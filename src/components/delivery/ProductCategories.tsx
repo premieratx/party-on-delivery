@@ -57,9 +57,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Step-based order flow mapping to collection handles
   const stepMapping = [
-    { step: 1, title: 'Beer', handle: 'beer-collection', icon: Beer, color: 'bg-amber-500' },
+    { step: 1, title: 'Beer', handle: 'tailgate-beer', icon: Beer, color: 'bg-amber-500' },
     { step: 2, title: 'Seltzers', handle: 'seltzer-collection', icon: Martini, color: 'bg-blue-500' },
-    { step: 3, title: 'Cocktails', handle: 'cocktail-collection', icon: Martini, color: 'bg-pink-500' },
+    { step: 3, title: 'Cocktails', handle: 'cocktail-kits', icon: Martini, color: 'bg-pink-500' },
     { step: 4, title: 'Party Supplies', handle: 'party-supplies', icon: Package, color: 'bg-green-500' }
   ];
 
