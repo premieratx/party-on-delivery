@@ -422,55 +422,44 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* ShopPay Component with correct configuration */}
-                  <div className="w-full">
-                    <shopify-accelerated-checkout
-                      shop-domain="premier-concierge"
-                      variant-ids={cartItems.map(item => item.variant || item.id).join(',')}
-                      quantities={cartItems.map(item => item.quantity).join(',')}
-                      customer-email={customerInfo.email}
-                      customer-phone={customerInfo.phone}
-                      shipping-first-name={customerInfo.firstName}
-                      shipping-last-name={customerInfo.lastName}
-                      shipping-address1={addressInfo.street}
-                      shipping-address2=""
-                      shipping-city={addressInfo.city}
-                      shipping-province={addressInfo.state}
-                      shipping-zip={addressInfo.zipCode}
-                      shipping-country="US"
-                      note={`Delivery Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}${addressInfo.instructions ? `\nDelivery Instructions: ${addressInfo.instructions}` : ''}`}
-                      onLoad={() => {
-                        console.log('ShopPay component loaded successfully');
-                      }}
-                      onSuccess={(event: any) => {
-                        console.log('Order completed successfully via ShopPay:', event);
-                        alert('Order placed successfully! You will receive a confirmation email shortly.');
-                      }}
-                      onError={(event: any) => {
-                        console.error('ShopPay error:', event);
-                        console.log('Trying fallback checkout method...');
+                  {/* Working Checkout Button */}
+                  <div className="w-full space-y-4">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold py-4 text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                      onClick={() => {
+                        // Create Shopify cart with proper variant IDs
+                        const lineItems = cartItems.map(item => {
+                          // Extract variant ID from the product data
+                          const variantId = item.variant || item.id;
+                          console.log('Adding item to cart:', { item, variantId });
+                          return `${variantId.replace('gid://shopify/ProductVariant/', '')}:${item.quantity}`;
+                        }).join(',');
                         
-                        // Fallback to cart permalink if ShopPay fails
-                        const cartPermalink = cartItems.map(item => 
-                          `${item.variant || item.id}:${item.quantity}`
-                        ).join(',');
+                        const orderNote = encodeURIComponent([
+                          `Customer: ${customerInfo.firstName} ${customerInfo.lastName}`,
+                          `Email: ${customerInfo.email}`,
+                          `Phone: ${customerInfo.phone}`,
+                          `Delivery Address: ${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+                          `Delivery Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}`,
+                          `Age Verified: Yes`,
+                          `Total: $${finalTotal.toFixed(2)} (includes $${deliveryFee.toFixed(2)} delivery fee)`,
+                          addressInfo.instructions ? `Instructions: ${addressInfo.instructions}` : ''
+                        ].filter(Boolean).join('\n'));
                         
-                        const orderNote = encodeURIComponent(
-                          `Customer: ${customerInfo.firstName} ${customerInfo.lastName}\n` +
-                          `Email: ${customerInfo.email}\n` +
-                          `Phone: ${customerInfo.phone}\n` +
-                          `Delivery: ${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}\n` +
-                          `Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}`
-                        );
-                        
-                        window.open(`https://premier-concierge.myshopify.com/cart/${cartPermalink}?note=${orderNote}`, '_blank');
+                        // Redirect to Shopify cart with all info
+                        const checkoutUrl = `https://premier-concierge.myshopify.com/cart/${lineItems}?note=${orderNote}`;
+                        console.log('Redirecting to:', checkoutUrl);
+                        window.open(checkoutUrl, '_blank');
                       }}
-                    />
-                  </div>
-                  
-                  <div className="text-center text-sm text-muted-foreground">
-                    <p>Total: ${finalTotal.toFixed(2)} (including ${deliveryFee.toFixed(2)} delivery fee)</p>
-                    <p className="mt-2 text-xs">If payment options don't appear, please refresh the page or contact support.</p>
+                    >
+                      Complete Order - ${finalTotal.toFixed(2)}
+                    </Button>
+                    
+                    <div className="text-center text-sm text-muted-foreground space-y-2">
+                      <p>Secure checkout powered by Shopify</p>
+                      <p>Total: ${finalTotal.toFixed(2)} (including ${deliveryFee.toFixed(2)} delivery fee)</p>
+                      <p className="text-xs">You'll be redirected to our secure Shopify checkout</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
