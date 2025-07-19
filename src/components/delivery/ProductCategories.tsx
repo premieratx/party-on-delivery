@@ -503,14 +503,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   {/* Cart controls */}
                   <div className="flex-shrink-0">
                     {(() => {
-                      const cartQty = getCartItemQuantity(product.id, undefined);
+                      const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
                       
                       return cartQty > 0 ? (
                         <div className="flex items-center gap-1 bg-muted rounded">
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleQuantityChange(product.id, undefined, -1)}
+                            onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
                             className="h-7 w-7 p-0"
                           >
                             <Minus className="h-3 w-3" />
@@ -519,7 +519,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleQuantityChange(product.id, undefined, 1)}
+                            onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
                             className="h-7 w-7 p-0"
                           >
                             <Plus className="h-3 w-3" />
