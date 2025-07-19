@@ -68,8 +68,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.log('Fetching Shopify collections...');
       
       const SHOPIFY_STORE = "premier-concierge.myshopify.com";
-      // Updated with valid Storefront Access Token
-      const SHOPIFY_API_KEY = "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";
+      // Using the provided token (but this was causing 401 errors)
+      const SHOPIFY_API_KEY = "0d4359f88af16da44f2653d9134c18c5";
       
       // Define the 4 collections for the order steps
       const targetCollections = [
