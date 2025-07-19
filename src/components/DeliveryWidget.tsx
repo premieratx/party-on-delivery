@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AgeVerification } from './delivery/AgeVerification';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import { ProductCategories } from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
 import { CheckoutFlow } from './delivery/CheckoutFlow';
+import { OrderContinuation } from './OrderContinuation';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
-export type DeliveryStep = 'age-verify' | 'schedule' | 'products' | 'cart' | 'checkout';
+export type DeliveryStep = 'order-continuation' | 'age-verify' | 'schedule' | 'products' | 'cart' | 'checkout';
 
 export interface CartItem {
   id: string;
@@ -25,7 +27,7 @@ export interface DeliveryInfo {
 }
 
 export const DeliveryWidget: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<DeliveryStep>('age-verify');
+  const [currentStep, setCurrentStep] = useState<DeliveryStep>('order-continuation');
   const [isAgeVerified, setIsAgeVerified] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     date: null,
@@ -33,8 +35,23 @@ export const DeliveryWidget: React.FC = () => {
     address: '',
     instructions: ''
   });
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('partyondelivery_cart', []);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
+  const [isAddingToOrder, setIsAddingToOrder] = useState(false);
+
+  const handleStartNewOrder = () => {
+    // Clear cart and start fresh
+    setCartItems([]);
+    setIsAddingToOrder(false);
+    setCurrentStep('age-verify');
+  };
+
+  const handleAddToOrder = () => {
+    // Keep existing cart and order info
+    setIsAddingToOrder(true);
+    setCurrentStep('age-verify');
+  };
 
   const handleAgeVerified = (verified: boolean) => {
     setIsAgeVerified(verified);
@@ -89,6 +106,16 @@ export const DeliveryWidget: React.FC = () => {
   const handleCheckout = () => {
     setCurrentStep('checkout');
   };
+
+  if (currentStep === 'order-continuation') {
+    return (
+      <OrderContinuation
+        onStartNewOrder={handleStartNewOrder}
+        onAddToOrder={handleAddToOrder}
+        lastOrderInfo={lastOrderInfo}
+      />
+    );
+  }
 
   if (!isAgeVerified && currentStep === 'age-verify') {
     return <AgeVerification onVerified={handleAgeVerified} />;

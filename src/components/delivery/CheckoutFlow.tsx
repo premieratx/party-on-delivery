@@ -18,6 +18,7 @@ import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, Exte
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 
 interface CheckoutFlowProps {
   cartItems: CartItem[];
@@ -44,22 +45,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
-  // Customer info state
-  const [customerInfo, setCustomerInfo] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: ''
-  });
-  
-  // Address state
-  const [addressInfo, setAddressInfo] = useState({
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    instructions: ''
-  });
+  // Use persistent customer info
+  const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
 
   // ShopPay integration state
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
@@ -170,18 +157,37 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       try {
         console.log('Creating Shopify order for payment intent:', paymentIntentId);
         const response = await supabase.functions.invoke('create-shopify-order', {
-          body: { paymentIntentId }
+          body: { 
+            paymentIntentId,
+            customerInfo,
+            addressInfo,
+            cartItems,
+            deliveryInfo
+          }
         });
         
         if (response.error) {
           console.error('Error creating Shopify order:', response.error);
         } else {
           console.log('Shopify order created:', response.data);
+          // Save last order info for potential future "add to order"
+          if (response.data?.order) {
+            const orderInfo = {
+              orderNumber: response.data.order.order_number || response.data.order.id,
+              total: finalTotal,
+              date: new Date().toLocaleDateString(),
+              orderId: response.data.order.id
+            };
+            localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+          }
         }
       } catch (error) {
         console.error('Failed to create Shopify order:', error);
       }
     }
+    
+    // Clear cart after successful order
+    localStorage.removeItem('partyondelivery_cart');
     
     // Redirect to your domain (home page)
     if (window.top) {
@@ -353,6 +359,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <Label htmlFor="street">Street Address *</Label>
                     <Input
                       id="street"
+                      name="street-address"
+                      autoComplete="street-address"
                       placeholder="123 Main Street"
                       value={addressInfo.street}
                       onChange={(e) => setAddressInfo(prev => ({ ...prev, street: e.target.value }))}
@@ -364,6 +372,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <Label htmlFor="city">City *</Label>
                       <Input
                         id="city"
+                        name="address-level2"
+                        autoComplete="address-level2"
                         placeholder="Austin"
                         value={addressInfo.city}
                         onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
@@ -373,6 +383,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <Label htmlFor="state">State *</Label>
                       <Input
                         id="state"
+                        name="address-level1"
+                        autoComplete="address-level1"
                         placeholder="TX"
                         value={addressInfo.state}
                         onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
@@ -384,6 +396,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <Label htmlFor="zipCode">Zip Code *</Label>
                     <Input
                       id="zipCode"
+                      name="postal-code"
+                      autoComplete="postal-code"
                       placeholder="78701"
                       value={addressInfo.zipCode}
                       onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
@@ -427,6 +441,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <Label htmlFor="firstName">First Name *</Label>
                       <Input
                         id="firstName"
+                        name="given-name"
+                        autoComplete="given-name"
                         placeholder="John"
                         value={customerInfo.firstName}
                         onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
@@ -436,6 +452,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <Label htmlFor="lastName">Last Name *</Label>
                       <Input
                         id="lastName"
+                        name="family-name"
+                        autoComplete="family-name"
                         placeholder="Doe"
                         value={customerInfo.lastName}
                         onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
@@ -447,7 +465,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <Label htmlFor="phone">Phone Number *</Label>
                     <Input
                       id="phone"
+                      name="tel"
                       type="tel"
+                      autoComplete="tel"
                       placeholder="(555) 123-4567"
                       value={customerInfo.phone}
                       onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
@@ -458,8 +478,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <Label htmlFor="email">Email Address *</Label>
                     <Input
                       id="email"
+                      name="email"
                       type="email"
-                      placeholder="your@email.com"
+                      autoComplete="email"
+                      placeholder="john.doe@example.com"
                       value={customerInfo.email}
                       onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
                     />

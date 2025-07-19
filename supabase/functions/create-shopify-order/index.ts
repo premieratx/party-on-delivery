@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -204,10 +205,84 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
       orderNumber: orderResult.order.order_number 
     });
 
+    // Store order group info in Supabase for potential future orders
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      );
+
+      // Check if order group exists for this customer
+      const { data: existingGroup } = await supabaseClient
+        .from('order_groups')
+        .select('id')
+        .eq('customer_email', customerEmail)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      let orderGroupId = existingGroup?.id;
+
+      // Create new order group if none exists or if last order was more than 24 hours ago
+      if (!orderGroupId) {
+        const { data: newGroup, error: groupError } = await supabaseClient
+          .from('order_groups')
+          .insert({
+            customer_email: customerEmail,
+            customer_name: customerName || '',
+            customer_phone: customerPhone || '',
+            delivery_address: addressParts.street || '',
+            delivery_city: addressParts.city || '',
+            delivery_state: addressParts.state || '',
+            delivery_zip: addressParts.zip || '',
+            delivery_instructions: deliveryInstructions || ''
+          })
+          .select('id')
+          .single();
+
+        if (groupError) {
+          logStep('Error creating order group', groupError);
+        } else {
+          orderGroupId = newGroup?.id;
+          logStep('Created new order group', { orderGroupId });
+        }
+      }
+
+      // Add this Shopify order to the group
+      if (orderGroupId) {
+        const { error: orderError } = await supabaseClient
+          .from('shopify_orders')
+          .insert({
+            order_group_id: orderGroupId,
+            shopify_order_id: orderResult.order.id.toString(),
+            shopify_order_number: orderResult.order.order_number?.toString() || '',
+            amount: parseFloat((orderResult.order.total_price || 0).toString()),
+            currency: orderResult.order.currency || 'USD',
+            status: 'completed'
+          });
+
+        if (orderError) {
+          logStep('Error linking order to group', orderError);
+        } else {
+          logStep('Order linked to group successfully', { orderGroupId });
+        }
+      }
+    } catch (supabaseError) {
+      logStep('Error with Supabase operations', supabaseError);
+      // Don't fail the order creation if Supabase operations fail
+    }
+
     return new Response(JSON.stringify({ 
       success: true,
       shopifyOrderId: orderResult.order.id,
-      orderNumber: orderResult.order.order_number
+      orderNumber: orderResult.order.order_number,
+      order: orderResult.order
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
