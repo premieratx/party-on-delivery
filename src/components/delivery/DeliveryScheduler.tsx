@@ -32,6 +32,7 @@ const timeSlots = [
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
   const [date, setDate] = useState<Date | undefined>(deliveryInfo.date || undefined);
   const [timeSlot, setTimeSlot] = useState(deliveryInfo.timeSlot);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleContinue = () => {
     if (date && timeSlot) {
@@ -66,7 +67,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                 <CalendarIcon className="w-4 h-4" />
                 Delivery Date
               </Label>
-              <Popover>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -83,7 +84,10 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={setDate}
+                    onSelect={(selectedDate) => {
+                      setDate(selectedDate);
+                      setIsCalendarOpen(false);
+                    }}
                     disabled={(date) => date < new Date()}
                     initialFocus
                     className="pointer-events-auto"
