@@ -50,9 +50,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Use persistent customer info (always persistent)
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
   
-  // For new orders or new visitors, clear address info
+  // Track if address has been cleared for new orders to prevent infinite loop
+  const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
+  
+  // For new orders or new visitors, clear address info once
   useEffect(() => {
-    if (!isAddingToOrder) {
+    if (!isAddingToOrder && !hasAddressBeenCleared) {
       setAddressInfo({
         street: '',
         city: '',
@@ -60,8 +63,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         zipCode: '',
         instructions: ''
       });
+      setHasAddressBeenCleared(true);
     }
-  }, [isAddingToOrder, setAddressInfo]);
+    if (isAddingToOrder) {
+      setHasAddressBeenCleared(false);
+    }
+  }, [isAddingToOrder, hasAddressBeenCleared]);
 
   // ShopPay integration state
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);

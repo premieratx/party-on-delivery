@@ -55,10 +55,10 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           
           <Button 
             onClick={onStartNewOrder}
-            className="w-full h-14 text-lg"
+            className="w-full h-16 text-xl"
             variant="outline"
           >
-            <RotateCcw className="w-5 h-5 mr-2" />
+            <RotateCcw className="w-6 h-6 mr-2" />
             Start New Order
           </Button>
           
