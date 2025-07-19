@@ -316,22 +316,24 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         <div className="border-t bg-background/95 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {categoryMapping.map((category, index) => {
-                const Icon = category.icon;
+              {collections.map((collection, index) => {
+                const categoryInfo = categoryMapping.find(cat => cat.handle === collection.handle);
+                const Icon = categoryInfo?.icon || Package;
+                const color = categoryInfo?.color || 'bg-gray-500';
                 const isActive = selectedCategory === index;
                 
                 return (
                   <Button
-                    key={category.handle}
+                    key={collection.handle}
                     variant={isActive ? "default" : "outline"}
                     size="lg"
                     onClick={() => setSelectedCategory(index)}
                     className="h-16 flex-col gap-2"
                   >
-                    <div className={`w-6 h-6 rounded-full ${category.color} flex items-center justify-center`}>
+                    <div className={`w-6 h-6 rounded-full ${color} flex items-center justify-center`}>
                       <Icon className="w-3 h-3 text-white" />
                     </div>
-                    <span className="text-xs">{category.title}</span>
+                    <span className="text-xs">{collection.title}</span>
                   </Button>
                 );
               })}
