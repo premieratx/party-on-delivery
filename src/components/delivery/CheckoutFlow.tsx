@@ -422,10 +422,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* ShopPay Component - Replace YOUR_STORE_DOMAIN with your actual domain */}
+                  {/* ShopPay Component */}
                   <div className="w-full">
                     <shopify-accelerated-checkout
-                      shop-domain="YOUR_STORE_DOMAIN.myshopify.com"
+                      shop-domain="premier-concierge.myshopify.com"
                       line-items={JSON.stringify(cartItems.map(item => ({
                         merchandise: {
                           id: item.id
@@ -446,6 +446,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         phone: customerInfo.phone
                       })}
                       note={`Delivery Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}${addressInfo.instructions ? `\nDelivery Instructions: ${addressInfo.instructions}` : ''}`}
+                      onLoad={() => {
+                        console.log('ShopPay component loaded');
+                      }}
                       onSuccess={() => {
                         console.log('Order completed successfully via ShopPay');
                         alert('Order placed successfully! You will receive a confirmation email shortly.');
@@ -459,6 +462,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   
                   <div className="text-center text-sm text-muted-foreground">
                     <p>Total: ${finalTotal.toFixed(2)} (including ${deliveryFee.toFixed(2)} delivery fee)</p>
+                    <p className="mt-2 text-xs">If payment options don't appear, please refresh the page or contact support.</p>
                   </div>
                 </CardContent>
               </Card>
