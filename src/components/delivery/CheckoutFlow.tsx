@@ -68,32 +68,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
 
   useEffect(() => {
-    // Load Shopify Web Components script
+    // Load correct Shopify Web Components script
     const script = document.createElement('script');
-    script.src = 'https://cdn.shopify.com/shopifycloud/web-components/assets/index.js';
+    script.src = 'https://cdn.shopify.com/shopifycloud/web-components/assets/shopify-web.js';
     script.async = true;
     script.type = 'module';
     
     script.onload = () => {
-      console.log('Shopify Web Components script loaded successfully');
-      // Initialize the web components after script loads
-      if (window.customElements) {
-        console.log('Custom elements supported, ShopPay should be available');
-      }
+      console.log('Shopify Web Components loaded successfully');
+      setIsShopPayLoading(false);
     };
     
-    script.onerror = (error) => {
-      console.error('Failed to load Shopify Web Components script:', error);
+    script.onerror = () => {
+      console.error('Failed to load Shopify Web Components');
+      setIsShopPayLoading(false);
     };
     
-    // Only add script if it doesn't already exist
-    if (!document.querySelector('script[src*="shopify"]')) {
+    // Only add if not already present
+    if (!document.querySelector('script[src*="shopify-web"]')) {
       document.head.appendChild(script);
     }
-    
-    return () => {
-      // Don't remove script on cleanup to avoid re-loading
-    };
   }, []);
 
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
@@ -452,78 +446,38 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* ShopPay Web Component */}
-                  <div className="w-full">
-                    {isShopPayLoading && (
-                      <div className="flex items-center justify-center p-8 border border-dashed border-primary rounded-lg">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                          <p className="text-sm text-muted-foreground">Loading ShopPay...</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Load Shopify Web Components script */}
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: `
-                          <script>
-                            if (!window.customElements.get('shopify-accelerated-checkout')) {
-                              const script = document.createElement('script');
-                              script.src = 'https://cdn.shopify.com/shopifycloud/web/assets/v1/index.js';
-                              script.type = 'module';
-                              script.onload = () => {
-                                console.log('Shopify Accelerated Checkout script loaded successfully');
-                                // Initialize the web component
-                                if (window.ShopifyAcceleratedCheckout) {
-                                  window.ShopifyAcceleratedCheckout.init();
-                                }
-                              };
-                              script.onerror = () => {
-                                console.error('Failed to load Shopify Accelerated Checkout script');
-                                console.log('Falling back to manual checkout only');
-                              };
-                              document.head.appendChild(script);
-                            }
-                          </script>
-                        `
-                      }}
-                    />
-                    
-                    <div className="space-y-4">
-                      {/* ShopPay Button */}
-                      <div className="bg-white p-4 rounded-lg border">
-                        <h3 className="font-medium mb-3">Express Checkout</h3>
-                        <div id="shopify-accelerated-checkout-container">
+                  <div className="space-y-6">
+                    {/* Single Unified Checkout Section */}
+                    <div className="bg-white p-6 rounded-lg border shadow-sm">
+                      <h3 className="text-lg font-semibold mb-4">Complete Your Payment</h3>
+                      
+                      {/* ShopPay Express Checkout */}
+                      <div className="mb-4">
+                        {isShopPayLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                            <span className="ml-2 text-sm">Loading payment options...</span>
+                          </div>
+                        ) : (
                           <shopify-accelerated-checkout
                             shop-domain="thecannacorp"
                             storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
                             variant-ids={cartItems.map(item => {
-                              console.log('Processing cart item:', item);
-                              
-                              // Extract variant ID - handle both formats
-                              let variantId = '';
-                              if (item.variant) {
-                                if (typeof item.variant === 'string' && item.variant.includes('gid://shopify/ProductVariant/')) {
-                                  variantId = item.variant.split('/').pop() || '';
-                                } else {
-                                  variantId = item.variant.toString();
-                                }
-                              }
-                              
-                              console.log('Extracted variant ID:', variantId, 'for item:', item.title);
+                              const variantId = item.variant?.toString().split('/').pop() || '';
+                              console.log('ShopPay variant ID:', variantId, 'for:', item.title);
                               return variantId;
                             }).filter(id => id).join(',')}
                             quantities={cartItems.map(item => item.quantity).join(',')}
-                            className="w-full"
+                            style={{
+                              width: '100%',
+                              minHeight: '120px'
+                            }}
                           />
-                        </div>
-                        {isShopPayLoading && (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                            <span className="ml-2">Loading ShopPay...</span>
-                          </div>
                         )}
+                      </div>
+                      
+                      <div className="text-center text-sm text-gray-500 my-4">
+                        or continue with manual checkout below
                       </div>
                     </div>
                   </div>
