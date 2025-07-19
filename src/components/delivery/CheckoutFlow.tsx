@@ -1,4 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Declare Shopify Web Components types
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'shopify-accelerated-checkout': any;
+    }
+  }
+}
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -54,13 +63,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     instructions: ''
   });
 
-  // Payment state
-  const [paymentInfo, setPaymentInfo] = useState({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    nameOnCard: ''
-  });
+  // ShopPay integration state
+  const [isShopPayLoading, setIsShopPayLoading] = useState(false);
 
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
@@ -123,7 +127,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
   const isAddressComplete = addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode;
   const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email;
-  const isPaymentComplete = paymentInfo.cardNumber && paymentInfo.expiryDate && paymentInfo.cvv && paymentInfo.nameOnCard;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
@@ -406,67 +409,57 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               </Card>
             )}
 
-            {/* Payment Information */}
+            {/* ShopPay Payment */}
             {currentStep === 'payment' && (
               <Card className="shadow-card border-2 border-green-500">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <CreditCard className="w-5 h-5" />
-                    Payment Information
+                    Payment with ShopPay
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Secure checkout powered by Shopify
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nameOnCard">Name on Card *</Label>
-                    <Input
-                      id="nameOnCard"
-                      placeholder="John Doe"
-                      value={paymentInfo.nameOnCard}
-                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, nameOnCard: e.target.value }))}
+                  {/* ShopPay Component - Replace YOUR_STORE_DOMAIN with your actual domain */}
+                  <div className="w-full">
+                    <shopify-accelerated-checkout
+                      shop-domain="YOUR_STORE_DOMAIN.myshopify.com"
+                      line-items={JSON.stringify(cartItems.map(item => ({
+                        merchandise: {
+                          id: item.id
+                        },
+                        quantity: item.quantity
+                      })))}
+                      shipping-address={JSON.stringify({
+                        address1: addressInfo.street,
+                        city: addressInfo.city,
+                        province: addressInfo.state,
+                        zip: addressInfo.zipCode,
+                        country: 'US'
+                      })}
+                      customer={JSON.stringify({
+                        firstName: customerInfo.firstName,
+                        lastName: customerInfo.lastName,
+                        email: customerInfo.email,
+                        phone: customerInfo.phone
+                      })}
+                      note={`Delivery Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}${addressInfo.instructions ? `\nDelivery Instructions: ${addressInfo.instructions}` : ''}`}
+                      onSuccess={() => {
+                        console.log('Order completed successfully via ShopPay');
+                        alert('Order placed successfully! You will receive a confirmation email shortly.');
+                      }}
+                      onError={(error: any) => {
+                        console.error('ShopPay error:', error);
+                        alert('There was an error processing your payment. Please try again.');
+                      }}
                     />
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber">Card Number *</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={paymentInfo.cardNumber}
-                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, cardNumber: e.target.value }))}
-                    />
+                  <div className="text-center text-sm text-muted-foreground">
+                    <p>Total: ${finalTotal.toFixed(2)} (including ${deliveryFee.toFixed(2)} delivery fee)</p>
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiryDate">Expiry Date *</Label>
-                      <Input
-                        id="expiryDate"
-                        placeholder="MM/YY"
-                        value={paymentInfo.expiryDate}
-                        onChange={(e) => setPaymentInfo(prev => ({ ...prev, expiryDate: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv">CVV *</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        value={paymentInfo.cvv}
-                        onChange={(e) => setPaymentInfo(prev => ({ ...prev, cvv: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    onClick={handleCompleteOrder}
-                    disabled={!isPaymentComplete}
-                    className="w-full"
-                    variant="delivery"
-                    size="lg"
-                  >
-                    <ExternalLink className="w-5 h-5 mr-2" />
-                    Confirm Order - ${finalTotal.toFixed(2)}
-                  </Button>
                 </CardContent>
               </Card>
             )}
