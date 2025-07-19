@@ -353,127 +353,135 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </Card>
         )}
 
-        {/* Products Grid - 5 items per row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 auto-rows-fr">
+        {/* Compact Order Form Layout - 5 columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
           {selectedCollection?.products.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col">
-              <div className="aspect-square bg-muted relative">
-                <img
-                  src={product.image}
-                  alt={product.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              
-              <CardContent className="p-4 flex flex-col flex-1">
-                <div className="flex-1 flex flex-col justify-between">
-                  <div className="mb-3">
-                    <h3 className="font-semibold text-lg">{product.title}</h3>
-                    <p className="text-muted-foreground text-sm line-clamp-2">
-                      {product.description}
-                    </p>
+            <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200">
+              {/* Product variants handling */}
+              {product.variants.length > 1 ? (
+                <div className="space-y-2">
+                  {product.variants.slice(0, 3).map((variant) => {
+                    const cartQty = getCartItemQuantity(product.id, variant.title);
+                    
+                    return (
+                      <div key={variant.id} className="flex items-center gap-2 min-h-[60px]">
+                        {/* Small product image */}
+                        <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                          <img
+                            src={product.image}
+                            alt={product.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        
+                        {/* Product info */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm truncate">{product.title}</h4>
+                          <p className="text-xs text-muted-foreground truncate">{variant.title}</p>
+                          <Badge variant="secondary" className="text-xs mt-1">
+                            ${variant.price.toFixed(2)}
+                          </Badge>
+                        </div>
+                        
+                        {/* Cart controls */}
+                        <div className="flex-shrink-0">
+                          {cartQty > 0 ? (
+                            <div className="flex items-center gap-1 bg-muted rounded">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleQuantityChange(product.id, variant.title, -1)}
+                                className="h-7 w-7 p-0"
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="px-2 text-xs font-medium">{cartQty}</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleQuantityChange(product.id, variant.title, 1)}
+                                className="h-7 w-7 p-0"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={() => handleAddToCart(product, variant)}
+                              size="sm"
+                              disabled={!variant.available}
+                              className="h-7 px-2 text-xs"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                // Single product row
+                <div className="flex items-center gap-2 min-h-[60px]">
+                  {/* Small product image */}
+                  <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                    <img
+                      src={product.image}
+                      alt={product.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   
-                  {/* Variants */}
-                  {product.variants.length > 1 ? (
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Options:</p>
-                      <div className="space-y-2">
-                        {product.variants.slice(0, 3).map((variant) => {
-                          const cartQty = getCartItemQuantity(product.id, variant.title);
-                          
-                          return (
-                            <div key={variant.id} className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm">{variant.title}</span>
-                                <Badge variant="secondary">
-                                  ${variant.price.toFixed(2)}
-                                </Badge>
-                              </div>
-                              
-                              {cartQty > 0 ? (
-                                <div className="flex items-center gap-1 bg-muted rounded-md">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleQuantityChange(product.id, variant.title, -1)}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Minus className="h-3 w-3" />
-                                  </Button>
-                                  <span className="px-2 text-sm font-medium">{cartQty} added</span>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleQuantityChange(product.id, variant.title, 1)}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <Button
-                                  onClick={() => handleAddToCart(product, variant)}
-                                  size="sm"
-                                  disabled={!variant.available}
-                                  className="gap-1"
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  Add
-                                </Button>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 mt-auto">
-                      <Badge variant="secondary" className="text-lg font-bold">
-                        ${product.price.toFixed(2)}
-                      </Badge>
+                  {/* Product info */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm truncate">{product.title}</h4>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {product.description}
+                    </p>
+                    <Badge variant="secondary" className="text-xs mt-1">
+                      ${product.price.toFixed(2)}
+                    </Badge>
+                  </div>
+                  
+                  {/* Cart controls */}
+                  <div className="flex-shrink-0">
+                    {(() => {
+                      const cartQty = getCartItemQuantity(product.id, undefined);
                       
-                      {(() => {
-                        const cartQty = getCartItemQuantity(product.id, undefined);
-                        
-                        return cartQty > 0 ? (
-                          <div className="flex items-center justify-between bg-muted rounded-lg p-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, undefined, -1)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <span className="px-2 text-sm font-medium flex-1 text-center">
-                              {cartQty} added
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, undefined, 1)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ) : (
+                      return cartQty > 0 ? (
+                        <div className="flex items-center gap-1 bg-muted rounded">
                           <Button
-                            onClick={() => handleAddToCart(product)}
-                            size="lg"
-                            className="w-full gap-2"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleQuantityChange(product.id, undefined, -1)}
+                            className="h-7 w-7 p-0"
                           >
-                            <Plus className="h-4 w-4" />
-                            Add to Cart
+                            <Minus className="h-3 w-3" />
                           </Button>
-                        );
-                      })()}
-                    </div>
-                  )}
+                          <span className="px-2 text-xs font-medium">{cartQty}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleQuantityChange(product.id, undefined, 1)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleAddToCart(product)}
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      );
+                    })()}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           ))}
         </div>
 
