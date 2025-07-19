@@ -67,6 +67,35 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // ShopPay integration state
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
 
+  useEffect(() => {
+    // Load Shopify Web Components script
+    const script = document.createElement('script');
+    script.src = 'https://cdn.shopify.com/shopifycloud/web-components/assets/index.js';
+    script.async = true;
+    script.type = 'module';
+    
+    script.onload = () => {
+      console.log('Shopify Web Components script loaded successfully');
+      // Initialize the web components after script loads
+      if (window.customElements) {
+        console.log('Custom elements supported, ShopPay should be available');
+      }
+    };
+    
+    script.onerror = (error) => {
+      console.error('Failed to load Shopify Web Components script:', error);
+    };
+    
+    // Only add script if it doesn't already exist
+    if (!document.querySelector('script[src*="shopify"]')) {
+      document.head.appendChild(script);
+    }
+    
+    return () => {
+      // Don't remove script on cleanup to avoid re-loading
+    };
+  }, []);
+
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
     '10:00 AM - 11:00 AM',
@@ -461,54 +490,42 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       }}
                     />
                     
-                    {/* First add the store context */}
-                    <shopify-store 
-                      domain="thecannacorp.myshopify.com"
-                      access-token="a49fa69332729e9f8329ad8caacc37ba"
-                    />
-                    
-                    <shopify-accelerated-checkout
-                      variant-ids={cartItems.map(item => {
-                        // Debug the actual cart item structure
-                        console.log('Cart item structure:', item);
-                        
-                        // Extract the numeric variant ID from the Shopify GID format
-                        let variantId;
-                        if (item.variant && typeof item.variant === 'string') {
-                          if (item.variant.includes('gid://shopify/ProductVariant/')) {
-                            variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
-                          } else {
-                            variantId = item.variant;
-                          }
-                        } else {
-                          // If no variant, try to use the first variant of the product
-                          variantId = item.id.replace('gid://shopify/Product/', '').replace('gid://shopify/ProductVariant/', '');
-                        }
-                        
-                        console.log('Final variant ID for ShopPay:', variantId, 'for item:', item.title);
-                        return variantId;
-                      }).join(',')}
-                      quantities={cartItems.map(item => item.quantity).join(',')}
-                       onLoad={() => {
-                         console.log('ShopPay component loaded successfully');
-                         setIsShopPayLoading(false);
-                       }}
-                       onSuccess={(event: any) => {
-                         console.log('ShopPay payment successful:', event);
-                         alert('Payment successful! Order confirmed.');
-                       }}
-                       onError={(error: any) => {
-                         console.error('ShopPay component error:', error);
-                         setIsShopPayLoading(false);
-                       }}
-                       style={{ 
-                         width: '100%', 
-                         minHeight: '200px', 
-                         border: '1px solid #e2e8f0',
-                         borderRadius: '8px',
-                         display: isShopPayLoading ? 'none' : 'block'
-                       }}
-                     />
+                    <div className="space-y-4">
+                      {/* ShopPay Button */}
+                      <div className="bg-white p-4 rounded-lg border">
+                        <h3 className="font-medium mb-3">Express Checkout</h3>
+                        <div id="shopify-accelerated-checkout-container">
+                          <shopify-accelerated-checkout
+                            shop-domain="thecannacorp"
+                            storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
+                            variant-ids={cartItems.map(item => {
+                              console.log('Processing cart item:', item);
+                              
+                              // Extract variant ID - handle both formats
+                              let variantId = '';
+                              if (item.variant) {
+                                if (typeof item.variant === 'string' && item.variant.includes('gid://shopify/ProductVariant/')) {
+                                  variantId = item.variant.split('/').pop() || '';
+                                } else {
+                                  variantId = item.variant.toString();
+                                }
+                              }
+                              
+                              console.log('Extracted variant ID:', variantId, 'for item:', item.title);
+                              return variantId;
+                            }).filter(id => id).join(',')}
+                            quantities={cartItems.map(item => item.quantity).join(',')}
+                            className="w-full"
+                          />
+                        </div>
+                        {isShopPayLoading && (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                            <span className="ml-2">Loading ShopPay...</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Fallback Manual Checkout */}
