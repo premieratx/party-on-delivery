@@ -422,40 +422,48 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* ShopPay Component */}
+                  {/* ShopPay Component with correct configuration */}
                   <div className="w-full">
                     <shopify-accelerated-checkout
-                      shop-domain="premier-concierge.myshopify.com"
-                      line-items={JSON.stringify(cartItems.map(item => ({
-                        merchandise: {
-                          id: item.id
-                        },
-                        quantity: item.quantity
-                      })))}
-                      shipping-address={JSON.stringify({
-                        address1: addressInfo.street,
-                        city: addressInfo.city,
-                        province: addressInfo.state,
-                        zip: addressInfo.zipCode,
-                        country: 'US'
-                      })}
-                      customer={JSON.stringify({
-                        firstName: customerInfo.firstName,
-                        lastName: customerInfo.lastName,
-                        email: customerInfo.email,
-                        phone: customerInfo.phone
-                      })}
+                      shop-domain="premier-concierge"
+                      variant-ids={cartItems.map(item => item.variant || item.id).join(',')}
+                      quantities={cartItems.map(item => item.quantity).join(',')}
+                      customer-email={customerInfo.email}
+                      customer-phone={customerInfo.phone}
+                      shipping-first-name={customerInfo.firstName}
+                      shipping-last-name={customerInfo.lastName}
+                      shipping-address1={addressInfo.street}
+                      shipping-address2=""
+                      shipping-city={addressInfo.city}
+                      shipping-province={addressInfo.state}
+                      shipping-zip={addressInfo.zipCode}
+                      shipping-country="US"
                       note={`Delivery Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}${addressInfo.instructions ? `\nDelivery Instructions: ${addressInfo.instructions}` : ''}`}
                       onLoad={() => {
-                        console.log('ShopPay component loaded');
+                        console.log('ShopPay component loaded successfully');
                       }}
-                      onSuccess={() => {
-                        console.log('Order completed successfully via ShopPay');
+                      onSuccess={(event: any) => {
+                        console.log('Order completed successfully via ShopPay:', event);
                         alert('Order placed successfully! You will receive a confirmation email shortly.');
                       }}
-                      onError={(error: any) => {
-                        console.error('ShopPay error:', error);
-                        alert('There was an error processing your payment. Please try again.');
+                      onError={(event: any) => {
+                        console.error('ShopPay error:', event);
+                        console.log('Trying fallback checkout method...');
+                        
+                        // Fallback to cart permalink if ShopPay fails
+                        const cartPermalink = cartItems.map(item => 
+                          `${item.variant || item.id}:${item.quantity}`
+                        ).join(',');
+                        
+                        const orderNote = encodeURIComponent(
+                          `Customer: ${customerInfo.firstName} ${customerInfo.lastName}\n` +
+                          `Email: ${customerInfo.email}\n` +
+                          `Phone: ${customerInfo.phone}\n` +
+                          `Delivery: ${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}\n` +
+                          `Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}`
+                        );
+                        
+                        window.open(`https://premier-concierge.myshopify.com/cart/${cartPermalink}?note=${orderNote}`, '_blank');
                       }}
                     />
                   </div>
