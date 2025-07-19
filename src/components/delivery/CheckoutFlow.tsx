@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
@@ -41,13 +42,30 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     instructions: ''
   });
 
-  // Available time slots
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
-    '10:00 AM - 12:00 PM',
-    '12:00 PM - 2:00 PM', 
-    '2:00 PM - 4:00 PM',
-    '4:00 PM - 6:00 PM',
-    '6:00 PM - 8:00 PM'
+    '10:00 AM - 11:00 AM',
+    '10:30 AM - 11:30 AM',
+    '11:00 AM - 12:00 PM',
+    '11:30 AM - 12:30 PM',
+    '12:00 PM - 1:00 PM',
+    '12:30 PM - 1:30 PM',
+    '1:00 PM - 2:00 PM',
+    '1:30 PM - 2:30 PM',
+    '2:00 PM - 3:00 PM',
+    '2:30 PM - 3:30 PM',
+    '3:00 PM - 4:00 PM',
+    '3:30 PM - 4:30 PM',
+    '4:00 PM - 5:00 PM',
+    '4:30 PM - 5:30 PM',
+    '5:00 PM - 6:00 PM',
+    '5:30 PM - 6:30 PM',
+    '6:00 PM - 7:00 PM',
+    '6:30 PM - 7:30 PM',
+    '7:00 PM - 8:00 PM',
+    '7:30 PM - 8:30 PM'
   ];
 
   const deliveryFee = 4.99;
@@ -129,7 +147,7 @@ Additional Notes: ${customerInfo.notes || 'None'}
                 {/* Date Picker */}
                 <div className="space-y-2">
                   <Label>Delivery Date *</Label>
-                  <Popover>
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -142,11 +160,14 @@ Additional Notes: ${customerInfo.notes || 'None'}
                         {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
                       <Calendar
                         mode="single"
                         selected={deliveryInfo.date || undefined}
-                        onSelect={(date) => updateDeliveryInfo('date', date)}
+                        onSelect={(date) => {
+                          updateDeliveryInfo('date', date);
+                          setIsCalendarOpen(false); // Close calendar when date is selected
+                        }}
                         disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
                         initialFocus
                         className="p-3 pointer-events-auto"
@@ -158,19 +179,24 @@ Additional Notes: ${customerInfo.notes || 'None'}
                 {/* Time Slot Picker */}
                 <div className="space-y-2">
                   <Label>Delivery Time *</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {timeSlots.map((slot) => (
-                      <Button
-                        key={slot}
-                        variant={deliveryInfo.timeSlot === slot ? "default" : "outline"}
-                        onClick={() => updateDeliveryInfo('timeSlot', slot)}
-                        className="justify-start"
-                      >
-                        <Clock className="w-4 h-4 mr-2" />
-                        {slot}
-                      </Button>
-                    ))}
-                  </div>
+                  <Select 
+                    value={deliveryInfo.timeSlot} 
+                    onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a time slot" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-background">
+                      {timeSlots.map((slot) => (
+                        <SelectItem key={slot} value={slot}>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            {slot}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
