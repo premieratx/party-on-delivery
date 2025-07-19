@@ -189,9 +189,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         return;
       }
 
-      // Redirect to Stripe checkout
+      // Redirect to Stripe checkout at top level to avoid iframe restrictions
       if (data.url) {
-        window.location.href = data.url;
+        window.open(data.url, '_top');
       }
     } catch (error) {
       console.error('Error:', error);
