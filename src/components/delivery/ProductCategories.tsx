@@ -268,15 +268,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     {/* Content */}
                     <div className="relative z-10 h-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-2 sm:p-4">
                       {/* Mobile layout: improved contrast and readability */}
-                      <div className="sm:hidden flex flex-col items-center justify-center h-full space-y-1">
+                      <div className="sm:hidden flex flex-col items-center justify-center h-full space-y-1 px-1">
                         <div className={`font-bold text-2xl transition-colors ${isActive ? 'text-primary' : 'text-foreground'}`}>
                           {stepNumber}
                         </div>
-                        <div className={`text-sm font-semibold text-center leading-tight px-1 ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                        <div className={`text-sm font-semibold text-center leading-tight ${isActive ? 'text-primary' : 'text-foreground'}`}>
                           {stepTitle}
-                        </div>
-                        <div className={`text-xs font-medium ${isActive ? 'text-primary/80' : 'text-muted-foreground'}`}>
-                          Step {stepNumber}
                         </div>
                       </div>
                       
@@ -342,7 +339,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{variant.title}</p>
                           </div>
-                          <Badge variant="secondary" className="text-xs lg:text-sm mt-1 w-fit text-center font-semibold">
+                          <Badge variant="secondary" className="text-xs lg:text-sm mt-1 w-fit mx-auto text-center font-semibold">
                             ${variant.price.toFixed(2)}
                           </Badge>
                         </div>
@@ -402,7 +399,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <h4 className="font-medium text-xs lg:text-sm leading-tight line-clamp-2 lg:line-clamp-3">
                       {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                     </h4>
-                    <Badge variant="secondary" className="text-xs lg:text-sm mt-2 w-fit text-center font-semibold">
+                    <Badge variant="secondary" className="text-xs lg:text-sm mt-2 w-fit mx-auto text-center font-semibold">
                       ${product.price.toFixed(2)}
                     </Badge>
                   </div>
