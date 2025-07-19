@@ -5,12 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  "https://lghmqfspgekjnkxefrdc.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxnaG1xZnNwZ2Vram5reGVmcmRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0NzAzNTksImV4cCI6MjA1MzA0NjM1OX0.pjFOGnRDMb5nCtA4m6pAZfFdNhBWKhKq1I2R6Pj_D5w"
-);
+import { supabase } from '@/integrations/supabase/client';
 
 interface ShopifyProduct {
   id: string;
@@ -74,175 +69,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const fetchCollections = async () => {
     try {
       setLoading(true);
-      console.log('Fetching all Shopify collections...');
+      console.log('Fetching Shopify collections via edge function...');
       
-      const SHOPIFY_STORE = "premier-concierge.myshopify.com";
-      const SHOPIFY_API_KEY = "a49fa69332729e9f8329ad8caacc37ba";
-      
-      // First, get all collections to see what's available
-      const allCollectionsQuery = `
-        query {
-          collections(first: 20) {
-            edges {
-              node {
-                id
-                title
-                handle
-                description
-              }
-            }
-          }
-        }
-      `;
-
-      const allCollectionsResponse = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          query: allCollectionsQuery
-        }),
-      });
-
-      if (allCollectionsResponse.ok) {
-        const allCollectionsData = await allCollectionsResponse.json();
-        console.log('All available collections:', allCollectionsData.data?.collections?.edges);
-        
-        // Show available collections in console to help identify correct handles
-        allCollectionsData.data?.collections?.edges.forEach(({ node: collection }) => {
-          console.log(`Collection: "${collection.title}" - Handle: "${collection.handle}"`);
-        });
-      }
-
-      // Try to find best matching collections for our 4 categories
-      const allCollections = [];
-
       // Use our step mapping to define the collections we want
       const targetCollections = stepMapping.map(step => step.handle);
-
-      // Fetch each collection directly from Shopify
-      for (const handle of targetCollections) {
-        console.log(`Fetching collection: ${handle}`);
-        
-        const query = `
-          query getCollectionByHandle($handle: String!) {
-            collectionByHandle(handle: $handle) {
-              id
-              title
-              handle
-              description
-              products(first: 20) {
-                edges {
-                  node {
-                    id
-                    title
-                    handle
-                    description
-                    images(first: 1) {
-                      edges {
-                        node {
-                          url
-                          altText
-                        }
-                      }
-                    }
-                    variants(first: 5) {
-                      edges {
-                        node {
-                          id
-                          title
-                          price {
-                            amount
-                            currencyCode
-                          }
-                          availableForSale
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `;
-
-        try {
-          const response = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-              query,
-              variables: { handle }
-            }),
-          });
-
-          console.log(`Response for ${handle}:`, response.status);
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log(`Data for ${handle}:`, data);
-            
-            if (data.data?.collectionByHandle) {
-              const collection = data.data.collectionByHandle;
-              
-              // Transform products
-              const products = collection.products.edges.map(({ node: product }) => {
-                const variant = product.variants.edges[0]?.node;
-                const image = product.images.edges[0]?.node;
-                
-                return {
-                  id: product.id,
-                  title: product.title,
-                  price: variant ? parseFloat(variant.price.amount) : 0,
-                  image: image?.url || '/placeholder.svg',
-                  description: product.description,
-                  handle: product.handle,
-                  variants: product.variants.edges.map(({ node: v }) => ({
-                    id: v.id,
-                    title: v.title,
-                    price: parseFloat(v.price.amount),
-                    available: v.availableForSale
-                  }))
-                };
-              });
-
-              allCollections.push({
-                id: collection.id,
-                title: collection.title,
-                handle: collection.handle,
-                description: collection.description,
-                products
-              });
-               
-              console.log(`Added collection: ${collection.title} with ${products.length} products`);
-            } else {
-              console.log(`No collection found for handle: ${handle}`);
-            }
-          } else {
-            const errorData = await response.text();
-            console.error(`Error fetching ${handle}:`, response.status, response.statusText, errorData);
-            
-            // Show specific error for authentication issues
-            if (response.status === 401) {
-              console.error(`Authentication failed for ${handle}. The token may be invalid or not a Storefront Access Token.`);
-            }
-          }
-        } catch (fetchError) {
-          console.error(`Fetch error for ${handle}:`, fetchError);
-        }
-      }
       
-      console.log('All collections loaded:', allCollections);
-      setCollections(allCollections);
+      // Call our edge function to fetch collections
+      const { data, error } = await supabase.functions.invoke('fetch-shopify-products', {
+        body: { handles: targetCollections }
+      });
+
+      if (error) {
+        console.error('Error calling edge function:', error);
+        setError('Failed to fetch collections');
+        return;
+      }
+
+      if (data?.collections) {
+        console.log('Collections loaded via edge function:', data.collections);
+        setCollections(data.collections);
+      } else {
+        console.error('No collections data received');
+        setError('No collections found');
+      }
     } catch (error) {
       console.error('Error fetching collections:', error);
+      setError('Failed to load collections');
     } finally {
       setLoading(false);
     }
@@ -271,6 +123,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     onAddToCart({
       id: product.id,
       title: product.title,
+      name: product.title, // Add name field for Shopify compatibility
       price: variant ? variant.price : product.price,
       image: product.image,
       variant: variant ? variant.id : product.variants[0]?.id // Use variant ID, not title

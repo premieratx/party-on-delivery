@@ -51,10 +51,14 @@ serve(async (req) => {
   }
 
   try {
-    const { collectionHandle } = await req.json();
+    const { handles } = await req.json();
     
-    const SHOPIFY_STORE = "premier-concierge.myshopify.com";
-    const SHOPIFY_API_KEY = "0d4359f88af16da44f2653d9134c18c5";
+    if (!handles || !Array.isArray(handles)) {
+      throw new Error("Collection handles array is required");
+    }
+    
+    const SHOPIFY_STORE = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";
+    const SHOPIFY_API_KEY = "a49fa69332729e9f8329ad8caacc37ba"; // Storefront API token
     
     // GraphQL query to fetch collection with products
     const query = `
@@ -99,64 +103,67 @@ serve(async (req) => {
       }
     `;
 
-    const response = await fetch(`https://${SHOPIFY_STORE}/api/2025-01/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
-      },
-      body: JSON.stringify({
-        query,
-        variables: { handle: collectionHandle }
-      }),
-    });
+    const allCollections = [];
 
-    if (!response.ok) {
-      throw new Error(`Shopify API error: ${response.status}`);
+    // Fetch each collection
+    for (const handle of handles) {
+      try {
+        const response = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
+          },
+          body: JSON.stringify({
+            query,
+            variables: { handle }
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.data?.collectionByHandle) {
+            const collection: ShopifyCollection = data.data.collectionByHandle;
+            
+            // Transform Shopify data to our format
+            const products = collection.products.edges.map(({ node: product }) => {
+              const variant = product.variants.edges[0]?.node;
+              const image = product.images.edges[0]?.node;
+              
+              return {
+                id: product.id,
+                title: product.title,
+                price: variant ? parseFloat(variant.price.amount) : 0,
+                image: image?.url || '/placeholder.svg',
+                description: product.description,
+                handle: product.handle,
+                variants: product.variants.edges.map(({ node: v }) => ({
+                  id: v.id,
+                  title: v.title,
+                  price: parseFloat(v.price.amount),
+                  available: v.availableForSale
+                }))
+              };
+            });
+
+            allCollections.push({
+              id: collection.id,
+              title: collection.title,
+              handle: collection.handle,
+              description: collection.description,
+              products
+            });
+          }
+        }
+      } catch (fetchError) {
+        console.error(`Error fetching collection ${handle}:`, fetchError);
+      }
     }
-
-    const data = await response.json();
-    
-    if (data.errors) {
-      throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
-    }
-
-    const collection: ShopifyCollection = data.data.collectionByHandle;
-    
-    if (!collection) {
-      throw new Error(`Collection not found: ${collectionHandle}`);
-    }
-
-    // Transform Shopify data to our format
-    const products = collection.products.edges.map(({ node: product }) => {
-      const variant = product.variants.edges[0]?.node;
-      const image = product.images.edges[0]?.node;
-      
-      return {
-        id: product.id,
-        title: product.title,
-        price: variant ? parseFloat(variant.price.amount) : 0,
-        image: image?.url || '/placeholder.svg',
-        description: product.description,
-        handle: product.handle,
-        variants: product.variants.edges.map(({ node: v }) => ({
-          id: v.id,
-          title: v.title,
-          price: parseFloat(v.price.amount),
-          available: v.availableForSale
-        }))
-      };
-    });
 
     return new Response(
       JSON.stringify({
-        collection: {
-          id: collection.id,
-          title: collection.title,
-          handle: collection.handle,
-          description: collection.description
-        },
-        products
+        collections: allCollections
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },

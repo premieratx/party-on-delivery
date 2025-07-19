@@ -124,8 +124,8 @@ serve(async (req) => {
 
     // Prepare line items for Shopify order
     const lineItems = cartItems.map((item: any) => ({
-      title: item.name,
-      price: item.price.replace('$', ''),
+      title: item.title || item.name,
+      price: item.price.toString(), // Convert number to string for Shopify
       quantity: item.quantity,
       requires_shipping: true,
     }));

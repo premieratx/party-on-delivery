@@ -10,6 +10,7 @@ export type DeliveryStep = 'age-verify' | 'schedule' | 'products' | 'cart' | 'ch
 export interface CartItem {
   id: string;
   title: string;
+  name: string; // Add name field to match what's needed for Shopify
   price: number;
   image: string;
   quantity: number;
