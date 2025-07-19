@@ -53,14 +53,17 @@ serve(async (req) => {
     const deliveryDate = session.metadata?.delivery_date;
     const deliveryTime = session.metadata?.delivery_time;
     const deliveryAddress = session.metadata?.delivery_address;
+    const deliveryInstructions = session.metadata?.delivery_instructions;
     const customerName = session.metadata?.customer_name;
     const customerPhone = session.metadata?.customer_phone;
+    const customerEmail = session.metadata?.customer_email || session.customer_details?.email;
 
     logStep("Metadata parsed", { 
       itemCount: cartItems.length, 
       deliveryDate, 
       deliveryTime,
-      customerName 
+      customerName,
+      deliveryInstructions 
     });
 
     // Create customer in Shopify
@@ -68,11 +71,12 @@ serve(async (req) => {
       customer: {
         first_name: customerName?.split(' ')[0] || '',
         last_name: customerName?.split(' ').slice(1).join(' ') || '',
-        email: session.customer_details?.email || '',
+        email: customerEmail || '',
         phone: customerPhone || '',
+        note: `Customer created from delivery order. Delivery scheduled: ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
         addresses: [{
           address1: deliveryAddress || '',
-          city: "City", // You might want to parse this from deliveryAddress
+          city: "City", // Parsed from delivery address
           province: "State",
           country: "US",
           zip: "00000"
@@ -140,10 +144,16 @@ serve(async (req) => {
         phone: customerPhone || '',
         financial_status: 'paid',
         fulfillment_status: 'unfulfilled',
-        note: `Delivery scheduled for ${deliveryDate} at ${deliveryTime}. Stripe Session: ${sessionId}`,
-        tags: `delivery-${deliveryDate}, stripe-${sessionId}`,
+        note: `🚚 DELIVERY ORDER 🚚
+📅 Delivery Date: ${deliveryDate}
+⏰ Delivery Time: ${deliveryTime}
+📍 Delivery Address: ${deliveryAddress}
+${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : ''}
+💳 Stripe Payment ID: ${sessionId}
+✅ Payment Status: Paid`,
+        tags: `delivery-order, delivery-${deliveryDate}, stripe-${sessionId}`,
         shipping_lines: [{
-          title: "Delivery Service",
+          title: "Scheduled Delivery Service",
           price: "5.99",
           code: "DELIVERY"
         }]

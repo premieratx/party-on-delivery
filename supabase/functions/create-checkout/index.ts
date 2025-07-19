@@ -86,14 +86,17 @@ serve(async (req) => {
       customer_email: customerId ? undefined : customerInfo.email,
       line_items: lineItems,
       mode: "payment",
+      billing_address_collection: "auto", // Stripe will collect billing if needed
       success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {
         delivery_date: deliveryInfo.date,
         delivery_time: deliveryInfo.time,
         delivery_address: deliveryInfo.address,
+        delivery_instructions: addressInfo?.instructions || '',
         customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
         customer_phone: customerInfo.phone,
+        customer_email: customerInfo.email,
         cart_items: JSON.stringify(cartItems),
       },
     });
