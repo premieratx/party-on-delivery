@@ -486,7 +486,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                               return `${variantId}:${item.quantity}`;
                             }).filter(item => !item.startsWith(':')).join(',');
                             
-                            const checkoutUrl = `https://thecannacorp.myshopify.com/cart/${checkoutItems}`;
+                            const checkoutUrl = `https://premier-concierge.myshopify.com/cart/${checkoutItems}`;
                             console.log('Processing payment with items:', checkoutItems);
                             
                             // Simulate payment processing
@@ -543,7 +543,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         ].filter(Boolean).join('\n'));
                         
                         // Redirect to Shopify cart with all info
-                        const checkoutUrl = `https://thecannacorp.myshopify.com/cart/${lineItems}?note=${orderNote}`;
+                        const checkoutUrl = `https://premier-concierge.myshopify.com/cart/${lineItems}?note=${orderNote}`;
                         console.log('Redirecting to:', checkoutUrl);
                         window.open(checkoutUrl, '_blank');
                       }}
