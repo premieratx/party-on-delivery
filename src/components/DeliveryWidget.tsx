@@ -28,6 +28,9 @@ export interface DeliveryInfo {
 }
 
 export const DeliveryWidget: React.FC = () => {
+  // Check for persistent add to order flag
+  const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
+  
   const [currentStep, setCurrentStep] = useState<DeliveryStep>('order-continuation');
   const [isAgeVerified, setIsAgeVerified] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
@@ -39,7 +42,7 @@ export const DeliveryWidget: React.FC = () => {
   const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('partyondelivery_cart', []);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
-  const [isAddingToOrder, setIsAddingToOrder] = useState(false);
+  const [isAddingToOrder, setIsAddingToOrder] = useState(addToOrderFlag); // Initialize based on flag
   const [useSameAddress, setUseSameAddress] = useState(false);
   
   // State for tracking cart calculations (for cart/checkout sync)
@@ -78,10 +81,14 @@ export const DeliveryWidget: React.FC = () => {
   useEffect(() => {
     const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order');
     if (addToOrderFlag === 'true' && validLastOrderInfo) {
-      // Clear the flag immediately to prevent repeated triggering
-      localStorage.removeItem('partyondelivery_add_to_order');
+      // DON'T clear the flag - it should persist until delivery date/time passes
       // Start the add to order flow
       handleAddToOrder();
+    }
+    
+    // Clean up expired add to order flag if delivery has passed
+    if (addToOrderFlag === 'true' && !validLastOrderInfo) {
+      localStorage.removeItem('partyondelivery_add_to_order');
     }
   }, [validLastOrderInfo]);
 
@@ -89,6 +96,8 @@ export const DeliveryWidget: React.FC = () => {
     // Clear cart and start fresh
     setCartItems([]);
     setIsAddingToOrder(false);
+    // Clear the add to order flag when starting a completely new order
+    localStorage.removeItem('partyondelivery_add_to_order');
     setCurrentStep('age-verify');
   };
 
