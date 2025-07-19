@@ -20,8 +20,8 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { cartItems, deliveryInfo, customerInfo } = await req.json();
-    logStep("Request data received", { cartItems: cartItems?.length, deliveryInfo, customerInfo });
+    const { cartItems, deliveryInfo, customerInfo, appliedDiscount, tipAmount } = await req.json();
+    logStep("Request data received", { cartItems: cartItems?.length, deliveryInfo, customerInfo, appliedDiscount, tipAmount });
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -33,9 +33,19 @@ serve(async (req) => {
     const subtotal = cartItems.reduce((sum: number, item: any) => {
       return sum + (parseFloat(item.price.replace('$', '')) * item.quantity);
     }, 0);
-    const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20; // $20 or 10% of subtotal
+    
+    // Apply discount to subtotal if applicable
+    const discountedSubtotal = appliedDiscount?.type === 'percentage' 
+      ? subtotal * (1 - appliedDiscount.value / 100)
+      : subtotal;
+    
+    // Calculate delivery fee (based on original subtotal, not discounted)
+    const originalDeliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+    const deliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
+    
     const salesTax = subtotal * 0.0825; // 8.25% sales tax
-    const totalAmount = Math.round((subtotal + deliveryFee + salesTax) * 100); // Convert to cents
+    const finalTipAmount = tipAmount || 0;
+    const totalAmount = Math.round((discountedSubtotal + deliveryFee + salesTax + finalTipAmount) * 100); // Convert to cents
 
     logStep("Amount calculated", { subtotal, deliveryFee, salesTax, totalAmount });
 
@@ -66,18 +76,47 @@ serve(async (req) => {
       quantity: item.quantity,
     }));
 
-    // Add delivery fee as a line item
-    lineItems.push({
-      price_data: {
-        currency: "usd",
-        product_data: {
-          name: subtotal >= 200 ? "Delivery Fee (10%)" : "Delivery Fee",
-          description: `Delivery to ${deliveryInfo.address}`,
+    // Add discount as negative line item if applicable
+    if (appliedDiscount?.type === 'percentage') {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `Discount (${appliedDiscount.code} - ${appliedDiscount.value}% off)`,
+            description: `${appliedDiscount.value}% discount applied`,
+          },
+          unit_amount: -Math.round((subtotal * appliedDiscount.value / 100) * 100),
         },
-        unit_amount: Math.round(deliveryFee * 100),
-      },
-      quantity: 1,
-    });
+        quantity: 1,
+      });
+    }
+
+    // Add delivery fee as a line item (only if not free shipping)
+    if (deliveryFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: subtotal >= 200 ? "Delivery Fee (10%)" : "Delivery Fee",
+            description: `Delivery to ${deliveryInfo.address}`,
+          },
+          unit_amount: Math.round(deliveryFee * 100),
+        },
+        quantity: 1,
+      });
+    } else if (appliedDiscount?.type === 'free_shipping') {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `Free Shipping (${appliedDiscount.code})`,
+            description: "Delivery fee waived with discount code",
+          },
+          unit_amount: 0,
+        },
+        quantity: 1,
+      });
+    }
 
     // Add sales tax as a line item
     lineItems.push({
@@ -91,6 +130,21 @@ serve(async (req) => {
       },
       quantity: 1,
     });
+
+    // Add tip as a line item if provided
+    if (finalTipAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Driver Tip",
+            description: "Tip for delivery driver",
+          },
+          unit_amount: Math.round(finalTipAmount * 100),
+        },
+        quantity: 1,
+      });
+    }
 
     logStep("Line items prepared", { itemCount: lineItems.length });
 

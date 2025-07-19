@@ -96,7 +96,46 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const salesTax = subtotal * 0.0825;
   const [tipAmount, setTipAmount] = useState(0);
   const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
-  const finalTotal = subtotal + deliveryFee + salesTax + tipAmount;
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+  
+  // Calculate discounted subtotal
+  const discountedSubtotal = appliedDiscount?.type === 'percentage' 
+    ? subtotal * (1 - appliedDiscount.value / 100)
+    : subtotal;
+  
+  // Calculate delivery fee (based on original subtotal, not discounted)
+  const originalDeliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
+  
+  const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
+
+  // Validate and apply discount codes
+  const validateDiscountCode = (code: string) => {
+    const upperCode = code.toUpperCase();
+    switch (upperCode) {
+      case 'PREMIER2025':
+        return { code: upperCode, type: 'free_shipping' as const, value: 0 };
+      case 'PARTYON10':
+        return { code: upperCode, type: 'percentage' as const, value: 10 };
+      default:
+        return null;
+    }
+  };
+
+  const handleApplyDiscount = () => {
+    const discount = validateDiscountCode(discountCode);
+    if (discount) {
+      setAppliedDiscount(discount);
+    } else {
+      alert('Invalid discount code');
+    }
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCode('');
+  };
 
   const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
     const newInfo = { ...deliveryInfo, [field]: value };
@@ -138,7 +177,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             date: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
             time: deliveryInfo.timeSlot || ''
           },
-          customerInfo
+          customerInfo,
+          appliedDiscount,
+          tipAmount
         }
       });
 
@@ -678,14 +719,68 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 
                 <Separator />
                 
+                {/* Discount Code Section */}
+                <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                  <Label className="text-sm font-medium">Discount Code</Label>
+                  {!appliedDiscount ? (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter code"
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                        className="flex-1"
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleApplyDiscount}
+                        disabled={!discountCode}
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-2 bg-green-100 rounded border border-green-300">
+                      <span className="text-sm font-medium text-green-800">
+                        {appliedDiscount.code} applied
+                        {appliedDiscount.type === 'percentage' && ` (${appliedDiscount.value}% off)`}
+                        {appliedDiscount.type === 'free_shipping' && ' (Free shipping)'}
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={handleRemoveDiscount}
+                        className="text-green-800 hover:text-green-900"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                
+                <Separator />
+                
                  <div className="space-y-2">
                    <div className="flex justify-between">
                      <span>Subtotal</span>
                      <span>${subtotal.toFixed(2)}</span>
                    </div>
+                   {appliedDiscount?.type === 'percentage' && (
+                     <div className="flex justify-between text-green-600">
+                       <span>Discount ({appliedDiscount.value}% off)</span>
+                       <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
+                     </div>
+                   )}
                    <div className="flex justify-between">
                      <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
-                     <span>${deliveryFee.toFixed(2)}</span>
+                     <div className="flex items-center gap-2">
+                       {appliedDiscount?.type === 'free_shipping' && originalDeliveryFee > 0 && (
+                         <span className="text-sm text-muted-foreground line-through">${originalDeliveryFee.toFixed(2)}</span>
+                       )}
+                       <span className={appliedDiscount?.type === 'free_shipping' && originalDeliveryFee > 0 ? 'text-green-600' : ''}>
+                         ${finalDeliveryFee.toFixed(2)}
+                       </span>
+                     </div>
                    </div>
                    <div className="flex justify-between">
                      <span>Sales Tax (8.25%)</span>
