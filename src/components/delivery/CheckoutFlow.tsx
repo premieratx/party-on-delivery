@@ -295,10 +295,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               <div className="space-y-3">
                  {confirmedDateTime && (
                    <div className="p-3 border border-black rounded-lg bg-muted/30">
-                     <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-start gap-2">
-                       <span>Delivery:</span>
-                       <span className="text-foreground">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} • {deliveryInfo.timeSlot}</span>
-                       {useSameAddress && <span className="text-sm text-green-600">(Same as previous order)</span>}
+                     <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-between gap-2">
+                       <div className="flex flex-wrap items-center gap-2">
+                         <span>Delivery:</span>
+                         <span className="text-foreground">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} • {deliveryInfo.timeSlot}</span>
+                         {useSameAddress && <span className="text-sm text-green-600">(Same as previous order)</span>}
+                       </div>
+                       <Button 
+                         variant="outline" 
+                         size="sm" 
+                         onClick={() => {
+                           setConfirmedDateTime(false);
+                           setCurrentStep('datetime');
+                         }}
+                       >
+                         Edit
+                       </Button>
                      </div>
                    </div>
                  )}
@@ -306,13 +318,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                  {confirmedAddress && (
                    <div className="p-3 border border-black rounded-lg bg-muted/30">
                      <div className="text-lg font-semibold text-primary">
-                       <div className="flex flex-wrap items-center justify-start gap-2">
-                         <span>Address:</span>
-                         <span className="text-foreground">{addressInfo.street} • {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
-                         {useSameAddress && <span className="text-sm text-green-600">(Same as previous order)</span>}
+                       <div className="flex flex-wrap items-center justify-between gap-2">
+                         <div className="flex flex-wrap items-center gap-2">
+                           <span>Address:</span>
+                           <span className="text-foreground">{addressInfo.street} • {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
+                           {useSameAddress && <span className="text-sm text-green-600">(Same as previous order)</span>}
+                         </div>
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           onClick={() => {
+                             setConfirmedAddress(false);
+                             setCurrentStep('address');
+                           }}
+                         >
+                           Edit
+                         </Button>
                        </div>
                        {addressInfo.instructions && (
-                         <div className="text-sm font-normal text-foreground mt-1 ml-20">
+                         <div className="text-sm font-normal text-foreground mt-1">
                            {addressInfo.instructions}
                          </div>
                        )}
@@ -322,9 +346,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 
                 {confirmedCustomer && (
                   <div className="p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-start gap-2">
-                      <span>Contact:</span>
-                      <span className="text-foreground">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone} • {customerInfo.email}</span>
+                    <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span>Contact:</span>
+                        <span className="text-foreground">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone} • {customerInfo.email}</span>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setConfirmedCustomer(false);
+                          setCurrentStep('customer');
+                        }}
+                      >
+                        Edit
+                      </Button>
                     </div>
                   </div>
                 )}

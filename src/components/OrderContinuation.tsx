@@ -33,7 +33,7 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
               <img 
                 src={logoImage} 
                 alt="Party On Delivery Logo" 
-                className="w-24 h-24 mx-auto mb-4"
+                className="w-48 h-48 mx-auto mb-4"
               />
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
