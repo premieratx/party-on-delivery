@@ -356,7 +356,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         )}
 
         {/* Compact Order Form Layout - 5 columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {selectedCollection?.products.map((product) => (
             <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200">
               {/* Product variants handling */}
@@ -378,8 +378,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         
                         {/* Product info */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">{product.title}</h4>
-                          <p className="text-xs text-muted-foreground truncate">{variant.title}</p>
+                          <h4 className="font-medium text-sm">{product.title}</h4>
+                          <p className="text-xs text-muted-foreground">{variant.title}</p>
                           <Badge variant="secondary" className="text-xs mt-1">
                             ${variant.price.toFixed(2)}
                           </Badge>
@@ -436,8 +436,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   
                   {/* Product info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm truncate">{product.title}</h4>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
+                    <h4 className="font-medium text-sm">{product.title}</h4>
+                    <p className="text-xs text-muted-foreground">
                       {product.description}
                     </p>
                     <Badge variant="secondary" className="text-xs mt-1">
