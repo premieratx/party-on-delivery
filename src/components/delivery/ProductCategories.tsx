@@ -145,6 +145,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const handleNextTab = () => {
     if (selectedCategory < collections.length - 1) {
       setSelectedCategory(selectedCategory + 1);
+      // Scroll to top when changing tabs
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       // On the last tab, show checkout confirmation
       setShowCheckoutDialog(true);
@@ -249,7 +251,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 return (
                   <button
                     key={collection.handle}
-                    onClick={() => setSelectedCategory(index)}
+                    onClick={() => {
+                      setSelectedCategory(index);
+                      // Scroll to top when switching tabs
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
                     className={`relative h-20 sm:h-32 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       isActive 
                         ? 'border-primary shadow-lg scale-105 bg-primary/10' 

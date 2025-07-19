@@ -101,6 +101,8 @@ export const DeliveryWidget: React.FC = () => {
     // Clear the add to order flag when starting a completely new order
     localStorage.removeItem('partyondelivery_add_to_order');
     setCurrentStep('products');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAddToOrder = () => {
@@ -128,29 +130,41 @@ export const DeliveryWidget: React.FC = () => {
     } else {
       setCurrentStep('products');
     }
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleConfirmSameAddress = () => {
     setUseSameAddress(true);
     setCurrentStep('products');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleUseNewAddress = () => {
     setUseSameAddress(false);
     setCurrentStep('products');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToAddressConfirmation = () => {
     setCurrentStep('address-confirmation');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
 
   const handleBackToProducts = () => {
     setCurrentStep('products');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToOrderContinuation = () => {
     setCurrentStep('order-continuation');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
@@ -194,6 +208,8 @@ export const DeliveryWidget: React.FC = () => {
 
   const handleCheckout = () => {
     setCurrentStep('checkout');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (currentStep === 'order-continuation') {
