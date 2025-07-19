@@ -60,10 +60,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Step-based order flow mapping to collection handles
   const stepMapping = [
-    { step: 1, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg },
-    { step: 2, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg },
-    { step: 3, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg },
-    { step: 4, title: 'Party Supplies', handle: 'party-supplies', backgroundImage: partySuppliesCategoryBg }
+    { step: 1, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
+    { step: 2, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
+    { step: 3, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
+    { step: 4, title: 'Party Supplies', handle: 'party-supplies', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Party Supplies' }
   ];
 
   useEffect(() => {
@@ -191,26 +191,26 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      {/* Build Your Party Header */}
+      {/* Build Your Party Header - Mobile optimized */}
       <div className="sticky top-0 bg-background/95 backdrop-blur-md border-b z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Build Your Party
             </h1>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3">
               <Button 
                 variant="default" 
-                size="lg"
+                size="sm"
                 onClick={onOpenCart}
-                className="relative"
+                className="relative text-xs sm:text-sm px-2 sm:px-4"
               >
-                <ShoppingCart className="w-5 h-5" />
-                Cart
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline ml-1">Cart</span>
                 {cartItemCount > 0 && (
                   <Badge 
-                    className={`absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[24px] h-6 rounded-full text-xs font-bold transition-all duration-300 ${
+                    className={`absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-accent text-accent-foreground min-w-[20px] sm:min-w-[24px] h-5 sm:h-6 rounded-full text-xs font-bold transition-all duration-300 ${
                       cartCountAnimation ? 'animate-pulse scale-125' : ''
                     }`}
                   >
@@ -221,10 +221,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               
               <Button 
                 variant="outline" 
-                size="lg"
+                size="sm"
                 onClick={onProceedToCheckout}
                 disabled={cartItemCount === 0}
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-xs sm:text-sm px-2 sm:px-4"
               >
                 Checkout
               </Button>
@@ -232,10 +232,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         </div>
         
-        {/* Step-based Navigation */}
+        {/* Step-based Navigation - Condensed for mobile */}
         <div className="border-t bg-background/95 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-6">
+            <div className="grid grid-cols-4 gap-1 sm:gap-4">
               {collections.map((collection, index) => {
                 const stepInfo = stepMapping.find(step => step.handle === collection.handle);
                 const stepTitle = stepInfo?.title || collection.title;
@@ -247,27 +247,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <button
                     key={collection.handle}
                     onClick={() => setSelectedCategory(index)}
-                    className={`relative h-32 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                    className={`relative h-16 sm:h-32 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       isActive 
                         ? 'border-primary shadow-lg scale-105' 
                         : 'border-border hover:border-primary/50 hover:scale-102'
-                    }`}
+                    } bg-muted sm:bg-transparent`}
                     style={{
-                      backgroundImage: `url(${backgroundImage})`,
+                      // Background image only on larger screens
+                      backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }}
                   >
-                    {/* Dark overlay with 60% opacity */}
-                    <div className="absolute inset-0 bg-black/60"></div>
+                    {/* Dark overlay with 60% opacity - only on desktop */}
+                    <div className="absolute inset-0 bg-black/60 hidden sm:block"></div>
                     
                     {/* Content */}
-                    <div className="relative z-10 h-full flex items-center justify-between p-4">
-                      {/* Large number pushed far left */}
-                      <div className="text-white font-bold text-4xl">{stepNumber}</div>
+                    <div className="relative z-10 h-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-1 sm:p-4">
+                      {/* Mobile layout: stacked */}
+                      <div className="sm:hidden flex flex-col items-center justify-center h-full">
+                        <div className="text-primary font-bold text-lg">{stepNumber}</div>
+                        <div className="text-xs font-medium text-center leading-tight">{stepTitle}</div>
+                      </div>
                       
-                      {/* Category name - bigger and positioned right */}
-                      <div className="text-white font-bold text-xl text-right">{stepTitle}</div>
+                      {/* Desktop layout: side by side */}
+                      <div className="hidden sm:block text-white font-bold text-4xl">{stepNumber}</div>
+                      <div className="hidden sm:block text-white font-bold text-xl text-right">{stepTitle}</div>
                     </div>
                   </button>
                 );
@@ -277,18 +282,26 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
+      {/* Page Title with Background Image */}
+      {selectedCollection && (
+        <div className="relative h-32 sm:h-48 overflow-hidden">
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${stepMapping.find(step => step.handle === selectedCollection.handle)?.backgroundImage})`,
+            }}
+          >
+            <div className="absolute inset-0 bg-black/60"></div>
+          </div>
+          <div className="relative z-10 h-full flex items-center justify-center">
+            <h2 className="text-white text-2xl sm:text-4xl font-bold text-center px-4">
+              {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
+            </h2>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto p-4 pt-8">
-        {/* Collection Info */}
-        {selectedCollection && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {selectedCollection.title}
-              </CardTitle>
-              <CardDescription>{selectedCollection.description}</CardDescription>
-            </CardHeader>
-          </Card>
-        )}
 
         {/* Compact Order Form Layout - 5 columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
