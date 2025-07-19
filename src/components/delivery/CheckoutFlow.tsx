@@ -422,12 +422,38 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Working Checkout Button */}
-                  <div className="w-full space-y-4">
+                  {/* ShopPay Web Component */}
+                  <div className="w-full">
+                    <shopify-accelerated-checkout
+                      shop-domain="thecannacorp.myshopify.com"
+                      variant-ids={cartItems.map(item => item.id).join(',')}
+                      quantities={cartItems.map(item => item.quantity).join(',')}
+                      onLoad={() => {
+                        console.log('ShopPay component loaded');
+                        setIsShopPayLoading(false);
+                      }}
+                      onSuccess={(event: any) => {
+                        console.log('ShopPay payment successful:', event);
+                        alert('Payment successful! Order confirmed.');
+                      }}
+                      onError={(event: any) => {
+                        console.error('ShopPay error:', event);
+                        alert('Payment failed. Please try again.');
+                      }}
+                      style={{ width: '100%', minHeight: '200px' }}
+                    />
+                  </div>
+                  
+                  {/* Fallback Manual Checkout */}
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground mb-3 text-center">
+                      Or complete your order manually
+                    </p>
                     <Button 
-                      className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-semibold py-4 text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                      variant="outline"
+                      className="w-full"
                       onClick={() => {
-                        // Create Shopify cart with proper variant IDs
+                        // Create cart line items
                         const lineItems = cartItems.map(item => {
                           // Extract variant ID from the product data
                           const variantId = item.variant || item.id;
@@ -447,7 +473,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         ].filter(Boolean).join('\n'));
                         
                         // Redirect to Shopify cart with all info
-                        const checkoutUrl = `https://premier-concierge.myshopify.com/cart/${lineItems}?note=${orderNote}`;
+                        const checkoutUrl = `https://thecannacorp.myshopify.com/cart/${lineItems}?note=${orderNote}`;
                         console.log('Redirecting to:', checkoutUrl);
                         window.open(checkoutUrl, '_blank');
                       }}
