@@ -156,45 +156,34 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               <div className="space-y-3">
                 {confirmedDateTime && (
                   <div className="p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4" />
-                        <span className="font-medium">Delivery:</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")}</div>
-                        <div className="text-sm text-muted-foreground">{deliveryInfo.timeSlot}</div>
-                      </div>
+                    <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-start gap-2">
+                      <span>Delivery:</span>
+                      <span className="text-foreground">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} • {deliveryInfo.timeSlot}</span>
                     </div>
                   </div>
                 )}
                 
                 {confirmedAddress && (
                   <div className="p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <span className="font-medium">Address:</span>
+                    <div className="text-lg font-semibold text-primary">
+                      <div className="flex flex-wrap items-center justify-start gap-2">
+                        <span>Address:</span>
+                        <span className="text-foreground">{addressInfo.street} • {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
                       </div>
-                      <div className="text-right text-sm">
-                        <div>{addressInfo.street}</div>
-                        <div>{addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</div>
-                      </div>
+                      {addressInfo.instructions && (
+                        <div className="text-sm font-normal text-foreground mt-1 ml-20">
+                          {addressInfo.instructions}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
                 
                 {confirmedCustomer && (
                   <div className="p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        <span className="font-medium">Contact:</span>
-                      </div>
-                      <div className="text-right text-sm">
-                        <div>{customerInfo.firstName} {customerInfo.lastName}</div>
-                        <div>{customerInfo.phone} • {customerInfo.email}</div>
-                      </div>
+                    <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-start gap-2">
+                      <span>Contact:</span>
+                      <span className="text-foreground">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone} • {customerInfo.email}</span>
                     </div>
                   </div>
                 )}
