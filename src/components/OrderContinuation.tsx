@@ -41,6 +41,11 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
               <div>
                 <p className="text-sm text-muted-foreground">Delivery Address:</p>
                 <p className="font-medium">{lastOrderInfo.address || 'Address not saved'}</p>
+                {lastOrderInfo.instructions && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Instructions: {lastOrderInfo.instructions}
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Delivery Date & Time:</p>

@@ -20,7 +20,7 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { paymentIntentId } = await req.json();
+    const { paymentIntentId, isAddingToOrder, useSameAddress } = await req.json();
     if (!paymentIntentId) {
       throw new Error("Payment Intent ID is required");
     }
@@ -278,6 +278,14 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
         // Update Shopify order with group information
         try {
           const groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
+          
+          // Build tags array
+          const tagArray = [groupTags, 'bundle-ready'];
+          if (isAddingToOrder && useSameAddress) {
+            tagArray.push('recentpurchase');
+          }
+          const newTags = tagArray.join(', ');
+          
           const updateUrl = `https://${shopifyStore}/admin/api/2025-01/orders/${orderResult.order.id}.json`;
           
           await fetch(updateUrl, {
@@ -289,7 +297,7 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
             body: JSON.stringify({
               order: {
                 id: orderResult.order.id,
-                tags: `${orderResult.order.tags || ''}, ${groupTags}, bundle-ready`.replace(/^, /, ''),
+                tags: `${orderResult.order.tags || ''}, ${newTags}`.replace(/^, /, ''),
                 note: `${orderResult.order.note || ''}
 
 🔗 ORDER GROUP: ${orderGroupId}

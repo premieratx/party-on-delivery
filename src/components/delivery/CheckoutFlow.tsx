@@ -134,7 +134,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   // Pricing calculations
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  // Free delivery for bundled orders (adding to same address)
+  const deliveryFee = (isAddingToOrder && useSameAddress) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20);
   const salesTax = subtotal * 0.0825;
   const [tipAmount, setTipAmount] = useState(0);
   const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
@@ -147,7 +148,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     : subtotal;
   
   // Calculate delivery fee (based on original subtotal, not discounted)
-  const originalDeliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  const originalDeliveryFee = (isAddingToOrder && useSameAddress) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20);
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
   
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
@@ -216,7 +217,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             customerInfo,
             addressInfo,
             cartItems,
-            deliveryInfo
+            deliveryInfo,
+            isAddingToOrder,
+            useSameAddress
           }
         });
         
@@ -688,17 +691,20 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                        <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
                      </div>
                    )}
-                   <div className="flex justify-between">
-                     <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
-                     <div className="flex items-center gap-2">
-                       {appliedDiscount?.type === 'free_shipping' && originalDeliveryFee > 0 && (
-                         <span className="text-sm text-muted-foreground line-through">${originalDeliveryFee.toFixed(2)}</span>
-                       )}
-                       <span className={appliedDiscount?.type === 'free_shipping' && originalDeliveryFee > 0 ? 'text-green-600' : ''}>
-                         ${finalDeliveryFee.toFixed(2)}
-                       </span>
-                     </div>
-                   </div>
+                    <div className="flex justify-between">
+                      <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+                      <div className="flex items-center gap-2">
+                        {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress)) && originalDeliveryFee > 0 && (
+                          <span className="text-sm text-muted-foreground line-through">${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
+                        )}
+                        <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress)) && originalDeliveryFee > 0 ? 'text-green-600' : ''}>
+                          ${finalDeliveryFee.toFixed(2)}
+                          {(isAddingToOrder && useSameAddress) && finalDeliveryFee === 0 && (
+                            <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
                    <div className="flex justify-between">
                      <span>Sales Tax (8.25%)</span>
                      <span>${salesTax.toFixed(2)}</span>

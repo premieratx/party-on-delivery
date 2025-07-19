@@ -13,6 +13,7 @@ interface AddressConfirmationProps {
     address?: string;
     deliveryDate?: string;
     deliveryTime?: string;
+    instructions?: string;
   };
 }
 
@@ -41,6 +42,11 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
             <div className="p-4 bg-muted/30 rounded-lg">
               <p className="text-sm text-muted-foreground mb-1">Previous delivery address:</p>
               <p className="font-medium">{lastOrderInfo.address}</p>
+              {lastOrderInfo.instructions && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Instructions: {lastOrderInfo.instructions}
+                </p>
+              )}
               {lastOrderInfo.deliveryDate && lastOrderInfo.deliveryTime && (
                 <p className="text-sm text-muted-foreground mt-2">
                   Last delivery: {lastOrderInfo.deliveryDate} at {lastOrderInfo.deliveryTime}
