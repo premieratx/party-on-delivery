@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 // Declare Shopify Web Components types
 // No need for Shopify components in JSX since we're using embedded form
@@ -116,9 +117,40 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
 
-  const handleCompleteOrder = () => {
-    console.log('Order completed with all information');
-    alert('Order placed successfully!');
+  const handleCompleteOrder = async () => {
+    console.log('Completing order...');
+    setIsPaymentProcessing(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          cartItems,
+          deliveryInfo: {
+            ...deliveryInfo,
+            address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+            date: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+            time: deliveryInfo.timeSlot || ''
+          },
+          customerInfo
+        }
+      });
+
+      if (error) {
+        console.error('Error creating checkout:', error);
+        alert('Error creating checkout. Please try again.');
+        return;
+      }
+
+      // Redirect to Stripe checkout
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error creating checkout. Please try again.');
+    } finally {
+      setIsPaymentProcessing(false);
+    }
   };
 
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
@@ -475,27 +507,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           className="w-full mt-6"
                           size="lg"
                           disabled={isPaymentProcessing}
-                          onClick={() => {
-                            setIsPaymentProcessing(true);
-                            
-                            // Create Shopify checkout URL with all items
-                            const checkoutItems = cartItems.map(item => {
-                              const variantId = item.variant?.toString().includes('ProductVariant/') 
-                                ? item.variant.toString().split('/').pop() 
-                                : item.variant?.toString() || '';
-                              return `${variantId}:${item.quantity}`;
-                            }).filter(item => !item.startsWith(':')).join(',');
-                            
-                            const checkoutUrl = `https://premier-concierge.myshopify.com/cart/${checkoutItems}`;
-                            console.log('Processing payment with items:', checkoutItems);
-                            
-                            // Simulate payment processing
-                            setTimeout(() => {
-                              alert('Payment processed! Redirecting to complete your order...');
-                              window.open(checkoutUrl, '_blank');
-                              setIsPaymentProcessing(false);
-                            }, 2000);
-                          }}
+                          onClick={handleCompleteOrder}
                         >
                           {isPaymentProcessing ? (
                             <>
