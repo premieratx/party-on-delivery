@@ -440,7 +440,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           <script>
                             if (!window.customElements.get('shopify-accelerated-checkout')) {
                               const script = document.createElement('script');
-                              script.src = 'https://cdn.shopify.com/shopifycloud/web/assets/v1/accelerated-checkout-react.en.js';
+                              script.src = 'https://cdn.shopify.com/shopifycloud/web/assets/v1/index.js';
                               script.type = 'module';
                               script.onload = () => {
                                 console.log('Shopify Accelerated Checkout script loaded successfully');
