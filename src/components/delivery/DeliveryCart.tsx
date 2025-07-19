@@ -47,6 +47,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
     : subtotal;
   
   // Calculate delivery fee (same logic as checkout) - remove free delivery if changes detected
+  // Note: For cart display, we use standard pricing. Distance-based pricing is calculated in checkout.
   const originalDeliveryFee = (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20);
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
   

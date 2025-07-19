@@ -19,6 +19,7 @@ import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
+import { calculateDistanceBasedDeliveryFee, getStandardDeliveryFee } from '@/utils/deliveryPricing';
 
 interface CheckoutFlowProps {
   cartItems: CartItem[];
@@ -187,8 +188,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   // Pricing calculations
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  // Free delivery for bundled orders (adding to same address) - but remove if changes detected
-  const deliveryFee = (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20);
+  // Distance-based delivery fee state
+  const [deliveryPricing, setDeliveryPricing] = useState<{fee: number, minimumOrder: number, isDistanceBased: boolean, distance?: number}>({
+    fee: (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20),
+    minimumOrder: 0,
+    isDistanceBased: false
+  });
   const salesTax = subtotal * 0.0825;
   const [tipAmount, setTipAmount] = useState(0);
   const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
@@ -200,9 +205,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  // Calculate delivery fee (based on original subtotal, not discounted) - but remove if changes detected
-  const originalDeliveryFee = (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20);
-  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
+  // Calculate delivery fee using distance-based pricing
+  const baseDeliveryFee = (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : deliveryPricing.fee;
+  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : baseDeliveryFee;
   
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
 
@@ -259,8 +264,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
 
-  const handleConfirmAddress = () => {
+  const handleConfirmAddress = async () => {
     if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
+      // Calculate distance-based delivery pricing
+      if (!isAddingToOrder || hasChanges) {
+        try {
+          const pricing = await calculateDistanceBasedDeliveryFee(
+            addressInfo.street,
+            addressInfo.city,
+            addressInfo.state,
+            addressInfo.zipCode,
+            subtotal
+          );
+          setDeliveryPricing(pricing);
+        } catch (error) {
+          console.error('Error calculating distance-based pricing:', error);
+          // Use standard pricing as fallback
+          setDeliveryPricing(getStandardDeliveryFee(subtotal));
+        }
+      }
+      
       setConfirmedAddress(true);
       setCurrentStep('customer');
     }
@@ -823,17 +846,20 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                    )}
                      <div className="flex justify-between">
                        <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
-                       <div className="flex items-center gap-2">
-                         {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && originalDeliveryFee > 0 && (
-                           <span className="text-sm text-muted-foreground line-through">${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
-                         )}
-                         <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && originalDeliveryFee > 0 ? 'text-green-600' : ''}>
-                           ${finalDeliveryFee.toFixed(2)}
-                           {(isAddingToOrder && useSameAddress && !hasChanges) && finalDeliveryFee === 0 && (
-                             <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
-                           )}
-                         </span>
-                       </div>
+                        <div className="flex items-center gap-2">
+                          {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 && (
+                            <span className="text-sm text-muted-foreground line-through">${baseDeliveryFee.toFixed(2)}</span>
+                          )}
+                          <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
+                            ${finalDeliveryFee.toFixed(2)}
+                            {(isAddingToOrder && useSameAddress && !hasChanges) && finalDeliveryFee === 0 && (
+                              <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                            )}
+                            {deliveryPricing.isDistanceBased && deliveryPricing.distance && (
+                              <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>
+                            )}
+                          </span>
+                        </div>
                      </div>
                    <div className="flex justify-between">
                      <span>Sales Tax (8.25%)</span>
