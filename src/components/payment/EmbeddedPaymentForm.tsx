@@ -18,7 +18,7 @@ interface PaymentFormProps {
   customerInfo: any;
   deliveryInfo: any;
   appliedDiscount: any;
-  onPaymentSuccess: () => void;
+  onPaymentSuccess: (paymentIntentId?: string) => void;
 }
 
 export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
@@ -95,9 +95,14 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       });
 
       if (paymentError) {
+        console.error('Payment error:', paymentError);
         setPaymentError(paymentError.message || 'Payment failed');
       } else {
-        onPaymentSuccess();
+        console.log('Payment successful! Payment intent ID:', data.client_secret);
+        // Extract payment intent ID from client_secret
+        const paymentIntentId = data.client_secret.split('_secret_')[0];
+        console.log('Extracted payment intent ID:', paymentIntentId);
+        onPaymentSuccess(paymentIntentId);
       }
     } catch (error) {
       setPaymentError(error instanceof Error ? error.message : 'Payment failed');

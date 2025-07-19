@@ -19,12 +19,12 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { sessionId } = await req.json();
-    if (!sessionId) {
-      throw new Error("Session ID is required");
+    const { paymentIntentId } = await req.json();
+    if (!paymentIntentId) {
+      throw new Error("Payment Intent ID is required");
     }
 
-    logStep("Session ID received", { sessionId });
+    logStep("Payment Intent ID received", { paymentIntentId });
 
     // Initialize Stripe
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -32,13 +32,13 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Get session details from Stripe
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.payment_status !== 'paid') {
+    // Get payment intent details from Stripe
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status !== 'succeeded') {
       throw new Error("Payment not completed");
     }
 
-    logStep("Stripe session retrieved", { paymentStatus: session.payment_status });
+    logStep("Stripe payment intent retrieved", { status: paymentIntent.status });
 
     // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
@@ -49,14 +49,14 @@ serve(async (req) => {
     }
 
     // Parse cart items from metadata
-    const cartItems = JSON.parse(session.metadata?.cart_items || '[]');
-    const deliveryDate = session.metadata?.delivery_date;
-    const deliveryTime = session.metadata?.delivery_time;
-    const deliveryAddress = session.metadata?.delivery_address;
-    const deliveryInstructions = session.metadata?.delivery_instructions;
-    const customerName = session.metadata?.customer_name;
-    const customerPhone = session.metadata?.customer_phone;
-    const customerEmail = session.metadata?.customer_email || session.customer_details?.email;
+    const cartItems = JSON.parse(paymentIntent.metadata?.cart_items || '[]');
+    const deliveryDate = paymentIntent.metadata?.delivery_date;
+    const deliveryTime = paymentIntent.metadata?.delivery_time;
+    const deliveryAddress = paymentIntent.metadata?.delivery_address;
+    const deliveryInstructions = paymentIntent.metadata?.delivery_instructions;
+    const customerName = paymentIntent.metadata?.customer_name;
+    const customerPhone = paymentIntent.metadata?.customer_phone;
+    const customerEmail = paymentIntent.metadata?.customer_email;
 
     logStep("Metadata parsed", { 
       itemCount: cartItems.length, 
@@ -155,7 +155,7 @@ serve(async (req) => {
           zip: addressParts.zip,
           phone: customerPhone || '',
         },
-        email: session.customer_details?.email || '',
+        email: customerEmail || '',
         phone: customerPhone || '',
         financial_status: 'paid',
         fulfillment_status: 'unfulfilled',
@@ -164,9 +164,9 @@ serve(async (req) => {
 ⏰ Delivery Time: ${deliveryTime}
 📍 Delivery Address: ${deliveryAddress}
 ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : ''}
-💳 Stripe Payment ID: ${sessionId}
+💳 Stripe Payment ID: ${paymentIntentId}
 ✅ Payment Status: Paid`,
-        tags: `delivery-order, delivery-${deliveryDate}, stripe-${sessionId}`,
+        tags: `delivery-order, delivery-${deliveryDate}, stripe-${paymentIntentId}`,
         shipping_lines: [{
           title: "Scheduled Delivery Service",
           price: "5.99",
@@ -195,7 +195,7 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
         status: orderResponse.status, 
         error: errorText 
       });
-      throw new Error(`Failed to create Shopify order: ${orderText}`);
+      throw new Error(`Failed to create Shopify order: ${errorText}`);
     }
 
     const orderResult = await orderResponse.json();

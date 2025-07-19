@@ -164,9 +164,31 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
 
-  const handlePaymentSuccess = () => {
-    // Redirect to your domain
-    window.location.href = 'https://partyondelivery.com/success';
+  const handlePaymentSuccess = async (paymentIntentId?: string) => {
+    // Create Shopify order after successful payment
+    if (paymentIntentId) {
+      try {
+        console.log('Creating Shopify order for payment intent:', paymentIntentId);
+        const response = await supabase.functions.invoke('create-shopify-order', {
+          body: { paymentIntentId }
+        });
+        
+        if (response.error) {
+          console.error('Error creating Shopify order:', response.error);
+        } else {
+          console.log('Shopify order created:', response.data);
+        }
+      } catch (error) {
+        console.error('Failed to create Shopify order:', error);
+      }
+    }
+    
+    // Redirect to your domain (home page)
+    if (window.top) {
+      window.top.location.href = 'https://partyondelivery.com';
+    } else {
+      window.open('https://partyondelivery.com', '_blank');
+    }
   };
 
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
