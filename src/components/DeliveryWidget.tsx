@@ -38,12 +38,11 @@ export const DeliveryWidget: React.FC = () => {
   const handleAgeVerified = (verified: boolean) => {
     setIsAgeVerified(verified);
     if (verified) {
-      setCurrentStep('schedule');
+      setCurrentStep('products');
     }
   };
 
-  const handleScheduleComplete = (info: DeliveryInfo) => {
-    setDeliveryInfo(info);
+  const handleBackToProducts = () => {
     setCurrentStep('products');
   };
 
@@ -96,13 +95,6 @@ export const DeliveryWidget: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {currentStep === 'schedule' && (
-        <DeliveryScheduler 
-          onComplete={handleScheduleComplete}
-          deliveryInfo={deliveryInfo}
-        />
-      )}
-      
       {currentStep === 'products' && (
         <ProductCategories 
           onAddToCart={addToCart}
@@ -119,6 +111,8 @@ export const DeliveryWidget: React.FC = () => {
           cartItems={cartItems}
           deliveryInfo={deliveryInfo}
           totalPrice={getTotalPrice()}
+          onBack={handleBackToProducts}
+          onDeliveryInfoChange={setDeliveryInfo}
         />
       )}
 

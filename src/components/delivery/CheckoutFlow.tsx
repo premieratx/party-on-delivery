@@ -7,20 +7,27 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { CheckCircle, Calendar, Clock, MapPin, ShoppingBag, ExternalLink } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface CheckoutFlowProps {
   cartItems: CartItem[];
   deliveryInfo: DeliveryInfo;
   totalPrice: number;
+  onBack: () => void;
+  onDeliveryInfoChange: (info: DeliveryInfo) => void;
 }
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   cartItems,
   deliveryInfo,
-  totalPrice
+  totalPrice,
+  onBack,
+  onDeliveryInfoChange
 }) => {
   const [customerInfo, setCustomerInfo] = useState({
     email: '',
@@ -33,6 +40,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     address: '',
     instructions: ''
   });
+
+  // Available time slots
+  const timeSlots = [
+    '10:00 AM - 12:00 PM',
+    '12:00 PM - 2:00 PM', 
+    '2:00 PM - 4:00 PM',
+    '4:00 PM - 6:00 PM',
+    '6:00 PM - 8:00 PM'
+  ];
 
   const deliveryFee = 4.99;
   const finalTotal = totalPrice + deliveryFee;
@@ -64,11 +80,27 @@ Additional Notes: ${customerInfo.notes || 'None'}
     setDeliveryAddress(prev => ({ ...prev, [field]: value }));
   };
 
-  const isFormValid = customerInfo.email && customerInfo.phone && customerInfo.name && deliveryAddress.address;
+  const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
+    const newInfo = { ...deliveryInfo, [field]: value };
+    onDeliveryInfoChange(newInfo);
+  };
+
+  const isFormValid = customerInfo.email && customerInfo.phone && customerInfo.name && 
+                     deliveryAddress.address && deliveryInfo.date && deliveryInfo.timeSlot;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Back Button */}
+        <Button 
+          variant="outline" 
+          onClick={onBack}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Products
+        </Button>
+
         {/* Header */}
         <Card className="shadow-floating animate-fade-in">
           <CardHeader className="text-center">
@@ -89,23 +121,56 @@ Additional Notes: ${customerInfo.notes || 'None'}
             <Card className="shadow-card border-2 border-green-500">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
+                  <CalendarIcon className="w-5 h-5" />
                   Schedule Your Delivery
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <div>
-                    <p className="font-medium">
-                      {deliveryInfo.date ? format(deliveryInfo.date, 'EEE, MMM d, yyyy') : 'Date not set'}
-                    </p>
-                  </div>
+                {/* Date Picker */}
+                <div className="space-y-2">
+                  <Label>Delivery Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !deliveryInfo.date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={deliveryInfo.date || undefined}
+                        onSelect={(date) => updateDeliveryInfo('date', date)}
+                        disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                
-                <div className="flex items-center gap-3">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <p>{deliveryInfo.timeSlot || 'Time not set'}</p>
+
+                {/* Time Slot Picker */}
+                <div className="space-y-2">
+                  <Label>Delivery Time *</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {timeSlots.map((slot) => (
+                      <Button
+                        key={slot}
+                        variant={deliveryInfo.timeSlot === slot ? "default" : "outline"}
+                        onClick={() => updateDeliveryInfo('timeSlot', slot)}
+                        className="justify-start"
+                      >
+                        <Clock className="w-4 h-4 mr-2" />
+                        {slot}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -259,7 +324,7 @@ Additional Notes: ${customerInfo.notes || 'None'}
               
               {!isFormValid && (
                 <p className="text-sm text-destructive">
-                  Please fill in all required fields including delivery address
+                  Please fill in all required fields including delivery date, time, and address
                 </p>
               )}
             </div>
