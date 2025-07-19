@@ -1,9 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Beer, Martini, Package, Plus } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Loader2 } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  "https://lghmqfspgekjnkxefrdc.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxnaG1xZnNwZ2Vram5reGVmcmRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc0NzAzNTksImV4cCI6MjA1MzA0NjM1OX0.pjFOGnRDMb5nCtA4m6pAZfFdNhBWKhKq1I2R6Pj_D5w"
+);
+
+interface ShopifyProduct {
+  id: string;
+  title: string;
+  price: number;
+  image: string;
+  description: string;
+  handle: string;
+  variants: Array<{
+    id: string;
+    title: string;
+    price: number;
+    available: boolean;
+  }>;
+}
+
+interface ShopifyCollection {
+  id: string;
+  title: string;
+  handle: string;
+  description: string;
+  products: ShopifyProduct[];
+}
 
 interface ProductCategoriesProps {
   onAddToCart: (item: Omit<CartItem, 'quantity'>) => void;
@@ -11,96 +40,64 @@ interface ProductCategoriesProps {
   onOpenCart: () => void;
 }
 
-type Category = 'beer' | 'liquor' | 'cocktails' | 'party-supplies';
-
-interface Product {
-  id: string;
-  title: string;
-  price: number;
-  image: string;
-  category: Category;
-  description?: string;
-  variants?: string[];
-}
-
-// Mock products - in real app, these would come from Shopify
-const mockProducts: Product[] = [
-  {
-    id: 'beer-1',
-    title: 'Craft IPA 6-Pack',
-    price: 12.99,
-    image: '/api/placeholder/300/300',
-    category: 'beer',
-    description: 'Fresh hoppy IPA with citrus notes'
-  },
-  {
-    id: 'beer-2',
-    title: 'Light Beer 12-Pack',
-    price: 18.99,
-    image: '/api/placeholder/300/300',
-    category: 'beer',
-    description: 'Crisp and refreshing light beer'
-  },
-  {
-    id: 'liquor-1',
-    title: 'Premium Vodka',
-    price: 29.99,
-    image: '/api/placeholder/300/300',
-    category: 'liquor',
-    description: 'Smooth premium vodka',
-    variants: ['750ml', '1L']
-  },
-  {
-    id: 'liquor-2',
-    title: 'Whiskey Bottle',
-    price: 45.99,
-    image: '/api/placeholder/300/300',
-    category: 'liquor',
-    description: 'Rich bourbon whiskey'
-  },
-  {
-    id: 'cocktail-1',
-    title: 'Margarita Mix',
-    price: 8.99,
-    image: '/api/placeholder/300/300',
-    category: 'cocktails',
-    description: 'Ready-to-drink margarita'
-  },
-  {
-    id: 'party-1',
-    title: 'Party Cups (50ct)',
-    price: 5.99,
-    image: '/api/placeholder/300/300',
-    category: 'party-supplies',
-    description: 'Disposable party cups'
-  }
-];
-
-const categories = [
-  { id: 'beer' as Category, name: 'Beer', icon: Beer, color: 'bg-amber-500' },
-  { id: 'liquor' as Category, name: 'Liquor', icon: Martini, color: 'bg-blue-500' },
-  { id: 'cocktails' as Category, name: 'Cocktails', icon: Martini, color: 'bg-pink-500' },
-  { id: 'party-supplies' as Category, name: 'Party Supplies', icon: Package, color: 'bg-purple-500' }
-];
-
-export const ProductCategories: React.FC<ProductCategoriesProps> = ({ 
-  onAddToCart, 
-  cartItemCount, 
-  onOpenCart 
+export const ProductCategories: React.FC<ProductCategoriesProps> = ({
+  onAddToCart,
+  cartItemCount,
+  onOpenCart
 }) => {
-  const [activeCategory, setActiveCategory] = useState<Category>('beer');
+  const [selectedCategory, setSelectedCategory] = useState(0);
+  const [collections, setCollections] = useState<ShopifyCollection[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProducts = mockProducts.filter(product => product.category === activeCategory);
+  // Category mapping to collection handles
+  const categoryMapping = [
+    { title: 'Texas Beer', handle: 'texas-beer', icon: Beer, color: 'bg-amber-500' },
+    { title: 'Seltzer Collection', handle: 'seltzer-collection', icon: Martini, color: 'bg-blue-500' },
+    { title: 'Lake Package Items', handle: 'lake-package-items', icon: Package, color: 'bg-green-500' },
+    { title: 'Cocktail Collection', handle: 'cocktail-collection-all', icon: Martini, color: 'bg-pink-500' }
+  ];
 
-  const handleAddToCart = (product: Product, variant?: string) => {
+  useEffect(() => {
+    fetchCollections();
+  }, []);
+
+  const fetchCollections = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      
+      if (error) throw error;
+      
+      setCollections(data.collections || []);
+    } catch (error) {
+      console.error('Error fetching collections:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectedCollection = collections[selectedCategory];
+
+  const handleAddToCart = (product: ShopifyProduct, variant?: any) => {
     onAddToCart({
       id: product.id,
-      title: variant ? `${product.title} (${variant})` : product.title,
-      price: product.price,
+      title: product.title,
+      price: variant ? variant.price : product.price,
       image: product.image,
-      variant
+      variant: variant?.title
     });
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading collections from Shopify...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -113,7 +110,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </h1>
             
             <Button 
-              variant="cart" 
+              variant="default" 
               size="lg"
               onClick={onOpenCart}
               className="relative"
@@ -134,35 +131,47 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {/* Category Navigation */}
         <div className="mb-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category) => {
+            {categoryMapping.map((category, index) => {
               const Icon = category.icon;
-              const isActive = activeCategory === category.id;
+              const isActive = selectedCategory === index;
               
               return (
                 <Button
-                  key={category.id}
-                  variant={isActive ? "step-active" : "step"}
+                  key={category.handle}
+                  variant={isActive ? "default" : "outline"}
                   size="lg"
-                  onClick={() => setActiveCategory(category.id)}
+                  onClick={() => setSelectedCategory(index)}
                   className="h-20 flex-col gap-2"
                 >
                   <div className={`w-8 h-8 rounded-full ${category.color} flex items-center justify-center`}>
                     <Icon className="w-4 h-4 text-white" />
                   </div>
-                  {category.name}
+                  {category.title}
                 </Button>
               );
             })}
           </div>
         </div>
 
+        {/* Collection Info */}
+        {selectedCollection && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {selectedCollection.title}
+              </CardTitle>
+              <CardDescription>{selectedCollection.description}</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover:shadow-card transition-all duration-300 animate-fade-in">
+          {selectedCollection?.products.map((product) => (
+            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="aspect-square bg-muted relative">
-                <img 
-                  src={product.image} 
+                <img
+                  src={product.image}
                   alt={product.title}
                   className="w-full h-full object-cover"
                 />
@@ -171,49 +180,69 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               <CardContent className="p-4 space-y-3">
                 <div>
                   <h3 className="font-semibold text-lg">{product.title}</h3>
-                  <p className="text-muted-foreground text-sm">{product.description}</p>
-                  <p className="text-xl font-bold text-primary mt-2">${product.price}</p>
+                  <p className="text-muted-foreground text-sm line-clamp-2">
+                    {product.description}
+                  </p>
                 </div>
-
-                {product.variants ? (
+                
+                {/* Variants */}
+                {product.variants.length > 1 ? (
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Size:</p>
-                    <div className="flex gap-2">
-                      {product.variants.map((variant) => (
-                        <Button
-                          key={variant}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAddToCart(product, variant)}
-                          className="flex-1"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          {variant}
-                        </Button>
+                    <p className="text-sm font-medium">Options:</p>
+                    <div className="space-y-2">
+                      {product.variants.slice(0, 3).map((variant) => (
+                        <div key={variant.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{variant.title}</span>
+                            <Badge variant="secondary">
+                              ${variant.price.toFixed(2)}
+                            </Badge>
+                          </div>
+                          <Button
+                            onClick={() => handleAddToCart(product, variant)}
+                            size="sm"
+                            disabled={!variant.available}
+                            className="gap-1"
+                          >
+                            <Plus className="h-4 w-4" />
+                            Add
+                          </Button>
+                        </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <Button 
-                    variant="default" 
-                    size="lg"
-                    className="w-full"
-                    onClick={() => handleAddToCart(product)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add to Cart
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-lg font-bold">
+                      ${product.price.toFixed(2)}
+                    </Badge>
+                    <Button
+                      onClick={() => handleAddToCart(product)}
+                      size="lg"
+                      className="gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add to Cart
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {filteredProducts.length === 0 && (
+        {selectedCollection?.products.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">
-              No products found in this category
-            </p>
+            <p className="text-muted-foreground text-lg">No products found in this collection.</p>
+          </div>
+        )}
+
+        {collections.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground text-lg">Unable to load Shopify collections.</p>
+            <Button onClick={fetchCollections} className="mt-4">
+              Try Again
+            </Button>
           </div>
         )}
       </div>
