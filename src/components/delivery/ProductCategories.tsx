@@ -267,15 +267,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     
                     {/* Content */}
                     <div className="relative z-10 h-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-2 sm:p-4">
-                      {/* Mobile layout: improved spacing and sizing */}
+                      {/* Mobile layout: improved contrast and readability */}
                       <div className="sm:hidden flex flex-col items-center justify-center h-full space-y-1">
                         <div className={`font-bold text-2xl transition-colors ${isActive ? 'text-primary' : 'text-foreground'}`}>
                           {stepNumber}
                         </div>
-                        <div className="text-sm font-semibold text-center leading-tight px-1">
+                        <div className={`text-sm font-semibold text-center leading-tight px-1 ${isActive ? 'text-primary' : 'text-foreground'}`}>
                           {stepTitle}
                         </div>
-                        <div className="text-xs text-muted-foreground font-medium">
+                        <div className={`text-xs font-medium ${isActive ? 'text-primary/80' : 'text-muted-foreground'}`}>
                           Step {stepNumber}
                         </div>
                       </div>
@@ -313,8 +313,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       <div className="max-w-7xl mx-auto p-4 pt-8">
 
-        {/* Product Grid - 3 columns on all screen sizes */}
-        <div className="grid grid-cols-3 gap-2 lg:gap-4">
+        {/* Product Grid - 3 columns mobile, 6 columns desktop */}
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-3">
           {selectedCollection?.products.map((product) => (
             <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200">
               {/* Product variants handling */}
@@ -335,14 +335,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </div>
                         
                         {/* Product info with fixed height to prevent layout shifts */}
-                        <div className="min-h-[4rem] flex flex-col justify-between">
+                        <div className="min-h-[4rem] lg:min-h-[5rem] flex flex-col justify-between">
                           <div>
-                            <h4 className="font-medium text-xs lg:text-base leading-tight line-clamp-2">
+                            <h4 className="font-medium text-xs lg:text-sm leading-tight line-clamp-2 lg:line-clamp-3">
                               {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{variant.title}</p>
                           </div>
-                          <Badge variant="secondary" className="text-xs mt-1 w-fit text-center">
+                          <Badge variant="secondary" className="text-xs lg:text-sm mt-1 w-fit text-center font-semibold">
                             ${variant.price.toFixed(2)}
                           </Badge>
                         </div>
@@ -374,7 +374,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               onClick={() => handleAddToCart(product, variant)}
                               size="sm"
                               disabled={!variant.available}
-                              className="h-6 lg:h-8 px-2 lg:px-4 text-xs"
+                              className="h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm font-medium"
                             >
                               <Plus className="h-2 w-2 lg:h-3 lg:w-3 mr-1" />
                               Add
@@ -398,11 +398,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   </div>
                   
                   {/* Product info with fixed height to prevent layout shifts */}
-                  <div className="min-h-[4rem] flex flex-col justify-between">
-                    <h4 className="font-medium text-xs lg:text-base leading-tight line-clamp-2">
+                  <div className="min-h-[4rem] lg:min-h-[5rem] flex flex-col justify-between">
+                    <h4 className="font-medium text-xs lg:text-sm leading-tight line-clamp-2 lg:line-clamp-3">
                       {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                     </h4>
-                    <Badge variant="secondary" className="text-xs mt-2 w-fit text-center">
+                    <Badge variant="secondary" className="text-xs lg:text-sm mt-2 w-fit text-center font-semibold">
                       ${product.price.toFixed(2)}
                     </Badge>
                   </div>
