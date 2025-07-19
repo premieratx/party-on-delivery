@@ -74,6 +74,17 @@ export const DeliveryWidget: React.FC = () => {
   // Filter out expired orders
   const validLastOrderInfo = lastOrderInfo && !isLastOrderExpired() ? lastOrderInfo : null;
 
+  // Check for add to order flag on component mount
+  useEffect(() => {
+    const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order');
+    if (addToOrderFlag === 'true' && validLastOrderInfo) {
+      // Clear the flag immediately to prevent repeated triggering
+      localStorage.removeItem('partyondelivery_add_to_order');
+      // Start the add to order flow
+      handleAddToOrder();
+    }
+  }, [validLastOrderInfo]);
+
   const handleStartNewOrder = () => {
     // Clear cart and start fresh
     setCartItems([]);
