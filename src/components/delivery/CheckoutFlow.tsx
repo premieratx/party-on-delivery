@@ -433,20 +433,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       </div>
                     )}
                     
-                    {/* ShopPay requires the web component script to be loaded */}
+                    {/* Load Shopify Web Components script */}
                     <div
                       dangerouslySetInnerHTML={{
                         __html: `
                           <script>
                             if (!window.customElements.get('shopify-accelerated-checkout')) {
                               const script = document.createElement('script');
-                              script.src = 'https://cdn.shopify.com/shopifycloud/checkout-web/assets/checkout-web-packages~ShopifyAcceleratedCheckout.latest.en.js';
+                              script.src = 'https://cdn.shopify.com/shopifycloud/web/assets/v1/accelerated-checkout-react.en.js';
                               script.type = 'module';
                               script.onload = () => {
-                                console.log('Shopify Accelerated Checkout script loaded');
+                                console.log('Shopify Accelerated Checkout script loaded successfully');
+                                // Initialize the web component
+                                if (window.ShopifyAcceleratedCheckout) {
+                                  window.ShopifyAcceleratedCheckout.init();
+                                }
                               };
                               script.onerror = () => {
                                 console.error('Failed to load Shopify Accelerated Checkout script');
+                                console.log('Falling back to manual checkout only');
                               };
                               document.head.appendChild(script);
                             }
