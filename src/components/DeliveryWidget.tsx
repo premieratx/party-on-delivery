@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { AgeVerification } from './delivery/AgeVerification';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import { ProductCategories } from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
@@ -8,7 +7,7 @@ import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
-export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'age-verify' | 'schedule' | 'products' | 'cart' | 'checkout';
+export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'products' | 'cart' | 'checkout';
 
 export interface CartItem {
   id: string;
@@ -32,7 +31,6 @@ export const DeliveryWidget: React.FC = () => {
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
   
   const [currentStep, setCurrentStep] = useState<DeliveryStep>('order-continuation');
-  const [isAgeVerified, setIsAgeVerified] = useState(false);
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     date: null,
     timeSlot: '',
@@ -98,50 +96,57 @@ export const DeliveryWidget: React.FC = () => {
     setIsAddingToOrder(false);
     // Clear the add to order flag when starting a completely new order
     localStorage.removeItem('partyondelivery_add_to_order');
-    setCurrentStep('age-verify');
+    setCurrentStep('products');
   };
 
   const handleAddToOrder = () => {
     // Keep existing cart and order info
     setIsAddingToOrder(true);
+    // Pre-fill delivery info when adding to order
+    if (validLastOrderInfo) {
+      if (validLastOrderInfo.deliveryDate) {
+        const date = new Date(validLastOrderInfo.deliveryDate);
+        setDeliveryInfo(prev => ({ ...prev, date }));
+      }
+      if (validLastOrderInfo.deliveryTime) {
+        setDeliveryInfo(prev => ({ ...prev, timeSlot: validLastOrderInfo.deliveryTime }));
+      }
+      if (validLastOrderInfo.address) {
+        setDeliveryInfo(prev => ({ ...prev, address: validLastOrderInfo.address }));
+      }
+      if (validLastOrderInfo.instructions) {
+        setDeliveryInfo(prev => ({ ...prev, instructions: validLastOrderInfo.instructions }));
+      }
+    }
+    
     if (validLastOrderInfo?.address) {
       setCurrentStep('address-confirmation');
     } else {
-      setCurrentStep('age-verify');
+      setCurrentStep('products');
     }
   };
 
   const handleConfirmSameAddress = () => {
     setUseSameAddress(true);
-    setCurrentStep('age-verify');
+    setCurrentStep('products');
   };
 
   const handleUseNewAddress = () => {
     setUseSameAddress(false);
-    setCurrentStep('age-verify');
+    setCurrentStep('products');
   };
 
   const handleBackToAddressConfirmation = () => {
     setCurrentStep('address-confirmation');
   };
 
-  const handleBackToOrderContinuation = () => {
-    setCurrentStep('order-continuation');
-  };
-
-  const handleAgeVerified = (verified: boolean) => {
-    setIsAgeVerified(verified);
-    if (verified) {
-      setCurrentStep('products');
-    }
-  };
 
   const handleBackToProducts = () => {
     setCurrentStep('products');
   };
 
-  const handleBackToAgeVerify = () => {
-    setCurrentStep('age-verify');
+  const handleBackToOrderContinuation = () => {
+    setCurrentStep('order-continuation');
   };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
@@ -208,12 +213,6 @@ export const DeliveryWidget: React.FC = () => {
     );
   }
 
-  if (!isAgeVerified && currentStep === 'age-verify') {
-    return <AgeVerification 
-      onVerified={handleAgeVerified} 
-      onBack={isAddingToOrder && validLastOrderInfo?.address ? handleBackToAddressConfirmation : handleBackToOrderContinuation}
-    />;
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -225,7 +224,7 @@ export const DeliveryWidget: React.FC = () => {
           cartItems={cartItems}
           onUpdateQuantity={updateQuantity}
           onProceedToCheckout={handleCheckout}
-          onBack={handleBackToAgeVerify}
+          onBack={handleBackToOrderContinuation}
         />
       )}
 
