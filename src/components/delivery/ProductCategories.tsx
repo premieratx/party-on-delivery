@@ -437,9 +437,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   {/* Product info */}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm">{product.title}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      {product.description}
-                    </p>
                     <Badge variant="secondary" className="text-xs mt-1">
                       ${product.price.toFixed(2)}
                     </Badge>
