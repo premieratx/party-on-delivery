@@ -68,8 +68,8 @@ serve(async (req) => {
       price_data: {
         currency: "usd",
         product_data: {
-          name: item.name,
-          description: item.description || '',
+          name: item.name || item.title,
+          description: item.description || item.title || 'Product',
         },
         unit_amount: Math.round(item.price * 100),
       },
