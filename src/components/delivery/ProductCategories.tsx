@@ -306,8 +306,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       <div className="max-w-7xl mx-auto p-4 pt-8">
 
-        {/* Product Grid - 3 columns desktop, 2 columns mobile */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+        {/* Product Grid - 3 columns on all screen sizes */}
+        <div className="grid grid-cols-3 gap-2 lg:gap-4">
           {selectedCollection?.products.map((product) => (
             <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200">
               {/* Product variants handling */}
@@ -323,19 +323,19 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <img
                             src={product.image}
                             alt={product.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain lg:object-cover"
                           />
                         </div>
                         
                         {/* Product info with fixed height to prevent layout shifts */}
                         <div className="min-h-[4rem] flex flex-col justify-between">
                           <div>
-                            <h4 className="font-medium text-sm lg:text-base leading-tight line-clamp-2">
+                            <h4 className="font-medium text-xs lg:text-base leading-tight line-clamp-2">
                               {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{variant.title}</p>
                           </div>
-                          <Badge variant="secondary" className="text-xs mt-1 w-fit">
+                          <Badge variant="secondary" className="text-xs mt-1 w-fit text-center">
                             ${variant.price.toFixed(2)}
                           </Badge>
                         </div>
@@ -348,18 +348,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleQuantityChange(product.id, variant.id, -1)}
-                                className="h-8 w-8 p-0"
+                                className="h-6 w-6 lg:h-8 lg:w-8 p-0"
                               >
-                                <Minus className="h-3 w-3" />
+                                <Minus className="h-2 w-2 lg:h-3 lg:w-3" />
                               </Button>
-                              <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
+                              <span className="px-1 lg:px-2 text-xs lg:text-sm font-medium min-w-[1.5rem] lg:min-w-[2rem] text-center">{cartQty}</span>
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleQuantityChange(product.id, variant.id, 1)}
-                                className="h-8 w-8 p-0"
+                                className="h-6 w-6 lg:h-8 lg:w-8 p-0"
                               >
-                                <Plus className="h-3 w-3" />
+                                <Plus className="h-2 w-2 lg:h-3 lg:w-3" />
                               </Button>
                             </div>
                           ) : (
@@ -367,9 +367,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               onClick={() => handleAddToCart(product, variant)}
                               size="sm"
                               disabled={!variant.available}
-                              className="h-8 px-4 text-xs"
+                              className="h-6 lg:h-8 px-2 lg:px-4 text-xs"
                             >
-                              <Plus className="h-3 w-3 mr-1" />
+                              <Plus className="h-2 w-2 lg:h-3 lg:w-3 mr-1" />
                               Add
                             </Button>
                           )}
@@ -386,16 +386,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <img
                       src={product.image}
                       alt={product.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain lg:object-cover"
                     />
                   </div>
                   
                   {/* Product info with fixed height to prevent layout shifts */}
                   <div className="min-h-[4rem] flex flex-col justify-between">
-                    <h4 className="font-medium text-sm lg:text-base leading-tight line-clamp-2">
+                    <h4 className="font-medium text-xs lg:text-base leading-tight line-clamp-2">
                       {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                     </h4>
-                    <Badge variant="secondary" className="text-xs mt-2 w-fit">
+                    <Badge variant="secondary" className="text-xs mt-2 w-fit text-center">
                       ${product.price.toFixed(2)}
                     </Badge>
                   </div>

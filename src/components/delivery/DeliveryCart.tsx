@@ -208,7 +208,10 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                 className="w-full"
                 onClick={() => {
                   onCheckout();
-                  onClose(); // Close cart when proceeding to checkout
+                  // Don't close cart automatically on mobile to prevent popup behavior
+                  if (window.innerWidth >= 768) {
+                    onClose();
+                  }
                 }}
               >
                 Proceed to Checkout

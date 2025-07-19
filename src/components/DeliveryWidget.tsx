@@ -6,6 +6,7 @@ import { CheckoutFlow } from './delivery/CheckoutFlow';
 import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useWakeLock } from '@/hooks/useWakeLock';
 
 export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'products' | 'cart' | 'checkout';
 
@@ -27,6 +28,9 @@ export interface DeliveryInfo {
 }
 
 export const DeliveryWidget: React.FC = () => {
+  // Enable wake lock to keep screen on during app usage
+  useWakeLock();
+  
   // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
   
