@@ -110,6 +110,7 @@ export const DeliveryWidget: React.FC = () => {
           onOpenCart={() => setIsCartOpen(true)}
           cartItems={cartItems}
           onUpdateQuantity={updateQuantity}
+          onProceedToCheckout={handleCheckout}
         />
       )}
 

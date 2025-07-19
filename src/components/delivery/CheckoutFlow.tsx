@@ -85,6 +85,52 @@ Additional Notes: ${customerInfo.notes || 'None'}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Customer & Delivery Information */}
           <div className="space-y-6">
+            {/* Schedule Your Delivery */}
+            <Card className="shadow-card border-2 border-green-500">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Schedule Your Delivery
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="font-medium">
+                      {deliveryInfo.date ? format(deliveryInfo.date, 'EEE, MMM d, yyyy') : 'Date not set'}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <p>{deliveryInfo.timeSlot || 'Time not set'}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="address">Full Address *</Label>
+                  <Input
+                    id="address"
+                    placeholder="Street address, city, state, zip code"
+                    value={deliveryAddress.address}
+                    onChange={(e) => updateDeliveryAddress('address', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+                  <Textarea
+                    id="instructions"
+                    placeholder="Apartment number, gate code, delivery preferences..."
+                    value={deliveryAddress.instructions}
+                    onChange={(e) => updateDeliveryAddress('instructions', e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Customer Information */}
             <Card className="shadow-card">
               <CardHeader>
@@ -125,38 +171,6 @@ Additional Notes: ${customerInfo.notes || 'None'}
               </CardContent>
             </Card>
 
-            {/* Delivery Address */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
-                  Delivery Address
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="address">Full Address *</Label>
-                  <Input
-                    id="address"
-                    placeholder="Street address, city, state, zip code"
-                    value={deliveryAddress.address}
-                    onChange={(e) => updateDeliveryAddress('address', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
-                  <Textarea
-                    id="instructions"
-                    placeholder="Apartment number, gate code, delivery preferences..."
-                    value={deliveryAddress.instructions}
-                    onChange={(e) => updateDeliveryAddress('instructions', e.target.value)}
-                    className="min-h-[80px]"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Order Notes */}
             <Card className="shadow-card">
               <CardHeader>
@@ -179,28 +193,6 @@ Additional Notes: ${customerInfo.notes || 'None'}
 
           {/* Order Summary */}
           <div className="space-y-6">
-            {/* Delivery Schedule */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Delivery Schedule</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <div>
-                    <p className="font-medium">
-                      {deliveryInfo.date ? format(deliveryInfo.date, 'EEE, MMM d, yyyy') : 'Date not set'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <p>{deliveryInfo.timeSlot || 'Time not set'}</p>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Order Items */}
             <Card className="shadow-card">
               <CardHeader>

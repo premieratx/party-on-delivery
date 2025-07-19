@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { createClient } from '@supabase/supabase-js';
 
@@ -40,6 +41,7 @@ interface ProductCategoriesProps {
   onOpenCart: () => void;
   cartItems: CartItem[]; // Add this to track individual cart items
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
+  onProceedToCheckout: () => void;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -47,13 +49,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   cartItemCount,
   onOpenCart,
   cartItems,
-  onUpdateQuantity
+  onUpdateQuantity,
+  onProceedToCheckout
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cartCountAnimation, setCartCountAnimation] = useState(false);
+  const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
 
   // Step-based order flow mapping to collection handles
   const stepMapping = [
@@ -277,6 +281,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     const currentQty = getCartItemQuantity(productId, variantTitle);
     const newQty = Math.max(0, currentQty + delta);
     onUpdateQuantity(productId, variantTitle, newQty);
+  };
+
+  const handleNextTab = () => {
+    if (selectedCategory < collections.length - 1) {
+      setSelectedCategory(selectedCategory + 1);
+    } else {
+      // On the last tab, show checkout confirmation
+      setShowCheckoutDialog(true);
+    }
+  };
+
+  const confirmCheckout = () => {
+    setShowCheckoutDialog(false);
+    onProceedToCheckout();
   };
 
   if (loading) {
@@ -538,7 +556,48 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </Button>
           </div>
         )}
+
+        {/* Next Button */}
+        {selectedCollection && (
+          <div className="flex justify-center mt-8 pb-8">
+            <Button 
+              variant="default" 
+              size="xl" 
+              onClick={handleNextTab}
+              className="px-8 py-3"
+            >
+              {selectedCategory < collections.length - 1 ? (
+                <>
+                  Next <ChevronRight className="w-5 h-5 ml-2" />
+                </>
+              ) : (
+                'Proceed to Checkout'
+              )}
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Checkout Confirmation Dialog */}
+      <Dialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Proceed to Checkout?</DialogTitle>
+            <DialogDescription>
+              You're about to proceed to checkout with {cartItemCount} items in your cart.
+              You can always come back to add more items later.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCheckoutDialog(false)}>
+              Continue Shopping
+            </Button>
+            <Button onClick={confirmCheckout}>
+              Proceed to Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

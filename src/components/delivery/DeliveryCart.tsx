@@ -159,7 +159,10 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                 variant="delivery" 
                 size="xl" 
                 className="w-full"
-                onClick={onCheckout}
+                onClick={() => {
+                  onCheckout();
+                  onClose(); // Close cart when proceeding to checkout
+                }}
               >
                 Proceed to Checkout
               </Button>
