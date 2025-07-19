@@ -458,16 +458,44 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           <span className="ml-2 text-sm">Loading payment options...</span>
                         </div>
                       ) : (
-                        <div className="mb-4">
+                        <div className="space-y-4">
+                          {/* Shop Pay Button with proper configuration */}
                           <shop-pay-button
                             store-url="https://thecannacorp.myshopify.com"
                             variants={cartItems.map(item => {
-                              const variantId = item.variant?.toString().split('/').pop() || '';
+                              // Extract clean variant ID
+                              const variantId = item.variant?.toString().includes('ProductVariant/') 
+                                ? item.variant.toString().split('/').pop() 
+                                : item.variant?.toString() || '';
                               const quantity = item.quantity;
                               console.log('Shop Pay variant:', `${variantId}:${quantity}`, 'for:', item.title);
                               return `${variantId}:${quantity}`;
                             }).filter(variant => !variant.startsWith(':')).join(',')}
+                            data-shop-pay-checkout="true"
                           />
+                          
+                          {/* Fallback manual checkout link */}
+                          <div className="text-center">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => {
+                                // Create manual checkout URL
+                                const checkoutItems = cartItems.map(item => {
+                                  const variantId = item.variant?.toString().includes('ProductVariant/') 
+                                    ? item.variant.toString().split('/').pop() 
+                                    : item.variant?.toString() || '';
+                                  return `${variantId}:${item.quantity}`;
+                                }).filter(item => !item.startsWith(':')).join(',');
+                                
+                                const checkoutUrl = `https://thecannacorp.myshopify.com/cart/${checkoutItems}`;
+                                console.log('Opening checkout URL:', checkoutUrl);
+                                window.open(checkoutUrl, '_blank');
+                              }}
+                              className="w-full"
+                            >
+                              Continue to Shopify Checkout
+                            </Button>
+                          </div>
                         </div>
                       )}
                       
