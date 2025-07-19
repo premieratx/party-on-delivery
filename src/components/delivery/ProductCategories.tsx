@@ -55,12 +55,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [cartCountAnimation, setCartCountAnimation] = useState(false);
 
-  // Category mapping to collection handles
-  const categoryMapping = [
-    { title: 'Texas Beer', handle: 'texas-beer', icon: Beer, color: 'bg-amber-500' },
-    { title: 'Seltzer Collection', handle: 'seltzer-collection', icon: Martini, color: 'bg-blue-500' },
-    { title: 'Lake Package Items', handle: 'lake-package-items', icon: Package, color: 'bg-green-500' },
-    { title: 'Cocktail Collection', handle: 'cocktail-collection-all', icon: Martini, color: 'bg-pink-500' }
+  // Step-based order flow mapping to collection handles
+  const stepMapping = [
+    { step: 1, title: 'Choose Your Beer', handle: 'texas-beer', icon: Beer, color: 'bg-amber-500' },
+    { step: 2, title: 'Cocktail Kits', handle: 'cocktail-collection-all', icon: Martini, color: 'bg-pink-500' },
+    { step: 3, title: 'Party Supplies', handle: 'lake-package-items', icon: Package, color: 'bg-green-500' },
+    { step: 4, title: 'Extras & Add-ons', handle: 'seltzer-collection', icon: Martini, color: 'bg-blue-500' }
   ];
 
   useEffect(() => {
@@ -283,12 +283,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      {/* Header with Cart */}
+      {/* Build Your Party Header */}
       <div className="sticky top-0 bg-background/95 backdrop-blur-md border-b z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Choose Your Products
+              Build Your Party
             </h1>
             
             <Button 
@@ -312,14 +312,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         </div>
         
-        {/* Sticky Category Navigation */}
+        {/* Step-based Navigation */}
         <div className="border-t bg-background/95 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="max-w-7xl mx-auto px-4 py-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {collections.map((collection, index) => {
-                const categoryInfo = categoryMapping.find(cat => cat.handle === collection.handle);
-                const Icon = categoryInfo?.icon || Package;
-                const color = categoryInfo?.color || 'bg-gray-500';
+                const stepInfo = stepMapping.find(step => step.handle === collection.handle);
+                const Icon = stepInfo?.icon || Package;
+                const color = stepInfo?.color || 'bg-gray-500';
+                const stepTitle = stepInfo?.title || collection.title;
+                const stepNumber = stepInfo?.step || index + 1;
                 const isActive = selectedCategory === index;
                 
                 return (
@@ -328,12 +330,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     variant={isActive ? "default" : "outline"}
                     size="lg"
                     onClick={() => setSelectedCategory(index)}
-                    className="h-16 flex-col gap-2"
+                    className="h-24 flex-col gap-3 text-left"
                   >
-                    <div className={`w-6 h-6 rounded-full ${color} flex items-center justify-center`}>
-                      <Icon className="w-3 h-3 text-white" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                        {stepNumber}
+                      </div>
+                      <div className={`w-6 h-6 rounded-full ${color} flex items-center justify-center`}>
+                        <Icon className="w-3 h-3 text-white" />
+                      </div>
                     </div>
-                    <span className="text-xs">{collection.title}</span>
+                    <span className="text-3xl font-bold leading-none">{stepTitle}</span>
                   </Button>
                 );
               })}
