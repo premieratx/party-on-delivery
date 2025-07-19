@@ -68,16 +68,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.log('Fetching Shopify collections...');
       
       const SHOPIFY_STORE = "premier-concierge.myshopify.com";
-      // Note: This Storefront Access Token needs to be updated with a valid one from your Shopify Admin
-      const SHOPIFY_API_KEY = "YOUR_STOREFRONT_ACCESS_TOKEN_HERE";
-      
-      // Check if we have a valid token
-      if (SHOPIFY_API_KEY === "YOUR_STOREFRONT_ACCESS_TOKEN_HERE") {
-        console.error('Shopify Storefront Access Token not configured');
-        setError('Shopify integration not configured. Please update the Storefront Access Token.');
-        setLoading(false);
-        return;
-      }
+      // Updated with valid Storefront Access Token
+      const SHOPIFY_API_KEY = "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";
       
       // Define the 4 collections for the order steps
       const targetCollections = [
