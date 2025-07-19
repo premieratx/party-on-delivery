@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 
 // Declare Shopify Web Components types
 // No need for Shopify components in JSX since we're using embedded form
@@ -163,42 +164,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
 
-  const handleCompleteOrder = async () => {
-    console.log('Completing order...');
-    setIsPaymentProcessing(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          cartItems,
-          deliveryInfo: {
-            ...deliveryInfo,
-            address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
-            date: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
-            time: deliveryInfo.timeSlot || ''
-          },
-          customerInfo,
-          appliedDiscount,
-          tipAmount
-        }
-      });
-
-      if (error) {
-        console.error('Error creating checkout:', error);
-        alert('Error creating checkout. Please try again.');
-        return;
-      }
-
-      // Redirect to Stripe checkout at top level to avoid iframe restrictions
-      if (data.url) {
-        window.open(data.url, '_top');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error creating checkout. Please try again.');
-    } finally {
-      setIsPaymentProcessing(false);
-    }
+  const handlePaymentSuccess = () => {
+    // Redirect to success page
+    window.location.href = '/success';
   };
 
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
@@ -486,183 +454,23 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               </Card>
             )}
 
-            {/* ShopPay Payment */}
+            {/* Embedded Payment */}
             {currentStep === 'payment' && (
-              <Card className="shadow-card border-2 border-green-500">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    Payment with ShopPay
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Secure checkout powered by Shopify
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-6">
-                    {/* Embedded Payment Form */}
-                    <div className="bg-white p-6 rounded-lg border shadow-sm">
-                      <h3 className="text-lg font-semibold mb-6">Payment Information</h3>
-                      
-                      <div className="space-y-4">
-                        {/* Credit Card Fields */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Card Number
-                          </label>
-                          <Input 
-                            placeholder="1234 5678 9012 3456" 
-                            className="w-full"
-                            maxLength={19}
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Expiry Date
-                            </label>
-                            <Input 
-                              placeholder="MM/YY" 
-                              className="w-full"
-                              maxLength={5}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              CVV
-                            </label>
-                            <Input 
-                              placeholder="123" 
-                              className="w-full"
-                              maxLength={4}
-                            />
-                          </div>
-                        </div>
-                        
-                         <div>
-                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                             Cardholder Name
-                           </label>
-                           <Input 
-                             placeholder="John Doe" 
-                             className="w-full"
-                             onChange={(e) => {
-                               // Detect when card info is entered
-                               if (e.target.value.length > 2) {
-                                 setHasEnteredCardInfo(true);
-                               }
-                             }}
-                           />
-                         </div>
-                         
-                         {/* Tip the Driver Section - Shows after card info entered */}
-                         {hasEnteredCardInfo && (
-                           <div className="pt-4 border-t border-gray-200">
-                             <h4 className="text-sm font-medium text-gray-700 mb-3">Tip the Driver</h4>
-                             <div className="grid grid-cols-4 gap-2 mb-3">
-                               {[0, 2, 5, 8].map((tipPercent) => (
-                                 <Button
-                                   key={tipPercent}
-                                   variant={tipAmount === (subtotal * tipPercent / 100) ? "default" : "outline"}
-                                   size="sm"
-                                   onClick={() => setTipAmount(subtotal * tipPercent / 100)}
-                                   className="text-xs"
-                                 >
-                                   {tipPercent === 0 ? "No Tip" : `${tipPercent}%`}
-                                 </Button>
-                               ))}
-                             </div>
-                             <div className="flex items-center gap-2">
-                               <Label htmlFor="customTip" className="text-sm">Custom: $</Label>
-                               <Input
-                                 id="customTip"
-                                 type="number"
-                                 placeholder="0.00"
-                                 value={tipAmount > 0 && ![0, 2, 5, 8].map(p => subtotal * p / 100).includes(tipAmount) ? tipAmount.toFixed(2) : ''}
-                                 onChange={(e) => setTipAmount(parseFloat(e.target.value) || 0)}
-                                 className="w-20 text-sm"
-                                 step="0.01"
-                                 min="0"
-                               />
-                             </div>
-                             {tipAmount > 0 && (
-                               <p className="text-xs text-gray-600 mt-2">
-                                 Tip amount: ${tipAmount.toFixed(2)}
-                               </p>
-                             )}
-                           </div>
-                         )}
-                         
-                         {/* Payment Button */}
-                        <Button 
-                          className="w-full mt-6"
-                          size="lg"
-                          disabled={isPaymentProcessing}
-                          onClick={handleCompleteOrder}
-                        >
-                          {isPaymentProcessing ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Processing Payment...
-                            </>
-                           ) : (
-                             `Complete Payment • $${finalTotal.toFixed(2)}`
-                           )}
-                        </Button>
-                        
-                        <div className="text-center text-xs text-gray-500 mt-4">
-                          🔒 Your payment information is secure and encrypted
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Fallback Manual Checkout */}
-                  <div className="pt-4 border-t">
-                    <p className="text-sm text-muted-foreground mb-3 text-center">
-                      Or complete your order manually
-                    </p>
-                    <Button 
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => {
-                        // Create cart line items
-                        const lineItems = cartItems.map(item => {
-                          // Extract variant ID from the product data
-                          const variantId = item.variant || item.id;
-                          console.log('Adding item to cart:', { item, variantId });
-                          return `${variantId.replace('gid://shopify/ProductVariant/', '')}:${item.quantity}`;
-                        }).join(',');
-                        
-                        const orderNote = encodeURIComponent([
-                          `Customer: ${customerInfo.firstName} ${customerInfo.lastName}`,
-                          `Email: ${customerInfo.email}`,
-                          `Phone: ${customerInfo.phone}`,
-                          `Delivery Address: ${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
-                          `Delivery Date: ${deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} at ${deliveryInfo.timeSlot}`,
-                          `Age Verified: Yes`,
-                          `Total: $${finalTotal.toFixed(2)} (includes $${deliveryFee.toFixed(2)} delivery fee)`,
-                          addressInfo.instructions ? `Instructions: ${addressInfo.instructions}` : ''
-                        ].filter(Boolean).join('\n'));
-                        
-                        // Redirect to Shopify cart with all info
-                        const checkoutUrl = `https://premier-concierge.myshopify.com/cart/${lineItems}?note=${orderNote}`;
-                        console.log('Redirecting to:', checkoutUrl);
-                        window.open(checkoutUrl, '_blank');
-                      }}
-                    >
-                      Complete Order - ${finalTotal.toFixed(2)}
-                    </Button>
-                    
-                    <div className="text-center text-sm text-muted-foreground space-y-2">
-                      <p>Secure checkout powered by Shopify</p>
-                      <p>Total: ${finalTotal.toFixed(2)} (including ${deliveryFee.toFixed(2)} delivery fee)</p>
-                      <p className="text-xs">You'll be redirected to our secure Shopify checkout</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <EmbeddedPaymentForm
+                cartItems={cartItems}
+                subtotal={discountedSubtotal}
+                deliveryFee={finalDeliveryFee}
+                salesTax={salesTax}
+                customerInfo={customerInfo}
+                deliveryInfo={{
+                  ...deliveryInfo,
+                  address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+                  date: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+                  time: deliveryInfo.timeSlot || ''
+                }}
+                appliedDiscount={appliedDiscount}
+                onPaymentSuccess={handlePaymentSuccess}
+              />
             )}
           </div>
 
