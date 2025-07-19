@@ -5,9 +5,10 @@ import { ProductCategories } from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
 import { CheckoutFlow } from './delivery/CheckoutFlow';
 import { OrderContinuation } from './OrderContinuation';
+import { AddressConfirmation } from './AddressConfirmation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
-export type DeliveryStep = 'order-continuation' | 'age-verify' | 'schedule' | 'products' | 'cart' | 'checkout';
+export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'age-verify' | 'schedule' | 'products' | 'cart' | 'checkout';
 
 export interface CartItem {
   id: string;
@@ -39,6 +40,7 @@ export const DeliveryWidget: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
   const [isAddingToOrder, setIsAddingToOrder] = useState(false);
+  const [useSameAddress, setUseSameAddress] = useState(false);
 
   const handleStartNewOrder = () => {
     // Clear cart and start fresh
@@ -50,6 +52,20 @@ export const DeliveryWidget: React.FC = () => {
   const handleAddToOrder = () => {
     // Keep existing cart and order info
     setIsAddingToOrder(true);
+    if (lastOrderInfo?.address) {
+      setCurrentStep('address-confirmation');
+    } else {
+      setCurrentStep('age-verify');
+    }
+  };
+
+  const handleConfirmSameAddress = () => {
+    setUseSameAddress(true);
+    setCurrentStep('age-verify');
+  };
+
+  const handleUseNewAddress = () => {
+    setUseSameAddress(false);
     setCurrentStep('age-verify');
   };
 
@@ -117,6 +133,16 @@ export const DeliveryWidget: React.FC = () => {
     );
   }
 
+  if (currentStep === 'address-confirmation') {
+    return (
+      <AddressConfirmation
+        onConfirmSameAddress={handleConfirmSameAddress}
+        onUseNewAddress={handleUseNewAddress}
+        lastOrderInfo={lastOrderInfo}
+      />
+    );
+  }
+
   if (!isAgeVerified && currentStep === 'age-verify') {
     return <AgeVerification onVerified={handleAgeVerified} />;
   }
@@ -143,6 +169,8 @@ export const DeliveryWidget: React.FC = () => {
           onDeliveryInfoChange={setDeliveryInfo}
           onUpdateQuantity={updateQuantity}
           isAddingToOrder={isAddingToOrder}
+          useSameAddress={useSameAddress}
+          lastOrderInfo={lastOrderInfo}
         />
       )}
 

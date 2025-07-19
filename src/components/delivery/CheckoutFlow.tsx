@@ -28,6 +28,8 @@ interface CheckoutFlowProps {
   onDeliveryInfoChange: (info: DeliveryInfo) => void;
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
   isAddingToOrder?: boolean;
+  useSameAddress?: boolean;
+  lastOrderInfo?: any;
 }
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
@@ -37,12 +39,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onBack,
   onDeliveryInfoChange,
   onUpdateQuantity,
-  isAddingToOrder = false
+  isAddingToOrder = false,
+  useSameAddress = false,
+  lastOrderInfo
 }) => {
-  // Step management
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
-  const [confirmedDateTime, setConfirmedDateTime] = useState(false);
-  const [confirmedAddress, setConfirmedAddress] = useState(false);
+  // Step management - if same address is confirmed, skip to customer info
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
+    useSameAddress ? 'customer' : 'datetime'
+  );
+  const [confirmedDateTime, setConfirmedDateTime] = useState(useSameAddress);
+  const [confirmedAddress, setConfirmedAddress] = useState(useSameAddress);
   const [confirmedCustomer, setConfirmedCustomer] = useState(false);
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -69,6 +75,32 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       setHasAddressBeenCleared(false);
     }
   }, [isAddingToOrder, hasAddressBeenCleared]);
+
+  // Pre-fill delivery info when using same address
+  useEffect(() => {
+    if (useSameAddress && lastOrderInfo) {
+      // Pre-fill delivery date and time if available
+      if (lastOrderInfo.deliveryDate) {
+        const date = new Date(lastOrderInfo.deliveryDate);
+        updateDeliveryInfo('date', date);
+      }
+      if (lastOrderInfo.deliveryTime) {
+        updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
+      }
+      
+      // Pre-fill address info
+      if (lastOrderInfo.address) {
+        const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
+        setAddressInfo({
+          street: addressParts[0] || '',
+          city: addressParts[1] || '',
+          state: addressParts[2]?.split(' ')[0] || '',
+          zipCode: addressParts[2]?.split(' ')[1] || '',
+          instructions: lastOrderInfo.instructions || ''
+        });
+      }
+    }
+  }, [useSameAddress, lastOrderInfo]);
 
   // ShopPay integration state
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
@@ -198,7 +230,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               orderNumber: response.data.order.order_number || response.data.order.id,
               total: finalTotal,
               date: new Date().toLocaleDateString(),
-              orderId: response.data.order.id
+              orderId: response.data.order.id,
+              address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+              deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+              deliveryTime: deliveryInfo.timeSlot || '',
+              instructions: addressInfo.instructions || ''
             };
             localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
           }
@@ -252,30 +288,32 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
             <CardContent className="border-t">
               <div className="space-y-3">
-                {confirmedDateTime && (
-                  <div className="p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-start gap-2">
-                      <span>Delivery:</span>
-                      <span className="text-foreground">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} • {deliveryInfo.timeSlot}</span>
-                    </div>
-                  </div>
-                )}
+                 {confirmedDateTime && (
+                   <div className="p-3 border border-black rounded-lg bg-muted/30">
+                     <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-start gap-2">
+                       <span>Delivery:</span>
+                       <span className="text-foreground">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} • {deliveryInfo.timeSlot}</span>
+                       {useSameAddress && <span className="text-sm text-green-600">(Same as previous order)</span>}
+                     </div>
+                   </div>
+                 )}
                 
-                {confirmedAddress && (
-                  <div className="p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="text-lg font-semibold text-primary">
-                      <div className="flex flex-wrap items-center justify-start gap-2">
-                        <span>Address:</span>
-                        <span className="text-foreground">{addressInfo.street} • {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
-                      </div>
-                      {addressInfo.instructions && (
-                        <div className="text-sm font-normal text-foreground mt-1 ml-20">
-                          {addressInfo.instructions}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                 {confirmedAddress && (
+                   <div className="p-3 border border-black rounded-lg bg-muted/30">
+                     <div className="text-lg font-semibold text-primary">
+                       <div className="flex flex-wrap items-center justify-start gap-2">
+                         <span>Address:</span>
+                         <span className="text-foreground">{addressInfo.street} • {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
+                         {useSameAddress && <span className="text-sm text-green-600">(Same as previous order)</span>}
+                       </div>
+                       {addressInfo.instructions && (
+                         <div className="text-sm font-normal text-foreground mt-1 ml-20">
+                           {addressInfo.instructions}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 )}
                 
                 {confirmedCustomer && (
                   <div className="p-3 border border-black rounded-lg bg-muted/30">
