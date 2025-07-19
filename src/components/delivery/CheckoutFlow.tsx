@@ -424,15 +424,23 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 <CardContent className="space-y-4">
                   {/* ShopPay Web Component */}
                   <div className="w-full">
+                    {isShopPayLoading && (
+                      <div className="flex items-center justify-center p-8 border border-dashed border-primary rounded-lg">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                          <p className="text-sm text-muted-foreground">Loading ShopPay...</p>
+                        </div>
+                      </div>
+                    )}
                     <shopify-accelerated-checkout
                       shop-domain="thecannacorp.myshopify.com"
                       storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
                       variant-ids={cartItems.map(item => {
-                        // Use the actual product ID as variant ID if variant is undefined
+                        // Extract proper variant ID from the item
                         const variantId = item.variant && typeof item.variant === 'string' 
-                          ? item.variant 
-                          : `${item.id.replace('gid://shopify/Product/', 'gid://shopify/ProductVariant/')}-default`;
-                        console.log('Using variant ID for ShopPay:', variantId);
+                          ? item.variant.replace('gid://shopify/ProductVariant/', '')
+                          : item.id.replace('gid://shopify/Product/', '') + '-variant';
+                        console.log('ShopPay variant ID:', variantId, 'for item:', item.title);
                         return variantId;
                       }).join(',')}
                       quantities={cartItems.map(item => item.quantity).join(',')}
@@ -445,10 +453,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         alert('Payment successful! Order confirmed.');
                       }}
                       onError={(event: any) => {
-                        console.error('ShopPay error:', event);
-                        console.log('Falling back to manual checkout');
+                        console.error('ShopPay error details:', event);
+                        setIsShopPayLoading(false);
+                        console.log('ShopPay failed - check console for details');
                       }}
-                      style={{ width: '100%', minHeight: '200px', border: '1px solid #ccc' }}
+                      style={{ 
+                        width: '100%', 
+                        minHeight: '200px', 
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        display: isShopPayLoading ? 'none' : 'block'
+                      }}
                     />
                   </div>
                   
