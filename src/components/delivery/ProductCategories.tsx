@@ -64,11 +64,130 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const fetchCollections = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      console.log('Fetching Shopify collections...');
       
-      if (error) throw error;
+      const SHOPIFY_STORE = "premier-concierge.myshopify.com";
+      const SHOPIFY_API_KEY = "0d4359f88af16da44f2653d9134c18c5";
       
-      setCollections(data.collections || []);
+      // Define the 4 collections for the order steps
+      const targetCollections = [
+        "texas-beer",
+        "seltzer-collection", 
+        "lake-package-items",
+        "cocktail-collection-all"
+      ];
+
+      const allCollections = [];
+
+      // Fetch each collection directly from Shopify
+      for (const handle of targetCollections) {
+        console.log(`Fetching collection: ${handle}`);
+        
+        const query = `
+          query getCollectionByHandle($handle: String!) {
+            collectionByHandle(handle: $handle) {
+              id
+              title
+              handle
+              description
+              products(first: 20) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                    description
+                    images(first: 1) {
+                      edges {
+                        node {
+                          url
+                          altText
+                        }
+                      }
+                    }
+                    variants(first: 5) {
+                      edges {
+                        node {
+                          id
+                          title
+                          price {
+                            amount
+                            currencyCode
+                          }
+                          availableForSale
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `;
+
+        try {
+          const response = await fetch(`https://${SHOPIFY_STORE}/api/2025-01/graphql.json`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
+            },
+            body: JSON.stringify({
+              query,
+              variables: { handle }
+            }),
+          });
+
+          console.log(`Response for ${handle}:`, response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`Data for ${handle}:`, data);
+            
+            if (data.data?.collectionByHandle) {
+              const collection = data.data.collectionByHandle;
+              
+              // Transform products
+              const products = collection.products.edges.map(({ node: product }) => {
+                const variant = product.variants.edges[0]?.node;
+                const image = product.images.edges[0]?.node;
+                
+                return {
+                  id: product.id,
+                  title: product.title,
+                  price: variant ? parseFloat(variant.price.amount) : 0,
+                  image: image?.url || '/placeholder.svg',
+                  description: product.description,
+                  handle: product.handle,
+                  variants: product.variants.edges.map(({ node: v }) => ({
+                    id: v.id,
+                    title: v.title,
+                    price: parseFloat(v.price.amount),
+                    available: v.availableForSale
+                  }))
+                };
+              });
+
+              allCollections.push({
+                id: collection.id,
+                title: collection.title,
+                handle: collection.handle,
+                description: collection.description,
+                products
+              });
+              
+              console.log(`Added collection: ${collection.title} with ${products.length} products`);
+            }
+          } else {
+            console.error(`Error fetching ${handle}:`, response.status, response.statusText);
+          }
+        } catch (fetchError) {
+          console.error(`Fetch error for ${handle}:`, fetchError);
+        }
+      }
+      
+      console.log('All collections loaded:', allCollections);
+      setCollections(allCollections);
     } catch (error) {
       console.error('Error fetching collections:', error);
     } finally {
