@@ -142,6 +142,7 @@ export const DeliveryWidget: React.FC = () => {
           onBack={handleBackToProducts}
           onDeliveryInfoChange={setDeliveryInfo}
           onUpdateQuantity={updateQuantity}
+          isAddingToOrder={isAddingToOrder}
         />
       )}
 

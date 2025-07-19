@@ -27,6 +27,7 @@ interface CheckoutFlowProps {
   onBack: () => void;
   onDeliveryInfoChange: (info: DeliveryInfo) => void;
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
+  isAddingToOrder?: boolean;
 }
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
@@ -35,7 +36,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   totalPrice,
   onBack,
   onDeliveryInfoChange,
-  onUpdateQuantity
+  onUpdateQuantity,
+  isAddingToOrder = false
 }) => {
   // Step management
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
@@ -45,8 +47,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
-  // Use persistent customer info
+  // Use persistent customer info (always persistent)
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
+  
+  // For new orders or new visitors, clear address info
+  useEffect(() => {
+    if (!isAddingToOrder) {
+      setAddressInfo({
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        instructions: ''
+      });
+    }
+  }, [isAddingToOrder, setAddressInfo]);
 
   // ShopPay integration state
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
@@ -360,7 +375,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <Input
                       id="street"
                       name="street-address"
-                      autoComplete="street-address"
+                      autoComplete={isAddingToOrder ? "street-address" : "off"}
                       placeholder="123 Main Street"
                       value={addressInfo.street}
                       onChange={(e) => setAddressInfo(prev => ({ ...prev, street: e.target.value }))}
@@ -373,7 +388,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <Input
                         id="city"
                         name="address-level2"
-                        autoComplete="address-level2"
+                        autoComplete={isAddingToOrder ? "address-level2" : "off"}
                         placeholder="Austin"
                         value={addressInfo.city}
                         onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
@@ -384,7 +399,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <Input
                         id="state"
                         name="address-level1"
-                        autoComplete="address-level1"
+                        autoComplete={isAddingToOrder ? "address-level1" : "off"}
                         placeholder="TX"
                         value={addressInfo.state}
                         onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
@@ -397,7 +412,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <Input
                       id="zipCode"
                       name="postal-code"
-                      autoComplete="postal-code"
+                      autoComplete={isAddingToOrder ? "postal-code" : "off"}
                       placeholder="78701"
                       value={addressInfo.zipCode}
                       onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
