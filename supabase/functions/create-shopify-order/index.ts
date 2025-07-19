@@ -228,6 +228,7 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
         .single();
 
       let orderGroupId = existingGroup?.id;
+      let isNewGroup = false;
 
       // Create new order group if none exists or if last order was more than 24 hours ago
       if (!orderGroupId) {
@@ -250,6 +251,7 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
           logStep('Error creating order group', groupError);
         } else {
           orderGroupId = newGroup?.id;
+          isNewGroup = true;
           logStep('Created new order group', { orderGroupId });
         }
       }
@@ -271,6 +273,34 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
           logStep('Error linking order to group', orderError);
         } else {
           logStep('Order linked to group successfully', { orderGroupId });
+        }
+
+        // Update Shopify order with group information
+        try {
+          const groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
+          const updateUrl = `https://${shopifyStore}/admin/api/2025-01/orders/${orderResult.order.id}.json`;
+          
+          await fetch(updateUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Shopify-Access-Token': shopifyToken
+            },
+            body: JSON.stringify({
+              order: {
+                id: orderResult.order.id,
+                tags: `${orderResult.order.tags || ''}, ${groupTags}, bundle-ready`.replace(/^, /, ''),
+                note: `${orderResult.order.note || ''}
+
+🔗 ORDER GROUP: ${orderGroupId}
+📦 BUNDLING: This order can be bundled with other orders in the same group for delivery efficiency.`
+              }
+            })
+          });
+          
+          logStep('Updated Shopify order with group info', { groupTags, orderGroupId });
+        } catch (updateError) {
+          logStep('Error updating Shopify order with group info', updateError);
         }
       }
     } catch (supabaseError) {
