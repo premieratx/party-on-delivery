@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -30,19 +29,38 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onBack,
   onDeliveryInfoChange
 }) => {
+  // Step management
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
+  const [confirmedDateTime, setConfirmedDateTime] = useState(false);
+  const [confirmedAddress, setConfirmedAddress] = useState(false);
+  const [confirmedCustomer, setConfirmedCustomer] = useState(false);
+  
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  
+  // Customer info state
   const [customerInfo, setCustomerInfo] = useState({
-    email: '',
+    firstName: '',
+    lastName: '',
     phone: '',
-    name: '',
-    notes: ''
+    email: ''
   });
-
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    address: '',
+  
+  // Address state
+  const [addressInfo, setAddressInfo] = useState({
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
     instructions: ''
   });
 
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  // Payment state
+  const [paymentInfo, setPaymentInfo] = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    nameOnCard: ''
+  });
 
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
@@ -71,40 +89,41 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const deliveryFee = 4.99;
   const finalTotal = totalPrice + deliveryFee;
 
-  const handleShopifyCheckout = () => {
-    const deliveryNotes = `
-DELIVERY INFO:
-Date: ${deliveryInfo.date ? format(deliveryInfo.date, 'EEE, MMM d, yyyy') : 'Not set'}
-Time: ${deliveryInfo.timeSlot || 'Not set'}
-Address: ${deliveryAddress.address || 'Not set'}
-Instructions: ${deliveryAddress.instructions || 'None'}
-
-Customer Info:
-Name: ${customerInfo.name}
-Email: ${customerInfo.email}
-Phone: ${customerInfo.phone}
-Additional Notes: ${customerInfo.notes || 'None'}
-    `.trim();
-
-    console.log('Redirecting to Shopify checkout with delivery info:', deliveryNotes);
-    alert('Redirecting to Shopify checkout with delivery information attached!');
-  };
-
-  const updateCustomerInfo = (field: string, value: string) => {
-    setCustomerInfo(prev => ({ ...prev, [field]: value }));
-  };
-
-  const updateDeliveryAddress = (field: string, value: string) => {
-    setDeliveryAddress(prev => ({ ...prev, [field]: value }));
-  };
-
   const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
     const newInfo = { ...deliveryInfo, [field]: value };
     onDeliveryInfoChange(newInfo);
   };
 
-  const isFormValid = customerInfo.email && customerInfo.phone && customerInfo.name && 
-                     deliveryAddress.address && deliveryInfo.date && deliveryInfo.timeSlot;
+  const handleConfirmDateTime = () => {
+    if (deliveryInfo.date && deliveryInfo.timeSlot) {
+      setConfirmedDateTime(true);
+      setCurrentStep('address');
+    }
+  };
+
+  const handleConfirmAddress = () => {
+    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
+      setConfirmedAddress(true);
+      setCurrentStep('customer');
+    }
+  };
+
+  const handleConfirmCustomer = () => {
+    if (customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email) {
+      setConfirmedCustomer(true);
+      setCurrentStep('payment');
+    }
+  };
+
+  const handleCompleteOrder = () => {
+    console.log('Order completed with all information');
+    alert('Order placed successfully!');
+  };
+
+  const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
+  const isAddressComplete = addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode;
+  const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email;
+  const isPaymentComplete = paymentInfo.cardNumber && paymentInfo.expiryDate && paymentInfo.cvv && paymentInfo.nameOnCard;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
@@ -119,7 +138,7 @@ Additional Notes: ${customerInfo.notes || 'None'}
           Back to Products
         </Button>
 
-        {/* Header */}
+        {/* Header with Confirmation Summary */}
         <Card className="shadow-floating animate-fade-in">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
@@ -127,164 +146,345 @@ Additional Notes: ${customerInfo.notes || 'None'}
               Complete Your Order
             </CardTitle>
             <p className="text-muted-foreground">
-              Confirm your details and delivery address
+              Confirm your details step by step
             </p>
           </CardHeader>
+          
+          {/* Confirmation Summary */}
+          {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
+            <CardContent className="border-t">
+              <div className="space-y-3">
+                {confirmedDateTime && (
+                  <div className="p-3 border border-black rounded-lg bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4" />
+                        <span className="font-medium">Delivery:</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")}</div>
+                        <div className="text-sm text-muted-foreground">{deliveryInfo.timeSlot}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {confirmedAddress && (
+                  <div className="p-3 border border-black rounded-lg bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        <span className="font-medium">Address:</span>
+                      </div>
+                      <div className="text-right text-sm">
+                        <div>{addressInfo.street}</div>
+                        <div>{addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {confirmedCustomer && (
+                  <div className="p-3 border border-black rounded-lg bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        <span className="font-medium">Contact:</span>
+                      </div>
+                      <div className="text-right text-sm">
+                        <div>{customerInfo.firstName} {customerInfo.lastName}</div>
+                        <div>{customerInfo.phone} • {customerInfo.email}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Customer & Delivery Information */}
+          {/* Step-by-Step Forms */}
           <div className="space-y-6">
-            {/* Schedule Your Delivery */}
-            <Card className="shadow-card border-2 border-green-500">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5" />
-                  Schedule Your Delivery
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Date Picker */}
-                <div className="space-y-2">
-                  <Label>Delivery Date *</Label>
-                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !deliveryInfo.date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={deliveryInfo.date || undefined}
-                        onSelect={(date) => {
-                          updateDeliveryInfo('date', date);
-                          setIsCalendarOpen(false); // Close calendar when date is selected
-                        }}
-                        disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
-                        initialFocus
-                        className="p-3 pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+            {/* Date/Time Selection */}
+            {currentStep === 'datetime' && (
+              <Card className="shadow-card border-2 border-green-500">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CalendarIcon className="w-5 h-5" />
+                    Schedule Your Delivery
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Delivery Date *</Label>
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !deliveryInfo.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={deliveryInfo.date || undefined}
+                          onSelect={(date) => {
+                            updateDeliveryInfo('date', date);
+                            setIsCalendarOpen(false);
+                          }}
+                          disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
 
-                {/* Time Slot Picker */}
-                <div className="space-y-2">
-                  <Label>Delivery Time *</Label>
-                  <Select 
-                    value={deliveryInfo.timeSlot} 
-                    onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
+                  <div className="space-y-2">
+                    <Label>Delivery Time *</Label>
+                    <Select 
+                      value={deliveryInfo.timeSlot} 
+                      onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a time slot" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-background">
+                        {timeSlots.map((slot) => (
+                          <SelectItem key={slot} value={slot}>
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              {slot}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleConfirmDateTime}
+                    disabled={!isDateTimeComplete}
+                    className="w-full"
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a time slot" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-background">
-                      {timeSlots.map((slot) => (
-                        <SelectItem key={slot} value={slot}>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            {slot}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="address">Full Address *</Label>
-                  <Input
-                    id="address"
-                    placeholder="Street address, city, state, zip code"
-                    value={deliveryAddress.address}
-                    onChange={(e) => updateDeliveryAddress('address', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
-                  <Textarea
-                    id="instructions"
-                    placeholder="Apartment number, gate code, delivery preferences..."
-                    value={deliveryAddress.instructions}
-                    onChange={(e) => updateDeliveryAddress('instructions', e.target.value)}
-                    className="min-h-[80px]"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+                    Confirm Date & Time
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Address Section */}
+            {currentStep === 'address' && (
+              <Card className="shadow-card border-2 border-green-500">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Delivery Address
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="street">Street Address *</Label>
+                    <Input
+                      id="street"
+                      placeholder="123 Main Street"
+                      value={addressInfo.street}
+                      onChange={(e) => setAddressInfo(prev => ({ ...prev, street: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        placeholder="Austin"
+                        value={addressInfo.city}
+                        onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State *</Label>
+                      <Input
+                        id="state"
+                        placeholder="TX"
+                        value={addressInfo.state}
+                        onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="zipCode">Zip Code *</Label>
+                    <Input
+                      id="zipCode"
+                      placeholder="78701"
+                      value={addressInfo.zipCode}
+                      onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+                    <Textarea
+                      id="instructions"
+                      placeholder="Apartment number, gate code, delivery preferences..."
+                      value={addressInfo.instructions}
+                      onChange={(e) => setAddressInfo(prev => ({ ...prev, instructions: e.target.value }))}
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleConfirmAddress}
+                    disabled={!isAddressComplete}
+                    className="w-full"
+                  >
+                    Confirm Address
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Customer Information */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Customer Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter your full name"
-                    value={customerInfo.name}
-                    onChange={(e) => updateCustomerInfo('name', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={customerInfo.email}
-                    onChange={(e) => updateCustomerInfo('email', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="(555) 123-4567"
-                    value={customerInfo.phone}
-                    onChange={(e) => updateCustomerInfo('phone', e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            {currentStep === 'customer' && (
+              <Card className="shadow-card border-2 border-green-500">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Contact Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input
+                        id="firstName"
+                        placeholder="John"
+                        value={customerInfo.firstName}
+                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input
+                        id="lastName"
+                        placeholder="Doe"
+                        value={customerInfo.lastName}
+                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      value={customerInfo.phone}
+                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={customerInfo.email}
+                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleConfirmCustomer}
+                    disabled={!isCustomerComplete}
+                    className="w-full"
+                  >
+                    Confirm Contact Info
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Order Notes */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Order Notes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Additional Notes (Optional)</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="Any special requests or notes..."
-                    value={customerInfo.notes}
-                    onChange={(e) => updateCustomerInfo('notes', e.target.value)}
-                    className="min-h-[80px]"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Payment Information */}
+            {currentStep === 'payment' && (
+              <Card className="shadow-card border-2 border-green-500">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    Payment Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nameOnCard">Name on Card *</Label>
+                    <Input
+                      id="nameOnCard"
+                      placeholder="John Doe"
+                      value={paymentInfo.nameOnCard}
+                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, nameOnCard: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cardNumber">Card Number *</Label>
+                    <Input
+                      id="cardNumber"
+                      placeholder="1234 5678 9012 3456"
+                      value={paymentInfo.cardNumber}
+                      onChange={(e) => setPaymentInfo(prev => ({ ...prev, cardNumber: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="expiryDate">Expiry Date *</Label>
+                      <Input
+                        id="expiryDate"
+                        placeholder="MM/YY"
+                        value={paymentInfo.expiryDate}
+                        onChange={(e) => setPaymentInfo(prev => ({ ...prev, expiryDate: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cvv">CVV *</Label>
+                      <Input
+                        id="cvv"
+                        placeholder="123"
+                        value={paymentInfo.cvv}
+                        onChange={(e) => setPaymentInfo(prev => ({ ...prev, cvv: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={handleCompleteOrder}
+                    disabled={!isPaymentComplete}
+                    className="w-full"
+                    variant="delivery"
+                    size="lg"
+                  >
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    Confirm Order - ${finalTotal.toFixed(2)}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Order Summary */}
           <div className="space-y-6">
-            {/* Order Items */}
             <Card className="shadow-card">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -327,35 +527,6 @@ Additional Notes: ${customerInfo.notes || 'None'}
             </Card>
           </div>
         </div>
-
-        {/* Checkout Button */}
-        <Card className="shadow-floating">
-          <CardContent className="p-6">
-            <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
-                You will be redirected to our secure Shopify checkout to complete your purchase.
-                Your delivery information will be automatically included with your order.
-              </p>
-              
-              <Button 
-                variant="delivery" 
-                size="xl" 
-                className="w-full max-w-md mx-auto"
-                onClick={handleShopifyCheckout}
-                disabled={!isFormValid}
-              >
-                <ExternalLink className="w-5 h-5 mr-2" />
-                Complete Purchase on Shopify
-              </Button>
-              
-              {!isFormValid && (
-                <p className="text-sm text-destructive">
-                  Please fill in all required fields including delivery date, time, and address
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
