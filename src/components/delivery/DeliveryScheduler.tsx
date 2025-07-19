@@ -1,13 +1,12 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CalendarIcon, Clock, MapPin, ArrowRight } from 'lucide-react';
+import { CalendarIcon, Clock, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DeliveryInfo } from '../DeliveryWidget';
@@ -33,21 +32,19 @@ const timeSlots = [
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
   const [date, setDate] = useState<Date | undefined>(deliveryInfo.date || undefined);
   const [timeSlot, setTimeSlot] = useState(deliveryInfo.timeSlot);
-  const [address, setAddress] = useState(deliveryInfo.address);
-  const [instructions, setInstructions] = useState(deliveryInfo.instructions || '');
 
   const handleContinue = () => {
-    if (date && timeSlot && address) {
+    if (date && timeSlot) {
       onComplete({
         date,
         timeSlot,
-        address,
-        instructions
+        address: '', // Address will be filled during checkout
+        instructions: ''
       });
     }
   };
 
-  const isFormValid = date && timeSlot && address;
+  const isFormValid = date && timeSlot;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
@@ -55,10 +52,10 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
         <Card className="shadow-floating animate-fade-in">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
-              Schedule Your Delivery
+              When would you like delivery?
             </CardTitle>
             <p className="text-muted-foreground">
-              Choose when and where you'd like your order delivered
+              Choose your preferred delivery date and time
             </p>
           </CardHeader>
           
@@ -115,35 +112,6 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
               </Select>
             </div>
 
-            {/* Address Input */}
-            <div className="space-y-2">
-              <Label htmlFor="address" className="text-base font-medium flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Delivery Address
-              </Label>
-              <Input
-                id="address"
-                placeholder="Enter your full delivery address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="text-base"
-              />
-            </div>
-
-            {/* Special Instructions */}
-            <div className="space-y-2">
-              <Label htmlFor="instructions" className="text-base font-medium">
-                Special Instructions (Optional)
-              </Label>
-              <Textarea
-                id="instructions"
-                placeholder="Apartment number, gate code, delivery preferences..."
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                className="min-h-[80px]"
-              />
-            </div>
-
             {/* Continue Button */}
             <Button 
               variant="delivery" 
@@ -152,7 +120,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
               onClick={handleContinue}
               disabled={!isFormValid}
             >
-              Continue to Products
+              Start Shopping
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </CardContent>

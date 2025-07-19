@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,22 +29,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     notes: ''
   });
 
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    address: '',
+    instructions: ''
+  });
+
   const deliveryFee = 4.99;
   const finalTotal = totalPrice + deliveryFee;
 
   const handleShopifyCheckout = () => {
-    // In a real implementation, this would:
-    // 1. Create a Shopify checkout session
-    // 2. Add all cart items to the checkout
-    // 3. Add delivery info as customer notes
-    // 4. Redirect to Shopify checkout
-    
     const deliveryNotes = `
 DELIVERY INFO:
 Date: ${deliveryInfo.date ? format(deliveryInfo.date, 'EEE, MMM d, yyyy') : 'Not set'}
 Time: ${deliveryInfo.timeSlot || 'Not set'}
-Address: ${deliveryInfo.address || 'Not set'}
-Instructions: ${deliveryInfo.instructions || 'None'}
+Address: ${deliveryAddress.address || 'Not set'}
+Instructions: ${deliveryAddress.instructions || 'None'}
 
 Customer Info:
 Name: ${customerInfo.name}
@@ -52,15 +52,7 @@ Phone: ${customerInfo.phone}
 Additional Notes: ${customerInfo.notes || 'None'}
     `.trim();
 
-    // Mock Shopify checkout URL - replace with actual Shopify integration
-    const shopifyCheckoutUrl = `https://your-store.myshopify.com/cart/add?quantity=1&id=variant_id&properties[Delivery Notes]=${encodeURIComponent(deliveryNotes)}`;
-    
     console.log('Redirecting to Shopify checkout with delivery info:', deliveryNotes);
-    
-    // In real implementation, you would redirect here:
-    // window.location.href = shopifyCheckoutUrl;
-    
-    // For demo purposes, show an alert
     alert('Redirecting to Shopify checkout with delivery information attached!');
   };
 
@@ -68,7 +60,11 @@ Additional Notes: ${customerInfo.notes || 'None'}
     setCustomerInfo(prev => ({ ...prev, [field]: value }));
   };
 
-  const isFormValid = customerInfo.email && customerInfo.phone && customerInfo.name;
+  const updateDeliveryAddress = (field: string, value: string) => {
+    setDeliveryAddress(prev => ({ ...prev, [field]: value }));
+  };
+
+  const isFormValid = customerInfo.email && customerInfo.phone && customerInfo.name && deliveryAddress.address;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
@@ -78,72 +74,115 @@ Additional Notes: ${customerInfo.notes || 'None'}
           <CardHeader className="text-center">
             <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
               <CheckCircle className="w-6 h-6 text-primary" />
-              Review Your Order
+              Complete Your Order
             </CardTitle>
             <p className="text-muted-foreground">
-              Confirm your details before checkout
+              Confirm your details and delivery address
             </p>
           </CardHeader>
         </Card>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Customer Information */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="text-lg">Customer Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter your full name"
-                  value={customerInfo.name}
-                  onChange={(e) => updateCustomerInfo('name', e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={customerInfo.email}
-                  onChange={(e) => updateCustomerInfo('email', e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="(555) 123-4567"
-                  value={customerInfo.phone}
-                  onChange={(e) => updateCustomerInfo('phone', e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="notes">Order Notes (Optional)</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Any special requests or notes..."
-                  value={customerInfo.notes}
-                  onChange={(e) => updateCustomerInfo('notes', e.target.value)}
-                  className="min-h-[80px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {/* Customer & Delivery Information */}
+          <div className="space-y-6">
+            {/* Customer Information */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="text-lg">Customer Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter your full name"
+                    value={customerInfo.name}
+                    onChange={(e) => updateCustomerInfo('name', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={customerInfo.email}
+                    onChange={(e) => updateCustomerInfo('email', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={customerInfo.phone}
+                    onChange={(e) => updateCustomerInfo('phone', e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Delivery Address */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Delivery Address
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Full Address *</Label>
+                  <Input
+                    id="address"
+                    placeholder="Street address, city, state, zip code"
+                    value={deliveryAddress.address}
+                    onChange={(e) => updateDeliveryAddress('address', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+                  <Textarea
+                    id="instructions"
+                    placeholder="Apartment number, gate code, delivery preferences..."
+                    value={deliveryAddress.instructions}
+                    onChange={(e) => updateDeliveryAddress('instructions', e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Order Notes */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="text-lg">Order Notes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any special requests or notes..."
+                    value={customerInfo.notes}
+                    onChange={(e) => updateCustomerInfo('notes', e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Order Summary */}
           <div className="space-y-6">
-            {/* Delivery Details */}
+            {/* Delivery Schedule */}
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle className="text-lg">Delivery Details</CardTitle>
+                <CardTitle className="text-lg">Delivery Schedule</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -158,21 +197,6 @@ Additional Notes: ${customerInfo.notes || 'None'}
                 <div className="flex items-center gap-3">
                   <Clock className="w-4 h-4 text-primary" />
                   <p>{deliveryInfo.timeSlot || 'Time not set'}</p>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-primary mt-1" />
-                  <div>
-                    <p className="font-medium">Delivery Address</p>
-                    <p className="text-sm text-muted-foreground">
-                      {deliveryInfo.address || 'Address not set'}
-                    </p>
-                    {deliveryInfo.instructions && (
-                      <p className="text-sm text-muted-foreground italic mt-1">
-                        "{deliveryInfo.instructions}"
-                      </p>
-                    )}
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -243,7 +267,7 @@ Additional Notes: ${customerInfo.notes || 'None'}
               
               {!isFormValid && (
                 <p className="text-sm text-destructive">
-                  Please fill in all required customer information fields
+                  Please fill in all required fields including delivery address
                 </p>
               )}
             </div>
