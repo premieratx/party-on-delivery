@@ -66,6 +66,20 @@ serve(async (req) => {
       deliveryInstructions 
     });
 
+    // Parse delivery address components
+    const parseAddress = (fullAddress: string) => {
+      const parts = fullAddress.split(',').map(part => part.trim());
+      return {
+        street: parts[0] || '',
+        city: parts[1] || '',
+        stateZip: parts[2] || '',
+        state: parts[2]?.split(' ')[0] || '',
+        zip: parts[2]?.split(' ')[1] || ''
+      };
+    };
+
+    const addressParts = parseAddress(deliveryAddress || '');
+
     // Create customer in Shopify
     const customerData = {
       customer: {
@@ -75,11 +89,12 @@ serve(async (req) => {
         phone: customerPhone || '',
         note: `Customer created from delivery order. Delivery scheduled: ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
         addresses: [{
-          address1: deliveryAddress || '',
-          city: "City", // Parsed from delivery address
-          province: "State",
+          address1: addressParts.street,
+          city: addressParts.city,
+          province: addressParts.state,
           country: "US",
-          zip: "00000"
+          zip: addressParts.zip,
+          phone: customerPhone || ''
         }]
       }
     };
@@ -123,21 +138,21 @@ serve(async (req) => {
         billing_address: {
           first_name: customerName?.split(' ')[0] || '',
           last_name: customerName?.split(' ').slice(1).join(' ') || '',
-          address1: deliveryAddress || '',
-          city: "City",
-          province: "State",
+          address1: addressParts.street,
+          city: addressParts.city,
+          province: addressParts.state,
           country: "US",
-          zip: "00000",
+          zip: addressParts.zip,
           phone: customerPhone || '',
         },
         shipping_address: {
           first_name: customerName?.split(' ')[0] || '',
           last_name: customerName?.split(' ').slice(1).join(' ') || '',
-          address1: deliveryAddress || '',
-          city: "City",
-          province: "State",
+          address1: addressParts.street,
+          city: addressParts.city,
+          province: addressParts.state,
           country: "US",
-          zip: "00000",
+          zip: addressParts.zip,
           phone: customerPhone || '',
         },
         email: session.customer_details?.email || '',
