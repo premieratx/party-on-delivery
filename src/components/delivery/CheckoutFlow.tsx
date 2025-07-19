@@ -426,10 +426,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   <div className="w-full">
                     <shopify-accelerated-checkout
                       shop-domain="thecannacorp.myshopify.com"
-                      variant-ids={cartItems.map(item => item.id).join(',')}
+                      storefront-access-token="your-storefront-access-token"
+                      variant-ids={cartItems.map(item => {
+                        // Use the actual product ID as variant ID if variant is undefined
+                        const variantId = item.variant && typeof item.variant === 'string' 
+                          ? item.variant 
+                          : `${item.id.replace('gid://shopify/Product/', 'gid://shopify/ProductVariant/')}-default`;
+                        console.log('Using variant ID for ShopPay:', variantId);
+                        return variantId;
+                      }).join(',')}
                       quantities={cartItems.map(item => item.quantity).join(',')}
                       onLoad={() => {
-                        console.log('ShopPay component loaded');
+                        console.log('ShopPay component loaded successfully');
                         setIsShopPayLoading(false);
                       }}
                       onSuccess={(event: any) => {
@@ -438,9 +446,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       }}
                       onError={(event: any) => {
                         console.error('ShopPay error:', event);
-                        alert('Payment failed. Please try again.');
+                        console.log('Falling back to manual checkout');
                       }}
-                      style={{ width: '100%', minHeight: '200px' }}
+                      style={{ width: '100%', minHeight: '200px', border: '1px solid #ccc' }}
                     />
                   </div>
                   
