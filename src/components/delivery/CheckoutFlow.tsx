@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 declare global {
   namespace JSX {
     interface IntrinsicElements {
-      'shopify-accelerated-checkout': any;
-      'shopify-store': any;
+      'shop-pay-button': any;
     }
   }
 }
@@ -68,25 +67,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
 
   useEffect(() => {
-    // Load correct Shopify Web Components script
+    // Load Shop Pay component script (correct CDN URL)
     const script = document.createElement('script');
-    script.src = 'https://cdn.shopify.com/shopifycloud/web-components/assets/shopify-web.js';
-    script.async = true;
+    script.src = 'https://cdn.shopify.com/shopifycloud/shop-js/modules/v2/loader.pay-button.esm.js';
     script.type = 'module';
+    script.async = true;
     
     script.onload = () => {
-      console.log('Shopify Web Components loaded successfully');
+      console.log('Shop Pay component loaded successfully');
       setIsShopPayLoading(false);
     };
     
     script.onerror = () => {
-      console.error('Failed to load Shopify Web Components');
+      console.error('Failed to load Shop Pay component');
       setIsShopPayLoading(false);
     };
     
     // Only add if not already present
-    if (!document.querySelector('script[src*="shopify-web"]')) {
+    if (!document.querySelector('script[src*="shop-js"]')) {
       document.head.appendChild(script);
+    } else {
+      setIsShopPayLoading(false);
     }
   }, []);
 
@@ -447,37 +448,31 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-6">
-                    {/* Single Unified Checkout Section */}
+                    {/* Single Shop Pay Checkout */}
                     <div className="bg-white p-6 rounded-lg border shadow-sm">
                       <h3 className="text-lg font-semibold mb-4">Complete Your Payment</h3>
                       
-                      {/* ShopPay Express Checkout */}
-                      <div className="mb-4">
-                        {isShopPayLoading ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                            <span className="ml-2 text-sm">Loading payment options...</span>
-                          </div>
-                        ) : (
-                          <shopify-accelerated-checkout
-                            shop-domain="thecannacorp"
-                            storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
-                            variant-ids={cartItems.map(item => {
+                      {isShopPayLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                          <span className="ml-2 text-sm">Loading payment options...</span>
+                        </div>
+                      ) : (
+                        <div className="mb-4">
+                          <shop-pay-button
+                            store-url="https://thecannacorp.myshopify.com"
+                            variants={cartItems.map(item => {
                               const variantId = item.variant?.toString().split('/').pop() || '';
-                              console.log('ShopPay variant ID:', variantId, 'for:', item.title);
-                              return variantId;
-                            }).filter(id => id).join(',')}
-                            quantities={cartItems.map(item => item.quantity).join(',')}
-                            style={{
-                              width: '100%',
-                              minHeight: '120px'
-                            }}
+                              const quantity = item.quantity;
+                              console.log('Shop Pay variant:', `${variantId}:${quantity}`, 'for:', item.title);
+                              return `${variantId}:${quantity}`;
+                            }).filter(variant => !variant.startsWith(':')).join(',')}
                           />
-                        )}
-                      </div>
+                        </div>
+                      )}
                       
                       <div className="text-center text-sm text-gray-500 my-4">
-                        or continue with manual checkout below
+                        Secure checkout powered by Shopify
                       </div>
                     </div>
                   </div>
