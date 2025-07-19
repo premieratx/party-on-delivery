@@ -64,7 +64,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   });
 
   // ShopPay integration state
-  const [isShopPayLoading, setIsShopPayLoading] = useState(false);
+  const [isShopPayLoading, setIsShopPayLoading] = useState(true);
 
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
@@ -432,14 +432,37 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         </div>
                       </div>
                     )}
+                    
+                    {/* ShopPay requires the web component script to be loaded */}
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: `
+                          <script>
+                            if (!window.customElements.get('shopify-accelerated-checkout')) {
+                              const script = document.createElement('script');
+                              script.src = 'https://cdn.shopify.com/shopifycloud/checkout-web/assets/checkout-web-packages~ShopifyAcceleratedCheckout.latest.en.js';
+                              script.type = 'module';
+                              script.onload = () => {
+                                console.log('Shopify Accelerated Checkout script loaded');
+                              };
+                              script.onerror = () => {
+                                console.error('Failed to load Shopify Accelerated Checkout script');
+                              };
+                              document.head.appendChild(script);
+                            }
+                          </script>
+                        `
+                      }}
+                    />
+                    
                     <shopify-accelerated-checkout
                       shop-domain="thecannacorp.myshopify.com"
                       storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
                       variant-ids={cartItems.map(item => {
-                        // Extract proper variant ID from the item
+                        // Get the actual variant ID from Shopify format
                         const variantId = item.variant && typeof item.variant === 'string' 
-                          ? item.variant.replace('gid://shopify/ProductVariant/', '')
-                          : item.id.replace('gid://shopify/Product/', '') + '-variant';
+                          ? item.variant.split('/').pop()
+                          : item.id.split('/').pop();
                         console.log('ShopPay variant ID:', variantId, 'for item:', item.title);
                         return variantId;
                       }).join(',')}
