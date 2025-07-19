@@ -16,6 +16,11 @@ interface DeliveryCartProps {
   totalPrice: number;
   onCheckout: () => void;
   deliveryInfo: DeliveryInfo;
+  isAddingToOrder?: boolean;
+  useSameAddress?: boolean;
+  hasChanges?: boolean;
+  appliedDiscount?: {code: string, type: 'percentage' | 'free_shipping', value: number} | null;
+  tipAmount?: number;
 }
 
 export const DeliveryCart: React.FC<DeliveryCartProps> = ({
@@ -26,13 +31,27 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   onRemoveItem,
   totalPrice,
   onCheckout,
-  deliveryInfo
+  deliveryInfo,
+  isAddingToOrder = false,
+  useSameAddress = false,
+  hasChanges = false,
+  appliedDiscount = null,
+  tipAmount = 0
 }) => {
-  // Calculate pricing like in checkout
+  // Calculate pricing like in checkout with same logic
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  
+  // Calculate discounted subtotal
+  const discountedSubtotal = appliedDiscount?.type === 'percentage' 
+    ? subtotal * (1 - appliedDiscount.value / 100)
+    : subtotal;
+  
+  // Calculate delivery fee (same logic as checkout) - remove free delivery if changes detected
+  const originalDeliveryFee = (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20);
+  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
+  
   const salesTax = subtotal * 0.0825; // 8.25% sales tax
-  const finalTotal = subtotal + deliveryFee + salesTax;
+  const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
 
   if (!isOpen) return null;
 
@@ -139,28 +158,48 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
             )}
           </div>
 
-          {/* Footer with Totals and Checkout */}
-          {items.length > 0 && (
-            <div className="border-t p-4 space-y-4">
-               <div className="space-y-2">
-                 <div className="flex justify-between">
-                   <span>Subtotal</span>
-                   <span>${subtotal.toFixed(2)}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
-                   <span>${deliveryFee.toFixed(2)}</span>
-                 </div>
-                 <div className="flex justify-between">
-                   <span>Sales Tax (8.25%)</span>
-                   <span>${salesTax.toFixed(2)}</span>
-                 </div>
-                 <Separator />
-                 <div className="flex justify-between font-bold text-lg">
-                   <span>Total</span>
-                   <span>${finalTotal.toFixed(2)}</span>
-                 </div>
-               </div>
+           {/* Footer with Totals and Checkout */}
+           {items.length > 0 && (
+             <div className="border-t p-4 space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  {appliedDiscount?.type === 'percentage' && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({appliedDiscount.code})</span>
+                      <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+                    <span className={finalDeliveryFee === 0 ? 'text-green-600' : ''}>
+                      {finalDeliveryFee === 0 ? 'FREE' : `$${finalDeliveryFee.toFixed(2)}`}
+                    </span>
+                  </div>
+                  {appliedDiscount?.type === 'free_shipping' && originalDeliveryFee > 0 && (
+                    <div className="flex justify-between text-green-600 text-sm">
+                      <span>Free shipping ({appliedDiscount.code})</span>
+                      <span>-${originalDeliveryFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span>Sales Tax (8.25%)</span>
+                    <span>${salesTax.toFixed(2)}</span>
+                  </div>
+                  {tipAmount > 0 && (
+                    <div className="flex justify-between">
+                      <span>Tip</span>
+                      <span>${tipAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total</span>
+                    <span>${finalTotal.toFixed(2)}</span>
+                  </div>
+                </div>
               
               <Button 
                 variant="delivery" 

@@ -52,7 +52,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                 )}
                 {lastOrderInfo.deliveryDate && lastOrderInfo.deliveryTime && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Last delivery: {lastOrderInfo.deliveryDate} at {lastOrderInfo.deliveryTime}
+                    Last delivery: {new Date(lastOrderInfo.deliveryDate).toLocaleDateString()} at {lastOrderInfo.deliveryTime}
                   </p>
                 )}
               </div>

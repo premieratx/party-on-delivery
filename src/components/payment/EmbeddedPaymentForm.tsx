@@ -19,6 +19,8 @@ interface PaymentFormProps {
   deliveryInfo: any;
   appliedDiscount: any;
   onPaymentSuccess: (paymentIntentId?: string) => void;
+  tipAmount?: number;
+  setTipAmount?: (tip: number) => void;
 }
 
 export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
@@ -29,12 +31,18 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   customerInfo,
   deliveryInfo,
   appliedDiscount,
-  onPaymentSuccess
+  onPaymentSuccess,
+  tipAmount: externalTipAmount,
+  setTipAmount: externalSetTipAmount
 }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [tipAmount, setTipAmount] = useState(subtotal * 0.10); // 10% pre-selected
+  const [internalTipAmount, setInternalTipAmount] = useState(subtotal * 0.10); // 10% pre-selected
+  
+  // Use external tip state if provided, otherwise use internal
+  const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
+  const setTipAmount = externalSetTipAmount || setInternalTipAmount;
   const [showCustomTip, setShowCustomTip] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 

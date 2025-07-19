@@ -41,6 +41,11 @@ export const DeliveryWidget: React.FC = () => {
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
   const [isAddingToOrder, setIsAddingToOrder] = useState(false);
   const [useSameAddress, setUseSameAddress] = useState(false);
+  
+  // State for tracking cart calculations (for cart/checkout sync)
+  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+  const [tipAmount, setTipAmount] = useState(0);
+  const [hasChanges, setHasChanges] = useState(false);
 
   const handleStartNewOrder = () => {
     // Clear cart and start fresh
@@ -188,6 +193,9 @@ export const DeliveryWidget: React.FC = () => {
           isAddingToOrder={isAddingToOrder}
           useSameAddress={useSameAddress}
           lastOrderInfo={lastOrderInfo}
+          onDiscountChange={setAppliedDiscount}
+          onTipChange={setTipAmount}
+          onChangesDetected={setHasChanges}
         />
       )}
 
@@ -201,6 +209,11 @@ export const DeliveryWidget: React.FC = () => {
         totalPrice={getTotalPrice()}
         onCheckout={handleCheckout}
         deliveryInfo={deliveryInfo}
+        isAddingToOrder={isAddingToOrder}
+        useSameAddress={useSameAddress}
+        hasChanges={hasChanges}
+        appliedDiscount={appliedDiscount}
+        tipAmount={tipAmount}
       />
     </div>
   );
