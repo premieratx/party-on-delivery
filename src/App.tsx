@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StripeProvider } from "@/components/payment/StripeProvider";
 import Index from "./pages/Index";
 import Success from "./pages/Success";
+import OrderComplete from "./pages/OrderComplete";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/success" element={<Success />} />
+            <Route path="/order-complete" element={<OrderComplete />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

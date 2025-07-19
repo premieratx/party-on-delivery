@@ -341,11 +341,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     // Clear cart after successful order
     localStorage.removeItem('partyondelivery_cart');
     
-    // Redirect to your domain (home page)
+    // Redirect to order complete page instead of external site
     if (window.top) {
-      window.top.location.href = 'https://partyondelivery.com';
+      window.top.location.href = '/order-complete';
     } else {
-      window.open('https://partyondelivery.com', '_blank');
+      window.open('/order-complete', '_blank');
     }
   };
 
