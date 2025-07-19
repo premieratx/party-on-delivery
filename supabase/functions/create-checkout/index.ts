@@ -161,7 +161,7 @@ serve(async (req) => {
         delivery_date: deliveryInfo.date,
         delivery_time: deliveryInfo.time,
         delivery_address: deliveryInfo.address,
-        delivery_instructions: addressInfo?.instructions || '',
+        delivery_instructions: deliveryInfo?.instructions || '',
         customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
         customer_phone: customerInfo.phone,
         customer_email: customerInfo.email,
