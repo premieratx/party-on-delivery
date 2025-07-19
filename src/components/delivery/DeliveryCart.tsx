@@ -96,7 +96,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                     <div className="flex-1 space-y-2">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-medium text-sm line-clamp-2">{item.title}</h4>
+                          <h4 className="font-medium text-sm line-clamp-2">{item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
                           <p className="text-primary font-semibold">${item.price}</p>
                         </div>
                         <Button
