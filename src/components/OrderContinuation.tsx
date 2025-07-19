@@ -43,23 +43,23 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
         
         <CardContent className="space-y-4">
           <Button 
-            onClick={onAddToOrder}
-            className="w-full h-14 text-lg"
+            onClick={onStartNewOrder}
+            className="w-full h-16 text-xl"
             variant="default"
           >
-            <Plus className="w-5 h-5 mr-2" />
-            Add to Previous Order
+            <RotateCcw className="w-6 h-6 mr-2" />
+            Start New Order
           </Button>
           
           <div className="text-center text-sm text-muted-foreground">or</div>
           
           <Button 
-            onClick={onStartNewOrder}
-            className="w-full h-16 text-xl"
+            onClick={onAddToOrder}
+            className="w-full h-12 text-base"
             variant="outline"
           >
-            <RotateCcw className="w-6 h-6 mr-2" />
-            Start New Order
+            <Plus className="w-4 h-4 mr-2" />
+            Add to Previous Order
           </Button>
           
           <p className="text-xs text-muted-foreground text-center mt-4">
