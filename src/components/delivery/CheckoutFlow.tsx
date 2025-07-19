@@ -5,6 +5,7 @@ declare global {
   namespace JSX {
     interface IntrinsicElements {
       'shopify-accelerated-checkout': any;
+      'shopify-store': any;
     }
   }
 }
@@ -460,9 +461,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       }}
                     />
                     
+                    {/* First add the store context */}
+                    <shopify-store 
+                      domain="thecannacorp.myshopify.com"
+                      access-token="a49fa69332729e9f8329ad8caacc37ba"
+                    />
+                    
                     <shopify-accelerated-checkout
-                      shop-domain="thecannacorp.myshopify.com"
-                      storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
                       variant-ids={cartItems.map(item => {
                         // Debug the actual cart item structure
                         console.log('Cart item structure:', item);
@@ -484,27 +489,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         return variantId;
                       }).join(',')}
                       quantities={cartItems.map(item => item.quantity).join(',')}
-                      onLoad={() => {
-                        console.log('ShopPay component loaded successfully');
-                        setIsShopPayLoading(false);
-                      }}
-                      onSuccess={(event: any) => {
-                        console.log('ShopPay payment successful:', event);
-                        alert('Payment successful! Order confirmed.');
-                      }}
-                      onError={(event: any) => {
-                        console.error('ShopPay error details:', event);
-                        setIsShopPayLoading(false);
-                        console.log('ShopPay failed - check console for details');
-                      }}
-                      style={{ 
-                        width: '100%', 
-                        minHeight: '200px', 
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        display: isShopPayLoading ? 'none' : 'block'
-                      }}
-                    />
+                       onLoad={() => {
+                         console.log('ShopPay component loaded successfully');
+                         setIsShopPayLoading(false);
+                       }}
+                       onSuccess={(event: any) => {
+                         console.log('ShopPay payment successful:', event);
+                         alert('Payment successful! Order confirmed.');
+                       }}
+                       onError={(error: any) => {
+                         console.error('ShopPay component error:', error);
+                         setIsShopPayLoading(false);
+                       }}
+                       style={{ 
+                         width: '100%', 
+                         minHeight: '200px', 
+                         border: '1px solid #e2e8f0',
+                         borderRadius: '8px',
+                         display: isShopPayLoading ? 'none' : 'block'
+                       }}
+                     />
                   </div>
                   
                   {/* Fallback Manual Checkout */}
