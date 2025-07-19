@@ -128,11 +128,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         `;
 
         try {
-          const response = await fetch(`https://${SHOPIFY_STORE}/api/2025-01/graphql.json`, {
+          const response = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
+              'Accept': 'application/json',
             },
             body: JSON.stringify({
               query,
@@ -177,11 +178,19 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 description: collection.description,
                 products
               });
-              
+               
               console.log(`Added collection: ${collection.title} with ${products.length} products`);
+            } else {
+              console.log(`No collection found for handle: ${handle}`);
             }
           } else {
-            console.error(`Error fetching ${handle}:`, response.status, response.statusText);
+            const errorData = await response.text();
+            console.error(`Error fetching ${handle}:`, response.status, response.statusText, errorData);
+            
+            // Show specific error for authentication issues
+            if (response.status === 401) {
+              console.error(`Authentication failed for ${handle}. The token may be invalid or not a Storefront Access Token.`);
+            }
           }
         } catch (fetchError) {
           console.error(`Fetch error for ${handle}:`, fetchError);
