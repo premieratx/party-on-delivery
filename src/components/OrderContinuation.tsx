@@ -10,6 +10,10 @@ interface OrderContinuationProps {
     orderNumber: string;
     total: number;
     date: string;
+    address?: string;
+    deliveryDate?: string;
+    deliveryTime?: string;
+    instructions?: string;
   };
 }
 
@@ -33,10 +37,25 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           </p>
           
           {lastOrderInfo && (
-            <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">Last order:</p>
-              <p className="font-medium">#{lastOrderInfo.orderNumber}</p>
-              <p className="text-sm">${lastOrderInfo.total.toFixed(2)} • {lastOrderInfo.date}</p>
+            <div className="mt-4 p-3 bg-muted/30 rounded-lg space-y-2">
+              <div>
+                <p className="text-sm text-muted-foreground">Delivery Address:</p>
+                <p className="font-medium">{lastOrderInfo.address || 'Address not saved'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Delivery Date & Time:</p>
+                <p className="font-medium">
+                  {lastOrderInfo.deliveryDate && lastOrderInfo.deliveryTime 
+                    ? `${new Date(lastOrderInfo.deliveryDate).toLocaleDateString()} at ${lastOrderInfo.deliveryTime}`
+                    : 'Date/time not saved'
+                  }
+                </p>
+              </div>
+              <div className="pt-1 border-t border-muted-foreground/20">
+                <p className="text-xs text-muted-foreground">
+                  Order #{lastOrderInfo.orderNumber} • ${lastOrderInfo.total.toFixed(2)} • {lastOrderInfo.date}
+                </p>
+              </div>
             </div>
           )}
         </CardHeader>
