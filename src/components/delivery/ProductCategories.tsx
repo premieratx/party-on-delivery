@@ -289,7 +289,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         
                         {/* Product info */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-base">{product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '')}</h4>
+                          <h4 className="font-medium text-base">{product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
                           <p className="text-xs text-muted-foreground">{variant.title}</p>
                           <Badge variant="secondary" className="text-xs mt-1">
                             ${variant.price.toFixed(2)}
@@ -347,7 +347,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   
                   {/* Product info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-base">{product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '')}</h4>
+                    <h4 className="font-medium text-base">{product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
                     <Badge variant="secondary" className="text-xs mt-1">
                       ${product.price.toFixed(2)}
                     </Badge>
