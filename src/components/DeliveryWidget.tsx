@@ -47,6 +47,33 @@ export const DeliveryWidget: React.FC = () => {
   const [tipAmount, setTipAmount] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
 
+  // Check if last order has expired (delivery date/time has passed)
+  const isLastOrderExpired = () => {
+    if (!lastOrderInfo?.deliveryDate || !lastOrderInfo?.deliveryTime) return true;
+    
+    try {
+      const deliveryDate = new Date(lastOrderInfo.deliveryDate);
+      const [timeSlot] = lastOrderInfo.deliveryTime.split(' - '); // Get start time from "10:00 AM - 11:00 AM"
+      const [time, period] = timeSlot.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      
+      // Convert to 24-hour format
+      let deliveryHours = hours;
+      if (period === 'PM' && hours !== 12) deliveryHours += 12;
+      if (period === 'AM' && hours === 12) deliveryHours = 0;
+      
+      deliveryDate.setHours(deliveryHours, minutes, 0, 0);
+      
+      return new Date() > deliveryDate;
+    } catch (error) {
+      console.error('Error parsing delivery date/time:', error);
+      return true; // If we can't parse, assume expired
+    }
+  };
+
+  // Filter out expired orders
+  const validLastOrderInfo = lastOrderInfo && !isLastOrderExpired() ? lastOrderInfo : null;
+
   const handleStartNewOrder = () => {
     // Clear cart and start fresh
     setCartItems([]);
@@ -57,7 +84,7 @@ export const DeliveryWidget: React.FC = () => {
   const handleAddToOrder = () => {
     // Keep existing cart and order info
     setIsAddingToOrder(true);
-    if (lastOrderInfo?.address) {
+    if (validLastOrderInfo?.address) {
       setCurrentStep('address-confirmation');
     } else {
       setCurrentStep('age-verify');
@@ -145,7 +172,7 @@ export const DeliveryWidget: React.FC = () => {
       <OrderContinuation
         onStartNewOrder={handleStartNewOrder}
         onAddToOrder={handleAddToOrder}
-        lastOrderInfo={lastOrderInfo}
+        lastOrderInfo={validLastOrderInfo}
       />
     );
   }
@@ -156,7 +183,7 @@ export const DeliveryWidget: React.FC = () => {
         onConfirmSameAddress={handleConfirmSameAddress}
         onUseNewAddress={handleUseNewAddress}
         onBack={handleBackToOrderContinuation}
-        lastOrderInfo={lastOrderInfo}
+        lastOrderInfo={validLastOrderInfo}
       />
     );
   }
@@ -164,7 +191,7 @@ export const DeliveryWidget: React.FC = () => {
   if (!isAgeVerified && currentStep === 'age-verify') {
     return <AgeVerification 
       onVerified={handleAgeVerified} 
-      onBack={isAddingToOrder && lastOrderInfo?.address ? handleBackToAddressConfirmation : handleBackToOrderContinuation}
+      onBack={isAddingToOrder && validLastOrderInfo?.address ? handleBackToAddressConfirmation : handleBackToOrderContinuation}
     />;
   }
 
@@ -192,7 +219,7 @@ export const DeliveryWidget: React.FC = () => {
           onUpdateQuantity={updateQuantity}
           isAddingToOrder={isAddingToOrder}
           useSameAddress={useSameAddress}
-          lastOrderInfo={lastOrderInfo}
+          lastOrderInfo={validLastOrderInfo}
           onDiscountChange={setAppliedDiscount}
           onTipChange={setTipAmount}
           onChangesDetected={setHasChanges}

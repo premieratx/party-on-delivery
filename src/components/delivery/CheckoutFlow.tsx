@@ -116,7 +116,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [useSameAddress, lastOrderInfo]);
 
-  // Check for changes from original order
+  // Check for changes from original order (excluding instructions)
   useEffect(() => {
     if (originalOrderInfo && useSameAddress) {
       const changes: string[] = [];
@@ -143,12 +143,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         }
       }
       
-      // Check instructions changes
-      if (addressInfo.instructions !== (originalOrderInfo.instructions || '')) {
-        if (!changes.includes('delivery address')) {
-          changes.push('delivery instructions');
-        }
-      }
+      // NOTE: Instructions changes are intentionally excluded - they don't affect same order status
       
       setChangedFields(changes);
       setHasChanges(changes.length > 0);
@@ -158,7 +153,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         onChangesDetected(changes.length > 0);
       }
     }
-  }, [addressInfo, deliveryInfo, originalOrderInfo, useSameAddress, onChangesDetected]);
+  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, deliveryInfo.date, deliveryInfo.timeSlot, originalOrderInfo, useSameAddress, onChangesDetected]);
 
   // ShopPay integration state
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
@@ -401,9 +396,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                            <span>Address:</span>
                            <span className="text-foreground">{addressInfo.street} • {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
                            {useSameAddress && !hasChanges && <span className="text-sm text-green-600">(Same as previous order)</span>}
-                           {hasChanges && (changedFields.includes('delivery address') || changedFields.includes('delivery instructions')) && (
+                           {hasChanges && (changedFields.includes('delivery address')) && (
                              <span className="text-sm text-red-600 font-medium">
-                               ({changedFields.includes('delivery address') ? 'Address changed' : 'Instructions changed'})
+                               (Address changed)
                              </span>
                            )}
                          </div>
