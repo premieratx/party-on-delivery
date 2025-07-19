@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Plus, RotateCcw } from 'lucide-react';
+import { ShoppingBag, Plus, RotateCcw, ArrowRight } from 'lucide-react';
+import logoImage from '@/assets/party-on-delivery-logo.png';
 
 interface OrderContinuationProps {
   onStartNewOrder: () => void;
@@ -26,15 +27,40 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
       <Card className="max-w-md w-full shadow-floating animate-fade-in">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShoppingBag className="w-8 h-8 text-white" />
-          </div>
-          <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
-            {lastOrderInfo ? "Welcome Back!" : "Welcome to Party On Delivery"}
-          </CardTitle>
-          <p className="text-muted-foreground">
-            {lastOrderInfo ? "What would you like to do today?" : "Let's Get This Party Started"}
-          </p>
+          {!lastOrderInfo ? (
+            // New user welcome screen with logo and main heading
+            <>
+              <img 
+                src={logoImage} 
+                alt="Party On Delivery Logo" 
+                className="w-24 h-24 mx-auto mb-4"
+              />
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  Local Liquor Delivery
+                </h1>
+                <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
+                  Party On Delivery
+                </CardTitle>
+                <p className="text-muted-foreground text-lg">
+                  Let's Get This Party Started
+                </p>
+              </div>
+            </>
+          ) : (
+            // Returning user welcome
+            <>
+              <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <ShoppingBag className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
+                Welcome Back!
+              </CardTitle>
+              <p className="text-muted-foreground">
+                What would you like to do today?
+              </p>
+            </>
+          )}
           
           {lastOrderInfo && (
             <div className="mt-4 p-3 bg-muted/30 rounded-lg space-y-2">
@@ -66,29 +92,44 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <Button 
-            onClick={onStartNewOrder}
-            className="w-full h-16 text-xl"
-            variant="default"
-          >
-            <RotateCcw className="w-6 h-6 mr-2" />
-            Start New Order
-          </Button>
-          
-          <div className="text-center text-sm text-muted-foreground">or</div>
-          
-          <Button 
-            onClick={onAddToOrder}
-            className="w-full h-12 text-base"
-            variant="outline"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add to Previous Order
-          </Button>
-          
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Adding to your previous order allows us to bundle deliveries and save you money!
-          </p>
+          {!lastOrderInfo ? (
+            // New user - single "Start Delivery" button
+            <Button 
+              onClick={onStartNewOrder}
+              className="w-full h-16 text-xl"
+              variant="default"
+            >
+              <ArrowRight className="w-6 h-6 mr-2" />
+              Start Delivery
+            </Button>
+          ) : (
+            // Returning user - choice between new order or add to existing
+            <>
+              <Button 
+                onClick={onStartNewOrder}
+                className="w-full h-16 text-xl"
+                variant="default"
+              >
+                <RotateCcw className="w-6 h-6 mr-2" />
+                Start New Order
+              </Button>
+              
+              <div className="text-center text-sm text-muted-foreground">or</div>
+              
+              <Button 
+                onClick={onAddToOrder}
+                className="w-full h-12 text-base"
+                variant="outline"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add to Previous Order
+              </Button>
+              
+              <p className="text-xs text-muted-foreground text-center mt-4">
+                Adding to your previous order allows us to bundle deliveries and save you money!
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

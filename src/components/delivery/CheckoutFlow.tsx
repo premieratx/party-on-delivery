@@ -264,8 +264,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex flex-col">
+      <div className="flex-1">
+        <div className="max-w-4xl mx-auto space-y-6">
         {/* Back Button */}
         <Button 
           variant="outline" 
@@ -724,6 +725,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                  </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </div>
+      </div>
+      
+      {/* Navigation Footer */}
+      <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
+        <div className="max-w-4xl mx-auto flex justify-center">
+          <div className="text-sm text-muted-foreground">
+            Step 4 of 4
           </div>
         </div>
       </div>

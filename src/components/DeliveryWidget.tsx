@@ -69,6 +69,14 @@ export const DeliveryWidget: React.FC = () => {
     setCurrentStep('age-verify');
   };
 
+  const handleBackToAddressConfirmation = () => {
+    setCurrentStep('address-confirmation');
+  };
+
+  const handleBackToOrderContinuation = () => {
+    setCurrentStep('order-continuation');
+  };
+
   const handleAgeVerified = (verified: boolean) => {
     setIsAgeVerified(verified);
     if (verified) {
@@ -78,6 +86,10 @@ export const DeliveryWidget: React.FC = () => {
 
   const handleBackToProducts = () => {
     setCurrentStep('products');
+  };
+
+  const handleBackToAgeVerify = () => {
+    setCurrentStep('age-verify');
   };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
@@ -138,13 +150,17 @@ export const DeliveryWidget: React.FC = () => {
       <AddressConfirmation
         onConfirmSameAddress={handleConfirmSameAddress}
         onUseNewAddress={handleUseNewAddress}
+        onBack={handleBackToOrderContinuation}
         lastOrderInfo={lastOrderInfo}
       />
     );
   }
 
   if (!isAgeVerified && currentStep === 'age-verify') {
-    return <AgeVerification onVerified={handleAgeVerified} />;
+    return <AgeVerification 
+      onVerified={handleAgeVerified} 
+      onBack={isAddingToOrder && lastOrderInfo?.address ? handleBackToAddressConfirmation : handleBackToOrderContinuation}
+    />;
   }
 
   return (
@@ -157,6 +173,7 @@ export const DeliveryWidget: React.FC = () => {
           cartItems={cartItems}
           onUpdateQuantity={updateQuantity}
           onProceedToCheckout={handleCheckout}
+          onBack={handleBackToAgeVerify}
         />
       )}
 

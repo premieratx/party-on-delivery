@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { supabase } from '@/integrations/supabase/client';
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
@@ -41,6 +41,7 @@ interface ProductCategoriesProps {
   cartItems: CartItem[]; // Add this to track individual cart items
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
   onProceedToCheckout: () => void;
+  onBack?: () => void;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -49,7 +50,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   onOpenCart,
   cartItems,
   onUpdateQuantity,
-  onProceedToCheckout
+  onProceedToCheckout,
+  onBack
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
@@ -190,7 +192,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
+      <div className="flex-1">{/* Main content area */}
       {/* Build Your Party Header - Mobile optimized */}
       <div className="sticky top-0 bg-background/95 backdrop-blur-md border-b z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
@@ -488,6 +491,27 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
+      
+      {/* Navigation Footer */}
+      {onBack && (
+        <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={onBack}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Step 3 of 4
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
