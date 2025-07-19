@@ -48,6 +48,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Category mapping to collection handles
   const categoryMapping = [
@@ -67,7 +68,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.log('Fetching Shopify collections...');
       
       const SHOPIFY_STORE = "premier-concierge.myshopify.com";
-      const SHOPIFY_API_KEY = "0d4359f88af16da44f2653d9134c18c5";
+      // Note: This Storefront Access Token needs to be updated with a valid one from your Shopify Admin
+      const SHOPIFY_API_KEY = "YOUR_STOREFRONT_ACCESS_TOKEN_HERE";
+      
+      // Check if we have a valid token
+      if (SHOPIFY_API_KEY === "YOUR_STOREFRONT_ACCESS_TOKEN_HERE") {
+        console.error('Shopify Storefront Access Token not configured');
+        setError('Shopify integration not configured. Please update the Storefront Access Token.');
+        setLoading(false);
+        return;
+      }
       
       // Define the 4 collections for the order steps
       const targetCollections = [
@@ -213,6 +223,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Loading collections from Shopify...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-destructive mb-2">Configuration Required</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              To connect to Shopify, you need to:
+              <br />1. Go to your Shopify Admin
+              <br />2. Navigate to Apps → Develop apps → Create private app
+              <br />3. Enable Storefront API access
+              <br />4. Copy the Storefront access token
+              <br />5. Replace "YOUR_STOREFRONT_ACCESS_TOKEN_HERE" in the code
+            </p>
+            <Button onClick={fetchCollections} variant="outline">
+              Retry
+            </Button>
+          </div>
         </div>
       </div>
     );
