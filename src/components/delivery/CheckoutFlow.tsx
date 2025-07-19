@@ -459,11 +459,23 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       shop-domain="thecannacorp.myshopify.com"
                       storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
                       variant-ids={cartItems.map(item => {
-                        // Get the actual variant ID from Shopify format
-                        const variantId = item.variant && typeof item.variant === 'string' 
-                          ? item.variant.split('/').pop()
-                          : item.id.split('/').pop();
-                        console.log('ShopPay variant ID:', variantId, 'for item:', item.title);
+                        // Debug the actual cart item structure
+                        console.log('Cart item structure:', item);
+                        
+                        // Extract the numeric variant ID from the Shopify GID format
+                        let variantId;
+                        if (item.variant && typeof item.variant === 'string') {
+                          if (item.variant.includes('gid://shopify/ProductVariant/')) {
+                            variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
+                          } else {
+                            variantId = item.variant;
+                          }
+                        } else {
+                          // If no variant, try to use the first variant of the product
+                          variantId = item.id.replace('gid://shopify/Product/', '').replace('gid://shopify/ProductVariant/', '');
+                        }
+                        
+                        console.log('Final variant ID for ShopPay:', variantId, 'for item:', item.title);
                         return variantId;
                       }).join(',')}
                       quantities={cartItems.map(item => item.quantity).join(',')}
