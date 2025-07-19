@@ -18,11 +18,24 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        
+        // Age verification variants
+        success: "bg-gradient-success text-success-foreground hover:shadow-glow transition-all duration-300 hover:scale-105",
+        danger: "bg-gradient-danger text-danger-foreground hover:shadow-[0_0_20px_hsl(var(--danger)/0.4)] transition-all duration-300 hover:scale-105",
+        
+        // Delivery app variants
+        delivery: "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-all duration-300 hover:scale-105 animate-glow-pulse",
+        cart: "bg-gradient-secondary text-secondary-foreground hover:shadow-[0_0_20px_hsl(var(--secondary)/0.4)] transition-all duration-300",
+        
+        // Step navigation
+        step: "bg-card border border-border hover:bg-accent hover:text-accent-foreground transition-all duration-300 hover:shadow-card",
+        "step-active": "bg-primary text-primary-foreground border border-primary shadow-glow",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
+        xl: "h-14 rounded-lg px-10 text-base font-semibold",
         icon: "h-10 w-10",
       },
     },

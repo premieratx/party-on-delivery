@@ -1,0 +1,135 @@
+import React, { useState } from 'react';
+import { AgeVerification } from './delivery/AgeVerification';
+import { DeliveryScheduler } from './delivery/DeliveryScheduler';
+import { ProductCategories } from './delivery/ProductCategories';
+import { DeliveryCart } from './delivery/DeliveryCart';
+import { CheckoutFlow } from './delivery/CheckoutFlow';
+
+export type DeliveryStep = 'age-verify' | 'schedule' | 'products' | 'cart' | 'checkout';
+
+export interface CartItem {
+  id: string;
+  title: string;
+  price: number;
+  image: string;
+  quantity: number;
+  variant?: string;
+}
+
+export interface DeliveryInfo {
+  date: Date | null;
+  timeSlot: string;
+  address: string;
+  instructions?: string;
+}
+
+export const DeliveryWidget: React.FC = () => {
+  const [currentStep, setCurrentStep] = useState<DeliveryStep>('age-verify');
+  const [isAgeVerified, setIsAgeVerified] = useState(false);
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
+    date: null,
+    timeSlot: '',
+    address: '',
+    instructions: ''
+  });
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const handleAgeVerified = (verified: boolean) => {
+    setIsAgeVerified(verified);
+    if (verified) {
+      setCurrentStep('schedule');
+    }
+  };
+
+  const handleScheduleComplete = (info: DeliveryInfo) => {
+    setDeliveryInfo(info);
+    setCurrentStep('products');
+  };
+
+  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+    setCartItems(prev => {
+      const existing = prev.find(i => i.id === item.id && i.variant === item.variant);
+      if (existing) {
+        return prev.map(i => 
+          i.id === item.id && i.variant === item.variant 
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        );
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
+    setIsCartOpen(true);
+  };
+
+  const updateQuantity = (id: string, variant: string | undefined, quantity: number) => {
+    if (quantity <= 0) {
+      setCartItems(prev => prev.filter(i => !(i.id === id && i.variant === variant)));
+    } else {
+      setCartItems(prev => prev.map(i => 
+        i.id === id && i.variant === variant 
+          ? { ...i, quantity }
+          : i
+      ));
+    }
+  };
+
+  const removeFromCart = (id: string, variant?: string) => {
+    setCartItems(prev => prev.filter(i => !(i.id === id && i.variant === variant)));
+  };
+
+  const getTotalPrice = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const getTotalItems = () => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const handleCheckout = () => {
+    setCurrentStep('checkout');
+  };
+
+  if (!isAgeVerified && currentStep === 'age-verify') {
+    return <AgeVerification onVerified={handleAgeVerified} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {currentStep === 'schedule' && (
+        <DeliveryScheduler 
+          onComplete={handleScheduleComplete}
+          deliveryInfo={deliveryInfo}
+        />
+      )}
+      
+      {currentStep === 'products' && (
+        <ProductCategories 
+          onAddToCart={addToCart}
+          cartItemCount={getTotalItems()}
+          onOpenCart={() => setIsCartOpen(true)}
+        />
+      )}
+
+      {currentStep === 'checkout' && (
+        <CheckoutFlow 
+          cartItems={cartItems}
+          deliveryInfo={deliveryInfo}
+          totalPrice={getTotalPrice()}
+        />
+      )}
+
+      {/* Slide-out Cart */}
+      <DeliveryCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
+        totalPrice={getTotalPrice()}
+        onCheckout={handleCheckout}
+        deliveryInfo={deliveryInfo}
+      />
+    </div>
+  );
+};
