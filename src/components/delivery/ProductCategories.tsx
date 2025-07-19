@@ -70,21 +70,54 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const fetchCollections = async () => {
     try {
       setLoading(true);
-      console.log('Fetching Shopify collections...');
+      console.log('Fetching all Shopify collections...');
       
       const SHOPIFY_STORE = "premier-concierge.myshopify.com";
-      // Updated with correct Storefront Access Token
       const SHOPIFY_API_KEY = "a49fa69332729e9f8329ad8caacc37ba";
       
-      // Define the 4 collections for the order steps
-      const targetCollections = [
-        "texas-beer",
-        "seltzer-collection", 
-        "lake-package-items",
-        "cocktail-collection-all"
-      ];
+      // First, get all collections to see what's available
+      const allCollectionsQuery = `
+        query {
+          collections(first: 20) {
+            edges {
+              node {
+                id
+                title
+                handle
+                description
+              }
+            }
+          }
+        }
+      `;
 
+      const allCollectionsResponse = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          query: allCollectionsQuery
+        }),
+      });
+
+      if (allCollectionsResponse.ok) {
+        const allCollectionsData = await allCollectionsResponse.json();
+        console.log('All available collections:', allCollectionsData.data?.collections?.edges);
+        
+        // Show available collections in console to help identify correct handles
+        allCollectionsData.data?.collections?.edges.forEach(({ node: collection }) => {
+          console.log(`Collection: "${collection.title}" - Handle: "${collection.handle}"`);
+        });
+      }
+
+      // Try to find best matching collections for our 4 categories
       const allCollections = [];
+
+      // Use our step mapping to define the collections we want
+      const targetCollections = stepMapping.map(step => step.handle);
 
       // Fetch each collection directly from Shopify
       for (const handle of targetCollections) {
