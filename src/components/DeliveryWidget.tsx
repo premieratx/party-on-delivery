@@ -59,7 +59,7 @@ export const DeliveryWidget: React.FC = () => {
       }
       return [...prev, { ...item, quantity: 1 }];
     });
-    setIsCartOpen(true);
+    // Don't auto-open cart anymore - user requested this change
   };
 
   const updateQuantity = (id: string, variant: string | undefined, quantity: number) => {
@@ -108,6 +108,8 @@ export const DeliveryWidget: React.FC = () => {
           onAddToCart={addToCart}
           cartItemCount={getTotalItems()}
           onOpenCart={() => setIsCartOpen(true)}
+          cartItems={cartItems}
+          onUpdateQuantity={updateQuantity}
         />
       )}
 

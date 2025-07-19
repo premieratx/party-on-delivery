@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Beer, Martini, Package, Plus, Loader2 } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2 } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { createClient } from '@supabase/supabase-js';
 
@@ -38,17 +38,22 @@ interface ProductCategoriesProps {
   onAddToCart: (item: Omit<CartItem, 'quantity'>) => void;
   cartItemCount: number;
   onOpenCart: () => void;
+  cartItems: CartItem[]; // Add this to track individual cart items
+  onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   onAddToCart,
   cartItemCount,
-  onOpenCart
+  onOpenCart,
+  cartItems,
+  onUpdateQuantity
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cartCountAnimation, setCartCountAnimation] = useState(false);
 
   // Category mapping to collection handles
   const categoryMapping = [
@@ -208,6 +213,23 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const selectedCollection = collections[selectedCategory];
 
+  // Helper to get cart item quantity for a specific product
+  const getCartItemQuantity = (productId: string, variantTitle?: string) => {
+    const cartItem = cartItems.find(item => 
+      item.id === productId && item.variant === variantTitle
+    );
+    return cartItem?.quantity || 0;
+  };
+
+  // Trigger cart count animation
+  useEffect(() => {
+    if (cartItemCount > 0) {
+      setCartCountAnimation(true);
+      const timer = setTimeout(() => setCartCountAnimation(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [cartItemCount]);
+
   const handleAddToCart = (product: ShopifyProduct, variant?: any) => {
     onAddToCart({
       id: product.id,
@@ -216,6 +238,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       image: product.image,
       variant: variant?.title
     });
+  };
+
+  const handleQuantityChange = (productId: string, variantTitle: string | undefined, delta: number) => {
+    const currentQty = getCartItemQuantity(productId, variantTitle);
+    const newQty = Math.max(0, currentQty + delta);
+    onUpdateQuantity(productId, variantTitle, newQty);
   };
 
   if (loading) {
@@ -256,8 +284,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       {/* Header with Cart */}
-      <div className="sticky top-0 bg-background/80 backdrop-blur-sm border-b z-40">
-        <div className="max-w-6xl mx-auto px-4 py-4">
+      <div className="sticky top-0 bg-background/95 backdrop-blur-md border-b z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Choose Your Products
@@ -272,41 +300,47 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               <ShoppingCart className="w-5 h-5" />
               Cart
               {cartItemCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[20px] h-5 rounded-full text-xs">
+                <Badge 
+                  className={`absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[24px] h-6 rounded-full text-xs font-bold transition-all duration-300 ${
+                    cartCountAnimation ? 'animate-pulse scale-125' : ''
+                  }`}
+                >
                   {cartItemCount}
                 </Badge>
               )}
             </Button>
           </div>
         </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto p-4">
-        {/* Category Navigation */}
-        <div className="mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categoryMapping.map((category, index) => {
-              const Icon = category.icon;
-              const isActive = selectedCategory === index;
-              
-              return (
-                <Button
-                  key={category.handle}
-                  variant={isActive ? "default" : "outline"}
-                  size="lg"
-                  onClick={() => setSelectedCategory(index)}
-                  className="h-20 flex-col gap-2"
-                >
-                  <div className={`w-8 h-8 rounded-full ${category.color} flex items-center justify-center`}>
-                    <Icon className="w-4 h-4 text-white" />
-                  </div>
-                  {category.title}
-                </Button>
-              );
-            })}
+        
+        {/* Sticky Category Navigation */}
+        <div className="border-t bg-background/95 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {categoryMapping.map((category, index) => {
+                const Icon = category.icon;
+                const isActive = selectedCategory === index;
+                
+                return (
+                  <Button
+                    key={category.handle}
+                    variant={isActive ? "default" : "outline"}
+                    size="lg"
+                    onClick={() => setSelectedCategory(index)}
+                    className="h-16 flex-col gap-2"
+                  >
+                    <div className={`w-6 h-6 rounded-full ${category.color} flex items-center justify-center`}>
+                      <Icon className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-xs">{category.title}</span>
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto p-4 pt-8">
         {/* Collection Info */}
         {selectedCollection && (
           <Card className="mb-6">
@@ -319,8 +353,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </Card>
         )}
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Products Grid - 5 items per row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {selectedCollection?.products.map((product) => (
             <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="aspect-square bg-muted relative">
@@ -344,40 +378,96 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Options:</p>
                     <div className="space-y-2">
-                      {product.variants.slice(0, 3).map((variant) => (
-                        <div key={variant.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{variant.title}</span>
-                            <Badge variant="secondary">
-                              ${variant.price.toFixed(2)}
-                            </Badge>
+                      {product.variants.slice(0, 3).map((variant) => {
+                        const cartQty = getCartItemQuantity(product.id, variant.title);
+                        
+                        return (
+                          <div key={variant.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">{variant.title}</span>
+                              <Badge variant="secondary">
+                                ${variant.price.toFixed(2)}
+                              </Badge>
+                            </div>
+                            
+                            {cartQty > 0 ? (
+                              <div className="flex items-center gap-1 bg-muted rounded-md">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleQuantityChange(product.id, variant.title, -1)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="px-2 text-sm font-medium">{cartQty} added</span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleQuantityChange(product.id, variant.title, 1)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                onClick={() => handleAddToCart(product, variant)}
+                                size="sm"
+                                disabled={!variant.available}
+                                className="gap-1"
+                              >
+                                <Plus className="h-4 w-4" />
+                                Add
+                              </Button>
+                            )}
                           </div>
-                          <Button
-                            onClick={() => handleAddToCart(product, variant)}
-                            size="sm"
-                            disabled={!variant.available}
-                            className="gap-1"
-                          >
-                            <Plus className="h-4 w-4" />
-                            Add
-                          </Button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-3">
                     <Badge variant="secondary" className="text-lg font-bold">
                       ${product.price.toFixed(2)}
                     </Badge>
-                    <Button
-                      onClick={() => handleAddToCart(product)}
-                      size="lg"
-                      className="gap-2"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add to Cart
-                    </Button>
+                    
+                    {(() => {
+                      const cartQty = getCartItemQuantity(product.id, undefined);
+                      
+                      return cartQty > 0 ? (
+                        <div className="flex items-center justify-between bg-muted rounded-lg p-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleQuantityChange(product.id, undefined, -1)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="px-2 text-sm font-medium flex-1 text-center">
+                            {cartQty} added
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleQuantityChange(product.id, undefined, 1)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleAddToCart(product)}
+                          size="lg"
+                          className="w-full gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add to Cart
+                        </Button>
+                      );
+                    })()}
                   </div>
                 )}
               </CardContent>
