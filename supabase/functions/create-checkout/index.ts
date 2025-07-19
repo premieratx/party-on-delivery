@@ -31,7 +31,7 @@ serve(async (req) => {
 
     // Calculate pricing components
     const subtotal = cartItems.reduce((sum: number, item: any) => {
-      return sum + (parseFloat(item.price.replace('$', '')) * item.quantity);
+      return sum + (item.price * item.quantity);
     }, 0);
     
     // Apply discount to subtotal if applicable
@@ -71,7 +71,7 @@ serve(async (req) => {
           name: item.name,
           description: item.description || '',
         },
-        unit_amount: Math.round(parseFloat(item.price.replace('$', '')) * 100),
+        unit_amount: Math.round(item.price * 100),
       },
       quantity: item.quantity,
     }));
