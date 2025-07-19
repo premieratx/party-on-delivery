@@ -250,14 +250,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <button
                     key={collection.handle}
                     onClick={() => setSelectedCategory(index)}
-                    className={`relative h-16 sm:h-32 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                    className={`relative h-20 sm:h-32 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       isActive 
-                        ? 'border-primary shadow-lg scale-105' 
-                        : 'border-border hover:border-primary/50 hover:scale-102'
-                    } bg-muted sm:bg-transparent`}
+                        ? 'border-primary shadow-lg scale-105 bg-primary/10' 
+                        : 'border-border hover:border-primary/50 hover:scale-102 bg-muted/50'
+                    }`}
                     style={{
                       // Background image only on larger screens
-                      backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+                      backgroundImage: window.innerWidth >= 640 && backgroundImage ? `url(${backgroundImage})` : 'none',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }}
@@ -266,14 +266,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <div className="absolute inset-0 bg-black/60 hidden sm:block"></div>
                     
                     {/* Content */}
-                    <div className="relative z-10 h-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-1 sm:p-4">
-                      {/* Mobile layout: stacked */}
-                      <div className="sm:hidden flex flex-col items-center justify-center h-full">
-                        <div className="text-primary font-bold text-lg">{stepNumber}</div>
-                        <div className="text-xs font-medium text-center leading-tight">{stepTitle}</div>
+                    <div className="relative z-10 h-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-2 sm:p-4">
+                      {/* Mobile layout: improved spacing and sizing */}
+                      <div className="sm:hidden flex flex-col items-center justify-center h-full space-y-1">
+                        <div className={`font-bold text-2xl transition-colors ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                          {stepNumber}
+                        </div>
+                        <div className="text-sm font-semibold text-center leading-tight px-1">
+                          {stepTitle}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-medium">
+                          Step {stepNumber}
+                        </div>
                       </div>
                       
-                      {/* Desktop layout: side by side */}
+                      {/* Desktop layout: side by side with background */}
                       <div className="hidden sm:block text-white font-bold text-4xl">{stepNumber}</div>
                       <div className="hidden sm:block text-white font-bold text-xl text-right">{stepTitle}</div>
                     </div>
