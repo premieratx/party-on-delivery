@@ -251,9 +251,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const selectedCollection = collections[selectedCategory];
 
   // Helper to get cart item quantity for a specific product
-  const getCartItemQuantity = (productId: string, variantTitle?: string) => {
+  const getCartItemQuantity = (productId: string, variantId?: string) => {
     const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variantTitle
+      item.id === productId && item.variant === variantId
     );
     return cartItem?.quantity || 0;
   };
@@ -273,14 +273,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       title: product.title,
       price: variant ? variant.price : product.price,
       image: product.image,
-      variant: variant?.title
+      variant: variant ? variant.id : product.variants[0]?.id // Use variant ID, not title
     });
   };
 
-  const handleQuantityChange = (productId: string, variantTitle: string | undefined, delta: number) => {
-    const currentQty = getCartItemQuantity(productId, variantTitle);
+  const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
+    const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
-    onUpdateQuantity(productId, variantTitle, newQty);
+    onUpdateQuantity(productId, variantId, newQty);
   };
 
   const handleNextTab = () => {
@@ -421,7 +421,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               {product.variants.length > 1 ? (
                 <div className="space-y-2">
                   {product.variants.slice(0, 3).map((variant) => {
-                    const cartQty = getCartItemQuantity(product.id, variant.title);
+                    const cartQty = getCartItemQuantity(product.id, variant.id);
                     
                     return (
                       <div key={variant.id} className="flex items-center gap-2 min-h-[60px]">
@@ -450,7 +450,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleQuantityChange(product.id, variant.title, -1)}
+                                onClick={() => handleQuantityChange(product.id, variant.id, -1)}
                                 className="h-7 w-7 p-0"
                               >
                                 <Minus className="h-3 w-3" />
@@ -459,7 +459,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleQuantityChange(product.id, variant.title, 1)}
+                                onClick={() => handleQuantityChange(product.id, variant.id, 1)}
                                 className="h-7 w-7 p-0"
                               >
                                 <Plus className="h-3 w-3" />

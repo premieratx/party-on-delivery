@@ -426,7 +426,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   <div className="w-full">
                     <shopify-accelerated-checkout
                       shop-domain="thecannacorp.myshopify.com"
-                      storefront-access-token="your-storefront-access-token"
+                      storefront-access-token="a49fa69332729e9f8329ad8caacc37ba"
                       variant-ids={cartItems.map(item => {
                         // Use the actual product ID as variant ID if variant is undefined
                         const variantId = item.variant && typeof item.variant === 'string' 
