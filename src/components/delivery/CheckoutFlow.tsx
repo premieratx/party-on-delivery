@@ -90,8 +90,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     '7:30 PM - 8:30 PM'
   ];
 
-  const deliveryFee = 4.99;
-  const finalTotal = totalPrice + deliveryFee;
+  // Pricing calculations
+  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  const salesTax = subtotal * 0.0825;
+  const [tipAmount, setTipAmount] = useState(0);
+  const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
+  const finalTotal = subtotal + deliveryFee + salesTax + tipAmount;
 
   const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
     const newInfo = { ...deliveryInfo, [field]: value };
@@ -494,17 +499,61 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           </div>
                         </div>
                         
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Cardholder Name
-                          </label>
-                          <Input 
-                            placeholder="John Doe" 
-                            className="w-full"
-                          />
-                        </div>
-                        
-                        {/* Payment Button */}
+                         <div>
+                           <label className="block text-sm font-medium text-gray-700 mb-2">
+                             Cardholder Name
+                           </label>
+                           <Input 
+                             placeholder="John Doe" 
+                             className="w-full"
+                             onChange={(e) => {
+                               // Detect when card info is entered
+                               if (e.target.value.length > 2) {
+                                 setHasEnteredCardInfo(true);
+                               }
+                             }}
+                           />
+                         </div>
+                         
+                         {/* Tip the Driver Section - Shows after card info entered */}
+                         {hasEnteredCardInfo && (
+                           <div className="pt-4 border-t border-gray-200">
+                             <h4 className="text-sm font-medium text-gray-700 mb-3">Tip the Driver</h4>
+                             <div className="grid grid-cols-4 gap-2 mb-3">
+                               {[0, 2, 5, 8].map((tipPercent) => (
+                                 <Button
+                                   key={tipPercent}
+                                   variant={tipAmount === (subtotal * tipPercent / 100) ? "default" : "outline"}
+                                   size="sm"
+                                   onClick={() => setTipAmount(subtotal * tipPercent / 100)}
+                                   className="text-xs"
+                                 >
+                                   {tipPercent === 0 ? "No Tip" : `${tipPercent}%`}
+                                 </Button>
+                               ))}
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <Label htmlFor="customTip" className="text-sm">Custom: $</Label>
+                               <Input
+                                 id="customTip"
+                                 type="number"
+                                 placeholder="0.00"
+                                 value={tipAmount > 0 && ![0, 2, 5, 8].map(p => subtotal * p / 100).includes(tipAmount) ? tipAmount.toFixed(2) : ''}
+                                 onChange={(e) => setTipAmount(parseFloat(e.target.value) || 0)}
+                                 className="w-20 text-sm"
+                                 step="0.01"
+                                 min="0"
+                               />
+                             </div>
+                             {tipAmount > 0 && (
+                               <p className="text-xs text-gray-600 mt-2">
+                                 Tip amount: ${tipAmount.toFixed(2)}
+                               </p>
+                             )}
+                           </div>
+                         )}
+                         
+                         {/* Payment Button */}
                         <Button 
                           className="w-full mt-6"
                           size="lg"
@@ -516,9 +565,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                               Processing Payment...
                             </>
-                          ) : (
-                            `Complete Payment • $${cartItems.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)}`
-                          )}
+                           ) : (
+                             `Complete Payment • $${finalTotal.toFixed(2)}`
+                           )}
                         </Button>
                         
                         <div className="text-center text-xs text-gray-500 mt-4">
@@ -629,21 +678,31 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 
                 <Separator />
                 
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>${totalPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee</span>
-                    <span>${deliveryFee.toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>${finalTotal.toFixed(2)}</span>
-                  </div>
-                </div>
+                 <div className="space-y-2">
+                   <div className="flex justify-between">
+                     <span>Subtotal</span>
+                     <span>${subtotal.toFixed(2)}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+                     <span>${deliveryFee.toFixed(2)}</span>
+                   </div>
+                   <div className="flex justify-between">
+                     <span>Sales Tax (8.25%)</span>
+                     <span>${salesTax.toFixed(2)}</span>
+                   </div>
+                   {tipAmount > 0 && (
+                     <div className="flex justify-between">
+                       <span>Driver Tip</span>
+                       <span>${tipAmount.toFixed(2)}</span>
+                     </div>
+                   )}
+                   <Separator />
+                   <div className="flex justify-between font-bold text-lg">
+                     <span>Total</span>
+                     <span>${finalTotal.toFixed(2)}</span>
+                   </div>
+                 </div>
               </CardContent>
             </Card>
           </div>

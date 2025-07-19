@@ -29,14 +29,15 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     logStep("Stripe initialized");
 
-    // Calculate total amount
+    // Calculate pricing components
     const subtotal = cartItems.reduce((sum: number, item: any) => {
       return sum + (parseFloat(item.price.replace('$', '')) * item.quantity);
     }, 0);
-    const deliveryFee = 5.99;
-    const totalAmount = Math.round((subtotal + deliveryFee) * 100); // Convert to cents
+    const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20; // $20 or 10% of subtotal
+    const salesTax = subtotal * 0.0825; // 8.25% sales tax
+    const totalAmount = Math.round((subtotal + deliveryFee + salesTax) * 100); // Convert to cents
 
-    logStep("Amount calculated", { subtotal, deliveryFee, totalAmount });
+    logStep("Amount calculated", { subtotal, deliveryFee, salesTax, totalAmount });
 
     // Check for existing customer
     const customers = await stripe.customers.list({ 
@@ -70,10 +71,23 @@ serve(async (req) => {
       price_data: {
         currency: "usd",
         product_data: {
-          name: "Delivery Fee",
+          name: subtotal >= 200 ? "Delivery Fee (10%)" : "Delivery Fee",
           description: `Delivery to ${deliveryInfo.address}`,
         },
         unit_amount: Math.round(deliveryFee * 100),
+      },
+      quantity: 1,
+    });
+
+    // Add sales tax as a line item
+    lineItems.push({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: "Sales Tax (8.25%)",
+          description: "TX State Sales Tax",
+        },
+        unit_amount: Math.round(salesTax * 100),
       },
       quantity: 1,
     });
