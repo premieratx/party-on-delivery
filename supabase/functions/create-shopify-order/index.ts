@@ -282,7 +282,7 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
           // Build tags array
           const tagArray = [groupTags, 'bundle-ready'];
           if (isAddingToOrder && useSameAddress) {
-            tagArray.push('recentpurchase');
+            tagArray.push('delivery-bundle');
           }
           const newTags = tagArray.join(', ');
           

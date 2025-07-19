@@ -237,7 +237,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
               deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
               deliveryTime: deliveryInfo.timeSlot || '',
-              instructions: addressInfo.instructions || ''
+              instructions: addressInfo.instructions || '',
+              recentpurchase: true // Mark as recent purchase for app identification
             };
             localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
           }
