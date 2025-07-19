@@ -6,6 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { supabase } from '@/integrations/supabase/client';
+import beerCategoryBg from '@/assets/beer-category-bg.jpg';
+import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
+import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
+import partySuppliesCategoryBg from '@/assets/party-supplies-category-bg.jpg';
 
 interface ShopifyProduct {
   id: string;
@@ -56,10 +60,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Step-based order flow mapping to collection handles
   const stepMapping = [
-    { step: 1, title: 'Beer', handle: 'tailgate-beer', icon: Beer, color: 'bg-amber-500' },
-    { step: 2, title: 'Seltzers', handle: 'seltzer-collection', icon: Martini, color: 'bg-blue-500' },
-    { step: 3, title: 'Cocktails', handle: 'cocktail-kits', icon: Martini, color: 'bg-pink-500' },
-    { step: 4, title: 'Party Supplies', handle: 'party-supplies', icon: Package, color: 'bg-green-500' }
+    { step: 1, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg },
+    { step: 2, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg },
+    { step: 3, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg },
+    { step: 4, title: 'Party Supplies', handle: 'party-supplies', backgroundImage: partySuppliesCategoryBg }
   ];
 
   useEffect(() => {
@@ -234,30 +238,38 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {collections.map((collection, index) => {
                 const stepInfo = stepMapping.find(step => step.handle === collection.handle);
-                const Icon = stepInfo?.icon || Package;
-                const color = stepInfo?.color || 'bg-gray-500';
                 const stepTitle = stepInfo?.title || collection.title;
                 const stepNumber = stepInfo?.step || index + 1;
+                const backgroundImage = stepInfo?.backgroundImage;
                 const isActive = selectedCategory === index;
                 
                 return (
-                  <Button
+                  <button
                     key={collection.handle}
-                    variant={isActive ? "default" : "outline"}
-                    size="lg"
                     onClick={() => setSelectedCategory(index)}
-                    className="h-24 flex-col gap-3 text-left"
+                    className={`relative h-32 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                      isActive 
+                        ? 'border-primary shadow-lg scale-105' 
+                        : 'border-border hover:border-primary/50 hover:scale-102'
+                    }`}
+                    style={{
+                      backgroundImage: `url(${backgroundImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center'
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
-                        {stepNumber}
-                      </div>
-                      <div className={`w-6 h-6 rounded-full ${color} flex items-center justify-center`}>
-                        <Icon className="w-3 h-3 text-white" />
-                      </div>
+                    {/* Dark overlay with 60% opacity */}
+                    <div className="absolute inset-0 bg-black/60"></div>
+                    
+                    {/* Content */}
+                    <div className="relative z-10 h-full flex items-center justify-between p-4">
+                      {/* Large number pushed far left */}
+                      <div className="text-white font-bold text-4xl">{stepNumber}</div>
+                      
+                      {/* Category name - bigger and positioned right */}
+                      <div className="text-white font-bold text-xl text-right">{stepTitle}</div>
                     </div>
-                    <span className="text-3xl font-bold leading-none">{stepTitle}</span>
-                  </Button>
+                  </button>
                 );
               })}
             </div>
