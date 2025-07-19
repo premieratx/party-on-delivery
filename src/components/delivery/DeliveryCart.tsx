@@ -28,8 +28,11 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   onCheckout,
   deliveryInfo
 }) => {
-  const deliveryFee = 4.99;
-  const finalTotal = totalPrice + deliveryFee;
+  // Calculate pricing like in checkout
+  const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  const salesTax = subtotal * 0.0825; // 8.25% sales tax
+  const finalTotal = subtotal + deliveryFee + salesTax;
 
   if (!isOpen) return null;
 
@@ -139,21 +142,25 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
           {/* Footer with Totals and Checkout */}
           {items.length > 0 && (
             <div className="border-t p-4 space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>${totalPrice.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span>${deliveryFee.toFixed(2)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span>${finalTotal.toFixed(2)}</span>
-                </div>
-              </div>
+               <div className="space-y-2">
+                 <div className="flex justify-between">
+                   <span>Subtotal</span>
+                   <span>${subtotal.toFixed(2)}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+                   <span>${deliveryFee.toFixed(2)}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span>Sales Tax (8.25%)</span>
+                   <span>${salesTax.toFixed(2)}</span>
+                 </div>
+                 <Separator />
+                 <div className="flex justify-between font-bold text-lg">
+                   <span>Total</span>
+                   <span>${finalTotal.toFixed(2)}</span>
+                 </div>
+               </div>
               
               <Button 
                 variant="delivery" 

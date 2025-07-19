@@ -728,6 +728,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         placeholder="Enter code"
                         value={discountCode}
                         onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && discountCode) {
+                            handleApplyDiscount();
+                          }
+                        }}
                         className="flex-1"
                       />
                       <Button 
