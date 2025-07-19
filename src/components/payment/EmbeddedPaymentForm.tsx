@@ -34,16 +34,16 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [tipAmount, setTipAmount] = useState(0);
+  const [tipAmount, setTipAmount] = useState(subtotal * 0.10); // 10% pre-selected
+  const [showCustomTip, setShowCustomTip] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const total = subtotal + deliveryFee + salesTax + tipAmount;
 
   const tipOptions = [
-    { label: '15%', value: subtotal * 0.15 },
-    { label: '18%', value: subtotal * 0.18 },
-    { label: '20%', value: subtotal * 0.20 },
-    { label: '25%', value: subtotal * 0.25 }
+    { label: '5%', value: subtotal * 0.05 },
+    { label: '10%', value: subtotal * 0.10 },
+    { label: '15%', value: subtotal * 0.15 }
   ];
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -144,30 +144,46 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                 <Button
                   key={tip.label}
                   type="button"
-                  variant={tipAmount === tip.value ? "default" : "outline"}
-                  onClick={() => setTipAmount(tip.value)}
+                  variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"}
+                  onClick={() => {
+                    setTipAmount(tip.value);
+                    setShowCustomTip(false);
+                  }}
                   className="text-sm"
                 >
                   {tip.label} (${tip.value.toFixed(2)})
                 </Button>
               ))}
+              <Button
+                type="button"
+                variant={showCustomTip ? "default" : "outline"}
+                onClick={() => {
+                  setShowCustomTip(true);
+                  setTipAmount(0);
+                }}
+                className="text-sm"
+              >
+                Custom
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="customTip" className="text-sm">Custom tip:</Label>
-              <div className="flex items-center gap-1">
-                <span className="text-sm">$</span>
-                <Input
-                  id="customTip"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={tipAmount > 0 && !tipOptions.some(t => t.value === tipAmount) ? tipAmount.toFixed(2) : ''}
-                  onChange={(e) => setTipAmount(parseFloat(e.target.value) || 0)}
-                  className="w-20"
-                />
+            {showCustomTip && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="customTip" className="text-sm">Custom tip:</Label>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm">$</span>
+                  <Input
+                    id="customTip"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={tipAmount.toFixed(2)}
+                    onChange={(e) => setTipAmount(parseFloat(e.target.value) || 0)}
+                    className="w-20"
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           <Separator />
