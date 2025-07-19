@@ -195,24 +195,36 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               Build Your Party
             </h1>
             
-            <Button 
-              variant="default" 
-              size="lg"
-              onClick={onOpenCart}
-              className="relative"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              Cart
-              {cartItemCount > 0 && (
-                <Badge 
-                  className={`absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[24px] h-6 rounded-full text-xs font-bold transition-all duration-300 ${
-                    cartCountAnimation ? 'animate-pulse scale-125' : ''
-                  }`}
-                >
-                  {cartItemCount}
-                </Badge>
-              )}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="default" 
+                size="lg"
+                onClick={onOpenCart}
+                className="relative"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Cart
+                {cartItemCount > 0 && (
+                  <Badge 
+                    className={`absolute -top-2 -right-2 bg-accent text-accent-foreground min-w-[24px] h-6 rounded-full text-xs font-bold transition-all duration-300 ${
+                      cartCountAnimation ? 'animate-pulse scale-125' : ''
+                    }`}
+                  >
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={onProceedToCheckout}
+                disabled={cartItemCount === 0}
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                Checkout
+              </Button>
+            </div>
           </div>
         </div>
         
