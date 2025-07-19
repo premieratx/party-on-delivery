@@ -306,20 +306,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       <div className="max-w-7xl mx-auto p-4 pt-8">
 
-        {/* Compact Order Form Layout - 5 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Product Grid - 3 columns desktop, 2 columns mobile */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
           {selectedCollection?.products.map((product) => (
-            <div key={product.id} className="bg-card border rounded-lg px-3 py-1.5 hover:shadow-md transition-all duration-200">
+            <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200">
               {/* Product variants handling */}
               {product.variants.length > 1 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {product.variants.slice(0, 3).map((variant) => {
                     const cartQty = getCartItemQuantity(product.id, variant.id);
                     
                     return (
-                      <div key={variant.id} className="flex items-center gap-2 min-h-[60px]">
-                        {/* Small product image */}
-                        <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                      <div key={variant.id} className="space-y-2">
+                        {/* Product image */}
+                        <div className="w-full aspect-square bg-muted rounded overflow-hidden">
                           <img
                             src={product.image}
                             alt={product.title}
@@ -327,33 +327,37 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           />
                         </div>
                         
-                        {/* Product info */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-base">{product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
-                          <p className="text-xs text-muted-foreground">{variant.title}</p>
-                          <Badge variant="secondary" className="text-xs mt-1">
+                        {/* Product info with fixed height to prevent layout shifts */}
+                        <div className="min-h-[4rem] flex flex-col justify-between">
+                          <div>
+                            <h4 className="font-medium text-sm lg:text-base leading-tight line-clamp-2">
+                              {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
+                            </h4>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{variant.title}</p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs mt-1 w-fit">
                             ${variant.price.toFixed(2)}
                           </Badge>
                         </div>
                         
-                        {/* Cart controls */}
-                        <div className="flex-shrink-0">
+                        {/* Cart controls with fixed width to prevent layout shifts */}
+                        <div className="flex justify-center min-h-[2rem]">
                           {cartQty > 0 ? (
                             <div className="flex items-center gap-1 bg-muted rounded">
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleQuantityChange(product.id, variant.id, -1)}
-                                className="h-7 w-7 p-0"
+                                className="h-8 w-8 p-0"
                               >
                                 <Minus className="h-3 w-3" />
                               </Button>
-                              <span className="px-2 text-xs font-medium">{cartQty}</span>
+                              <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => handleQuantityChange(product.id, variant.id, 1)}
-                                className="h-7 w-7 p-0"
+                                className="h-8 w-8 p-0"
                               >
                                 <Plus className="h-3 w-3" />
                               </Button>
@@ -363,9 +367,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               onClick={() => handleAddToCart(product, variant)}
                               size="sm"
                               disabled={!variant.available}
-                              className="h-7 px-2 text-xs"
+                              className="h-8 px-4 text-xs"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-3 w-3 mr-1" />
+                              Add
                             </Button>
                           )}
                         </div>
@@ -374,10 +379,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   })}
                 </div>
               ) : (
-                // Single product row
-                <div className="flex items-center gap-2 min-h-[60px]">
-                  {/* Small product image */}
-                  <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                // Single product layout
+                <div className="space-y-3">
+                  {/* Product image */}
+                  <div className="w-full aspect-square bg-muted rounded overflow-hidden">
                     <img
                       src={product.image}
                       alt={product.title}
@@ -385,16 +390,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     />
                   </div>
                   
-                  {/* Product info */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-base">{product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
-                    <Badge variant="secondary" className="text-xs mt-1">
+                  {/* Product info with fixed height to prevent layout shifts */}
+                  <div className="min-h-[4rem] flex flex-col justify-between">
+                    <h4 className="font-medium text-sm lg:text-base leading-tight line-clamp-2">
+                      {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
+                    </h4>
+                    <Badge variant="secondary" className="text-xs mt-2 w-fit">
                       ${product.price.toFixed(2)}
                     </Badge>
                   </div>
                   
-                  {/* Cart controls */}
-                  <div className="flex-shrink-0">
+                  {/* Cart controls with fixed width to prevent layout shifts */}
+                  <div className="flex justify-center min-h-[2rem]">
                     {(() => {
                       const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
                       
@@ -404,16 +411,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             size="sm"
                             variant="ghost"
                             onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
-                            className="h-7 w-7 p-0"
+                            className="h-8 w-8 p-0"
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
-                          <span className="px-2 text-xs font-medium">{cartQty}</span>
+                          <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
-                            className="h-7 w-7 p-0"
+                            className="h-8 w-8 p-0"
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
@@ -422,9 +429,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         <Button
                           onClick={() => handleAddToCart(product)}
                           size="sm"
-                          className="h-7 px-2 text-xs"
+                          className="h-8 px-4 text-xs"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add
                         </Button>
                       );
                     })()}
