@@ -165,8 +165,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handlePaymentSuccess = () => {
-    // Redirect to success page
-    window.location.href = '/success';
+    // Redirect to your domain
+    window.location.href = 'https://partyondelivery.com/success';
   };
 
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
