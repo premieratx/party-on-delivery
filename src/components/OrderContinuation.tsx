@@ -26,10 +26,10 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             <ShoppingBag className="w-8 h-8 text-white" />
           </div>
           <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
-            Welcome Back!
+            {lastOrderInfo ? "Welcome Back!" : "Welcome to Party On Delivery"}
           </CardTitle>
           <p className="text-muted-foreground">
-            What would you like to do today?
+            {lastOrderInfo ? "What would you like to do today?" : "Let's Get This Party Started"}
           </p>
           
           {lastOrderInfo && (
