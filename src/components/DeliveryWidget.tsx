@@ -113,6 +113,7 @@ export const DeliveryWidget: React.FC = () => {
           totalPrice={getTotalPrice()}
           onBack={handleBackToProducts}
           onDeliveryInfoChange={setDeliveryInfo}
+          onUpdateQuantity={updateQuantity}
         />
       )}
 

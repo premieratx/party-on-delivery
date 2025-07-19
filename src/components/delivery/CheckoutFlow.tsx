@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard } from 'lucide-react';
+import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ interface CheckoutFlowProps {
   totalPrice: number;
   onBack: () => void;
   onDeliveryInfoChange: (info: DeliveryInfo) => void;
+  onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
 }
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
@@ -31,7 +32,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   deliveryInfo,
   totalPrice,
   onBack,
-  onDeliveryInfoChange
+  onDeliveryInfoChange,
+  onUpdateQuantity
 }) => {
   // Step management
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
@@ -589,11 +591,39 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <div className="flex-1">
                       <p className="font-medium text-sm">{item.title}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="secondary">Qty: {item.quantity}</Badge>
                         <span className="text-sm text-muted-foreground">${item.price} each</span>
                       </div>
                     </div>
-                    <p className="font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
+                    
+                    <div className="flex items-center gap-3">
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        
+                        <Badge variant="secondary" className="min-w-[35px] justify-center px-2">
+                          {item.quantity}
+                        </Badge>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      
+                      {/* Total Price for Item */}
+                      <p className="font-semibold min-w-[60px] text-right">${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
                   </div>
                 ))}
                 
