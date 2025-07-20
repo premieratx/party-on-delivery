@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
-import { ProductCategories } from './delivery/ProductCategories';
+import ProductCategories from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
 import { CheckoutFlow } from './delivery/CheckoutFlow';
 import { OrderContinuation } from './OrderContinuation';
@@ -283,12 +283,9 @@ export const DeliveryWidget: React.FC = () => {
       {currentStep === 'products' && (
         <ProductCategories 
           onAddToCart={addToCart}
-          cartItemCount={getTotalItems()}
-          onOpenCart={() => setIsCartOpen(true)}
-          cartItems={cartItems}
-          onUpdateQuantity={updateQuantity}
-          onProceedToCheckout={handleCheckout}
-          onBack={handleBackToOrderContinuation}
+          onCheckout={handleCheckout}
+          getTotalItems={getTotalItems}
+          getTotalPrice={getTotalPrice}
         />
       )}
 
