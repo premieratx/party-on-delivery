@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,6 +60,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [cartCountAnimation, setCartCountAnimation] = useState(false);
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
+  const [selectedVariants, setSelectedVariants] = useState<{[productId: string]: string}>({});
 
   // Step-based order flow mapping to collection handles
   const stepMapping = [
@@ -316,317 +318,165 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       <div className="max-w-7xl mx-auto p-4 pt-8">
 
-        {/* Product Grid - Cocktails use 1 column on mobile, others stay 3 columns mobile */}
-        <div className={`grid gap-2 lg:gap-4 ${
-          selectedCollection?.handle === 'cocktail-kits' 
-            ? 'grid-cols-1 lg:grid-cols-6' 
-            : 'grid-cols-3 lg:grid-cols-6'
-        }`}>
-          {selectedCollection?.products.map((product) => (
-            <div 
-              key={product.id} 
-              className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
-                selectedCollection?.handle === 'cocktail-kits' ? 'lg:flex-col' : 'flex-col'
-              }`}
-            >
-              {/* Product variants handling */}
-              {product.variants.length > 1 ? (
-                <div className={`space-y-4 flex-1 flex flex-col ${
-                  selectedCollection?.handle === 'cocktail-kits' ? 'lg:space-y-4' : ''
-                }`}>
-                  {product.variants.slice(0, 3).map((variant) => {
-                    const cartQty = getCartItemQuantity(product.id, variant.id);
-                    
-                    return (
-                      <div 
-                        key={variant.id} 
-                        className={`flex flex-col h-full ${
-                          selectedCollection?.handle === 'cocktail-kits' 
-                            ? 'flex-row items-center gap-4 lg:flex-col lg:gap-0' 
-                            : 'gap-3'
-                        }`}
-                      >
-                        {/* Product image */}
-                        <div className={`bg-muted rounded overflow-hidden shrink-0 ${
-                          selectedCollection?.handle === 'cocktail-kits' 
-                            ? 'w-20 h-20 lg:w-full lg:aspect-square' 
-                            : 'w-full aspect-square'
-                        }`}>
-                          <img
-                            src={product.image}
-                            alt={product.title}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        
-                        {/* Product info with responsive layout for cocktails */}
-                        <div className={`flex flex-col flex-1 ${
-                          selectedCollection?.handle === 'cocktail-kits' 
-                            ? 'justify-between lg:min-h-[8rem]' 
-                            : 'justify-between min-h-[7rem]'
-                        }`}>
-                          <div className="flex-1 flex flex-col justify-center">
-                            <h4 className={`font-medium leading-tight text-center ${
-                              selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'text-lg lg:text-sm line-clamp-2' 
-                                : 'text-base lg:text-sm line-clamp-2'
-                            }`}>
-                              {(() => {
-                                // Clean title and remove pack info if it will be shown separately
-                                const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
-                                
-                                let cleanedTitle;
-                                if (hasPackInfo) {
-                                  cleanedTitle = product.title
-                                    .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
-                                    .replace(/(\d+)\s*(?:pk|pack)/gi, '')
-                                    .replace(/(\d+)\s*oz/gi, '')
-                                    .replace(/Can/gi, '')
-                                    .replace(/Hard Seltzer/gi, '')
-                                    .replace(/\s+/g, ' ')
-                                    .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
-                                    .trim();
-                                } else {
-                                  cleanedTitle = product.title
-                                    .replace(/(\d+)\s*Pack/gi, '$1pk')
-                                    .replace(/(\d+)\s*oz/gi, '$1oz')
-                                    .replace(/Can/gi, '')
-                                    .replace(/Hard Seltzer/gi, '')
-                                    .replace(/\s+/g, ' ')
-                                    .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
-                                    .trim();
-                                }
-                                
-                                return cleanedTitle;
-                              })()}
-                            </h4>
-                            <p className={`text-muted-foreground mt-1 ${
-                              selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'text-sm lg:text-xs line-clamp-1' 
-                                : 'text-xs line-clamp-1'
-                            }`}>
-                              {variant.title}
-                            </p>
-                            {/* Pack size info for variant products - mobile and desktop */}
-                            {(() => {
-                              const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
-                              const sizeMatch = product.title.match(/(\d+)\s*oz/i);
-                              if (packMatch && sizeMatch) {
-                                return (
-                                  <p className={`text-foreground font-bold mt-1 text-center ${
-                                    selectedCollection?.handle === 'cocktail-kits' ? 'text-sm lg:text-xs' : 'text-xs lg:text-xs'
-                                  }`}>
-                                    {packMatch[1]}pk × {sizeMatch[1]}oz
-                                  </p>
-                                );
-                              }
-                              return null;
-                            })()}
-                            {selectedCollection?.handle === 'cocktail-kits' && (
-                              <p className="text-sm text-muted-foreground mt-2 line-clamp-2 lg:hidden">
-                                {product.description}
-                              </p>
-                            )}
-                          </div>
-                          
-                          {/* Price and cart controls container */}
-                          <div className={`mt-auto pt-3 ${
-                            selectedCollection?.handle === 'cocktail-kits' 
-                              ? 'flex items-center gap-3 lg:block lg:pt-3' 
-                              : 'flex flex-col items-center gap-2'
-                          }`}>
-                          <Badge variant="secondary" className="w-fit font-semibold text-center mx-auto block">
-                            ${variant.price.toFixed(2)}
-                          </Badge>
-                            
-                            {/* Cart controls */}
-                            <div className={`flex justify-center ${
-                              selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'lg:mt-2' 
-                                : 'mt-2'
-                            }`}>
-                            {cartQty > 0 ? (
-                              <div className="flex items-center gap-0.5 bg-muted rounded">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleQuantityChange(product.id, variant.id, -1)}
-                                  className="h-7 w-7 p-0"
-                                >
-                                  <Minus className="h-2.5 w-2.5" />
-                                </Button>
-                                <span className="px-1.5 text-xs font-medium min-w-[1.5rem] text-center">{cartQty}</span>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleQuantityChange(product.id, variant.id, 1)}
-                                  className="h-7 w-7 p-0"
-                                >
-                                  <Plus className="h-2.5 w-2.5" />
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button
-                                onClick={() => handleAddToCart(product, variant)}
-                                size="sm"
-                                variant="delivery"
-                                disabled={!variant.available}
-                                className="h-7 px-3 text-xs font-medium"
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Add
-                              </Button>
-                            )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+        {/* Product Grid - All categories use consistent 3 columns mobile, 6 desktop */}
+        <div className="grid gap-2 lg:gap-4 grid-cols-3 lg:grid-cols-6">
+          {selectedCollection?.products.map((product) => {
+            // Handle variant selection for products with multiple variants
+            const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
+            const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
+            const cartQty = getCartItemQuantity(product.id, selectedVariant?.id);
+            
+            return (
+              <div 
+                key={product.id} 
+                className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full"
+              >
+                {/* Product image - consistent height */}
+                <div className="bg-muted rounded overflow-hidden w-full aspect-square mb-3">
+                  <img
+                    src={product.image}
+                    alt={product.title}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-              ) : (
-                // Single product layout
-                <div className={`flex flex-col h-full ${
-                  selectedCollection?.handle === 'cocktail-kits' 
-                    ? 'flex-row items-center gap-4 lg:flex-col lg:gap-0' 
-                    : 'gap-3'
-                }`}>
-                  {/* Product image */}
-                  <div className={`bg-muted rounded overflow-hidden shrink-0 ${
-                    selectedCollection?.handle === 'cocktail-kits' 
-                      ? 'w-20 h-20 lg:w-full lg:aspect-square' 
-                      : 'w-full aspect-square'
-                  }`}>
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                      className="w-full h-full object-contain"
-                    />
+                
+                {/* Product info with consistent height */}
+                <div className="flex flex-col flex-1 justify-between min-h-[8rem]">
+                  <div className="flex-1 flex flex-col justify-start">
+                    <h4 className="font-medium leading-tight text-center text-sm line-clamp-2 mb-2">
+                      {(() => {
+                        // Clean title and remove pack info if it will be shown separately
+                        const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
+                        
+                        let cleanedTitle;
+                        if (hasPackInfo) {
+                          cleanedTitle = product.title
+                            .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
+                            .replace(/(\d+)\s*(?:pk|pack)/gi, '')
+                            .replace(/(\d+)\s*oz/gi, '')
+                            .replace(/Can/gi, '')
+                            .replace(/Hard Seltzer/gi, '')
+                            .replace(/\s+/g, ' ')
+                            .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '')
+                            .trim();
+                        } else {
+                          cleanedTitle = product.title
+                            .replace(/(\d+)\s*Pack/gi, '$1pk')
+                            .replace(/(\d+)\s*oz/gi, '$1oz')
+                            .replace(/Can/gi, '')
+                            .replace(/Hard Seltzer/gi, '')
+                            .replace(/\s+/g, ' ')
+                            .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '')
+                            .trim();
+                        }
+                        
+                        return cleanedTitle;
+                      })()}
+                    </h4>
+
+                    {/* Variant selector for products with multiple variants */}
+                    {product.variants.length > 1 ? (
+                      <div className="mb-2">
+                        <Select
+                          value={selectedVariantId}
+                          onValueChange={(variantId) => setSelectedVariants(prev => ({
+                            ...prev,
+                            [product.id]: variantId
+                          }))}
+                        >
+                          <SelectTrigger className="w-full h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {product.variants.map((variant) => (
+                              <SelectItem key={variant.id} value={variant.id} className="text-xs">
+                                {variant.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-xs line-clamp-1 mb-2">
+                        {selectedVariant?.title}
+                      </p>
+                    )}
+
+                    {/* Pack size info for variant products */}
+                    {(() => {
+                      const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
+                      const sizeMatch = product.title.match(/(\d+)\s*oz/i);
+                      if (packMatch && sizeMatch) {
+                        return (
+                          <p className="text-foreground font-bold text-xs text-center mb-2">
+                            {packMatch[1]}pk × {sizeMatch[1]}oz
+                          </p>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                   
-                  {/* Product info with responsive layout */}
-                  <div className={`flex flex-col flex-1 ${
-                    selectedCollection?.handle === 'cocktail-kits' 
-                      ? 'justify-between lg:min-h-[8rem]' 
-                      : 'justify-between min-h-[7rem]'
-                  }`}>
-                    <div className="flex-1 flex flex-col justify-center">
-                      <h4 className={`font-medium leading-tight text-center ${
-                        selectedCollection?.handle === 'cocktail-kits' 
-                          ? 'text-lg lg:text-sm line-clamp-2' 
-                          : 'text-base lg:text-sm line-clamp-2'
-                      }`}>
-                        {(() => {
-                          // Clean title and remove pack info if it will be shown separately
-                          const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
-                          
-                          let cleanedTitle;
-                          if (hasPackInfo) {
-                            cleanedTitle = product.title
-                              .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
-                              .replace(/(\d+)\s*(?:pk|pack)/gi, '')
-                              .replace(/(\d+)\s*oz/gi, '')
-                              .replace(/Can/gi, '')
-                              .replace(/Hard Seltzer/gi, '')
-                              .replace(/\s+/g, ' ')
-                              .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
-                              .trim();
-                          } else {
-                            cleanedTitle = product.title
-                              .replace(/(\d+)\s*Pack/gi, '$1pk')
-                              .replace(/(\d+)\s*oz/gi, '$1oz')
-                              .replace(/Can/gi, '')
-                              .replace(/Hard Seltzer/gi, '')
-                              .replace(/\s+/g, ' ')
-                              .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
-                              .trim();
-                          }
-                          
-                          return cleanedTitle;
-                        })()}
-                      </h4>
-                      {/* Pack size info for all products - mobile and desktop */}
-                      {(() => {
-                        const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
-                        const sizeMatch = product.title.match(/(\d+)\s*oz/i);
-                        if (packMatch && sizeMatch) {
-                          return (
-                            <p className={`text-foreground font-bold mt-1 text-center ${
-                              selectedCollection?.handle === 'cocktail-kits' ? 'text-sm lg:text-xs' : 'text-xs lg:text-xs'
-                            }`}>
-                              {packMatch[1]}pk × {sizeMatch[1]}oz
-                            </p>
-                          );
-                        }
-                        return null;
-                      })()}
-                      {selectedCollection?.handle === 'cocktail-kits' && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2 lg:hidden">
-                          {product.description}
-                        </p>
-                      )}
-                    </div>
-                    
-                    {/* Price and cart controls container */}
-                    <div className={`mt-auto pt-3 ${
-                      selectedCollection?.handle === 'cocktail-kits' 
-                        ? 'flex items-center gap-3 lg:block lg:pt-3' 
-                        : 'flex flex-col items-center gap-2'
-                    }`}>
-                      <Badge variant="secondary" className="w-fit font-semibold text-center mx-auto block mt-2">
-                        ${product.price.toFixed(2)}
-                      </Badge>
+                  {/* Price and cart controls container - always at bottom */}
+                  <div className="mt-auto pt-2 flex flex-col items-center gap-2">
+                    <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
+                      ${selectedVariant?.price.toFixed(2)}
+                    </Badge>
                       
-                      {/* Cart controls */}
-                      <div className={`flex justify-center ${
-                        selectedCollection?.handle === 'cocktail-kits' 
-                          ? 'lg:mt-2' 
-                          : 'mt-2'
-                      }`}>
-                        {(() => {
-                          const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
-                          
-                        return cartQty > 0 ? (
-                          <div className="flex items-center gap-0.5 bg-muted rounded">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
-                              className="h-7 w-7 p-0"
-                            >
-                              <Minus className="h-2.5 w-2.5" />
-                            </Button>
-                            <span className="px-1.5 text-xs font-medium min-w-[1.5rem] text-center">{cartQty}</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
-                              className="h-7 w-7 p-0"
-                            >
-                              <Plus className="h-2.5 w-2.5" />
-                            </Button>
-                          </div>
-                        ) : (
+                    {/* Cart controls */}
+                    <div className="flex justify-center">
+                      {cartQty > 0 ? (
+                        <div className="flex items-center gap-0.5 bg-muted rounded">
                           <Button
-                            onClick={() => handleAddToCart(product)}
+                            variant="ghost"
                             size="sm"
-                            variant="delivery"
-                            className="h-7 px-3 text-xs font-medium"
+                            className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={() => onUpdateQuantity(product.id, selectedVariant?.id, Math.max(0, cartQty - 1))}
                           >
-                            <Plus className="h-3 w-3 mr-1" />
-                            Add
+                            <Minus size={12} />
                           </Button>
-                        );
-                        })()}
-                      </div>
+                          <span className="text-sm font-medium px-2 min-w-[2rem] text-center">
+                            {cartQty}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                            onClick={() => onUpdateQuantity(product.id, selectedVariant?.id, cartQty + 1)}
+                          >
+                            <Plus size={12} />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-8 px-3 text-xs"
+                          onClick={() => {
+                             if (selectedVariant) {
+                               onAddToCart({
+                                 id: product.id,
+                                 title: product.title,
+                                 name: product.title,
+                                 price: selectedVariant.price,
+                                 image: product.image,
+                                 variant: selectedVariant.id
+                               });
+                              setCartCountAnimation(true);
+                              setTimeout(() => setCartCountAnimation(false), 300);
+                            }
+                          }}
+                        >
+                          Add
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
-
         {selectedCollection?.products.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No products found in this collection.</p>
@@ -683,6 +533,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       </div>
       
       {/* Navigation Footer */}
