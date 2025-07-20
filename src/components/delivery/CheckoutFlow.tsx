@@ -583,26 +583,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                  <CardContent className="space-y-4">
                    <div className="space-y-2">
                      <Label htmlFor="street">Street Address *</Label>
-                     <GooglePlacesAutocomplete
-                       value={addressInfo.street}
-                       onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
-                       onPlaceSelect={(place) => {
-                         // Auto-populate other fields from selected place
-                         const components = place.address_components || [];
-                         const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
-                         const route = components.find(c => c.types.includes('route'))?.long_name || '';
-                         const city = components.find(c => c.types.includes('locality'))?.long_name || '';
-                         const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
-                         const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
-                         
-                         setAddressInfo(prev => ({
-                           ...prev,
-                           street: `${streetNumber} ${route}`.trim(),
-                           city: city || prev.city,
-                           state: state || prev.state,
-                           zipCode: zipCode || prev.zipCode
-                         }));
-                       }}
+                      <GooglePlacesAutocomplete
+                        value={addressInfo.street}
+                        onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
+                        onPlaceSelect={(place) => {
+                          // Auto-populate ALL fields from selected place on first click
+                          const components = place.address_components || [];
+                          const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+                          const route = components.find(c => c.types.includes('route'))?.long_name || '';
+                          const city = components.find(c => c.types.includes('locality'))?.long_name || 
+                                      components.find(c => c.types.includes('sublocality'))?.long_name || '';
+                          const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
+                          const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
+                          
+                          setAddressInfo(prev => ({
+                            ...prev,
+                            street: `${streetNumber} ${route}`.trim(),
+                            city: city,
+                            state: state, 
+                            zipCode: zipCode
+                          }));
+                        }}
                        placeholder="Start typing your address..."
                      />
                    </div>

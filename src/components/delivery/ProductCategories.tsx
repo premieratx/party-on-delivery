@@ -154,8 +154,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       // Scroll to top when changing tabs
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      // On the last tab, show checkout confirmation
-      setShowCheckoutDialog(true);
+      // On the last tab, go directly to checkout
+      onProceedToCheckout();
     }
   };
 
@@ -216,43 +216,44 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      {/* Sticky Cart & Checkout Buttons - Desktop Only */}
-      <div className="hidden lg:block bg-background/95 backdrop-blur-sm border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto p-4">
-          <div className="flex justify-center items-center gap-4">
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={onOpenCart}
-              className="flex items-center gap-2 bg-background/80 hover:bg-background"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              Cart ({cartItemCount})
-              {cartItemCount > 0 && (
-                <Badge variant="default" className="ml-1 bg-primary text-primary-foreground">
-                  {cartItemCount}
-                </Badge>
-              )}
-            </Button>
-            
-            {cartItemCount > 0 && (
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+        {/* Desktop Cart & Checkout Buttons */}
+        <div className="hidden lg:block">
+          <div className="max-w-7xl mx-auto p-4">
+            <div className="flex justify-center items-center gap-4">
               <Button
-                variant="default"
+                variant="outline"
                 size="lg"
-                onClick={onProceedToCheckout}
-                className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary"
+                onClick={onOpenCart}
+                className="flex items-center gap-2 bg-background/80 hover:bg-background"
               >
-                Checkout Now
+                <ShoppingCart className="w-5 h-5" />
+                Cart ({cartItemCount})
+                {cartItemCount > 0 && (
+                  <Badge variant="default" className="ml-1 bg-primary text-primary-foreground">
+                    {cartItemCount}
+                  </Badge>
+                )}
               </Button>
-            )}
+              
+              {cartItemCount > 0 && (
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={onProceedToCheckout}
+                  className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary"
+                >
+                  Checkout Now
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Category Tabs - increased height on desktop, no background images */}
-      <div className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-30 lg:top-[72px]">
-        <div className="max-w-7xl mx-auto p-4">
-          <div className="grid grid-cols-4 gap-2 h-20 sm:h-24">
+        {/* Category Tabs - smaller with larger font */}
+        <div className="max-w-7xl mx-auto px-4 pb-4">
+          <div className="grid grid-cols-4 gap-2 h-16 sm:h-18">
             {stepMapping.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Martini : Package;
@@ -278,14 +279,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: stacked */}
                     <div className="sm:hidden flex flex-col items-center gap-1">
-                      <IconComponent className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-foreground'}`} />
+                      <IconComponent className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-foreground'}`} />
                       <div className={`text-xs font-bold ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                     
-                    {/* Desktop layout: side by side without background image */}
-                    <div className="hidden sm:flex items-center justify-between w-full px-4">
-                      <div className={`font-bold text-3xl ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
-                      <div className={`font-bold text-xl text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                    {/* Desktop layout: side by side */}
+                    <div className="hidden sm:flex items-center justify-between w-full px-3">
+                      <div className={`font-bold text-2xl ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
+                      <div className={`font-bold text-lg text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                   </div>
                 </button>
@@ -293,64 +294,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             })}
           </div>
         </div>
+
+        {/* Section Heading - connected to tabs */}
+        {selectedCollection && (
+          <div className="max-w-7xl mx-auto px-4 pb-4">
+            <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
+              {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
+            </h2>
+          </div>
+        )}
       </div>
 
-      {/* Collection Header with reduced height on desktop and navigation arrows */}
-      {selectedCollection && (
-        <div className="relative h-32 sm:h-24 overflow-hidden">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url(${stepMapping.find(step => step.handle === selectedCollection.handle)?.backgroundImage})`,
-            }}
-          >
-            <div className="absolute inset-0 bg-black/60"></div>
-          </div>
-          <div className="relative z-10 h-full flex items-center justify-center px-4">
-            {/* Center title with navigation arrows below */}
-            <div className="flex flex-col items-center justify-center">
-              <h2 className="text-white text-2xl sm:text-3xl font-bold text-center mb-2">
-                {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
-              </h2>
-              
-              {/* Navigation arrows - big white ovals with blue arrows */}
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => {
-                    const prevIndex = selectedCategory > 0 ? selectedCategory - 1 : collections.length - 1;
-                    setSelectedCategory(prevIndex);
-                  }}
-                  className="bg-white/95 hover:bg-white text-brand-blue hover:text-brand-blue rounded-full h-12 w-12 p-0 shadow-lg"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </Button>
-                
-                <span className="text-white/80 text-sm font-medium">
-                  {selectedCategory + 1} of {collections.length}
-                </span>
-                
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => {
-                    const nextIndex = selectedCategory < collections.length - 1 ? selectedCategory + 1 : 0;
-                    setSelectedCategory(nextIndex);
-                  }}
-                  className="bg-white/95 hover:bg-white text-brand-blue hover:text-brand-blue rounded-full h-12 w-12 p-0 shadow-lg"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto p-4 pt-8">
-        {/* Product Grid - All categories use consistent 3 columns mobile, 6 desktop */}
-        <div className="grid gap-2 lg:gap-4 grid-cols-3 lg:grid-cols-6">
+      <div className="max-w-7xl mx-auto p-4">
+        {/* Product Grid - smaller tiles for beer section, consistent for others */}
+        <div className={`grid gap-2 lg:gap-4 ${selectedCategory === 0 ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
           {selectedCollection?.products.map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
@@ -365,8 +322,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 }`}
                 onClick={() => handleProductClick(product)}
               >
-                {/* Product image - consistent height */}
-                <div className="bg-muted rounded overflow-hidden w-full aspect-square mb-3">
+                {/* Product image - smaller for beer section */}
+                <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${selectedCategory === 0 ? 'mb-2' : 'mb-3'}`}>
                   <img
                     src={product.image}
                     alt={product.title}
@@ -374,10 +331,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   />
                 </div>
                 
-                {/* Product info with consistent height */}
-                <div className="flex flex-col flex-1 justify-between min-h-[8rem]">
+                {/* Product info with smaller height for beer */}
+                <div className={`flex flex-col flex-1 justify-between ${selectedCategory === 0 ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
                   <div className="flex-1 flex flex-col justify-start">
-                    <h4 className="font-medium leading-tight text-center text-sm line-clamp-2 mb-2">
+                    <h4 className={`font-medium leading-tight text-center line-clamp-2 ${selectedCategory === 0 ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
                       {(() => {
                         // Clean title and remove pack info if it will be shown separately
                         const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
@@ -555,26 +512,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         )}
       </div>
 
-      {/* Checkout Confirmation Dialog */}
-      <Dialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Proceed to Checkout?</DialogTitle>
-            <DialogDescription>
-              You're about to proceed to checkout with {cartItemCount} items in your cart.
-              You can always come back to add more items later.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCheckoutDialog(false)}>
-              Continue Shopping
-            </Button>
-            <Button onClick={confirmCheckout}>
-              Proceed to Checkout
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       
       {/* Navigation Footer */}
       {onBack && (

@@ -59,13 +59,8 @@ export const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> =
         autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace();
           if (place && place.formatted_address) {
-            // For mobile, set only the street address in the input
-            const streetNumber = place.address_components?.find(c => c.types.includes('street_number'))?.long_name || '';
-            const streetName = place.address_components?.find(c => c.types.includes('route'))?.long_name || '';
-            const streetAddress = `${streetNumber} ${streetName}`.trim();
-            
-            // Use street address for the input field instead of full formatted address
-            onChange(streetAddress || place.formatted_address);
+            // Use the full formatted address in the input field
+            onChange(place.formatted_address);
             
             // Check if address is in Texas
             const isInTexas = place.address_components?.some(component => 
