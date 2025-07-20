@@ -379,116 +379,118 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
       <div className="flex-1">
-        <div className="max-w-4xl mx-auto space-y-6">
-        {/* Back Button */}
-        <Button 
-          variant="outline" 
-          onClick={onBack}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Products
-        </Button>
+        {/* Mobile-optimized back button */}
+        <div className="p-2 pt-1 md:p-4">
+          <Button 
+            variant="outline" 
+            onClick={onBack}
+            className="mb-1 md:mb-4 text-xs md:text-sm py-1 px-2 md:py-2 md:px-4 h-auto"
+          >
+            <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+            Back to Products
+          </Button>
+        </div>
 
-        {/* Header with Confirmation Summary */}
-        <Card className="shadow-floating animate-fade-in">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
-              <CheckCircle className="w-6 h-6 text-primary" />
-              Complete Your Order
-            </CardTitle>
-            <p className="text-muted-foreground">
-              Confirm your details step by step
-            </p>
-          </CardHeader>
+        <div className="max-w-4xl mx-auto px-2 md:px-4 space-y-2 md:space-y-6">
+          {/* Compact Header */}
+          <Card className="shadow-floating animate-fade-in">
+            <CardHeader className="text-center py-2 md:py-6">
+              <CardTitle className="text-lg md:text-2xl bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-1 md:gap-2">
+                <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-primary" />
+                Complete Your Order
+              </CardTitle>
+              <p className="text-muted-foreground text-xs md:text-sm">
+                Confirm your details step by step
+              </p>
+            </CardHeader>
           
-          {/* Confirmation Summary */}
-          {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
-            <CardContent className="border-t">
-              <div className="space-y-3">
-                 {confirmedDateTime && (
-                   <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
-                     <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                       <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                         <span className="shrink-0">Delivery:</span>
-                         <span className="text-foreground text-xs md:text-sm truncate">{deliveryInfo.date && format(deliveryInfo.date, "MMM d")} • {deliveryInfo.timeSlot}</span>
-                         {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
-                         {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
-                           <span className="text-xs text-red-600 font-medium hidden md:inline">
-                             ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
-                               changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
-                           </span>
-                         )}
+            {/* Confirmation Summary - Condensed for mobile */}
+            {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
+              <CardContent className="border-t py-2 md:py-4">
+                <div className="space-y-1 md:space-y-3">
+                   {confirmedDateTime && (
+                     <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
+                       <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
+                         <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+                           <span className="shrink-0 text-xs md:text-sm">Delivery:</span>
+                           <span className="text-foreground text-xs md:text-sm truncate">{deliveryInfo.date && format(deliveryInfo.date, "MMM d")} • {deliveryInfo.timeSlot}</span>
+                           {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
+                           {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
+                             <span className="text-xs text-red-600 font-medium hidden md:inline">
+                               ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
+                                 changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
+                             </span>
+                           )}
+                         </div>
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           onClick={() => {
+                             setConfirmedDateTime(false);
+                             setCurrentStep('datetime');
+                           }}
+                           className="shrink-0 text-xs px-2 py-1 h-auto"
+                         >
+                           Edit
+                         </Button>
                        </div>
-                       <Button 
-                         variant="outline" 
-                         size="sm" 
-                         onClick={() => {
-                           setConfirmedDateTime(false);
-                           setCurrentStep('datetime');
-                         }}
-                         className="shrink-0 text-xs md:text-sm px-2 md:px-3"
-                       >
-                         Edit
-                       </Button>
                      </div>
-                   </div>
-                 )}
+                   )}
                 
-                 {confirmedAddress && (
-                   <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
-                     <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                       <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                         <span className="shrink-0">Address:</span>
-                         <span className="text-foreground text-xs md:text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
-                         {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
-                         {hasChanges && (changedFields.includes('delivery address')) && (
-                           <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
-                         )}
+                   {confirmedAddress && (
+                     <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
+                       <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
+                         <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+                           <span className="shrink-0 text-xs md:text-sm">Address:</span>
+                           <span className="text-foreground text-xs md:text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
+                           {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
+                           {hasChanges && (changedFields.includes('delivery address')) && (
+                             <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
+                           )}
+                         </div>
+                         <Button 
+                           variant="outline" 
+                           size="sm" 
+                           onClick={() => {
+                             setConfirmedAddress(false);
+                             setCurrentStep('address');
+                           }}
+                           className="shrink-0 text-xs px-2 py-1 h-auto"
+                         >
+                           Edit
+                         </Button>
                        </div>
-                       <Button 
-                         variant="outline" 
-                         size="sm" 
-                         onClick={() => {
-                           setConfirmedAddress(false);
-                           setCurrentStep('address');
-                         }}
-                         className="shrink-0 text-xs md:text-sm px-2 md:px-3"
-                       >
-                         Edit
-                       </Button>
+                       {addressInfo.instructions && (
+                         <div className="text-xs md:text-sm font-normal text-foreground mt-1">
+                           {addressInfo.instructions}
+                         </div>
+                       )}
                      </div>
-                     {addressInfo.instructions && (
-                       <div className="text-xs md:text-sm font-normal text-foreground mt-1">
-                         {addressInfo.instructions}
-                       </div>
-                     )}
-                   </div>
-                 )}
+                   )}
                 
-                {confirmedCustomer && (
-                  <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                        <span className="shrink-0">Contact:</span>
-                        <span className="text-foreground text-xs md:text-sm truncate">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
+                  {confirmedCustomer && (
+                    <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
+                      <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+                          <span className="shrink-0 text-xs md:text-sm">Contact:</span>
+                          <span className="text-foreground text-xs md:text-sm truncate">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setConfirmedCustomer(false);
+                            setCurrentStep('customer');
+                          }}
+                          className="shrink-0 text-xs px-2 py-1 h-auto"
+                        >
+                          Edit
+                        </Button>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          setConfirmedCustomer(false);
-                          setCurrentStep('customer');
-                        }}
-                        className="shrink-0 text-xs md:text-sm px-2 md:px-3"
-                      >
-                        Edit
-                      </Button>
                     </div>
-                  </div>
-                 )}
+                   )}
                  
                  {/* Changes Warning */}
                  {hasChanges && (
@@ -506,9 +508,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
            )}
          </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-2 md:gap-6">
           {/* Step-by-Step Forms */}
-          <div className="space-y-6">
+          <div className="space-y-2 md:space-y-6">
             {/* Date/Time Selection */}
             {currentStep === 'datetime' && (
               <Card className="shadow-card border-2 border-green-500">
@@ -795,11 +797,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           </div>
 
           {/* Order Summary */}
-          <div className="space-y-6">
+          <div className="space-y-2 md:space-y-6">
             <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5" />
+              <CardHeader className="py-2 md:py-6">
+                <CardTitle className="text-sm md:text-lg flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
                   Order Summary ({cartItems.length})
                 </CardTitle>
               </CardHeader>
