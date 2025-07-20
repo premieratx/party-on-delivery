@@ -408,77 +408,52 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
                               : ''
                           }`}>
-                            <Badge variant="secondary" className={`w-fit font-semibold ${
-                              selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'text-sm lg:text-sm mx-0 lg:mx-auto' 
-                                : 'text-xs lg:text-sm mt-1 mx-auto text-center'
-                            }`}>
-                              ${variant.price.toFixed(2)}
-                            </Badge>
-                            
-                            {/* Cart controls */}
-                            <div className={`flex justify-center ${
-                              selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'lg:mt-2' 
-                                : 'min-h-[2rem] mt-2'
-                            }`}>
-                              {cartQty > 0 ? (
-                                <div className="flex items-center gap-1 bg-muted rounded">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleQuantityChange(product.id, variant.id, -1)}
-                                    className={selectedCollection?.handle === 'cocktail-kits' 
-                                      ? 'h-8 w-8 p-0' 
-                                      : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
-                                    }
-                                  >
-                                    <Minus className={selectedCollection?.handle === 'cocktail-kits' 
-                                      ? 'h-3 w-3' 
-                                      : 'h-2 w-2 lg:h-3 lg:w-3'
-                                    } />
-                                  </Button>
-                                  <span className={`font-medium text-center ${
-                                    selectedCollection?.handle === 'cocktail-kits' 
-                                      ? 'px-2 text-sm min-w-[2rem]' 
-                                      : 'px-1 lg:px-2 text-xs lg:text-sm min-w-[1.5rem] lg:min-w-[2rem]'
-                                  }`}>
-                                    {cartQty}
-                                  </span>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => handleQuantityChange(product.id, variant.id, 1)}
-                                    className={selectedCollection?.handle === 'cocktail-kits' 
-                                      ? 'h-8 w-8 p-0' 
-                                      : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
-                                    }
-                                  >
-                                    <Plus className={selectedCollection?.handle === 'cocktail-kits' 
-                                      ? 'h-3 w-3' 
-                                      : 'h-2 w-2 lg:h-3 lg:w-3'
-                                    } />
-                                  </Button>
-                                </div>
-                              ) : (
+                          <Badge variant="secondary" className={`w-fit font-semibold text-center ${
+                            selectedCollection?.handle === 'cocktail-kits' 
+                              ? 'text-sm lg:text-sm mx-0 lg:mx-auto' 
+                              : 'text-xs lg:text-sm mt-1 mx-auto'
+                          }`}>
+                            ${variant.price.toFixed(2)}
+                          </Badge>
+                          
+                          {/* Cart controls */}
+                          <div className={`flex justify-center ${
+                            selectedCollection?.handle === 'cocktail-kits' 
+                              ? 'lg:mt-2' 
+                              : 'min-h-[2rem] mt-2'
+                          }`}>
+                            {cartQty > 0 ? (
+                              <div className="flex items-center gap-1 bg-muted rounded">
                                 <Button
-                                  onClick={() => handleAddToCart(product, variant)}
                                   size="sm"
-                                  variant="add-to-cart"
-                                  disabled={!variant.available}
-                                  className={`font-medium ${
-                                    selectedCollection?.handle === 'cocktail-kits' 
-                                      ? 'h-8 px-3 text-sm' 
-                                      : 'h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm'
-                                  }`}
+                                  variant="ghost"
+                                  onClick={() => handleQuantityChange(product.id, variant.id, -1)}
+                                  className="h-8 w-8 p-0"
                                 >
-                                  <Plus className={selectedCollection?.handle === 'cocktail-kits' 
-                                    ? 'h-3 w-3 mr-1' 
-                                    : 'h-2 w-2 lg:h-3 lg:w-3 mr-1'
-                                  } />
-                                  Add
+                                  <Minus className="h-3 w-3" />
                                 </Button>
-                              )}
+                                <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleQuantityChange(product.id, variant.id, 1)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                onClick={() => handleAddToCart(product, variant)}
+                                size="sm"
+                                variant="delivery"
+                                disabled={!variant.available}
+                                className="h-8 px-4 text-sm font-medium"
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add
+                              </Button>
+                            )}
                             </div>
                           </div>
                         </div>
@@ -548,10 +523,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
                         : ''
                     }`}>
-                      <Badge variant="secondary" className={`w-fit font-semibold ${
+                      <Badge variant="secondary" className={`w-fit font-semibold text-center ${
                         selectedCollection?.handle === 'cocktail-kits' 
                           ? 'text-sm lg:text-sm mx-0 lg:mx-auto' 
-                          : 'text-xs lg:text-sm mt-2 mx-auto text-center'
+                          : 'text-xs lg:text-sm mt-2 mx-auto'
                       }`}>
                         ${product.price.toFixed(2)}
                       </Badge>
@@ -565,104 +540,40 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         {(() => {
                           const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
                           
-                          return cartQty > 0 ? (
-                            <div className="flex items-center gap-1 bg-muted rounded">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
-                                className={selectedCollection?.handle === 'cocktail-kits' 
-                                  ? 'h-8 w-8 p-0' 
-                                  : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
-                                }
-                              >
-                                <Minus className={selectedCollection?.handle === 'cocktail-kits' 
-                                  ? 'h-3 w-3' 
-                                  : 'h-2 w-2 lg:h-3 lg:w-3'
-                                } />
-                              </Button>
-                              <span className={`font-medium text-center ${
-                                selectedCollection?.handle === 'cocktail-kits' 
-                                  ? 'px-2 text-sm min-w-[2rem]' 
-                                  : 'px-1 lg:px-2 text-xs lg:text-sm min-w-[1.5rem] lg:min-w-[2rem]'
-                              }`}>
-                                {cartQty}
-                              </span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
-                                className={selectedCollection?.handle === 'cocktail-kits' 
-                                  ? 'h-8 w-8 p-0' 
-                                  : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
-                                }
-                              >
-                                <Plus className={selectedCollection?.handle === 'cocktail-kits' 
-                                  ? 'h-3 w-3' 
-                                  : 'h-2 w-2 lg:h-3 lg:w-3'
-                                } />
-                              </Button>
-                            </div>
-                          ) : (
+                        return cartQty > 0 ? (
+                          <div className="flex items-center gap-1 bg-muted rounded">
                             <Button
-                              onClick={() => handleAddToCart(product)}
                               size="sm"
-                              variant="add-to-cart"
-                              className={`font-medium ${
-                                selectedCollection?.handle === 'cocktail-kits' 
-                                  ? 'h-8 px-3 text-sm' 
-                                  : 'h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm'
-                              }`}
+                              variant="ghost"
+                              onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
+                              className="h-8 w-8 p-0"
                             >
-                              <Plus className={selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'h-3 w-3 mr-1' 
-                                : 'h-2 w-2 lg:h-3 lg:w-3 mr-1'
-                              } />
-                              Add
+                              <Minus className="h-3 w-3" />
                             </Button>
-                          );
+                            <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => handleAddToCart(product)}
+                            size="sm"
+                            variant="delivery"
+                            className="h-8 px-4 text-sm font-medium"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add
+                          </Button>
+                        );
                         })()}
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Cart controls with fixed width to prevent layout shifts */}
-                  <div className="flex justify-center min-h-[2rem]">
-                    {(() => {
-                      const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
-                      
-                      return cartQty > 0 ? (
-                        <div className="flex items-center gap-1 bg-muted rounded">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={() => handleAddToCart(product)}
-                          size="sm"
-                          variant="add-to-cart"
-                          className="h-8 px-4 text-xs"
-                        >
-                          <Plus className="h-3 w-3 mr-1" />
-                          Add
-                        </Button>
-                      );
-                    })()}
                   </div>
                 </div>
               )}
