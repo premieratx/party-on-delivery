@@ -85,21 +85,21 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
             </Button>
           </div>
 
-          {/* Delivery Info */}
+          {/* Delivery Info - Compact */}
           {deliveryInfo.date && (
-            <Card className="m-4 bg-primary/5 border-primary/20">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Truck className="w-4 h-4 text-primary" />
-                  <span className="font-medium text-sm">Delivery Details</span>
+            <div className="mx-4 mt-3 mb-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <div className="flex items-center gap-2 mb-1">
+                <Truck className="w-4 h-4 text-primary" />
+                <span className="font-medium text-xs">Delivery Details</span>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-0.5">
+                <div className="flex justify-between">
+                  <span>{format(deliveryInfo.date, 'EEE, MMM d')}</span>
+                  <span>{deliveryInfo.timeSlot}</span>
                 </div>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>{format(deliveryInfo.date, 'EEE, MMM d')}</p>
-                  <p>{deliveryInfo.timeSlot}</p>
-                  <p className="truncate">{deliveryInfo.address}</p>
-                </div>
-              </CardContent>
-            </Card>
+                <p className="truncate">{deliveryInfo.address}</p>
+              </div>
+            </div>
           )}
 
           {/* Cart Items */}
