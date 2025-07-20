@@ -74,6 +74,18 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
 
     try {
       // Create payment intent
+      const groupOrderData = localStorage.getItem('partyondelivery_group_order');
+      let groupOrderNumber = '';
+      
+      if (groupOrderData) {
+        try {
+          const groupOrder = JSON.parse(groupOrderData);
+          groupOrderNumber = groupOrder.originalOrderNumber || '';
+        } catch (error) {
+          console.error('Error parsing group order data:', error);
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: {
           amount: Math.round(total * 100), // Convert to cents
@@ -82,7 +94,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           customerInfo,
           deliveryInfo,
           appliedDiscount,
-          tipAmount
+          tipAmount,
+          groupOrderNumber
         }
       });
 

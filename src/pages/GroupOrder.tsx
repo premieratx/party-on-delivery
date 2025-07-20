@@ -8,6 +8,16 @@ import { CheckCircle, MapPin, Clock, Package, Users, AlertCircle } from 'lucide-
 import { DeliveryWidget } from '@/components/DeliveryWidget';
 import { supabase } from '@/integrations/supabase/client';
 
+interface OrderItem {
+  id: string;
+  title: string;
+  name: string;
+  price: number;
+  quantity: number;
+  image: string;
+  variant?: string;
+}
+
 interface GroupOrderInfo {
   orderNumber: string;
   total: number;
@@ -19,6 +29,8 @@ interface GroupOrderInfo {
   instructions?: string;
   customerName?: string;
   customerEmail?: string;
+  items?: OrderItem[];
+  subtotal?: number;
 }
 
 const GroupOrder = () => {
@@ -42,7 +54,31 @@ const GroupOrder = () => {
           if (orderData) {
             const order = JSON.parse(orderData);
             if (order.orderNumber === groupOrderId) {
-              setGroupOrderInfo(order);
+              // Try to fetch detailed order info from Shopify
+              try {
+                const { data: shopifyDetails, error: shopifyError } = await supabase.functions.invoke('get-shopify-order-details', {
+                  body: { orderNumber: groupOrderId }
+                });
+
+                if (!shopifyError && shopifyDetails?.success) {
+                  const enhancedOrder = {
+                    ...order,
+                    items: shopifyDetails.order.items,
+                    subtotal: shopifyDetails.order.subtotal,
+                    deliveryDate: shopifyDetails.order.delivery.date || order.deliveryDate,
+                    deliveryTime: shopifyDetails.order.delivery.time || order.deliveryTime,
+                    address: shopifyDetails.order.delivery.address || order.address,
+                    instructions: shopifyDetails.order.delivery.instructions || order.instructions
+                  };
+                  setGroupOrderInfo(enhancedOrder);
+                } else {
+                  setGroupOrderInfo(order);
+                }
+              } catch (shopifyError) {
+                console.error('Error fetching Shopify details:', shopifyError);
+                setGroupOrderInfo(order);
+              }
+
               // Check if the order is expired
               if (order.deliveryDate && order.deliveryTime) {
                 const deliveryDateTime = new Date(`${order.deliveryDate}T${convertTimeToDateTime(order.deliveryTime)}`);
@@ -52,7 +88,7 @@ const GroupOrder = () => {
             }
           }
 
-          // If not in localStorage, fetch from database
+          // If not in localStorage, fetch from database and Shopify
           const { data: shopifyOrder, error } = await supabase
             .from('shopify_orders')
             .select(`
@@ -82,27 +118,52 @@ const GroupOrder = () => {
             const orderGroup = shopifyOrder.order_groups;
             const fullAddress = `${orderGroup.delivery_address}, ${orderGroup.delivery_city}, ${orderGroup.delivery_state} ${orderGroup.delivery_zip}`;
             
-            // Create a delivery date 2 hours from order creation (placeholder logic)
-            const orderDate = new Date(shopifyOrder.created_at);
-            const deliveryDate = new Date(orderDate.getTime() + 2 * 60 * 60 * 1000);
-            
-            const groupOrder = {
-              orderNumber: shopifyOrder.shopify_order_number,
-              total: shopifyOrder.amount,
-              date: shopifyOrder.created_at,
-              orderId: shopifyOrder.shopify_order_number,
-              address: fullAddress,
-              deliveryDate: deliveryDate.toISOString().split('T')[0],
-              deliveryTime: "2:00 PM - 3:00 PM", // Placeholder time
-              instructions: orderGroup.delivery_instructions,
-              customerName: orderGroup.customer_name,
-              customerEmail: orderGroup.customer_email
-            };
+            // Fetch detailed order info from Shopify
+            const { data: shopifyDetails, error: shopifyError } = await supabase.functions.invoke('get-shopify-order-details', {
+              body: { orderNumber: groupOrderId }
+            });
+
+            let groupOrder;
+            if (!shopifyError && shopifyDetails?.success) {
+              // Use detailed Shopify data
+              groupOrder = {
+                orderNumber: shopifyOrder.shopify_order_number,
+                total: shopifyDetails.order.total,
+                subtotal: shopifyDetails.order.subtotal,
+                date: shopifyOrder.created_at,
+                orderId: shopifyOrder.shopify_order_number,
+                address: shopifyDetails.order.delivery.address || fullAddress,
+                deliveryDate: shopifyDetails.order.delivery.date || new Date(shopifyOrder.created_at).toISOString().split('T')[0],
+                deliveryTime: shopifyDetails.order.delivery.time || "2:00 PM - 3:00 PM",
+                instructions: shopifyDetails.order.delivery.instructions || orderGroup.delivery_instructions,
+                customerName: shopifyDetails.order.customer.name || orderGroup.customer_name,
+                customerEmail: shopifyDetails.order.customer.email || orderGroup.customer_email,
+                items: shopifyDetails.order.items
+              };
+            } else {
+              // Fallback to basic data
+              const orderDate = new Date(shopifyOrder.created_at);
+              const deliveryDate = new Date(orderDate.getTime() + 2 * 60 * 60 * 1000);
+              
+              groupOrder = {
+                orderNumber: shopifyOrder.shopify_order_number,
+                total: shopifyOrder.amount,
+                date: shopifyOrder.created_at,
+                orderId: shopifyOrder.shopify_order_number,
+                address: fullAddress,
+                deliveryDate: deliveryDate.toISOString().split('T')[0],
+                deliveryTime: "2:00 PM - 3:00 PM",
+                instructions: orderGroup.delivery_instructions,
+                customerName: orderGroup.customer_name,
+                customerEmail: orderGroup.customer_email
+              };
+            }
             
             setGroupOrderInfo(groupOrder);
             
-            // Check if the order is expired (assuming 2 hour delivery window)
-            setIsOrderExpired(isAfter(new Date(), deliveryDate));
+            // Check if the order is expired
+            const deliveryDateTime = new Date(`${groupOrder.deliveryDate}T${convertTimeToDateTime(groupOrder.deliveryTime)}`);
+            setIsOrderExpired(isAfter(new Date(), deliveryDateTime));
           }
         } catch (error) {
           console.error('Error parsing group order:', error);
@@ -130,11 +191,20 @@ const GroupOrder = () => {
 
   const handleConfirmAddress = () => {
     if (groupOrderInfo) {
-      // Set up the group order context
-      localStorage.setItem('partyondelivery_group_order', JSON.stringify({
-        ...groupOrderInfo,
-        isGroupOrder: true
-      }));
+      // Set up group order context for delivery widget
+      const groupOrderContext = {
+        isGroupOrder: true,
+        originalOrderNumber: groupOrderInfo.orderNumber,
+        deliveryDate: groupOrderInfo.deliveryDate,
+        deliveryTime: groupOrderInfo.deliveryTime,
+        address: groupOrderInfo.address,
+        instructions: groupOrderInfo.instructions || '',
+        customerName: groupOrderInfo.customerName,
+        customerEmail: groupOrderInfo.customerEmail
+      };
+      
+      localStorage.setItem('partyondelivery_group_order', JSON.stringify(groupOrderContext));
+      localStorage.setItem('partyondelivery_add_to_order', 'true');
       setAddressConfirmed(true);
       setShowDeliveryWidget(true);
     }
@@ -252,6 +322,58 @@ const GroupOrder = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Order Items Section */}
+        {groupOrderInfo.items && groupOrderInfo.items.length > 0 && (
+          <Card className="shadow-floating animate-fade-in border-blue-200 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                <Package className="w-5 h-5" />
+                Here's what we have ordered so far
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {groupOrderInfo.items.map((item, index) => (
+                  <div key={`${item.id}-${index}`} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border">
+                    <img 
+                      src={item.image} 
+                      alt={item.title}
+                      className="w-12 h-12 object-cover rounded-md bg-muted"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm truncate">
+                        {item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz')}
+                      </h4>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Qty: {item.quantity}</span>
+                        <span>•</span>
+                        <span>${item.price.toFixed(2)} each</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-sm">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {groupOrderInfo.subtotal && (
+                  <div className="border-t pt-3 mt-3">
+                    <div className="flex justify-between items-center text-sm font-medium">
+                      <span>Subtotal ({groupOrderInfo.items.length} items)</span>
+                      <span>${groupOrderInfo.subtotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Address Confirmation */}
         <Card className="shadow-floating animate-fade-in">
