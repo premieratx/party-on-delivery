@@ -25,6 +25,10 @@ interface PaymentFormProps {
   isAddingToOrder?: boolean;
   useSameAddress?: boolean;
   hasChanges?: boolean;
+  discountCode?: string;
+  setDiscountCode?: (code: string) => void;
+  handleApplyDiscount?: () => void;
+  handleRemoveDiscount?: () => void;
 }
 
 export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
@@ -41,7 +45,11 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   deliveryPricing,
   isAddingToOrder = false,
   useSameAddress = false,
-  hasChanges = false
+  hasChanges = false,
+  discountCode = '',
+  setDiscountCode,
+  handleApplyDiscount,
+  handleRemoveDiscount
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -252,6 +260,54 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               <span>${total.toFixed(2)}</span>
             </div>
           </div>
+
+          <Separator />
+
+          {/* Discount Code Section */}
+          {setDiscountCode && handleApplyDiscount && handleRemoveDiscount && (
+            <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+              <Label className="text-sm font-medium">Discount Code</Label>
+              {!appliedDiscount ? (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter code"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && discountCode) {
+                        handleApplyDiscount();
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleApplyDiscount}
+                    disabled={!discountCode}
+                  >
+                    Apply
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-2 bg-green-100 rounded border border-green-300">
+                  <span className="text-sm font-medium text-green-800">
+                    {appliedDiscount.code} applied
+                    {appliedDiscount.type === 'percentage' && ` (${appliedDiscount.value}% off)`}
+                    {appliedDiscount.type === 'free_shipping' && ' (Free shipping)'}
+                  </span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={handleRemoveDiscount}
+                    className="text-green-800 hover:text-green-900"
+                  >
+                    Remove
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           <Separator />
 

@@ -786,6 +786,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 isAddingToOrder={isAddingToOrder}
                 useSameAddress={useSameAddress}
                 hasChanges={hasChanges}
+                discountCode={discountCode}
+                setDiscountCode={setDiscountCode}
+                handleApplyDiscount={handleApplyDiscount}
+                handleRemoveDiscount={handleRemoveDiscount}
               />
             )}
           </div>
@@ -796,7 +800,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5" />
-                  Order Items ({cartItems.length})
+                  Order Summary ({cartItems.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -842,50 +846,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 ))}
                 
                 <Separator />
-                
-                {/* Discount Code Section */}
-                <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
-                  <Label className="text-sm font-medium">Discount Code</Label>
-                  {!appliedDiscount ? (
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Enter code"
-                        value={discountCode}
-                        onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && discountCode) {
-                            handleApplyDiscount();
-                          }
-                        }}
-                        className="flex-1"
-                      />
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleApplyDiscount}
-                        disabled={!discountCode}
-                      >
-                        Apply
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-between p-2 bg-green-100 rounded border border-green-300">
-                      <span className="text-sm font-medium text-green-800">
-                        {appliedDiscount.code} applied
-                        {appliedDiscount.type === 'percentage' && ` (${appliedDiscount.value}% off)`}
-                        {appliedDiscount.type === 'free_shipping' && ' (Free shipping)'}
-                      </span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={handleRemoveDiscount}
-                        className="text-green-800 hover:text-green-900"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  )}
-                </div>
                 
                  {/* Only show pricing summary during payment step or when not on payment step */}
                  {currentStep !== 'payment' && (
