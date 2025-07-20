@@ -368,11 +368,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <div className="flex-1 flex flex-col justify-center">
                             <h4 className={`font-medium leading-tight text-center ${
                               selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'text-lg lg:text-sm line-clamp-3' 
-                                : 'text-base lg:text-sm line-clamp-3'
+                                ? 'text-lg lg:text-sm line-clamp-2' 
+                                : 'text-base lg:text-sm line-clamp-2'
                             }`}>
                               {(() => {
-                                // Clean title more aggressively on mobile when showing pack info below
+                                // Clean title and remove pack info if it will be shown separately
                                 const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
                                 
                                 let cleanedTitle;
@@ -384,7 +384,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                     .replace(/Can/gi, '')
                                     .replace(/Hard Seltzer/gi, '')
                                     .replace(/\s+/g, ' ')
-                                    .replace(/\.$/, '') // Remove trailing dots
+                                    .replace(/\.+$/, '') // Remove trailing dots more aggressively
                                     .trim();
                                 } else {
                                   cleanedTitle = product.title
@@ -393,7 +393,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                     .replace(/Can/gi, '')
                                     .replace(/Hard Seltzer/gi, '')
                                     .replace(/\s+/g, ' ')
-                                    .replace(/\.$/, '') // Remove trailing dots
+                                    .replace(/\.+$/, '') // Remove trailing dots more aggressively
                                     .trim();
                                 }
                                 
@@ -407,14 +407,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }`}>
                               {variant.title}
                             </p>
-                            {/* Pack size info on mobile for variant products */}
+                            {/* Pack size info for variant products - mobile and desktop */}
                             {(() => {
                               const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
                               const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                               if (packMatch && sizeMatch) {
                                 return (
-                                  <p className={`text-foreground font-bold mt-1 lg:hidden ${
-                                    selectedCollection?.handle === 'cocktail-kits' ? 'text-sm' : 'text-xs'
+                                  <p className={`text-foreground font-bold mt-1 text-center ${
+                                    selectedCollection?.handle === 'cocktail-kits' ? 'text-sm lg:text-xs' : 'text-xs lg:text-xs'
                                   }`}>
                                     {packMatch[1]}pk × {sizeMatch[1]}oz
                                   </p>
@@ -513,11 +513,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <div className="flex-1 flex flex-col justify-center">
                       <h4 className={`font-medium leading-tight text-center ${
                         selectedCollection?.handle === 'cocktail-kits' 
-                          ? 'text-lg lg:text-sm line-clamp-3' 
-                          : 'text-base lg:text-sm line-clamp-3'
+                          ? 'text-lg lg:text-sm line-clamp-2' 
+                          : 'text-base lg:text-sm line-clamp-2'
                       }`}>
                         {(() => {
-                          // Clean title more aggressively on mobile when showing pack info below
+                          // Clean title and remove pack info if it will be shown separately
                           const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
                           
                           let cleanedTitle;
@@ -529,7 +529,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               .replace(/Can/gi, '')
                               .replace(/Hard Seltzer/gi, '')
                               .replace(/\s+/g, ' ')
-                              .replace(/\.$/, '') // Remove trailing dots
+                              .replace(/\.+$/, '') // Remove trailing dots more aggressively
                               .trim();
                           } else {
                             cleanedTitle = product.title
@@ -538,21 +538,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               .replace(/Can/gi, '')
                               .replace(/Hard Seltzer/gi, '')
                               .replace(/\s+/g, ' ')
-                              .replace(/\.$/, '') // Remove trailing dots
+                              .replace(/\.+$/, '') // Remove trailing dots more aggressively
                               .trim();
                           }
                           
                           return cleanedTitle;
                         })()}
                       </h4>
-                      {/* Pack size info on mobile for all products */}
+                      {/* Pack size info for all products - mobile and desktop */}
                       {(() => {
                         const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
                         const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                         if (packMatch && sizeMatch) {
                           return (
-                            <p className={`text-foreground font-bold mt-1 lg:hidden ${
-                              selectedCollection?.handle === 'cocktail-kits' ? 'text-sm' : 'text-xs'
+                            <p className={`text-foreground font-bold mt-1 text-center ${
+                              selectedCollection?.handle === 'cocktail-kits' ? 'text-sm lg:text-xs' : 'text-xs lg:text-xs'
                             }`}>
                               {packMatch[1]}pk × {sizeMatch[1]}oz
                             </p>
