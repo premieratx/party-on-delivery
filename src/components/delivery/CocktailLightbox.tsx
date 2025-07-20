@@ -7,21 +7,23 @@ import { X, Plus } from 'lucide-react';
 interface Product {
   id: string;
   title: string;
-  price: string;
-  image: {
-    url: string;
-  };
-  variants?: Array<{
+  price: number;
+  image: string;
+  images?: string[];
+  description: string;
+  handle: string;
+  variants: Array<{
     id: string;
     title: string;
-    price: string;
+    price: number;
+    available: boolean;
   }>;
 }
 
 interface CocktailLightboxProps {
   product: Product | null;
   onClose: () => void;
-  onAddToCart: (product: Product, variant?: { id: string; title: string; price: string }) => void;
+  onAddToCart: (product: Product, variant?: { id: string; title: string; price: number; available: boolean }) => void;
 }
 
 export const CocktailLightbox: React.FC<CocktailLightboxProps> = ({
@@ -34,8 +36,7 @@ export const CocktailLightbox: React.FC<CocktailLightboxProps> = ({
   if (!product) return null;
 
   const variant = selectedVariant || (product.variants && product.variants[0]);
-  const formatPrice = (priceString: string) => {
-    const price = parseFloat(priceString);
+  const formatPrice = (price: number) => {
     return isNaN(price) ? 0 : price;
   };
 
@@ -58,7 +59,7 @@ export const CocktailLightbox: React.FC<CocktailLightboxProps> = ({
             {/* Product Image */}
             <div className="aspect-square overflow-hidden rounded-lg bg-muted">
               <img
-                src={product.image?.url || '/placeholder.svg'}
+                src={product.image || '/placeholder.svg'}
                 alt={product.title}
                 className="w-full h-full object-cover"
                 onError={(e) => {

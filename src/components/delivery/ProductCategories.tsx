@@ -7,14 +7,16 @@ import { ShoppingCart, Plus } from 'lucide-react';
 interface Product {
   id: string;
   title: string;
-  price: string;
-  image: {
-    url: string;
-  };
-  variants?: Array<{
+  price: number;
+  image: string;
+  images?: string[];
+  description: string;
+  handle: string;
+  variants: Array<{
     id: string;
     title: string;
-    price: string;
+    price: number;
+    available: boolean;
   }>;
 }
 
@@ -45,7 +47,7 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
       try {
         const { data, error } = await supabase.functions.invoke('fetch-shopify-products', {
           body: { 
-            collectionHandle: 'cocktail-kits'
+            handles: ['cocktail-kits']
           }
         });
 
@@ -54,8 +56,12 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
           return;
         }
 
-        if (data?.products) {
-          setCocktailProducts(data.products);
+        if (data?.collections && data.collections.length > 0) {
+          // Extract products from the cocktail-kits collection
+          const cocktailCollection = data.collections.find((c: any) => c.handle === 'cocktail-kits');
+          if (cocktailCollection?.products) {
+            setCocktailProducts(cocktailCollection.products);
+          }
         }
       } catch (error) {
         console.error('Error fetching cocktail products:', error);
@@ -67,8 +73,7 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
     fetchCocktailProducts();
   }, []);
 
-  const formatPrice = (priceString: string) => {
-    const price = parseFloat(priceString);
+  const formatPrice = (price: number) => {
     return isNaN(price) ? 0 : price;
   };
 
@@ -76,7 +81,7 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
     setSelectedProduct(product);
   };
 
-  const handleAddToCart = (product: Product, selectedVariant?: { id: string; title: string; price: string }) => {
+  const handleAddToCart = (product: Product, selectedVariant?: { id: string; title: string; price: number }) => {
     const variant = selectedVariant || (product.variants && product.variants.length > 0 ? product.variants[0] : undefined);
     const price = variant ? formatPrice(variant.price) : formatPrice(product.price);
     
@@ -85,7 +90,7 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
       title: product.title,
       name: product.title,
       price: price,
-      image: product.image?.url || '/placeholder.svg',
+      image: product.image || '/placeholder.svg',
       variant: variant?.title
     };
     
@@ -128,7 +133,7 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
               <div className="bg-white dark:bg-gray-900 rounded-lg shadow-floating overflow-hidden border border-primary/10 hover:border-primary/30 transition-all duration-300">
                 <div className="aspect-square overflow-hidden">
                   <img
-                    src={product.image?.url || '/placeholder.svg'}
+                    src={product.image || '/placeholder.svg'}
                     alt={product.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     onError={(e) => {
@@ -142,7 +147,7 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
                   </h3>
                   <div className="flex items-center justify-between">
                     <span className="text-2xl font-bold text-primary">
-                      ${formatPrice(product.variants?.[0]?.price || product.price).toFixed(2)}
+                    ${formatPrice(product.variants?.[0]?.price || product.price).toFixed(2)}
                     </span>
                     <Button
                       size="sm"
