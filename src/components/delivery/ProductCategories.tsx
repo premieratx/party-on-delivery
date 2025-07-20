@@ -130,7 +130,7 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
               className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
               onClick={() => handleProductClick(product)}
             >
-              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-floating overflow-hidden border border-primary/10 hover:border-primary/30 transition-all duration-300">
+              <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-floating overflow-hidden border border-primary/10 hover:border-primary/30 transition-all duration-300">
                 <div className="aspect-square overflow-hidden">
                   <img
                     src={product.image || '/placeholder.svg'}
@@ -149,19 +149,20 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
                     <span className="text-2xl font-bold text-primary">
                     ${formatPrice(product.variants?.[0]?.price || product.price).toFixed(2)}
                     </span>
-                    <Button
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToCart(product);
-                      }}
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add
-                    </Button>
                   </div>
                 </div>
+                
+                {/* Add to cart button - always visible on bottom right */}
+                 <Button
+                  size="sm"
+                  className="absolute bottom-3 right-3 rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90 shadow-lg"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(product);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ))}
