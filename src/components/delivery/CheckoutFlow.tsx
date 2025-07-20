@@ -284,7 +284,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const handleConfirmDateTime = () => {
     if (deliveryInfo.date && deliveryInfo.timeSlot) {
       setConfirmedDateTime(true);
-      setCurrentStep('address');
+      // Check if address needs to be completed next
+      if (!isAddressComplete) {
+        setConfirmedAddress(false);
+        setCurrentStep('address');
+      } else if (!isCustomerComplete) {
+        setCurrentStep('customer');
+      } else {
+        setCurrentStep('payment');
+      }
       // Scroll to top of next section on mobile
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -313,7 +321,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       }
       
       setConfirmedAddress(true);
-      setCurrentStep('customer');
+      // Check what step to go to next
+      if (!isCustomerComplete) {
+        setCurrentStep('customer');
+      } else {
+        setCurrentStep('payment');
+      }
       // Scroll to top of next section on mobile
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -456,16 +469,19 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                              </span>
                            )}
                          </div>
-                         <Button 
-                           variant="outline" 
-                           size="sm" 
-                           onClick={() => {
-                             setConfirmedDateTime(false);
-                             setCurrentStep('datetime');
-                           }}
-                           className="shrink-0 text-xs px-2 py-1 h-auto"
-                         >
-                           Edit
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setConfirmedDateTime(false);
+                              setCurrentStep('datetime');
+                              // Reset subsequent steps if they depend on this one
+                              if (!isAddressComplete) setConfirmedAddress(false);
+                              if (!isCustomerComplete) setConfirmedCustomer(false);
+                            }}
+                            className="shrink-0 text-xs px-2 py-1 h-auto"
+                          >
+                            Edit
                          </Button>
                        </div>
                      </div>
@@ -482,16 +498,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                              <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
                            )}
                          </div>
-                         <Button 
-                           variant="outline" 
-                           size="sm" 
-                           onClick={() => {
-                             setConfirmedAddress(false);
-                             setCurrentStep('address');
-                           }}
-                           className="shrink-0 text-xs px-2 py-1 h-auto"
-                         >
-                           Edit
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setConfirmedAddress(false);
+                              setCurrentStep('address');
+                              // Reset subsequent steps if they depend on this one
+                              if (!isCustomerComplete) setConfirmedCustomer(false);
+                            }}
+                            className="shrink-0 text-xs px-2 py-1 h-auto"
+                          >
+                            Edit
                          </Button>
                        </div>
                        {addressInfo.instructions && (
