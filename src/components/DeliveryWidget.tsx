@@ -251,9 +251,21 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    setCurrentStep('checkout');
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Ensure we have items in cart before proceeding
+    if (cartItems.length === 0) {
+      console.warn('Cannot proceed to checkout with empty cart');
+      return;
+    }
+    
+    // Close cart if open
+    setIsCartOpen(false);
+    
+    // Set checkout step with a small delay to ensure smooth transition
+    setTimeout(() => {
+      setCurrentStep('checkout');
+      // Scroll to top after transition
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 50);
   };
 
   if (currentStep === 'order-continuation') {

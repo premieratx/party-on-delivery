@@ -300,7 +300,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </button>
               
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (cartItemCount > 0) {
                     onProceedToCheckout();
                   }
@@ -332,7 +334,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </button>
               
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (cartItemCount > 0) {
                     onProceedToCheckout();
                   }
