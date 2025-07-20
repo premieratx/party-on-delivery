@@ -46,10 +46,17 @@ const GroupOrder = () => {
 
   useEffect(() => {
     const fetchGroupOrderData = async () => {
-      console.log('fetchGroupOrderData called with orderNumber:', orderNumber);
+      // Get order number from either path params or query params
+      const searchParams = new URLSearchParams(location.search);
+      const orderFromQuery = searchParams.get('order');
+      const orderNumberToUse = orderNumber || orderFromQuery;
       
-      if (!orderNumber) {
-        console.log('No order number provided');
+      console.log('fetchGroupOrderData called with orderNumber:', orderNumberToUse);
+      console.log('Path param orderNumber:', orderNumber);
+      console.log('Query param order:', orderFromQuery);
+      
+      if (!orderNumberToUse) {
+        console.log('No order number provided in either path or query');
         setError('No order number provided');
         setIsLoading(false);
         return;
@@ -60,7 +67,7 @@ const GroupOrder = () => {
         setError(null);
         
         // Parse the group order ID from URL params
-        const groupOrderId = orderNumber;
+        const groupOrderId = orderNumberToUse;
         
         // First try localStorage for quick access
         console.log('Checking localStorage for order:', groupOrderId);
@@ -198,7 +205,7 @@ const GroupOrder = () => {
     };
 
     fetchGroupOrderData();
-  }, [orderNumber]);
+  }, [orderNumber, location]);
 
   const convertTimeToDateTime = (timeSlot: string): string => {
     const startTime = timeSlot.split(' - ')[0];
