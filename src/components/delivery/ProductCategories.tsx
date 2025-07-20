@@ -197,8 +197,41 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
+      {/* Sticky Cart & Checkout Buttons - Desktop Only */}
+      <div className="hidden lg:block bg-background/95 backdrop-blur-sm border-b sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto p-4">
+          <div className="flex justify-center items-center gap-4">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={onOpenCart}
+              className="flex items-center gap-2 bg-background/80 hover:bg-background"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              Cart ({cartItemCount})
+              {cartItemCount > 0 && (
+                <Badge variant="default" className="ml-1 bg-primary text-primary-foreground">
+                  {cartItemCount}
+                </Badge>
+              )}
+            </Button>
+            
+            {cartItemCount > 0 && (
+              <Button
+                variant="default"
+                size="lg"
+                onClick={onProceedToCheckout}
+                className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary"
+              >
+                Checkout Now
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Category Tabs - increased height on desktop, no background images */}
-      <div className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-30">
+      <div className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-30 lg:top-[72px]">
         <div className="max-w-7xl mx-auto p-4">
           <div className="grid grid-cols-4 gap-2 h-20 sm:h-24">
             {stepMapping.map((step, index) => {
@@ -254,39 +287,44 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           >
             <div className="absolute inset-0 bg-black/60"></div>
           </div>
-          <div className="relative z-10 h-full flex items-center justify-between px-4">
-            {/* Left arrow */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const prevIndex = selectedCategory > 0 ? selectedCategory - 1 : collections.length - 1;
-                setSelectedCategory(prevIndex);
-              }}
-              className="text-white hover:bg-white/20 h-8 w-8 p-0"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            
-            {/* Center title */}
-            <div className="flex items-center justify-center flex-1">
-              <h2 className="text-white text-2xl sm:text-3xl font-bold text-center">
+          <div className="relative z-10 h-full flex items-center justify-center px-4">
+            {/* Center title with navigation arrows below */}
+            <div className="flex flex-col items-center justify-center">
+              <h2 className="text-white text-2xl sm:text-3xl font-bold text-center mb-2">
                 {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
               </h2>
+              
+              {/* Navigation arrows - big white ovals with blue arrows */}
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => {
+                    const prevIndex = selectedCategory > 0 ? selectedCategory - 1 : collections.length - 1;
+                    setSelectedCategory(prevIndex);
+                  }}
+                  className="bg-white/95 hover:bg-white text-brand-blue hover:text-brand-blue rounded-full h-12 w-12 p-0 shadow-lg"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </Button>
+                
+                <span className="text-white/80 text-sm font-medium">
+                  {selectedCategory + 1} of {collections.length}
+                </span>
+                
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  onClick={() => {
+                    const nextIndex = selectedCategory < collections.length - 1 ? selectedCategory + 1 : 0;
+                    setSelectedCategory(nextIndex);
+                  }}
+                  className="bg-white/95 hover:bg-white text-brand-blue hover:text-brand-blue rounded-full h-12 w-12 p-0 shadow-lg"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </Button>
+              </div>
             </div>
-            
-            {/* Right arrow */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                const nextIndex = selectedCategory < collections.length - 1 ? selectedCategory + 1 : 0;
-                setSelectedCategory(nextIndex);
-              }}
-              className="text-white hover:bg-white/20 h-8 w-8 p-0"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       )}
