@@ -194,43 +194,43 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Pricing calculations
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   
-  // Calculate delivery fee dynamically based on current state
-  const calculateCurrentDeliveryFee = () => {
-    // Check if delivery details match previous order exactly
-    const deliveryDetailsMatch = isAddingToOrder && 
-      originalOrderInfo &&
-      addressInfo.street === originalOrderInfo.address?.split(',')[0]?.trim() &&
-      deliveryInfo.date && originalOrderInfo.deliveryDate &&
-      new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
-      deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
-
-    // Free delivery if all delivery details match exactly
-    if (deliveryDetailsMatch) {
-      return 0;
-    }
-    
-    // Apply $20 minimum with 10% of subtotal for orders $200+
-    return Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20);
-  };
-  
-  // Current delivery fee (recalculated on every render)
-  const currentDeliveryFee = calculateCurrentDeliveryFee();
-  
-  const [deliveryPricing, setDeliveryPricing] = useState<{fee: number, minimumOrder: number, isDistanceBased: boolean, distance?: number}>({
-    fee: currentDeliveryFee,
-    minimumOrder: 0,
-    isDistanceBased: false
-  });
-  
-  // Update delivery fee when any factor changes
-  useEffect(() => {
-    setDeliveryPricing(prev => ({ ...prev, fee: currentDeliveryFee }));
-  }, [currentDeliveryFee]);
-  const salesTax = subtotal * 0.0825;
+  // State declarations first
   const [tipAmount, setTipAmount] = useState(0);
   const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+
+  // Check if delivery details match previous order exactly for automatic free shipping
+  const deliveryDetailsMatch = isAddingToOrder && 
+    originalOrderInfo &&
+    addressInfo.street === originalOrderInfo.address?.split(',')[0]?.trim() &&
+    deliveryInfo.date && originalOrderInfo.deliveryDate &&
+    new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
+    deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
+
+  // Auto-apply free shipping when details match (overrides any other discount)
+  useEffect(() => {
+    if (deliveryDetailsMatch) {
+      setAppliedDiscount({ code: 'SAME_ORDER', type: 'free_shipping', value: 0 });
+      if (onDiscountChange) {
+        onDiscountChange({ code: 'SAME_ORDER', type: 'free_shipping', value: 0 });
+      }
+    } else if (appliedDiscount?.code === 'SAME_ORDER') {
+      // Remove auto-applied discount if details no longer match
+      setAppliedDiscount(null);
+      if (onDiscountChange) {
+        onDiscountChange(null);
+      }
+    }
+  }, [deliveryDetailsMatch, appliedDiscount?.code, onDiscountChange]);
+
+  const salesTax = subtotal * 0.0825;
+  
+  const [deliveryPricing, setDeliveryPricing] = useState<{fee: number, minimumOrder: number, isDistanceBased: boolean, distance?: number}>({
+    fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20),
+    minimumOrder: 0,
+    isDistanceBased: false
+  });
   
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
