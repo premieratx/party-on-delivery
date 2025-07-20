@@ -52,7 +52,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
-  // Step management - always start at datetime for add to recent order, but pre-fill info
+  // Step management - always start at datetime step for everyone
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
   const [confirmedDateTime, setConfirmedDateTime] = useState(false);
   const [confirmedAddress, setConfirmedAddress] = useState(false);
@@ -75,7 +75,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [hasChanges, setHasChanges] = useState(false);
   const [changedFields, setChangedFields] = useState<string[]>([]);
   
-  // For new orders or new visitors, clear address info once
+  // For new orders, clear address info once
   useEffect(() => {
     if (!isAddingToOrder && !hasAddressBeenCleared) {
       setAddressInfo({
@@ -86,9 +86,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         instructions: ''
       });
       setHasAddressBeenCleared(true);
-    }
-    if (isAddingToOrder) {
-      setHasAddressBeenCleared(false);
     }
   }, [isAddingToOrder, hasAddressBeenCleared]);
 

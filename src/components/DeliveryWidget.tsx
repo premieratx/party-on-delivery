@@ -184,33 +184,6 @@ export const DeliveryWidget: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleConfirmSameAddress = () => {
-    setUseSameAddress(true);
-    
-    // Set bundle-ready flag for free shipping when same address is confirmed
-    if (isAddingToOrder) {
-      localStorage.setItem('partyondelivery_bundle_ready', 'true');
-    }
-    
-    setCurrentStep('products');
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleUseNewAddress = () => {
-    setUseSameAddress(false);
-    setCurrentStep('products');
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleBackToAddressConfirmation = () => {
-    setCurrentStep('address-confirmation');
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-
   const handleBackToProducts = () => {
     setCurrentStep('products');
     // Scroll to top
@@ -222,6 +195,7 @@ export const DeliveryWidget: React.FC = () => {
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCartItems(prev => {
@@ -307,16 +281,6 @@ export const DeliveryWidget: React.FC = () => {
     );
   }
 
-  if (currentStep === 'address-confirmation') {
-    return (
-      <AddressConfirmation
-        onConfirmSameAddress={handleConfirmSameAddress}
-        onUseNewAddress={handleUseNewAddress}
-        onBack={handleBackToOrderContinuation}
-        lastOrderInfo={validLastOrderInfo}
-      />
-    );
-  }
 
 
   return (
@@ -329,7 +293,7 @@ export const DeliveryWidget: React.FC = () => {
           cartItems={cartItems}
           onUpdateQuantity={updateQuantity}
           onProceedToCheckout={handleCheckout}
-          onBack={isAddingToOrder && validLastOrderInfo?.address ? handleBackToAddressConfirmation : handleBackToOrderContinuation}
+          onBack={handleBackToOrderContinuation}
         />
       )}
 
