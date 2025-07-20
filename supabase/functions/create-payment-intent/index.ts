@@ -36,6 +36,13 @@ serve(async (req) => {
     });
     logStep("Stripe initialized");
 
+    // Create a concise cart summary that fits in Stripe's 500 char metadata limit
+    const cartSummary = cartItems.map((item: any) => 
+      `${item.quantity}x ${item.title.substring(0, 30)}`
+    ).join(', ').substring(0, 400); // Keep under 500 chars
+    
+    const itemCount = cartItems.reduce((total: number, item: any) => total + item.quantity, 0);
+    
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
@@ -46,13 +53,10 @@ serve(async (req) => {
         customer_phone: customerInfo.phone,
         delivery_date: deliveryInfo.date,
         delivery_time: deliveryInfo.timeSlot,
-        delivery_address: deliveryInfo.address,
-        delivery_instructions: deliveryInfo.instructions || '',
-        cart_items: JSON.stringify(cartItems.map((item: any) => ({
-          name: item.title,
-          quantity: item.quantity,
-          price: item.price
-        }))),
+        delivery_address: deliveryInfo.address.substring(0, 100), // Truncate long addresses
+        delivery_instructions: (deliveryInfo.instructions || '').substring(0, 100),
+        cart_summary: cartSummary,
+        item_count: itemCount.toString(),
         tip_amount: tipAmount.toString(),
         discount_code: appliedDiscount?.code || 'none',
         group_order_number: groupOrderNumber || ''
