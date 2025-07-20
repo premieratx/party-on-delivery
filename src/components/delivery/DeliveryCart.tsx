@@ -123,8 +123,8 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                     <div className="flex-1 space-y-2">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-medium text-sm line-clamp-2">{item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
-                          <p className="text-primary font-semibold">${item.price}</p>
+                          <h4 className="font-medium text-xs sm:text-sm line-clamp-2">{item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
+                          <p className="text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
                         </div>
                         <Button
                           variant="ghost"
@@ -136,29 +136,29 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                         </Button>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        
-                        <Badge variant="secondary" className="min-w-[40px] justify-center">
-                          {item.quantity}
-                        </Badge>
-                        
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
+                       <div className="flex items-center gap-1 sm:gap-2">
+                         <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-6 w-6 sm:h-8 sm:w-8"
+                           onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
+                         >
+                           <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
+                         </Button>
+                         
+                         <Badge variant="secondary" className="min-w-[32px] sm:min-w-[40px] justify-center text-xs">
+                           {item.quantity}
+                         </Badge>
+                         
+                         <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-6 w-6 sm:h-8 sm:w-8"
+                           onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                         >
+                           <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
+                         </Button>
+                       </div>
                     </div>
                   </div>
                 </Card>

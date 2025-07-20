@@ -784,45 +784,45 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {cartItems.map((item) => (
-                  <div key={`${item.id}-${item.variant || ''}`} className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{item.title}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-muted-foreground">${item.price} each</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        
-                        <Badge variant="secondary" className="min-w-[35px] justify-center px-2">
-                          {item.quantity}
-                        </Badge>
-                        
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      
-                      {/* Total Price for Item */}
-                      <p className="font-semibold min-w-[60px] text-right">${(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                  </div>
+                 {cartItems.map((item) => (
+                   <div key={`${item.id}-${item.variant || ''}`} className="flex justify-between items-center gap-2">
+                     <div className="flex-1 min-w-0">
+                       <p className="font-medium text-xs sm:text-sm line-clamp-2">{item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</p>
+                       <div className="flex items-center gap-2 mt-1">
+                         <span className="text-xs sm:text-sm text-muted-foreground">${item.price} each</span>
+                       </div>
+                     </div>
+                     
+                     <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+                       {/* Quantity Controls */}
+                       <div className="flex items-center gap-1">
+                         <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-6 w-6 sm:h-7 sm:w-7"
+                           onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
+                         >
+                           <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
+                         </Button>
+                         
+                         <Badge variant="secondary" className="min-w-[28px] sm:min-w-[35px] justify-center px-1 sm:px-2 text-xs">
+                           {item.quantity}
+                         </Badge>
+                         
+                         <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-6 w-6 sm:h-7 sm:w-7"
+                           onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                         >
+                           <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
+                         </Button>
+                       </div>
+                       
+                       {/* Total Price for Item */}
+                       <p className="font-semibold min-w-[50px] sm:min-w-[60px] text-right text-xs sm:text-sm">${(item.price * item.quantity).toFixed(2)}</p>
+                     </div>
+                   </div>
                 ))}
                 
                 <Separator />
