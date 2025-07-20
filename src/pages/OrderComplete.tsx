@@ -206,6 +206,30 @@ export default function OrderComplete() {
           </CardContent>
         </Card>
 
+        {/* Send to Friends Section */}
+        <Card className="shadow-floating animate-fade-in border-blue-200 bg-blue-50/50 dark:bg-blue-900/10">
+          <CardContent className="p-6">
+            <h3 className="font-semibold mb-3 text-blue-800 dark:text-blue-200">
+              Ordering with friends at the same location?
+            </h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+              Share this link so friends can add to your order and get free delivery to the same address!
+            </p>
+            <Button 
+              onClick={() => {
+                const shareUrl = `${window.location.origin}/group-order?order=${lastOrderInfo.orderNumber}`;
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                  alert('Link copied to clipboard! Share this with your friends.');
+                });
+              }}
+              variant="outline"
+              className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
+              Send to Friends
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Back to Home */}
         <div className="text-center pt-4">
           <Button 

@@ -31,10 +31,13 @@ export const DeliveryWidget: React.FC = () => {
   // Enable wake lock to keep screen on during app usage
   useWakeLock();
   
-  // Check for persistent add to order flag
+  // Check for persistent add to order flag and group order context
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
+  const groupOrderData = localStorage.getItem('partyondelivery_group_order');
+  const isGroupOrder = groupOrderData ? JSON.parse(groupOrderData)?.isGroupOrder : false;
   
-  const [currentStep, setCurrentStep] = useLocalStorage<DeliveryStep>('partyondelivery_current_step', 'order-continuation');
+  const [currentStep, setCurrentStep] = useLocalStorage<DeliveryStep>('partyondelivery_current_step', 
+    isGroupOrder ? 'products' : 'order-continuation');
   const [deliveryInfo, setDeliveryInfo] = useLocalStorage<DeliveryInfo>('partyondelivery_delivery_info', {
     date: null,
     timeSlot: '',
@@ -44,7 +47,7 @@ export const DeliveryWidget: React.FC = () => {
   const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('partyondelivery_cart', []);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
-  const [isAddingToOrder, setIsAddingToOrder] = useLocalStorage<boolean>('partyondelivery_is_adding_to_order', addToOrderFlag);
+  const [isAddingToOrder, setIsAddingToOrder] = useLocalStorage<boolean>('partyondelivery_is_adding_to_order', addToOrderFlag || isGroupOrder);
   const [useSameAddress, setUseSameAddress] = useLocalStorage<boolean>('partyondelivery_use_same_address', false);
   
   // State for tracking cart calculations (for cart/checkout sync)
@@ -79,10 +82,41 @@ export const DeliveryWidget: React.FC = () => {
   // Filter out expired orders
   const validLastOrderInfo = lastOrderInfo && !isLastOrderExpired() ? lastOrderInfo : null;
 
-  // Check for add to order flag on component mount
+  // Check for add to order flag and group order context on component mount
   useEffect(() => {
     const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order');
-    if (addToOrderFlag === 'true' && validLastOrderInfo) {
+    const groupOrderData = localStorage.getItem('partyondelivery_group_order');
+    
+    // Handle group order flow
+    if (groupOrderData) {
+      try {
+        const groupOrder = JSON.parse(groupOrderData);
+        if (groupOrder.isGroupOrder) {
+          // Pre-fill delivery info from group order
+          if (groupOrder.deliveryDate) {
+            const date = new Date(groupOrder.deliveryDate);
+            setDeliveryInfo(prev => ({ ...prev, date }));
+          }
+          if (groupOrder.deliveryTime) {
+            setDeliveryInfo(prev => ({ ...prev, timeSlot: groupOrder.deliveryTime }));
+          }
+          if (groupOrder.address) {
+            setDeliveryInfo(prev => ({ ...prev, address: groupOrder.address }));
+          }
+          if (groupOrder.instructions) {
+            setDeliveryInfo(prev => ({ ...prev, instructions: groupOrder.instructions }));
+          }
+          // Group orders skip address confirmation
+          setUseSameAddress(true);
+          setIsAddingToOrder(true);
+        }
+      } catch (error) {
+        console.error('Error parsing group order data:', error);
+      }
+    }
+    
+    // Handle regular add to order flow
+    if (addToOrderFlag === 'true' && validLastOrderInfo && !groupOrderData) {
       // DON'T clear the flag - it should persist until delivery date/time passes
       // Start the add to order flow
       handleAddToOrder();
@@ -104,8 +138,9 @@ export const DeliveryWidget: React.FC = () => {
       address: '',
       instructions: ''
     });
-    // Clear the add to order flag when starting a completely new order
+    // Clear the add to order flag and group order context when starting a completely new order
     localStorage.removeItem('partyondelivery_add_to_order');
+    localStorage.removeItem('partyondelivery_group_order');
     setCurrentStep('products');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });

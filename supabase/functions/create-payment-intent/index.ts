@@ -20,7 +20,7 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount } = await req.json();
+    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber } = await req.json();
     
     logStep("Request data received", { 
       amount, 
@@ -47,13 +47,15 @@ serve(async (req) => {
         delivery_date: deliveryInfo.date,
         delivery_time: deliveryInfo.timeSlot,
         delivery_address: deliveryInfo.address,
+        delivery_instructions: deliveryInfo.instructions || '',
         cart_items: JSON.stringify(cartItems.map((item: any) => ({
           name: item.title,
           quantity: item.quantity,
           price: item.price
         }))),
         tip_amount: tipAmount.toString(),
-        discount_code: appliedDiscount?.code || 'none'
+        discount_code: appliedDiscount?.code || 'none',
+        group_order_number: groupOrderNumber || ''
       }
     });
 

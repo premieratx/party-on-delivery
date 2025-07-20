@@ -159,6 +159,28 @@ const Success = () => {
               </Link>
             </Button>
           </div>
+
+          {/* Send to Friends Button */}
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+              Ordering with friends at the same location?
+            </h4>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+              Share this link so friends can add to your order and get free delivery!
+            </p>
+            <Button 
+              onClick={() => {
+                const shareUrl = `${window.location.origin}/group-order?order=${orderStatus.orderNumber}`;
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                  alert('Link copied to clipboard!');
+                });
+              }}
+              variant="outline"
+              className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
+              Send to Friends
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

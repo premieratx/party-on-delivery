@@ -20,9 +20,9 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { paymentIntentId, isAddingToOrder, useSameAddress } = await req.json();
-    if (!paymentIntentId) {
-      throw new Error("Payment Intent ID is required");
+    const { paymentIntentId, isAddingToOrder, useSameAddress, sessionId } = await req.json();
+    if (!paymentIntentId && !sessionId) {
+      throw new Error("Payment Intent ID or Session ID is required");
     }
 
     logStep("Payment Intent ID received", { paymentIntentId });
@@ -33,13 +33,25 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Get payment intent details from Stripe
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (paymentIntent.status !== 'succeeded') {
-      throw new Error("Payment not completed");
+    // Get payment details from Stripe (either PaymentIntent or CheckoutSession)
+    let metadata;
+    if (paymentIntentId) {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      if (paymentIntent.status !== 'succeeded') {
+        throw new Error("Payment not completed");
+      }
+      metadata = paymentIntent.metadata;
+      logStep("Stripe payment intent retrieved", { status: paymentIntent.status });
+    } else if (sessionId) {
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      if (session.payment_status !== 'paid') {
+        throw new Error("Payment not completed");
+      }
+      metadata = session.metadata;
+      logStep("Stripe checkout session retrieved", { status: session.payment_status });
+    } else {
+      throw new Error("No payment method specified");
     }
-
-    logStep("Stripe payment intent retrieved", { status: paymentIntent.status });
 
     // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
@@ -50,14 +62,15 @@ serve(async (req) => {
     }
 
     // Parse cart items from metadata
-    const cartItems = JSON.parse(paymentIntent.metadata?.cart_items || '[]');
-    const deliveryDate = paymentIntent.metadata?.delivery_date;
-    const deliveryTime = paymentIntent.metadata?.delivery_time;
-    const deliveryAddress = paymentIntent.metadata?.delivery_address;
-    const deliveryInstructions = paymentIntent.metadata?.delivery_instructions;
-    const customerName = paymentIntent.metadata?.customer_name;
-    const customerPhone = paymentIntent.metadata?.customer_phone;
-    const customerEmail = paymentIntent.metadata?.customer_email;
+    const cartItems = JSON.parse(metadata?.cart_items || '[]');
+    const deliveryDate = metadata?.delivery_date;
+    const deliveryTime = metadata?.delivery_time;
+    const deliveryAddress = metadata?.delivery_address;
+    const deliveryInstructions = metadata?.delivery_instructions;
+    const customerName = metadata?.customer_name;
+    const customerPhone = metadata?.customer_phone;
+    const customerEmail = metadata?.customer_email;
+    const groupOrderNumber = metadata?.group_order_number;
 
     logStep("Metadata parsed", { 
       itemCount: cartItems.length, 
@@ -218,19 +231,37 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
         }
       );
 
-      // Check if order group exists for this customer
-      const { data: existingGroup } = await supabaseClient
-        .from('order_groups')
-        .select('id')
-        .eq('customer_email', customerEmail)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      let orderGroupId = existingGroup?.id;
+      let orderGroupId;
       let isNewGroup = false;
 
-      // Create new order group if none exists or if last order was more than 24 hours ago
+      // If this is a group order (friend adding to existing order), find the original order group
+      if (groupOrderNumber) {
+        const { data: originalOrder } = await supabaseClient
+          .from('shopify_orders')
+          .select('order_group_id')
+          .eq('shopify_order_number', groupOrderNumber)
+          .single();
+        
+        if (originalOrder?.order_group_id) {
+          orderGroupId = originalOrder.order_group_id;
+          logStep('Found existing order group for group order', { orderGroupId, groupOrderNumber });
+        }
+      }
+
+      // If not a group order or if group order lookup failed, check for existing group by customer
+      if (!orderGroupId) {
+        const { data: existingGroup } = await supabaseClient
+          .from('order_groups')
+          .select('id')
+          .eq('customer_email', customerEmail)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        orderGroupId = existingGroup?.id;
+      }
+
+      // Create new order group if none exists
       if (!orderGroupId) {
         const { data: newGroup, error: groupError } = await supabaseClient
           .from('order_groups')
