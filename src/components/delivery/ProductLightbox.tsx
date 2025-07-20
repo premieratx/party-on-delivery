@@ -28,6 +28,7 @@ interface ProductLightboxProps {
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
   cartQuantity: number;
   selectedVariant?: any;
+  onProceedToCheckout?: () => void;
 }
 
 export const ProductLightbox: React.FC<ProductLightboxProps> = ({
@@ -37,7 +38,8 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
   onAddToCart,
   onUpdateQuantity,
   cartQuantity,
-  selectedVariant
+  selectedVariant,
+  onProceedToCheckout
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -222,7 +224,9 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                   size="lg"
                   className="flex-1 text-base"
                   onClick={() => {
-                    // Add logic to navigate to checkout if needed
+                    if (onProceedToCheckout) {
+                      onProceedToCheckout();
+                    }
                     onClose();
                   }}
                 >

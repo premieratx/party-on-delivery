@@ -77,6 +77,11 @@ export const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> =
             if (onPlaceSelect) {
               onPlaceSelect(place);
             }
+            
+            // Trigger blur to improve mobile experience
+            if (inputRef.current) {
+              inputRef.current.blur();
+            }
           }
         });
       } catch (error) {
@@ -107,6 +112,11 @@ export const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> =
         onChange={handleInputChange}
         placeholder={placeholder}
         className={className}
+        autoComplete="off"
+        onFocus={() => {
+          // Clear any existing warnings when user focuses
+          setShowTexasWarning(false);
+        }}
       />
       
       {showTexasWarning && (

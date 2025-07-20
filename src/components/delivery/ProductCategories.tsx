@@ -607,6 +607,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         onUpdateQuantity={onUpdateQuantity}
         cartQuantity={lightboxProduct ? getCartItemQuantity(lightboxProduct.id, selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id) : 0}
         selectedVariant={lightboxProduct ? lightboxProduct.variants.find(v => v.id === (selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id)) || lightboxProduct.variants[0] : undefined}
+        onProceedToCheckout={onProceedToCheckout}
       />
     </div>
   );
