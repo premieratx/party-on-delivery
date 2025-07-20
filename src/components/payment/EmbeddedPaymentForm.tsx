@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CreditCard, Plus, Minus, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CartItem } from '../DeliveryWidget';
-
 interface PaymentFormProps {
   cartItems: CartItem[];
   subtotal: number;
@@ -22,7 +21,12 @@ interface PaymentFormProps {
   onPaymentSuccess: (paymentIntentId?: string) => void;
   tipAmount?: number;
   setTipAmount?: (tip: number) => void;
-  deliveryPricing?: {fee: number, minimumOrder: number, isDistanceBased: boolean, distance?: number};
+  deliveryPricing?: {
+    fee: number;
+    minimumOrder: number;
+    isDistanceBased: boolean;
+    distance?: number;
+  };
   isAddingToOrder?: boolean;
   useSameAddress?: boolean;
   hasChanges?: boolean;
@@ -31,7 +35,6 @@ interface PaymentFormProps {
   handleApplyDiscount?: () => void;
   handleRemoveDiscount?: () => void;
 }
-
 export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   cartItems,
   subtotal,
@@ -56,7 +59,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [internalTipAmount, setInternalTipAmount] = useState(subtotal * 0.10); // 10% pre-selected
-  
+
   // Use external tip state if provided, otherwise use internal
   const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
   const setTipAmount = externalSetTipAmount || setInternalTipAmount;
@@ -65,14 +68,17 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const [customTipConfirmed, setCustomTipConfirmed] = useState(false);
   const [confirmedTipAmount, setConfirmedTipAmount] = useState(0);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-
   const total = subtotal + deliveryFee + salesTax + tipAmount;
-
-  const tipOptions = [
-    { label: '5%', value: subtotal * 0.05 },
-    { label: '10%', value: subtotal * 0.10 },
-    { label: '15%', value: subtotal * 0.15 }
-  ];
+  const tipOptions = [{
+    label: '5%',
+    value: subtotal * 0.05
+  }, {
+    label: '10%',
+    value: subtotal * 0.10
+  }, {
+    label: '15%',
+    value: subtotal * 0.15
+  }];
 
   // Auto-condense preset tips after 3 seconds
   useEffect(() => {
@@ -84,7 +90,6 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       return () => clearTimeout(timer);
     }
   }, [tipAmount, showCustomTip, tipConfirmed]);
-
   const handleCustomTipConfirm = () => {
     if (tipAmount > 0) {
       setCustomTipConfirmed(true);
@@ -93,37 +98,34 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       setShowCustomTip(false);
     }
   };
-
   const handleEditTip = () => {
     setTipConfirmed(false);
     setCustomTipConfirmed(false);
     setShowCustomTip(false);
     setTipAmount(confirmedTipAmount);
   };
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
     if (!stripe || !elements) {
       return;
     }
-
     setIsProcessing(true);
     setPaymentError(null);
-
     const card = elements.getElement(CardElement);
-
     if (!card) {
       setPaymentError('Card information is required');
       setIsProcessing(false);
       return;
     }
-
     try {
       // Create payment intent
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('create-payment-intent', {
         body: {
-          amount: Math.round(total * 100), // Convert to cents
+          amount: Math.round(total * 100),
+          // Convert to cents
           currency: 'usd',
           cartItems,
           customerInfo,
@@ -132,23 +134,23 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           tipAmount
         }
       });
-
       if (error) {
         throw new Error(error.message);
       }
 
       // Confirm payment
-      const { error: paymentError } = await stripe.confirmCardPayment(data.client_secret, {
+      const {
+        error: paymentError
+      } = await stripe.confirmCardPayment(data.client_secret, {
         payment_method: {
           card: card,
           billing_details: {
             name: `${customerInfo.firstName} ${customerInfo.lastName}`,
             email: customerInfo.email,
-            phone: customerInfo.phone,
+            phone: customerInfo.phone
           }
         }
       });
-
       if (paymentError) {
         console.error('Payment error:', paymentError);
         setPaymentError(paymentError.message || 'Payment failed');
@@ -163,24 +165,21 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       setIsProcessing(false);
     }
   };
-
   const cardElementOptions = {
     style: {
       base: {
         fontSize: '16px',
         color: '#424770',
         '::placeholder': {
-          color: '#aab7c4',
-        },
+          color: '#aab7c4'
+        }
       },
       invalid: {
-        color: '#9e2146',
-      },
-    },
+        color: '#9e2146'
+      }
+    }
   };
-
-  return (
-    <Card className="shadow-card border-2 border-green-500">
+  return <Card className="shadow-card border-2 border-green-500">
       <CardHeader className="py-2 md:py-6">
         <CardTitle className="text-sm md:text-lg flex items-center gap-2">
           <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
@@ -190,110 +189,71 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       <CardContent className="space-y-2 md:space-y-6">
         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-6">
           {/* Tip Selection - Condensed or Full */}
-          {tipConfirmed ? (
-            <div className="p-2 md:p-3 border border-green-500 rounded-lg bg-green-50">
+          {tipConfirmed ? <div className="p-2 md:p-3 border border-green-500 rounded-lg bg-green-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Driver Tip: ${confirmedTipAmount.toFixed(2)}</span>
                   {customTipConfirmed && <Badge variant="secondary" className="text-xs">Custom</Badge>}
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEditTip}
-                  className="text-xs px-2 py-1 h-auto"
-                >
+                <Button type="button" variant="outline" size="sm" onClick={handleEditTip} className="text-xs px-2 py-1 h-auto">
                   <Edit className="w-3 h-3 mr-1" />
                   Edit
                 </Button>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
+            </div> : <div className="space-y-3">
               <Label className="text-sm md:text-base font-semibold">Add a tip for your delivery driver</Label>
               <div className="grid grid-cols-2 gap-2">
-                {tipOptions.map((tip) => (
-                  <Button
-                    key={tip.label}
-                    type="button"
-                    variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"}
-                    onClick={() => {
-                      setTipAmount(tip.value);
-                      setShowCustomTip(false);
-                      setTipConfirmed(false);
-                    }}
-                    className="text-xs md:text-sm"
-                  >
+                {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"} onClick={() => {
+              setTipAmount(tip.value);
+              setShowCustomTip(false);
+              setTipConfirmed(false);
+            }} className="text-xs md:text-sm">
                     {tip.label} (${tip.value.toFixed(2)})
-                  </Button>
-                ))}
-                <Button
-                  type="button"
-                  variant={showCustomTip ? "default" : "outline"}
-                  onClick={() => {
-                    setShowCustomTip(true);
-                    setTipAmount(0);
-                    setTipConfirmed(false);
-                  }}
-                  className="text-xs md:text-sm"
-                >
+                  </Button>)}
+                <Button type="button" variant={showCustomTip ? "default" : "outline"} onClick={() => {
+              setShowCustomTip(true);
+              setTipAmount(0);
+              setTipConfirmed(false);
+            }} className="text-xs md:text-sm">
                   Custom
                 </Button>
               </div>
-              {showCustomTip && (
-                <div className="space-y-3">
+              {showCustomTip && <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="customTip" className="text-sm">Custom tip:</Label>
                     <div className="flex items-center gap-1">
                       <span className="text-sm">$</span>
-                      <Input
-                        id="customTip"
-                        type="text"
-                        placeholder="0.00"
-                        value={tipAmount === 0 ? '' : tipAmount.toString()}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Allow typing numbers and decimal point
-                          if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                            const numValue = parseFloat(value) || 0;
-                            setTipAmount(numValue);
-                          }
-                        }}
-                        onBlur={(e) => {
-                          // Format to 2 decimal places on blur if there's a value
-                          const value = parseFloat(e.target.value) || 0;
-                          setTipAmount(value);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Tab' || e.key === 'Enter') {
-                            const value = parseFloat(e.currentTarget.value) || 0;
-                            setTipAmount(value);
-                          }
-                        }}
-                        className="w-20"
-                      />
+                      <Input id="customTip" type="text" placeholder="0.00" value={tipAmount === 0 ? '' : tipAmount.toString()} onChange={e => {
+                  const value = e.target.value;
+                  // Allow typing numbers and decimal point
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    const numValue = parseFloat(value) || 0;
+                    setTipAmount(numValue);
+                  }
+                }} onBlur={e => {
+                  // Format to 2 decimal places on blur if there's a value
+                  const value = parseFloat(e.target.value) || 0;
+                  setTipAmount(value);
+                }} onKeyDown={e => {
+                  if (e.key === 'Tab' || e.key === 'Enter') {
+                    const value = parseFloat(e.currentTarget.value) || 0;
+                    setTipAmount(value);
+                  }
+                }} className="w-20" />
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="confirmCustomTip"
-                      checked={customTipConfirmed}
-                      onCheckedChange={(checked) => {
-                        if (checked && tipAmount > 0) {
-                          handleCustomTipConfirm();
-                        }
-                      }}
-                      disabled={tipAmount === 0}
-                    />
+                    <Checkbox id="confirmCustomTip" checked={customTipConfirmed} onCheckedChange={checked => {
+                if (checked && tipAmount > 0) {
+                  handleCustomTipConfirm();
+                }
+              }} disabled={tipAmount === 0} />
                     <Label htmlFor="confirmCustomTip" className="text-sm">
                       Confirm tip amount: ${tipAmount.toFixed(2)}
                     </Label>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
 
           <Separator />
 
@@ -308,12 +268,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               <div className="flex items-center gap-2">
                 <span>
                   ${deliveryFee.toFixed(2)}
-                  {(isAddingToOrder && useSameAddress && !hasChanges) && deliveryFee === 0 && (
-                    <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
-                  )}
-                  {deliveryPricing?.isDistanceBased && deliveryPricing.distance && (
-                    <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>
-                  )}
+                  {isAddingToOrder && useSameAddress && !hasChanges && deliveryFee === 0 && <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>}
+                  {deliveryPricing?.isDistanceBased && deliveryPricing.distance && <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>}
                 </span>
               </div>
             </div>
@@ -332,56 +288,33 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
             </div>
           </div>
 
-          <Separator />
+          
 
-          <Separator />
+          
 
           {/* Discount Code Section */}
-          {setDiscountCode && handleApplyDiscount && handleRemoveDiscount && (
-            <div className="space-y-2 md:space-y-3 p-2 md:p-3 bg-muted/30 rounded-lg">
+          {setDiscountCode && handleApplyDiscount && handleRemoveDiscount && <div className="space-y-2 md:space-y-3 p-2 md:p-3 bg-muted/30 rounded-lg">
               <Label className="text-xs md:text-sm font-medium">Discount Code</Label>
-              {!appliedDiscount ? (
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Enter code"
-                    value={discountCode}
-                    onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && discountCode) {
-                        handleApplyDiscount();
-                      }
-                    }}
-                    className="flex-1 text-xs md:text-sm"
-                  />
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleApplyDiscount}
-                    disabled={!discountCode}
-                    className="text-xs px-2 py-1"
-                  >
+              {!appliedDiscount ? <div className="flex gap-2">
+                  <Input placeholder="Enter code" value={discountCode} onChange={e => setDiscountCode(e.target.value.toUpperCase())} onKeyDown={e => {
+              if (e.key === 'Enter' && discountCode) {
+                handleApplyDiscount();
+              }
+            }} className="flex-1 text-xs md:text-sm" />
+                  <Button variant="outline" size="sm" onClick={handleApplyDiscount} disabled={!discountCode} className="text-xs px-2 py-1">
                     Apply
                   </Button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between p-2 bg-green-100 rounded border border-green-300">
+                </div> : <div className="flex items-center justify-between p-2 bg-green-100 rounded border border-green-300">
                   <span className="text-xs md:text-sm font-medium text-green-800">
                     {appliedDiscount.code} applied
                     {appliedDiscount.type === 'percentage' && ` (${appliedDiscount.value}% off)`}
                     {appliedDiscount.type === 'free_shipping' && ' (Free shipping)'}
                   </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={handleRemoveDiscount}
-                    className="text-green-800 hover:text-green-900 text-xs px-2 py-1"
-                  >
+                  <Button variant="ghost" size="sm" onClick={handleRemoveDiscount} className="text-green-800 hover:text-green-900 text-xs px-2 py-1">
                     Remove
                   </Button>
-                </div>
-              )}
-            </div>
-          )}
+                </div>}
+            </div>}
 
           <Separator />
 
@@ -393,20 +326,12 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
             </div>
           </div>
 
-          {paymentError && (
-            <div className="text-red-600 text-sm">{paymentError}</div>
-          )}
+          {paymentError && <div className="text-red-600 text-sm">{paymentError}</div>}
 
-          <Button
-            type="submit"
-            disabled={!stripe || isProcessing}
-            className="w-full text-xs md:text-sm"
-            size="lg"
-          >
+          <Button type="submit" disabled={!stripe || isProcessing} className="w-full text-xs md:text-sm" size="lg">
             {isProcessing ? 'Processing...' : `Complete Payment - $${total.toFixed(2)}`}
           </Button>
         </form>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
