@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -216,44 +216,28 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
+      {/* Header Section with Logo - non-sticky */}
+      <div className="bg-background border-b">
+        <div className="max-w-7xl mx-auto py-6 px-4 text-center">
+          <img 
+            src="/src/assets/party-on-delivery-logo.png" 
+            alt="Party on Delivery" 
+            className="mx-auto h-24 lg:h-48 object-contain mb-4"
+          />
+          <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-2">
+            Build Your Party Package
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Select from our curated collection of drinks and party supplies
+          </p>
+        </div>
+      </div>
+
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
-        {/* Desktop Cart & Checkout Buttons */}
-        <div className="hidden lg:block">
-          <div className="max-w-7xl mx-auto p-4">
-            <div className="flex justify-center items-center gap-4">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={onOpenCart}
-                className="flex items-center gap-2 bg-background/80 hover:bg-background"
-              >
-                <ShoppingCart className="w-5 h-5" />
-                Cart ({cartItemCount})
-                {cartItemCount > 0 && (
-                  <Badge variant="default" className="ml-1 bg-primary text-primary-foreground">
-                    {cartItemCount}
-                  </Badge>
-                )}
-              </Button>
-              
-              {cartItemCount > 0 && (
-                <Button
-                  variant="default"
-                  size="lg"
-                  onClick={onProceedToCheckout}
-                  className="bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary"
-                >
-                  Checkout Now
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Category Tabs - smaller with larger font */}
-        <div className="max-w-7xl mx-auto px-4 pb-4">
-          <div className="grid grid-cols-4 gap-2 h-16 sm:h-18">
+        {/* Category Tabs with 5th checkout tab */}
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="grid grid-cols-5 gap-2 h-16 sm:h-18">
             {stepMapping.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Martini : Package;
@@ -292,15 +276,48 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 </button>
               );
             })}
+            
+            {/* 5th tab - Cart/Checkout split */}
+            <div className="grid grid-cols-2 gap-1 h-full">
+              <button
+                onClick={onOpenCart}
+                className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-1"
+              >
+                <ShoppingCart className="w-4 h-4 text-foreground mb-1" />
+                <div className="text-xs font-bold text-foreground">Cart</div>
+                {cartItemCount > 0 && (
+                  <Badge variant="default" className="text-xs mt-1 bg-primary text-primary-foreground">
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </button>
+              
+              <button
+                onClick={onProceedToCheckout}
+                disabled={cartItemCount === 0}
+                className={`rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-1 ${
+                  cartItemCount > 0 
+                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20' 
+                    : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
+                }`}
+              >
+                <CheckCircle className={`w-4 h-4 mb-1 ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
+                <div className={`text-xs font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Section Heading - connected to tabs */}
+        {/* Section Heading with arrows */}
         {selectedCollection && (
           <div className="max-w-7xl mx-auto px-4 pb-4">
-            <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
-              {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
-            </h2>
+            <div className="flex items-center justify-center gap-4">
+              <ChevronLeft className="w-6 h-6 text-primary" />
+              <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
+                {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
+              </h2>
+              <ChevronRight className="w-6 h-6 text-primary" />
+            </div>
           </div>
         )}
       </div>
