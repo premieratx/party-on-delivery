@@ -81,7 +81,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const fetchCollections = async () => {
     try {
       setLoading(true);
-      console.log('Fetching Shopify collections via edge function...');
+      
       
       // Use our step mapping to define the collections we want
       const targetCollections = stepMapping.map(step => step.handle);
@@ -98,7 +98,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       }
 
       if (data?.collections) {
-        console.log('Collections loaded via edge function:', data.collections);
+        
         setCollections(data.collections);
       } else {
         console.error('No collections data received');

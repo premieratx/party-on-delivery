@@ -106,10 +106,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         console.error('Payment error:', paymentError);
         setPaymentError(paymentError.message || 'Payment failed');
       } else {
-        console.log('Payment successful! Payment intent ID:', data.client_secret);
         // Extract payment intent ID from client_secret
         const paymentIntentId = data.client_secret.split('_secret_')[0];
-        console.log('Extracted payment intent ID:', paymentIntentId);
         onPaymentSuccess(paymentIntentId);
       }
     } catch (error) {

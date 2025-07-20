@@ -313,7 +313,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     // Create Shopify order after successful payment
     if (paymentIntentId) {
       try {
-        console.log('Creating Shopify order for payment intent:', paymentIntentId);
+        
         const response = await supabase.functions.invoke('create-shopify-order', {
           body: { 
             paymentIntentId,
@@ -329,7 +329,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         if (response.error) {
           console.error('Error creating Shopify order:', response.error);
         } else {
-          console.log('Shopify order created:', response.data);
+          
           // Save last order info for potential future "add to order"
           if (response.data?.order) {
             const orderInfo = {
