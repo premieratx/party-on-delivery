@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Party on Delivery</title>
+    <title>Party On Delivery</title>
     <style>
         * {
             margin: 0;
@@ -37,6 +37,7 @@
             z-index: 1;
             color: #333;
             font-size: 18px;
+            text-align: center;
         }
         
         .spinner {
@@ -53,25 +54,19 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        /* Hide loading when iframe loads */
-        iframe:not([data-loading]) + .loading {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div class="iframe-container">
         <iframe 
-            src="https://your-app.lovable.app" 
+            src="https://party-on-delivery-concierge-app.lovable.app" 
             id="deliveryApp"
-            data-loading="true"
             allowfullscreen
-            title="Party on Delivery App">
+            title="Party On Delivery App">
         </iframe>
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            Loading Party on Delivery...
+            Loading Party On Delivery...
         </div>
     </div>
     
@@ -80,17 +75,13 @@
         const loading = document.getElementById('loading');
         
         iframe.onload = function() {
-            iframe.removeAttribute('data-loading');
             loading.style.display = 'none';
         };
         
-        // Handle iframe communication if needed
-        window.addEventListener('message', function(event) {
-            // Handle messages from your Lovable app if needed
-            if (event.origin === 'https://your-app.lovable.app') {
-                console.log('Message from app:', event.data);
-            }
-        });
+        // Hide loading after 5 seconds as fallback
+        setTimeout(() => {
+            loading.style.display = 'none';
+        }, 5000);
     </script>
 </body>
 </html>
