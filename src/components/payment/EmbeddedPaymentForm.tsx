@@ -21,6 +21,10 @@ interface PaymentFormProps {
   onPaymentSuccess: (paymentIntentId?: string) => void;
   tipAmount?: number;
   setTipAmount?: (tip: number) => void;
+  deliveryPricing?: {fee: number, minimumOrder: number, isDistanceBased: boolean, distance?: number};
+  isAddingToOrder?: boolean;
+  useSameAddress?: boolean;
+  hasChanges?: boolean;
 }
 
 export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
@@ -33,7 +37,11 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   appliedDiscount,
   onPaymentSuccess,
   tipAmount: externalTipAmount,
-  setTipAmount: externalSetTipAmount
+  setTipAmount: externalSetTipAmount,
+  deliveryPricing,
+  isAddingToOrder = false,
+  useSameAddress = false,
+  hasChanges = false
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -217,8 +225,18 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               <span>${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Delivery Fee</span>
-              <span>${deliveryFee.toFixed(2)}</span>
+              <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+              <div className="flex items-center gap-2">
+                <span>
+                  ${deliveryFee.toFixed(2)}
+                  {(isAddingToOrder && useSameAddress && !hasChanges) && deliveryFee === 0 && (
+                    <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                  )}
+                  {deliveryPricing?.isDistanceBased && deliveryPricing.distance && (
+                    <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>
+                  )}
+                </span>
+              </div>
             </div>
             <div className="flex justify-between text-sm">
               <span>Sales Tax</span>

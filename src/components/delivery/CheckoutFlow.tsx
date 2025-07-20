@@ -267,6 +267,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (deliveryInfo.date && deliveryInfo.timeSlot) {
       setConfirmedDateTime(true);
       setCurrentStep('address');
+      // Scroll to top of next section on mobile
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
     }
   };
 
@@ -292,6 +296,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       
       setConfirmedAddress(true);
       setCurrentStep('customer');
+      // Scroll to top of next section on mobile
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
     }
   };
 
@@ -306,6 +314,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (!emailErr && !phoneErr && customerInfo.firstName && customerInfo.lastName) {
       setConfirmedCustomer(true);
       setCurrentStep('payment');
+      // Scroll to top of next section on mobile
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
     }
   };
 
@@ -770,6 +782,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 onPaymentSuccess={handlePaymentSuccess}
                 tipAmount={tipAmount}
                 setTipAmount={handleTipChange}
+                deliveryPricing={deliveryPricing}
+                isAddingToOrder={isAddingToOrder}
+                useSameAddress={useSameAddress}
+                hasChanges={hasChanges}
               />
             )}
           </div>
@@ -871,52 +887,57 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   )}
                 </div>
                 
-                <Separator />
-                
-                 <div className="space-y-2">
-                   <div className="flex justify-between">
-                     <span>Subtotal</span>
-                     <span>${subtotal.toFixed(2)}</span>
-                   </div>
-                   {appliedDiscount?.type === 'percentage' && (
-                     <div className="flex justify-between text-green-600">
-                       <span>Discount ({appliedDiscount.value}% off)</span>
-                       <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
+                 {/* Only show pricing summary during payment step or when not on payment step */}
+                 {currentStep !== 'payment' && (
+                   <>
+                     <Separator />
+                     
+                     <div className="space-y-2">
+                       <div className="flex justify-between">
+                         <span>Subtotal</span>
+                         <span>${subtotal.toFixed(2)}</span>
+                       </div>
+                       {appliedDiscount?.type === 'percentage' && (
+                         <div className="flex justify-between text-green-600">
+                           <span>Discount ({appliedDiscount.value}% off)</span>
+                           <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
+                         </div>
+                       )}
+                         <div className="flex justify-between">
+                           <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+                            <div className="flex items-center gap-2">
+                              {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 && (
+                                <span className="text-sm text-muted-foreground line-through">${baseDeliveryFee.toFixed(2)}</span>
+                              )}
+                              <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
+                                ${finalDeliveryFee.toFixed(2)}
+                                {(isAddingToOrder && useSameAddress && !hasChanges) && finalDeliveryFee === 0 && (
+                                  <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                                )}
+                                {deliveryPricing.isDistanceBased && deliveryPricing.distance && (
+                                  <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>
+                                )}
+                              </span>
+                            </div>
+                         </div>
+                       <div className="flex justify-between">
+                         <span>Sales Tax (8.25%)</span>
+                         <span>${salesTax.toFixed(2)}</span>
+                       </div>
+                       {tipAmount > 0 && (
+                         <div className="flex justify-between">
+                           <span>Driver Tip</span>
+                           <span>${tipAmount.toFixed(2)}</span>
+                         </div>
+                       )}
+                       <Separator />
+                       <div className="flex justify-between font-bold text-lg">
+                         <span>Total</span>
+                         <span>${finalTotal.toFixed(2)}</span>
+                       </div>
                      </div>
-                   )}
-                     <div className="flex justify-between">
-                       <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
-                        <div className="flex items-center gap-2">
-                          {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 && (
-                            <span className="text-sm text-muted-foreground line-through">${baseDeliveryFee.toFixed(2)}</span>
-                          )}
-                          <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
-                            ${finalDeliveryFee.toFixed(2)}
-                            {(isAddingToOrder && useSameAddress && !hasChanges) && finalDeliveryFee === 0 && (
-                              <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
-                            )}
-                            {deliveryPricing.isDistanceBased && deliveryPricing.distance && (
-                              <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>
-                            )}
-                          </span>
-                        </div>
-                     </div>
-                   <div className="flex justify-between">
-                     <span>Sales Tax (8.25%)</span>
-                     <span>${salesTax.toFixed(2)}</span>
-                   </div>
-                   {tipAmount > 0 && (
-                     <div className="flex justify-between">
-                       <span>Driver Tip</span>
-                       <span>${tipAmount.toFixed(2)}</span>
-                     </div>
-                   )}
-                   <Separator />
-                   <div className="flex justify-between font-bold text-lg">
-                     <span>Total</span>
-                     <span>${finalTotal.toFixed(2)}</span>
-                   </div>
-                 </div>
+                   </>
+                 )}
               </CardContent>
             </Card>
           </div>
