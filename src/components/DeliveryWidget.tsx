@@ -120,7 +120,12 @@ export const DeliveryWidget: React.FC = () => {
     
     // Handle regular add to order flow
     if (addToOrderFlag === 'true' && validLastOrderInfo && !groupOrderData) {
-      // DON'T clear the flag - it should persist until delivery date/time passes
+      // Set the bundle-ready flag and enable free shipping when same address is used
+      setIsAddingToOrder(true);
+      
+      // Apply bundle-ready tag until delivery date/time passes
+      localStorage.setItem('partyondelivery_bundle_ready', 'true');
+      
       // Start the add to order flow
       handleAddToOrder();
     }
@@ -128,6 +133,7 @@ export const DeliveryWidget: React.FC = () => {
     // Clean up expired add to order flag if delivery has passed
     if (addToOrderFlag === 'true' && !validLastOrderInfo) {
       localStorage.removeItem('partyondelivery_add_to_order');
+      localStorage.removeItem('partyondelivery_bundle_ready');
     }
   }, [validLastOrderInfo]);
 
@@ -135,14 +141,16 @@ export const DeliveryWidget: React.FC = () => {
     // Clear cart and start fresh
     setCartItems([]);
     setIsAddingToOrder(false);
+    setUseSameAddress(false);
     setDeliveryInfo({
       date: null,
       timeSlot: '',
       address: '',
       instructions: ''
     });
-    // Clear the add to order flag and group order context when starting a completely new order
+    // Clear the add to order flag, bundle ready flag, and group order context when starting a completely new order
     localStorage.removeItem('partyondelivery_add_to_order');
+    localStorage.removeItem('partyondelivery_bundle_ready');
     localStorage.removeItem('partyondelivery_group_order');
     setCurrentStep('products');
     // Scroll to top
@@ -183,6 +191,12 @@ export const DeliveryWidget: React.FC = () => {
 
   const handleConfirmSameAddress = () => {
     setUseSameAddress(true);
+    
+    // Set bundle-ready flag for free shipping when same address is confirmed
+    if (isAddingToOrder) {
+      localStorage.setItem('partyondelivery_bundle_ready', 'true');
+    }
+    
     setCurrentStep('products');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });

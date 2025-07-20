@@ -54,10 +54,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 }) => {
   // Step management - if same address is confirmed, skip to customer info
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
-    useSameAddress ? 'customer' : 'datetime'
+    useSameAddress && isAddingToOrder ? 'customer' : 'datetime'
   );
-  const [confirmedDateTime, setConfirmedDateTime] = useState(useSameAddress);
-  const [confirmedAddress, setConfirmedAddress] = useState(useSameAddress);
+  const [confirmedDateTime, setConfirmedDateTime] = useState(useSameAddress && isAddingToOrder);
+  const [confirmedAddress, setConfirmedAddress] = useState(useSameAddress && isAddingToOrder);
   const [confirmedCustomer, setConfirmedCustomer] = useState(false);
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);

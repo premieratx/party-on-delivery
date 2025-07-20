@@ -310,10 +310,12 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
         try {
           const groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
           
-          // Build tags array
-          const tagArray = [groupTags, 'bundle-ready'];
+          // Build tags array - always add bundle-ready for add-to-order with same address
+          const tagArray = [groupTags];
           if (isAddingToOrder && useSameAddress) {
-            tagArray.push('delivery-bundle');
+            tagArray.push('bundle-ready', 'delivery-bundle', 'free-shipping');
+          } else {
+            tagArray.push('bundle-ready');
           }
           const newTags = tagArray.join(', ');
           
