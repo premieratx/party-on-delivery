@@ -373,11 +373,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }`}>
                               {(() => {
                                 // Clean title more aggressively on mobile when showing pack info below
-                                const isMobile = window.innerWidth < 1024;
                                 const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
                                 
                                 let cleanedTitle;
-                                if (isMobile && hasPackInfo) {
+                                if (hasPackInfo) {
                                   cleanedTitle = product.title
                                     .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
                                     .replace(/(\d+)\s*(?:pk|pack)/gi, '')
@@ -385,14 +384,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                     .replace(/Can/gi, '')
                                     .replace(/Hard Seltzer/gi, '')
                                     .replace(/\s+/g, ' ')
+                                    .replace(/\.$/, '') // Remove trailing dots
                                     .trim();
                                 } else {
-                                  cleanedTitle = product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim();
-                                }
-                                
-                                // Remove any trailing dots on mobile
-                                if (isMobile) {
-                                  cleanedTitle = cleanedTitle.replace(/\.$/, '');
+                                  cleanedTitle = product.title
+                                    .replace(/(\d+)\s*Pack/gi, '$1pk')
+                                    .replace(/(\d+)\s*oz/gi, '$1oz')
+                                    .replace(/Can/gi, '')
+                                    .replace(/Hard Seltzer/gi, '')
+                                    .replace(/\s+/g, ' ')
+                                    .replace(/\.$/, '') // Remove trailing dots
+                                    .trim();
                                 }
                                 
                                 return cleanedTitle;
@@ -516,11 +518,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       }`}>
                         {(() => {
                           // Clean title more aggressively on mobile when showing pack info below
-                          const isMobile = window.innerWidth < 1024;
                           const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
                           
                           let cleanedTitle;
-                          if (isMobile && hasPackInfo) {
+                          if (hasPackInfo) {
                             cleanedTitle = product.title
                               .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
                               .replace(/(\d+)\s*(?:pk|pack)/gi, '')
@@ -528,14 +529,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               .replace(/Can/gi, '')
                               .replace(/Hard Seltzer/gi, '')
                               .replace(/\s+/g, ' ')
+                              .replace(/\.$/, '') // Remove trailing dots
                               .trim();
                           } else {
-                            cleanedTitle = product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim();
-                          }
-                          
-                          // Remove any trailing dots on mobile
-                          if (isMobile) {
-                            cleanedTitle = cleanedTitle.replace(/\.$/, '');
+                            cleanedTitle = product.title
+                              .replace(/(\d+)\s*Pack/gi, '$1pk')
+                              .replace(/(\d+)\s*oz/gi, '$1oz')
+                              .replace(/Can/gi, '')
+                              .replace(/Hard Seltzer/gi, '')
+                              .replace(/\s+/g, ' ')
+                              .replace(/\.$/, '') // Remove trailing dots
+                              .trim();
                           }
                           
                           return cleanedTitle;
