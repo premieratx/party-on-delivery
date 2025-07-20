@@ -7,7 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon, Clock, ArrowRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addHours, isToday, isSunday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DeliveryInfo } from '../DeliveryWidget';
 
@@ -34,6 +34,43 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
   const [timeSlot, setTimeSlot] = useState(deliveryInfo.timeSlot);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
+  // Get the minimum allowed delivery date (3 hours from now)
+  const minDeliveryDate = addHours(new Date(), 3);
+
+  // Check if a date is disabled (past, Sunday, or within 3 hours)
+  const isDateDisabled = (checkDate: Date) => {
+    return checkDate < minDeliveryDate || isSunday(checkDate);
+  };
+
+  // Get available time slots based on selected date
+  const getAvailableTimeSlots = () => {
+    if (!date) return timeSlots;
+    
+    // If today is selected, filter out time slots that are within 3 hours
+    if (isToday(date)) {
+      const now = new Date();
+      return timeSlots.filter(slot => {
+        const [timeRange] = slot.split(' - ');
+        const [time, period] = timeRange.split(' ');
+        const [hours, minutes] = time.split(':').map(Number);
+        
+        // Convert to 24-hour format
+        let slotHours = hours;
+        if (period === 'PM' && hours !== 12) slotHours += 12;
+        if (period === 'AM' && hours === 12) slotHours = 0;
+        
+        // Create a date object for the slot time
+        const slotDateTime = new Date(date);
+        slotDateTime.setHours(slotHours, minutes, 0, 0);
+        
+        // Check if slot is at least 3 hours from now
+        return slotDateTime >= minDeliveryDate;
+      });
+    }
+    
+    return timeSlots;
+  };
+
   const handleContinue = () => {
     if (date && timeSlot) {
       onComplete({
@@ -57,6 +94,9 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
             </CardTitle>
             <p className="text-muted-foreground">
               Choose your preferred delivery date and time
+            </p>
+            <p className="text-sm text-amber-600 dark:text-amber-500">
+              Note: We're closed on Sundays. Orders require at least 3 hours advance notice.
             </p>
           </CardHeader>
           
@@ -86,9 +126,10 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                     selected={date}
                     onSelect={(selectedDate) => {
                       setDate(selectedDate);
+                      setTimeSlot(''); // Clear time slot when date changes
                       setIsCalendarOpen(false);
                     }}
-                    disabled={(date) => date < new Date()}
+                    disabled={isDateDisabled}
                     initialFocus
                     className="pointer-events-auto"
                   />
@@ -107,7 +148,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                   <SelectValue placeholder="Select a time slot" />
                 </SelectTrigger>
                 <SelectContent>
-                  {timeSlots.map((slot) => (
+                  {getAvailableTimeSlots().map((slot) => (
                     <SelectItem key={slot} value={slot}>
                       {slot}
                     </SelectItem>
