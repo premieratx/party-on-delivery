@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
+import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
@@ -61,6 +62,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [cartCountAnimation, setCartCountAnimation] = useState(false);
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<{[productId: string]: string}>({});
+  const [lightboxProduct, setLightboxProduct] = useState<ShopifyProduct | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   // Step-based order flow mapping to collection handles
   const stepMapping = [
@@ -158,6 +161,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const confirmCheckout = () => {
     setShowCheckoutDialog(false);
     onProceedToCheckout();
+  };
+
+  // Handle product click for cocktails (step 3)
+  const handleProductClick = (product: ShopifyProduct) => {
+    // Only enable lightbox for cocktails (step 3)
+    if (selectedCategory === 2) { // Cocktails is index 2
+      setLightboxProduct(product);
+      setIsLightboxOpen(true);
+    }
+  };
+
+  // Close lightbox
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+    setLightboxProduct(null);
   };
 
   if (loading) {
@@ -341,7 +359,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             return (
               <div 
                 key={product.id} 
-                className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full"
+                className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
+                  selectedCategory === 2 ? 'cursor-pointer hover:border-primary/50' : ''
+                }`}
+                onClick={() => handleProductClick(product)}
               >
                 {/* Product image - consistent height */}
                 <div className="bg-muted rounded overflow-hidden w-full aspect-square mb-3">
@@ -438,12 +459,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     {/* Cart controls */}
                     <div className="flex justify-center">
                       {cartQty > 0 ? (
-                        <div className="flex items-center gap-0.5 bg-muted rounded">
+                        <div className="flex items-center gap-0.5 bg-muted rounded" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                            onClick={() => onUpdateQuantity(product.id, selectedVariant?.id, Math.max(0, cartQty - 1))}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onUpdateQuantity(product.id, selectedVariant?.id, Math.max(0, cartQty - 1));
+                            }}
                           >
                             <Minus size={12} />
                           </Button>
@@ -454,7 +478,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground"
-                            onClick={() => onUpdateQuantity(product.id, selectedVariant?.id, cartQty + 1)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onUpdateQuantity(product.id, selectedVariant?.id, cartQty + 1);
+                            }}
                           >
                             <Plus size={12} />
                           </Button>
@@ -464,7 +491,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           variant="default"
                           size="sm"
                           className="h-8 px-3 text-xs"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                              if (selectedVariant) {
                                onAddToCart({
                                  id: product.id,
@@ -566,6 +594,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         </div>
       )}
+
+      {/* Product Lightbox for cocktails */}
+      <ProductLightbox
+        product={lightboxProduct}
+        isOpen={isLightboxOpen}
+        onClose={closeLightbox}
+        onAddToCart={handleAddToCart}
+        onUpdateQuantity={onUpdateQuantity}
+        cartQuantity={lightboxProduct ? getCartItemQuantity(lightboxProduct.id, selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id) : 0}
+        selectedVariant={lightboxProduct ? lightboxProduct.variants.find(v => v.id === (selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id)) || lightboxProduct.variants[0] : undefined}
+      />
     </div>
   );
 };
