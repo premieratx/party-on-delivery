@@ -54,6 +54,9 @@ export const DeliveryWidget: React.FC = () => {
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
   const [tipAmount, setTipAmount] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Calculate subtotal for consistent delivery fee calculation
+  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   // Check if last order has expired (delivery date/time has passed)
   const isLastOrderExpired = () => {

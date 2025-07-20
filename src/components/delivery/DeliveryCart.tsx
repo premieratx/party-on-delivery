@@ -49,9 +49,11 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   // Calculate delivery fee dynamically based on distance and order changes
   // Note: For cart display, we use standard pricing. Distance-based pricing is calculated in checkout.
   
-  // Recalculate delivery fee based on current subtotal with $20 minimum
+  // Calculate delivery fee with consistent logic matching checkout
   const calculateDeliveryFee = () => {
+    // Free delivery for add-to-order with same address and no changes
     if (isAddingToOrder && useSameAddress && !hasChanges) return 0;
+    // Apply $20 minimum with 10% of subtotal for orders $200+
     return Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20);
   };
   

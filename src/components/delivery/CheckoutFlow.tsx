@@ -194,12 +194,28 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   // Pricing calculations
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  // Distance-based delivery fee state
+  
+  // Distance-based delivery fee state - calculate dynamically
+  const calculateDeliveryFee = () => {
+    // Free delivery for add-to-order with same address and no changes
+    if (isAddingToOrder && useSameAddress && !hasChanges) {
+      return 0;
+    }
+    // Apply $20 minimum with 10% of subtotal for orders $200+
+    return Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20);
+  };
+  
   const [deliveryPricing, setDeliveryPricing] = useState<{fee: number, minimumOrder: number, isDistanceBased: boolean, distance?: number}>({
-    fee: (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : (subtotal >= 200 ? subtotal * 0.1 : 20),
+    fee: calculateDeliveryFee(),
     minimumOrder: 0,
     isDistanceBased: false
   });
+  
+  // Update delivery fee when subtotal or other factors change
+  useEffect(() => {
+    const newFee = calculateDeliveryFee();
+    setDeliveryPricing(prev => ({ ...prev, fee: newFee }));
+  }, [subtotal, isAddingToOrder, useSameAddress, hasChanges]);
   const salesTax = subtotal * 0.0825;
   const [tipAmount, setTipAmount] = useState(0);
   const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
@@ -211,8 +227,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  // Calculate delivery fee using distance-based pricing
-  const baseDeliveryFee = (isAddingToOrder && useSameAddress && !hasChanges) ? 0 : deliveryPricing.fee;
+  // Calculate delivery fee using consistent logic
+  const baseDeliveryFee = deliveryPricing.fee;
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : baseDeliveryFee;
   
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
