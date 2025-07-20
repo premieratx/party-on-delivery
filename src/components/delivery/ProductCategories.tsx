@@ -109,64 +109,85 @@ const ProductCategories = ({ onAddToCart, onCheckout, getTotalItems, getTotalPri
     );
   }
 
+  // Categorize products
+  const margaritaProducts = cocktailProducts.filter(product => 
+    product.title.toLowerCase().includes('margarita')
+  );
+  
+  const packageProducts = cocktailProducts.filter(product => 
+    product.title.toLowerCase().includes('pack') || 
+    product.title.toLowerCase().includes('kit') ||
+    product.title.toLowerCase().includes('bundle')
+  ).filter(product => !product.title.toLowerCase().includes('margarita'));
+  
+  const otherProducts = cocktailProducts.filter(product => 
+    !margaritaProducts.includes(product) && !packageProducts.includes(product)
+  );
+
+  const ProductCard = ({ product }: { product: Product }) => (
+    <div
+      className="group cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+      onClick={() => handleProductClick(product)}
+    >
+      <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-sm hover:shadow-md border border-primary/10 hover:border-primary/30 transition-all duration-200 p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium text-sm leading-tight mb-1 group-hover:text-primary transition-colors truncate">
+              {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz')}
+            </h3>
+            <span className="text-lg font-bold text-primary">
+              ${formatPrice(product.variants?.[0]?.price || product.price).toFixed(2)}
+            </span>
+          </div>
+          <Button
+            size="sm"
+            className="ml-2 rounded-full w-7 h-7 p-0 bg-primary hover:bg-primary/90 shadow-sm flex-shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart(product);
+            }}
+          >
+            <Plus className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ProductSection = ({ title, products }: { title: string; products: Product[] }) => {
+    if (products.length === 0) return null;
+    
+    return (
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-3 text-foreground border-b border-primary/20 pb-2">
+          {title}
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 pb-20 lg:pb-0">
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
+      <div className="container mx-auto p-4">
+        {/* Compact Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
             Austin's Best Cocktail Kits
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Premium cocktail kits with all ingredients included - delivered to your door
+          <p className="text-sm text-muted-foreground">
+            Premium cocktail kits delivered to your door
           </p>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {cocktailProducts.map((product) => (
-            <div
-              key={product.id}
-              className="group cursor-pointer transform transition-all duration-300 hover:scale-105"
-              onClick={() => handleProductClick(product)}
-            >
-              <div className="relative bg-white dark:bg-gray-900 rounded-lg shadow-floating overflow-hidden border border-primary/10 hover:border-primary/30 transition-all duration-300">
-                <div className="aspect-square overflow-hidden">
-                  <img
-                    src={product.image || '/placeholder.svg'}
-                    alt={product.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                    {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz')}
-                  </h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-primary">
-                    ${formatPrice(product.variants?.[0]?.price || product.price).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Add to cart button - always visible on bottom right */}
-                 <Button
-                  size="sm"
-                  className="absolute bottom-3 right-3 rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90 shadow-lg"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart(product);
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Categorized Products */}
+        <ProductSection title="Margaritas" products={margaritaProducts} />
+        <ProductSection title="Packages" products={packageProducts} />
+        <ProductSection title="Other Cocktail Options" products={otherProducts} />
 
         {cocktailProducts.length === 0 && !loading && (
           <div className="text-center py-12">
