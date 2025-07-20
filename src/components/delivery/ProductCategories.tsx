@@ -362,14 +362,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         {/* Product info with responsive layout for cocktails */}
                         <div className={`flex flex-col justify-between ${
                           selectedCollection?.handle === 'cocktail-kits' 
-                            ? 'flex-1 lg:min-h-[5rem]' 
-                            : 'min-h-[4rem] lg:min-h-[5rem]'
+                            ? 'flex-1 lg:min-h-[6rem]' 
+                            : 'min-h-[5rem] lg:min-h-[6rem]'
                         }`}>
                           <div className={selectedCollection?.handle === 'cocktail-kits' ? 'flex-1' : ''}>
-                            <h4 className={`font-medium leading-tight ${
+                            <h4 className={`font-medium leading-tight text-center ${
                               selectedCollection?.handle === 'cocktail-kits' 
-                                ? 'text-base lg:text-sm line-clamp-2 lg:line-clamp-3' 
-                                : 'text-xs lg:text-sm line-clamp-2 lg:line-clamp-3'
+                                ? 'text-sm lg:text-sm line-clamp-3' 
+                                : 'text-xs lg:text-sm line-clamp-3'
                             }`}>
                               {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                             </h4>
@@ -484,14 +484,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   {/* Product info with responsive layout for cocktails */}
                   <div className={`flex flex-col justify-between ${
                     selectedCollection?.handle === 'cocktail-kits' 
-                      ? 'flex-1 lg:min-h-[5rem]' 
-                      : 'min-h-[4rem] lg:min-h-[5rem]'
+                      ? 'flex-1 lg:min-h-[6rem]' 
+                      : 'min-h-[5rem] lg:min-h-[6rem]'
                   }`}>
                     <div className={selectedCollection?.handle === 'cocktail-kits' ? 'flex-1' : ''}>
-                      <h4 className={`font-medium leading-tight ${
+                      <h4 className={`font-medium leading-tight text-center ${
                         selectedCollection?.handle === 'cocktail-kits' 
-                          ? 'text-base lg:text-sm line-clamp-2 lg:line-clamp-3' 
-                          : 'text-xs lg:text-sm line-clamp-2 lg:line-clamp-3'
+                          ? 'text-sm lg:text-sm line-clamp-3' 
+                          : 'text-xs lg:text-sm line-clamp-3'
                       }`}>
                         {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                       </h4>
