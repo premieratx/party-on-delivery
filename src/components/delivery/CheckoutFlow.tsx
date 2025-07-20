@@ -201,7 +201,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     isDistanceBased: false
   });
   const salesTax = subtotal * 0.0825;
-  const [tipAmount, setTipAmount] = useState(0);
+  const [tipAmount, setTipAmount] = useState(Math.max(subtotal * 0.10, 20)); // $20 minimum
   const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
@@ -250,11 +250,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
   
-  // Sync tip changes with parent
+  // Sync tip changes with parent and enforce minimum
   const handleTipChange = (newTip: number) => {
-    setTipAmount(newTip);
+    const adjustedTip = Math.max(newTip, 20); // Enforce $20 minimum
+    setTipAmount(adjustedTip);
     if (onTipChange) {
-      onTipChange(newTip);
+      onTipChange(adjustedTip);
     }
   };
 
@@ -287,6 +288,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             subtotal
           );
           setDeliveryPricing(pricing);
+          // Adjust tip based on subtotal when address changes
+          const newMinimumTip = Math.max(subtotal * 0.10, 20);
+          if (tipAmount < newMinimumTip) {
+            handleTipChange(newMinimumTip);
+          }
         } catch (error) {
           console.error('Error calculating distance-based pricing:', error);
           // Use standard pricing as fallback

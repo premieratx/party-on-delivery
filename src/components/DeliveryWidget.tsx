@@ -52,7 +52,7 @@ export const DeliveryWidget: React.FC = () => {
   
   // State for tracking cart calculations (for cart/checkout sync)
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
-  const [tipAmount, setTipAmount] = useState(0);
+  const [tipAmount, setTipAmount] = useState(20); // $20 minimum
   const [hasChanges, setHasChanges] = useState(false);
 
   // Check if last order has expired (delivery date/time has passed)
@@ -316,7 +316,7 @@ export const DeliveryWidget: React.FC = () => {
           useSameAddress={useSameAddress}
           lastOrderInfo={validLastOrderInfo}
           onDiscountChange={setAppliedDiscount}
-          onTipChange={setTipAmount}
+          onTipChange={(tip) => setTipAmount(Math.max(tip, 20))} // Enforce $20 minimum
           onChangesDetected={setHasChanges}
         />
       )}

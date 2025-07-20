@@ -58,11 +58,17 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [internalTipAmount, setInternalTipAmount] = useState(subtotal * 0.10); // 10% pre-selected
+  // Set $20 minimum tip amount
+  const minimumTip = 20;
+  const [internalTipAmount, setInternalTipAmount] = useState(Math.max(subtotal * 0.10, minimumTip)); // 10% pre-selected with $20 min
 
   // Use external tip state if provided, otherwise use internal
   const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
-  const setTipAmount = externalSetTipAmount || setInternalTipAmount;
+  const setTipAmount = externalSetTipAmount || ((tip: number) => {
+    // Enforce minimum tip when setting
+    const adjustedTip = Math.max(tip, minimumTip);
+    setInternalTipAmount(adjustedTip);
+  });
   const [showCustomTip, setShowCustomTip] = useState(false);
   const [tipConfirmed, setTipConfirmed] = useState(false);
   const [customTipConfirmed, setCustomTipConfirmed] = useState(false);
@@ -71,13 +77,13 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const total = subtotal + deliveryFee + salesTax + tipAmount;
   const tipOptions = [{
     label: '5%',
-    value: subtotal * 0.05
+    value: Math.max(subtotal * 0.05, minimumTip)
   }, {
     label: '10%',
-    value: subtotal * 0.10
+    value: Math.max(subtotal * 0.10, minimumTip)
   }, {
     label: '15%',
-    value: subtotal * 0.15
+    value: Math.max(subtotal * 0.15, minimumTip)
   }];
 
   // Auto-condense preset tips after 3 seconds
@@ -202,6 +208,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               </div>
             </div> : <div className="space-y-3">
               <Label className="text-sm md:text-base font-semibold">Add a tip for your delivery driver</Label>
+              <p className="text-xs text-muted-foreground">Minimum $20 tip required</p>
               <div className="grid grid-cols-2 gap-2">
                 {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"} onClick={() => {
               setTipAmount(tip.value);
@@ -228,15 +235,16 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                   // Allow typing numbers and decimal point
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
                     const numValue = parseFloat(value) || 0;
-                    setTipAmount(numValue);
+                    // Don't enforce minimum while typing to allow user flexibility
+                    setInternalTipAmount(numValue);
                   }
-                }} onBlur={e => {
-                  // Format to 2 decimal places on blur if there's a value
-                  const value = parseFloat(e.target.value) || 0;
+                 }} onBlur={e => {
+                  // Format to 2 decimal places on blur and enforce minimum
+                  const value = Math.max(parseFloat(e.target.value) || 0, minimumTip);
                   setTipAmount(value);
-                }} onKeyDown={e => {
+                 }} onKeyDown={e => {
                   if (e.key === 'Tab' || e.key === 'Enter') {
-                    const value = parseFloat(e.currentTarget.value) || 0;
+                    const value = Math.max(parseFloat(e.currentTarget.value) || 0, minimumTip);
                     setTipAmount(value);
                   }
                 }} className="w-20" />
