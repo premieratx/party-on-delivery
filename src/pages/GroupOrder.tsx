@@ -73,10 +73,12 @@ const GroupOrder = () => {
         console.log('Checking localStorage for order:', groupOrderId);
         const orderData = localStorage.getItem('partyondelivery_last_order');
         console.log('LocalStorage data:', orderData);
+        console.log('All localStorage keys:', Object.keys(localStorage));
         
         if (orderData) {
           const order = JSON.parse(orderData);
           console.log('Parsed order from localStorage:', order);
+          console.log('Comparing order numbers:', order.orderNumber, '===', groupOrderId);
           if (order.orderNumber === groupOrderId) {
             // Try to fetch detailed order info from Shopify
             try {
