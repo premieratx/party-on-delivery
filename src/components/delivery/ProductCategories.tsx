@@ -219,7 +219,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
       {/* Hero Section with Austin Background */}
-      <div className="relative h-64 lg:h-96 overflow-hidden">
+      <div className="relative h-32 lg:h-96 overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroPartyAustin})` }}
@@ -230,7 +230,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <img 
             src={partyOnDeliveryLogo}
             alt="Party on Delivery" 
-            className="h-20 lg:h-32 object-contain mb-4 drop-shadow-lg"
+            className="h-20 lg:h-64 object-contain mb-4 drop-shadow-lg"
           />
           <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">
             Build Your Party Package
@@ -245,7 +245,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
         {/* Category Tabs with 5th checkout tab */}
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="grid grid-cols-5 gap-2 h-16 sm:h-18">
+          <div className="grid grid-cols-5 gap-1 h-16 sm:h-18">
             {stepMapping.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Martini : Package;
@@ -285,8 +285,35 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               );
             })}
             
-            {/* 5th tab - Cart/Checkout split */}
-            <div className="grid grid-cols-2 gap-1 h-full">
+            {/* 5th tab - Cart/Checkout split for mobile and desktop */}
+            <div className="sm:hidden flex flex-col h-full">
+              <button
+                onClick={onOpenCart}
+                className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
+              >
+                <ShoppingCart className="w-4 h-4 text-foreground" />
+                {cartItemCount > 0 && (
+                  <Badge variant="default" className="text-xs ml-1 bg-primary text-primary-foreground">
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </button>
+              
+              <button
+                onClick={onProceedToCheckout}
+                disabled={cartItemCount === 0}
+                className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
+                  cartItemCount > 0 
+                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20' 
+                    : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
+                } ${selectedCategory === 3 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
+              >
+                <div className={`text-xs font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
+              </button>
+            </div>
+
+            {/* Desktop version remains as grid */}
+            <div className="hidden sm:grid grid-cols-2 gap-1 h-full">
               <button
                 onClick={onOpenCart}
                 className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-1"
@@ -307,7 +334,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   cartItemCount > 0 
                     ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20' 
                     : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                }`}
+                } ${selectedCategory === 3 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
               >
                 <CheckCircle className={`w-4 h-4 mb-1 ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
                 <div className={`text-xs font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
@@ -320,17 +347,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {selectedCollection && (
           <div className="max-w-7xl mx-auto px-4 pb-4">
             <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={() => selectedCategory > 0 && setSelectedCategory(selectedCategory - 1)}
-                disabled={selectedCategory === 0}
-                className={`p-2 rounded-full transition-colors ${
-                  selectedCategory === 0 
-                    ? 'text-muted-foreground cursor-not-allowed' 
-                    : 'text-primary hover:bg-primary/10 cursor-pointer'
-                }`}
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
+              {selectedCategory !== 0 && (
+                <button
+                  onClick={() => selectedCategory > 0 && setSelectedCategory(selectedCategory - 1)}
+                  disabled={selectedCategory === 0}
+                  className="p-2 rounded-full transition-colors text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+              {selectedCategory === 0 && <div className="w-10"></div>}
               <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
                 {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
               </h2>
@@ -340,7 +366,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 className={`p-2 rounded-full transition-colors ${
                   selectedCategory === stepMapping.length - 1 
                     ? 'text-muted-foreground cursor-not-allowed' 
-                    : 'text-primary hover:bg-primary/10 cursor-pointer'
+                    : 'text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]'
                 }`}
               >
                 <ChevronRight className="w-6 h-6" />
@@ -432,19 +458,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           </SelectContent>
                         </Select>
                       </div>
-                    ) : (
-                      <p className="text-muted-foreground text-xs line-clamp-1 mb-1">
-                        {selectedVariant?.title}
-                      </p>
-                    )}
+                    ) : null}
 
-                    {/* Pack size info for variant products */}
+                     {/* Pack size info for variant products */}
                     {(() => {
                       const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
                       const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                       if (packMatch && sizeMatch) {
                         return (
-                          <p className="text-foreground text-xs text-center mb-1">
+                          <p className={`text-foreground text-center mb-1 ${selectedCategory === 0 ? 'text-xs' : 'text-xs'}`}>
                             {packMatch[1]}pk × {sizeMatch[1]}oz
                           </p>
                         );
