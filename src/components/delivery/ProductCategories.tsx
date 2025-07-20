@@ -197,10 +197,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      {/* Category Tabs - reduced height on desktop */}
+      {/* Category Tabs - increased height on desktop, no background images */}
       <div className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-30">
         <div className="max-w-7xl mx-auto p-4">
-          <div className="grid grid-cols-4 gap-2 h-20 sm:h-12">
+          <div className="grid grid-cols-4 gap-2 h-20 sm:h-24">
             {stepMapping.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Martini : Package;
@@ -222,26 +222,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
                   }`}
-                  style={{
-                    backgroundImage: `url(${step.backgroundImage})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
                 >
-                  <div className={`absolute inset-0 transition-all duration-300 ${
-                    isActive ? 'bg-primary/20' : 'bg-black/60 group-hover:bg-black/50'
-                  }`}></div>
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: stacked */}
                     <div className="sm:hidden flex flex-col items-center gap-1">
-                      <IconComponent className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-white'}`} />
-                      <div className={`text-xs font-bold ${isActive ? 'text-primary' : 'text-white'}`}>{stepTitle}</div>
+                      <IconComponent className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-foreground'}`} />
+                      <div className={`text-xs font-bold ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                     
-                    {/* Desktop layout: side by side with background - reduced text size */}
-                    <div className="hidden sm:flex items-center justify-between w-full px-2">
-                      <div className={`font-bold text-2xl ${isActive ? 'text-primary' : 'text-white'}`}>{stepNumber}</div>
-                      <div className={`font-bold text-lg text-right ${isActive ? 'text-primary' : 'text-white'}`}>{stepTitle}</div>
+                    {/* Desktop layout: side by side without background image */}
+                    <div className="hidden sm:flex items-center justify-between w-full px-4">
+                      <div className={`font-bold text-3xl ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
+                      <div className={`font-bold text-xl text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                   </div>
                 </button>
