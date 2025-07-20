@@ -730,7 +730,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             )}
 
             {/* Customer Information */}
-            {(currentStep === 'customer' || (!confirmedCustomer && (confirmedDateTime && confirmedAddress))) && (
+            {(currentStep === 'customer' || (!confirmedCustomer && confirmedDateTime && confirmedAddress)) && (
               <Card className="shadow-card border-2 border-green-500">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
