@@ -317,7 +317,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       <div className="max-w-7xl mx-auto p-4 pt-8">
 
         {/* Product Grid - Cocktails use 1 column on mobile, others stay 3 columns mobile */}
-        <div className={`grid gap-2 lg:gap-3 ${
+        <div className={`grid gap-3 lg:gap-4 ${
           selectedCollection?.handle === 'cocktail-kits' 
             ? 'grid-cols-1 lg:grid-cols-6' 
             : 'grid-cols-3 lg:grid-cols-6'
@@ -325,14 +325,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           {selectedCollection?.products.map((product) => (
             <div 
               key={product.id} 
-              className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 ${
-                selectedCollection?.handle === 'cocktail-kits' ? 'lg:block' : ''
+              className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
+                selectedCollection?.handle === 'cocktail-kits' ? 'lg:flex-col' : 'flex-col'
               }`}
             >
               {/* Product variants handling */}
               {product.variants.length > 1 ? (
-                <div className={`space-y-3 ${
-                  selectedCollection?.handle === 'cocktail-kits' ? 'lg:space-y-3' : ''
+                <div className={`space-y-4 flex-1 flex flex-col ${
+                  selectedCollection?.handle === 'cocktail-kits' ? 'lg:space-y-4' : ''
                 }`}>
                   {product.variants.slice(0, 3).map((variant) => {
                     const cartQty = getCartItemQuantity(product.id, variant.id);
@@ -340,32 +340,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     return (
                       <div 
                         key={variant.id} 
-                        className={`space-y-2 ${
+                        className={`flex flex-col h-full ${
                           selectedCollection?.handle === 'cocktail-kits' 
-                            ? 'flex items-center gap-4 space-y-0 lg:block lg:space-y-2' 
-                            : ''
+                            ? 'flex-row items-center gap-4 lg:flex-col lg:gap-0' 
+                            : 'gap-3'
                         }`}
                       >
                         {/* Product image */}
-                        <div className={`bg-muted rounded overflow-hidden ${
+                        <div className={`bg-muted rounded overflow-hidden shrink-0 ${
                           selectedCollection?.handle === 'cocktail-kits' 
-                            ? 'w-20 h-20 shrink-0 lg:w-full lg:aspect-square' 
+                            ? 'w-20 h-20 lg:w-full lg:aspect-square' 
                             : 'w-full aspect-square'
                         }`}>
                           <img
                             src={product.image}
                             alt={product.title}
-                            className="w-full h-full object-contain lg:object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                         
                         {/* Product info with responsive layout for cocktails */}
-                        <div className={`flex flex-col justify-between ${
+                        <div className={`flex flex-col flex-1 ${
                           selectedCollection?.handle === 'cocktail-kits' 
-                            ? 'flex-1 lg:min-h-[6rem]' 
-                            : 'min-h-[5rem] lg:min-h-[6rem]'
+                            ? 'justify-between lg:min-h-[8rem]' 
+                            : 'justify-between min-h-[7rem]'
                         }`}>
-                          <div className={selectedCollection?.handle === 'cocktail-kits' ? 'flex-1' : ''}>
+                          <div className="flex-1 flex flex-col justify-center">
                             <h4 className={`font-medium leading-tight text-center ${
                               selectedCollection?.handle === 'cocktail-kits' 
                                 ? 'text-sm lg:text-sm line-clamp-3' 
@@ -402,22 +402,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             )}
                           </div>
                           
-                          {/* Price and cart controls container for cocktails */}
-                          <div className={`${
+                          {/* Price and cart controls container */}
+                          <div className={`mt-auto pt-3 ${
                             selectedCollection?.handle === 'cocktail-kits' 
-                              ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
-                              : ''
+                              ? 'flex items-center gap-3 lg:block lg:pt-3' 
+                              : 'flex flex-col items-center gap-2'
                           }`}>
                           <Badge variant="secondary" className="w-fit font-semibold text-center mx-auto block">
                             ${variant.price.toFixed(2)}
                           </Badge>
-                          
-                          {/* Cart controls */}
-                          <div className={`flex justify-center ${
-                            selectedCollection?.handle === 'cocktail-kits' 
-                              ? 'lg:mt-2' 
-                              : 'min-h-[2rem] mt-2'
-                          }`}>
+                            
+                            {/* Cart controls */}
+                            <div className={`flex justify-center ${
+                              selectedCollection?.handle === 'cocktail-kits' 
+                                ? 'lg:mt-2' 
+                                : 'mt-2'
+                            }`}>
                             {cartQty > 0 ? (
                               <div className="flex items-center gap-1 bg-muted rounded">
                                 <Button
@@ -459,31 +459,31 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 </div>
               ) : (
                 // Single product layout
-                <div className={`space-y-3 ${
+                <div className={`flex flex-col h-full ${
                   selectedCollection?.handle === 'cocktail-kits' 
-                    ? 'flex items-center gap-4 space-y-0 lg:block lg:space-y-3' 
-                    : ''
+                    ? 'flex-row items-center gap-4 lg:flex-col lg:gap-0' 
+                    : 'gap-3'
                 }`}>
                   {/* Product image */}
-                  <div className={`bg-muted rounded overflow-hidden ${
+                  <div className={`bg-muted rounded overflow-hidden shrink-0 ${
                     selectedCollection?.handle === 'cocktail-kits' 
-                      ? 'w-20 h-20 shrink-0 lg:w-full lg:aspect-square' 
+                      ? 'w-20 h-20 lg:w-full lg:aspect-square' 
                       : 'w-full aspect-square'
                   }`}>
                     <img
                       src={product.image}
                       alt={product.title}
-                      className="w-full h-full object-contain lg:object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
                   
-                  {/* Product info with responsive layout for cocktails */}
-                  <div className={`flex flex-col justify-between ${
+                  {/* Product info with responsive layout */}
+                  <div className={`flex flex-col flex-1 ${
                     selectedCollection?.handle === 'cocktail-kits' 
-                      ? 'flex-1 lg:min-h-[6rem]' 
-                      : 'min-h-[5rem] lg:min-h-[6rem]'
+                      ? 'justify-between lg:min-h-[8rem]' 
+                      : 'justify-between min-h-[7rem]'
                   }`}>
-                    <div className={selectedCollection?.handle === 'cocktail-kits' ? 'flex-1' : ''}>
+                    <div className="flex-1 flex flex-col justify-center">
                       <h4 className={`font-medium leading-tight text-center ${
                         selectedCollection?.handle === 'cocktail-kits' 
                           ? 'text-sm lg:text-sm line-clamp-3' 
@@ -513,11 +513,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       )}
                     </div>
                     
-                    {/* Price and cart controls container for cocktails */}
-                    <div className={`${
+                    {/* Price and cart controls container */}
+                    <div className={`mt-auto pt-3 ${
                       selectedCollection?.handle === 'cocktail-kits' 
-                        ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
-                        : ''
+                        ? 'flex items-center gap-3 lg:block lg:pt-3' 
+                        : 'flex flex-col items-center gap-2'
                     }`}>
                       <Badge variant="secondary" className="w-fit font-semibold text-center mx-auto block mt-2">
                         ${product.price.toFixed(2)}
@@ -527,7 +527,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <div className={`flex justify-center ${
                         selectedCollection?.handle === 'cocktail-kits' 
                           ? 'lg:mt-2' 
-                          : 'min-h-[2rem] mt-2'
+                          : 'mt-2'
                       }`}>
                         {(() => {
                           const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
