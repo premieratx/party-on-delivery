@@ -34,8 +34,8 @@ export const DeliveryWidget: React.FC = () => {
   // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
   
-  const [currentStep, setCurrentStep] = useState<DeliveryStep>('order-continuation');
-  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
+  const [currentStep, setCurrentStep] = useLocalStorage<DeliveryStep>('partyondelivery_current_step', 'order-continuation');
+  const [deliveryInfo, setDeliveryInfo] = useLocalStorage<DeliveryInfo>('partyondelivery_delivery_info', {
     date: null,
     timeSlot: '',
     address: '',
@@ -44,8 +44,8 @@ export const DeliveryWidget: React.FC = () => {
   const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('partyondelivery_cart', []);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
-  const [isAddingToOrder, setIsAddingToOrder] = useState(addToOrderFlag); // Initialize based on flag
-  const [useSameAddress, setUseSameAddress] = useState(false);
+  const [isAddingToOrder, setIsAddingToOrder] = useLocalStorage<boolean>('partyondelivery_is_adding_to_order', addToOrderFlag);
+  const [useSameAddress, setUseSameAddress] = useLocalStorage<boolean>('partyondelivery_use_same_address', false);
   
   // State for tracking cart calculations (for cart/checkout sync)
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
@@ -98,6 +98,12 @@ export const DeliveryWidget: React.FC = () => {
     // Clear cart and start fresh
     setCartItems([]);
     setIsAddingToOrder(false);
+    setDeliveryInfo({
+      date: null,
+      timeSlot: '',
+      address: '',
+      instructions: ''
+    });
     // Clear the add to order flag when starting a completely new order
     localStorage.removeItem('partyondelivery_add_to_order');
     setCurrentStep('products');
