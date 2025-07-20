@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { format, isAfter } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, MapPin, Clock, Package, Users, AlertCircle } from 'lucide-react';
 import { DeliveryWidget } from '@/components/DeliveryWidget';
-import { supabase } from '@/integrations/supabase/client';
-
-interface OrderItem {
-  id: string;
-  title: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image: string;
-  variant?: string;
-}
 
 interface GroupOrderInfo {
   orderNumber: string;
@@ -29,185 +18,43 @@ interface GroupOrderInfo {
   instructions?: string;
   customerName?: string;
   customerEmail?: string;
-  items?: OrderItem[];
-  subtotal?: number;
 }
 
 const GroupOrder = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { orderNumber } = useParams<{ orderNumber: string }>();
   const [groupOrderInfo, setGroupOrderInfo] = useState<GroupOrderInfo | null>(null);
   const [isOrderExpired, setIsOrderExpired] = useState(false);
   const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [showDeliveryWidget, setShowDeliveryWidget] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchGroupOrderData = async () => {
-      // Get order number from either path params or query params
-      const searchParams = new URLSearchParams(location.search);
-      const orderFromQuery = searchParams.get('order');
-      const orderNumberToUse = orderNumber || orderFromQuery;
-      
-      console.log('fetchGroupOrderData called with orderNumber:', orderNumberToUse);
-      console.log('Path param orderNumber:', orderNumber);
-      console.log('Query param order:', orderFromQuery);
-      
-      if (!orderNumberToUse) {
-        console.log('No order number provided in either path or query');
-        setError('No order number provided');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Parse the group order ID from URL params
-        const groupOrderId = orderNumberToUse;
-        
-        // First try localStorage for quick access
-        console.log('Checking localStorage for order:', groupOrderId);
-        const orderData = localStorage.getItem('partyondelivery_last_order');
-        console.log('LocalStorage data:', orderData);
-        console.log('All localStorage keys:', Object.keys(localStorage));
-        
-        if (orderData) {
+    // Parse the group order ID from URL params
+    const searchParams = new URLSearchParams(location.search);
+    const groupOrderId = searchParams.get('order');
+    
+    if (groupOrderId) {
+      // In a real app, you'd fetch this from your backend
+      // For now, we'll try to get it from localStorage as a demo
+      const orderData = localStorage.getItem('partyondelivery_last_order');
+      if (orderData) {
+        try {
           const order = JSON.parse(orderData);
-          console.log('Parsed order from localStorage:', order);
-          console.log('Comparing order numbers:', order.orderNumber, '===', groupOrderId);
           if (order.orderNumber === groupOrderId) {
-            // Try to fetch detailed order info from Shopify
-            try {
-              const { data: shopifyDetails, error: shopifyError } = await supabase.functions.invoke('get-shopify-order-details', {
-                body: { orderNumber: groupOrderId }
-              });
-
-              if (!shopifyError && shopifyDetails?.success) {
-                const enhancedOrder = {
-                  ...order,
-                  items: shopifyDetails.order.items,
-                  subtotal: shopifyDetails.order.subtotal,
-                  deliveryDate: shopifyDetails.order.delivery.date || order.deliveryDate,
-                  deliveryTime: shopifyDetails.order.delivery.time || order.deliveryTime,
-                  address: shopifyDetails.order.delivery.address || order.address,
-                  instructions: shopifyDetails.order.delivery.instructions || order.instructions
-                };
-                setGroupOrderInfo(enhancedOrder);
-              } else {
-                setGroupOrderInfo(order);
-              }
-            } catch (shopifyError) {
-              console.error('Error fetching Shopify details:', shopifyError);
-              setGroupOrderInfo(order);
-            }
-
+            setGroupOrderInfo(order);
+            
             // Check if the order is expired
             if (order.deliveryDate && order.deliveryTime) {
               const deliveryDateTime = new Date(`${order.deliveryDate}T${convertTimeToDateTime(order.deliveryTime)}`);
               setIsOrderExpired(isAfter(new Date(), deliveryDateTime));
             }
-            return;
           }
+        } catch (error) {
+          console.error('Error parsing group order:', error);
         }
-
-        console.log('Not found in localStorage, fetching from database for order:', groupOrderId);
-        
-        // If not in localStorage, fetch from database and Shopify
-        const { data: shopifyOrder, error } = await supabase
-          .from('shopify_orders')
-          .select(`
-            shopify_order_number,
-            amount,
-            created_at,
-            order_groups (
-              customer_email,
-              customer_name,
-              delivery_address,
-              delivery_city,
-              delivery_state,
-              delivery_zip,
-              delivery_instructions,
-              created_at
-            )
-          `)
-          .eq('shopify_order_number', groupOrderId)
-          .single();
-
-        console.log('Database query result:', { shopifyOrder, error });
-
-        if (error) {
-          console.error('Error fetching order:', error);
-          setError('Order not found in database');
-          return;
-        }
-
-        if (shopifyOrder?.order_groups) {
-          const orderGroup = shopifyOrder.order_groups;
-          const fullAddress = `${orderGroup.delivery_address}, ${orderGroup.delivery_city}, ${orderGroup.delivery_state} ${orderGroup.delivery_zip}`;
-          
-          // Fetch detailed order info from Shopify
-          const { data: shopifyDetails, error: shopifyError } = await supabase.functions.invoke('get-shopify-order-details', {
-            body: { orderNumber: groupOrderId }
-          });
-
-          let groupOrder;
-          if (!shopifyError && shopifyDetails?.success) {
-            // Use detailed Shopify data
-            groupOrder = {
-              orderNumber: shopifyOrder.shopify_order_number,
-              total: shopifyDetails.order.total,
-              subtotal: shopifyDetails.order.subtotal,
-              date: shopifyOrder.created_at,
-              orderId: shopifyOrder.shopify_order_number,
-              address: shopifyDetails.order.delivery.address || fullAddress,
-              deliveryDate: shopifyDetails.order.delivery.date || new Date(shopifyOrder.created_at).toISOString().split('T')[0],
-              deliveryTime: shopifyDetails.order.delivery.time || "2:00 PM - 3:00 PM",
-              instructions: shopifyDetails.order.delivery.instructions || orderGroup.delivery_instructions,
-              customerName: shopifyDetails.order.customer.name || orderGroup.customer_name,
-              customerEmail: shopifyDetails.order.customer.email || orderGroup.customer_email,
-              items: shopifyDetails.order.items
-            };
-          } else {
-            // Fallback to basic data
-            const orderDate = new Date(shopifyOrder.created_at);
-            const deliveryDate = new Date(orderDate.getTime() + 2 * 60 * 60 * 1000);
-            
-            groupOrder = {
-              orderNumber: shopifyOrder.shopify_order_number,
-              total: shopifyOrder.amount,
-              date: shopifyOrder.created_at,
-              orderId: shopifyOrder.shopify_order_number,
-              address: fullAddress,
-              deliveryDate: deliveryDate.toISOString().split('T')[0],
-              deliveryTime: "2:00 PM - 3:00 PM",
-              instructions: orderGroup.delivery_instructions,
-              customerName: orderGroup.customer_name,
-              customerEmail: orderGroup.customer_email
-            };
-          }
-          
-          setGroupOrderInfo(groupOrder);
-          
-          // Check if the order is expired
-          const deliveryDateTime = new Date(`${groupOrder.deliveryDate}T${convertTimeToDateTime(groupOrder.deliveryTime)}`);
-          setIsOrderExpired(isAfter(new Date(), deliveryDateTime));
-        } else {
-          setError('Order data incomplete');
-        }
-      } catch (error) {
-        console.error('Error parsing group order:', error);
-        setError('Failed to load order details');
-      } finally {
-        setIsLoading(false);
       }
-    };
-
-    fetchGroupOrderData();
-  }, [orderNumber, location]);
+    }
+  }, [location]);
 
   const convertTimeToDateTime = (timeSlot: string): string => {
     const startTime = timeSlot.split(' - ')[0];
@@ -226,20 +73,11 @@ const GroupOrder = () => {
 
   const handleConfirmAddress = () => {
     if (groupOrderInfo) {
-      // Set up group order context for delivery widget
-      const groupOrderContext = {
-        isGroupOrder: true,
-        originalOrderNumber: groupOrderInfo.orderNumber,
-        deliveryDate: groupOrderInfo.deliveryDate,
-        deliveryTime: groupOrderInfo.deliveryTime,
-        address: groupOrderInfo.address,
-        instructions: groupOrderInfo.instructions || '',
-        customerName: groupOrderInfo.customerName,
-        customerEmail: groupOrderInfo.customerEmail
-      };
-      
-      localStorage.setItem('partyondelivery_group_order', JSON.stringify(groupOrderContext));
-      localStorage.setItem('partyondelivery_add_to_order', 'true');
+      // Set up the group order context
+      localStorage.setItem('partyondelivery_group_order', JSON.stringify({
+        ...groupOrderInfo,
+        isGroupOrder: true
+      }));
       setAddressConfirmed(true);
       setShowDeliveryWidget(true);
     }
@@ -251,23 +89,7 @@ const GroupOrder = () => {
     navigate('/');
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="p-8">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
-            <h1 className="text-2xl font-bold mb-4">Loading Order...</h1>
-            <p className="text-muted-foreground">
-              Fetching order details for #{orderNumber}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (error || !groupOrderInfo) {
+  if (!groupOrderInfo) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
         <Card className="w-full max-w-md text-center">
@@ -275,7 +97,7 @@ const GroupOrder = () => {
             <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
             <p className="text-muted-foreground mb-6">
-              {error || `Order #${orderNumber} could not be found or has expired.`}
+              The group order link you followed is invalid or has expired.
             </p>
             <Button onClick={() => navigate('/')} className="w-full">
               Start New Order
@@ -373,58 +195,6 @@ const GroupOrder = () => {
             )}
           </CardContent>
         </Card>
-
-        {/* Order Items Section */}
-        {groupOrderInfo.items && groupOrderInfo.items.length > 0 && (
-          <Card className="shadow-floating animate-fade-in border-blue-200 bg-blue-50/50 dark:bg-blue-900/10 dark:border-blue-800">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                <Package className="w-5 h-5" />
-                Here's what we have ordered so far
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {groupOrderInfo.items.map((item, index) => (
-                  <div key={`${item.id}-${index}`} className="flex items-center gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border">
-                    <img 
-                      src={item.image} 
-                      alt={item.title}
-                      className="w-12 h-12 object-cover rounded-md bg-muted"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate">
-                        {item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz')}
-                      </h4>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>Qty: {item.quantity}</span>
-                        <span>•</span>
-                        <span>${item.price.toFixed(2)} each</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-sm">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {groupOrderInfo.subtotal && (
-                  <div className="border-t pt-3 mt-3">
-                    <div className="flex justify-between items-center text-sm font-medium">
-                      <span>Subtotal ({groupOrderInfo.items.length} items)</span>
-                      <span>${groupOrderInfo.subtotal.toFixed(2)}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Address Confirmation */}
         <Card className="shadow-floating animate-fade-in">

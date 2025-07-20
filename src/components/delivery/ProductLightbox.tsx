@@ -39,9 +39,9 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
   cartQuantity,
   selectedVariant
 }) => {
-  if (!product) return null;
-
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  if (!product) return null;
 
   const variant = selectedVariant || product.variants[0];
   

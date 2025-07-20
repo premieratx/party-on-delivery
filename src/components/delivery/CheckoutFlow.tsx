@@ -367,7 +367,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex flex-col pb-20 lg:pb-4">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 flex flex-col">
       <div className="flex-1">
         <div className="max-w-4xl mx-auto space-y-6">
         {/* Back Button */}
