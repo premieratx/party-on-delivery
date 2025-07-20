@@ -52,12 +52,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
-  // Step management - if same address is confirmed, skip to customer info
+  // Step management - if same address is confirmed, we have pre-filled info
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
-    useSameAddress && isAddingToOrder ? 'customer' : 'datetime'
+    useSameAddress ? 'customer' : 'datetime'
   );
-  const [confirmedDateTime, setConfirmedDateTime] = useState(useSameAddress && isAddingToOrder);
-  const [confirmedAddress, setConfirmedAddress] = useState(useSameAddress && isAddingToOrder);
+  const [confirmedDateTime, setConfirmedDateTime] = useState(useSameAddress);
+  const [confirmedAddress, setConfirmedAddress] = useState(useSameAddress);
   const [confirmedCustomer, setConfirmedCustomer] = useState(false);
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -119,6 +119,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           zipCode: addressParts[2]?.split(' ')[1] || '',
           instructions: lastOrderInfo.instructions || ''
         });
+        
+        // Also update the main delivery info address
+        updateDeliveryInfo('address', lastOrderInfo.address);
+        updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
     }
   }, [useSameAddress, lastOrderInfo]);
@@ -726,7 +730,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             )}
 
             {/* Customer Information */}
-            {(currentStep === 'customer' || (!confirmedCustomer && (confirmedDateTime || confirmedAddress))) && (
+            {(currentStep === 'customer' || (!confirmedCustomer && (confirmedDateTime && confirmedAddress))) && (
               <Card className="shadow-card border-2 border-green-500">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
