@@ -24,7 +24,7 @@ const buttonVariants = cva(
         danger: "bg-gradient-danger text-danger-foreground hover:shadow-[0_0_20px_hsl(var(--danger)/0.4)] transition-all duration-300 hover:scale-105",
         
         // Delivery app variants
-        delivery: "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-all duration-300 hover:scale-105 animate-glow-pulse",
+        delivery: "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-all duration-300 hover:scale-105",
         cart: "bg-gradient-secondary text-secondary-foreground hover:shadow-[0_0_20px_hsl(var(--secondary)/0.4)] transition-all duration-300",
         
         // Add to cart variant (blue)

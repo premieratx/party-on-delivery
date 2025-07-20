@@ -408,11 +408,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
                               : ''
                           }`}>
-                          <Badge variant="secondary" className={`w-fit font-semibold text-center ${
-                            selectedCollection?.handle === 'cocktail-kits' 
-                              ? 'text-sm lg:text-sm mx-0 lg:mx-auto' 
-                              : 'text-xs lg:text-sm mt-1 mx-auto'
-                          }`}>
+                          <Badge variant="secondary" className="w-fit font-semibold text-center mx-auto block">
                             ${variant.price.toFixed(2)}
                           </Badge>
                           
@@ -523,11 +519,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
                         : ''
                     }`}>
-                      <Badge variant="secondary" className={`w-fit font-semibold text-center ${
-                        selectedCollection?.handle === 'cocktail-kits' 
-                          ? 'text-sm lg:text-sm mx-0 lg:mx-auto' 
-                          : 'text-xs lg:text-sm mt-2 mx-auto'
-                      }`}>
+                      <Badge variant="secondary" className="w-fit font-semibold text-center mx-auto block mt-2">
                         ${product.price.toFixed(2)}
                       </Badge>
                       
