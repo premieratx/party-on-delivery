@@ -213,7 +213,10 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleCheckout = () => {
+    console.log('handleCheckout called, cart items:', cartItems);
+    console.log('Current step before:', currentStep);
     setCurrentStep('checkout');
+    console.log('Current step after:', 'checkout');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
