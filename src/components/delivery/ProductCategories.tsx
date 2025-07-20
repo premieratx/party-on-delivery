@@ -219,7 +219,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
       {/* Hero Section with Austin Background */}
-      <div className="relative h-32 lg:h-96 overflow-hidden">
+      <div className="relative h-64 lg:h-96 overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroPartyAustin})` }}
@@ -230,12 +230,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <img 
             src={partyOnDeliveryLogo}
             alt="Party on Delivery" 
-            className="h-20 lg:h-64 object-contain mb-4 drop-shadow-lg"
+            className="h-24 lg:h-80 object-contain mb-4 drop-shadow-lg"
           />
           <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">
             Build Your Party Package
           </h1>
-          <p className="text-white/90 text-lg drop-shadow-lg">
+          <p className="text-white/90 text-lg drop-shadow-lg mb-4">
             Select from our curated collection of drinks and party supplies
           </p>
         </div>
@@ -378,7 +378,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       <div className="max-w-7xl mx-auto p-4">
         {/* Product Grid - smaller tiles for beer section, consistent for others */}
-        <div className={`grid gap-2 lg:gap-4 ${selectedCategory === 0 ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
+        <div className={`grid gap-1.5 lg:gap-3 ${selectedCategory === 0 ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
           {selectedCollection?.products.map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
@@ -460,13 +460,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       </div>
                     ) : null}
 
-                     {/* Pack size info for variant products */}
+                      {/* Pack size info for variant products */}
                     {(() => {
                       const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
                       const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                       if (packMatch && sizeMatch) {
                         return (
-                          <p className={`text-foreground text-center mb-1 ${selectedCategory === 0 ? 'text-xs' : 'text-xs'}`}>
+                          <p className={`text-foreground text-center mb-1 ${selectedCategory === 0 ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
                             {packMatch[1]}pk × {sizeMatch[1]}oz
                           </p>
                         );
@@ -484,38 +484,36 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     {/* Cart controls */}
                     <div className="flex justify-center">
                       {cartQty > 0 ? (
-                        <div className="flex items-center gap-0.5 bg-muted rounded" onClick={(e) => e.stopPropagation()}>
+                         <div className="flex items-center gap-0.5 bg-muted rounded" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               onUpdateQuantity(product.id, selectedVariant?.id, Math.max(0, cartQty - 1));
                             }}
                           >
-                            <Minus size={12} />
+                            <Minus size={10} />
                           </Button>
-                          <span className="text-sm font-medium px-2 min-w-[2rem] text-center">
+                          <span className="text-xs font-medium px-1.5 min-w-[1.5rem] text-center">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground"
+                            className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               onUpdateQuantity(product.id, selectedVariant?.id, cartQty + 1);
                             }}
                           >
-                            <Plus size={12} />
+                            <Plus size={10} />
                           </Button>
                         </div>
-                      ) : (
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="h-8 px-3 text-xs"
+                       ) : (
+                        <button
+                          className={`bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors ${selectedCategory === 0 ? 'w-6 h-6' : 'w-8 h-8'}`}
                           onClick={(e) => {
                             e.stopPropagation();
                              if (selectedVariant) {
@@ -532,8 +530,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }
                           }}
                         >
-                          Add
-                        </Button>
+                          <Plus size={selectedCategory === 0 ? 12 : 16} />
+                        </button>
                       )}
                     </div>
                   </div>

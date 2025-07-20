@@ -165,44 +165,70 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
               )}
             </div>
 
-            {/* Add to Cart Controls */}
-            <div className="flex items-center justify-between pt-4 border-t">
-              {cartQuantity > 0 ? (
-                <div className="flex items-center gap-2 bg-muted rounded-lg p-2">
+            {/* Add to Cart Controls - Always visible at bottom */}
+            <div className="space-y-3 pt-4 border-t">
+              {/* Add to Cart or Quantity Controls */}
+              <div className="w-full">
+                {cartQuantity > 0 ? (
+                  <div className="flex items-center justify-center gap-2 bg-muted rounded-lg p-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => onUpdateQuantity(product.id, variant?.id, Math.max(0, cartQuantity - 1))}
+                    >
+                      <Minus size={16} />
+                    </Button>
+                    <span className="text-lg font-medium px-4 min-w-[3rem] text-center">
+                      {cartQuantity}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 w-10 p-0 hover:bg-primary hover:text-primary-foreground"
+                      onClick={() => onUpdateQuantity(product.id, variant?.id, cartQuantity + 1)}
+                    >
+                      <Plus size={16} />
+                    </Button>
+                  </div>
+                ) : (
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-10 w-10 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => onUpdateQuantity(product.id, variant?.id, Math.max(0, cartQuantity - 1))}
+                    variant="default"
+                    size="lg"
+                    className="w-full text-base"
+                    onClick={() => {
+                      if (variant) {
+                        onAddToCart(product, variant);
+                      }
+                    }}
                   >
-                    <Minus size={16} />
+                    Add to Cart
                   </Button>
-                  <span className="text-lg font-medium px-4 min-w-[3rem] text-center">
-                    {cartQuantity}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-10 w-10 p-0 hover:bg-primary hover:text-primary-foreground"
-                    onClick={() => onUpdateQuantity(product.id, variant?.id, cartQuantity + 1)}
-                  >
-                    <Plus size={16} />
-                  </Button>
-                </div>
-              ) : (
+                )}
+              </div>
+              
+              {/* Navigation Buttons */}
+              <div className="flex gap-2">
                 <Button
-                  variant="default"
+                  variant="outline"
+                  size="lg"
+                  className="flex-1 text-base"
+                  onClick={onClose}
+                >
+                  Keep Shopping
+                </Button>
+                <Button
+                  variant="secondary"
                   size="lg"
                   className="flex-1 text-base"
                   onClick={() => {
-                    if (variant) {
-                      onAddToCart(product, variant);
-                    }
+                    // Add logic to navigate to checkout if needed
+                    onClose();
                   }}
                 >
-                  Add to Cart
+                  Checkout
                 </Button>
-              )}
+              </div>
             </div>
           </div>
         </div>
