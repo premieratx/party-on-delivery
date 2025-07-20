@@ -285,7 +285,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       
                       {/* Desktop layout: side by side with background */}
                       <div className="hidden sm:block text-white font-bold text-4xl">{stepNumber}</div>
-                      <div className="hidden sm:block text-white font-bold text-xl text-right">{stepTitle}</div>
+                      <div className="hidden sm:block text-white font-bold text-3xl text-right">{stepTitle}</div>
                     </div>
                   </button>
                 );

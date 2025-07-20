@@ -181,12 +181,28 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                   <span className="text-sm">$</span>
                   <Input
                     id="customTip"
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    type="text"
                     placeholder="0.00"
-                    value={tipAmount.toFixed(2)}
-                    onChange={(e) => setTipAmount(parseFloat(e.target.value) || 0)}
+                    value={tipAmount === 0 ? '' : tipAmount.toString()}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow typing numbers and decimal point
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        const numValue = parseFloat(value) || 0;
+                        setTipAmount(numValue);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Format to 2 decimal places on blur if there's a value
+                      const value = parseFloat(e.target.value) || 0;
+                      setTipAmount(value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Tab' || e.key === 'Enter') {
+                        const value = parseFloat(e.currentTarget.value) || 0;
+                        setTipAmount(value);
+                      }
+                    }}
                     className="w-20"
                   />
                 </div>
