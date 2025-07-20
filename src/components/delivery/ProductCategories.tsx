@@ -317,7 +317,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       <div className="max-w-7xl mx-auto p-4 pt-8">
 
         {/* Product Grid - Cocktails use 1 column on mobile, others stay 3 columns mobile */}
-        <div className={`grid gap-3 lg:gap-4 ${
+        <div className={`grid gap-2 lg:gap-4 ${
           selectedCollection?.handle === 'cocktail-kits' 
             ? 'grid-cols-1 lg:grid-cols-6' 
             : 'grid-cols-3 lg:grid-cols-6'
@@ -384,7 +384,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                     .replace(/Can/gi, '')
                                     .replace(/Hard Seltzer/gi, '')
                                     .replace(/\s+/g, ' ')
-                                    .replace(/\.+$/, '') // Remove trailing dots more aggressively
+                                    .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
                                     .trim();
                                 } else {
                                   cleanedTitle = product.title
@@ -393,7 +393,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                     .replace(/Can/gi, '')
                                     .replace(/Hard Seltzer/gi, '')
                                     .replace(/\s+/g, ' ')
-                                    .replace(/\.+$/, '') // Remove trailing dots more aggressively
+                                    .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
                                     .trim();
                                 }
                                 
@@ -446,23 +446,23 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                 : 'mt-2'
                             }`}>
                             {cartQty > 0 ? (
-                              <div className="flex items-center gap-1 bg-muted rounded">
+                              <div className="flex items-center gap-0.5 bg-muted rounded">
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => handleQuantityChange(product.id, variant.id, -1)}
-                                  className="h-8 w-8 p-0"
+                                  className="h-7 w-7 p-0"
                                 >
-                                  <Minus className="h-3 w-3" />
+                                  <Minus className="h-2.5 w-2.5" />
                                 </Button>
-                                <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
+                                <span className="px-1.5 text-xs font-medium min-w-[1.5rem] text-center">{cartQty}</span>
                                 <Button
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => handleQuantityChange(product.id, variant.id, 1)}
-                                  className="h-8 w-8 p-0"
+                                  className="h-7 w-7 p-0"
                                 >
-                                  <Plus className="h-3 w-3" />
+                                  <Plus className="h-2.5 w-2.5" />
                                 </Button>
                               </div>
                             ) : (
@@ -471,9 +471,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                 size="sm"
                                 variant="delivery"
                                 disabled={!variant.available}
-                                className="h-8 px-4 text-sm font-medium"
+                                className="h-7 px-3 text-xs font-medium"
                               >
-                                <Plus className="h-4 w-4 mr-1" />
+                                <Plus className="h-3 w-3 mr-1" />
                                 Add
                               </Button>
                             )}
@@ -529,7 +529,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               .replace(/Can/gi, '')
                               .replace(/Hard Seltzer/gi, '')
                               .replace(/\s+/g, ' ')
-                              .replace(/\.+$/, '') // Remove trailing dots more aggressively
+                              .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
                               .trim();
                           } else {
                             cleanedTitle = product.title
@@ -538,7 +538,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               .replace(/Can/gi, '')
                               .replace(/Hard Seltzer/gi, '')
                               .replace(/\s+/g, ' ')
-                              .replace(/\.+$/, '') // Remove trailing dots more aggressively
+                              .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
                               .trim();
                           }
                           
@@ -587,23 +587,23 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
                           
                         return cartQty > 0 ? (
-                          <div className="flex items-center gap-1 bg-muted rounded">
+                          <div className="flex items-center gap-0.5 bg-muted rounded">
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 p-0"
                             >
-                              <Minus className="h-3 w-3" />
+                              <Minus className="h-2.5 w-2.5" />
                             </Button>
-                            <span className="px-2 text-sm font-medium min-w-[2rem] text-center">{cartQty}</span>
+                            <span className="px-1.5 text-xs font-medium min-w-[1.5rem] text-center">{cartQty}</span>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 p-0"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-2.5 w-2.5" />
                             </Button>
                           </div>
                         ) : (
@@ -611,9 +611,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             onClick={() => handleAddToCart(product)}
                             size="sm"
                             variant="delivery"
-                            className="h-8 px-4 text-sm font-medium"
+                            className="h-7 px-3 text-xs font-medium"
                           >
-                            <Plus className="h-4 w-4 mr-1" />
+                            <Plus className="h-3 w-3 mr-1" />
                             Add
                           </Button>
                         );
