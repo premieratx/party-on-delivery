@@ -38,7 +38,7 @@ export const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, on
               />
               
               <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Local Liquor Delivery
+                Austin's Best Alcohol Delivery Service
               </h1>
               
               <p className="text-muted-foreground text-lg">

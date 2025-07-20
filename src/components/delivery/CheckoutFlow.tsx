@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
@@ -568,18 +569,32 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     Delivery Address
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="street">Street Address *</Label>
-                    <Input
-                      id="street"
-                      name="street-address"
-                      autoComplete={isAddingToOrder ? "street-address" : "off"}
-                      placeholder="123 Main Street"
-                      value={addressInfo.street}
-                      onChange={(e) => setAddressInfo(prev => ({ ...prev, street: e.target.value }))}
-                    />
-                  </div>
+                 <CardContent className="space-y-4">
+                   <div className="space-y-2">
+                     <Label htmlFor="street">Street Address *</Label>
+                     <GooglePlacesAutocomplete
+                       value={addressInfo.street}
+                       onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
+                       onPlaceSelect={(place) => {
+                         // Auto-populate other fields from selected place
+                         const components = place.address_components || [];
+                         const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+                         const route = components.find(c => c.types.includes('route'))?.long_name || '';
+                         const city = components.find(c => c.types.includes('locality'))?.long_name || '';
+                         const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
+                         const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
+                         
+                         setAddressInfo(prev => ({
+                           ...prev,
+                           street: `${streetNumber} ${route}`.trim(),
+                           city: city || prev.city,
+                           state: state || prev.state,
+                           zipCode: zipCode || prev.zipCode
+                         }));
+                       }}
+                       placeholder="Start typing your address..."
+                     />
+                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">

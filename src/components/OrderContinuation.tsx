@@ -37,7 +37,7 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
               />
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  Local Liquor Delivery
+                  Austin's Best Alcohol Delivery Service
                 </h1>
                 <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
                   Party On Delivery
