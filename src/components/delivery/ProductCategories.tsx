@@ -18,6 +18,7 @@ interface ShopifyProduct {
   title: string;
   price: number;
   image: string;
+  images?: string[]; // Add support for multiple images
   description: string;
   handle: string;
   variants: Array<{

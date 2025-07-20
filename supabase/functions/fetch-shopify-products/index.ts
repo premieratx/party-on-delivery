@@ -75,7 +75,7 @@ serve(async (req) => {
                 title
                 handle
                 description
-                images(first: 1) {
+                images(first: 10) {
                   edges {
                     node {
                       url
@@ -130,12 +130,14 @@ serve(async (req) => {
             const products = collection.products.edges.map(({ node: product }) => {
               const variant = product.variants.edges[0]?.node;
               const image = product.images.edges[0]?.node;
+              const allImages = product.images.edges.slice(1).map(({ node }) => node.url); // Get additional images (excluding first)
               
               return {
                 id: product.id,
                 title: product.title,
                 price: variant ? parseFloat(variant.price.amount) : 0,
                 image: image?.url || '/placeholder.svg',
+                images: allImages, // Add all additional images
                 description: product.description,
                 handle: product.handle,
                 variants: product.variants.edges.map(({ node: v }) => ({

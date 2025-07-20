@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Plus, Minus } from 'lucide-react';
+import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ShopifyProduct {
   id: string;
   title: string;
   price: number;
   image: string;
+  images?: string[]; // Add support for multiple images
   description: string;
   handle: string;
   variants: Array<{
@@ -38,9 +39,34 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
   cartQuantity,
   selectedVariant
 }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   if (!product) return null;
 
   const variant = selectedVariant || product.variants[0];
+  
+  // Create array of all available images (main image + additional images)
+  const allImages = [product.image, ...(product.images || [])].filter(Boolean);
+  const hasMultipleImages = allImages.length > 1;
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const resetImageIndex = () => {
+    setCurrentImageIndex(0);
+  };
+
+  // Reset image index when product changes or dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      resetImageIndex();
+    }
+  }, [isOpen, product?.id]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,13 +82,60 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
         </Button>
 
         <div className="grid md:grid-cols-2 gap-0">
-          {/* Product Image */}
-          <div className="bg-muted p-8 flex items-center justify-center min-h-[300px] md:min-h-[400px]">
+          {/* Product Image Carousel */}
+          <div className="relative bg-muted p-8 flex items-center justify-center min-h-[300px] md:min-h-[400px]">
+            {/* Main Image */}
             <img
-              src={product.image}
-              alt={product.title}
-              className="w-full h-full object-contain max-w-[300px] max-h-[300px]"
+              src={allImages[currentImageIndex]}
+              alt={`${product.title} - Image ${currentImageIndex + 1}`}
+              className="w-full h-full object-contain max-w-[300px] max-h-[300px] animate-fade-in"
             />
+            
+            {/* Navigation Arrows - only show if multiple images */}
+            {hasMultipleImages && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={prevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full z-10"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full z-10"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </>
+            )}
+            
+            {/* Image Dots Indicator - only show if multiple images */}
+            {hasMultipleImages && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {allImages.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentImageIndex 
+                        ? 'bg-white' 
+                        : 'bg-white/50 hover:bg-white/75'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* Image Counter - only show if multiple images */}
+            {hasMultipleImages && (
+              <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded z-10">
+                {currentImageIndex + 1} / {allImages.length}
+              </div>
+            )}
           </div>
 
           {/* Product Details */}
