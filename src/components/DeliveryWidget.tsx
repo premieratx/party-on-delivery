@@ -52,7 +52,7 @@ export const DeliveryWidget: React.FC = () => {
   
   // State for tracking cart calculations (for cart/checkout sync)
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
-  const [tipAmount, setTipAmount] = useState(20); // $20 minimum
+  const [tipAmount, setTipAmount] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
 
   // Check if last order has expired (delivery date/time has passed)
@@ -251,6 +251,13 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleCheckout = () => {
+    console.log('handleCheckout called', { 
+      cartItems: cartItems.length, 
+      isAddingToOrder, 
+      useSameAddress, 
+      currentStep 
+    });
+    
     // Ensure we have items in cart before proceeding
     if (cartItems.length === 0) {
       console.warn('Cannot proceed to checkout with empty cart');
@@ -260,9 +267,11 @@ export const DeliveryWidget: React.FC = () => {
     // Close cart if open
     setIsCartOpen(false);
     
+    console.log('About to set checkout step');
     // Set checkout step with a small delay to ensure smooth transition
     setTimeout(() => {
       setCurrentStep('checkout');
+      console.log('Checkout step set');
       // Scroll to top after transition
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 50);
@@ -316,7 +325,7 @@ export const DeliveryWidget: React.FC = () => {
           useSameAddress={useSameAddress}
           lastOrderInfo={validLastOrderInfo}
           onDiscountChange={setAppliedDiscount}
-          onTipChange={(tip) => setTipAmount(Math.max(tip, 20))} // Enforce $20 minimum
+          onTipChange={setTipAmount}
           onChangesDetected={setHasChanges}
         />
       )}

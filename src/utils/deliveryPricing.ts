@@ -36,7 +36,7 @@ export const calculateDistanceBasedDeliveryFee = async (
       console.error('Distance calculation error:', error);
       // Fallback to standard pricing
       return {
-        fee: subtotal >= 200 ? subtotal * 0.1 : 20,
+        fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
         minimumOrder: 0,
         isDistanceBased: false
       };
@@ -48,7 +48,7 @@ export const calculateDistanceBasedDeliveryFee = async (
       console.error('Distance calculation failed:', response.error);
       // Fallback to standard pricing
       return {
-        fee: subtotal >= 200 ? subtotal * 0.1 : 20,
+        fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
         minimumOrder: 0,
         isDistanceBased: false
       };
@@ -60,7 +60,7 @@ export const calculateDistanceBasedDeliveryFee = async (
     if (distance <= 10) {
       // Within 10 miles: existing rules (10% for $200+, $20 for under $200)
       return {
-        fee: subtotal >= 200 ? subtotal * 0.1 : 20,
+        fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
         minimumOrder: 0,
         isDistanceBased: true,
         distance
@@ -89,7 +89,7 @@ export const calculateDistanceBasedDeliveryFee = async (
     console.error('Error in distance-based pricing calculation:', error);
     // Fallback to standard pricing
     return {
-      fee: subtotal >= 200 ? subtotal * 0.1 : 20,
+      fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
       minimumOrder: 0,
       isDistanceBased: false
     };
@@ -98,7 +98,7 @@ export const calculateDistanceBasedDeliveryFee = async (
 
 export const getStandardDeliveryFee = (subtotal: number): DeliveryPricing => {
   return {
-    fee: subtotal >= 200 ? subtotal * 0.1 : 20,
+    fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
     minimumOrder: 0,
     isDistanceBased: false
   };
