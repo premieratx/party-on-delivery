@@ -371,7 +371,24 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                 ? 'text-sm lg:text-sm line-clamp-3' 
                                 : 'text-xs lg:text-sm line-clamp-3'
                             }`}>
-                              {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
+                              {(() => {
+                                // Clean title more aggressively on mobile when showing pack info below
+                                const isMobile = window.innerWidth < 1024;
+                                const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
+                                
+                                if (isMobile && hasPackInfo) {
+                                  return product.title
+                                    .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
+                                    .replace(/(\d+)\s*(?:pk|pack)/gi, '')
+                                    .replace(/(\d+)\s*oz/gi, '')
+                                    .replace(/Can/gi, '')
+                                    .replace(/Hard Seltzer/gi, '')
+                                    .replace(/\s+/g, ' ')
+                                    .trim();
+                                } else {
+                                  return product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim();
+                                }
+                              })()}
                             </h4>
                             <p className={`text-muted-foreground mt-1 ${
                               selectedCollection?.handle === 'cocktail-kits' 
@@ -386,8 +403,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                               if (packMatch && sizeMatch) {
                                 return (
-                                  <p className={`text-muted-foreground mt-1 lg:hidden ${
-                                    selectedCollection?.handle === 'cocktail-kits' ? 'text-sm' : 'text-xs'
+                                  <p className={`text-foreground font-bold mt-1 lg:hidden ${
+                                    selectedCollection?.handle === 'cocktail-kits' ? 'text-base' : 'text-sm'
                                   }`}>
                                     {packMatch[1]}pk × {sizeMatch[1]}oz
                                   </p>
@@ -489,7 +506,24 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           ? 'text-sm lg:text-sm line-clamp-3' 
                           : 'text-xs lg:text-sm line-clamp-3'
                       }`}>
-                        {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
+                        {(() => {
+                          // Clean title more aggressively on mobile when showing pack info below
+                          const isMobile = window.innerWidth < 1024;
+                          const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
+                          
+                          if (isMobile && hasPackInfo) {
+                            return product.title
+                              .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
+                              .replace(/(\d+)\s*(?:pk|pack)/gi, '')
+                              .replace(/(\d+)\s*oz/gi, '')
+                              .replace(/Can/gi, '')
+                              .replace(/Hard Seltzer/gi, '')
+                              .replace(/\s+/g, ' ')
+                              .trim();
+                          } else {
+                            return product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim();
+                          }
+                        })()}
                       </h4>
                       {/* Pack size info on mobile for all products */}
                       {(() => {
@@ -497,8 +531,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                         if (packMatch && sizeMatch) {
                           return (
-                            <p className={`text-muted-foreground mt-1 lg:hidden ${
-                              selectedCollection?.handle === 'cocktail-kits' ? 'text-sm' : 'text-xs'
+                            <p className={`text-foreground font-bold mt-1 lg:hidden ${
+                              selectedCollection?.handle === 'cocktail-kits' ? 'text-base' : 'text-sm'
                             }`}>
                               {packMatch[1]}pk × {sizeMatch[1]}oz
                             </p>
