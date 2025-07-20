@@ -261,6 +261,14 @@ export const DeliveryWidget: React.FC = () => {
     // Ensure we have items in cart before proceeding
     if (cartItems.length === 0) {
       console.warn('Cannot proceed to checkout with empty cart');
+      // Add toast notification for better UX
+      import('@/hooks/use-toast').then(({ toast }) => {
+        toast({
+          title: "Cart is empty",
+          description: "Please add items to your cart before proceeding to checkout.",
+          variant: "destructive",
+        });
+      });
       return;
     }
     

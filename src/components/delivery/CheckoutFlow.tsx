@@ -322,9 +322,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handlePaymentSuccess = async (paymentIntentId?: string) => {
+    console.log('Payment success called with:', {
+      paymentIntentId,
+      cartItemsCount: cartItems.length,
+      cartItems: cartItems.map(item => ({ id: item.id, title: item.title, quantity: item.quantity }))
+    });
+    
     // Create Shopify order after successful payment
     if (paymentIntentId) {
       try {
+        console.log('Creating Shopify order with items:', cartItems.length);
         
         const response = await supabase.functions.invoke('create-shopify-order', {
           body: { 
@@ -363,7 +370,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       }
     }
     
-    // Clear cart after successful order
+    console.log('About to clear cart and redirect. Current cart items:', cartItems.length);
+    // Clear cart after successful order - but do this through the parent component
+    // This ensures the UI state is properly updated
+    cartItems.forEach(item => {
+      onUpdateQuantity(item.id, item.variant, 0);
+    });
+    
+    // Also clear localStorage as backup
     localStorage.removeItem('partyondelivery_cart');
     
     // Redirect to order complete page instead of external site
