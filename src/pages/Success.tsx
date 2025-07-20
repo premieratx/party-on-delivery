@@ -40,6 +40,23 @@ const Success = () => {
             shopifyOrderId: data.shopifyOrderId,
             orderNumber: data.orderNumber
           });
+          
+          // Store order info in localStorage for group order functionality
+          const orderInfo = {
+            orderNumber: data.orderNumber,
+            total: data.total || 0,
+            date: new Date().toISOString(),
+            orderId: data.shopifyOrderId,
+            address: data.deliveryAddress || '',
+            deliveryDate: data.deliveryDate || new Date().toISOString().split('T')[0],
+            deliveryTime: data.deliveryTime || '2:00 PM - 3:00 PM',
+            instructions: data.instructions || '',
+            customerName: data.customerName || '',
+            customerEmail: data.customerEmail || ''
+          };
+          
+          localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+          console.log('Stored order info in localStorage:', orderInfo);
         }
       } catch (error) {
         console.error('Error:', error);
