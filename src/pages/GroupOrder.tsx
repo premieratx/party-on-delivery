@@ -46,7 +46,10 @@ const GroupOrder = () => {
 
   useEffect(() => {
     const fetchGroupOrderData = async () => {
+      console.log('fetchGroupOrderData called with orderNumber:', orderNumber);
+      
       if (!orderNumber) {
+        console.log('No order number provided');
         setError('No order number provided');
         setIsLoading(false);
         return;
@@ -60,9 +63,13 @@ const GroupOrder = () => {
         const groupOrderId = orderNumber;
         
         // First try localStorage for quick access
+        console.log('Checking localStorage for order:', groupOrderId);
         const orderData = localStorage.getItem('partyondelivery_last_order');
+        console.log('LocalStorage data:', orderData);
+        
         if (orderData) {
           const order = JSON.parse(orderData);
+          console.log('Parsed order from localStorage:', order);
           if (order.orderNumber === groupOrderId) {
             // Try to fetch detailed order info from Shopify
             try {
@@ -98,6 +105,8 @@ const GroupOrder = () => {
           }
         }
 
+        console.log('Not found in localStorage, fetching from database for order:', groupOrderId);
+        
         // If not in localStorage, fetch from database and Shopify
         const { data: shopifyOrder, error } = await supabase
           .from('shopify_orders')
@@ -118,6 +127,8 @@ const GroupOrder = () => {
           `)
           .eq('shopify_order_number', groupOrderId)
           .single();
+
+        console.log('Database query result:', { shopifyOrder, error });
 
         if (error) {
           console.error('Error fetching order:', error);
