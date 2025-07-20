@@ -334,7 +334,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 {/* Product info with smaller height for beer */}
                 <div className={`flex flex-col flex-1 justify-between ${selectedCategory === 0 ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
                   <div className="flex-1 flex flex-col justify-start">
-                    <h4 className={`font-medium leading-tight text-center line-clamp-2 ${selectedCategory === 0 ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
+                    <h4 className={`font-bold leading-tight text-center line-clamp-2 ${selectedCategory === 0 ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
                       {(() => {
                         // Clean title and remove pack info if it will be shown separately
                         const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
@@ -388,7 +388,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </Select>
                       </div>
                     ) : (
-                      <p className="text-muted-foreground text-xs line-clamp-1 mb-2">
+                      <p className="text-muted-foreground text-xs line-clamp-1 mb-1">
                         {selectedVariant?.title}
                       </p>
                     )}
@@ -399,7 +399,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                       if (packMatch && sizeMatch) {
                         return (
-                          <p className="text-foreground font-bold text-xs text-center mb-2">
+                          <p className="text-foreground text-xs text-center mb-1">
                             {packMatch[1]}pk × {sizeMatch[1]}oz
                           </p>
                         );
@@ -409,7 +409,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   </div>
                   
                   {/* Price and cart controls container - always at bottom */}
-                  <div className="mt-auto pt-2 flex flex-col items-center gap-2">
+                  <div className="mt-auto pt-1 flex flex-col items-center gap-1">
                     <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
                       ${selectedVariant?.price.toFixed(2)}
                     </Badge>

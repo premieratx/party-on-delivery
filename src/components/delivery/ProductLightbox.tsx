@@ -41,6 +41,13 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // Reset image index when product changes or dialog opens
+  React.useEffect(() => {
+    if (isOpen && product) {
+      setCurrentImageIndex(0);
+    }
+  }, [isOpen, product?.id]);
+
   if (!product) return null;
 
   const variant = selectedVariant || product.variants[0];
@@ -57,16 +64,6 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
     setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
   };
 
-  const resetImageIndex = () => {
-    setCurrentImageIndex(0);
-  };
-
-  // Reset image index when product changes or dialog opens
-  React.useEffect(() => {
-    if (isOpen) {
-      resetImageIndex();
-    }
-  }, [isOpen, product?.id]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
