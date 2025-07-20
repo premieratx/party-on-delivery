@@ -400,7 +400,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                    <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
                      <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
                        <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                         <span className="shrink-0">Delivery:</span>
+                         <span className="shrink-0">Delivery Date & Time:</span>
                          <span className="text-foreground text-xs md:text-sm truncate">{deliveryInfo.date && format(deliveryInfo.date, "MMM d")} • {deliveryInfo.timeSlot}</span>
                          {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
                          {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
@@ -429,7 +429,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                    <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
                      <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
                        <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                         <span className="shrink-0">Address:</span>
+                         <span className="shrink-0">Delivery Address:</span>
                          <span className="text-foreground text-xs md:text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
                          {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
                          {hasChanges && (changedFields.includes('delivery address')) && (

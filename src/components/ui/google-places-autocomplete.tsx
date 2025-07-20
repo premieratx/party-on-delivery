@@ -59,16 +59,17 @@ export const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> =
         autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace();
           if (place && place.formatted_address) {
-            // For mobile, set only the street address in the input
-            const streetNumber = place.address_components?.find(c => c.types.includes('street_number'))?.long_name || '';
-            const streetName = place.address_components?.find(c => c.types.includes('route'))?.long_name || '';
+            // Extract address components for proper field separation
+            const components = place.address_components || [];
+            const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+            const streetName = components.find(c => c.types.includes('route'))?.long_name || '';
             const streetAddress = `${streetNumber} ${streetName}`.trim();
             
-            // Use street address for the input field instead of full formatted address
+            // Use only the street address for the input field
             onChange(streetAddress || place.formatted_address);
             
             // Check if address is in Texas
-            const isInTexas = place.address_components?.some(component => 
+            const isInTexas = components.some(component => 
               component.types.includes('administrative_area_level_1') && 
               (component.short_name === 'TX' || component.long_name === 'Texas')
             );
