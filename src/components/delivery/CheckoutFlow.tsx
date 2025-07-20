@@ -284,11 +284,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const handleConfirmDateTime = () => {
     if (deliveryInfo.date && deliveryInfo.timeSlot) {
       setConfirmedDateTime(true);
-      // Check if address needs to be completed next
-      if (!isAddressComplete) {
-        setConfirmedAddress(false);
+      // Navigate to next incomplete step
+      if (!confirmedAddress) {
         setCurrentStep('address');
-      } else if (!isCustomerComplete) {
+      } else if (!confirmedCustomer) {
         setCurrentStep('customer');
       } else {
         setCurrentStep('payment');
@@ -321,8 +320,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       }
       
       setConfirmedAddress(true);
-      // Check what step to go to next
-      if (!isCustomerComplete) {
+      // Navigate to next incomplete step
+      if (!confirmedCustomer) {
         setCurrentStep('customer');
       } else {
         setCurrentStep('payment');
@@ -475,9 +474,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             onClick={() => {
                               setConfirmedDateTime(false);
                               setCurrentStep('datetime');
-                              // Reset subsequent steps if they depend on this one
-                              if (!isAddressComplete) setConfirmedAddress(false);
-                              if (!isCustomerComplete) setConfirmedCustomer(false);
                             }}
                             className="shrink-0 text-xs px-2 py-1 h-auto"
                           >
@@ -504,13 +500,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             onClick={() => {
                               setConfirmedAddress(false);
                               setCurrentStep('address');
-                              // Reset subsequent steps if they depend on this one
-                              if (!isCustomerComplete) setConfirmedCustomer(false);
                             }}
                             className="shrink-0 text-xs px-2 py-1 h-auto"
                           >
                             Edit
-                         </Button>
+                          </Button>
                        </div>
                        {addressInfo.instructions && (
                          <div className="text-xs md:text-sm font-normal text-foreground mt-1">
@@ -732,7 +726,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             )}
 
             {/* Customer Information */}
-            {currentStep === 'customer' && (
+            {(currentStep === 'customer' || (!confirmedCustomer && (confirmedDateTime || confirmedAddress))) && (
               <Card className="shadow-card border-2 border-green-500">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
