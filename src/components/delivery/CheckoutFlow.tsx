@@ -397,14 +397,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             <CardContent className="border-t">
               <div className="space-y-3">
                  {confirmedDateTime && (
-                   <div className="p-3 border border-black rounded-lg bg-muted/30">
-                     <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-between gap-2">
-                       <div className="flex flex-wrap items-center gap-2">
-                         <span>Delivery:</span>
-                         <span className="text-foreground">{deliveryInfo.date && format(deliveryInfo.date, "MMM d, yyyy")} • {deliveryInfo.timeSlot}</span>
-                         {useSameAddress && !hasChanges && <span className="text-sm text-green-600">(Same as previous order)</span>}
+                   <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
+                     <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
+                       <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+                         <span className="shrink-0">Delivery:</span>
+                         <span className="text-foreground text-xs md:text-sm truncate">{deliveryInfo.date && format(deliveryInfo.date, "MMM d")} • {deliveryInfo.timeSlot}</span>
+                         {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
                          {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
-                           <span className="text-sm text-red-600 font-medium">
+                           <span className="text-xs text-red-600 font-medium hidden md:inline">
                              ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
                                changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
                            </span>
@@ -417,6 +417,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                            setConfirmedDateTime(false);
                            setCurrentStep('datetime');
                          }}
+                         className="shrink-0 text-xs md:text-sm px-2 md:px-3"
                        >
                          Edit
                        </Button>
@@ -425,45 +426,42 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                  )}
                 
                  {confirmedAddress && (
-                   <div className="p-3 border border-black rounded-lg bg-muted/30">
-                     <div className="text-lg font-semibold text-primary">
-                       <div className="flex flex-wrap items-center justify-between gap-2">
-                         <div className="flex flex-wrap items-center gap-2">
-                           <span>Address:</span>
-                           <span className="text-foreground">{addressInfo.street} • {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
-                           {useSameAddress && !hasChanges && <span className="text-sm text-green-600">(Same as previous order)</span>}
-                           {hasChanges && (changedFields.includes('delivery address')) && (
-                             <span className="text-sm text-red-600 font-medium">
-                               (Address changed)
-                             </span>
-                           )}
-                         </div>
-                         <Button 
-                           variant="outline" 
-                           size="sm" 
-                           onClick={() => {
-                             setConfirmedAddress(false);
-                             setCurrentStep('address');
-                           }}
-                         >
-                           Edit
-                         </Button>
+                   <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
+                     <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
+                       <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+                         <span className="shrink-0">Address:</span>
+                         <span className="text-foreground text-xs md:text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
+                         {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
+                         {hasChanges && (changedFields.includes('delivery address')) && (
+                           <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
+                         )}
                        </div>
-                       {addressInfo.instructions && (
-                         <div className="text-sm font-normal text-foreground mt-1">
-                           {addressInfo.instructions}
-                         </div>
-                       )}
+                       <Button 
+                         variant="outline" 
+                         size="sm" 
+                         onClick={() => {
+                           setConfirmedAddress(false);
+                           setCurrentStep('address');
+                         }}
+                         className="shrink-0 text-xs md:text-sm px-2 md:px-3"
+                       >
+                         Edit
+                       </Button>
                      </div>
+                     {addressInfo.instructions && (
+                       <div className="text-xs md:text-sm font-normal text-foreground mt-1">
+                         {addressInfo.instructions}
+                       </div>
+                     )}
                    </div>
                  )}
                 
                 {confirmedCustomer && (
-                  <div className="p-3 border border-black rounded-lg bg-muted/30">
-                    <div className="text-lg font-semibold text-primary flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span>Contact:</span>
-                        <span className="text-foreground">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone} • {customerInfo.email}</span>
+                  <div className="p-2 md:p-3 border border-black rounded-lg bg-muted/30">
+                    <div className="text-sm md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+                        <span className="shrink-0">Contact:</span>
+                        <span className="text-foreground text-xs md:text-sm truncate">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
                       </div>
                       <Button 
                         variant="outline" 
@@ -472,6 +470,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           setConfirmedCustomer(false);
                           setCurrentStep('customer');
                         }}
+                        className="shrink-0 text-xs md:text-sm px-2 md:px-3"
                       >
                         Edit
                       </Button>

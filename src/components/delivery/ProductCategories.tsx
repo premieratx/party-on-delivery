@@ -316,20 +316,42 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       <div className="max-w-7xl mx-auto p-4 pt-8">
 
-        {/* Product Grid - 3 columns mobile, 6 columns desktop */}
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-3">
+        {/* Product Grid - Cocktails use 1 column on mobile, others stay 3 columns mobile */}
+        <div className={`grid gap-2 lg:gap-3 ${
+          selectedCollection?.handle === 'cocktail-kits' 
+            ? 'grid-cols-1 lg:grid-cols-6' 
+            : 'grid-cols-3 lg:grid-cols-6'
+        }`}>
           {selectedCollection?.products.map((product) => (
-            <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200">
+            <div 
+              key={product.id} 
+              className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 ${
+                selectedCollection?.handle === 'cocktail-kits' ? 'lg:block' : ''
+              }`}
+            >
               {/* Product variants handling */}
               {product.variants.length > 1 ? (
-                <div className="space-y-3">
+                <div className={`space-y-3 ${
+                  selectedCollection?.handle === 'cocktail-kits' ? 'lg:space-y-3' : ''
+                }`}>
                   {product.variants.slice(0, 3).map((variant) => {
                     const cartQty = getCartItemQuantity(product.id, variant.id);
                     
                     return (
-                      <div key={variant.id} className="space-y-2">
+                      <div 
+                        key={variant.id} 
+                        className={`space-y-2 ${
+                          selectedCollection?.handle === 'cocktail-kits' 
+                            ? 'flex items-center gap-4 space-y-0 lg:block lg:space-y-2' 
+                            : ''
+                        }`}
+                      >
                         {/* Product image */}
-                        <div className="w-full aspect-square bg-muted rounded overflow-hidden">
+                        <div className={`bg-muted rounded overflow-hidden ${
+                          selectedCollection?.handle === 'cocktail-kits' 
+                            ? 'w-20 h-20 shrink-0 lg:w-full lg:aspect-square' 
+                            : 'w-full aspect-square'
+                        }`}>
                           <img
                             src={product.image}
                             alt={product.title}
@@ -337,53 +359,128 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           />
                         </div>
                         
-                        {/* Product info with fixed height to prevent layout shifts */}
-                        <div className="min-h-[4rem] lg:min-h-[5rem] flex flex-col justify-between">
-                          <div>
-                            <h4 className="font-medium text-xs lg:text-sm leading-tight line-clamp-2 lg:line-clamp-3">
+                        {/* Product info with responsive layout for cocktails */}
+                        <div className={`flex flex-col justify-between ${
+                          selectedCollection?.handle === 'cocktail-kits' 
+                            ? 'flex-1 lg:min-h-[5rem]' 
+                            : 'min-h-[4rem] lg:min-h-[5rem]'
+                        }`}>
+                          <div className={selectedCollection?.handle === 'cocktail-kits' ? 'flex-1' : ''}>
+                            <h4 className={`font-medium leading-tight ${
+                              selectedCollection?.handle === 'cocktail-kits' 
+                                ? 'text-base lg:text-sm line-clamp-2 lg:line-clamp-3' 
+                                : 'text-xs lg:text-sm line-clamp-2 lg:line-clamp-3'
+                            }`}>
                               {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
                             </h4>
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{variant.title}</p>
+                            <p className={`text-muted-foreground mt-1 ${
+                              selectedCollection?.handle === 'cocktail-kits' 
+                                ? 'text-sm lg:text-xs line-clamp-1' 
+                                : 'text-xs line-clamp-1'
+                            }`}>
+                              {variant.title}
+                            </p>
+                            {/* Pack size info on mobile for variant products */}
+                            {(() => {
+                              const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
+                              const sizeMatch = product.title.match(/(\d+)\s*oz/i);
+                              if (packMatch && sizeMatch) {
+                                return (
+                                  <p className={`text-muted-foreground mt-1 lg:hidden ${
+                                    selectedCollection?.handle === 'cocktail-kits' ? 'text-sm' : 'text-xs'
+                                  }`}>
+                                    {packMatch[1]}pk × {sizeMatch[1]}oz
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
+                            {selectedCollection?.handle === 'cocktail-kits' && (
+                              <p className="text-sm text-muted-foreground mt-2 line-clamp-2 lg:hidden">
+                                {product.description}
+                              </p>
+                            )}
                           </div>
-                          <Badge variant="secondary" className="text-xs lg:text-sm mt-1 w-fit mx-auto text-center font-semibold">
-                            ${variant.price.toFixed(2)}
-                          </Badge>
-                        </div>
-                        
-                        {/* Cart controls with fixed width to prevent layout shifts */}
-                        <div className="flex justify-center min-h-[2rem]">
-                          {cartQty > 0 ? (
-                            <div className="flex items-center gap-1 bg-muted rounded">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleQuantityChange(product.id, variant.id, -1)}
-                                className="h-6 w-6 lg:h-8 lg:w-8 p-0"
-                              >
-                                <Minus className="h-2 w-2 lg:h-3 lg:w-3" />
-                              </Button>
-                              <span className="px-1 lg:px-2 text-xs lg:text-sm font-medium min-w-[1.5rem] lg:min-w-[2rem] text-center">{cartQty}</span>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleQuantityChange(product.id, variant.id, 1)}
-                                className="h-6 w-6 lg:h-8 lg:w-8 p-0"
-                              >
-                                <Plus className="h-2 w-2 lg:h-3 lg:w-3" />
-                              </Button>
+                          
+                          {/* Price and cart controls container for cocktails */}
+                          <div className={`${
+                            selectedCollection?.handle === 'cocktail-kits' 
+                              ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
+                              : ''
+                          }`}>
+                            <Badge variant="secondary" className={`w-fit font-semibold ${
+                              selectedCollection?.handle === 'cocktail-kits' 
+                                ? 'text-sm lg:text-sm mx-0 lg:mx-auto' 
+                                : 'text-xs lg:text-sm mt-1 mx-auto text-center'
+                            }`}>
+                              ${variant.price.toFixed(2)}
+                            </Badge>
+                            
+                            {/* Cart controls */}
+                            <div className={`flex justify-center ${
+                              selectedCollection?.handle === 'cocktail-kits' 
+                                ? 'lg:mt-2' 
+                                : 'min-h-[2rem] mt-2'
+                            }`}>
+                              {cartQty > 0 ? (
+                                <div className="flex items-center gap-1 bg-muted rounded">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleQuantityChange(product.id, variant.id, -1)}
+                                    className={selectedCollection?.handle === 'cocktail-kits' 
+                                      ? 'h-8 w-8 p-0' 
+                                      : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
+                                    }
+                                  >
+                                    <Minus className={selectedCollection?.handle === 'cocktail-kits' 
+                                      ? 'h-3 w-3' 
+                                      : 'h-2 w-2 lg:h-3 lg:w-3'
+                                    } />
+                                  </Button>
+                                  <span className={`font-medium text-center ${
+                                    selectedCollection?.handle === 'cocktail-kits' 
+                                      ? 'px-2 text-sm min-w-[2rem]' 
+                                      : 'px-1 lg:px-2 text-xs lg:text-sm min-w-[1.5rem] lg:min-w-[2rem]'
+                                  }`}>
+                                    {cartQty}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleQuantityChange(product.id, variant.id, 1)}
+                                    className={selectedCollection?.handle === 'cocktail-kits' 
+                                      ? 'h-8 w-8 p-0' 
+                                      : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
+                                    }
+                                  >
+                                    <Plus className={selectedCollection?.handle === 'cocktail-kits' 
+                                      ? 'h-3 w-3' 
+                                      : 'h-2 w-2 lg:h-3 lg:w-3'
+                                    } />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <Button
+                                  onClick={() => handleAddToCart(product, variant)}
+                                  size="sm"
+                                  variant="add-to-cart"
+                                  disabled={!variant.available}
+                                  className={`font-medium ${
+                                    selectedCollection?.handle === 'cocktail-kits' 
+                                      ? 'h-8 px-3 text-sm' 
+                                      : 'h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm'
+                                  }`}
+                                >
+                                  <Plus className={selectedCollection?.handle === 'cocktail-kits' 
+                                    ? 'h-3 w-3 mr-1' 
+                                    : 'h-2 w-2 lg:h-3 lg:w-3 mr-1'
+                                  } />
+                                  Add
+                                </Button>
+                              )}
                             </div>
-                          ) : (
-                            <Button
-                              onClick={() => handleAddToCart(product, variant)}
-                              size="sm"
-                              variant="add-to-cart"
-                              disabled={!variant.available}
-                              className="h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm font-medium"
-                            >
-                              <Plus className="h-2 w-2 lg:h-3 lg:w-3 mr-1" />
-                              Add
-                            </Button>
-                          )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -391,9 +488,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 </div>
               ) : (
                 // Single product layout
-                <div className="space-y-3">
+                <div className={`space-y-3 ${
+                  selectedCollection?.handle === 'cocktail-kits' 
+                    ? 'flex items-center gap-4 space-y-0 lg:block lg:space-y-3' 
+                    : ''
+                }`}>
                   {/* Product image */}
-                  <div className="w-full aspect-square bg-muted rounded overflow-hidden">
+                  <div className={`bg-muted rounded overflow-hidden ${
+                    selectedCollection?.handle === 'cocktail-kits' 
+                      ? 'w-20 h-20 shrink-0 lg:w-full lg:aspect-square' 
+                      : 'w-full aspect-square'
+                  }`}>
                     <img
                       src={product.image}
                       alt={product.title}
@@ -401,14 +506,124 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     />
                   </div>
                   
-                  {/* Product info with fixed height to prevent layout shifts */}
-                  <div className="min-h-[4rem] lg:min-h-[5rem] flex flex-col justify-between">
-                    <h4 className="font-medium text-xs lg:text-sm leading-tight line-clamp-2 lg:line-clamp-3">
-                      {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
-                    </h4>
-                    <Badge variant="secondary" className="text-xs lg:text-sm mt-2 w-fit mx-auto text-center font-semibold">
-                      ${product.price.toFixed(2)}
-                    </Badge>
+                  {/* Product info with responsive layout for cocktails */}
+                  <div className={`flex flex-col justify-between ${
+                    selectedCollection?.handle === 'cocktail-kits' 
+                      ? 'flex-1 lg:min-h-[5rem]' 
+                      : 'min-h-[4rem] lg:min-h-[5rem]'
+                  }`}>
+                    <div className={selectedCollection?.handle === 'cocktail-kits' ? 'flex-1' : ''}>
+                      <h4 className={`font-medium leading-tight ${
+                        selectedCollection?.handle === 'cocktail-kits' 
+                          ? 'text-base lg:text-sm line-clamp-2 lg:line-clamp-3' 
+                          : 'text-xs lg:text-sm line-clamp-2 lg:line-clamp-3'
+                      }`}>
+                        {product.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}
+                      </h4>
+                      {/* Pack size info on mobile for all products */}
+                      {(() => {
+                        const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
+                        const sizeMatch = product.title.match(/(\d+)\s*oz/i);
+                        if (packMatch && sizeMatch) {
+                          return (
+                            <p className={`text-muted-foreground mt-1 lg:hidden ${
+                              selectedCollection?.handle === 'cocktail-kits' ? 'text-sm' : 'text-xs'
+                            }`}>
+                              {packMatch[1]}pk × {sizeMatch[1]}oz
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
+                      {selectedCollection?.handle === 'cocktail-kits' && (
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2 lg:hidden">
+                          {product.description}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Price and cart controls container for cocktails */}
+                    <div className={`${
+                      selectedCollection?.handle === 'cocktail-kits' 
+                        ? 'flex items-center gap-3 mt-2 lg:block lg:mt-1' 
+                        : ''
+                    }`}>
+                      <Badge variant="secondary" className={`w-fit font-semibold ${
+                        selectedCollection?.handle === 'cocktail-kits' 
+                          ? 'text-sm lg:text-sm mx-0 lg:mx-auto' 
+                          : 'text-xs lg:text-sm mt-2 mx-auto text-center'
+                      }`}>
+                        ${product.price.toFixed(2)}
+                      </Badge>
+                      
+                      {/* Cart controls */}
+                      <div className={`flex justify-center ${
+                        selectedCollection?.handle === 'cocktail-kits' 
+                          ? 'lg:mt-2' 
+                          : 'min-h-[2rem] mt-2'
+                      }`}>
+                        {(() => {
+                          const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
+                          
+                          return cartQty > 0 ? (
+                            <div className="flex items-center gap-1 bg-muted rounded">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, -1)}
+                                className={selectedCollection?.handle === 'cocktail-kits' 
+                                  ? 'h-8 w-8 p-0' 
+                                  : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
+                                }
+                              >
+                                <Minus className={selectedCollection?.handle === 'cocktail-kits' 
+                                  ? 'h-3 w-3' 
+                                  : 'h-2 w-2 lg:h-3 lg:w-3'
+                                } />
+                              </Button>
+                              <span className={`font-medium text-center ${
+                                selectedCollection?.handle === 'cocktail-kits' 
+                                  ? 'px-2 text-sm min-w-[2rem]' 
+                                  : 'px-1 lg:px-2 text-xs lg:text-sm min-w-[1.5rem] lg:min-w-[2rem]'
+                              }`}>
+                                {cartQty}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleQuantityChange(product.id, product.variants[0]?.id, 1)}
+                                className={selectedCollection?.handle === 'cocktail-kits' 
+                                  ? 'h-8 w-8 p-0' 
+                                  : 'h-6 w-6 lg:h-8 lg:w-8 p-0'
+                                }
+                              >
+                                <Plus className={selectedCollection?.handle === 'cocktail-kits' 
+                                  ? 'h-3 w-3' 
+                                  : 'h-2 w-2 lg:h-3 lg:w-3'
+                                } />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={() => handleAddToCart(product)}
+                              size="sm"
+                              variant="add-to-cart"
+                              className={`font-medium ${
+                                selectedCollection?.handle === 'cocktail-kits' 
+                                  ? 'h-8 px-3 text-sm' 
+                                  : 'h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm'
+                              }`}
+                            >
+                              <Plus className={selectedCollection?.handle === 'cocktail-kits' 
+                                ? 'h-3 w-3 mr-1' 
+                                : 'h-2 w-2 lg:h-3 lg:w-3 mr-1'
+                              } />
+                              Add
+                            </Button>
+                          );
+                        })()}
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Cart controls with fixed width to prevent layout shifts */}
