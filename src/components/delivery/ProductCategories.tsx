@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { supabase } from '@/integrations/supabase/client';
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
@@ -197,109 +197,63 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      <div className="flex-1">{/* Main content area */}
-      {/* Build Your Party Header - Mobile optimized */}
-      <div className="sticky top-0 bg-background/95 backdrop-blur-md border-b z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-2xl font-bold text-brand-blue">
-              Build Your Party
-            </h1>
-            
-            <div className="flex items-center gap-1 sm:gap-3">
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={onOpenCart}
-                className="relative text-xs sm:text-sm px-2 sm:px-4"
-              >
-                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline ml-1">Cart</span>
-                {cartItemCount > 0 && (
-                  <Badge 
-                    className={`absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-accent text-accent-foreground min-w-[20px] sm:min-w-[24px] h-5 sm:h-6 rounded-full text-xs font-bold transition-all duration-300 ${
-                      cartCountAnimation ? 'animate-pulse scale-125' : ''
-                    }`}
-                  >
-                    {cartItemCount}
-                  </Badge>
-                )}
-              </Button>
+      {/* Category Tabs - reduced height on desktop */}
+      <div className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto p-4">
+          <div className="grid grid-cols-4 gap-2 h-20 sm:h-12">
+            {stepMapping.map((step, index) => {
+              const isActive = selectedCategory === index;
+              const IconComponent = step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Martini : Package;
+              const stepNumber = step.step;
+              const stepTitle = step.title;
               
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={onProceedToCheckout}
-                disabled={cartItemCount === 0}
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-xs sm:text-sm px-2 sm:px-4"
-              >
-                Checkout
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Step-based Navigation - Condensed for mobile */}
-        <div className="border-t bg-background/95 backdrop-blur-md">
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-6">
-            <div className="grid grid-cols-4 gap-1 sm:gap-4">
-              {collections.map((collection, index) => {
-                const stepInfo = stepMapping.find(step => step.handle === collection.handle);
-                const stepTitle = stepInfo?.title || collection.title;
-                const stepNumber = stepInfo?.step || index + 1;
-                const backgroundImage = stepInfo?.backgroundImage;
-                const isActive = selectedCategory === index;
-                
-                return (
-                  <button
-                    key={collection.handle}
-                    onClick={() => {
-                      setSelectedCategory(index);
-                      // Scroll to top when switching tabs
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className={`relative h-20 sm:h-32 rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                      isActive 
-                        ? 'border-primary shadow-lg scale-105 bg-primary/10' 
-                        : 'border-border hover:border-primary/50 hover:scale-102 bg-muted/50'
-                    }`}
-                    style={{
-                      // Background image only on larger screens
-                      backgroundImage: window.innerWidth >= 640 && backgroundImage ? `url(${backgroundImage})` : 'none',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
-                    }}
-                  >
-                    {/* Dark overlay with 60% opacity - only on desktop */}
-                    <div className="absolute inset-0 bg-black/60 hidden sm:block"></div>
-                    
-                    {/* Content */}
-                    <div className="relative z-10 h-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-2 sm:p-4">
-                      {/* Mobile layout: improved contrast and readability */}
-                      <div className="sm:hidden flex flex-col items-center justify-center h-full space-y-1 px-1">
-                        <div className={`font-bold text-2xl transition-colors ${isActive ? 'text-brand-blue' : 'text-foreground'}`}>
-                          {stepNumber}
-                        </div>
-                        <div className={`text-sm font-semibold text-center leading-tight ${isActive ? 'text-brand-blue' : 'text-foreground'}`}>
-                          {stepTitle}
-                        </div>
-                      </div>
-                      
-                      {/* Desktop layout: side by side with background */}
-                      <div className="hidden sm:block text-white font-bold text-4xl">{stepNumber}</div>
-                      <div className="hidden sm:block text-white font-bold text-3xl text-right">{stepTitle}</div>
+              return (
+                <button
+                  key={step.handle}
+                  onClick={() => {
+                    setSelectedCategory(index);
+                    const targetCollection = collections.find(c => c.handle === step.handle);
+                    if (targetCollection) {
+                      // No need to fetch, collection already loaded
+                    }
+                  }}
+                  className={`relative overflow-hidden rounded-lg transition-all duration-300 group ${
+                    isActive 
+                      ? 'bg-primary/10 border-2 border-primary shadow-lg' 
+                      : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
+                  }`}
+                  style={{
+                    backgroundImage: `url(${step.backgroundImage})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                >
+                  <div className={`absolute inset-0 transition-all duration-300 ${
+                    isActive ? 'bg-primary/20' : 'bg-black/60 group-hover:bg-black/50'
+                  }`}></div>
+                  <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
+                    {/* Mobile layout: stacked */}
+                    <div className="sm:hidden flex flex-col items-center gap-1">
+                      <IconComponent className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-white'}`} />
+                      <div className={`text-xs font-bold ${isActive ? 'text-primary' : 'text-white'}`}>{stepTitle}</div>
                     </div>
-                  </button>
-                );
-              })}
-            </div>
+                    
+                    {/* Desktop layout: side by side with background - reduced text size */}
+                    <div className="hidden sm:flex items-center justify-between w-full px-2">
+                      <div className={`font-bold text-2xl ${isActive ? 'text-primary' : 'text-white'}`}>{stepNumber}</div>
+                      <div className={`font-bold text-lg text-right ${isActive ? 'text-primary' : 'text-white'}`}>{stepTitle}</div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Page Title with Background Image */}
+      {/* Collection Header with reduced height on desktop and navigation arrows */}
       {selectedCollection && (
-        <div className="relative h-32 sm:h-48 overflow-hidden">
+        <div className="relative h-32 sm:h-24 overflow-hidden">
           <div 
             className="absolute inset-0 bg-cover bg-center"
             style={{
@@ -308,16 +262,44 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           >
             <div className="absolute inset-0 bg-black/60"></div>
           </div>
-          <div className="relative z-10 h-full flex items-center justify-center">
-            <h2 className="text-white text-2xl sm:text-4xl font-bold text-center px-4">
-              {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
-            </h2>
+          <div className="relative z-10 h-full flex items-center justify-between px-4">
+            {/* Left arrow */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const prevIndex = selectedCategory > 0 ? selectedCategory - 1 : collections.length - 1;
+                setSelectedCategory(prevIndex);
+              }}
+              className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            
+            {/* Center title */}
+            <div className="flex items-center justify-center flex-1">
+              <h2 className="text-white text-2xl sm:text-3xl font-bold text-center">
+                {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
+              </h2>
+            </div>
+            
+            {/* Right arrow */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const nextIndex = selectedCategory < collections.length - 1 ? selectedCategory + 1 : 0;
+                setSelectedCategory(nextIndex);
+              }}
+              className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       )}
 
       <div className="max-w-7xl mx-auto p-4 pt-8">
-
         {/* Product Grid - All categories use consistent 3 columns mobile, 6 desktop */}
         <div className="grid gap-2 lg:gap-4 grid-cols-3 lg:grid-cols-6">
           {selectedCollection?.products.map((product) => {
@@ -477,6 +459,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             );
           })}
         </div>
+
         {selectedCollection?.products.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No products found in this collection.</p>
@@ -533,8 +516,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      </div>
       
       {/* Navigation Footer */}
       {onBack && (
