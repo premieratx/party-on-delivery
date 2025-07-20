@@ -52,12 +52,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
-  // Step management - if same address is confirmed, skip to customer step since date/address are pre-filled
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
-    useSameAddress ? 'customer' : 'datetime'
-  );
-  const [confirmedDateTime, setConfirmedDateTime] = useState(useSameAddress);
-  const [confirmedAddress, setConfirmedAddress] = useState(useSameAddress);
+  // Step management - always start at datetime for add to recent order, but pre-fill info
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
+  const [confirmedDateTime, setConfirmedDateTime] = useState(false);
+  const [confirmedAddress, setConfirmedAddress] = useState(false);
   const [confirmedCustomer, setConfirmedCustomer] = useState(false);
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -94,9 +92,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [isAddingToOrder, hasAddressBeenCleared]);
 
-  // Pre-fill delivery info when using same address and store original info
+  // Pre-fill delivery info for add to recent order flow and store original info
   useEffect(() => {
-    if (useSameAddress && lastOrderInfo) {
+    if (isAddingToOrder && lastOrderInfo) {
       // Store original order info for comparison
       setOriginalOrderInfo(lastOrderInfo);
       
@@ -125,11 +123,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
     }
-  }, [useSameAddress, lastOrderInfo]);
+  }, [isAddingToOrder, lastOrderInfo]);
 
   // Check for changes from original order (excluding instructions)
   useEffect(() => {
-    if (originalOrderInfo && useSameAddress) {
+    if (originalOrderInfo && isAddingToOrder) {
       const changes: string[] = [];
       
       // Check address changes
@@ -164,7 +162,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         onChangesDetected(changes.length > 0);
       }
     }
-  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, deliveryInfo.date, deliveryInfo.timeSlot, originalOrderInfo, useSameAddress, onChangesDetected]);
+  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, deliveryInfo.date, deliveryInfo.timeSlot, originalOrderInfo, isAddingToOrder, onChangesDetected]);
 
   // ShopPay integration state
   const [isShopPayLoading, setIsShopPayLoading] = useState(true);
@@ -201,10 +199,19 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   // Calculate delivery fee dynamically based on current state
   const calculateCurrentDeliveryFee = () => {
-    // Free delivery for add-to-order with same address and no changes
-    if (isAddingToOrder && useSameAddress && !hasChanges) {
+    // Check if delivery details match previous order exactly
+    const deliveryDetailsMatch = isAddingToOrder && 
+      originalOrderInfo &&
+      addressInfo.street === originalOrderInfo.address?.split(',')[0]?.trim() &&
+      deliveryInfo.date && originalOrderInfo.deliveryDate &&
+      new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
+      deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
+
+    // Free delivery if all delivery details match exactly
+    if (deliveryDetailsMatch) {
       return 0;
     }
+    
     // Apply $20 minimum with 10% of subtotal for orders $200+
     return Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20);
   };
@@ -464,13 +471,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                          <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
                            <span className="shrink-0 text-xs md:text-sm">Delivery:</span>
                            <span className="text-foreground text-xs md:text-sm truncate">{deliveryInfo.date && format(deliveryInfo.date, "MMM d")} • {deliveryInfo.timeSlot}</span>
-                           {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
-                           {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
-                             <span className="text-xs text-red-600 font-medium hidden md:inline">
-                               ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
-                                 changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
-                             </span>
-                           )}
+            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
+            {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
+              <span className="text-xs text-red-600 font-medium hidden md:inline">
+                ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
+                  changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
+              </span>
+            )}
                          </div>
                           <Button 
                             variant="outline" 
@@ -493,10 +500,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                          <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
                            <span className="shrink-0 text-xs md:text-sm">Address:</span>
                            <span className="text-foreground text-xs md:text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
-                           {useSameAddress && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
-                           {hasChanges && (changedFields.includes('delivery address')) && (
-                             <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
-                           )}
+            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
+            {hasChanges && (changedFields.includes('delivery address')) && (
+              <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
+            )}
                          </div>
                           <Button 
                             variant="outline" 
@@ -916,14 +923,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                          <div className="flex justify-between">
                            <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
                             <div className="flex items-center gap-2">
-                              {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 && (
-                                <span className="text-sm text-muted-foreground line-through">${baseDeliveryFee.toFixed(2)}</span>
-                              )}
-                              <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && useSameAddress && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
-                                ${finalDeliveryFee.toFixed(2)}
-                                {(isAddingToOrder && useSameAddress && !hasChanges) && finalDeliveryFee === 0 && (
-                                  <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
-                                )}
+                               {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 && (
+                                 <span className="text-sm text-muted-foreground line-through">${baseDeliveryFee.toFixed(2)}</span>
+                               )}
+                               <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
+                                 ${finalDeliveryFee.toFixed(2)}
+                                 {(isAddingToOrder && !hasChanges) && finalDeliveryFee === 0 && (
+                                   <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                                 )}
                                 {deliveryPricing.isDistanceBased && deliveryPricing.distance && (
                                   <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>
                                 )}

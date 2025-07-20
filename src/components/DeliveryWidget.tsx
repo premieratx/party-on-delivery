@@ -127,7 +127,7 @@ export const DeliveryWidget: React.FC = () => {
       localStorage.setItem('partyondelivery_bundle_ready', 'true');
       
       // Start the add to order flow
-      handleAddToOrder();
+      handleAddToRecentOrder();
     }
     
     // Clean up expired add to order flag if delivery has passed
@@ -157,11 +157,11 @@ export const DeliveryWidget: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleAddToOrder = () => {
+  const handleAddToRecentOrder = () => {
     // Keep existing cart and order info
     setIsAddingToOrder(true);
     
-    // Pre-fill delivery info when adding to order
+    // Pre-fill delivery info from recent order
     if (validLastOrderInfo) {
       if (validLastOrderInfo.deliveryDate) {
         const date = new Date(validLastOrderInfo.deliveryDate);
@@ -178,13 +178,8 @@ export const DeliveryWidget: React.FC = () => {
       }
     }
     
-    // Always go to address confirmation first for add-to-order flow
-    // This ensures users see the address confirmation screen
-    if (validLastOrderInfo?.address) {
-      setCurrentStep('address-confirmation');
-    } else {
-      setCurrentStep('products');
-    }
+    // Go directly to products - let them confirm delivery info during checkout
+    setCurrentStep('products');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -306,7 +301,7 @@ export const DeliveryWidget: React.FC = () => {
     return (
       <OrderContinuation
         onStartNewOrder={handleStartNewOrder}
-        onAddToOrder={handleAddToOrder}
+        onAddToRecentOrder={handleAddToRecentOrder}
         lastOrderInfo={validLastOrderInfo}
       />
     );
