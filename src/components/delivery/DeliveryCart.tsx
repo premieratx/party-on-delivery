@@ -72,7 +72,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
       />
       
       {/* Cart Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right" onLoad={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right pb-20 lg:pb-0" onLoad={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">

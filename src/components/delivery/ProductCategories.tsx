@@ -215,7 +215,37 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col pb-20 lg:pb-0">
+      {/* Sticky Cart & Checkout Buttons - Mobile */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t z-40 p-4">
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={onOpenCart}
+            className="flex-1 transition-all duration-200"
+          >
+            <ShoppingCart className="w-5 h-5 mr-2" />
+            Cart
+            {cartItemCount > 0 && (
+              <Badge variant="default" className="ml-2 bg-primary text-primary-foreground">
+                {cartItemCount}
+              </Badge>
+            )}
+          </Button>
+          
+          {cartItemCount > 0 && (
+            <Button
+              variant="default"
+              size="lg"
+              onClick={onProceedToCheckout}
+              className="flex-1 bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary"
+            >
+              Checkout
+            </Button>
+          )}
+        </div>
+      </div>
       {/* Sticky Cart & Checkout Buttons - Desktop Only */}
       <div className="hidden lg:block bg-background/95 backdrop-blur-sm border-b sticky top-0 z-40">
         <div className="max-w-7xl mx-auto p-4">
