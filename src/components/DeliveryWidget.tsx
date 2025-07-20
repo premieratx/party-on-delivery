@@ -36,8 +36,10 @@ export const DeliveryWidget: React.FC = () => {
   const groupOrderData = localStorage.getItem('partyondelivery_group_order');
   const isGroupOrder = groupOrderData ? JSON.parse(groupOrderData)?.isGroupOrder : false;
   
-  const [currentStep, setCurrentStep] = useLocalStorage<DeliveryStep>('partyondelivery_current_step', 
-    isGroupOrder ? 'products' : 'order-continuation');
+  // ALWAYS start on order-continuation unless it's a group order
+  const [currentStep, setCurrentStep] = useState<DeliveryStep>(
+    isGroupOrder ? 'products' : 'order-continuation'
+  );
   const [deliveryInfo, setDeliveryInfo] = useLocalStorage<DeliveryInfo>('partyondelivery_delivery_info', {
     date: null,
     timeSlot: '',
@@ -47,8 +49,8 @@ export const DeliveryWidget: React.FC = () => {
   const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('partyondelivery_cart', []);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
-  const [isAddingToOrder, setIsAddingToOrder] = useLocalStorage<boolean>('partyondelivery_is_adding_to_order', addToOrderFlag || isGroupOrder);
-  const [useSameAddress, setUseSameAddress] = useLocalStorage<boolean>('partyondelivery_use_same_address', false);
+  const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(addToOrderFlag || isGroupOrder);
+  const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
   
   // State for tracking cart calculations (for cart/checkout sync)
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
@@ -129,16 +131,10 @@ export const DeliveryWidget: React.FC = () => {
       // Start the add to order flow
       handleAddToRecentOrder();
     }
-    
-    // Clean up expired add to order flag if delivery has passed
-    if (addToOrderFlag === 'true' && !validLastOrderInfo) {
-      localStorage.removeItem('partyondelivery_add_to_order');
-      localStorage.removeItem('partyondelivery_bundle_ready');
-    }
   }, [validLastOrderInfo]);
 
   const handleStartNewOrder = () => {
-    // Clear cart and start fresh
+    // Clear cart and start fresh - ALWAYS go to products for new orders
     setCartItems([]);
     setIsAddingToOrder(false);
     setUseSameAddress(false);
@@ -148,7 +144,7 @@ export const DeliveryWidget: React.FC = () => {
       address: '',
       instructions: ''
     });
-    // Clear the add to order flag, bundle ready flag, and group order context when starting a completely new order
+    // Clear all persistent flags
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
     localStorage.removeItem('partyondelivery_group_order');
@@ -237,12 +233,12 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    console.log('handleCheckout called', { 
-      cartItems: cartItems.length, 
-      isAddingToOrder, 
-      useSameAddress, 
-      currentStep 
-    });
+    console.log('=== CHECKOUT DEBUG ===');
+    console.log('cartItems length:', cartItems.length);
+    console.log('isAddingToOrder:', isAddingToOrder);
+    console.log('currentStep:', currentStep);
+    console.log('deliveryInfo:', deliveryInfo);
+    console.log('======================');
     
     // Ensure we have items in cart before proceeding
     if (cartItems.length === 0) {
@@ -261,14 +257,12 @@ export const DeliveryWidget: React.FC = () => {
     // Close cart if open
     setIsCartOpen(false);
     
-    console.log('About to set checkout step');
-    // Set checkout step with a small delay to ensure smooth transition
-    setTimeout(() => {
-      setCurrentStep('checkout');
-      console.log('Checkout step set');
-      // Scroll to top after transition
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 50);
+    console.log('Setting checkout step...');
+    // Set checkout step immediately
+    setCurrentStep('checkout');
+    console.log('Checkout step set, scrolling to top');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (currentStep === 'order-continuation') {
