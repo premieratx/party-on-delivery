@@ -171,8 +171,10 @@ const Success = () => {
             <Button 
               onClick={() => {
                 const shareUrl = `${window.location.origin}/group-order?order=${orderStatus.orderNumber}`;
+                console.log('Copying group order URL:', shareUrl);
+                console.log('Order number being used:', orderStatus.orderNumber);
                 navigator.clipboard.writeText(shareUrl).then(() => {
-                  alert('Link copied to clipboard!');
+                  alert(`Link copied to clipboard!\nOrder: ${orderStatus.orderNumber}`);
                 });
               }}
               variant="outline"
