@@ -493,8 +493,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       ${selectedVariant?.price.toFixed(2)}
                     </Badge>
                       
-                    {/* Cart controls with adjusted spacing */}
-                    <div className="flex justify-center pb-1">
+                    {/* Cart controls with reduced spacing */}
+                    <div className="flex justify-center">
                       {cartQty > 0 ? (
                          <div className="flex items-center gap-0.5 bg-muted rounded" onClick={(e) => e.stopPropagation()}>
                           <Button
