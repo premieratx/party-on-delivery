@@ -384,7 +384,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                     .replace(/Can/gi, '')
                                     .replace(/Hard Seltzer/gi, '')
                                     .replace(/\s+/g, ' ')
-                                    .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
+                                    .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
                                     .trim();
                                 } else {
                                   cleanedTitle = product.title
@@ -393,7 +393,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                     .replace(/Can/gi, '')
                                     .replace(/Hard Seltzer/gi, '')
                                     .replace(/\s+/g, ' ')
-                                    .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
+                                    .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
                                     .trim();
                                 }
                                 
@@ -529,7 +529,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               .replace(/Can/gi, '')
                               .replace(/Hard Seltzer/gi, '')
                               .replace(/\s+/g, ' ')
-                              .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
+                              .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
                               .trim();
                           } else {
                             cleanedTitle = product.title
@@ -538,7 +538,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               .replace(/Can/gi, '')
                               .replace(/Hard Seltzer/gi, '')
                               .replace(/\s+/g, ' ')
-                              .replace(/[.…]+$/g, '') // Remove all types of trailing dots/periods
+                              .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '') // Remove all dot-like characters at end
                               .trim();
                           }
                           
