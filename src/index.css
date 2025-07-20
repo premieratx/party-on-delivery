@@ -17,10 +17,14 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* Delivery app primary - vibrant green */
+    /* Primary - vibrant green for checkout/success actions */
     --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 142 76% 46%;
+
+    /* Light blue from logo for titles and navigation */
+    --brand-blue: 217 91% 60%;
+    --brand-blue-foreground: 0 0% 100%;
 
     /* Trust blue secondary */
     --secondary: 217 91% 60%;

@@ -27,9 +27,12 @@ const buttonVariants = cva(
         delivery: "bg-gradient-primary text-primary-foreground hover:shadow-glow transition-all duration-300 hover:scale-105 animate-glow-pulse",
         cart: "bg-gradient-secondary text-secondary-foreground hover:shadow-[0_0_20px_hsl(var(--secondary)/0.4)] transition-all duration-300",
         
+        // Add to cart variant (blue)
+        "add-to-cart": "bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 transition-all duration-300 hover:scale-105",
+        
         // Step navigation
         step: "bg-card border border-border hover:bg-accent hover:text-accent-foreground transition-all duration-300 hover:shadow-card",
-        "step-active": "bg-primary text-primary-foreground border border-primary shadow-glow",
+        "step-active": "bg-brand-blue text-brand-blue-foreground border border-brand-blue shadow-[0_0_20px_hsl(var(--brand-blue)/0.4)]",
       },
       size: {
         default: "h-10 px-4 py-2",

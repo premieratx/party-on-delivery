@@ -200,7 +200,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       <div className="sticky top-0 bg-background/95 backdrop-blur-md border-b z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-lg sm:text-2xl font-bold text-brand-blue">
               Build Your Party
             </h1>
             
@@ -275,10 +275,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <div className="relative z-10 h-full flex flex-col sm:flex-row items-center justify-center sm:justify-between p-2 sm:p-4">
                       {/* Mobile layout: improved contrast and readability */}
                       <div className="sm:hidden flex flex-col items-center justify-center h-full space-y-1 px-1">
-                        <div className={`font-bold text-2xl transition-colors ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                        <div className={`font-bold text-2xl transition-colors ${isActive ? 'text-brand-blue' : 'text-foreground'}`}>
                           {stepNumber}
                         </div>
-                        <div className={`text-sm font-semibold text-center leading-tight ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                        <div className={`text-sm font-semibold text-center leading-tight ${isActive ? 'text-brand-blue' : 'text-foreground'}`}>
                           {stepTitle}
                         </div>
                       </div>
@@ -376,6 +376,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             <Button
                               onClick={() => handleAddToCart(product, variant)}
                               size="sm"
+                              variant="add-to-cart"
                               disabled={!variant.available}
                               className="h-6 lg:h-8 px-2 lg:px-3 text-xs lg:text-sm font-medium"
                             >
@@ -439,6 +440,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         <Button
                           onClick={() => handleAddToCart(product)}
                           size="sm"
+                          variant="add-to-cart"
                           className="h-8 px-4 text-xs"
                         >
                           <Plus className="h-3 w-3 mr-1" />

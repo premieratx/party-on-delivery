@@ -36,10 +36,10 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
                 className="w-48 h-48 mx-auto mb-4"
               />
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-brand-blue">
                   Austin's Best Alcohol Delivery Service
                 </h1>
-                <CardTitle className="text-2xl bg-gradient-primary bg-clip-text text-transparent">
+                <CardTitle className="text-2xl text-brand-blue">
                   Party On Delivery
                 </CardTitle>
                 <p className="text-muted-foreground text-lg">

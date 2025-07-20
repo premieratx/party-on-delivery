@@ -21,6 +21,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { calculateDistanceBasedDeliveryFee, getStandardDeliveryFee } from '@/utils/deliveryPricing';
+import { validateEmail, validatePhoneNumber, formatPhoneNumber, getEmailErrorMessage, getPhoneErrorMessage } from '@/utils/validation';
 
 interface CheckoutFlowProps {
   cartItems: CartItem[];
@@ -63,6 +64,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   // Use persistent customer info (always persistent)
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
+  
+  // Validation states
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   
   // Track if address has been cleared for new orders to prevent infinite loop
   const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
@@ -291,7 +296,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmCustomer = () => {
-    if (customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email) {
+    // Validate email and phone before proceeding
+    const emailErr = getEmailErrorMessage(customerInfo.email);
+    const phoneErr = getPhoneErrorMessage(customerInfo.phone);
+    
+    setEmailError(emailErr);
+    setPhoneError(phoneErr);
+    
+    if (!emailErr && !phoneErr && customerInfo.firstName && customerInfo.lastName) {
       setConfirmedCustomer(true);
       setCurrentStep('payment');
     }
@@ -699,8 +711,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       autoComplete="tel"
                       placeholder="(555) 123-4567"
                       value={customerInfo.phone}
-                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) => {
+                        const formatted = formatPhoneNumber(e.target.value);
+                        setCustomerInfo(prev => ({ ...prev, phone: formatted }));
+                        // Clear error when user starts typing
+                        if (phoneError) setPhoneError(null);
+                      }}
+                      className={phoneError ? 'border-red-500' : ''}
                     />
+                    {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
                   </div>
                   
                   <div className="space-y-2">
@@ -712,8 +731,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       autoComplete="email"
                       placeholder="john.doe@example.com"
                       value={customerInfo.email}
-                      onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) => {
+                        setCustomerInfo(prev => ({ ...prev, email: e.target.value }));
+                        // Clear error when user starts typing
+                        if (emailError) setEmailError(null);
+                      }}
+                      className={emailError ? 'border-red-500' : ''}
                     />
+                    {emailError && <p className="text-sm text-red-600">{emailError}</p>}
                   </div>
                   
                   <Button 
