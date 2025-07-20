@@ -25,7 +25,6 @@ const App = () => (
             <Route path="/order-complete" element={<OrderComplete />} />
             <Route path="/group-order/:orderNumber" element={<GroupOrder />} />
             <Route path="/group-order" element={<GroupOrder />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
