@@ -12,6 +12,8 @@ import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
 import partySuppliesCategoryBg from '@/assets/party-supplies-category-bg.jpg';
+import heroPartyAustin from '@/assets/hero-party-austin.jpg';
+import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 
 interface ShopifyProduct {
   id: string;
@@ -216,18 +218,24 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      {/* Header Section with Logo - non-sticky */}
-      <div className="bg-background border-b">
-        <div className="max-w-7xl mx-auto py-6 px-4 text-center">
+      {/* Hero Section with Austin Background */}
+      <div className="relative h-64 lg:h-96 overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${heroPartyAustin})` }}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto h-full flex flex-col justify-center items-center text-center px-4">
           <img 
-            src="/src/assets/party-on-delivery-logo.png" 
+            src={partyOnDeliveryLogo}
             alt="Party on Delivery" 
-            className="mx-auto h-24 lg:h-48 object-contain mb-4"
+            className="h-20 lg:h-32 object-contain mb-4 drop-shadow-lg"
           />
-          <h1 className="text-3xl lg:text-4xl font-bold text-primary mb-2">
+          <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">
             Build Your Party Package
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-white/90 text-lg drop-shadow-lg">
             Select from our curated collection of drinks and party supplies
           </p>
         </div>
@@ -308,15 +316,35 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         </div>
 
-        {/* Section Heading with arrows */}
+        {/* Section Heading with functional arrows */}
         {selectedCollection && (
           <div className="max-w-7xl mx-auto px-4 pb-4">
             <div className="flex items-center justify-center gap-4">
-              <ChevronLeft className="w-6 h-6 text-primary" />
+              <button
+                onClick={() => selectedCategory > 0 && setSelectedCategory(selectedCategory - 1)}
+                disabled={selectedCategory === 0}
+                className={`p-2 rounded-full transition-colors ${
+                  selectedCategory === 0 
+                    ? 'text-muted-foreground cursor-not-allowed' 
+                    : 'text-primary hover:bg-primary/10 cursor-pointer'
+                }`}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
               <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
                 {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
               </h2>
-              <ChevronRight className="w-6 h-6 text-primary" />
+              <button
+                onClick={() => selectedCategory < stepMapping.length - 1 && setSelectedCategory(selectedCategory + 1)}
+                disabled={selectedCategory === stepMapping.length - 1}
+                className={`p-2 rounded-full transition-colors ${
+                  selectedCategory === stepMapping.length - 1 
+                    ? 'text-muted-foreground cursor-not-allowed' 
+                    : 'text-primary hover:bg-primary/10 cursor-pointer'
+                }`}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
             </div>
           </div>
         )}
