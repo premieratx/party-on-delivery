@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Package, Truck, Plus, Clock, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, isAfter } from 'date-fns';
+import { PostCheckoutContinuation } from '@/components/PostCheckoutContinuation';
 
 interface LastOrderInfo {
   orderNumber: string;
@@ -22,6 +23,7 @@ export default function OrderComplete() {
   const navigate = useNavigate();
   const [lastOrderInfo, setLastOrderInfo] = useState<LastOrderInfo | null>(null);
   const [isOrderStillActive, setIsOrderStillActive] = useState(false);
+  const [showContinuation, setShowContinuation] = useState(true);
 
   useEffect(() => {
     // Get the last order info from localStorage
@@ -64,14 +66,27 @@ export default function OrderComplete() {
   const handleOrderAgain = () => {
     // Set a flag to indicate this is an "add to order" flow
     localStorage.setItem('partyondelivery_add_to_order', 'true');
+    setShowContinuation(false);
     navigate('/');
   };
 
   const handleStartNewOrder = () => {
     // Clear the add to order flag and start fresh
     localStorage.removeItem('partyondelivery_add_to_order');
+    setShowContinuation(false);
     navigate('/');
   };
+
+  // Show PostCheckoutContinuation first for all users
+  if (showContinuation && lastOrderInfo) {
+    return (
+      <PostCheckoutContinuation
+        onStartNewOrder={handleStartNewOrder}
+        onAddToOrder={handleOrderAgain}
+        lastOrderInfo={lastOrderInfo}
+      />
+    );
+  }
 
   if (!lastOrderInfo) {
     return (

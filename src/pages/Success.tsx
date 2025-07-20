@@ -151,7 +151,7 @@ const Success = () => {
 
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild className="flex-1">
-              <Link to="/">Continue Shopping</Link>
+              <Link to="/order-complete">Continue Shopping</Link>
             </Button>
             <Button variant="outline" asChild className="flex-1">
               <Link to={`/order-tracking?order=${orderStatus.orderNumber}`}>
