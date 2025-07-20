@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, MapPin, Clock, Package, Users, AlertCircle } from 'lucide-react';
 import { DeliveryWidget } from '@/components/DeliveryWidget';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GroupOrderInfo {
   orderNumber: string;
@@ -29,31 +30,87 @@ const GroupOrder = () => {
   const [showDeliveryWidget, setShowDeliveryWidget] = useState(false);
 
   useEffect(() => {
-    // Parse the group order ID from URL params
-    const searchParams = new URLSearchParams(location.search);
-    const groupOrderId = searchParams.get('order');
-    
-    if (groupOrderId) {
-      // In a real app, you'd fetch this from your backend
-      // For now, we'll try to get it from localStorage as a demo
-      const orderData = localStorage.getItem('partyondelivery_last_order');
-      if (orderData) {
+    const fetchGroupOrderData = async () => {
+      // Parse the group order ID from URL params
+      const searchParams = new URLSearchParams(location.search);
+      const groupOrderId = searchParams.get('order');
+      
+      if (groupOrderId) {
         try {
-          const order = JSON.parse(orderData);
-          if (order.orderNumber === groupOrderId) {
-            setGroupOrderInfo(order);
-            
-            // Check if the order is expired
-            if (order.deliveryDate && order.deliveryTime) {
-              const deliveryDateTime = new Date(`${order.deliveryDate}T${convertTimeToDateTime(order.deliveryTime)}`);
-              setIsOrderExpired(isAfter(new Date(), deliveryDateTime));
+          // First try localStorage for quick access
+          const orderData = localStorage.getItem('partyondelivery_last_order');
+          if (orderData) {
+            const order = JSON.parse(orderData);
+            if (order.orderNumber === groupOrderId) {
+              setGroupOrderInfo(order);
+              // Check if the order is expired
+              if (order.deliveryDate && order.deliveryTime) {
+                const deliveryDateTime = new Date(`${order.deliveryDate}T${convertTimeToDateTime(order.deliveryTime)}`);
+                setIsOrderExpired(isAfter(new Date(), deliveryDateTime));
+              }
+              return;
             }
+          }
+
+          // If not in localStorage, fetch from database
+          const { data: shopifyOrder, error } = await supabase
+            .from('shopify_orders')
+            .select(`
+              shopify_order_number,
+              amount,
+              created_at,
+              order_groups (
+                customer_email,
+                customer_name,
+                delivery_address,
+                delivery_city,
+                delivery_state,
+                delivery_zip,
+                delivery_instructions,
+                created_at
+              )
+            `)
+            .eq('shopify_order_number', groupOrderId)
+            .single();
+
+          if (error) {
+            console.error('Error fetching order:', error);
+            return;
+          }
+
+          if (shopifyOrder?.order_groups) {
+            const orderGroup = shopifyOrder.order_groups;
+            const fullAddress = `${orderGroup.delivery_address}, ${orderGroup.delivery_city}, ${orderGroup.delivery_state} ${orderGroup.delivery_zip}`;
+            
+            // Create a delivery date 2 hours from order creation (placeholder logic)
+            const orderDate = new Date(shopifyOrder.created_at);
+            const deliveryDate = new Date(orderDate.getTime() + 2 * 60 * 60 * 1000);
+            
+            const groupOrder = {
+              orderNumber: shopifyOrder.shopify_order_number,
+              total: shopifyOrder.amount,
+              date: shopifyOrder.created_at,
+              orderId: shopifyOrder.shopify_order_number,
+              address: fullAddress,
+              deliveryDate: deliveryDate.toISOString().split('T')[0],
+              deliveryTime: "2:00 PM - 3:00 PM", // Placeholder time
+              instructions: orderGroup.delivery_instructions,
+              customerName: orderGroup.customer_name,
+              customerEmail: orderGroup.customer_email
+            };
+            
+            setGroupOrderInfo(groupOrder);
+            
+            // Check if the order is expired (assuming 2 hour delivery window)
+            setIsOrderExpired(isAfter(new Date(), deliveryDate));
           }
         } catch (error) {
           console.error('Error parsing group order:', error);
         }
       }
-    }
+    };
+
+    fetchGroupOrderData();
   }, [location]);
 
   const convertTimeToDateTime = (timeSlot: string): string => {
