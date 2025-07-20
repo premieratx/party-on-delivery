@@ -52,7 +52,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
-  // Step management - if same address is confirmed, we have pre-filled info
+  // Step management - if same address is confirmed, skip to customer step since date/address are pre-filled
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
     useSameAddress ? 'customer' : 'datetime'
   );
