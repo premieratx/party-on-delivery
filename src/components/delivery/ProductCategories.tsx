@@ -300,11 +300,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </button>
               
               <button
-                onClick={onProceedToCheckout}
+                onClick={() => {
+                  if (cartItemCount > 0) {
+                    onProceedToCheckout();
+                  }
+                }}
                 disabled={cartItemCount === 0}
                 className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
                   cartItemCount > 0 
-                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20' 
+                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
                     : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
                 } ${selectedCategory === 3 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
               >
@@ -328,11 +332,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </button>
               
               <button
-                onClick={onProceedToCheckout}
+                onClick={() => {
+                  if (cartItemCount > 0) {
+                    onProceedToCheckout();
+                  }
+                }}
                 disabled={cartItemCount === 0}
                 className={`rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-1 ${
                   cartItemCount > 0 
-                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20' 
+                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
                     : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
                 } ${selectedCategory === 3 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
               >
@@ -476,13 +484,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   </div>
                   
                   {/* Price and cart controls container - always at bottom */}
-                  <div className="mt-auto pt-1 flex flex-col items-center gap-1">
+                  <div className="mt-auto pt-2 flex flex-col items-center gap-2">
                     <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
                       ${selectedVariant?.price.toFixed(2)}
                     </Badge>
                       
-                    {/* Cart controls */}
-                    <div className="flex justify-center">
+                    {/* Cart controls with adjusted spacing */}
+                    <div className="flex justify-center pb-1">
                       {cartQty > 0 ? (
                          <div className="flex items-center gap-0.5 bg-muted rounded" onClick={(e) => e.stopPropagation()}>
                           <Button
