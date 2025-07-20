@@ -149,6 +149,7 @@ export const DeliveryWidget: React.FC = () => {
   const handleAddToOrder = () => {
     // Keep existing cart and order info
     setIsAddingToOrder(true);
+    
     // Pre-fill delivery info when adding to order
     if (validLastOrderInfo) {
       if (validLastOrderInfo.deliveryDate) {
@@ -166,6 +167,8 @@ export const DeliveryWidget: React.FC = () => {
       }
     }
     
+    // Always go to address confirmation first for add-to-order flow
+    // This ensures users see the address confirmation screen
     if (validLastOrderInfo?.address) {
       setCurrentStep('address-confirmation');
     } else {
@@ -285,7 +288,7 @@ export const DeliveryWidget: React.FC = () => {
           cartItems={cartItems}
           onUpdateQuantity={updateQuantity}
           onProceedToCheckout={handleCheckout}
-          onBack={handleBackToOrderContinuation}
+          onBack={isAddingToOrder && validLastOrderInfo?.address ? handleBackToAddressConfirmation : handleBackToOrderContinuation}
         />
       )}
 
