@@ -209,13 +209,14 @@ export const DeliveryWidget: React.FC = () => {
     // Keep existing cart and order info
     setIsAddingToOrder(true);
     
-    // DON'T clear delivery info completely - preserve structure but allow CheckoutFlow to override
-    setDeliveryInfo(prev => ({
-      date: null, // Will be pre-filled by CheckoutFlow
-      timeSlot: '', // Will be pre-filled by CheckoutFlow  
-      address: prev.address, // Keep existing if any
-      instructions: prev.instructions // Keep existing if any
-    }));
+    // DON'T clear delivery info completely - let CheckoutFlow handle all pre-filling from lastOrderInfo
+    // Keep the current deliveryInfo structure intact so CheckoutFlow can properly pre-fill from lastOrderInfo
+    // setDeliveryInfo(prev => ({
+    //   date: null, // Will be pre-filled by CheckoutFlow
+    //   timeSlot: '', // Will be pre-filled by CheckoutFlow  
+    //   address: prev.address, // Keep existing if any
+    //   instructions: prev.instructions // Keep existing if any
+    // }));
     
     // Go directly to products - CheckoutFlow will handle pre-filling delivery info
     setCurrentStep('products');
