@@ -491,7 +491,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         const drinkMatch = product.description.match(/(\d+)\s*(?:drinks?|servings?|cocktails?)/i);
                         if (drinkMatch) {
                           return (
-                            <p className="text-foreground text-center mb-1 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                            <p className="text-foreground text-center mb-1 text-[10px] leading-3 whitespace-nowrap overflow-hidden text-ellipsis">
                               {drinkMatch[1]} drinks
                             </p>
                           );
