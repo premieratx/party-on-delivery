@@ -59,7 +59,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   // Calculate tip percentage based on subtotal (before delivery fee adjustment for $200+)
-  const tipCalculationBase = subtotal >= 200 ? subtotal : subtotal;
+  const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
+  const tipCalculationBase = validSubtotal >= 200 ? validSubtotal : validSubtotal;
   const [internalTipAmount, setInternalTipAmount] = useState(tipCalculationBase * 0.10); // 10% pre-selected
   
   // Early return for empty cart
@@ -92,7 +93,11 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const [customTipConfirmed, setCustomTipConfirmed] = useState(false);
   const [confirmedTipAmount, setConfirmedTipAmount] = useState(0);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const total = subtotal + deliveryFee + salesTax + tipAmount;
+  const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
+  const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
+  const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
+  const total = validSubtotal + validDeliveryFee + validSalesTax + validTipAmount;
+  
   const tipOptions = [{
     label: '5%',
     value: tipCalculationBase * 0.05
@@ -219,7 +224,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           {tipConfirmed ? <div className="p-2 md:p-3 border border-green-500 rounded-lg bg-green-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Driver Tip: ${confirmedTipAmount.toFixed(2)}</span>
+                  <span className="text-sm font-medium">Driver Tip: ${(confirmedTipAmount || 0).toFixed(2)}</span>
                   {customTipConfirmed && <Badge variant="secondary" className="text-xs">Custom</Badge>}
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={handleEditTip} className="text-xs px-2 py-1 h-auto">
@@ -236,7 +241,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               setTipConfirmed(false);
             }} className="flex-shrink-0 text-xs md:text-sm flex flex-col items-center py-3 px-4 h-auto min-w-[80px]">
                     <span className="font-semibold">{tip.label}</span>
-                    <span className="text-xs opacity-75">(${tip.value.toFixed(2)})</span>
+                    <span className="text-xs opacity-75">(${(tip.value || 0).toFixed(2)})</span>
                   </Button>)}
                 <Button type="button" variant={showCustomTip ? "default" : "outline"} onClick={() => {
               setShowCustomTip(true);
@@ -278,7 +283,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                 }
               }} disabled={tipAmount === 0} />
                     <Label htmlFor="confirmCustomTip" className="text-sm">
-                      Confirm tip amount: ${tipAmount.toFixed(2)}
+                      Confirm tip amount: ${(tipAmount || 0).toFixed(2)}
                     </Label>
                   </div>
                 </div>}
@@ -290,30 +295,30 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           <div className="space-y-2">
             <div className="flex justify-between text-xs md:text-sm">
               <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>${(validSubtotal || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xs md:text-sm">
               <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
               <div className="flex items-center gap-2">
                 <span>
-                  ${deliveryFee.toFixed(2)}
+                  ${(validDeliveryFee || 0).toFixed(2)}
                   {isAddingToOrder && useSameAddress && !hasChanges && deliveryFee === 0 && <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>}
-                  {deliveryPricing?.isDistanceBased && deliveryPricing.distance && <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>}
+                  {deliveryPricing?.isDistanceBased && deliveryPricing.distance && <span className="text-xs text-muted-foreground ml-1">({(deliveryPricing.distance || 0).toFixed(1)} mi)</span>}
                 </span>
               </div>
             </div>
             <div className="flex justify-between text-xs md:text-sm">
               <span>Sales Tax</span>
-              <span>${salesTax.toFixed(2)}</span>
+              <span>${(validSalesTax || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-xs md:text-sm">
               <span>Tip</span>
-              <span>${tipAmount.toFixed(2)}</span>
+              <span>${(validTipAmount || 0).toFixed(2)}</span>
             </div>
             <Separator />
             <div className="flex justify-between font-semibold text-sm md:text-lg">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>${(total || 0).toFixed(2)}</span>
             </div>
           </div>
 
@@ -358,7 +363,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           {paymentError && <div className="text-red-600 text-sm">{paymentError}</div>}
 
           <Button type="submit" disabled={!stripe || isProcessing} className="w-full text-xs md:text-sm" size="lg">
-            {isProcessing ? 'Processing...' : `Complete Payment - $${total.toFixed(2)}`}
+            {isProcessing ? 'Processing...' : `Complete Payment - $${(total || 0).toFixed(2)}`}
           </Button>
         </form>
       </CardContent>
