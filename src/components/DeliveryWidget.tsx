@@ -150,33 +150,14 @@ export const DeliveryWidget: React.FC = () => {
   const handleStartNewOrder = () => {
     console.log('=== handleStartNewOrder ===');
     
-    // If user has items in cart, ask for confirmation
-    if (cartItems.length > 0) {
-      const confirmClearCart = window.confirm(
-        "You have items in your cart. Are you sure you want to clear your cart and start a new order?\n\nClick OK to clear cart and start new, or Cancel to resume your current order."
-      );
-      
-      if (!confirmClearCart) {
-        // User chose to resume current order
-        handleResumeOrder();
-        return;
-      }
-    }
-    
-    // Clear cart and start fresh - ALWAYS go to products for new orders
-    setCartItems([]);
+    // Keep existing cart and delivery info - just start a standard new order flow
     setIsAddingToOrder(false);
     setUseSameAddress(false);
     
-    // DON'T clear delivery info completely - keep saved customer/address info for pre-fill
-    // Only clear date/time to force new scheduling
-    setDeliveryInfo(prev => ({
-      ...prev,
-      date: null,
-      timeSlot: ''
-    }));
+    // Keep all delivery info and customer info for pre-filling
+    // Don't clear anything - let CheckoutFlow handle pre-filling from saved data
     
-    // Clear all persistent flags
+    // Clear all persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
     localStorage.removeItem('partyondelivery_group_order');
@@ -187,24 +168,15 @@ export const DeliveryWidget: React.FC = () => {
 
   const handleResumeOrder = () => {
     console.log('=== handleResumeOrder ===');
-    // If cart is empty (after checkout), behave like new order
-    if (cartItems.length === 0) {
-      handleStartNewOrder();
-      return;
-    }
-    // Keep existing cart items and start a new order flow (not adding to existing order)
+    
+    // Resume order works exactly like start new order now - keep everything
     setIsAddingToOrder(false);
     setUseSameAddress(false);
-    // DON'T clear delivery info for resume - let saved customer/address info persist
-    // Only clear if no date/time set to allow fresh scheduling
-    if (!deliveryInfo.date || !deliveryInfo.timeSlot) {
-      setDeliveryInfo(prev => ({
-        ...prev,
-        date: null,
-        timeSlot: ''
-      }));
-    }
-    // Clear persistent flags
+    
+    // Keep all delivery info and customer info for pre-filling
+    // Don't clear anything - let CheckoutFlow handle pre-filling from saved data
+    
+    // Clear persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
     localStorage.removeItem('partyondelivery_group_order');
@@ -282,6 +254,18 @@ export const DeliveryWidget: React.FC = () => {
 
   const removeFromCart = (id: string, variant?: string) => {
     setCartItems(prev => prev.filter(i => !(i.id === id && i.variant === variant)));
+  };
+
+  const emptyCart = () => {
+    console.log('=== emptyCart ===');
+    setCartItems([]);
+    // Show confirmation message
+    import('@/hooks/use-toast').then(({ toast }) => {
+      toast({
+        title: "Cart emptied",
+        description: "All items have been removed from your cart.",
+      });
+    });
   };
 
   const getTotalPrice = () => {
@@ -397,6 +381,7 @@ export const DeliveryWidget: React.FC = () => {
         hasChanges={hasChanges}
         appliedDiscount={appliedDiscount}
         tipAmount={tipAmount}
+        onEmptyCart={emptyCart}
       />
     </div>
   );

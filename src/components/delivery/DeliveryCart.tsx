@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { X, Minus, Plus, ShoppingCart, Truck } from 'lucide-react';
+import { X, Minus, Plus, ShoppingCart, Truck, Trash2 } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
 
@@ -21,6 +21,7 @@ interface DeliveryCartProps {
   hasChanges?: boolean;
   appliedDiscount?: {code: string, type: 'percentage' | 'free_shipping', value: number} | null;
   tipAmount?: number;
+  onEmptyCart: () => void;
 }
 
 export const DeliveryCart: React.FC<DeliveryCartProps> = ({
@@ -36,7 +37,8 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   useSameAddress = false,
   hasChanges = false,
   appliedDiscount = null,
-  tipAmount = 0
+  tipAmount = 0,
+  onEmptyCart
 }) => {
   // Calculate pricing like in checkout with same logic
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -89,9 +91,21 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
               <ShoppingCart className="w-5 h-5" />
               Your Cart ({items.length})
             </h2>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-5 h-5" />
-            </Button>
+            <div className="flex gap-2">
+              {items.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={onEmptyCart}
+                  title="Empty Cart"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
 
           {/* Delivery Info - Compact */}
