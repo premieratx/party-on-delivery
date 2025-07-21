@@ -144,7 +144,7 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
               
               {/* Price */}
               <Badge variant="secondary" className="text-lg font-semibold mb-4 px-3 py-1">
-                ${variant?.price.toFixed(2)}
+                ${(variant?.price || 0).toFixed(2)}
               </Badge>
 
               {/* Description */}

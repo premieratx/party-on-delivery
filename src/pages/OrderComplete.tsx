@@ -135,7 +135,7 @@ export default function OrderComplete() {
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Total Amount</span>
-              <span className="font-bold text-xl">${lastOrderInfo.total.toFixed(2)}</span>
+              <span className="font-bold text-xl">${(lastOrderInfo.total || 0).toFixed(2)}</span>
             </div>
             
             <div className="flex items-center gap-2 text-sm text-muted-foreground">

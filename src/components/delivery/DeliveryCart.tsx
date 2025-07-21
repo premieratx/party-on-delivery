@@ -183,40 +183,40 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>${(subtotal || 0).toFixed(2)}</span>
                   </div>
                   {appliedDiscount?.type === 'percentage' && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount ({appliedDiscount.code})</span>
-                      <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
+                      <span>-${((subtotal || 0) * (appliedDiscount.value || 0) / 100).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
                     <span className={finalDeliveryFee === 0 ? 'text-green-600' : ''}>
-                      {finalDeliveryFee === 0 ? 'FREE' : `$${finalDeliveryFee.toFixed(2)}`}
+                      {finalDeliveryFee === 0 ? 'FREE' : `$${(finalDeliveryFee || 0).toFixed(2)}`}
                     </span>
                   </div>
                   {appliedDiscount?.type === 'free_shipping' && originalDeliveryFee > 0 && (
                     <div className="flex justify-between text-green-600 text-sm">
                       <span>Free shipping ({appliedDiscount.code})</span>
-                      <span>-${originalDeliveryFee.toFixed(2)}</span>
+                      <span>-${(originalDeliveryFee || 0).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
                     <span>Sales Tax (8.25%)</span>
-                    <span>${salesTax.toFixed(2)}</span>
+                    <span>${(salesTax || 0).toFixed(2)}</span>
                   </div>
                   {tipAmount > 0 && (
                     <div className="flex justify-between">
                       <span>Tip</span>
-                      <span>${tipAmount.toFixed(2)}</span>
+                      <span>${(tipAmount || 0).toFixed(2)}</span>
                     </div>
                   )}
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>${finalTotal.toFixed(2)}</span>
+                    <span>${(finalTotal || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>

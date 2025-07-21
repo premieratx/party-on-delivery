@@ -55,7 +55,7 @@ export const PostCheckoutContinuation: React.FC<PostCheckoutContinuationProps> =
               </div>
               <div className="pt-1 border-t border-muted-foreground/20">
                 <p className="text-xs text-muted-foreground">
-                  Order #{lastOrderInfo.orderNumber} • ${lastOrderInfo.total.toFixed(2)} • {lastOrderInfo.date}
+                  Order #{lastOrderInfo.orderNumber} • ${(lastOrderInfo.total || 0).toFixed(2)} • {lastOrderInfo.date}
                 </p>
               </div>
             </div>

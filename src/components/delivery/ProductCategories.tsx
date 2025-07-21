@@ -490,7 +490,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   {/* Price and cart controls container - always at bottom */}
                   <div className="mt-auto pt-2 flex flex-col items-center gap-2">
                     <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
-                      ${selectedVariant?.price.toFixed(2)}
+                      ${(selectedVariant?.price || 0).toFixed(2)}
                     </Badge>
                       
                     {/* Cart controls with reduced spacing */}

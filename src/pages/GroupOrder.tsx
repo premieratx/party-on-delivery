@@ -163,7 +163,7 @@ const GroupOrder = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Order Total:</span>
-                  <span className="font-medium">${groupOrderInfo.total.toFixed(2)}</span>
+                  <span className="font-medium">${(groupOrderInfo.total || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Ordered by:</span>

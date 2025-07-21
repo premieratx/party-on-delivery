@@ -858,7 +858,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                        </div>
                        
                        {/* Total Price for Item */}
-                       <p className="font-semibold min-w-[50px] sm:min-w-[60px] text-right text-xs sm:text-sm">${(item.price * item.quantity).toFixed(2)}</p>
+                       <p className="font-semibold min-w-[50px] sm:min-w-[60px] text-right text-xs sm:text-sm">${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
                      </div>
                    </div>
                 ))}
@@ -873,22 +873,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                      <div className="space-y-2">
                        <div className="flex justify-between">
                          <span>Subtotal</span>
-                         <span>${subtotal.toFixed(2)}</span>
+                         <span>${(subtotal || 0).toFixed(2)}</span>
                        </div>
                        {appliedDiscount?.type === 'percentage' && (
                          <div className="flex justify-between text-green-600">
                            <span>Discount ({appliedDiscount.value}% off)</span>
-                           <span>-${(subtotal * appliedDiscount.value / 100).toFixed(2)}</span>
+                           <span>-${((subtotal || 0) * (appliedDiscount.value || 0) / 100).toFixed(2)}</span>
                          </div>
                        )}
                          <div className="flex justify-between">
                            <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
                             <div className="flex items-center gap-2">
-                               {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 && (
-                                 <span className="text-sm text-muted-foreground line-through">${baseDeliveryFee.toFixed(2)}</span>
-                               )}
-                               <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
-                                 ${finalDeliveryFee.toFixed(2)}
+                                {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 && (
+                                  <span className="text-sm text-muted-foreground line-through">${(baseDeliveryFee || 0).toFixed(2)}</span>
+                                )}
+                                <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
+                                  ${(finalDeliveryFee || 0).toFixed(2)}
                                  {(isAddingToOrder && !hasChanges) && finalDeliveryFee === 0 && (
                                    <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
                                  )}
@@ -900,18 +900,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                          </div>
                        <div className="flex justify-between">
                          <span>Sales Tax (8.25%)</span>
-                         <span>${salesTax.toFixed(2)}</span>
+                         <span>${(salesTax || 0).toFixed(2)}</span>
                        </div>
                        {tipAmount > 0 && (
                          <div className="flex justify-between">
                            <span>Driver Tip</span>
-                           <span>${tipAmount.toFixed(2)}</span>
+                           <span>${(tipAmount || 0).toFixed(2)}</span>
                          </div>
                        )}
                        <Separator />
                        <div className="flex justify-between font-bold text-lg">
                          <span>Total</span>
-                         <span>${finalTotal.toFixed(2)}</span>
+                         <span>${(finalTotal || 0).toFixed(2)}</span>
                        </div>
                      </div>
                    </>

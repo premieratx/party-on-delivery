@@ -63,7 +63,7 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
               </div>
               <div className="pt-1 border-t border-muted-foreground/20">
                 <p className="text-xs text-muted-foreground">
-                  Order #{lastOrderInfo.orderNumber} • ${lastOrderInfo.total.toFixed(2)}
+                  Order #{lastOrderInfo.orderNumber} • ${(lastOrderInfo.total || 0).toFixed(2)}
                 </p>
               </div>
             </div>
