@@ -287,8 +287,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         street: addressInfo.street,
         city: addressInfo.city,
         state: addressInfo.state,
-        zipCode: addressInfo.zipCode
+        zipCode: addressInfo.zipCode,
+        isAddressComplete
       });
+      
+      // Show user what's missing
+      const missingFields = [];
+      if (!addressInfo.street) missingFields.push('Street Address');
+      if (!addressInfo.city) missingFields.push('City');
+      if (!addressInfo.state) missingFields.push('State');
+      if (!addressInfo.zipCode) missingFields.push('Zip Code');
+      
+      alert(`Please fill in all required address fields: ${missingFields.join(', ')}`);
     }
   };
 

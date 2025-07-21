@@ -149,16 +149,33 @@ export const DeliveryWidget: React.FC = () => {
 
   const handleStartNewOrder = () => {
     console.log('=== handleStartNewOrder ===');
+    
+    // If user has items in cart, ask for confirmation
+    if (cartItems.length > 0) {
+      const confirmClearCart = window.confirm(
+        "You have items in your cart. Are you sure you want to clear your cart and start a new order?\n\nClick OK to clear cart and start new, or Cancel to resume your current order."
+      );
+      
+      if (!confirmClearCart) {
+        // User chose to resume current order
+        handleResumeOrder();
+        return;
+      }
+    }
+    
     // Clear cart and start fresh - ALWAYS go to products for new orders
     setCartItems([]);
     setIsAddingToOrder(false);
     setUseSameAddress(false);
-    setDeliveryInfo({
+    
+    // DON'T clear delivery info completely - keep saved customer/address info for pre-fill
+    // Only clear date/time to force new scheduling
+    setDeliveryInfo(prev => ({
+      ...prev,
       date: null,
-      timeSlot: '',
-      address: '',
-      instructions: ''
-    });
+      timeSlot: ''
+    }));
+    
     // Clear all persistent flags
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');

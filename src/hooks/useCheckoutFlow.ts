@@ -28,7 +28,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     onDeliveryInfoChange(newInfo);
   };
 
-  // SIMPLIFIED: Just use draft order data for everything
+  // Pre-fill from draft order data for ALL flows (not just add-to-order)
   useEffect(() => {
     // Get draft order data from localStorage
     const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
@@ -41,8 +41,8 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         setOriginalOrderInfo(lastOrderInfo);
       }
       
-      // Pre-fill delivery date and time from draft
-      if (draftOrder.deliveryDate) {
+      // Pre-fill delivery date and time from draft (only for add-to-order flow)
+      if (isAddingToOrder && draftOrder.deliveryDate) {
         try {
           const date = new Date(draftOrder.deliveryDate);
           if (!isNaN(date.getTime())) {
@@ -53,11 +53,11 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         }
       }
       
-      if (draftOrder.deliveryTime) {
+      if (isAddingToOrder && draftOrder.deliveryTime) {
         updateDeliveryInfo('timeSlot', draftOrder.deliveryTime);
       }
       
-      // Pre-fill address from draft
+      // ALWAYS pre-fill address from draft (for both new orders and add-to-order)
       if (draftOrder.address) {
         const addressParts = draftOrder.address.split(',').map(part => part.trim());
         setAddressInfo({
@@ -69,7 +69,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         });
       }
       
-      // Pre-fill customer info from draft
+      // ALWAYS pre-fill customer info from draft (for both new orders and add-to-order)
       if (draftOrder.customerName || draftOrder.customerEmail) {
         const nameParts = draftOrder.customerName?.split(' ') || [];
         setCustomerInfo({
