@@ -260,7 +260,8 @@ export const DeliveryWidget: React.FC = () => {
     console.log('=== emptyCart ===');
     setCartItems([]);
     // Show confirmation message
-    import('@/hooks/use-toast').then(({ toast }) => {
+    import('@/hooks/use-toast').then(({ useToast }) => {
+      const { toast } = useToast();
       toast({
         title: "Cart emptied",
         description: "All items have been removed from your cart.",
@@ -291,7 +292,8 @@ export const DeliveryWidget: React.FC = () => {
       if (cartItems.length === 0) {
         console.warn('Cannot proceed to checkout with empty cart');
         // Add toast notification for better UX
-        import('@/hooks/use-toast').then(({ toast }) => {
+        import('@/hooks/use-toast').then(({ useToast }) => {
+          const { toast } = useToast();
           toast({
             title: "Cart is empty",
             description: "Please add items to your cart before proceeding to checkout.",
