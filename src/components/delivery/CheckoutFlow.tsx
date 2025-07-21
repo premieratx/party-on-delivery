@@ -86,9 +86,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
 
-  // For new orders, clear address info once
+  // For completely new orders (no lastOrderInfo), clear address info once
   useEffect(() => {
-    if (!isAddingToOrder && !hasAddressBeenCleared) {
+    if (!isAddingToOrder && !lastOrderInfo && !hasAddressBeenCleared) {
       setAddressInfo({
         street: '',
         city: '',
@@ -98,7 +98,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       });
       setHasAddressBeenCleared(true);
     }
-  }, [isAddingToOrder, hasAddressBeenCleared]);
+  }, [isAddingToOrder, lastOrderInfo, hasAddressBeenCleared]);
 
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
@@ -302,6 +302,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
               deliveryTime: deliveryInfo.timeSlot || '',
               instructions: addressInfo.instructions || '',
+              customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+              customerEmail: customerInfo.email,
+              customerPhone: customerInfo.phone,
               recentpurchase: true // Mark as recent purchase for app identification
             };
             localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));

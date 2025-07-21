@@ -10,7 +10,7 @@ interface UseCheckoutFlowProps {
 }
 
 export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange }: UseCheckoutFlowProps) {
-  const { customerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
+  const { customerInfo, addressInfo, setAddressInfo, setCustomerInfo } = useCustomerInfo();
   
   // Step management
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
@@ -77,11 +77,20 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
       
-      // Auto-confirm for returning customers
-      setConfirmedDateTime(true);
-      setConfirmedAddress(true);
-      setConfirmedCustomer(true);
-      setCurrentStep('payment');
+      // Pre-fill customer info
+      if (lastOrderInfo.customerEmail) {
+        console.log('Pre-filling customer info:', lastOrderInfo.customerEmail);
+        const nameParts = lastOrderInfo.customerName?.split(' ') || [];
+        setCustomerInfo({
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          email: lastOrderInfo.customerEmail || '',
+          phone: lastOrderInfo.customerPhone || ''
+        });
+      }
+      
+      // For resume orders, start at datetime step to allow confirmation
+      setCurrentStep('datetime');
       
     } else if (!isAddingToOrder && lastOrderInfo) {
       console.log('Processing NEW ORDER with pre-fill...');
@@ -117,6 +126,18 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         setAddressInfo(newAddressInfo);
         updateDeliveryInfo('address', lastOrderInfo.address);
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
+      }
+      
+      // Pre-fill customer info for new orders too
+      if (lastOrderInfo.customerEmail) {
+        console.log('Pre-filling customer info from last order:', lastOrderInfo.customerEmail);
+        const nameParts = lastOrderInfo.customerName?.split(' ') || [];
+        setCustomerInfo({
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          email: lastOrderInfo.customerEmail || '',
+          phone: lastOrderInfo.customerPhone || ''
+        });
       }
       
       // Start at datetime step (require manual confirmation)
