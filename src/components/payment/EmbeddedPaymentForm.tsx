@@ -112,16 +112,12 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
     value: 0
   }];
 
-  // Auto-condense preset tips after 3 seconds
+  // Set initial tip amount to 10%
   useEffect(() => {
-    if (tipAmount > 0 && !showCustomTip && !tipConfirmed) {
-      const timer = setTimeout(() => {
-        setTipConfirmed(true);
-        setConfirmedTipAmount(tipAmount);
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (tipAmount === 0 && tipCalculationBase > 0) {
+      setTipAmount(tipCalculationBase * 0.10);
     }
-  }, [tipAmount, showCustomTip, tipConfirmed]);
+  }, [tipCalculationBase]);
   const handleCustomTipConfirm = () => {
     if (tipAmount > 0) {
       setCustomTipConfirmed(true);

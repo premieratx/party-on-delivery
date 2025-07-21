@@ -61,9 +61,9 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
       }
       
-      // Pre-fill address info
+      // ALWAYS pre-fill address info for add to order flow
       if (lastOrderInfo.address) {
-        console.log('Pre-filling address:', lastOrderInfo.address);
+        console.log('Pre-filling address for ADD TO ORDER:', lastOrderInfo.address);
         const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
         const newAddressInfo = {
           street: addressParts[0] || '',
@@ -89,7 +89,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         });
       }
       
-      // For resume orders, start at datetime step to allow confirmation
+      // For add to order flow, start at datetime step to allow confirmation
       setCurrentStep('datetime');
       
     } else if (!isAddingToOrder && lastOrderInfo) {
@@ -143,10 +143,38 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     console.log('=== End useCheckoutFlow Pre-fill Logic ===');
   }, [isAddingToOrder, lastOrderInfo]);
 
-  // Additional effect to ensure pre-filling works when localStorage data is available
+  // Additional effect to ensure pre-filling works when localStorage data is available - especially for add to order
   useEffect(() => {
-    // If we have lastOrderInfo but address/customer info is still empty, try pre-filling again
-    if (lastOrderInfo && lastOrderInfo.address && !deliveryInfo.address) {
+    // Force re-fill for add to order if address/customer info is missing
+    if (isAddingToOrder && lastOrderInfo) {
+      // Force address pre-fill for add to order flow if not already set
+      if (lastOrderInfo.address && (!addressInfo.street || !deliveryInfo.address)) {
+        console.log('Force re-attempting address pre-fill for ADD TO ORDER:', lastOrderInfo.address);
+        const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
+        const newAddressInfo = {
+          street: addressParts[0] || '',
+          city: addressParts[1] || '',
+          state: addressParts[2]?.split(' ')[0] || '',
+          zipCode: addressParts[2]?.split(' ')[1] || '',
+          instructions: lastOrderInfo.instructions || ''
+        };
+        setAddressInfo(newAddressInfo);
+        updateDeliveryInfo('address', lastOrderInfo.address);
+        updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
+      }
+
+      if (lastOrderInfo.customerEmail && !customerInfo.email) {
+        console.log('Force re-attempting customer info pre-fill for ADD TO ORDER:', lastOrderInfo.customerEmail);
+        const nameParts = lastOrderInfo.customerName?.split(' ') || [];
+        setCustomerInfo({
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          email: lastOrderInfo.customerEmail || '',
+          phone: lastOrderInfo.customerPhone || ''
+        });
+      }
+    } else if (lastOrderInfo && lastOrderInfo.address && !deliveryInfo.address) {
+      // Regular re-attempt for non-add-to-order flows
       console.log('Re-attempting address pre-fill from lastOrderInfo:', lastOrderInfo.address);
       const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
       const newAddressInfo = {
@@ -161,7 +189,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
     }
 
-    if (lastOrderInfo && lastOrderInfo.customerEmail && !customerInfo.email) {
+    if (!isAddingToOrder && lastOrderInfo && lastOrderInfo.customerEmail && !customerInfo.email) {
       console.log('Re-attempting customer info pre-fill from lastOrderInfo:', lastOrderInfo.customerEmail);
       const nameParts = lastOrderInfo.customerName?.split(' ') || [];
       setCustomerInfo({
@@ -171,7 +199,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         phone: lastOrderInfo.customerPhone || ''
       });
     }
-  }, [lastOrderInfo, deliveryInfo.address, customerInfo.email]);
+  }, [lastOrderInfo, deliveryInfo.address, customerInfo.email, isAddingToOrder, addressInfo.street]);
 
   // Update delivery info when address changes
   useEffect(() => {
