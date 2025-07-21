@@ -61,6 +61,25 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   // Calculate tip percentage based on subtotal (before delivery fee adjustment for $200+)
   const tipCalculationBase = subtotal >= 200 ? subtotal : subtotal;
   const [internalTipAmount, setInternalTipAmount] = useState(tipCalculationBase * 0.10); // 10% pre-selected
+  
+  // Early return for empty cart
+  if (cartItems.length === 0) {
+    return (
+      <Card className="shadow-card border-2 border-green-500">
+        <CardContent className="py-8 text-center space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">Your cart is empty</h3>
+          <p className="text-gray-600">Add some items to your cart to continue with checkout.</p>
+          <Button 
+            onClick={() => window.location.href = '/'} 
+            size="lg" 
+            className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
+          >
+            Continue Shopping
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Use external tip state if provided, otherwise use internal
   const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
