@@ -538,17 +538,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     </div>
                    )}
                  
-                 {/* Changes Warning */}
-                 {hasChanges && (
-                   <div className="p-3 border border-red-200 rounded-lg bg-red-50 text-red-800">
-                     <div className="text-sm font-medium">
-                       ⚠️ Changes detected: {changedFields.join(', ')}
-                     </div>
-                     <div className="text-xs mt-1">
-                       Free delivery has been removed - this is being treated as a new order.
-                     </div>
-                   </div>
-                 )}
+                  {/* Changes Warning */}
+                  {hasChanges && (
+                    <div className="p-3 border border-red-200 rounded-lg bg-red-50 text-red-800">
+                      <div className="text-sm font-medium">
+                        ⚠️ Info does not match previous order
+                      </div>
+                      <div className="text-xs mt-2 space-y-1">
+                        <div><strong>Previous order details:</strong></div>
+                        {originalOrderInfo?.address && (
+                          <div>• Address: {originalOrderInfo.address}</div>
+                        )}
+                        {originalOrderInfo?.deliveryDate && (
+                          <div>• Date: {format(new Date(originalOrderInfo.deliveryDate), "EEEE, MMMM do, yyyy")}</div>
+                        )}
+                        {originalOrderInfo?.deliveryTime && (
+                          <div>• Time: {originalOrderInfo.deliveryTime}</div>
+                        )}
+                        <div className="mt-2 font-medium">
+                          Change to these details to get free delivery and add to that order.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                </div>
              </CardContent>
            )}
