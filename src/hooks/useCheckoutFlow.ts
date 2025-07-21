@@ -95,8 +95,8 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     } else if (!isAddingToOrder && lastOrderInfo) {
       console.log('Processing NEW ORDER with saved info pre-fill...');
       
-      // Always pre-fill address from saved info if available
-      if (lastOrderInfo.address && !addressInfo.street) {
+      // Always pre-fill address from saved info if available and not already filled
+      if (lastOrderInfo.address && (!addressInfo.street || !deliveryInfo.address)) {
         console.log('Pre-filling address from saved order:', lastOrderInfo.address);
         const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
         const newAddressInfo = {
@@ -112,7 +112,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       }
       
       // Always pre-fill customer info from saved order if current info is empty
-      if (lastOrderInfo.customerEmail && !customerInfo.email) {
+      if (lastOrderInfo.customerEmail && (!customerInfo.email || (!customerInfo.firstName && !customerInfo.lastName))) {
         console.log('Pre-filling customer info from saved order:', lastOrderInfo.customerEmail);
         const nameParts = lastOrderInfo.customerName?.split(' ') || [];
         setCustomerInfo({
@@ -142,6 +142,36 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     
     console.log('=== End useCheckoutFlow Pre-fill Logic ===');
   }, [isAddingToOrder, lastOrderInfo]);
+
+  // Additional effect to ensure pre-filling works when localStorage data is available
+  useEffect(() => {
+    // If we have lastOrderInfo but address/customer info is still empty, try pre-filling again
+    if (lastOrderInfo && lastOrderInfo.address && !deliveryInfo.address) {
+      console.log('Re-attempting address pre-fill from lastOrderInfo:', lastOrderInfo.address);
+      const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
+      const newAddressInfo = {
+        street: addressParts[0] || '',
+        city: addressParts[1] || '',
+        state: addressParts[2]?.split(' ')[0] || '',
+        zipCode: addressParts[2]?.split(' ')[1] || '',
+        instructions: lastOrderInfo.instructions || ''
+      };
+      setAddressInfo(newAddressInfo);
+      updateDeliveryInfo('address', lastOrderInfo.address);
+      updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
+    }
+
+    if (lastOrderInfo && lastOrderInfo.customerEmail && !customerInfo.email) {
+      console.log('Re-attempting customer info pre-fill from lastOrderInfo:', lastOrderInfo.customerEmail);
+      const nameParts = lastOrderInfo.customerName?.split(' ') || [];
+      setCustomerInfo({
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: lastOrderInfo.customerEmail || '',
+        phone: lastOrderInfo.customerPhone || ''
+      });
+    }
+  }, [lastOrderInfo, deliveryInfo.address, customerInfo.email]);
 
   // Update delivery info when address changes
   useEffect(() => {
