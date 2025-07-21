@@ -83,17 +83,56 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       setConfirmedCustomer(true);
       setCurrentStep('payment');
       
-    } else if (!isAddingToOrder) {
-      console.log('Processing RESUME ORDER pre-fill...');
+    } else if (!isAddingToOrder && lastOrderInfo) {
+      console.log('Processing NEW ORDER with pre-fill...');
       
-      // Pre-fill address from saved data
+      // Pre-fill from last order info if available
+      if (lastOrderInfo.deliveryDate) {
+        console.log('Pre-filling delivery date from last order:', lastOrderInfo.deliveryDate);
+        try {
+          const date = new Date(lastOrderInfo.deliveryDate);
+          if (!isNaN(date.getTime())) {
+            updateDeliveryInfo('date', date);
+          }
+        } catch (error) {
+          console.error('Error parsing delivery date:', error);
+        }
+      }
+      
+      if (lastOrderInfo.deliveryTime) {
+        console.log('Pre-filling delivery time from last order:', lastOrderInfo.deliveryTime);
+        updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
+      }
+      
+      if (lastOrderInfo.address) {
+        console.log('Pre-filling address from last order:', lastOrderInfo.address);
+        const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
+        const newAddressInfo = {
+          street: addressParts[0] || '',
+          city: addressParts[1] || '',
+          state: addressParts[2]?.split(' ')[0] || '',
+          zipCode: addressParts[2]?.split(' ')[1] || '',
+          instructions: lastOrderInfo.instructions || ''
+        };
+        setAddressInfo(newAddressInfo);
+        updateDeliveryInfo('address', lastOrderInfo.address);
+        updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
+      }
+      
+      // Start at datetime step (require manual confirmation)
+      setCurrentStep('datetime');
+      
+    } else if (!isAddingToOrder) {
+      console.log('Processing NEW ORDER without pre-fill...');
+      
+      // Pre-fill address from saved data only
       if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
         const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
         updateDeliveryInfo('address', fullAddress);
         updateDeliveryInfo('instructions', addressInfo.instructions || '');
       }
       
-      // Always start at datetime for resume orders (no auto-confirmation)
+      // Start at datetime step
       setCurrentStep('datetime');
     }
     
