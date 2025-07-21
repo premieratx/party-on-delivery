@@ -153,6 +153,26 @@ export const DeliveryWidget: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleResumeOrder = () => {
+    // Keep existing cart items and start a new order flow (not adding to existing order)
+    setIsAddingToOrder(false);
+    setUseSameAddress(false);
+    // Don't clear delivery info - let user set fresh delivery details
+    setDeliveryInfo({
+      date: null,
+      timeSlot: '',
+      address: '',
+      instructions: ''
+    });
+    // Clear persistent flags
+    localStorage.removeItem('partyondelivery_add_to_order');
+    localStorage.removeItem('partyondelivery_bundle_ready');
+    localStorage.removeItem('partyondelivery_group_order');
+    setCurrentStep('products');
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleAddToRecentOrder = () => {
     // Keep existing cart and order info
     setIsAddingToOrder(true);
@@ -283,8 +303,10 @@ export const DeliveryWidget: React.FC = () => {
     return (
       <OrderContinuation
         onStartNewOrder={handleStartNewOrder}
+        onResumeOrder={handleResumeOrder}
         onAddToRecentOrder={handleAddToRecentOrder}
         lastOrderInfo={validLastOrderInfo}
+        hasCartItems={cartItems.length > 0}
       />
     );
   }
