@@ -154,37 +154,24 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       setCurrentStep('payment'); // Go directly to payment for add to order
     }
     
-    // For resume orders - check if we have saved data and auto-confirm if complete
+    // For resume orders - pre-fill saved data but DON'T auto-confirm (user must click confirm)
     if (!isAddingToOrder) {
-      // Check if delivery date/time is complete and confirm
-      if (deliveryInfo.date && deliveryInfo.timeSlot) {
-        setConfirmedDateTime(true);
-      }
+      console.log('Processing resume order pre-fill...');
       
-      // Check if address is complete and confirm
+      // Pre-fill delivery date/time from saved data but don't confirm yet
+      // The forms will show the pre-filled data and user needs to click confirm
+      
+      // Pre-fill address from saved addressInfo and update main delivery info
       if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
-        setConfirmedAddress(true);
-        // Also update the main delivery info address from saved addressInfo
+        console.log('Pre-filling address from saved data for resume order');
         const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
         updateDeliveryInfo('address', fullAddress);
         updateDeliveryInfo('instructions', addressInfo.instructions || '');
       }
       
-      // Check if customer info is complete and confirm
-      if (customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone) {
-        setConfirmedCustomer(true);
-      }
-      
-      // Set current step based on what's confirmed
-      if (confirmedDateTime && confirmedAddress && confirmedCustomer) {
-        setCurrentStep('payment');
-      } else if (confirmedDateTime && confirmedAddress) {
-        setCurrentStep('customer');
-      } else if (confirmedDateTime) {
-        setCurrentStep('address');
-      } else {
-        setCurrentStep('datetime');
-      }
+      // Set current step to the first uncompleted step - but don't auto-confirm anything
+      // User will see pre-filled forms but needs to manually confirm each section
+      setCurrentStep('datetime'); // Always start with datetime for resume orders
     }
     
     console.log('=== End CheckoutFlow Pre-fill useEffect ===');
