@@ -446,7 +446,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             className="shrink-0 text-xs px-2 py-1 h-auto"
                           >
                             Edit
-                         </Button>
+                          </Button>
                        </div>
                      </div>
                    )}
