@@ -178,13 +178,15 @@ export const DeliveryWidget: React.FC = () => {
     // Keep existing cart items and start a new order flow (not adding to existing order)
     setIsAddingToOrder(false);
     setUseSameAddress(false);
-    // Don't clear delivery info - let user set fresh delivery details
-    setDeliveryInfo({
-      date: null,
-      timeSlot: '',
-      address: '',
-      instructions: ''
-    });
+    // DON'T clear delivery info for resume - let saved customer/address info persist
+    // Only clear if no date/time set to allow fresh scheduling
+    if (!deliveryInfo.date || !deliveryInfo.timeSlot) {
+      setDeliveryInfo(prev => ({
+        ...prev,
+        date: null,
+        timeSlot: ''
+      }));
+    }
     // Clear persistent flags
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
