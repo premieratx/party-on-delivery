@@ -465,18 +465,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               <CardContent className="border-t py-2 md:py-4">
                 {isAddingToOrder && (
                   <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800 font-medium text-center">
-                      Please confirm delivery details below (click "Edit" to make changes)
+                    <p className="text-sm md:text-base text-blue-800 font-medium text-center">
+                      Please Confirm Previous Delivery Details
+                    </p>
+                    <p className="text-xs md:text-sm text-blue-600 text-center mt-1">
+                      (Edit to make changes)
                     </p>
                   </div>
                 )}
                 <div className="space-y-1 md:space-y-3">
                    {confirmedDateTime && (
                      <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
-                       <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                         <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                           <span className="shrink-0 text-xs md:text-sm">Delivery:</span>
-                           <span className="text-foreground text-xs md:text-sm truncate">{deliveryInfo.date && format(deliveryInfo.date, "MMM d")} • {deliveryInfo.timeSlot}</span>
+                        <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
+                            <span className="shrink-0 text-xs md:text-sm">Date & Time:</span>
+                            <span className="text-foreground text-xs md:text-sm truncate">
+                              {deliveryInfo.date ? format(deliveryInfo.date, "MMM d") : ''} 
+                              {deliveryInfo.date && deliveryInfo.timeSlot ? ' • ' : ''}
+                              {deliveryInfo.timeSlot || ''}
+                            </span>
             {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
             {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
               <span className="text-xs text-red-600 font-medium hidden md:inline">

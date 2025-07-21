@@ -58,7 +58,9 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [internalTipAmount, setInternalTipAmount] = useState(subtotal * 0.10); // 10% pre-selected
+  // Calculate tip percentage based on subtotal (before delivery fee adjustment for $200+)
+  const tipCalculationBase = subtotal >= 200 ? subtotal : subtotal;
+  const [internalTipAmount, setInternalTipAmount] = useState(tipCalculationBase * 0.10); // 10% pre-selected
 
   // Use external tip state if provided, otherwise use internal
   const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
@@ -71,13 +73,13 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const total = subtotal + deliveryFee + salesTax + tipAmount;
   const tipOptions = [{
     label: '5%',
-    value: subtotal * 0.05
+    value: tipCalculationBase * 0.05
   }, {
     label: '10%',
-    value: subtotal * 0.10
+    value: tipCalculationBase * 0.10
   }, {
     label: '15%',
-    value: subtotal * 0.15
+    value: tipCalculationBase * 0.15
   }];
 
   // Auto-condense preset tips after 3 seconds
