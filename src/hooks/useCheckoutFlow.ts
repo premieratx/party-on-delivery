@@ -105,12 +105,18 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         changes.push('delivery address');
       }
       
-      // Check date changes
+      // Check date changes - safely handle date objects
       if (deliveryInfo.date && originalOrderInfo.deliveryDate) {
-        const originalDate = new Date(originalOrderInfo.deliveryDate).toDateString();
-        const currentDate = deliveryInfo.date.toDateString();
-        if (originalDate !== currentDate) {
-          changes.push('delivery date');
+        try {
+          const originalDate = new Date(originalOrderInfo.deliveryDate).toDateString();
+          const currentDate = deliveryInfo.date instanceof Date 
+            ? deliveryInfo.date.toDateString() 
+            : new Date(deliveryInfo.date).toDateString();
+          if (originalDate !== currentDate) {
+            changes.push('delivery date');
+          }
+        } catch (error) {
+          console.error('Error comparing dates:', error);
         }
       }
       
