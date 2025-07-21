@@ -233,7 +233,12 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleCheckout = () => {
+    // Multiple forms of debugging to ensure we see it
     console.log('=== CHECKOUT BUTTON CLICKED ===');
+    console.error('=== CHECKOUT BUTTON CLICKED (error log) ===');
+    console.warn('=== CHECKOUT BUTTON CLICKED (warning log) ===');
+    alert('Checkout button clicked!'); // Temporary for debugging
+    
     console.log('cartItems length:', cartItems.length);
     console.log('isAddingToOrder:', isAddingToOrder);
     console.log('useSameAddress:', useSameAddress);
