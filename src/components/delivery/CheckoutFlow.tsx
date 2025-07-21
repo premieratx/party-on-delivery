@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 
-// Declare Shopify Web Components types
-// No need for Shopify components in JSX since we're using embedded form
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -20,7 +18,8 @@ import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
-import { calculateDistanceBasedDeliveryFee, getStandardDeliveryFee } from '@/utils/deliveryPricing';
+import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
+import { useDeliveryPricing } from '@/hooks/useDeliveryPricing';
 import { validateEmail, validatePhoneNumber, formatPhoneNumber, getEmailErrorMessage, getPhoneErrorMessage } from '@/utils/validation';
 
 interface CheckoutFlowProps {
@@ -52,31 +51,41 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
-  // Step management - start at payment for returning customers, datetime for new or resume
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
-    isAddingToOrder ? 'payment' : 'datetime'
-  );
-  const [confirmedDateTime, setConfirmedDateTime] = useState(false);
-  const [confirmedAddress, setConfirmedAddress] = useState(false);
-  const [confirmedCustomer, setConfirmedCustomer] = useState(false);
-  
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  
-  // Use persistent customer info (always persistent)
+  // Use custom hooks for cleaner state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
+  const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange });
+  const { deliveryPricing, isPricingLoading } = useDeliveryPricing({ 
+    addressInfo, 
+    subtotal: cartItems.reduce((total, item) => total + (item.price * item.quantity), 0),
+    isAddingToOrder,
+    hasChanges: checkoutFlow.hasChanges
+  });
   
-  // Validation states
+  // Extract from checkout flow hook
+  const {
+    currentStep,
+    setCurrentStep,
+    confirmedDateTime,
+    setConfirmedDateTime,
+    confirmedAddress,
+    setConfirmedAddress,
+    confirmedCustomer,
+    setConfirmedCustomer,
+    originalOrderInfo,
+    hasChanges,
+    changedFields,
+    updateDeliveryInfo,
+    isDateTimeComplete,
+    isAddressComplete,
+    isCustomerComplete
+  } = checkoutFlow;
+
+  // Local UI state
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  
-  // Track if address has been cleared for new orders to prevent infinite loop
   const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
-  
-  // Track changes from original order
-  const [originalOrderInfo, setOriginalOrderInfo] = useState<any>(null);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [changedFields, setChangedFields] = useState<string[]>([]);
-  
+
   // For new orders, clear address info once
   useEffect(() => {
     if (!isAddingToOrder && !hasAddressBeenCleared) {
@@ -91,136 +100,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [isAddingToOrder, hasAddressBeenCleared]);
 
-  // CENTRALIZED PRE-FILL LOGIC - only happens here to avoid conflicts
+  // Notify parent component about changes
   useEffect(() => {
-    console.log('=== CheckoutFlow Pre-fill useEffect ===');
-    console.log('isAddingToOrder:', isAddingToOrder);
-    console.log('lastOrderInfo:', lastOrderInfo);
-    console.log('deliveryInfo before pre-fill:', deliveryInfo);
-    console.log('customerInfo:', customerInfo);
-    console.log('addressInfo:', addressInfo);
-    
-    // For returning customers adding to order
-    if (isAddingToOrder && lastOrderInfo) {
-      console.log('Processing add to order pre-fill...');
-      // Store original order info for comparison
-      setOriginalOrderInfo(lastOrderInfo);
-      
-      // ALWAYS pre-fill delivery date and time from last order - force override if needed
-      if (lastOrderInfo.deliveryDate) {
-        console.log('Pre-filling delivery date:', lastOrderInfo.deliveryDate);
-        try {
-          const date = new Date(lastOrderInfo.deliveryDate);
-          // Validate the date is valid
-          if (!isNaN(date.getTime())) {
-            console.log('Parsed date object:', date);
-            updateDeliveryInfo('date', date);
-          } else {
-            console.error('Invalid date parsed from lastOrderInfo.deliveryDate');
-          }
-        } catch (error) {
-          console.error('Error parsing delivery date:', error);
-        }
-      }
-      
-      if (lastOrderInfo.deliveryTime) {
-        console.log('Pre-filling delivery time:', lastOrderInfo.deliveryTime);
-        updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
-      }
-      
-      // Pre-fill address info with full address
-      if (lastOrderInfo.address) {
-        console.log('Pre-filling address:', lastOrderInfo.address);
-        const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
-        const newAddressInfo = {
-          street: addressParts[0] || '',
-          city: addressParts[1] || '',
-          state: addressParts[2]?.split(' ')[0] || '',
-          zipCode: addressParts[2]?.split(' ')[1] || '',
-          instructions: lastOrderInfo.instructions || ''
-        };
-        console.log('Parsed address info:', newAddressInfo);
-        setAddressInfo(newAddressInfo);
-        
-        // Also update the main delivery info address
-        updateDeliveryInfo('address', lastOrderInfo.address);
-        updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
-      }
-      
-      // Set confirmation states for returning customers
-      setConfirmedDateTime(true);
-      setConfirmedAddress(true);
-      setConfirmedCustomer(true);
-      setCurrentStep('payment'); // Go directly to payment for add to order
+    if (onChangesDetected) {
+      onChangesDetected(hasChanges);
     }
-    
-    // For resume orders - pre-fill saved data but DON'T auto-confirm (user must click confirm)
-    if (!isAddingToOrder) {
-      console.log('Processing resume order pre-fill...');
-      
-      // Pre-fill delivery date/time from saved data but don't confirm yet
-      // The forms will show the pre-filled data and user needs to click confirm
-      
-      // Pre-fill address from saved addressInfo and update main delivery info
-      if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
-        console.log('Pre-filling address from saved data for resume order');
-        const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
-        updateDeliveryInfo('address', fullAddress);
-        updateDeliveryInfo('instructions', addressInfo.instructions || '');
-      }
-      
-      // Set current step to the first uncompleted step - but don't auto-confirm anything
-      // User will see pre-filled forms but needs to manually confirm each section
-      setCurrentStep('datetime'); // Always start with datetime for resume orders
-    }
-    
-    console.log('=== End CheckoutFlow Pre-fill useEffect ===');
-  }, [isAddingToOrder, lastOrderInfo, deliveryInfo.date, deliveryInfo.timeSlot, addressInfo, customerInfo]);
-
-  // Check for changes from original order (excluding instructions)
-  useEffect(() => {
-    if (originalOrderInfo && isAddingToOrder) {
-      const changes: string[] = [];
-      
-      // Check address changes
-      const currentAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
-      if (currentAddress !== originalOrderInfo.address && addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
-        changes.push('delivery address');
-      }
-      
-      // Check date changes
-      if (deliveryInfo.date && originalOrderInfo.deliveryDate) {
-        const originalDate = new Date(originalOrderInfo.deliveryDate).toDateString();
-        const currentDate = deliveryInfo.date.toDateString();
-        if (originalDate !== currentDate) {
-          changes.push('delivery date');
-        }
-      }
-      
-      // Check time changes
-      if (deliveryInfo.timeSlot && originalOrderInfo.deliveryTime) {
-        if (deliveryInfo.timeSlot !== originalOrderInfo.deliveryTime) {
-          changes.push('delivery time');
-        }
-      }
-      
-      // NOTE: Instructions changes are intentionally excluded - they don't affect same order status
-      
-      setChangedFields(changes);
-      setHasChanges(changes.length > 0);
-      
-      // Notify parent component about changes
-      if (onChangesDetected) {
-        onChangesDetected(changes.length > 0);
-      }
-    }
-  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, deliveryInfo.date, deliveryInfo.timeSlot, originalOrderInfo, isAddingToOrder, onChangesDetected]);
-
-  // ShopPay integration state
-  const [isShopPayLoading, setIsShopPayLoading] = useState(true);
-
-  // Remove ShopPay script loading since we're doing embedded checkout
-  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
+  }, [hasChanges, onChangesDetected]);
 
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
@@ -249,9 +134,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Pricing calculations
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   
-  // State declarations first
+  // State declarations
   const [tipAmount, setTipAmount] = useState(0);
-  const [hasEnteredCardInfo, setHasEnteredCardInfo] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
 
@@ -281,18 +165,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
   const salesTax = subtotal * 0.0825;
   
-  const [deliveryPricing, setDeliveryPricing] = useState<{fee: number, minimumOrder: number, isDistanceBased: boolean, distance?: number}>({
-    fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20),
-    minimumOrder: 0,
-    isDistanceBased: false
-  });
-  
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  // Calculate delivery fee using consistent logic
+  // Calculate delivery fee using hook data
   const baseDeliveryFee = deliveryPricing.fee;
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : baseDeliveryFee;
   
@@ -339,15 +217,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
 
-  const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
-    console.log(`Updating delivery info: ${field} =`, value);
-    const newInfo = { ...deliveryInfo, [field]: value };
-    console.log('New delivery info:', newInfo);
-    onDeliveryInfoChange(newInfo);
-  };
-
   const handleConfirmDateTime = () => {
-    if (deliveryInfo.date && deliveryInfo.timeSlot) {
+    if (isDateTimeComplete) {
       setConfirmedDateTime(true);
       // Navigate to next incomplete step
       if (!confirmedAddress) {
@@ -365,25 +236,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmAddress = async () => {
-    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
-      // Calculate distance-based delivery pricing
-      if (!isAddingToOrder || hasChanges) {
-        try {
-          const pricing = await calculateDistanceBasedDeliveryFee(
-            addressInfo.street,
-            addressInfo.city,
-            addressInfo.state,
-            addressInfo.zipCode,
-            subtotal
-          );
-          setDeliveryPricing(pricing);
-        } catch (error) {
-          console.error('Error calculating distance-based pricing:', error);
-          // Use standard pricing as fallback
-          setDeliveryPricing(getStandardDeliveryFee(subtotal));
-        }
-      }
-      
+    if (isAddressComplete) {
+      // Delivery pricing is automatically calculated by the hook
       setConfirmedAddress(true);
       // Navigate to next incomplete step
       if (!confirmedCustomer) {
@@ -466,8 +320,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
     
     console.log('About to clear cart and redirect. Current cart items:', cartItems.length);
-    // Clear cart after successful order - but do this through the parent component
-    // This ensures the UI state is properly updated
+    // Clear cart after successful order
     cartItems.forEach(item => {
       onUpdateQuantity(item.id, item.variant, 0);
     });
@@ -475,17 +328,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     // Also clear localStorage as backup
     localStorage.removeItem('partyondelivery_cart');
     
-    // Redirect to order complete page instead of external site
+    // Redirect to order complete page
     if (window.top) {
       window.top.location.href = '/order-complete';
     } else {
       window.open('/order-complete', '_blank');
     }
   };
-
-  const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;
-  const isAddressComplete = addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode;
-  const isCustomerComplete = customerInfo.firstName && customerInfo.lastName && customerInfo.phone && customerInfo.email;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
