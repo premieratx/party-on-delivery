@@ -233,43 +233,50 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleCheckout = () => {
-    // Multiple forms of debugging to ensure we see it
-    console.log('=== CHECKOUT BUTTON CLICKED ===');
-    console.error('=== CHECKOUT BUTTON CLICKED (error log) ===');
-    console.warn('=== CHECKOUT BUTTON CLICKED (warning log) ===');
-    alert('Checkout button clicked!'); // Temporary for debugging
-    
-    console.log('cartItems length:', cartItems.length);
-    console.log('isAddingToOrder:', isAddingToOrder);
-    console.log('useSameAddress:', useSameAddress);
-    console.log('currentStep:', currentStep);
-    console.log('deliveryInfo:', deliveryInfo);
-    console.log('validLastOrderInfo:', validLastOrderInfo);
-    console.log('===================================');
-    
-    // Ensure we have items in cart before proceeding
-    if (cartItems.length === 0) {
-      console.warn('Cannot proceed to checkout with empty cart');
-      // Add toast notification for better UX
-      import('@/hooks/use-toast').then(({ toast }) => {
-        toast({
-          title: "Cart is empty",
-          description: "Please add items to your cart before proceeding to checkout.",
-          variant: "destructive",
+    try {
+      console.log('=== CHECKOUT BUTTON CLICKED ===');
+      console.log('cartItems length:', cartItems.length);
+      console.log('isAddingToOrder:', isAddingToOrder);
+      console.log('useSameAddress:', useSameAddress);
+      console.log('currentStep:', currentStep);
+      console.log('deliveryInfo:', deliveryInfo);
+      console.log('validLastOrderInfo:', validLastOrderInfo);
+      console.log('===================================');
+      
+      // Ensure we have items in cart before proceeding
+      if (cartItems.length === 0) {
+        console.warn('Cannot proceed to checkout with empty cart');
+        // Add toast notification for better UX
+        import('@/hooks/use-toast').then(({ toast }) => {
+          toast({
+            title: "Cart is empty",
+            description: "Please add items to your cart before proceeding to checkout.",
+            variant: "destructive",
+          });
         });
-      });
-      return;
+        return;
+      }
+      
+      console.log('Cart has items, proceeding...');
+      
+      // Close cart if open
+      setIsCartOpen(false);
+      console.log('Cart closed');
+      
+      console.log('About to set checkout step...');
+      // Set checkout step immediately
+      setCurrentStep('checkout');
+      console.log('Checkout step set successfully');
+      
+      // Scroll to top
+      console.log('Scrolling to top...');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      console.log('Scrolled to top');
+      
+    } catch (error) {
+      console.error('Error in handleCheckout:', error);
+      alert('Error in checkout: ' + error.message);
     }
-    
-    // Close cart if open
-    setIsCartOpen(false);
-    
-    console.log('Setting checkout step...');
-    // Set checkout step immediately
-    setCurrentStep('checkout');
-    console.log('Checkout step set, scrolling to top');
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (currentStep === 'order-continuation') {
