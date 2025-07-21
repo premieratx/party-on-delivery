@@ -112,12 +112,14 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
     value: 0
   }];
 
-  // Set initial tip amount to 10%
+  // Only set initial tip amount to 10% if no tip has been set yet (user hasn't interacted)
+  const [hasUserSetTip, setHasUserSetTip] = useState(false);
+  
   useEffect(() => {
-    if (tipAmount === 0 && tipCalculationBase > 0) {
+    if (!hasUserSetTip && tipAmount === 0 && tipCalculationBase > 0) {
       setTipAmount(tipCalculationBase * 0.10);
     }
-  }, [tipCalculationBase]);
+  }, [tipCalculationBase, hasUserSetTip]);
   const handleCustomTipConfirm = () => {
     if (tipAmount > 0) {
       setCustomTipConfirmed(true);
@@ -233,6 +235,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               <div className="grid grid-cols-5 gap-1 w-full">
                 {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"} onClick={() => {
               setTipAmount(tip.value);
+              setHasUserSetTip(true); // Mark that user has interacted with tip
               setShowCustomTip(false);
               setTipConfirmed(false);
             }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
@@ -241,6 +244,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                   </Button>)}
                 <Button type="button" variant={showCustomTip ? "default" : "outline"} onClick={() => {
               setShowCustomTip(true);
+              setHasUserSetTip(true); // Mark that user has interacted with tip
               setTipAmount(0);
               setTipConfirmed(false);
             }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
@@ -259,15 +263,18 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
                     const numValue = parseFloat(value) || 0;
                     setTipAmount(numValue);
+                    setHasUserSetTip(true); // Mark that user has interacted with tip
                   }
                  }} onBlur={e => {
                   // Format to 2 decimal places on blur if there's a value
                   const value = parseFloat(e.target.value) || 0;
                   setTipAmount(value);
+                  setHasUserSetTip(true);
                  }} onKeyDown={e => {
                   if (e.key === 'Tab' || e.key === 'Enter') {
                     const value = parseFloat(e.currentTarget.value) || 0;
                     setTipAmount(value);
+                    setHasUserSetTip(true);
                   }
                 }} className="w-16 text-sm" />
                     </div>

@@ -49,6 +49,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         try {
           const date = new Date(lastOrderInfo.deliveryDate);
           if (!isNaN(date.getTime())) {
+            console.log('Setting date in deliveryInfo:', date);
             updateDeliveryInfo('date', date);
           }
         } catch (error) {
@@ -89,12 +90,15 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         });
       }
       
-      // For add to order flow, auto-confirm all steps and go to payment
-      console.log('Auto-confirming all steps for ADD TO ORDER...');
-      setConfirmedDateTime(true);
-      setConfirmedAddress(true);
-      setConfirmedCustomer(true);
-      setCurrentStep('payment'); // Skip directly to payment since everything is pre-filled
+      // For add to order flow - delay the auto-confirm to ensure data is filled
+      console.log('Scheduling auto-confirm for ADD TO ORDER...');
+      setTimeout(() => {
+        console.log('Auto-confirming all steps for ADD TO ORDER...');
+        setConfirmedDateTime(true);
+        setConfirmedAddress(true);
+        setConfirmedCustomer(true);
+        setCurrentStep('payment'); // Skip directly to payment since everything is pre-filled
+      }, 100); // Small delay to ensure state updates are processed
       
     } else if (!isAddingToOrder && lastOrderInfo) {
       console.log('Processing NEW ORDER with saved info pre-fill...');
