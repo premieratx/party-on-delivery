@@ -43,7 +43,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       console.log('Processing ADD TO ORDER pre-fill...');
       setOriginalOrderInfo(lastOrderInfo);
       
-      // Pre-fill delivery date and time (force override)
+      // FORCE pre-fill delivery date and time immediately
       if (lastOrderInfo.deliveryDate) {
         console.log('Pre-filling delivery date:', lastOrderInfo.deliveryDate);
         try {
@@ -61,7 +61,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
       }
       
-      // ALWAYS pre-fill address info for add to order flow
+      // FORCE pre-fill address info for add to order flow
       if (lastOrderInfo.address) {
         console.log('Pre-filling address for ADD TO ORDER:', lastOrderInfo.address);
         const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
@@ -77,7 +77,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
       
-      // Pre-fill customer info
+      // FORCE pre-fill customer info
       if (lastOrderInfo.customerEmail) {
         console.log('Pre-filling customer info:', lastOrderInfo.customerEmail);
         const nameParts = lastOrderInfo.customerName?.split(' ') || [];
@@ -89,8 +89,12 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         });
       }
       
-      // For add to order flow, start at datetime step to allow confirmation
-      setCurrentStep('datetime');
+      // For add to order flow, auto-confirm all steps and go to payment
+      console.log('Auto-confirming all steps for ADD TO ORDER...');
+      setConfirmedDateTime(true);
+      setConfirmedAddress(true);
+      setConfirmedCustomer(true);
+      setCurrentStep('payment'); // Skip directly to payment since everything is pre-filled
       
     } else if (!isAddingToOrder && lastOrderInfo) {
       console.log('Processing NEW ORDER with saved info pre-fill...');
