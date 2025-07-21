@@ -28,23 +28,32 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     onDeliveryInfoChange(newInfo);
   };
 
-  // Pre-fill from draft order data for ALL flows (not just add-to-order)
+  // Pre-fill with data prioritizing completed order info over draft
   useEffect(() => {
     // Get draft order data from localStorage
     const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
     
-    if (draftOrder && Object.keys(draftOrder).length > 0) {
-      console.log('Pre-filling from draft order data:', draftOrder);
+    // Determine the source of truth: completed order (lastOrderInfo) or draft order
+    const sourceData = (isAddingToOrder && lastOrderInfo?.recentpurchase) ? lastOrderInfo : draftOrder;
+    
+    console.log('=== useCheckoutFlow pre-fill ===');
+    console.log('isAddingToOrder:', isAddingToOrder);
+    console.log('lastOrderInfo:', lastOrderInfo);
+    console.log('draftOrder:', draftOrder);
+    console.log('sourceData chosen:', sourceData);
+    
+    if (sourceData && Object.keys(sourceData).length > 0) {
+      console.log('Pre-filling from source data:', sourceData);
       
       // For add-to-order flow, save the original info for change tracking
       if (isAddingToOrder && lastOrderInfo) {
         setOriginalOrderInfo(lastOrderInfo);
       }
       
-      // Pre-fill delivery date and time from draft (only for add-to-order flow)
-      if (isAddingToOrder && draftOrder.deliveryDate) {
+      // Pre-fill delivery date and time (for add-to-order flow, use completed order data)
+      if (isAddingToOrder && sourceData.deliveryDate) {
         try {
-          const date = new Date(draftOrder.deliveryDate);
+          const date = new Date(sourceData.deliveryDate);
           if (!isNaN(date.getTime())) {
             updateDeliveryInfo('date', date);
           }
@@ -53,37 +62,37 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         }
       }
       
-      if (isAddingToOrder && draftOrder.deliveryTime) {
-        updateDeliveryInfo('timeSlot', draftOrder.deliveryTime);
+      if (isAddingToOrder && sourceData.deliveryTime) {
+        updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
       }
       
-      // ALWAYS pre-fill address from draft (for both new orders and add-to-order)
-      if (draftOrder.address) {
-        const addressParts = draftOrder.address.split(',').map(part => part.trim());
+      // ALWAYS pre-fill address (prioritize completed order for add-to-order)
+      if (sourceData.address) {
+        const addressParts = sourceData.address.split(',').map(part => part.trim());
         setAddressInfo({
           street: addressParts[0] || '',
           city: addressParts[1] || '',
           state: addressParts[2]?.split(' ')[0] || '',
           zipCode: addressParts[2]?.split(' ')[1] || '',
-          instructions: draftOrder.instructions || ''
+          instructions: sourceData.instructions || ''
         });
       }
       
-      // ALWAYS pre-fill customer info from draft (for both new orders and add-to-order)
-      if (draftOrder.customerName || draftOrder.customerEmail) {
-        const nameParts = draftOrder.customerName?.split(' ') || [];
+      // ALWAYS pre-fill customer info (prioritize completed order for add-to-order)
+      if (sourceData.customerName || sourceData.customerEmail) {
+        const nameParts = sourceData.customerName?.split(' ') || [];
         setCustomerInfo({
           firstName: nameParts[0] || '',
           lastName: nameParts.slice(1).join(' ') || '',
-          email: draftOrder.customerEmail || '',
-          phone: draftOrder.customerPhone || ''
+          email: sourceData.customerEmail || '',
+          phone: sourceData.customerPhone || ''
         });
       }
     }
     
     // Always start at datetime step
     setCurrentStep('datetime');
-  }, []); // Only run once on mount
+  }, [isAddingToOrder, lastOrderInfo]); // React to changes in these props
 
   // Update delivery info when address changes
   useEffect(() => {

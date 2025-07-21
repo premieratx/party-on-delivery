@@ -310,13 +310,20 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
         try {
           const groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
           
-          // Build tags array - always add bundle-ready for add-to-order with same address
+          // Build tags array based on order type
           const tagArray = [groupTags];
-          if (isAddingToOrder && useSameAddress) {
-            tagArray.push('bundle-ready', 'delivery-bundle', 'free-shipping');
+          
+          // Check if this is a bundle order (second order to same address/time)
+          const isBundleOrder = isAddingToOrder && useSameAddress;
+          
+          if (isBundleOrder) {
+            // This is a second order being added - mark as bundle-order-placed
+            tagArray.push('bundle-order-placed', 'delivery-bundle', 'free-shipping');
           } else {
+            // This is a first purchase - mark as bundle-ready
             tagArray.push('bundle-ready');
           }
+          
           const newTags = tagArray.join(', ');
           
           const updateUrl = `https://${shopifyStore}/admin/api/2025-01/orders/${orderResult.order.id}.json`;

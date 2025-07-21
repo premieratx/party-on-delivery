@@ -40,6 +40,18 @@ const Success = () => {
             shopifyOrderId: data.shopifyOrderId,
             orderNumber: data.orderNumber
           });
+          
+          // Update localStorage with completed order info immediately
+          const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
+          const completedOrderInfo = {
+            ...existingOrder,
+            orderNumber: data.orderNumber,
+            orderId: data.shopifyOrderId,
+            recentpurchase: true,
+            total: existingOrder.total || 0
+          };
+          localStorage.setItem('partyondelivery_last_order', JSON.stringify(completedOrderInfo));
+          console.log('Completed order info saved to localStorage:', completedOrderInfo);
         }
       } catch (error) {
         console.error('Error:', error);
