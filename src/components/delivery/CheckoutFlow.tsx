@@ -91,37 +91,51 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [isAddingToOrder, hasAddressBeenCleared]);
 
-  // Pre-fill delivery info for add to recent order flow and store original info
+  // CENTRALIZED PRE-FILL LOGIC - only happens here to avoid conflicts
   useEffect(() => {
+    console.log('=== CheckoutFlow Pre-fill useEffect ===');
+    console.log('isAddingToOrder:', isAddingToOrder);
+    console.log('lastOrderInfo:', lastOrderInfo);
+    console.log('deliveryInfo before pre-fill:', deliveryInfo);
+    
     if (isAddingToOrder && lastOrderInfo) {
       // Store original order info for comparison
       setOriginalOrderInfo(lastOrderInfo);
       
-      // Pre-fill delivery date and time if available
-      if (lastOrderInfo.deliveryDate) {
+      // Pre-fill delivery date and time if not already set
+      if (lastOrderInfo.deliveryDate && !deliveryInfo.date) {
+        console.log('Pre-filling delivery date:', lastOrderInfo.deliveryDate);
         const date = new Date(lastOrderInfo.deliveryDate);
+        console.log('Parsed date object:', date);
         updateDeliveryInfo('date', date);
       }
-      if (lastOrderInfo.deliveryTime) {
+      
+      if (lastOrderInfo.deliveryTime && !deliveryInfo.timeSlot) {
+        console.log('Pre-filling delivery time:', lastOrderInfo.deliveryTime);
         updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
       }
       
       // Pre-fill address info with full address
       if (lastOrderInfo.address) {
+        console.log('Pre-filling address:', lastOrderInfo.address);
         const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
-        setAddressInfo({
+        const newAddressInfo = {
           street: addressParts[0] || '',
           city: addressParts[1] || '',
           state: addressParts[2]?.split(' ')[0] || '',
           zipCode: addressParts[2]?.split(' ')[1] || '',
           instructions: lastOrderInfo.instructions || ''
-        });
+        };
+        console.log('Parsed address info:', newAddressInfo);
+        setAddressInfo(newAddressInfo);
         
         // Also update the main delivery info address
         updateDeliveryInfo('address', lastOrderInfo.address);
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
     }
+    
+    console.log('=== End CheckoutFlow Pre-fill useEffect ===');
   }, [isAddingToOrder, lastOrderInfo]);
 
   // Check for changes from original order (excluding instructions)
@@ -287,7 +301,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
+    console.log(`Updating delivery info: ${field} =`, value);
     const newInfo = { ...deliveryInfo, [field]: value };
+    console.log('New delivery info:', newInfo);
     onDeliveryInfoChange(newInfo);
   };
 
@@ -468,7 +484,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <p className="text-sm md:text-base text-blue-800 font-medium text-center">
                       Please Confirm Previous Delivery Details
                     </p>
-                    <p className="text-xs md:text-sm text-blue-600 text-center mt-1">
+                    <p className="text-xs text-blue-600 text-center mt-1">
                       (Edit to make changes)
                     </p>
                   </div>

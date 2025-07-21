@@ -92,23 +92,33 @@ export const DeliveryWidget: React.FC = () => {
     const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order');
     const groupOrderData = localStorage.getItem('partyondelivery_group_order');
     
+    console.log('=== DeliveryWidget useEffect ===');
+    console.log('addToOrderFlag:', addToOrderFlag);
+    console.log('groupOrderData:', groupOrderData);
+    console.log('validLastOrderInfo:', validLastOrderInfo);
+    
     // Handle group order flow
     if (groupOrderData) {
       try {
         const groupOrder = JSON.parse(groupOrderData);
+        console.log('Group order data:', groupOrder);
         if (groupOrder.isGroupOrder) {
-          // Pre-fill delivery info from group order
-          if (groupOrder.deliveryDate) {
+          // Pre-fill delivery info from group order - but don't override if already set
+          if (groupOrder.deliveryDate && !deliveryInfo.date) {
             const date = new Date(groupOrder.deliveryDate);
+            console.log('Setting group order delivery date:', date);
             setDeliveryInfo(prev => ({ ...prev, date }));
           }
-          if (groupOrder.deliveryTime) {
+          if (groupOrder.deliveryTime && !deliveryInfo.timeSlot) {
+            console.log('Setting group order delivery time:', groupOrder.deliveryTime);
             setDeliveryInfo(prev => ({ ...prev, timeSlot: groupOrder.deliveryTime }));
           }
-          if (groupOrder.address) {
+          if (groupOrder.address && !deliveryInfo.address) {
+            console.log('Setting group order address:', groupOrder.address);
             setDeliveryInfo(prev => ({ ...prev, address: groupOrder.address }));
           }
-          if (groupOrder.instructions) {
+          if (groupOrder.instructions && !deliveryInfo.instructions) {
+            console.log('Setting group order instructions:', groupOrder.instructions);
             setDeliveryInfo(prev => ({ ...prev, instructions: groupOrder.instructions }));
           }
           // Group orders skip address confirmation
@@ -120,20 +130,25 @@ export const DeliveryWidget: React.FC = () => {
       }
     }
     
-    // Handle regular add to order flow
+    // Handle regular add to order flow - but only pre-fill if not already set
     if (addToOrderFlag === 'true' && validLastOrderInfo && !groupOrderData) {
+      console.log('Processing add to order flag with lastOrderInfo:', validLastOrderInfo);
       // Set the bundle-ready flag and enable free shipping when same address is used
       setIsAddingToOrder(true);
       
       // Apply bundle-ready tag until delivery date/time passes
       localStorage.setItem('partyondelivery_bundle_ready', 'true');
       
+      // Don't pre-fill here - let CheckoutFlow handle it to avoid conflicts
       // Start the add to order flow
       handleAddToRecentOrder();
     }
+    
+    console.log('=== End DeliveryWidget useEffect ===');
   }, [validLastOrderInfo]);
 
   const handleStartNewOrder = () => {
+    console.log('=== handleStartNewOrder ===');
     // Clear cart and start fresh - ALWAYS go to products for new orders
     setCartItems([]);
     setIsAddingToOrder(false);
@@ -154,6 +169,7 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleResumeOrder = () => {
+    console.log('=== handleResumeOrder ===');
     // Keep existing cart items and start a new order flow (not adding to existing order)
     setIsAddingToOrder(false);
     setUseSameAddress(false);
@@ -174,27 +190,20 @@ export const DeliveryWidget: React.FC = () => {
   };
 
   const handleAddToRecentOrder = () => {
+    console.log('=== handleAddToRecentOrder ===');
+    console.log('validLastOrderInfo:', validLastOrderInfo);
     // Keep existing cart and order info
     setIsAddingToOrder(true);
     
-    // Pre-fill delivery info from recent order
-    if (validLastOrderInfo) {
-      if (validLastOrderInfo.deliveryDate) {
-        const date = new Date(validLastOrderInfo.deliveryDate);
-        setDeliveryInfo(prev => ({ ...prev, date }));
-      }
-      if (validLastOrderInfo.deliveryTime) {
-        setDeliveryInfo(prev => ({ ...prev, timeSlot: validLastOrderInfo.deliveryTime }));
-      }
-      if (validLastOrderInfo.address) {
-        setDeliveryInfo(prev => ({ ...prev, address: validLastOrderInfo.address }));
-      }
-      if (validLastOrderInfo.instructions) {
-        setDeliveryInfo(prev => ({ ...prev, instructions: validLastOrderInfo.instructions }));
-      }
-    }
+    // Clear delivery info here - let CheckoutFlow handle pre-filling to avoid conflicts
+    setDeliveryInfo({
+      date: null,
+      timeSlot: '',
+      address: '',
+      instructions: ''
+    });
     
-    // Go directly to products - let them confirm delivery info during checkout
+    // Go directly to products - CheckoutFlow will handle pre-filling delivery info
     setCurrentStep('products');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -211,7 +220,6 @@ export const DeliveryWidget: React.FC = () => {
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCartItems(prev => {
@@ -310,8 +318,6 @@ export const DeliveryWidget: React.FC = () => {
       />
     );
   }
-
-
 
   return (
     <div className="min-h-screen bg-background">
