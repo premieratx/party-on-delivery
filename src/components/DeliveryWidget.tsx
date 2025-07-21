@@ -170,6 +170,11 @@ export const DeliveryWidget: React.FC = () => {
 
   const handleResumeOrder = () => {
     console.log('=== handleResumeOrder ===');
+    // If cart is empty (after checkout), behave like new order
+    if (cartItems.length === 0) {
+      handleStartNewOrder();
+      return;
+    }
     // Keep existing cart items and start a new order flow (not adding to existing order)
     setIsAddingToOrder(false);
     setUseSameAddress(false);
@@ -192,6 +197,13 @@ export const DeliveryWidget: React.FC = () => {
   const handleAddToRecentOrder = () => {
     console.log('=== handleAddToRecentOrder ===');
     console.log('validLastOrderInfo:', validLastOrderInfo);
+    
+    // If no valid last order (new customer), behave like new order
+    if (!validLastOrderInfo) {
+      handleStartNewOrder();
+      return;
+    }
+    
     // Keep existing cart and order info
     setIsAddingToOrder(true);
     

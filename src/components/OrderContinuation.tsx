@@ -81,29 +81,25 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             Start New Order
           </Button>
           
-          {/* Resume Order button - only show if there are items in cart */}
-          {hasCartItems && (
-            <Button 
-              onClick={onResumeOrder}
-              className="w-full h-12 text-base"
-              variant="outline"
-            >
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Resume Order
-            </Button>
-          )}
+          {/* Resume Order button - always show */}
+          <Button 
+            onClick={onResumeOrder}
+            className="w-full h-12 text-base"
+            variant="outline"
+          >
+            <ShoppingBag className="w-4 h-4 mr-2" />
+            Resume Order
+          </Button>
           
-          {/* Add to Recent Order button - only show if there's a recent order */}
-          {lastOrderInfo && (
-            <Button 
-              onClick={onAddToRecentOrder}
-              className="w-full h-12 text-base"
-              variant="outline"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add to Recent Order
-            </Button>
-          )}
+          {/* Add to Recent Order button - always show */}
+          <Button 
+            onClick={onAddToRecentOrder}
+            className="w-full h-12 text-base"
+            variant="outline"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add to Recent Order
+          </Button>
           
           {lastOrderInfo && (
             <p className="text-xs text-muted-foreground text-center">
