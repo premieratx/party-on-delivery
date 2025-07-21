@@ -52,11 +52,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
-  // Step management - always start at datetime step for everyone
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
-  const [confirmedDateTime, setConfirmedDateTime] = useState(false);
-  const [confirmedAddress, setConfirmedAddress] = useState(false);
-  const [confirmedCustomer, setConfirmedCustomer] = useState(false);
+  // Step management - start at payment for returning customers, datetime for new
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
+    isAddingToOrder ? 'payment' : 'datetime'
+  );
+  const [confirmedDateTime, setConfirmedDateTime] = useState(isAddingToOrder);
+  const [confirmedAddress, setConfirmedAddress] = useState(isAddingToOrder);
+  const [confirmedCustomer, setConfirmedCustomer] = useState(isAddingToOrder);
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
@@ -461,6 +463,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             {/* Confirmation Summary - Condensed for mobile */}
             {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
               <CardContent className="border-t py-2 md:py-4">
+                {isAddingToOrder && (
+                  <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 font-medium text-center">
+                      Please confirm delivery details below (click "Edit" to make changes)
+                    </p>
+                  </div>
+                )}
                 <div className="space-y-1 md:space-y-3">
                    {confirmedDateTime && (
                      <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
