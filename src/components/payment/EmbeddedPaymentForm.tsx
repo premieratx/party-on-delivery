@@ -70,7 +70,17 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           <h3 className="text-lg font-semibold text-gray-900">Your cart is empty</h3>
           <p className="text-gray-600">Add some items to your cart to continue with checkout.</p>
           <Button 
-            onClick={() => window.location.href = '/'} 
+            onClick={() => {
+              try {
+                if (window.parent && window.parent !== window) {
+                  window.parent.postMessage({ type: 'navigate', url: '/' }, '*');
+                } else {
+                  window.location.href = '/';
+                }
+              } catch (error) {
+                window.location.href = '/';
+              }
+            }} 
             size="lg" 
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
           >
