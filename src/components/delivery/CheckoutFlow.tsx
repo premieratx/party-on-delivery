@@ -609,90 +609,90 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     </CardTitle>
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="street">Street Address *</Label>
-                         <GooglePlacesAutocomplete
-                           value={addressInfo.street}
-                           onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
-                           onPlaceSelect={(place) => {
-                             const components = place.address_components || [];
-                             const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
-                             const route = components.find(c => c.types.includes('route'))?.long_name || '';
-                             const city = components.find(c => c.types.includes('locality'))?.long_name || 
-                                         components.find(c => c.types.includes('sublocality'))?.long_name || '';
-                             const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
-                             const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
-                             
-                             setAddressInfo(prev => ({
-                               ...prev,
-                               street: `${streetNumber} ${route}`.trim(),
-                               city: city,
-                               state: state, 
-                               zipCode: zipCode
-                             }));
-                           }}
-                          placeholder="Start typing your address..."
+                   <CardContent className="space-y-2 md:space-y-4">
+                     <div className="space-y-2 md:space-y-4">
+                       <div className="space-y-1 md:space-y-2">
+                         <Label htmlFor="street">Street Address *</Label>
+                          <GooglePlacesAutocomplete
+                            value={addressInfo.street}
+                            onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
+                            onPlaceSelect={(place) => {
+                              const components = place.address_components || [];
+                              const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+                              const route = components.find(c => c.types.includes('route'))?.long_name || '';
+                              const city = components.find(c => c.types.includes('locality'))?.long_name || 
+                                          components.find(c => c.types.includes('sublocality'))?.long_name || '';
+                              const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
+                              const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
+                              
+                              setAddressInfo(prev => ({
+                                ...prev,
+                                street: `${streetNumber} ${route}`.trim(),
+                                city: city,
+                                state: state, 
+                                zipCode: zipCode
+                              }));
+                            }}
+                           placeholder="Start typing your address..."
+                         />
+                       </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 md:gap-4">
+                        <div className="space-y-1 md:space-y-2">
+                          <Label htmlFor="city">City *</Label>
+                          <Input
+                            id="city"
+                            name="address-level2"
+                            autoComplete={isAddingToOrder ? "address-level2" : "off"}
+                            placeholder="Austin"
+                            value={addressInfo.city}
+                            onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-1 md:space-y-2">
+                          <Label htmlFor="state">State *</Label>
+                          <Input
+                            id="state"
+                            name="address-level1"
+                            autoComplete={isAddingToOrder ? "address-level1" : "off"}
+                            placeholder="TX"
+                            value={addressInfo.state}
+                            onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1 md:space-y-2">
+                        <Label htmlFor="zipCode">Zip Code *</Label>
+                        <Input
+                          id="zipCode"
+                          name="postal-code"
+                          autoComplete={isAddingToOrder ? "postal-code" : "off"}
+                          placeholder="78701"
+                          value={addressInfo.zipCode}
+                          onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
                         />
                       </div>
-                     
-                     <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                         <Label htmlFor="city">City *</Label>
-                         <Input
-                           id="city"
-                           name="address-level2"
-                           autoComplete={isAddingToOrder ? "address-level2" : "off"}
-                           placeholder="Austin"
-                           value={addressInfo.city}
-                           onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
-                         />
-                       </div>
-                       <div className="space-y-2">
-                         <Label htmlFor="state">State *</Label>
-                         <Input
-                           id="state"
-                           name="address-level1"
-                           autoComplete={isAddingToOrder ? "address-level1" : "off"}
-                           placeholder="TX"
-                           value={addressInfo.state}
-                           onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
-                         />
-                       </div>
+                      
+                      <div className="space-y-1 md:space-y-2">
+                        <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+                        <Textarea
+                          id="instructions"
+                          placeholder="Apartment number, gate code, delivery preferences..."
+                          value={addressInfo.instructions}
+                          onChange={(e) => setAddressInfo(prev => ({ ...prev, instructions: e.target.value }))}
+                          className="min-h-[50px] md:min-h-[80px]"
+                        />
+                      </div>
+                      
+                      <Button 
+                        onClick={handleConfirmAddress}
+                        disabled={!isAddressComplete}
+                        className="w-full"
+                      >
+                        Confirm Address
+                      </Button>
                      </div>
-                     
-                     <div className="space-y-2">
-                       <Label htmlFor="zipCode">Zip Code *</Label>
-                       <Input
-                         id="zipCode"
-                         name="postal-code"
-                         autoComplete={isAddingToOrder ? "postal-code" : "off"}
-                         placeholder="78701"
-                         value={addressInfo.zipCode}
-                         onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
-                       />
-                     </div>
-                     
-                     <div className="space-y-2">
-                       <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
-                       <Textarea
-                         id="instructions"
-                         placeholder="Apartment number, gate code, delivery preferences..."
-                         value={addressInfo.instructions}
-                         onChange={(e) => setAddressInfo(prev => ({ ...prev, instructions: e.target.value }))}
-                         className="min-h-[80px]"
-                       />
-                     </div>
-                     
-                     <Button 
-                       onClick={handleConfirmAddress}
-                       disabled={!isAddressComplete}
-                       className="w-full"
-                     >
-                       Confirm Address
-                     </Button>
-                    </div>
                   </CardContent>
                 </Card>
               )}

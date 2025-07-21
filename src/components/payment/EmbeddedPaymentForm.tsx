@@ -80,6 +80,9 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   }, {
     label: '15%',
     value: tipCalculationBase * 0.15
+  }, {
+    label: '0%',
+    value: 0
   }];
 
   // Auto-condense preset tips after 3 seconds
