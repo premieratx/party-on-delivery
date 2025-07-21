@@ -236,8 +236,10 @@ export const DeliveryWidget: React.FC = () => {
     console.log('=== CHECKOUT DEBUG ===');
     console.log('cartItems length:', cartItems.length);
     console.log('isAddingToOrder:', isAddingToOrder);
+    console.log('useSameAddress:', useSameAddress);
     console.log('currentStep:', currentStep);
     console.log('deliveryInfo:', deliveryInfo);
+    console.log('validLastOrderInfo:', validLastOrderInfo);
     console.log('======================');
     
     // Ensure we have items in cart before proceeding
