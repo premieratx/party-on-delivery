@@ -221,7 +221,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       <CardContent className="space-y-2 md:space-y-6">
         <form onSubmit={handleSubmit} className="space-y-3 md:space-y-6">
           {/* Tip Selection - Condensed or Full */}
-          {tipConfirmed ? <div className="p-2 md:p-3 border border-green-500 rounded-lg bg-green-50">
+          {tipConfirmed ? <div className="p-2 border border-green-500 rounded-lg bg-green-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Driver Tip: ${(confirmedTipAmount || 0).toFixed(2)}</span>
@@ -232,29 +232,29 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                   Edit
                 </Button>
               </div>
-            </div> : <div className="space-y-3">
-              <Label className="text-sm md:text-base font-semibold">Add a tip for your delivery driver</Label>
-              <div className="flex gap-2 overflow-x-auto pb-2">
+            </div> : <div className="space-y-2">
+              <Label className="text-sm font-semibold">Add a tip for your delivery driver</Label>
+              <div className="grid grid-cols-5 gap-1 w-full">
                 {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"} onClick={() => {
               setTipAmount(tip.value);
               setShowCustomTip(false);
               setTipConfirmed(false);
-            }} className="flex-shrink-0 text-xs md:text-sm flex flex-col items-center py-3 px-4 h-auto min-w-[80px]">
+            }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
                     <span className="font-semibold">{tip.label}</span>
-                    <span className="text-xs opacity-75">(${(tip.value || 0).toFixed(2)})</span>
+                    <span className="text-xs opacity-75">${(tip.value || 0).toFixed(0)}</span>
                   </Button>)}
                 <Button type="button" variant={showCustomTip ? "default" : "outline"} onClick={() => {
               setShowCustomTip(true);
               setTipAmount(0);
               setTipConfirmed(false);
-            }} className="flex-shrink-0 text-xs md:text-sm flex flex-col items-center py-3 px-4 h-auto min-w-[80px]">
+            }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
                   <span className="font-semibold">Custom</span>
-                  <span className="text-xs opacity-75">&nbsp;</span>
+                  <span className="text-xs opacity-75">$</span>
                 </Button>
               </div>
-              {showCustomTip && <div className="space-y-3">
+              {showCustomTip && <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Label htmlFor="customTip" className="text-sm">Custom tip:</Label>
+                    <Label htmlFor="customTip" className="text-sm whitespace-nowrap">Custom tip:</Label>
                     <div className="flex items-center gap-1">
                       <span className="text-sm">$</span>
                       <Input id="customTip" type="text" placeholder="0.00" value={tipAmount === 0 ? '' : tipAmount.toString()} onChange={e => {
@@ -273,7 +273,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                     const value = parseFloat(e.currentTarget.value) || 0;
                     setTipAmount(value);
                   }
-                }} className="w-20" />
+                }} className="w-16 text-sm" />
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -283,7 +283,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                 }
               }} disabled={tipAmount === 0} />
                     <Label htmlFor="confirmCustomTip" className="text-sm">
-                      Confirm tip amount: ${(tipAmount || 0).toFixed(2)}
+                      Confirm tip: ${(tipAmount || 0).toFixed(2)}
                     </Label>
                   </div>
                 </div>}

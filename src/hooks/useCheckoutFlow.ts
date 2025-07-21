@@ -93,28 +93,11 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       setCurrentStep('datetime');
       
     } else if (!isAddingToOrder && lastOrderInfo) {
-      console.log('Processing NEW ORDER with pre-fill...');
+      console.log('Processing NEW ORDER with saved info pre-fill...');
       
-      // Pre-fill from last order info if available
-      if (lastOrderInfo.deliveryDate) {
-        console.log('Pre-filling delivery date from last order:', lastOrderInfo.deliveryDate);
-        try {
-          const date = new Date(lastOrderInfo.deliveryDate);
-          if (!isNaN(date.getTime())) {
-            updateDeliveryInfo('date', date);
-          }
-        } catch (error) {
-          console.error('Error parsing delivery date:', error);
-        }
-      }
-      
-      if (lastOrderInfo.deliveryTime) {
-        console.log('Pre-filling delivery time from last order:', lastOrderInfo.deliveryTime);
-        updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
-      }
-      
-      if (lastOrderInfo.address) {
-        console.log('Pre-filling address from last order:', lastOrderInfo.address);
+      // Always pre-fill address from saved info if available
+      if (lastOrderInfo.address && !addressInfo.street) {
+        console.log('Pre-filling address from saved order:', lastOrderInfo.address);
         const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
         const newAddressInfo = {
           street: addressParts[0] || '',
@@ -128,9 +111,9 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
       
-      // Pre-fill customer info for new orders too
-      if (lastOrderInfo.customerEmail) {
-        console.log('Pre-filling customer info from last order:', lastOrderInfo.customerEmail);
+      // Always pre-fill customer info from saved order if current info is empty
+      if (lastOrderInfo.customerEmail && !customerInfo.email) {
+        console.log('Pre-filling customer info from saved order:', lastOrderInfo.customerEmail);
         const nameParts = lastOrderInfo.customerName?.split(' ') || [];
         setCustomerInfo({
           firstName: nameParts[0] || '',
@@ -144,9 +127,9 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       setCurrentStep('datetime');
       
     } else if (!isAddingToOrder) {
-      console.log('Processing NEW ORDER without pre-fill...');
+      console.log('Processing NEW ORDER without saved order info...');
       
-      // Pre-fill address from saved data only
+      // Pre-fill address from localStorage data only
       if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
         const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
         updateDeliveryInfo('address', fullAddress);
