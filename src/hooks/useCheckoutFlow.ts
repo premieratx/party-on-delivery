@@ -28,16 +28,23 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     onDeliveryInfoChange(newInfo);
   };
 
-  // SIMPLIFIED PRE-FILL LOGIC - One effect to rule them all
+  // SIMPLIFIED: Just use draft order data for everything
   useEffect(() => {
-    if (lastOrderInfo) {
-      console.log('Pre-filling from lastOrderInfo:', lastOrderInfo);
-      setOriginalOrderInfo(lastOrderInfo);
+    // Get draft order data from localStorage
+    const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
+    
+    if (draftOrder && Object.keys(draftOrder).length > 0) {
+      console.log('Pre-filling from draft order data:', draftOrder);
       
-      // Pre-fill delivery date and time
-      if (lastOrderInfo.deliveryDate) {
+      // For add-to-order flow, save the original info for change tracking
+      if (isAddingToOrder && lastOrderInfo) {
+        setOriginalOrderInfo(lastOrderInfo);
+      }
+      
+      // Pre-fill delivery date and time from draft
+      if (draftOrder.deliveryDate) {
         try {
-          const date = new Date(lastOrderInfo.deliveryDate);
+          const date = new Date(draftOrder.deliveryDate);
           if (!isNaN(date.getTime())) {
             updateDeliveryInfo('date', date);
           }
@@ -46,37 +53,37 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         }
       }
       
-      if (lastOrderInfo.deliveryTime) {
-        updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
+      if (draftOrder.deliveryTime) {
+        updateDeliveryInfo('timeSlot', draftOrder.deliveryTime);
       }
       
-      // Pre-fill address
-      if (lastOrderInfo.address) {
-        const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
+      // Pre-fill address from draft
+      if (draftOrder.address) {
+        const addressParts = draftOrder.address.split(',').map(part => part.trim());
         setAddressInfo({
           street: addressParts[0] || '',
           city: addressParts[1] || '',
           state: addressParts[2]?.split(' ')[0] || '',
           zipCode: addressParts[2]?.split(' ')[1] || '',
-          instructions: lastOrderInfo.instructions || ''
+          instructions: draftOrder.instructions || ''
         });
       }
       
-      // Pre-fill customer info
-      if (lastOrderInfo.customerName) {
-        const nameParts = lastOrderInfo.customerName.split(' ');
+      // Pre-fill customer info from draft
+      if (draftOrder.customerName || draftOrder.customerEmail) {
+        const nameParts = draftOrder.customerName?.split(' ') || [];
         setCustomerInfo({
           firstName: nameParts[0] || '',
           lastName: nameParts.slice(1).join(' ') || '',
-          email: lastOrderInfo.customerEmail || '',
-          phone: lastOrderInfo.customerPhone || ''
+          email: draftOrder.customerEmail || '',
+          phone: draftOrder.customerPhone || ''
         });
       }
     }
     
     // Always start at datetime step
     setCurrentStep('datetime');
-  }, [isAddingToOrder, lastOrderInfo?.orderNumber]); // Only depend on order number to avoid loops
+  }, []); // Only run once on mount
 
   // Update delivery info when address changes
   useEffect(() => {
