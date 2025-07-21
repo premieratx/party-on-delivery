@@ -384,6 +384,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 <ChevronRight className="w-6 h-6" />
               </button>
             </div>
+            
+            {/* Add instruction text for cocktails only */}
+            {selectedCategory === 2 && (
+              <div className="text-center mt-2">
+                <p className="text-sm text-muted-foreground">Click each item to see photos and details</p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -417,9 +424,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 {/* Product info with smaller height for beer */}
                 <div className={`flex flex-col flex-1 justify-between ${selectedCategory === 0 ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
                   <div className="flex-1 flex flex-col justify-start">
-                    <h4 className={`font-bold leading-tight text-center line-clamp-2 ${selectedCategory === 0 ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
+                    <h4 className={`font-bold leading-tight text-center ${selectedCategory === 0 ? 'text-xs mb-1' : 'text-sm mb-2'} ${selectedCategory === 2 ? '' : 'line-clamp-2'}`}>
                       {(() => {
-                        // Clean title and remove pack info if it will be shown separately
+                        // For cocktails (selectedCategory === 2), show full title without truncation
+                        if (selectedCategory === 2) {
+                          return product.title;
+                        }
+                        
+                        // Clean title and remove pack info if it will be shown separately for other categories
                         const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
                         
                         let cleanedTitle;
@@ -472,8 +484,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       </div>
                     ) : null}
 
-                      {/* Pack size info for variant products */}
+                    {/* Pack size info for variant products OR cocktail drink count */}
                     {(() => {
+                      // For cocktails (selectedCategory === 2), extract drink count from description
+                      if (selectedCategory === 2) {
+                        const drinkMatch = product.description.match(/(\d+)\s*(?:drinks?|servings?|cocktails?)/i);
+                        if (drinkMatch) {
+                          return (
+                            <p className="text-foreground text-center mb-1 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                              {drinkMatch[1]} drinks
+                            </p>
+                          );
+                        }
+                        return null;
+                      }
+                      
+                      // For other categories, show pack size info
                       const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
                       const sizeMatch = product.title.match(/(\d+)\s*oz/i);
                       if (packMatch && sizeMatch) {
