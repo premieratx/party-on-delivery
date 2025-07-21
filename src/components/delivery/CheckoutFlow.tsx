@@ -52,13 +52,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
-  // Step management - start at payment for returning customers, datetime for new
+  // Step management - start at payment for returning customers, datetime for new or resume
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>(
     isAddingToOrder ? 'payment' : 'datetime'
   );
-  const [confirmedDateTime, setConfirmedDateTime] = useState(isAddingToOrder);
-  const [confirmedAddress, setConfirmedAddress] = useState(isAddingToOrder);
-  const [confirmedCustomer, setConfirmedCustomer] = useState(isAddingToOrder);
+  const [confirmedDateTime, setConfirmedDateTime] = useState(false);
+  const [confirmedAddress, setConfirmedAddress] = useState(false);
+  const [confirmedCustomer, setConfirmedCustomer] = useState(false);
   
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
@@ -97,7 +97,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     console.log('isAddingToOrder:', isAddingToOrder);
     console.log('lastOrderInfo:', lastOrderInfo);
     console.log('deliveryInfo before pre-fill:', deliveryInfo);
+    console.log('customerInfo:', customerInfo);
+    console.log('addressInfo:', addressInfo);
     
+    // For returning customers adding to order
     if (isAddingToOrder && lastOrderInfo) {
       // Store original order info for comparison
       setOriginalOrderInfo(lastOrderInfo);
@@ -133,10 +136,48 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         updateDeliveryInfo('address', lastOrderInfo.address);
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
+      
+      // Set confirmation states for returning customers
+      setConfirmedDateTime(true);
+      setConfirmedAddress(true);
+      setConfirmedCustomer(true);
+    }
+    
+    // For resume orders - check if we have saved data and auto-confirm if complete
+    if (!isAddingToOrder) {
+      // Check if delivery date/time is complete and confirm
+      if (deliveryInfo.date && deliveryInfo.timeSlot) {
+        setConfirmedDateTime(true);
+      }
+      
+      // Check if address is complete and confirm
+      if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
+        setConfirmedAddress(true);
+        // Also update the main delivery info address from saved addressInfo
+        const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
+        updateDeliveryInfo('address', fullAddress);
+        updateDeliveryInfo('instructions', addressInfo.instructions || '');
+      }
+      
+      // Check if customer info is complete and confirm
+      if (customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone) {
+        setConfirmedCustomer(true);
+      }
+      
+      // Set current step based on what's confirmed
+      if (confirmedDateTime && confirmedAddress && confirmedCustomer) {
+        setCurrentStep('payment');
+      } else if (confirmedDateTime && confirmedAddress) {
+        setCurrentStep('customer');
+      } else if (confirmedDateTime) {
+        setCurrentStep('address');
+      } else {
+        setCurrentStep('datetime');
+      }
     }
     
     console.log('=== End CheckoutFlow Pre-fill useEffect ===');
-  }, [isAddingToOrder, lastOrderInfo]);
+  }, [isAddingToOrder, lastOrderInfo, deliveryInfo.date, deliveryInfo.timeSlot, addressInfo, customerInfo]);
 
   // Check for changes from original order (excluding instructions)
   useEffect(() => {
