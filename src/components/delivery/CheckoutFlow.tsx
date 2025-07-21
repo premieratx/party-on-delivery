@@ -411,25 +411,31 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     </p>
                   </div>
                 )}
-                <div className="space-y-1 md:space-y-3">
+                 <div className="space-y-1 md:space-y-3">
                    {confirmedDateTime && (
                      <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
                         <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                            <span className="shrink-0 text-xs md:text-sm">Date & Time:</span>
-                            <span className="text-foreground text-xs md:text-sm truncate">
-                              {deliveryInfo.date ? format(deliveryInfo.date, "MMM d") : ''} 
-                              {deliveryInfo.date && deliveryInfo.timeSlot ? ' • ' : ''}
-                              {deliveryInfo.timeSlot || ''}
-                            </span>
-            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
+                          <div className="flex flex-col gap-1 min-w-0 flex-1">
+                            <div className="flex items-center gap-1 md:gap-2">
+                              <span className="shrink-0 text-xs md:text-sm">Delivery:</span>
+                              <span className="text-foreground text-xs md:text-sm">
+                                {deliveryInfo.date ? format(deliveryInfo.date, "EEEE, MMMM do, yyyy") : ''} 
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 md:gap-2">
+                              <span className="shrink-0 text-xs md:text-sm">Time:</span>
+                              <span className="text-foreground text-xs md:text-sm">
+                                {deliveryInfo.timeSlot || ''}
+                              </span>
+                            </div>
+            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600">Same as previous order</span>}
             {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
-              <span className="text-xs text-red-600 font-medium hidden md:inline">
+              <span className="text-xs text-red-600 font-medium">
                 ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
                   changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
               </span>
             )}
-                         </div>
+                          </div>
                           <Button 
                             variant="outline" 
                             size="sm" 
@@ -479,9 +485,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   {confirmedCustomer && (
                     <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
                       <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                          <span className="shrink-0 text-xs md:text-sm">Contact:</span>
-                          <span className="text-foreground text-xs md:text-sm truncate">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
+                        <div className="flex flex-col gap-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-1 md:gap-2">
+                            <span className="shrink-0 text-xs md:text-sm">Contact:</span>
+                            <span className="text-foreground text-xs md:text-sm">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-1 md:gap-2">
+                            <span className="shrink-0 text-xs md:text-sm">Email:</span>
+                            <span className="text-foreground text-xs md:text-sm">{customerInfo.email}</span>
+                          </div>
                         </div>
                         <Button 
                           variant="outline" 
