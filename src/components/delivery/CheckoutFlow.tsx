@@ -220,6 +220,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmDateTime = () => {
+    console.log('handleConfirmDateTime called, isDateTimeComplete:', isDateTimeComplete);
+    console.log('deliveryInfo:', deliveryInfo);
+    
     if (isDateTimeComplete) {
       setConfirmedDateTime(true);
       
@@ -246,10 +249,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
+    } else {
+      console.log('Cannot confirm - missing data. Date:', deliveryInfo.date, 'TimeSlot:', deliveryInfo.timeSlot);
     }
   };
 
   const handleConfirmAddress = async () => {
+    console.log('handleConfirmAddress called, isAddressComplete:', isAddressComplete);
+    console.log('addressInfo:', addressInfo);
+    
     if (isAddressComplete) {
       // Delivery pricing is automatically calculated by the hook
       setConfirmedAddress(true);
@@ -278,6 +286,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
+    } else {
+      console.log('Cannot confirm address - missing data:', {
+        street: addressInfo.street,
+        city: addressInfo.city,
+        state: addressInfo.state,
+        zipCode: addressInfo.zipCode
+      });
     }
   };
 
