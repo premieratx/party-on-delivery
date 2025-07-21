@@ -213,6 +213,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const handleConfirmDateTime = () => {
     if (isDateTimeComplete) {
       setConfirmedDateTime(true);
+      
+      // Save date/time info immediately to localStorage
+      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
+      const orderInfo = {
+        ...existingOrder,
+        deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+        deliveryTime: deliveryInfo.timeSlot || '',
+        recentpurchase: true
+      };
+      localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+      console.log('Date/time confirmed and saved to localStorage:', orderInfo);
+      
       // Navigate to next incomplete step
       if (!confirmedAddress) {
         setCurrentStep('address');
@@ -232,6 +244,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (isAddressComplete) {
       // Delivery pricing is automatically calculated by the hook
       setConfirmedAddress(true);
+      
+      // Save address info immediately to localStorage
+      const orderInfo = {
+        address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+        instructions: addressInfo.instructions || '',
+        deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+        deliveryTime: deliveryInfo.timeSlot || '',
+        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone,
+        recentpurchase: true // Mark as recent purchase for app identification
+      };
+      localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+      console.log('Address confirmed and saved to localStorage:', orderInfo);
+      
       // Navigate to next incomplete step
       if (!confirmedCustomer) {
         setCurrentStep('customer');
@@ -255,6 +282,19 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     if (!emailErr && !phoneErr && customerInfo.firstName && customerInfo.lastName) {
       setConfirmedCustomer(true);
+      
+      // Save customer info immediately to localStorage
+      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
+      const orderInfo = {
+        ...existingOrder,
+        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone,
+        recentpurchase: true
+      };
+      localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+      console.log('Customer info confirmed and saved to localStorage:', orderInfo);
+      
       setCurrentStep('payment');
       // Scroll to top of next section on mobile
       setTimeout(() => {
