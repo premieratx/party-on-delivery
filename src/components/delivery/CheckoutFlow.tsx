@@ -102,18 +102,28 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     // For returning customers adding to order
     if (isAddingToOrder && lastOrderInfo) {
+      console.log('Processing add to order pre-fill...');
       // Store original order info for comparison
       setOriginalOrderInfo(lastOrderInfo);
       
-      // Pre-fill delivery date and time if not already set
-      if (lastOrderInfo.deliveryDate && !deliveryInfo.date) {
+      // ALWAYS pre-fill delivery date and time from last order - force override if needed
+      if (lastOrderInfo.deliveryDate) {
         console.log('Pre-filling delivery date:', lastOrderInfo.deliveryDate);
-        const date = new Date(lastOrderInfo.deliveryDate);
-        console.log('Parsed date object:', date);
-        updateDeliveryInfo('date', date);
+        try {
+          const date = new Date(lastOrderInfo.deliveryDate);
+          // Validate the date is valid
+          if (!isNaN(date.getTime())) {
+            console.log('Parsed date object:', date);
+            updateDeliveryInfo('date', date);
+          } else {
+            console.error('Invalid date parsed from lastOrderInfo.deliveryDate');
+          }
+        } catch (error) {
+          console.error('Error parsing delivery date:', error);
+        }
       }
       
-      if (lastOrderInfo.deliveryTime && !deliveryInfo.timeSlot) {
+      if (lastOrderInfo.deliveryTime) {
         console.log('Pre-filling delivery time:', lastOrderInfo.deliveryTime);
         updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
       }
@@ -141,6 +151,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       setConfirmedDateTime(true);
       setConfirmedAddress(true);
       setConfirmedCustomer(true);
+      setCurrentStep('payment'); // Go directly to payment for add to order
     }
     
     // For resume orders - check if we have saved data and auto-confirm if complete
