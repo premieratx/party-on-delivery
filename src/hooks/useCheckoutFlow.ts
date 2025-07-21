@@ -139,6 +139,15 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     console.log('=== End useCheckoutFlow Pre-fill Logic ===');
   }, [isAddingToOrder, lastOrderInfo]);
 
+  // Update delivery info when address changes
+  useEffect(() => {
+    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
+      const fullAddress = `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`;
+      updateDeliveryInfo('address', fullAddress);
+      updateDeliveryInfo('instructions', addressInfo.instructions || '');
+    }
+  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, addressInfo.instructions]);
+
   // Check for changes from original order
   useEffect(() => {
     if (originalOrderInfo && isAddingToOrder) {
