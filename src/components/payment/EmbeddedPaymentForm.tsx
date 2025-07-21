@@ -226,20 +226,22 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               </div>
             </div> : <div className="space-y-3">
               <Label className="text-sm md:text-base font-semibold">Add a tip for your delivery driver</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-2">
                 {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"} onClick={() => {
               setTipAmount(tip.value);
               setShowCustomTip(false);
               setTipConfirmed(false);
-            }} className="text-xs md:text-sm">
-                    {tip.label} (${tip.value.toFixed(2)})
+            }} className="flex-shrink-0 text-xs md:text-sm flex flex-col items-center py-3 px-4 h-auto min-w-[80px]">
+                    <span className="font-semibold">{tip.label}</span>
+                    <span className="text-xs opacity-75">(${tip.value.toFixed(2)})</span>
                   </Button>)}
                 <Button type="button" variant={showCustomTip ? "default" : "outline"} onClick={() => {
               setShowCustomTip(true);
               setTipAmount(0);
               setTipConfirmed(false);
-            }} className="text-xs md:text-sm">
-                  Custom
+            }} className="flex-shrink-0 text-xs md:text-sm flex flex-col items-center py-3 px-4 h-auto min-w-[80px]">
+                  <span className="font-semibold">Custom</span>
+                  <span className="text-xs opacity-75">&nbsp;</span>
                 </Button>
               </div>
               {showCustomTip && <div className="space-y-3">

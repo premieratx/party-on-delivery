@@ -364,10 +364,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     // Also clear localStorage as backup
     localStorage.removeItem('partyondelivery_cart');
     
-    // Redirect to order complete page
-    if (window.top) {
-      window.top.location.href = '/order-complete';
-    } else {
+    // Redirect to order complete page with navigation fallback
+    try {
+      if (window.top && window.top !== window) {
+        window.top.location.href = '/order-complete';
+      } else {
+        window.location.href = '/order-complete';
+      }
+    } catch (error) {
+      // Fallback for iframe restrictions
       window.open('/order-complete', '_blank');
     }
   };
