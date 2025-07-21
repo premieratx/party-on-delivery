@@ -40,10 +40,10 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     console.log('customerInfo:', customerInfo);
 
     if (isAddingToOrder && lastOrderInfo) {
-      console.log('Processing ADD TO ORDER pre-fill...');
+      console.log('Processing ADD TO ORDER pre-fill (using resume flow pattern)...');
       setOriginalOrderInfo(lastOrderInfo);
       
-      // FORCE pre-fill delivery date and time immediately
+      // Pre-fill delivery date and time (same as resume flow)
       if (lastOrderInfo.deliveryDate) {
         console.log('Pre-filling delivery date:', lastOrderInfo.deliveryDate);
         try {
@@ -62,7 +62,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         updateDeliveryInfo('timeSlot', lastOrderInfo.deliveryTime);
       }
       
-      // FORCE pre-fill address info for add to order flow
+      // Pre-fill address from saved info (same as resume flow)
       if (lastOrderInfo.address) {
         console.log('Pre-filling address for ADD TO ORDER:', lastOrderInfo.address);
         const addressParts = lastOrderInfo.address.split(',').map(part => part.trim());
@@ -78,9 +78,9 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         updateDeliveryInfo('instructions', lastOrderInfo.instructions || '');
       }
       
-      // FORCE pre-fill customer info
+      // Pre-fill customer info from saved order (same as resume flow)
       if (lastOrderInfo.customerEmail) {
-        console.log('Pre-filling customer info:', lastOrderInfo.customerEmail);
+        console.log('Pre-filling customer info for ADD TO ORDER:', lastOrderInfo.customerEmail);
         const nameParts = lastOrderInfo.customerName?.split(' ') || [];
         setCustomerInfo({
           firstName: nameParts[0] || '',
@@ -90,15 +90,8 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
         });
       }
       
-      // For add to order flow - delay the auto-confirm to ensure data is filled
-      console.log('Scheduling auto-confirm for ADD TO ORDER...');
-      setTimeout(() => {
-        console.log('Auto-confirming all steps for ADD TO ORDER...');
-        setConfirmedDateTime(true);
-        setConfirmedAddress(true);
-        setConfirmedCustomer(true);
-        setCurrentStep('payment'); // Skip directly to payment since everything is pre-filled
-      }, 100); // Small delay to ensure state updates are processed
+      // Start at datetime step like resume flow (require manual confirmation)
+      setCurrentStep('datetime');
       
     } else if (!isAddingToOrder && lastOrderInfo) {
       console.log('Processing NEW ORDER with saved info pre-fill...');
