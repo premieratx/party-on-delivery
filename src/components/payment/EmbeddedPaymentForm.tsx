@@ -71,15 +71,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           <p className="text-gray-600">Add some items to your cart to continue with checkout.</p>
           <Button 
             onClick={() => {
-              try {
-                if (window.parent && window.parent !== window) {
-                  window.parent.postMessage({ type: 'navigate', url: '/' }, '*');
-                } else {
-                  window.location.href = '/';
-                }
-              } catch (error) {
-                window.location.href = '/';
-              }
+              // Import useNavigate and use proper React Router navigation
+              window.location.href = '/';
             }} 
             size="lg" 
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"

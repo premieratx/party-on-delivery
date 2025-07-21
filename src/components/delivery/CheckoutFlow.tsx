@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onTipChange,
   onChangesDetected
 }) => {
+  const navigate = useNavigate();
   // Use custom hooks for cleaner state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange });
@@ -364,17 +366,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     // Also clear localStorage as backup
     localStorage.removeItem('partyondelivery_cart');
     
-    // Redirect to order complete page with navigation fallback
-    try {
-      if (window.top && window.top !== window) {
-        window.top.location.href = '/order-complete';
-      } else {
-        window.location.href = '/order-complete';
-      }
-    } catch (error) {
-      // Fallback for iframe restrictions
-      window.open('/order-complete', '_blank');
-    }
+    // Navigate using React Router instead of window.location
+    navigate('/order-complete');
   };
 
   return (
