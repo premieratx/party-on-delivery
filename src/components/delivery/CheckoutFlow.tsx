@@ -54,12 +54,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 }) => {
   const navigate = useNavigate();
   
-  console.log('CheckoutFlow rendered with:', {
-    isAddingToOrder,
-    lastOrderInfo,
-    deliveryInfo,
-    cartItemsCount: cartItems.length
-  });
+  console.log('CheckoutFlow START - isAddingToOrder:', isAddingToOrder);
+  
   // Use custom hooks for cleaner state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange });
