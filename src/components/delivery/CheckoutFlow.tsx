@@ -14,7 +14,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
-import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus } from 'lucide-react';
+import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
@@ -520,7 +520,99 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 )}
              </CardContent>
            )}
-         </Card>
+          </Card>
+
+          {/* Confirmed sections displayed compactly at top */}
+          {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
+            <div className="space-y-2">
+              {confirmedDateTime && (
+                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                  <CardContent className="py-2 px-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                        <div>
+                          <span className="text-xs font-medium text-green-800">Delivery Time: </span>
+                          <span className="text-xs text-green-700">
+                            {format(new Date(deliveryInfo.date!), 'MMM d')} at {deliveryInfo.timeSlot}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setConfirmedDateTime(false);
+                          setCurrentStep('datetime');
+                        }}
+                        className="text-green-600 hover:text-green-800 h-6 px-2"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {confirmedAddress && (
+                <Card className="bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200">
+                  <CardContent className="py-2 px-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 mr-2 text-blue-600" />
+                        <div>
+                          <span className="text-xs font-medium text-blue-800">Address: </span>
+                          <span className="text-xs text-blue-700">
+                            {addressInfo.street}, {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setConfirmedAddress(false);
+                          setCurrentStep('address');
+                        }}
+                        className="text-blue-600 hover:text-blue-800 h-6 px-2"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {confirmedCustomer && (
+                <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200">
+                  <CardContent className="py-2 px-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 mr-2 text-purple-600" />
+                        <div>
+                          <span className="text-xs font-medium text-purple-800">Contact: </span>
+                          <span className="text-xs text-purple-700">
+                            {customerInfo.firstName} {customerInfo.lastName} • {customerInfo.email}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setConfirmedCustomer(false);
+                          setCurrentStep('customer');
+                        }}
+                        className="text-purple-600 hover:text-purple-800 h-6 px-2"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
 
           <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
             {/* Step-by-Step Forms - Mobile optimized */}
