@@ -627,72 +627,72 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       {confirmedDateTime && <CheckCircle className="w-5 h-5 text-green-600 ml-2" />}
                     </CardTitle>
                   </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    {!confirmedDateTime ? (
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Delivery Date *</Label>
-                          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !deliveryInfo.date && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={deliveryInfo.date || undefined}
-                                onSelect={(date) => {
-                                  updateDeliveryInfo('date', date);
-                                  setIsCalendarOpen(false);
-                                }}
-                                disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                   
+                   <CardContent className="space-y-4">
+                     {!confirmedDateTime && (
+                       <div className="space-y-4">
+                         <div className="space-y-2">
+                           <Label>Delivery Date *</Label>
+                           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                             <PopoverTrigger asChild>
+                               <Button
+                                 variant="outline"
+                                 className={cn(
+                                   "w-full justify-start text-left font-normal",
+                                   !deliveryInfo.date && "text-muted-foreground"
+                                 )}
+                               >
+                                 <CalendarIcon className="mr-2 h-4 w-4" />
+                                 {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
+                               </Button>
+                             </PopoverTrigger>
+                             <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
+                               <Calendar
+                                 mode="single"
+                                 selected={deliveryInfo.date || undefined}
+                                 onSelect={(date) => {
+                                   updateDeliveryInfo('date', date);
+                                   setIsCalendarOpen(false);
+                                 }}
+                                 disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                                 initialFocus
+                                 className="p-3 pointer-events-auto"
+                               />
+                             </PopoverContent>
+                           </Popover>
+                         </div>
 
-                        <div className="space-y-2">
-                          <Label>Delivery Time *</Label>
-                          <Select 
-                            value={deliveryInfo.timeSlot} 
-                            onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select a time slot" />
-                            </SelectTrigger>
-                            <SelectContent className="z-50 bg-background">
-                              {timeSlots.map((slot) => (
-                                <SelectItem key={slot} value={slot}>
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4" />
-                                    {slot}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <Button 
-                          onClick={handleConfirmDateTime}
-                          disabled={!isDateTimeComplete}
-                          className="w-full"
-                        >
-                          Confirm Date & Time
+                         <div className="space-y-2">
+                           <Label>Delivery Time *</Label>
+                           <Select 
+                             value={deliveryInfo.timeSlot} 
+                             onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
+                           >
+                             <SelectTrigger className="w-full">
+                               <SelectValue placeholder="Select a time slot" />
+                             </SelectTrigger>
+                             <SelectContent className="z-50 bg-background">
+                               {timeSlots.map((slot) => (
+                                 <SelectItem key={slot} value={slot}>
+                                   <div className="flex items-center gap-2">
+                                     <Clock className="w-4 h-4" />
+                                     {slot}
+                                   </div>
+                                 </SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
+                         </div>
+                         
+                         <Button 
+                           onClick={handleConfirmDateTime}
+                           disabled={!isDateTimeComplete}
+                           className="w-full"
+                         >
+                           Confirm Date & Time
                          </Button>
                        </div>
-                     ) : null}
+                     )}
                    </CardContent>
                 </Card>
 
@@ -707,7 +707,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                  </CardHeader>
                  
                    <CardContent className="space-y-2 md:space-y-4">
-                     {!confirmedAddress ? (
+                     {!confirmedAddress && (
                       <div className="space-y-2 md:space-y-4">
                         <div className="space-y-1 md:space-y-2">
                           <Label htmlFor="street">Street Address *</Label>
@@ -791,8 +791,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                          Confirm Address
                        </Button>
                        </div>
-                     ) : null}
-                   </CardContent>
+                       )}
+                    </CardContent>
                   </Card>
 
               {/* Customer Information - Always show, highlight when editing */}
@@ -806,7 +806,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 </CardHeader>
                 
                  <CardContent className="space-y-4">
-                   {!confirmedCustomer ? (
+                   {!confirmedCustomer && (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -878,8 +878,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         Confirm Contact Info
                       </Button>
                     </div>
-                  ) : null}
-                </CardContent>
+                     )}
+                  </CardContent>
               </Card>
 
              {/* Embedded Payment */}
