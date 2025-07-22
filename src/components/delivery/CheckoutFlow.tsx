@@ -690,47 +690,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           className="w-full"
                         >
                           Confirm Date & Time
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="p-3 border rounded-lg bg-muted/30">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex flex-col gap-1 min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium">Date:</span>
-                              <span className="text-sm">
-                                {deliveryInfo.date ? format(deliveryInfo.date, "EEEE, MMMM do, yyyy") : ''} 
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium">Time:</span>
-                              <span className="text-sm">
-                                {deliveryInfo.timeSlot || ''}
-                              </span>
-                            </div>
-                            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600">Same as previous order</span>}
-                            {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
-                              <span className="text-xs text-red-600 font-medium">
-                                ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
-                                  changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
-                              </span>
-                            )}
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setConfirmedDateTime(false);
-                              setCurrentStep('datetime');
-                            }}
-                            className="shrink-0"
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
+                         </Button>
+                       </div>
+                     ) : null}
+                   </CardContent>
                 </Card>
 
                {/* Address Section - Always show, highlight when editing */}
@@ -827,39 +790,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                        >
                          Confirm Address
                        </Button>
-                      </div>
-                    ) : (
-                      <div className="p-3 border rounded-lg bg-muted/30">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <span className="text-sm font-medium">Address:</span>
-                            <span className="text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
-                            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
-                            {hasChanges && (changedFields.includes('delivery address')) && (
-                              <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
-                            )}
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setConfirmedAddress(false);
-                              setCurrentStep('address');
-                            }}
-                            className="shrink-0"
-                          >
-                            Edit
-                          </Button>
-                        </div>
-                        {addressInfo.instructions && (
-                          <div className="text-sm text-muted-foreground mt-2">
-                            {addressInfo.instructions}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                       </div>
+                     ) : null}
                    </CardContent>
-                 </Card>
+                  </Card>
 
               {/* Customer Information - Always show, highlight when editing */}
               <Card className={`shadow-card ${currentStep === 'customer' ? 'border-2 border-green-500' : 'border'}`}>
@@ -944,33 +878,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         Confirm Contact Info
                       </Button>
                     </div>
-                  ) : (
-                    <div className="p-3 border rounded-lg bg-muted/30">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex flex-col gap-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">Contact:</span>
-                            <span className="text-sm">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">Email:</span>
-                            <span className="text-sm">{customerInfo.email}</span>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setConfirmedCustomer(false);
-                            setCurrentStep('customer');
-                          }}
-                          className="shrink-0"
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  ) : null}
                 </CardContent>
               </Card>
 
