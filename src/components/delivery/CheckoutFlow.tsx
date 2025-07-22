@@ -104,19 +104,23 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, []);
 
-  // For completely new orders (no lastOrderInfo), clear address info once
+  // DEBUG: Log what data we actually have on component mount
   useEffect(() => {
-    if (!isAddingToOrder && !lastOrderInfo && !hasAddressBeenCleared) {
-      setAddressInfo({
-        street: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        instructions: ''
-      });
-      setHasAddressBeenCleared(true);
-    }
-  }, [isAddingToOrder, lastOrderInfo, hasAddressBeenCleared]);
+    console.log('=== CheckoutFlow Debug - Component Mount ===');
+    console.log('customerInfo from hook:', customerInfo);
+    console.log('addressInfo from hook:', addressInfo);
+    console.log('isAddingToOrder:', isAddingToOrder);
+    console.log('lastOrderInfo:', lastOrderInfo);
+    
+    // Check all possible storage locations
+    console.log('localStorage partyondelivery_customer:', localStorage.getItem('partyondelivery_customer'));
+    console.log('localStorage partyondelivery_address:', localStorage.getItem('partyondelivery_address'));
+    console.log('localStorage partyondelivery_customer_persistent:', localStorage.getItem('partyondelivery_customer_persistent'));
+    console.log('localStorage partyondelivery_address_persistent:', localStorage.getItem('partyondelivery_address_persistent'));
+    console.log('localStorage partyondelivery_last_order:', localStorage.getItem('partyondelivery_last_order'));
+    console.log('localStorage partyondelivery_completed_order:', localStorage.getItem('partyondelivery_completed_order'));
+    console.log('=== End CheckoutFlow Debug ===');
+  }, []);
 
   // Available time slots - 1 hour windows starting at 30 min intervals from 10am
   const timeSlots = [
