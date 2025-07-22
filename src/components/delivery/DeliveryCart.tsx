@@ -46,6 +46,8 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
   
+  console.log('DeliveryCart pricing:', { subtotal, deliveryFee, finalDeliveryFee });
+  
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? subtotal * (1 - appliedDiscount.value / 100)
@@ -178,7 +180,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+                    <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
                     <span className={finalDeliveryFee === 0 ? 'text-green-600' : ''}>
                       {finalDeliveryFee === 0 ? 'FREE' : `$${(finalDeliveryFee || 0).toFixed(2)}`}
                     </span>

@@ -67,6 +67,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     hasChanges: checkoutFlow.hasChanges
   });
   
+  console.log('CheckoutFlow delivery pricing:', { 
+    subtotal: cartItems.reduce((total, item) => total + (item.price * item.quantity), 0), 
+    deliveryPricing, 
+    isPricingLoading 
+  });
+  
   // Extract from checkout flow hook
   const {
     currentStep,
@@ -991,7 +997,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                          </div>
                        )}
                          <div className="flex justify-between">
-                           <span>Delivery Fee {subtotal >= 200 ? '(10%)' : ''}</span>
+                           <span>Delivery Fee {deliveryPricing.fee >= subtotal * 0.1 ? '(10%)' : '($20 min)'}</span>
                             <div className="flex items-center gap-2">
                                 {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 && (
                                   <span className="text-sm text-muted-foreground line-through">${(baseDeliveryFee || 0).toFixed(2)}</span>
