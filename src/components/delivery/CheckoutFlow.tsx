@@ -92,17 +92,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
   const [showDataConfirmation, setShowDataConfirmation] = useState(false);
-
-  // Check if we should show data confirmation on mount
+  
+  // Initialize step logic - start with data confirmation if we have saved data
   useEffect(() => {
     const hasExistingCustomer = customerInfo.firstName || customerInfo.lastName || customerInfo.email;
     const hasExistingAddress = addressInfo.street || addressInfo.city;
+    const hasExistingDelivery = deliveryInfo.date || deliveryInfo.timeSlot;
     
-    if (hasExistingCustomer || hasExistingAddress) {
+    if ((hasExistingCustomer || hasExistingAddress || hasExistingDelivery) && !confirmedDateTime && !confirmedAddress && !confirmedCustomer) {
       console.log('Found existing data, showing confirmation');
       setShowDataConfirmation(true);
+    } else if (!hasExistingCustomer && !hasExistingAddress && !hasExistingDelivery) {
+      // No existing data, start fresh with datetime
+      setCurrentStep('datetime');
+      setShowDataConfirmation(false);
     }
-  }, []);
+  }, [customerInfo, addressInfo, deliveryInfo, confirmedDateTime, confirmedAddress, confirmedCustomer]);
 
   // DEBUG: Log what data we actually have on component mount
   useEffect(() => {
@@ -456,46 +461,74 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     navigate('/order-complete');
   };
 
+  const handleDataConfirmation = () => {
+    // Auto-confirm all existing data
+    if (deliveryInfo.date && deliveryInfo.timeSlot) {
+      setConfirmedDateTime(true);
+    }
+    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
+      setConfirmedAddress(true);
+    }
+    if (customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone) {
+      setConfirmedCustomer(true);
+    }
+    
+    setShowDataConfirmation(false);
+    
+    // Navigate to first incomplete step or payment if all complete
+    if (!confirmedDateTime && (!deliveryInfo.date || !deliveryInfo.timeSlot)) {
+      setCurrentStep('datetime');
+    } else if (!confirmedAddress && (!addressInfo.street || !addressInfo.city)) {
+      setCurrentStep('address');
+    } else if (!confirmedCustomer && (!customerInfo.firstName || !customerInfo.email)) {
+      setCurrentStep('customer');
+    } else {
+      setCurrentStep('payment');
+    }
+  };
+
+  const handleDataEdit = () => {
+    // Reset all confirmations and start fresh
+    setConfirmedDateTime(false);
+    setConfirmedAddress(false);
+    setConfirmedCustomer(false);
+    setShowDataConfirmation(false);
+    setCurrentStep('datetime');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      <div className="flex-1">
-        {/* Data Confirmation Section */}
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-secondary/5">
+      <div className="relative">
+        {/* Show data confirmation modal if needed */}
         {showDataConfirmation && (
-          <div className="p-4">
-            <DataConfirmation
-              customerInfo={customerInfo}
-              addressInfo={addressInfo}
-              onConfirm={() => {
-                setShowDataConfirmation(false);
-                // Auto-confirm sections with data
-                if (customerInfo.firstName && customerInfo.email) {
-                  setConfirmedCustomer(true);
-                }
-                if (addressInfo.street && addressInfo.city) {
-                  setConfirmedAddress(true);
-                }
-              }}
-              onEdit={() => setShowDataConfirmation(false)}
-            />
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
+              <DataConfirmation
+                customerInfo={customerInfo}
+                addressInfo={addressInfo}
+                onConfirm={handleDataConfirmation}
+                onEdit={handleDataEdit}
+              />
+            </div>
           </div>
         )}
         
         {/* Mobile-optimized back button */}
-        <div className="p-2 pt-1 md:p-4">
+        <div className="p-3 md:p-4">
           <Button 
             variant="outline" 
             onClick={onBack}
-            className="mb-1 md:mb-4 text-xs md:text-sm py-1 px-2 md:py-2 md:px-4 h-auto"
+            className="text-xs md:text-sm py-2 px-3 md:py-2 md:px-4"
           >
             <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             Back to Products
           </Button>
         </div>
 
-        <div className="max-w-4xl mx-auto px-2 md:px-4 space-y-2 md:space-y-6">
+        <div className="max-w-6xl mx-auto px-3 md:px-4 space-y-4 md:space-y-6">
           {/* Compact Header */}
           <Card className="shadow-floating animate-fade-in">
-            <CardHeader className="text-center py-2 md:py-6">
+            <CardHeader className="text-center py-3 md:py-6">
               <CardTitle className="text-lg md:text-2xl bg-gradient-primary bg-clip-text text-transparent flex items-center justify-center gap-1 md:gap-2">
                 <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-primary" />
                 Complete Your Order
@@ -505,49 +538,48 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               </p>
             </CardHeader>
           
-            {/* Confirmation Summary - Condensed for mobile */}
-            {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
+            {/* Add-to-Order Notice */}
+            {isAddingToOrder && (
               <CardContent className="border-t py-2 md:py-4">
-                {isAddingToOrder && (
-                  <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm md:text-base text-blue-800 font-medium text-center">
-                      Please Confirm Previous Delivery Details
-                    </p>
-                    <p className="text-xs text-blue-600 text-center mt-1">
-                      (Edit to make changes)
-                    </p>
-                  </div>
-                )}
-                  {/* Changes Warning */}
-                  {hasChanges && (
-                    <div className="p-3 border border-red-200 rounded-lg bg-red-50 text-red-800">
-                      <div className="text-sm font-medium">
-                        ⚠️ Info does not match previous order
-                      </div>
-                      <div className="text-xs mt-2 space-y-1">
-                        <div><strong>Previous order details:</strong></div>
-                        {originalOrderInfo?.address && (
-                          <div>• Address: {originalOrderInfo.address}</div>
-                        )}
-                        {originalOrderInfo?.deliveryDate && (
-                          <div>• Date: {format(new Date(originalOrderInfo.deliveryDate), "EEEE, MMMM do, yyyy")}</div>
-                        )}
-                        {originalOrderInfo?.deliveryTime && (
-                          <div>• Time: {originalOrderInfo.deliveryTime}</div>
-                        )}
-                        <div className="mt-2 font-medium">
-                          Change to these details to get free delivery and add to that order.
-                        </div>
+                <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm md:text-base text-blue-800 font-medium text-center">
+                    Adding to Previous Order
+                  </p>
+                  <p className="text-xs text-blue-600 text-center mt-1">
+                    Match previous details for free delivery
+                  </p>
+                </div>
+                
+                {/* Changes Warning */}
+                {hasChanges && (
+                  <div className="p-3 border border-red-200 rounded-lg bg-red-50 text-red-800 mt-3">
+                    <div className="text-sm font-medium">
+                      ⚠️ Details don't match previous order
+                    </div>
+                    <div className="text-xs mt-2 space-y-1">
+                      <div><strong>Previous order:</strong></div>
+                      {originalOrderInfo?.address && (
+                        <div>• Address: {originalOrderInfo.address}</div>
+                      )}
+                      {originalOrderInfo?.deliveryDate && (
+                        <div>• Date: {format(new Date(originalOrderInfo.deliveryDate), "EEEE, MMMM do")}</div>
+                      )}
+                      {originalOrderInfo?.deliveryTime && (
+                        <div>• Time: {originalOrderInfo.deliveryTime}</div>
+                      )}
+                      <div className="mt-2 font-medium text-xs">
+                        Match these details to add to that order and get free delivery
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
              </CardContent>
            )}
          </Card>
 
-          <div className="grid md:grid-cols-2 gap-2 md:gap-6">
-            {/* Step-by-Step Forms - All sections visible with smart highlighting */}
-            <div className="space-y-2 md:space-y-6">
+          <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
+            {/* Step-by-Step Forms - Mobile optimized */}
+            <div className="space-y-3 md:space-y-6">
               
                 {/* Date/Time Section - Always show, highlight when editing */}
                 <Card className={`shadow-card ${currentStep === 'datetime' ? 'border-2 border-green-500' : 'border'}`}>

@@ -35,59 +35,82 @@ export const DataConfirmation: React.FC<DataConfirmationProps> = ({
   }
 
   return (
-    <Card className="mb-6 border-green-200 bg-green-50">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-green-800">
-          <CheckCircle className="w-5 h-5" />
-          Saved Information Found
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {hasCustomerData && (
-          <div className="flex items-start gap-3">
-            <User className="w-4 h-4 mt-1 text-green-600" />
-            <div className="flex-1">
-              <p className="font-medium text-green-800">Contact Information</p>
-              <p className="text-sm text-green-700">
-                {customerInfo.firstName} {customerInfo.lastName}
-                {customerInfo.email && (
-                  <span className="block">{customerInfo.email}</span>
-                )}
-                {customerInfo.phone && (
-                  <span className="block">{customerInfo.phone}</span>
-                )}
-              </p>
+    <div className="max-w-2xl mx-auto">
+      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-green-50 shadow-lg">
+        <CardHeader className="pb-3 text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-blue-800 text-lg md:text-xl">
+            <CheckCircle className="w-5 h-5 md:w-6 md:h-6" />
+            Welcome Back!
+          </CardTitle>
+          <p className="text-sm text-blue-600 mt-1">
+            We found your previous delivery information
+          </p>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {hasCustomerData && (
+            <div className="p-3 border border-blue-200 rounded-lg bg-white/50">
+              <div className="flex items-start gap-3">
+                <User className="w-4 h-4 mt-1 text-blue-600 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-blue-800 text-sm">Contact Information</p>
+                  <div className="text-sm text-blue-700 space-y-1 mt-1">
+                    <div className="truncate">{customerInfo.firstName} {customerInfo.lastName}</div>
+                    {customerInfo.email && (
+                      <div className="truncate text-xs">{customerInfo.email}</div>
+                    )}
+                    {customerInfo.phone && (
+                      <div className="text-xs">{customerInfo.phone}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {hasAddressData && (
-          <div className="flex items-start gap-3">
-            <MapPin className="w-4 h-4 mt-1 text-green-600" />
-            <div className="flex-1">
-              <p className="font-medium text-green-800">Delivery Address</p>
-              <p className="text-sm text-green-700">
-                {addressInfo.street}
-                {addressInfo.city && (
-                  <span className="block">{addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</span>
-                )}
-                {addressInfo.instructions && (
-                  <span className="block text-xs opacity-75">Note: {addressInfo.instructions}</span>
-                )}
-              </p>
+          {hasAddressData && (
+            <div className="p-3 border border-blue-200 rounded-lg bg-white/50">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-4 h-4 mt-1 text-blue-600 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-blue-800 text-sm">Delivery Address</p>
+                  <div className="text-sm text-blue-700 space-y-1 mt-1">
+                    <div className="truncate">{addressInfo.street}</div>
+                    {addressInfo.city && (
+                      <div className="text-xs">{addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}</div>
+                    )}
+                    {addressInfo.instructions && (
+                      <div className="text-xs opacity-75 italic">"{addressInfo.instructions}"</div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="flex gap-3 pt-2">
-          <Button onClick={onConfirm} className="flex-1" size="sm">
-            Use This Information
-          </Button>
-          <Button onClick={onEdit} variant="outline" size="sm">
-            Edit Details
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button 
+              onClick={onConfirm} 
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              size="lg"
+            >
+              ✓ Use This Information
+            </Button>
+            <Button 
+              onClick={onEdit} 
+              variant="outline" 
+              className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+              size="lg"
+            >
+              ✏ Start Fresh
+            </Button>
+          </div>
+          
+          <p className="text-xs text-center text-blue-600 opacity-75 mt-2">
+            Your information is saved for faster checkout
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
