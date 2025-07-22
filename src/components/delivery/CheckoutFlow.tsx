@@ -150,6 +150,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [tipAmount, setTipAmount] = useState(0);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+  
+  // Pre-select 10% tip automatically when subtotal changes
+  useEffect(() => {
+    if (subtotal > 0 && tipAmount === 0) {
+      const defaultTip = subtotal * 0.10;
+      setTipAmount(defaultTip);
+      if (onTipChange) {
+        onTipChange(defaultTip);
+      }
+    }
+  }, [subtotal, onTipChange]);
 
   // Check if delivery details match previous order exactly for automatic free shipping
   const deliveryDetailsMatch = isAddingToOrder && 
