@@ -222,14 +222,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (isDateTimeComplete) {
       setConfirmedDateTime(true);
       
-      // Save date/time info immediately to localStorage
+      // Build comprehensive order info for saving
       const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
       const orderInfo = {
         ...existingOrder,
         deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
         deliveryTime: deliveryInfo.timeSlot || '',
+        address: addressInfo.street ? `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}` : existingOrder.address,
+        instructions: addressInfo.instructions || existingOrder.instructions || '',
+        customerName: customerInfo.firstName ? `${customerInfo.firstName} ${customerInfo.lastName}`.trim() : existingOrder.customerName,
+        customerEmail: customerInfo.email || existingOrder.customerEmail,
+        customerPhone: customerInfo.phone || existingOrder.customerPhone,
         recentpurchase: true
       };
+      
+      // Save to localStorage
       localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
       console.log('Date/time confirmed and saved to localStorage:', orderInfo);
       
@@ -258,19 +265,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       // Delivery pricing is automatically calculated by the hook
       setConfirmedAddress(true);
       
-      // Save address info immediately to localStorage
+      // Build comprehensive order info for saving
+      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
       const orderInfo = {
+        ...existingOrder,
         address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
         instructions: addressInfo.instructions || '',
         deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
         deliveryTime: deliveryInfo.timeSlot || '',
-        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`.trim(),
         customerEmail: customerInfo.email,
         customerPhone: customerInfo.phone,
         recentpurchase: true // Mark as recent purchase for app identification
       };
+      
+      // Save to multiple places for reliability
       localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+      
+      // Also ensure the individual address storage is updated
+      localStorage.setItem('partyondelivery_address', JSON.stringify(addressInfo));
+      localStorage.setItem('partyondelivery_customer', JSON.stringify(customerInfo));
+      
       console.log('Address confirmed and saved to localStorage:', orderInfo);
+      console.log('Individual address storage updated:', addressInfo);
       
       // Navigate to next incomplete step
       if (!confirmedCustomer) {
@@ -303,6 +320,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmCustomer = () => {
+    console.log('handleConfirmCustomer called, isCustomerComplete:', isCustomerComplete);
+    console.log('customerInfo:', customerInfo);
+    
     // Validate email and phone before proceeding
     const emailErr = getEmailErrorMessage(customerInfo.email);
     const phoneErr = getPhoneErrorMessage(customerInfo.phone);
@@ -313,17 +333,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (!emailErr && !phoneErr && customerInfo.firstName && customerInfo.lastName) {
       setConfirmedCustomer(true);
       
-      // Save customer info immediately to localStorage
+      // Build comprehensive order info for saving
       const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
       const orderInfo = {
         ...existingOrder,
-        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+        address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+        instructions: addressInfo.instructions || '',
+        deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+        deliveryTime: deliveryInfo.timeSlot || '',
+        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`.trim(),
         customerEmail: customerInfo.email,
         customerPhone: customerInfo.phone,
         recentpurchase: true
       };
+      
+      // Save to multiple places for reliability
       localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
-      console.log('Customer info confirmed and saved to localStorage:', orderInfo);
+      localStorage.setItem('partyondelivery_customer', JSON.stringify(customerInfo));
+      localStorage.setItem('partyondelivery_address', JSON.stringify(addressInfo));
+      
+      console.log('Customer confirmed and saved to localStorage:', orderInfo);
       
       setCurrentStep('payment');
       // Scroll to top of next section on mobile

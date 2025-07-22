@@ -30,69 +30,97 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
 
   // Pre-fill with data prioritizing completed order info over draft
   useEffect(() => {
+    console.log('=== useCheckoutFlow pre-fill effect ===');
+    
     // Get draft order data from localStorage
     const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
+    
+    // Get existing customer and address data from storage
+    const existingCustomer = JSON.parse(localStorage.getItem('partyondelivery_customer') || '{}');
+    const existingAddress = JSON.parse(localStorage.getItem('partyondelivery_address') || '{}');
+    
+    console.log('isAddingToOrder:', isAddingToOrder);
+    console.log('lastOrderInfo:', lastOrderInfo);
+    console.log('draftOrder:', draftOrder);
+    console.log('existingCustomer:', existingCustomer);
+    console.log('existingAddress:', existingAddress);
     
     // Determine the source of truth: completed order (lastOrderInfo) or draft order
     const sourceData = (isAddingToOrder && lastOrderInfo?.recentpurchase) ? lastOrderInfo : draftOrder;
     
-    console.log('=== useCheckoutFlow pre-fill ===');
-    console.log('isAddingToOrder:', isAddingToOrder);
-    console.log('lastOrderInfo:', lastOrderInfo);
-    console.log('draftOrder:', draftOrder);
-    console.log('sourceData chosen:', sourceData);
+    // Pre-fill address - priority: 1) sourceData 2) existingAddress storage
+    let addressToUse = null;
     
-    if (sourceData && Object.keys(sourceData).length > 0) {
-      console.log('Pre-filling from source data:', sourceData);
+    if (sourceData?.address && sourceData.address.trim()) {
+      // Parse address from order data
+      const addressParts = sourceData.address.split(',').map(part => part.trim());
+      const stateParts = addressParts[2]?.split(' ') || [];
       
-      // For add-to-order flow, save the original info for change tracking
-      if (isAddingToOrder && lastOrderInfo) {
-        setOriginalOrderInfo(lastOrderInfo);
-      }
-      
-      // Pre-fill delivery date and time (for add-to-order flow, use completed order data)
-      if (isAddingToOrder && sourceData.deliveryDate) {
-        try {
-          const date = new Date(sourceData.deliveryDate);
-          if (!isNaN(date.getTime())) {
-            updateDeliveryInfo('date', date);
-          }
-        } catch (error) {
-          console.error('Error parsing delivery date:', error);
+      addressToUse = {
+        street: addressParts[0] || '',
+        city: addressParts[1] || '',
+        state: stateParts[0] || '',
+        zipCode: stateParts[1] || '',
+        instructions: sourceData.instructions || ''
+      };
+    } else if (existingAddress.street) {
+      // Use existing address from storage
+      addressToUse = existingAddress;
+    }
+    
+    if (addressToUse && (addressToUse.street || addressToUse.city)) {
+      console.log('Pre-filling address with:', addressToUse);
+      setAddressInfo(addressToUse);
+    }
+    
+    // Pre-fill customer info - priority: 1) sourceData 2) existingCustomer storage
+    let customerToUse = null;
+    
+    if (sourceData?.customerName || sourceData?.customerEmail) {
+      const nameParts = sourceData.customerName?.split(' ') || [];
+      customerToUse = {
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: sourceData.customerEmail || '',
+        phone: sourceData.customerPhone || ''
+      };
+    } else if (existingCustomer.firstName || existingCustomer.email) {
+      customerToUse = existingCustomer;
+    }
+    
+    if (customerToUse && (customerToUse.firstName || customerToUse.email)) {
+      console.log('Pre-filling customer with:', customerToUse);
+      setCustomerInfo(customerToUse);
+    }
+    
+    // Pre-fill delivery date and time - only for adding to order or if data exists
+    if (sourceData?.deliveryDate && sourceData?.deliveryTime) {
+      try {
+        const date = new Date(sourceData.deliveryDate);
+        if (!isNaN(date.getTime())) {
+          console.log('Pre-filling delivery date:', date);
+          updateDeliveryInfo('date', date);
         }
+      } catch (error) {
+        console.error('Error parsing delivery date:', error);
       }
       
-      if (isAddingToOrder && sourceData.deliveryTime) {
+      if (sourceData.deliveryTime) {
+        console.log('Pre-filling delivery time:', sourceData.deliveryTime);
         updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
       }
-      
-      // ALWAYS pre-fill address (prioritize completed order for add-to-order)
-      if (sourceData.address) {
-        const addressParts = sourceData.address.split(',').map(part => part.trim());
-        setAddressInfo({
-          street: addressParts[0] || '',
-          city: addressParts[1] || '',
-          state: addressParts[2]?.split(' ')[0] || '',
-          zipCode: addressParts[2]?.split(' ')[1] || '',
-          instructions: sourceData.instructions || ''
-        });
-      }
-      
-      // ALWAYS pre-fill customer info (prioritize completed order for add-to-order)
-      if (sourceData.customerName || sourceData.customerEmail) {
-        const nameParts = sourceData.customerName?.split(' ') || [];
-        setCustomerInfo({
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
-          email: sourceData.customerEmail || '',
-          phone: sourceData.customerPhone || ''
-        });
-      }
+    }
+    
+    // For add-to-order flow, save the original info for change tracking
+    if (isAddingToOrder && lastOrderInfo) {
+      setOriginalOrderInfo(lastOrderInfo);
     }
     
     // Always start at datetime step
     setCurrentStep('datetime');
-  }, [isAddingToOrder, lastOrderInfo]); // React to changes in these props
+    
+    console.log('=== End useCheckoutFlow pre-fill ===');
+  }, [isAddingToOrder]); // Only depend on isAddingToOrder to prevent infinite loops
 
   // Update delivery info when address changes
   useEffect(() => {
