@@ -10,19 +10,18 @@ interface UseDeliveryPricingProps {
 }
 
 export function useDeliveryPricing({ addressInfo, subtotal, isAddingToOrder, hasChanges }: UseDeliveryPricingProps) {
-  const [deliveryPricing, setDeliveryPricing] = useState<DeliveryPricing>({
-    fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20),
-    minimumOrder: 0,
-    isDistanceBased: false
-  });
+  // Initialize with current subtotal-based pricing
+  const [deliveryPricing, setDeliveryPricing] = useState<DeliveryPricing>(() => 
+    getStandardDeliveryFee(subtotal)
+  );
   const [isPricingLoading, setIsPricingLoading] = useState(false);
 
-  // Calculate delivery pricing whenever address changes or component mounts with complete address
+  // Calculate delivery pricing whenever address changes, subtotal changes, or component mounts with complete address
   useEffect(() => {
     const calculatePricing = async () => {
       // Only calculate if we have a complete address
       if (!addressInfo.street || !addressInfo.city || !addressInfo.state || !addressInfo.zipCode) {
-        // Use standard pricing for incomplete addresses
+        // Use standard pricing for incomplete addresses - but update with current subtotal
         setDeliveryPricing(getStandardDeliveryFee(subtotal));
         return;
       }
@@ -35,7 +34,7 @@ export function useDeliveryPricing({ addressInfo, subtotal, isAddingToOrder, has
       setIsPricingLoading(true);
       
       try {
-        console.log('Calculating delivery pricing for address:', addressInfo);
+        console.log('Calculating delivery pricing for address:', addressInfo, 'subtotal:', subtotal);
         const pricing = await calculateDistanceBasedDeliveryFee(
           addressInfo.street,
           addressInfo.city,
@@ -47,7 +46,7 @@ export function useDeliveryPricing({ addressInfo, subtotal, isAddingToOrder, has
         setDeliveryPricing(pricing);
       } catch (error) {
         console.error('Error calculating delivery pricing:', error);
-        // Fallback to standard pricing
+        // Fallback to standard pricing with current subtotal
         setDeliveryPricing(getStandardDeliveryFee(subtotal));
       } finally {
         setIsPricingLoading(false);
