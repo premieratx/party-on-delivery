@@ -18,7 +18,7 @@ serve(async (req) => {
       throw new Error("SHOPIFY_STOREFRONT_ACCESS_TOKEN is not configured in Supabase secrets");
     }
     
-    // Updated collections to match the frontend component
+    // Collections that exist in your Shopify store
     const targetCollections = [
       "tailgate-beer",
       "seltzer-collection", 
@@ -28,40 +28,42 @@ serve(async (req) => {
 
     const allCollections = [];
 
-    // Fetch each collection
+    // Fetch each collection using Storefront API GraphQL
     for (const handle of targetCollections) {
-      const query = `
-        query getCollectionByHandle($handle: String!) {
-          collectionByHandle(handle: $handle) {
-            id
-            title
-            handle
-            description
-            products(first: 20) {
-              edges {
-                node {
-                  id
-                  title
-                  handle
-                  description
-                  images(first: 1) {
-                    edges {
-                      node {
-                        url
-                        altText
+      try {
+        const query = `
+          query getCollectionByHandle($handle: String!) {
+            collectionByHandle(handle: $handle) {
+              id
+              title
+              handle
+              description
+              products(first: 20) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                    description
+                    images(first: 1) {
+                      edges {
+                        node {
+                          url
+                          altText
+                        }
                       }
                     }
-                  }
-                  variants(first: 5) {
-                    edges {
-                      node {
-                        id
-                        title
-                        price {
-                          amount
-                          currencyCode
+                    variants(first: 5) {
+                      edges {
+                        node {
+                          id
+                          title
+                          price {
+                            amount
+                            currencyCode
+                          }
+                          availableForSale
                         }
-                        availableForSale
                       }
                     }
                   }
@@ -69,57 +71,69 @@ serve(async (req) => {
               }
             }
           }
-        }
-      `;
+        `;
 
-      const response = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
-        },
-        body: JSON.stringify({
-          query,
-          variables: { handle }
-        }),
-      });
+        const response = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
+          },
+          body: JSON.stringify({
+            query,
+            variables: { handle }
+          }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data?.collectionByHandle) {
-          const collection = data.data.collectionByHandle;
+        if (response.ok) {
+          const data = await response.json();
           
-          // Transform products
-          const products = collection.products.edges.map(({ node: product }) => {
-            const variant = product.variants.edges[0]?.node;
-            const image = product.images.edges[0]?.node;
+          if (data.data?.collectionByHandle) {
+            const collection = data.data.collectionByHandle;
             
-            return {
-              id: product.id,
-              title: product.title,
-              price: variant ? parseFloat(variant.price.amount) : 0,
-              image: image?.url || '/placeholder.svg',
-              description: product.description,
-              handle: product.handle,
-              variants: product.variants.edges.map(({ node: v }) => ({
-                id: v.id,
-                title: v.title,
-                price: parseFloat(v.price.amount),
-                available: v.availableForSale
-              }))
-            };
-          });
+            // Transform products
+            const products = collection.products.edges.map(({ node: product }) => {
+              const variant = product.variants.edges[0]?.node;
+              const image = product.images.edges[0]?.node;
+              
+              return {
+                id: product.id,
+                title: product.title,
+                price: variant ? parseFloat(variant.price.amount) : 0,
+                image: image?.url || '/placeholder.svg',
+                description: product.description,
+                handle: product.handle,
+                variants: product.variants.edges.map(({ node: v }) => ({
+                  id: v.id,
+                  title: v.title,
+                  price: parseFloat(v.price.amount),
+                  available: v.availableForSale
+                }))
+              };
+            });
 
-          allCollections.push({
-            id: collection.id,
-            title: collection.title,
-            handle: collection.handle,
-            description: collection.description,
-            products
-          });
+            allCollections.push({
+              id: collection.id,
+              title: collection.title,
+              handle: collection.handle,
+              description: collection.description,
+              products
+            });
+
+            console.log(`Successfully loaded collection: ${handle} with ${products.length} products`);
+          } else {
+            console.log(`Collection not found: ${handle}`);
+          }
+        } else {
+          const errorText = await response.text();
+          console.error(`Failed to fetch collection ${handle}: ${response.status} - ${errorText}`);
         }
+      } catch (collectionError) {
+        console.error(`Error fetching collection ${handle}:`, collectionError);
       }
     }
+
+    console.log(`Total collections loaded: ${allCollections.length}`);
 
     return new Response(
       JSON.stringify({ collections: allCollections }),
@@ -130,9 +144,12 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error fetching collections:", error);
+    console.error("Error in get-all-collections function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        collections: []
+      }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500 
