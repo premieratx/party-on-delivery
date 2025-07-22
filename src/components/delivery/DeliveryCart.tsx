@@ -3,11 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { X, Minus, Plus, ShoppingCart, Truck, Trash2 } from 'lucide-react';
+import { X, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
-import { format } from 'date-fns';
-import { useDeliveryPricing } from '@/hooks/useDeliveryPricing';
-import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 
 interface DeliveryCartProps {
   isOpen: boolean;
@@ -42,27 +39,17 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   tipAmount = 0,
   onEmptyCart
 }) => {
-  // Get address info for delivery pricing calculation
-  const { addressInfo } = useCustomerInfo();
-  
-  // Calculate pricing like in checkout with same logic
+  // Calculate pricing with simple logic to avoid hooks issues
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
   
-  // Use the same delivery pricing hook as checkout for consistency
-  const { deliveryPricing } = useDeliveryPricing({ 
-    addressInfo, 
-    subtotal,
-    isAddingToOrder,
-    hasChanges
-  });
+  // Use simple delivery fee calculation: $20 minimum for orders under $200, 10% for orders over $200
+  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
   
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
-  
-  const originalDeliveryFee = deliveryPricing.fee;
-  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
   
   const salesTax = subtotal * 0.0825; // 8.25% sales tax
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
@@ -109,23 +96,6 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
               </Button>
             </div>
           </div>
-
-          {/* Delivery Info - Compact */}
-          {deliveryInfo.date && (
-            <div className="mx-4 mt-3 mb-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
-              <div className="flex items-center gap-2 mb-1">
-                <Truck className="w-4 h-4 text-primary" />
-                <span className="font-medium text-xs">Delivery Details</span>
-              </div>
-              <div className="text-xs text-muted-foreground space-y-0.5">
-                <div className="flex justify-between">
-                  <span>{format(deliveryInfo.date, 'EEE, MMM d')}</span>
-                  <span>{deliveryInfo.timeSlot}</span>
-                </div>
-                <p className="truncate">{deliveryInfo.address}</p>
-              </div>
-            </div>
-          )}
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto">
@@ -213,10 +183,10 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                       {finalDeliveryFee === 0 ? 'FREE' : `$${(finalDeliveryFee || 0).toFixed(2)}`}
                     </span>
                   </div>
-                  {appliedDiscount?.type === 'free_shipping' && originalDeliveryFee > 0 && (
+                  {appliedDiscount?.type === 'free_shipping' && deliveryFee > 0 && (
                     <div className="flex justify-between text-green-600 text-sm">
                       <span>Free shipping ({appliedDiscount.code})</span>
-                      <span>-${(originalDeliveryFee || 0).toFixed(2)}</span>
+                      <span>-${(deliveryFee || 0).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
