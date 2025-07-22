@@ -58,7 +58,11 @@ serve(async (req) => {
     }
     
     const SHOPIFY_STORE = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";
-    const SHOPIFY_API_KEY = "a49fa69332729e9f8329ad8caacc37ba"; // Storefront API token
+    const SHOPIFY_API_KEY = Deno.env.get("SHOPIFY_STOREFRONT_ACCESS_TOKEN");
+    
+    if (!SHOPIFY_API_KEY) {
+      throw new Error("SHOPIFY_STOREFRONT_ACCESS_TOKEN is not set");
+    }
     
     // GraphQL query to fetch collection with products
     const query = `

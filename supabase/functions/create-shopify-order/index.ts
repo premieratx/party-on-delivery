@@ -55,10 +55,10 @@ serve(async (req) => {
 
     // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-    const shopifyStore = Deno.env.get("SHOPIFY_STORE_URL");
+    const shopifyStore = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";
     
-    if (!shopifyToken || !shopifyStore) {
-      throw new Error("Shopify credentials not configured");
+    if (!shopifyToken) {
+      throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not configured");
     }
 
     // Parse cart items from metadata
@@ -71,13 +71,17 @@ serve(async (req) => {
     const customerPhone = metadata?.customer_phone;
     const customerEmail = metadata?.customer_email;
     const groupOrderNumber = metadata?.group_order_number;
+    const discountCode = metadata?.discount_code;
+    const discountAmount = metadata?.discount_amount;
 
     logStep("Metadata parsed", { 
       itemCount: cartItems.length, 
       deliveryDate, 
       deliveryTime,
       customerName,
-      deliveryInstructions 
+      deliveryInstructions,
+      discountCode,
+      discountAmount 
     });
 
     // Parse delivery address components
@@ -144,6 +148,16 @@ serve(async (req) => {
       requires_shipping: true,
     }));
 
+    // Add discount line item if discount code was used
+    if (discountCode && discountAmount) {
+      lineItems.push({
+        title: `Discount Applied: ${discountCode}`,
+        price: `-${Math.abs(parseFloat(discountAmount)).toString()}`,
+        quantity: 1,
+        requires_shipping: false,
+      });
+    }
+
     // Create order in Shopify
     const orderData = {
       order: {
@@ -178,9 +192,10 @@ serve(async (req) => {
 ⏰ Delivery Time: ${deliveryTime}
 📍 Delivery Address: ${deliveryAddress}
 ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : ''}
+${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${discountAmount ? `$${Math.abs(parseFloat(discountAmount)).toFixed(2)} off` : ''})` : ''}
 💳 Stripe Payment ID: ${paymentIntentId}
 ✅ Payment Status: Paid`,
-        tags: `delivery-order, delivery-${deliveryDate}, stripe-${paymentIntentId}`,
+        tags: `delivery-order, delivery-${deliveryDate}, stripe-${paymentIntentId}${discountCode ? `, discount-${discountCode}, affiliate-${discountCode}` : ''}`,
         shipping_lines: [{
           title: "Scheduled Delivery Service",
           price: "5.99",
@@ -313,6 +328,11 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
           // Build tags array based on order type
           const tagArray = [groupTags];
           
+          // Add discount tags if applicable
+          if (discountCode) {
+            tagArray.push(`discount-${discountCode}`, `affiliate-${discountCode}`);
+          }
+          
           // Check if this is a bundle order (second order to same address/time)
           const isBundleOrder = isAddingToOrder && useSameAddress;
           
@@ -341,7 +361,8 @@ ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : 
                 note: `${orderResult.order.note || ''}
 
 🔗 ORDER GROUP: ${orderGroupId}
-📦 BUNDLING: This order can be bundled with other orders in the same group for delivery efficiency.`
+📦 BUNDLING: This order can be bundled with other orders in the same group for delivery efficiency.
+${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" used for affiliate sales tracking.` : ''}`
               }
             })
           });
