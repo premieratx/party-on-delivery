@@ -8,6 +8,8 @@ import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRigh
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
+import { cacheManager } from '@/utils/cacheManager';
+import { ErrorHandler } from '@/utils/errorHandler';
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
@@ -85,70 +87,50 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       setLoading(true);
       setError(null);
       
-      // Check for cached collections first (unless force refresh)
+      // Check cache first (unless force refresh)
       if (!forceRefresh) {
-        const cachedCollections = localStorage.getItem('shopify-collections');
-        const cacheTimestamp = localStorage.getItem('shopify-collections-timestamp');
-        const ONE_HOUR = 60 * 60 * 1000; // 1 hour in milliseconds
-        
-        // Use cache if it's less than 1 hour old
-        if (cachedCollections && cacheTimestamp) {
-          const age = Date.now() - parseInt(cacheTimestamp);
-          if (age < ONE_HOUR) {
-            console.log('Using cached collections');
-            setCollections(JSON.parse(cachedCollections));
-            setLoading(false);
-            return;
-          }
+        const cachedCollections = cacheManager.getShopifyCollections();
+        if (cachedCollections && cachedCollections.length > 0) {
+          console.log('Using cached collections');
+          setCollections(cachedCollections);
+          setLoading(false);
+          return;
         }
       }
       
       console.log('Fetching fresh collections from Shopify...');
       
-      // Call our updated edge function 
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      // Use retry logic for API calls
+      const result = await ErrorHandler.withRetry(async () => {
+        const { data, error } = await supabase.functions.invoke('get-all-collections');
+        if (error) throw error;
+        return data;
+      }, {
+        maxAttempts: 3,
+        delayMs: 1000,
+        backoffMultiplier: 1.5
+      });
 
-      if (error) {
-        console.error('Error calling edge function:', error);
-        // Try to use cached data as fallback
-        const cachedCollections = localStorage.getItem('shopify-collections');
-        if (cachedCollections) {
-          console.log('Using cached collections as fallback');
-          setCollections(JSON.parse(cachedCollections));
-        } else {
-          setError('Failed to fetch collections and no cache available');
-        }
-        return;
-      }
-
-      if (data?.collections && data.collections.length > 0) {
+      if (result?.collections && result.collections.length > 0) {
         console.log('Fresh collections loaded successfully');
-        setCollections(data.collections);
+        setCollections(result.collections);
         
         // Cache the successful result
-        localStorage.setItem('shopify-collections', JSON.stringify(data.collections));
-        localStorage.setItem('shopify-collections-timestamp', Date.now().toString());
+        cacheManager.setShopifyCollections(result.collections);
       } else {
-        console.error('No collections data received');
-        // Try to use cached data as fallback
-        const cachedCollections = localStorage.getItem('shopify-collections');
-        if (cachedCollections) {
-          console.log('Using cached collections as fallback');
-          setCollections(JSON.parse(cachedCollections));
-        } else {
-          setError('No collections found');
-        }
+        throw new Error('No collections data received from API');
       }
     } catch (error) {
-      console.error('Error fetching collections:', error);
+      ErrorHandler.logError(error, 'fetchCollections');
       
       // Try to use cached data as fallback
-      const cachedCollections = localStorage.getItem('shopify-collections');
-      if (cachedCollections) {
+      const cachedCollections = cacheManager.getShopifyCollections();
+      if (cachedCollections && cachedCollections.length > 0) {
         console.log('Using cached collections as fallback');
-        setCollections(JSON.parse(cachedCollections));
+        setCollections(cachedCollections);
+        setError('Using cached data - some products may be outdated');
       } else {
-        setError('Failed to load collections');
+        setError('Failed to load collections and no cache available');
       }
     } finally {
       setLoading(false);
@@ -156,8 +138,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   };
 
   const clearCacheAndRefresh = () => {
-    localStorage.removeItem('shopify-collections');
-    localStorage.removeItem('shopify-collections-timestamp');
+    cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
     fetchCollections(true);
   };
 

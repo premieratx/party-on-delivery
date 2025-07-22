@@ -1,4 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
+import { cacheManager } from './cacheManager';
+import { ErrorHandler } from './errorHandler';
 
 export interface DistanceResponse {
   distanceInMiles: number;
@@ -21,45 +23,49 @@ export const calculateDistanceBasedDeliveryFee = async (
   zipCode: string,
   subtotal: number
 ): Promise<DeliveryPricing> => {
+  const fullAddress = `${address}, ${city}, ${state} ${zipCode}`;
+  
+  // Check cache first
+  const cachedPricing = cacheManager.getDeliveryPricing(fullAddress);
+  if (cachedPricing) {
+    console.log('Using cached delivery pricing');
+    return cachedPricing;
+  }
+
   try {
-    // Call the distance calculation edge function
-    const { data, error } = await supabase.functions.invoke('calculate-delivery-distance', {
-      body: {
-        deliveryAddress: address,
-        deliveryCity: city,
-        deliveryState: state,
-        deliveryZip: zipCode
-      }
+    // Use retry logic for API calls
+    const result = await ErrorHandler.withRetry(async () => {
+      const { data, error } = await supabase.functions.invoke('calculate-delivery-distance', {
+        body: {
+          deliveryAddress: address,
+          deliveryCity: city,
+          deliveryState: state,
+          deliveryZip: zipCode
+        }
+      });
+      if (error) throw error;
+      return data;
+    }, {
+      maxAttempts: 2,
+      delayMs: 1000,
+      backoffMultiplier: 1.5
     });
 
-    if (error) {
-      console.error('Distance calculation error:', error);
-      // Fallback to standard pricing
-      return {
-        fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
-        minimumOrder: 0,
-        isDistanceBased: false
-      };
-    }
-
-    const response: DistanceResponse = data;
+    const response: DistanceResponse = result;
     
     if (!response.success) {
       console.error('Distance calculation failed:', response.error);
-      // Fallback to standard pricing
-      return {
-        fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
-        minimumOrder: 0,
-        isDistanceBased: false
-      };
+      // Return standard pricing but don't cache failures
+      return getStandardDeliveryFee(subtotal);
     }
 
     const distance = response.distanceInMiles;
+    let pricing: DeliveryPricing;
     
     // Apply distance-based pricing rules
     if (distance <= 10) {
       // Within 10 miles: existing rules (10% for $200+, $20 for under $200)
-      return {
+      pricing = {
         fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
         minimumOrder: 0,
         isDistanceBased: true,
@@ -68,7 +74,7 @@ export const calculateDistanceBasedDeliveryFee = async (
     } else if (distance <= 20) {
       // 10-20 miles: $40 minimum order requirement
       const percentageFee = subtotal * 0.1;
-      return {
+      pricing = {
         fee: Math.max(percentageFee, 40),
         minimumOrder: 40,
         isDistanceBased: true,
@@ -77,7 +83,7 @@ export const calculateDistanceBasedDeliveryFee = async (
     } else {
       // Over 20 miles: $60 minimum order requirement
       const percentageFee = subtotal * 0.1;
-      return {
+      pricing = {
         fee: Math.max(percentageFee, 60),
         minimumOrder: 60,
         isDistanceBased: true,
@@ -85,14 +91,14 @@ export const calculateDistanceBasedDeliveryFee = async (
       };
     }
 
+    // Cache successful result
+    cacheManager.setDeliveryPricing(fullAddress, pricing);
+    return pricing;
+
   } catch (error) {
-    console.error('Error in distance-based pricing calculation:', error);
+    ErrorHandler.logError(error, 'calculateDistanceBasedDeliveryFee');
     // Fallback to standard pricing
-    return {
-      fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
-      minimumOrder: 0,
-      isDistanceBased: false
-    };
+    return getStandardDeliveryFee(subtotal);
   }
 };
 
