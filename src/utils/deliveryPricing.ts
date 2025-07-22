@@ -66,7 +66,7 @@ export const calculateDistanceBasedDeliveryFee = async (
     if (distance <= 10) {
       // Within 10 miles: existing rules (10% for $200+, $20 for under $200)
       pricing = {
-        fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
+        fee: subtotal >= 200 ? subtotal * 0.1 : 20, // 10% for orders $200+, $20 minimum for orders under $200
         minimumOrder: 0,
         isDistanceBased: true,
         distance
@@ -104,7 +104,7 @@ export const calculateDistanceBasedDeliveryFee = async (
 
 export const getStandardDeliveryFee = (subtotal: number): DeliveryPricing => {
   return {
-    fee: Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20), // $20 minimum delivery fee
+    fee: subtotal >= 200 ? subtotal * 0.1 : 20, // 10% for orders $200+, $20 minimum for orders under $200
     minimumOrder: 0,
     isDistanceBased: false
   };

@@ -153,7 +153,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   // Pre-select 10% tip automatically when subtotal changes
   useEffect(() => {
-    if (subtotal > 0 && tipAmount === 0) {
+    if (subtotal > 0) {
       const defaultTip = subtotal * 0.10;
       setTipAmount(defaultTip);
       if (onTipChange) {
