@@ -11,15 +11,15 @@ serve(async (req) => {
   }
 
   try {
-    const SHOPIFY_STORE = "premier-concierge.myshopify.com";
-    const SHOPIFY_API_KEY = "0d4359f88af16da44f2653d9134c18c5";
+    const SHOPIFY_STORE = Deno.env.get('SHOPIFY_STORE_URL') || "premier-concierge.myshopify.com";
+    const SHOPIFY_API_KEY = Deno.env.get('SHOPIFY_STOREFRONT_ACCESS_TOKEN') || "0d4359f88af16da44f2653d9134c18c5";
     
-    // Define the 4 collections for the order steps
+    // Updated collections to match the frontend component
     const targetCollections = [
-      "texas-beer",
+      "tailgate-beer",
       "seltzer-collection", 
-      "lake-package-items",
-      "cocktail-collection-all"
+      "cocktail-kits",
+      "party-supplies"
     ];
 
     const allCollections = [];

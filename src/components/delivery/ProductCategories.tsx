@@ -80,38 +80,85 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     fetchCollections();
   }, []);
 
-  const fetchCollections = async () => {
+  const fetchCollections = async (forceRefresh = false) => {
     try {
       setLoading(true);
+      setError(null);
       
+      // Check for cached collections first (unless force refresh)
+      if (!forceRefresh) {
+        const cachedCollections = localStorage.getItem('shopify-collections');
+        const cacheTimestamp = localStorage.getItem('shopify-collections-timestamp');
+        const ONE_HOUR = 60 * 60 * 1000; // 1 hour in milliseconds
+        
+        // Use cache if it's less than 1 hour old
+        if (cachedCollections && cacheTimestamp) {
+          const age = Date.now() - parseInt(cacheTimestamp);
+          if (age < ONE_HOUR) {
+            console.log('Using cached collections');
+            setCollections(JSON.parse(cachedCollections));
+            setLoading(false);
+            return;
+          }
+        }
+      }
       
-      // Use our step mapping to define the collections we want
-      const targetCollections = stepMapping.map(step => step.handle);
+      console.log('Fetching fresh collections from Shopify...');
       
-      // Call our edge function to fetch collections
-      const { data, error } = await supabase.functions.invoke('fetch-shopify-products', {
-        body: { handles: targetCollections }
-      });
+      // Call our updated edge function 
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
 
       if (error) {
         console.error('Error calling edge function:', error);
-        setError('Failed to fetch collections');
+        // Try to use cached data as fallback
+        const cachedCollections = localStorage.getItem('shopify-collections');
+        if (cachedCollections) {
+          console.log('Using cached collections as fallback');
+          setCollections(JSON.parse(cachedCollections));
+        } else {
+          setError('Failed to fetch collections and no cache available');
+        }
         return;
       }
 
-      if (data?.collections) {
-        
+      if (data?.collections && data.collections.length > 0) {
+        console.log('Fresh collections loaded successfully');
         setCollections(data.collections);
+        
+        // Cache the successful result
+        localStorage.setItem('shopify-collections', JSON.stringify(data.collections));
+        localStorage.setItem('shopify-collections-timestamp', Date.now().toString());
       } else {
         console.error('No collections data received');
-        setError('No collections found');
+        // Try to use cached data as fallback
+        const cachedCollections = localStorage.getItem('shopify-collections');
+        if (cachedCollections) {
+          console.log('Using cached collections as fallback');
+          setCollections(JSON.parse(cachedCollections));
+        } else {
+          setError('No collections found');
+        }
       }
     } catch (error) {
       console.error('Error fetching collections:', error);
-      setError('Failed to load collections');
+      
+      // Try to use cached data as fallback
+      const cachedCollections = localStorage.getItem('shopify-collections');
+      if (cachedCollections) {
+        console.log('Using cached collections as fallback');
+        setCollections(JSON.parse(cachedCollections));
+      } else {
+        setError('Failed to load collections');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearCacheAndRefresh = () => {
+    localStorage.removeItem('shopify-collections');
+    localStorage.removeItem('shopify-collections-timestamp');
+    fetchCollections(true);
   };
 
   const selectedCollection = collections[selectedCategory];
@@ -207,9 +254,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               <br />4. Copy the Storefront access token
               <br />5. Replace "YOUR_STOREFRONT_ACCESS_TOKEN_HERE" in the code
             </p>
-            <Button onClick={fetchCollections} variant="outline">
-              Retry
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => fetchCollections(true)} variant="outline">
+                Retry
+              </Button>
+              <Button onClick={clearCacheAndRefresh} variant="outline">
+                Clear Cache & Retry
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -588,9 +640,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {collections.length === 0 && !loading && (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">Unable to load Shopify collections.</p>
-            <Button onClick={fetchCollections} className="mt-4">
-              Try Again
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => fetchCollections(true)} className="mt-4">
+                Try Again
+              </Button>
+              <Button onClick={clearCacheAndRefresh} variant="outline" className="mt-4">
+                Clear Cache & Retry
+              </Button>
+            </div>
           </div>
         )}
 
