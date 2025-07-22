@@ -257,12 +257,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
       console.log('Date/time confirmed and saved to localStorage:', orderInfo);
       
-      // Navigate to next incomplete step
+      // Navigate to next incomplete step or payment if all confirmed
       if (!confirmedAddress) {
         setCurrentStep('address');
       } else if (!confirmedCustomer) {
         setCurrentStep('customer');
-      } else {
+      } else if (confirmedAddress && confirmedCustomer) {
         setCurrentStep('payment');
       }
       // Scroll to top of next section on mobile
@@ -306,10 +306,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       console.log('Address confirmed and saved to localStorage:', orderInfo);
       console.log('Individual address storage updated:', addressInfo);
       
-      // Navigate to next incomplete step
+      // Navigate to next incomplete step or payment if all confirmed
       if (!confirmedCustomer) {
         setCurrentStep('customer');
-      } else {
+      } else if (confirmedDateTime && confirmedCustomer) {
         setCurrentStep('payment');
       }
       // Scroll to top of next section on mobile
@@ -371,7 +371,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       
       console.log('Customer confirmed and saved to localStorage:', orderInfo);
       
-      setCurrentStep('payment');
+      // Only proceed to payment if all sections confirmed
+      if (confirmedDateTime && confirmedAddress) {
+        setCurrentStep('payment');
+      }
       // Scroll to top of next section on mobile
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -515,105 +518,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     </p>
                   </div>
                 )}
-                 <div className="space-y-1 md:space-y-3">
-                   {confirmedDateTime && (
-                     <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
-                        <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                          <div className="flex flex-col gap-1 min-w-0 flex-1">
-                            <div className="flex items-center gap-1 md:gap-2">
-                              <span className="shrink-0 text-xs md:text-sm">Delivery:</span>
-                              <span className="text-foreground text-xs md:text-sm">
-                                {deliveryInfo.date ? format(deliveryInfo.date, "EEEE, MMMM do, yyyy") : ''} 
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 md:gap-2">
-                              <span className="shrink-0 text-xs md:text-sm">Time:</span>
-                              <span className="text-foreground text-xs md:text-sm">
-                                {deliveryInfo.timeSlot || ''}
-                              </span>
-                            </div>
-            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600">Same as previous order</span>}
-            {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
-              <span className="text-xs text-red-600 font-medium">
-                ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
-                  changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
-              </span>
-            )}
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setConfirmedDateTime(false);
-                              setCurrentStep('datetime');
-                            }}
-                            className="shrink-0 text-xs px-2 py-1 h-auto"
-                          >
-                            Edit
-                          </Button>
-                       </div>
-                     </div>
-                   )}
-                
-                   {confirmedAddress && (
-                     <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
-                       <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                         <div className="flex items-center gap-1 md:gap-2 min-w-0 flex-1">
-                           <span className="shrink-0 text-xs md:text-sm">Address:</span>
-                           <span className="text-foreground text-xs md:text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
-            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
-            {hasChanges && (changedFields.includes('delivery address')) && (
-              <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
-            )}
-                         </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setConfirmedAddress(false);
-                              setCurrentStep('address');
-                            }}
-                            className="shrink-0 text-xs px-2 py-1 h-auto"
-                          >
-                            Edit
-                          </Button>
-                       </div>
-                       {addressInfo.instructions && (
-                         <div className="text-xs md:text-sm font-normal text-foreground mt-1">
-                           {addressInfo.instructions}
-                         </div>
-                       )}
-                     </div>
-                   )}
-                
-                  {confirmedCustomer && (
-                    <div className="p-1.5 md:p-3 border border-black rounded-lg bg-muted/30">
-                      <div className="text-xs md:text-lg font-semibold text-primary flex items-center justify-between gap-2">
-                        <div className="flex flex-col gap-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-1 md:gap-2">
-                            <span className="shrink-0 text-xs md:text-sm">Contact:</span>
-                            <span className="text-foreground text-xs md:text-sm">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
-                          </div>
-                          <div className="flex items-center gap-1 md:gap-2">
-                            <span className="shrink-0 text-xs md:text-sm">Email:</span>
-                            <span className="text-foreground text-xs md:text-sm">{customerInfo.email}</span>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setConfirmedCustomer(false);
-                            setCurrentStep('customer');
-                          }}
-                          className="shrink-0 text-xs px-2 py-1 h-auto"
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </div>
-                   )}
-                 
                   {/* Changes Warning */}
                   {hasChanges && (
                     <div className="p-3 border border-red-200 rounded-lg bg-red-50 text-red-800">
@@ -637,278 +541,369 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       </div>
                     </div>
                   )}
-               </div>
              </CardContent>
            )}
          </Card>
 
-         <div className="grid md:grid-cols-2 gap-2 md:gap-6">
-           {/* Step-by-Step Forms - Smart display based on data state */}
-           <div className="space-y-2 md:space-y-6">
-             
-               {/* Date/Time Section - Only show when current step */}
-               {currentStep === 'datetime' && (
-                 <Card className="shadow-card border-2 border-green-500">
-                   <CardHeader>
-                     <CardTitle className="text-lg flex items-center gap-2">
-                       <CalendarIcon className="w-5 h-5" />
-                       Schedule Your Delivery
-                       {confirmedDateTime && <CheckCircle className="w-5 h-5 text-green-600 ml-2" />}
-                     </CardTitle>
-                   </CardHeader>
-                   
-                   <CardContent className="space-y-4">
-                     <div className="space-y-4">
-                       <div className="space-y-2">
-                         <Label>Delivery Date *</Label>
-                         <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                           <PopoverTrigger asChild>
-                             <Button
-                               variant="outline"
-                               className={cn(
-                                 "w-full justify-start text-left font-normal",
-                                 !deliveryInfo.date && "text-muted-foreground"
-                               )}
-                             >
-                               <CalendarIcon className="mr-2 h-4 w-4" />
-                               {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
-                             </Button>
-                           </PopoverTrigger>
-                           <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
-                             <Calendar
-                               mode="single"
-                               selected={deliveryInfo.date || undefined}
-                               onSelect={(date) => {
-                                 updateDeliveryInfo('date', date);
-                                 setIsCalendarOpen(false);
-                               }}
-                               disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
-                               initialFocus
-                               className="p-3 pointer-events-auto"
-                             />
-                           </PopoverContent>
-                         </Popover>
-                       </div>
-
-                       <div className="space-y-2">
-                         <Label>Delivery Time *</Label>
-                         <Select 
-                           value={deliveryInfo.timeSlot} 
-                           onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
-                         >
-                           <SelectTrigger className="w-full">
-                             <SelectValue placeholder="Select a time slot" />
-                           </SelectTrigger>
-                           <SelectContent className="z-50 bg-background">
-                             {timeSlots.map((slot) => (
-                               <SelectItem key={slot} value={slot}>
-                                 <div className="flex items-center gap-2">
-                                   <Clock className="w-4 h-4" />
-                                   {slot}
-                                 </div>
-                               </SelectItem>
-                             ))}
-                           </SelectContent>
-                         </Select>
-                       </div>
-                       
-                       <Button 
-                         onClick={handleConfirmDateTime}
-                         disabled={!isDateTimeComplete}
-                         className="w-full"
-                       >
-                         Confirm Date & Time
-                       </Button>
-                     </div>
-                   </CardContent>
-                 </Card>
-               )}
-
-              {/* Address Section - Only show when current step */}
-              {currentStep === 'address' && (
-                <Card className="shadow-card border-2 border-green-500">
+          <div className="grid md:grid-cols-2 gap-2 md:gap-6">
+            {/* Step-by-Step Forms - All sections visible with smart highlighting */}
+            <div className="space-y-2 md:space-y-6">
+              
+                {/* Date/Time Section - Always show, highlight when editing */}
+                <Card className={`shadow-card ${currentStep === 'datetime' ? 'border-2 border-green-500' : 'border'}`}>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <MapPin className="w-5 h-5" />
-                      Delivery Address
-                      {confirmedAddress && <CheckCircle className="w-5 h-5 text-green-600 ml-2" />}
+                      <CalendarIcon className="w-5 h-5" />
+                      Schedule Your Delivery
+                      {confirmedDateTime && <CheckCircle className="w-5 h-5 text-green-600 ml-2" />}
                     </CardTitle>
                   </CardHeader>
                   
-                   <CardContent className="space-y-2 md:space-y-4">
-                     <div className="space-y-2 md:space-y-4">
-                       <div className="space-y-1 md:space-y-2">
-                         <Label htmlFor="street">Street Address *</Label>
-                          <GooglePlacesAutocomplete
-                            value={addressInfo.street}
-                            onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
-                            onPlaceSelect={(place) => {
-                              const components = place.address_components || [];
-                              const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
-                              const route = components.find(c => c.types.includes('route'))?.long_name || '';
-                              const city = components.find(c => c.types.includes('locality'))?.long_name || 
-                                          components.find(c => c.types.includes('sublocality'))?.long_name || '';
-                              const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
-                              const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
-                              
-                              setAddressInfo(prev => ({
-                                ...prev,
-                                street: `${streetNumber} ${route}`.trim(),
-                                city: city,
-                                state: state, 
-                                zipCode: zipCode
-                              }));
+                  <CardContent className="space-y-4">
+                    {!confirmedDateTime || currentStep === 'datetime' ? (
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Delivery Date *</Label>
+                          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !deliveryInfo.date && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={deliveryInfo.date || undefined}
+                                onSelect={(date) => {
+                                  updateDeliveryInfo('date', date);
+                                  setIsCalendarOpen(false);
+                                }}
+                                disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>Delivery Time *</Label>
+                          <Select 
+                            value={deliveryInfo.timeSlot} 
+                            onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select a time slot" />
+                            </SelectTrigger>
+                            <SelectContent className="z-50 bg-background">
+                              {timeSlots.map((slot) => (
+                                <SelectItem key={slot} value={slot}>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4" />
+                                    {slot}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <Button 
+                          onClick={handleConfirmDateTime}
+                          disabled={!isDateTimeComplete}
+                          className="w-full"
+                        >
+                          Confirm Date & Time
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="p-3 border rounded-lg bg-muted/30">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-col gap-1 min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Date:</span>
+                              <span className="text-sm">
+                                {deliveryInfo.date ? format(deliveryInfo.date, "EEEE, MMMM do, yyyy") : ''} 
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Time:</span>
+                              <span className="text-sm">
+                                {deliveryInfo.timeSlot || ''}
+                              </span>
+                            </div>
+                            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600">Same as previous order</span>}
+                            {hasChanges && (changedFields.includes('delivery date') || changedFields.includes('delivery time')) && (
+                              <span className="text-xs text-red-600 font-medium">
+                                ({changedFields.includes('delivery date') && changedFields.includes('delivery time') ? 'Date & time changed' : 
+                                  changedFields.includes('delivery date') ? 'Date changed' : 'Time changed'})
+                              </span>
+                            )}
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setConfirmedDateTime(false);
+                              setCurrentStep('datetime');
                             }}
-                           placeholder="Start typing your address..."
-                         />
-                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-2 md:gap-4">
-                        <div className="space-y-1 md:space-y-2">
-                          <Label htmlFor="city">City *</Label>
-                          <Input
-                            id="city"
-                            name="address-level2"
-                            autoComplete={isAddingToOrder ? "address-level2" : "off"}
-                            placeholder="Austin"
-                            value={addressInfo.city}
-                            onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
-                          />
-                        </div>
-                        <div className="space-y-1 md:space-y-2">
-                          <Label htmlFor="state">State *</Label>
-                          <Input
-                            id="state"
-                            name="address-level1"
-                            autoComplete={isAddingToOrder ? "address-level1" : "off"}
-                            placeholder="TX"
-                            value={addressInfo.state}
-                            onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
-                          />
+                            className="shrink-0"
+                          >
+                            Edit
+                          </Button>
                         </div>
                       </div>
-                      
-                      <div className="space-y-1 md:space-y-2">
-                        <Label htmlFor="zipCode">Zip Code *</Label>
-                        <Input
-                          id="zipCode"
-                          name="postal-code"
-                          autoComplete={isAddingToOrder ? "postal-code" : "off"}
-                          placeholder="78701"
-                          value={addressInfo.zipCode}
-                          onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
-                        />
-                      </div>
-                      
-                      <div className="space-y-1 md:space-y-2">
-                        <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
-                        <Textarea
-                          id="instructions"
-                          placeholder="Apartment number, gate code, delivery preferences..."
-                          value={addressInfo.instructions}
-                          onChange={(e) => setAddressInfo(prev => ({ ...prev, instructions: e.target.value }))}
-                          className="min-h-[50px] md:min-h-[80px]"
-                        />
-                      </div>
-                      
-                      <Button 
-                        onClick={handleConfirmAddress}
-                        disabled={!isAddressComplete}
-                        className="w-full"
-                      >
-                        Confirm Address
-                      </Button>
-                     </div>
+                    )}
                   </CardContent>
                 </Card>
-              )}
 
-             {/* Customer Information - Only show when current step */}
-             {currentStep === 'customer' && (
-               <Card className="shadow-card border-2 border-green-500">
+               {/* Address Section - Always show, highlight when editing */}
+               <Card className={`shadow-card ${currentStep === 'address' ? 'border-2 border-green-500' : 'border'}`}>
                  <CardHeader>
                    <CardTitle className="text-lg flex items-center gap-2">
-                     <User className="w-5 h-5" />
-                     Contact Information
-                     {confirmedCustomer && <CheckCircle className="w-5 h-5 text-green-600 ml-2" />}
+                     <MapPin className="w-5 h-5" />
+                     Delivery Address
+                     {confirmedAddress && <CheckCircle className="w-5 h-5 text-green-600 ml-2" />}
                    </CardTitle>
                  </CardHeader>
                  
-                 <CardContent className="space-y-4">
-                   <div className="space-y-4">
-                     <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                         <Label htmlFor="firstName">First Name *</Label>
+                  <CardContent className="space-y-2 md:space-y-4">
+                    {!confirmedAddress || currentStep === 'address' ? (
+                      <div className="space-y-2 md:space-y-4">
+                        <div className="space-y-1 md:space-y-2">
+                          <Label htmlFor="street">Street Address *</Label>
+                           <GooglePlacesAutocomplete
+                             value={addressInfo.street}
+                             onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
+                             onPlaceSelect={(place) => {
+                               const components = place.address_components || [];
+                               const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+                               const route = components.find(c => c.types.includes('route'))?.long_name || '';
+                               const city = components.find(c => c.types.includes('locality'))?.long_name || 
+                                           components.find(c => c.types.includes('sublocality'))?.long_name || '';
+                               const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
+                               const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
+                               
+                               setAddressInfo(prev => ({
+                                 ...prev,
+                                 street: `${streetNumber} ${route}`.trim(),
+                                 city: city,
+                                 state: state, 
+                                 zipCode: zipCode
+                               }));
+                             }}
+                            placeholder="Start typing your address..."
+                          />
+                        </div>
+                       
+                       <div className="grid grid-cols-2 gap-2 md:gap-4">
+                         <div className="space-y-1 md:space-y-2">
+                           <Label htmlFor="city">City *</Label>
+                           <Input
+                             id="city"
+                             name="address-level2"
+                             autoComplete={isAddingToOrder ? "address-level2" : "off"}
+                             placeholder="Austin"
+                             value={addressInfo.city}
+                             onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
+                           />
+                         </div>
+                         <div className="space-y-1 md:space-y-2">
+                           <Label htmlFor="state">State *</Label>
+                           <Input
+                             id="state"
+                             name="address-level1"
+                             autoComplete={isAddingToOrder ? "address-level1" : "off"}
+                             placeholder="TX"
+                             value={addressInfo.state}
+                             onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
+                           />
+                         </div>
+                       </div>
+                       
+                       <div className="space-y-1 md:space-y-2">
+                         <Label htmlFor="zipCode">Zip Code *</Label>
                          <Input
-                           id="firstName"
-                           name="given-name"
-                           autoComplete="given-name"
-                           placeholder="John"
-                           value={customerInfo.firstName}
-                           onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
+                           id="zipCode"
+                           name="postal-code"
+                           autoComplete={isAddingToOrder ? "postal-code" : "off"}
+                           placeholder="78701"
+                           value={addressInfo.zipCode}
+                           onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
                          />
                        </div>
-                       <div className="space-y-2">
-                         <Label htmlFor="lastName">Last Name *</Label>
-                         <Input
-                           id="lastName"
-                           name="family-name"
-                           autoComplete="family-name"
-                           placeholder="Doe"
-                           value={customerInfo.lastName}
-                           onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
+                       
+                       <div className="space-y-1 md:space-y-2">
+                         <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+                         <Textarea
+                           id="instructions"
+                           placeholder="Apartment number, gate code, delivery preferences..."
+                           value={addressInfo.instructions}
+                           onChange={(e) => setAddressInfo(prev => ({ ...prev, instructions: e.target.value }))}
+                           className="min-h-[50px] md:min-h-[80px]"
                          />
                        </div>
-                     </div>
-                     
-                     <div className="space-y-2">
-                       <Label htmlFor="phone">Phone Number *</Label>
-                       <Input
-                         id="phone"
-                         name="tel"
-                         type="tel"
-                         autoComplete="tel"
-                         placeholder="(555) 123-4567"
-                         value={customerInfo.phone}
-                         onChange={(e) => {
-                           const formatted = formatPhoneNumber(e.target.value);
-                           setCustomerInfo(prev => ({ ...prev, phone: formatted }));
-                           if (phoneError) setPhoneError(null);
-                         }}
-                         className={phoneError ? 'border-red-500' : ''}
-                       />
-                       {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
-                     </div>
-                     
-                     <div className="space-y-2">
-                       <Label htmlFor="email">Email Address *</Label>
-                       <Input
-                         id="email"
-                         name="email"
-                         type="email"
-                         autoComplete="email"
-                         placeholder="john.doe@example.com"
-                         value={customerInfo.email}
-                         onChange={(e) => {
-                           setCustomerInfo(prev => ({ ...prev, email: e.target.value }));
-                           if (emailError) setEmailError(null);
-                         }}
-                         className={emailError ? 'border-red-500' : ''}
-                       />
-                       {emailError && <p className="text-sm text-red-600">{emailError}</p>}
-                     </div>
-                     
-                     <Button 
-                       onClick={handleConfirmCustomer}
-                       disabled={!isCustomerComplete}
-                       className="w-full"
-                     >
-                       Confirm Contact Info
-                     </Button>
-                   </div>
-                 </CardContent>
-               </Card>
-             )}
+                       
+                       <Button 
+                         onClick={handleConfirmAddress}
+                         disabled={!isAddressComplete}
+                         className="w-full"
+                       >
+                         Confirm Address
+                       </Button>
+                      </div>
+                    ) : (
+                      <div className="p-3 border rounded-lg bg-muted/30">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <span className="text-sm font-medium">Address:</span>
+                            <span className="text-sm truncate">{addressInfo.street} • {addressInfo.city}, {addressInfo.state}</span>
+                            {isAddingToOrder && !hasChanges && <span className="text-xs text-green-600 hidden md:inline">(Same as previous)</span>}
+                            {hasChanges && (changedFields.includes('delivery address')) && (
+                              <span className="text-xs text-red-600 font-medium hidden md:inline">(Address changed)</span>
+                            )}
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setConfirmedAddress(false);
+                              setCurrentStep('address');
+                            }}
+                            className="shrink-0"
+                          >
+                            Edit
+                          </Button>
+                        </div>
+                        {addressInfo.instructions && (
+                          <div className="text-sm text-muted-foreground mt-2">
+                            {addressInfo.instructions}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                   </CardContent>
+                 </Card>
+
+              {/* Customer Information - Always show, highlight when editing */}
+              <Card className={`shadow-card ${currentStep === 'customer' ? 'border-2 border-green-500' : 'border'}`}>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Contact Information
+                    {confirmedCustomer && <CheckCircle className="w-5 h-5 text-green-600 ml-2" />}
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {!confirmedCustomer || currentStep === 'customer' ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName">First Name *</Label>
+                          <Input
+                            id="firstName"
+                            name="given-name"
+                            autoComplete="given-name"
+                            placeholder="John"
+                            value={customerInfo.firstName}
+                            onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">Last Name *</Label>
+                          <Input
+                            id="lastName"
+                            name="family-name"
+                            autoComplete="family-name"
+                            placeholder="Doe"
+                            value={customerInfo.lastName}
+                            onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone Number *</Label>
+                        <Input
+                          id="phone"
+                          name="tel"
+                          type="tel"
+                          autoComplete="tel"
+                          placeholder="(555) 123-4567"
+                          value={customerInfo.phone}
+                          onChange={(e) => {
+                            const formatted = formatPhoneNumber(e.target.value);
+                            setCustomerInfo(prev => ({ ...prev, phone: formatted }));
+                            if (phoneError) setPhoneError(null);
+                          }}
+                          className={phoneError ? 'border-red-500' : ''}
+                        />
+                        {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email Address *</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="john.doe@example.com"
+                          value={customerInfo.email}
+                          onChange={(e) => {
+                            setCustomerInfo(prev => ({ ...prev, email: e.target.value }));
+                            if (emailError) setEmailError(null);
+                          }}
+                          className={emailError ? 'border-red-500' : ''}
+                        />
+                        {emailError && <p className="text-sm text-red-600">{emailError}</p>}
+                      </div>
+                      
+                      <Button 
+                        onClick={handleConfirmCustomer}
+                        disabled={!isCustomerComplete}
+                        className="w-full"
+                      >
+                        Confirm Contact Info
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="p-3 border rounded-lg bg-muted/30">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-col gap-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Contact:</span>
+                            <span className="text-sm">{customerInfo.firstName} {customerInfo.lastName} • {customerInfo.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Email:</span>
+                            <span className="text-sm">{customerInfo.email}</span>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setConfirmedCustomer(false);
+                            setCurrentStep('customer');
+                          }}
+                          className="shrink-0"
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
              {/* Embedded Payment */}
              {currentStep === 'payment' && (
