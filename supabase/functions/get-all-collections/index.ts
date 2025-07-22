@@ -20,7 +20,9 @@ serve(async (req) => {
     
     console.log("Environment check:");
     console.log("Store URL exists:", !!SHOPIFY_STORE_URL);
+    console.log("Store URL value:", SHOPIFY_STORE_URL);
     console.log("Access Token exists:", !!SHOPIFY_API_KEY);
+    console.log("Access Token length:", SHOPIFY_API_KEY?.length || 0);
     
     if (!SHOPIFY_STORE_URL || !SHOPIFY_API_KEY) {
       const missingVars = [];
@@ -42,11 +44,24 @@ serve(async (req) => {
       );
     }
 
-    // Clean the store URL
-    const SHOPIFY_STORE = SHOPIFY_STORE_URL.replace("https://", "").replace("http://", "");
-    console.log("Store URL value:", SHOPIFY_STORE);
+    // Clean and validate the store URL - handle multiple formats
+    let SHOPIFY_STORE = SHOPIFY_STORE_URL;
+    if (SHOPIFY_STORE.includes('://')) {
+      SHOPIFY_STORE = SHOPIFY_STORE.split('://')[1];
+    }
+    if (SHOPIFY_STORE.endsWith('/')) {
+      SHOPIFY_STORE = SHOPIFY_STORE.slice(0, -1);
+    }
+    if (!SHOPIFY_STORE.includes('.myshopify.com')) {
+      // If it's just the store name, add the domain
+      if (!SHOPIFY_STORE.includes('.')) {
+        SHOPIFY_STORE = `${SHOPIFY_STORE}.myshopify.com`;
+      }
+    }
     
-    // Collections that exist in your Shopify store
+    console.log("Cleaned store URL:", SHOPIFY_STORE);
+    
+    // Validate that we have the correct collections in Shopify
     const targetCollections = [
       "tailgate-beer",
       "seltzer-collection", 
@@ -55,6 +70,7 @@ serve(async (req) => {
     ];
 
     console.log("Target collections:", targetCollections);
+    console.log("Will fetch from store:", SHOPIFY_STORE);
     const allCollections = [];
 
     // Fetch each collection using Storefront API GraphQL
@@ -105,7 +121,15 @@ serve(async (req) => {
         `;
 
         const graphqlUrl = `https://${SHOPIFY_STORE}/api/2024-10/graphql.json`;
-        console.log(`Making request to: ${graphqlUrl}`);
+        console.log(`Making GraphQL request to: ${graphqlUrl}`);
+        console.log(`Request headers - Content-Type: application/json`);
+        console.log(`Request headers - X-Shopify-Storefront-Access-Token: ${SHOPIFY_API_KEY?.substring(0, 10)}...`);
+
+        const requestBody = JSON.stringify({
+          query,
+          variables: { handle }
+        });
+        console.log(`Request body length: ${requestBody.length}`);
 
         const response = await fetch(graphqlUrl, {
           method: 'POST',
@@ -113,68 +137,67 @@ serve(async (req) => {
             'Content-Type': 'application/json',
             'X-Shopify-Storefront-Access-Token': SHOPIFY_API_KEY,
           },
-          body: JSON.stringify({
-            query,
-            variables: { handle }
-          }),
+          body: requestBody,
         });
 
         console.log(`Response status for ${handle}:`, response.status);
+        console.log(`Response statusText for ${handle}:`, response.statusText);
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log(`GraphQL response for ${handle}:`, !!data.data);
-          
-          if (data.errors) {
-            console.error(`GraphQL errors for ${handle}:`, data.errors);
-            continue;
-          }
-          
-          if (data.data?.collectionByHandle) {
-            const collection = data.data.collectionByHandle;
-            console.log(`Collection found: ${handle} with ${collection.products.edges.length} products`);
-            
-            // Transform products with error handling
-            const products = collection.products.edges.map(({ node: product }) => {
-              try {
-                const variant = product.variants.edges[0]?.node;
-                const image = product.images.edges[0]?.node;
-                
-                return {
-                  id: product.id,
-                  title: product.title || '',
-                  price: variant ? parseFloat(variant.price.amount) : 0,
-                  image: image?.url || '/placeholder.svg',
-                  description: product.description || '',
-                  handle: product.handle || '',
-                  variants: product.variants.edges.map(({ node: v }) => ({
-                    id: v.id,
-                    title: v.title || 'Default Title',
-                    price: parseFloat(v.price.amount) || 0,
-                    available: v.availableForSale || false
-                  }))
-                };
-              } catch (productError) {
-                console.error(`Error processing product:`, productError);
-                return null;
-              }
-            }).filter(Boolean); // Remove null products
-
-            allCollections.push({
-              id: collection.id,
-              title: collection.title,
-              handle: collection.handle,
-              description: collection.description || '',
-              products
-            });
-
-            console.log(`Successfully loaded collection: ${handle} with ${products.length} products`);
-          } else {
-            console.log(`Collection not found: ${handle}`);
-          }
-        } else {
+        if (!response.ok) {
           const errorText = await response.text();
-          console.error(`Failed to fetch collection ${handle}: ${response.status} - ${errorText}`);
+          console.error(`HTTP Error ${response.status} for ${handle}: ${errorText}`);
+          continue; // Skip this collection and try the next one
+        }
+        
+        const data = await response.json();
+        console.log(`GraphQL response for ${handle} received:`, !!data.data);
+        
+        if (data.errors) {
+          console.error(`GraphQL errors for ${handle}:`, JSON.stringify(data.errors));
+          continue; // Skip this collection if there are GraphQL errors
+        }
+        
+        if (data.data?.collectionByHandle) {
+          const collection = data.data.collectionByHandle;
+          console.log(`Collection found: ${handle} with ${collection.products.edges.length} products`);
+          
+          // Transform products with error handling
+          const products = collection.products.edges.map(({ node: product }) => {
+            try {
+              const variant = product.variants.edges[0]?.node;
+              const image = product.images.edges[0]?.node;
+              
+              return {
+                id: product.id,
+                title: product.title || '',
+                price: variant ? parseFloat(variant.price.amount) : 0,
+                image: image?.url || '/placeholder.svg',
+                description: product.description || '',
+                handle: product.handle || '',
+                variants: product.variants.edges.map(({ node: v }) => ({
+                  id: v.id,
+                  title: v.title || 'Default Title',
+                  price: parseFloat(v.price.amount) || 0,
+                  available: v.availableForSale || false
+                }))
+              };
+            } catch (productError) {
+              console.error(`Error processing product:`, productError);
+              return null;
+            }
+          }).filter(Boolean); // Remove null products
+
+          allCollections.push({
+            id: collection.id,
+            title: collection.title,
+            handle: collection.handle,
+            description: collection.description || '',
+            products
+          });
+
+          console.log(`Successfully loaded collection: ${handle} with ${products.length} products`);
+        } else {
+          console.log(`Collection not found in Shopify: ${handle}`);
         }
       } catch (collectionError) {
         console.error(`Error fetching collection ${handle}:`, collectionError);

@@ -87,23 +87,54 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       setLoading(true);
       setError(null);
       
+      console.log(`=== fetchCollections START (forceRefresh: ${forceRefresh}) ===`);
+      
       // Check cache first (unless force refresh)
       if (!forceRefresh) {
         const cachedCollections = cacheManager.getShopifyCollections();
         if (cachedCollections && cachedCollections.length > 0) {
-          console.log('Using cached collections');
+          console.log(`Using cached collections (${cachedCollections.length} collections)`);
           setCollections(cachedCollections);
           setLoading(false);
           return;
         }
+        console.log('No valid cache found, fetching from API');
+      } else {
+        console.log('Force refresh - clearing cache and fetching fresh data');
+        cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
       }
       
       console.log('Fetching fresh collections from Shopify...');
       
-      // Use retry logic for API calls
+      // Use retry logic for API calls with enhanced error handling
       const result = await ErrorHandler.withRetry(async () => {
+        console.log('Making supabase.functions.invoke call to get-all-collections');
         const { data, error } = await supabase.functions.invoke('get-all-collections');
-        if (error) throw error;
+        
+        if (error) {
+          console.error('Supabase function invoke error:', error);
+          throw new Error(`Function error: ${error.message || JSON.stringify(error)}`);
+        }
+        
+        console.log('Function response received:', {
+          hasData: !!data,
+          hasCollections: !!data?.collections,
+          collectionsCount: data?.collections?.length || 0,
+          hasError: !!data?.error
+        });
+        
+        if (data?.error) {
+          throw new Error(`API returned error: ${data.error}`);
+        }
+        
+        if (!data?.collections || !Array.isArray(data.collections)) {
+          throw new Error('Invalid response format: no collections array');
+        }
+        
+        if (data.collections.length === 0) {
+          throw new Error('No collections found in Shopify store');
+        }
+        
         return data;
       }, {
         maxAttempts: 3,
@@ -111,33 +142,37 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         backoffMultiplier: 1.5
       });
 
-      if (result?.collections && result.collections.length > 0) {
-        console.log('Fresh collections loaded successfully');
-        setCollections(result.collections);
-        
-        // Cache the successful result
-        cacheManager.setShopifyCollections(result.collections);
-      } else {
-        throw new Error('No collections data received from API');
-      }
+      console.log(`Successfully fetched ${result.collections.length} collections`);
+      setCollections(result.collections);
+      
+      // Cache the successful result
+      cacheManager.setShopifyCollections(result.collections);
+      console.log('Collections cached successfully');
+      
     } catch (error) {
+      console.error('=== ERROR in fetchCollections ===');
+      console.error('Error details:', error);
       ErrorHandler.logError(error, 'fetchCollections');
       
       // Try to use cached data as fallback
       const cachedCollections = cacheManager.getShopifyCollections();
       if (cachedCollections && cachedCollections.length > 0) {
-        console.log('Using cached collections as fallback');
+        console.log(`Using cached collections as fallback (${cachedCollections.length} collections)`);
         setCollections(cachedCollections);
-        setError('Using cached data - some products may be outdated');
+        setError('Using cached data - connection issues detected. Click refresh to retry.');
       } else {
-        setError('Failed to load collections and no cache available');
+        console.log('No cache available - showing full error to user');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setError(`Failed to load collections: ${errorMessage}. Please check Shopify connection.`);
       }
     } finally {
       setLoading(false);
+      console.log('=== fetchCollections END ===');
     }
   };
 
   const clearCacheAndRefresh = () => {
+    console.log('=== clearCacheAndRefresh called ===');
     cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
     fetchCollections(true);
   };
