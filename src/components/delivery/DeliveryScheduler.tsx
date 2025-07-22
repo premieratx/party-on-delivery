@@ -26,7 +26,7 @@ const timeSlots = [
   '6:00 PM - 7:00 PM',
   '7:00 PM - 8:00 PM',
   '8:00 PM - 9:00 PM',
-  '9:00 PM - 10:00 PM'
+  '8:30 PM - 9:30 PM'
 ];
 
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
@@ -34,10 +34,10 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
   const [timeSlot, setTimeSlot] = useState(deliveryInfo.timeSlot);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Get the minimum allowed delivery date (3 hours from now)
-  const minDeliveryDate = addHours(new Date(), 3);
+  // Get the minimum allowed delivery date (1 hour from now)
+  const minDeliveryDate = addHours(new Date(), 1);
 
-  // Check if a date is disabled (past, Sunday, or within 3 hours)
+  // Check if a date is disabled (past, Sunday, or within 1 hour)
   const isDateDisabled = (checkDate: Date) => {
     return checkDate < minDeliveryDate || isSunday(checkDate);
   };
@@ -46,7 +46,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
   const getAvailableTimeSlots = () => {
     if (!date) return timeSlots;
     
-    // If today is selected, filter out time slots that are within 3 hours
+    // If today is selected, filter out time slots that are within 1 hour
     if (isToday(date)) {
       const now = new Date();
       return timeSlots.filter(slot => {
@@ -63,7 +63,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
         const slotDateTime = new Date(date);
         slotDateTime.setHours(slotHours, minutes, 0, 0);
         
-        // Check if slot is at least 3 hours from now
+        // Check if slot is at least 1 hour from now
         return slotDateTime >= minDeliveryDate;
       });
     }
@@ -96,7 +96,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
               Choose your preferred delivery date and time
             </p>
             <p className="text-sm text-amber-600 dark:text-amber-500">
-              Note: We're closed on Sundays. Orders require at least 3 hours advance notice.
+              Note: We're closed on Sundays. Orders require at least 1 hour advance notice.
             </p>
           </CardHeader>
           
