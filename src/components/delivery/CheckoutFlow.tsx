@@ -58,7 +58,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   console.log('CheckoutFlow START - isAddingToOrder:', isAddingToOrder);
   
   // Use custom hooks for cleaner state management
-  const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
+  const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo, saveCompletedOrder } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange });
   const { deliveryPricing, isPricingLoading } = useDeliveryPricing({ 
     addressInfo, 
@@ -403,7 +403,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           console.error('Error creating Shopify order:', response.error);
         } else {
           
-          // Save last order info for potential future "add to order"
+          // Save comprehensive order info with 30-day persistence
           if (response.data?.order) {
             const orderInfo = {
               orderNumber: response.data.order.order_number || response.data.order.id,
@@ -417,9 +417,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
               customerEmail: customerInfo.email,
               customerPhone: customerInfo.phone,
-              recentpurchase: true // Mark as recent purchase for app identification
+              recentpurchase: true,
+              completedAt: new Date().toISOString(),
+              expiresAt: '' // Will be set by saveCompletedOrder
             };
+            
+            // Save with persistent 30-day storage
+            saveCompletedOrder(orderInfo);
+            
+            // Also save to legacy storage for backward compatibility
             localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+            
+            console.log('Order completed and saved with 30-day persistence:', orderInfo);
           }
         }
       } catch (error) {
