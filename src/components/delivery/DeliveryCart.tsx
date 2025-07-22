@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { X, Minus, Plus, ShoppingCart, Truck, Trash2 } from 'lucide-react';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format } from 'date-fns';
+import { useDeliveryPricing } from '@/hooks/useDeliveryPricing';
+import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 
 interface DeliveryCartProps {
   isOpen: boolean;
@@ -40,26 +42,26 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   tipAmount = 0,
   onEmptyCart
 }) => {
+  // Get address info for delivery pricing calculation
+  const { addressInfo } = useCustomerInfo();
+  
   // Calculate pricing like in checkout with same logic
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  
+  // Use the same delivery pricing hook as checkout for consistency
+  const { deliveryPricing } = useDeliveryPricing({ 
+    addressInfo, 
+    subtotal,
+    isAddingToOrder,
+    hasChanges
+  });
   
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  // Calculate delivery fee dynamically based on distance and order changes
-  // Note: For cart display, we use standard pricing. Distance-based pricing is calculated in checkout.
-  
-  // Calculate delivery fee with consistent logic matching checkout
-  const calculateDeliveryFee = () => {
-    // Free delivery for add-to-order with same address and no changes
-    if (isAddingToOrder && useSameAddress && !hasChanges) return 0;
-    // Apply $20 minimum with 10% of subtotal for orders $200+
-    return Math.max(subtotal >= 200 ? subtotal * 0.1 : 20, 20);
-  };
-  
-  const originalDeliveryFee = calculateDeliveryFee();
+  const originalDeliveryFee = deliveryPricing.fee;
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : originalDeliveryFee;
   
   const salesTax = subtotal * 0.0825; // 8.25% sales tax
