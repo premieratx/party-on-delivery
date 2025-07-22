@@ -629,7 +629,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </CardHeader>
                   
                   <CardContent className="space-y-4">
-                    {!confirmedDateTime || currentStep === 'datetime' ? (
+                    {!confirmedDateTime ? (
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <Label>Delivery Date *</Label>
@@ -706,8 +706,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                    </CardTitle>
                  </CardHeader>
                  
-                  <CardContent className="space-y-2 md:space-y-4">
-                    {!confirmedAddress || currentStep === 'address' ? (
+                   <CardContent className="space-y-2 md:space-y-4">
+                     {!confirmedAddress ? (
                       <div className="space-y-2 md:space-y-4">
                         <div className="space-y-1 md:space-y-2">
                           <Label htmlFor="street">Street Address *</Label>
@@ -805,8 +805,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </CardTitle>
                 </CardHeader>
                 
-                <CardContent className="space-y-4">
-                  {!confirmedCustomer || currentStep === 'customer' ? (
+                 <CardContent className="space-y-4">
+                   {!confirmedCustomer ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
