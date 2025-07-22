@@ -118,7 +118,7 @@ serve(async (req) => {
     };
 
     const customerResponse = await fetch(
-      `https://${shopifyStore}/admin/api/2025-01/customers.json`,
+      `https://${shopifyStore}/admin/api/2024-10/customers.json`,
       {
         method: 'POST',
         headers: {
@@ -207,7 +207,7 @@ ${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${discountAmount 
     logStep("Creating Shopify order", { lineItemCount: lineItems.length });
 
     const orderResponse = await fetch(
-      `https://${shopifyStore}/admin/api/2025-01/orders.json`,
+      `https://${shopifyStore}/admin/api/2024-10/orders.json`,
       {
         method: 'POST',
         headers: {
@@ -346,7 +346,7 @@ ${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${discountAmount 
           
           const newTags = tagArray.join(', ');
           
-          const updateUrl = `https://${shopifyStore}/admin/api/2025-01/orders/${orderResult.order.id}.json`;
+          const updateUrl = `https://${shopifyStore}/admin/api/2024-10/orders/${orderResult.order.id}.json`;
           
           await fetch(updateUrl, {
             method: 'PUT',

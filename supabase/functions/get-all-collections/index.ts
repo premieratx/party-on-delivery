@@ -11,8 +11,12 @@ serve(async (req) => {
   }
 
   try {
-    const SHOPIFY_STORE = Deno.env.get('SHOPIFY_STORE_URL') || "premier-concierge.myshopify.com";
-    const SHOPIFY_API_KEY = Deno.env.get('SHOPIFY_STOREFRONT_ACCESS_TOKEN') || "0d4359f88af16da44f2653d9134c18c5";
+    const SHOPIFY_STORE = Deno.env.get('SHOPIFY_STORE_URL')?.replace("https://", "") || "premier-concierge.myshopify.com";
+    const SHOPIFY_API_KEY = Deno.env.get('SHOPIFY_STOREFRONT_ACCESS_TOKEN');
+    
+    if (!SHOPIFY_API_KEY) {
+      throw new Error("SHOPIFY_STOREFRONT_ACCESS_TOKEN is not configured in Supabase secrets");
+    }
     
     // Updated collections to match the frontend component
     const targetCollections = [
@@ -68,7 +72,7 @@ serve(async (req) => {
         }
       `;
 
-      const response = await fetch(`https://${SHOPIFY_STORE}/api/2025-01/graphql.json`, {
+      const response = await fetch(`https://${SHOPIFY_STORE}/api/2024-10/graphql.json`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

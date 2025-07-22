@@ -225,15 +225,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-destructive mb-2">Configuration Required</h3>
+            <h3 className="text-lg font-semibold text-destructive mb-2">Shopify Connection Error</h3>
             <p className="text-muted-foreground mb-4">{error}</p>
             <p className="text-sm text-muted-foreground mb-4">
-              To connect to Shopify, you need to:
-              <br />1. Go to your Shopify Admin
-              <br />2. Navigate to Apps → Develop apps → Create private app
-              <br />3. Enable Storefront API access
-              <br />4. Copy the Storefront access token
-              <br />5. Replace "YOUR_STOREFRONT_ACCESS_TOKEN_HERE" in the code
+              Please check that your Shopify credentials are properly configured in the Supabase secrets:
+              <br />• SHOPIFY_STORE_URL
+              <br />• SHOPIFY_STOREFRONT_ACCESS_TOKEN
+              <br />• SHOPIFY_ADMIN_API_ACCESS_TOKEN
             </p>
             <div className="flex gap-2 justify-center">
               <Button onClick={() => fetchCollections(true)} variant="outline">
