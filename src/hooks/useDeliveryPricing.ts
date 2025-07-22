@@ -16,12 +16,12 @@ export function useDeliveryPricing({ addressInfo, subtotal, isAddingToOrder, has
   );
   const [isPricingLoading, setIsPricingLoading] = useState(false);
 
-  // Calculate delivery pricing whenever address changes, subtotal changes, or component mounts with complete address
+  // Calculate delivery pricing whenever address changes, subtotal changes, or component mounts
   useEffect(() => {
     const calculatePricing = async () => {
-      // Only calculate if we have a complete address
+      // Always update pricing with current subtotal for incomplete addresses
       if (!addressInfo.street || !addressInfo.city || !addressInfo.state || !addressInfo.zipCode) {
-        // Use standard pricing for incomplete addresses - but update with current subtotal
+        console.log('Using standard pricing for subtotal:', subtotal);
         setDeliveryPricing(getStandardDeliveryFee(subtotal));
         return;
       }
