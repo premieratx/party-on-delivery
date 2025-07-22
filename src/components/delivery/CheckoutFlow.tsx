@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
+import { DataConfirmation } from './DataConfirmation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,6 +91,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
+  const [showDataConfirmation, setShowDataConfirmation] = useState(false);
+
+  // Check if we should show data confirmation on mount
+  useEffect(() => {
+    const hasExistingCustomer = customerInfo.firstName || customerInfo.lastName || customerInfo.email;
+    const hasExistingAddress = addressInfo.street || addressInfo.city;
+    
+    if (hasExistingCustomer || hasExistingAddress) {
+      console.log('Found existing data, showing confirmation');
+      setShowDataConfirmation(true);
+    }
+  }, []);
 
   // For completely new orders (no lastOrderInfo), clear address info once
   useEffect(() => {
@@ -430,6 +443,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
       <div className="flex-1">
+        {/* Data Confirmation Section */}
+        {showDataConfirmation && (
+          <div className="p-4">
+            <DataConfirmation
+              customerInfo={customerInfo}
+              addressInfo={addressInfo}
+              onConfirm={() => {
+                setShowDataConfirmation(false);
+                // Auto-confirm sections with data
+                if (customerInfo.firstName && customerInfo.email) {
+                  setConfirmedCustomer(true);
+                }
+                if (addressInfo.street && addressInfo.city) {
+                  setConfirmedAddress(true);
+                }
+              }}
+              onEdit={() => setShowDataConfirmation(false)}
+            />
+          </div>
+        )}
+        
         {/* Mobile-optimized back button */}
         <div className="p-2 pt-1 md:p-4">
           <Button 
