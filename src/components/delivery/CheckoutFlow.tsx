@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
-import { DataConfirmation } from './DataConfirmation';
+
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,23 +91,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
-  const [showDataConfirmation, setShowDataConfirmation] = useState(false);
   
-  // Initialize step logic - start with data confirmation if we have saved data
+  
+  // Initialize step logic - always start with datetime section open
   useEffect(() => {
-    const hasExistingCustomer = customerInfo.firstName || customerInfo.lastName || customerInfo.email;
-    const hasExistingAddress = addressInfo.street || addressInfo.city;
-    const hasExistingDelivery = deliveryInfo.date || deliveryInfo.timeSlot;
-    
-    if ((hasExistingCustomer || hasExistingAddress || hasExistingDelivery) && !confirmedDateTime && !confirmedAddress && !confirmedCustomer) {
-      console.log('Found existing data, showing confirmation');
-      setShowDataConfirmation(true);
-    } else if (!hasExistingCustomer && !hasExistingAddress && !hasExistingDelivery) {
-      // No existing data, start fresh with datetime
+    // Always start with datetime section
+    if (!confirmedDateTime && !confirmedAddress && !confirmedCustomer) {
       setCurrentStep('datetime');
-      setShowDataConfirmation(false);
     }
-  }, [customerInfo, addressInfo, deliveryInfo, confirmedDateTime, confirmedAddress, confirmedCustomer]);
+  }, []);
 
   // DEBUG: Log what data we actually have on component mount
   useEffect(() => {
@@ -461,57 +453,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     navigate('/order-complete');
   };
 
-  const handleDataConfirmation = () => {
-    // Auto-confirm all existing data
-    if (deliveryInfo.date && deliveryInfo.timeSlot) {
-      setConfirmedDateTime(true);
-    }
-    if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode) {
-      setConfirmedAddress(true);
-    }
-    if (customerInfo.firstName && customerInfo.lastName && customerInfo.email && customerInfo.phone) {
-      setConfirmedCustomer(true);
-    }
-    
-    setShowDataConfirmation(false);
-    
-    // Navigate to first incomplete step or payment if all complete
-    if (!confirmedDateTime && (!deliveryInfo.date || !deliveryInfo.timeSlot)) {
-      setCurrentStep('datetime');
-    } else if (!confirmedAddress && (!addressInfo.street || !addressInfo.city)) {
-      setCurrentStep('address');
-    } else if (!confirmedCustomer && (!customerInfo.firstName || !customerInfo.email)) {
-      setCurrentStep('customer');
-    } else {
-      setCurrentStep('payment');
-    }
-  };
-
-  const handleDataEdit = () => {
-    // Reset all confirmations and start fresh
-    setConfirmedDateTime(false);
-    setConfirmedAddress(false);
-    setConfirmedCustomer(false);
-    setShowDataConfirmation(false);
-    setCurrentStep('datetime');
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-secondary/5">
       <div className="relative">
-        {/* Show data confirmation modal if needed */}
-        {showDataConfirmation && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-              <DataConfirmation
-                customerInfo={customerInfo}
-                addressInfo={addressInfo}
-                onConfirm={handleDataConfirmation}
-                onEdit={handleDataEdit}
-              />
-            </div>
-          </div>
-        )}
         
         {/* Mobile-optimized back button */}
         <div className="p-3 md:p-4">
