@@ -153,7 +153,24 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                       setTimeSlot(''); // Clear time slot when date changes
                       setIsCalendarOpen(false);
                     }}
-                    disabled={isDateDisabled}
+                    disabled={(checkDate) => {
+                      // Convert to CST for proper timezone handling
+                      const checkDateCST = toZonedTime(checkDate, CST_TIMEZONE);
+                      const todayCST = toZonedTime(new Date(), CST_TIMEZONE);
+                      
+                      // Create date-only comparisons (no time component)
+                      const checkDateOnly = new Date(checkDateCST.getFullYear(), checkDateCST.getMonth(), checkDateCST.getDate());
+                      const todayOnly = new Date(todayCST.getFullYear(), todayCST.getMonth(), todayCST.getDate());
+                      
+                      // Disable Sundays
+                      const isSundayDate = isSunday(checkDateCST);
+                      
+                      // Disable past dates (before today)
+                      const isBeforeToday = checkDateOnly.getTime() < todayOnly.getTime();
+                      
+                      // Only disable if it's before today OR if it's a Sunday
+                      return isBeforeToday || isSundayDate;
+                    }}
                     initialFocus
                     className="pointer-events-auto"
                   />
