@@ -74,11 +74,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo, saveCompletedOrder } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange });
   
+  // State declarations must come before any usage
+  const [tipAmount, setTipAmount] = useState(0);
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+  
   // Pricing calculations
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   
-  // Use simple delivery fee calculation that ALWAYS updates with subtotal changes
-  const baseDeliveryFee = useDeliveryFee(subtotal);
+  // Calculate delivery fee using proper rules with discount consideration
+  const baseDeliveryFee = useDeliveryFee(subtotal, appliedDiscount);
   
   // Extract from checkout flow hook
   const {
@@ -111,10 +116,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, []);
 
-  // State declarations
-  const [tipAmount, setTipAmount] = useState(0);
-  const [discountCode, setDiscountCode] = useState('');
-  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
   
   // Pre-select tip to be 10% in all cases
   useEffect(() => {
@@ -135,14 +136,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
     deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
 
-  // Auto-apply free shipping when details match (overrides any other discount)
+  // Auto-apply free shipping when details match (but don't override user-applied discounts)
   useEffect(() => {
-    if (deliveryDetailsMatch) {
+    if (deliveryDetailsMatch && (!appliedDiscount || appliedDiscount.code === 'SAME_ORDER')) {
       setAppliedDiscount({ code: 'SAME_ORDER', type: 'free_shipping', value: 0 });
       if (onDiscountChange) {
         onDiscountChange({ code: 'SAME_ORDER', type: 'free_shipping', value: 0 });
       }
-    } else if (appliedDiscount?.code === 'SAME_ORDER') {
+    } else if (!deliveryDetailsMatch && appliedDiscount?.code === 'SAME_ORDER') {
       // Remove auto-applied discount if details no longer match
       setAppliedDiscount(null);
       if (onDiscountChange) {
@@ -158,8 +159,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  // Calculate delivery fee using simple hook
-  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : baseDeliveryFee;
+  // Final delivery fee (already calculated in useDeliveryFee with discount consideration)
+  const finalDeliveryFee = baseDeliveryFee;
   
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
 
@@ -834,20 +835,23 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                            <span>-${((subtotal || 0) * (appliedDiscount.value || 0) / 100).toFixed(2)}</span>
                          </div>
                        )}
-                         <div className="flex justify-between">
-                           <span>Delivery Fee {baseDeliveryFee >= subtotal * 0.1 ? '(10%)' : '($20 min)'}</span>
-                            <div className="flex items-center gap-2">
-                                {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 && (
-                                  <span className="text-sm text-muted-foreground line-through">${(baseDeliveryFee || 0).toFixed(2)}</span>
-                                )}
-                                <span className={(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 ? 'text-green-600' : ''}>
-                                  ${(finalDeliveryFee || 0).toFixed(2)}
-                                 {(isAddingToOrder && !hasChanges) && finalDeliveryFee === 0 && (
-                                   <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                          <div className="flex justify-between">
+                            <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
+                             <div className="flex items-center gap-2">
+                                 {appliedDiscount?.type === 'free_shipping' && (
+                                   <span className="text-sm text-muted-foreground line-through">${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
                                  )}
-                              </span>
-                            </div>
-                         </div>
+                                 <span className={appliedDiscount?.type === 'free_shipping' ? 'text-green-600' : ''}>
+                                   ${(finalDeliveryFee || 0).toFixed(2)}
+                                   {appliedDiscount?.type === 'free_shipping' && finalDeliveryFee === 0 && (
+                                     <span className="text-xs text-green-600 ml-1">(Free shipping)</span>
+                                   )}
+                                   {(isAddingToOrder && !hasChanges) && finalDeliveryFee === 0 && (
+                                    <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                                  )}
+                               </span>
+                             </div>
+                          </div>
                        <div className="flex justify-between">
                          <span>Sales Tax (8.25%)</span>
                          <span>${(salesTax || 0).toFixed(2)}</span>

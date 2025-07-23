@@ -42,11 +42,11 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   // Calculate pricing with simple logic to avoid hooks issues
   const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
   
-  // Use simple delivery fee calculation: $20 minimum for orders under $200, 10% for orders over $200
+  // Use proper delivery fee calculation: $20 minimum for orders under $200, 10% for orders over $200
   const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
   
-  console.log('DeliveryCart pricing:', { subtotal, deliveryFee, finalDeliveryFee });
+  console.log('DeliveryCart pricing:', { subtotal, deliveryFee, finalDeliveryFee, appliedDiscount });
   
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
