@@ -146,7 +146,7 @@ export default function OrderComplete() {
                 {lastOrderInfo.items.map((item, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <div className="flex-1">
-                      <span className="font-medium">{item.title.replace(/^gid:\/\/shopify\/[^/]+\/\d+\s*/, '')}</span>
+                      <span className="font-medium">{item.title.replace(/^gid:\/\/shopify\/.*?\s*/, '').trim()}</span>
                       {item.variant && (
                         <span className="text-muted-foreground ml-1">• {item.variant}</span>
                       )}
