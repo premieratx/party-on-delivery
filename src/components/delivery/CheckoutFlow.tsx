@@ -116,11 +116,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
   
-  // Pre-select tip automatically when subtotal changes (different rules based on threshold)
+  // Pre-select tip to be 10% in all cases
   useEffect(() => {
     if (subtotal > 0) {
-      // Tip rules: $20 minimum for orders under $200, 10% for orders over $200
-      const defaultTip = subtotal >= 200 ? subtotal * 0.10 : 20;
+      const defaultTip = subtotal * 0.10; // Always 10%
       setTipAmount(defaultTip);
       if (onTipChange) {
         onTipChange(defaultTip);
