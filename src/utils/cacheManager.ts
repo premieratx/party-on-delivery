@@ -166,11 +166,35 @@ export class CacheManager {
 
   // Specific helper methods for common operations
   public setShopifyCollections(collections: any[]): boolean {
-    return this.set(this.cacheKeys.SHOPIFY_COLLECTIONS, collections, 60); // 1 hour TTL
+    return this.set(this.cacheKeys.SHOPIFY_COLLECTIONS, collections, 30 * 24 * 60); // 30 days TTL
   }
 
   public getShopifyCollections(): any[] | null {
     return this.get(this.cacheKeys.SHOPIFY_COLLECTIONS);
+  }
+
+  public refreshShopifyCollections(): Promise<any[]> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Clear current cache
+        this.remove(this.cacheKeys.SHOPIFY_COLLECTIONS);
+        
+        // Import supabase dynamically to avoid circular imports
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        const { data, error } = await supabase.functions.invoke('get-all-collections');
+        if (error) throw error;
+        
+        if (data?.collections && Array.isArray(data.collections)) {
+          this.setShopifyCollections(data.collections);
+          resolve(data.collections);
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   public setDeliveryPricing(address: string, pricing: any): boolean {
