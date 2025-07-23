@@ -74,7 +74,28 @@ serve(async (req) => {
     const discountCode = metadata?.discount_code;
     const discountAmount = metadata?.discount_amount;
     const subtotal = parseFloat(metadata?.subtotal || '0');
-    const shippingFee = parseFloat(metadata?.shipping_fee || '5.99');
+    const shippingFee = parseFloat(metadata?.shipping_fee || '0');
+    const salesTax = parseFloat(metadata?.sales_tax || '0');
+    const tipAmount = parseFloat(metadata?.tip_amount || '0');
+    const totalAmount = parseFloat(metadata?.total_amount || '0');
+
+    logStep("Metadata parsed", { 
+      itemCount: cartItems.length, 
+      deliveryDate, 
+      deliveryTime,
+      customerName,
+      customerEmail,
+      customerPhone,
+      deliveryAddress,
+      deliveryInstructions,
+      discountCode,
+      discountAmount,
+      subtotal,
+      shippingFee,
+      salesTax,
+      tipAmount,
+      totalAmount
+    });
     
     // Enhanced affiliate tracking calculations
     let affiliateCommissionAmount = 0;
@@ -104,15 +125,6 @@ serve(async (req) => {
       }
     }
 
-    logStep("Metadata parsed", { 
-      itemCount: cartItems.length, 
-      deliveryDate, 
-      deliveryTime,
-      customerName,
-      deliveryInstructions,
-      discountCode,
-      discountAmount 
-    });
 
     // Parse delivery address components
     const parseAddress = (fullAddress: string) => {
@@ -170,13 +182,74 @@ serve(async (req) => {
       });
     }
 
-    // Prepare line items for Shopify order
-    const lineItems = cartItems.map((item: any) => ({
-      title: item.title || item.name,
-      price: item.price.toString(), // Convert number to string for Shopify
-      quantity: item.quantity,
-      requires_shipping: true,
-    }));
+    // Prepare line items for Shopify order with proper inventory management
+    const lineItems = [];
+    
+    // Process each cart item to create proper Shopify line items
+    for (const item of cartItems) {
+      // If item has Shopify product/variant IDs, use them for proper inventory tracking
+      if (item.id && item.id.includes('gid://shopify/Product/')) {
+        // Extract Shopify product ID from GID
+        const productId = item.id.replace('gid://shopify/Product/', '');
+        
+        // For products with variants, we need to find the correct variant
+        if (item.variant && item.variant.includes('gid://shopify/ProductVariant/')) {
+          const variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
+          lineItems.push({
+            variant_id: parseInt(variantId),
+            quantity: item.quantity,
+            price: item.price.toString()
+          });
+        } else {
+          // Use product without specific variant
+          lineItems.push({
+            title: item.title || item.name,
+            price: item.price.toString(),
+            quantity: item.quantity,
+            requires_shipping: true,
+            product_id: parseInt(productId)
+          });
+        }
+      } else {
+        // Fallback for items without Shopify IDs (custom items)
+        lineItems.push({
+          title: item.title || item.name,
+          price: item.price.toString(),
+          quantity: item.quantity,
+          requires_shipping: true
+        });
+      }
+    }
+
+    // Add shipping fee as line item
+    if (shippingFee > 0) {
+      lineItems.push({
+        title: "Scheduled Delivery Service",
+        price: shippingFee.toString(),
+        quantity: 1,
+        requires_shipping: false
+      });
+    }
+
+    // Add sales tax as line item
+    if (salesTax > 0) {
+      lineItems.push({
+        title: "Sales Tax (8.25%)",
+        price: salesTax.toString(),
+        quantity: 1,
+        requires_shipping: false
+      });
+    }
+
+    // Add tip as line item
+    if (tipAmount > 0) {
+      lineItems.push({
+        title: "Driver Tip",
+        price: tipAmount.toString(),
+        quantity: 1,
+        requires_shipping: false
+      });
+    }
 
     // Add discount line item if discount code was used
     if (discountCode && discountAmount) {
@@ -443,6 +516,65 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
     } catch (supabaseError) {
       logStep('Error with Supabase operations', supabaseError);
       // Don't fail the order creation if Supabase operations fail
+    }
+
+    // Send order confirmation email
+    try {
+      const emailData = {
+        orderDetails: {
+          orderNumber: orderResult.order.order_number,
+          deliveryDate,
+          deliveryTime,
+          deliveryAddress,
+          deliveryInstructions
+        },
+        customerInfo: {
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone
+        },
+        deliveryInfo: {
+          date: deliveryDate,
+          timeSlot: deliveryTime,
+          address: deliveryAddress,
+          instructions: deliveryInstructions
+        },
+        cartItems: cartItems,
+        paymentInfo: {
+          subtotal: subtotal,
+          deliveryFee: shippingFee,
+          salesTax: salesTax,
+          tipAmount: tipAmount,
+          discountCode: discountCode,
+          discountAmount: parseFloat(discountAmount || '0'),
+          total: totalAmount
+        },
+        shopifyOrderInfo: {
+          shopifyOrderId: orderResult.order.id,
+          orderNumber: orderResult.order.order_number
+        }
+      };
+
+      // Call the email confirmation function
+      const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-order-confirmation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+          'apikey': Deno.env.get('SUPABASE_ANON_KEY') || ''
+        },
+        body: JSON.stringify(emailData)
+      });
+
+      if (emailResponse.ok) {
+        logStep('Order confirmation email sent successfully');
+      } else {
+        const emailError = await emailResponse.text();
+        logStep('Failed to send order confirmation email', { error: emailError });
+      }
+    } catch (emailError) {
+      logStep('Error sending order confirmation email', emailError);
+      // Don't fail the order creation if email fails
     }
 
     return new Response(JSON.stringify({ 

@@ -167,6 +167,13 @@ serve(async (req) => {
         customer_email: customerInfo.email,
         cart_items: JSON.stringify(cartItems),
         group_order_number: groupOrderNumber || '',
+        subtotal: subtotal.toString(),
+        shipping_fee: deliveryFee.toString(),
+        sales_tax: salesTax.toString(),
+        tip_amount: finalTipAmount.toString(),
+        total_amount: totalAmount.toString(),
+        discount_code: appliedDiscount?.code || '',
+        discount_amount: appliedDiscount?.type === 'percentage' ? (subtotal * appliedDiscount.value / 100).toString() : (appliedDiscount?.type === 'free_shipping' ? deliveryFee.toString() : '0'),
       },
     });
 
