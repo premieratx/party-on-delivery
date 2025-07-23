@@ -306,7 +306,7 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
 🔖 Discount Type: ${discountType}
 💵 Discount Applied: $${actualDiscountApplied.toFixed(2)}
 🎯 Attribution: ${discountCode}-tracking-${Date.now()}` : 'No affiliate code used'}`,
-        tags: `delivery-order, delivery-${deliveryDate}, stripe-${paymentIntentId}${discountCode ? `, discount-${discountCode}, affiliate-${discountCode}, recomsale-${discountCode}, commission-${affiliateCommissionAmount.toFixed(2)}` : ''}`,
+        tags: `delivery-order,stripe-payment${discountCode ? `,discount-${discountCode}` : ''}`,
         note_attributes: discountCode ? [
           {
             name: "RecomSale Affiliate Code",
