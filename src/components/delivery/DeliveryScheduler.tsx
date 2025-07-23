@@ -43,10 +43,19 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
   const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
   const minDeliveryDateCST = addHours(nowCST, 1);
 
-  // Check if a date is disabled (past, Sunday, or within 1 hour)
+  // Check if a date is disabled (past dates or Sundays, but allow same day)
   const isDateDisabled = (checkDate: Date) => {
     const checkDateCST = toZonedTime(checkDate, CST_TIMEZONE);
-    return checkDateCST < minDeliveryDateCST || isSunday(checkDateCST);
+    const todayCST = toZonedTime(new Date(), CST_TIMEZONE);
+    
+    // Set both dates to start of day for comparison
+    const checkDateStart = new Date(checkDateCST);
+    checkDateStart.setHours(0, 0, 0, 0);
+    const todayStart = new Date(todayCST);
+    todayStart.setHours(0, 0, 0, 0);
+    
+    // Disable if it's before today or if it's Sunday
+    return checkDateStart < todayStart || isSunday(checkDateCST);
   };
 
   // Get available time slots based on selected date

@@ -46,28 +46,6 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             </CardTitle>
           </div>
           
-          {lastOrderInfo && (
-            <div className="mt-3 p-2 bg-muted/30 rounded-lg space-y-1.5">
-              <div>
-                <p className="text-xs text-muted-foreground">Recent Delivery:</p>
-                <p className="text-sm font-medium">{lastOrderInfo.address || 'Address not saved'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Date & Time:</p>
-                <p className="text-sm font-medium">
-                  {lastOrderInfo.deliveryDate && lastOrderInfo.deliveryTime 
-                    ? `${new Date(lastOrderInfo.deliveryDate).toLocaleDateString()} at ${lastOrderInfo.deliveryTime}`
-                    : 'Date/time not saved'
-                  }
-                </p>
-              </div>
-              <div className="pt-1 border-t border-muted-foreground/20">
-                <p className="text-xs text-muted-foreground">
-                  Order #{lastOrderInfo.orderNumber} • ${(lastOrderInfo.total || 0).toFixed(2)}
-                </p>
-              </div>
-            </div>
-          )}
         </CardHeader>
         
         <CardContent className="space-y-3 pb-4">
