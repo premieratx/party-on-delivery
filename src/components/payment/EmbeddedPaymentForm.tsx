@@ -132,7 +132,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
     setTipConfirmed(false);
     setCustomTipConfirmed(false);
     setShowCustomTip(false);
-    setTipAmount(confirmedTipAmount);
+    // Don't reset the tip amount, just allow editing
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -240,6 +240,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               setHasUserSetTip(true); // Mark that user has interacted with tip
               setShowCustomTip(false);
               setTipConfirmed(false);
+              setCustomTipConfirmed(false);
             }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
                     <span className="font-semibold">{tip.label}</span>
                     <span className="text-xs opacity-75">${(tip.value || 0).toFixed(0)}</span>
@@ -249,6 +250,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               setHasUserSetTip(true); // Mark that user has interacted with tip
               setTipAmount(0);
               setTipConfirmed(false);
+              setCustomTipConfirmed(false);
             }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
                   <span className="font-semibold">Custom</span>
                   <span className="text-xs opacity-75">$</span>

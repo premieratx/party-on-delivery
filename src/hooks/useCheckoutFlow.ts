@@ -61,18 +61,26 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     
     if (sourceData?.deliveryDate && sourceData?.deliveryTime) {
       try {
-        const date = new Date(sourceData.deliveryDate);
-        if (!isNaN(date.getTime())) {
-          console.log('Pre-filling delivery date:', date);
-          updateDeliveryInfo('date', date);
+        const savedDate = new Date(sourceData.deliveryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+        
+        // Only prefill if the saved date is today or in the future
+        if (!isNaN(savedDate.getTime()) && savedDate >= today) {
+          console.log('Pre-filling delivery date:', savedDate);
+          updateDeliveryInfo('date', savedDate);
+          
+          if (sourceData.deliveryTime) {
+            console.log('Pre-filling delivery time:', sourceData.deliveryTime);
+            updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
+          }
+        } else {
+          console.log('Saved date is in the past, using today as default');
+          updateDeliveryInfo('date', new Date());
         }
       } catch (error) {
         console.error('Error parsing delivery date:', error);
-      }
-      
-      if (sourceData.deliveryTime) {
-        console.log('Pre-filling delivery time:', sourceData.deliveryTime);
-        updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
+        updateDeliveryInfo('date', new Date());
       }
     }
     

@@ -34,10 +34,19 @@ const timeSlots = [
 const CST_TIMEZONE = 'America/Chicago';
 
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
-  // Pre-select today's date if no date is set
+  // Pre-select date, ensuring it's not in the past
   const [date, setDate] = useState<Date | undefined>(() => {
     if (deliveryInfo.date) {
-      return deliveryInfo.date;
+      const savedDate = new Date(deliveryInfo.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+      
+      // If saved date is in the past, use today instead
+      if (savedDate < today) {
+        console.log('Saved date is in the past, using today instead');
+        return new Date();
+      }
+      return savedDate;
     }
     // Pre-select today if no date saved
     return new Date();
