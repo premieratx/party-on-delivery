@@ -257,7 +257,7 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
           },
           {
             name: "RecomSale Tracking ID",
-            value: `${discountCode}-${orderResult?.order?.order_number || Date.now()}`
+            value: `${discountCode}-${Date.now()}`
           },
           {
             name: "Attribution Timestamp",
@@ -266,7 +266,7 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
         ] : [],
         shipping_lines: [{
           title: "Scheduled Delivery Service",
-          price: "5.99",
+          price: shippingFee.toString(),
           code: "DELIVERY"
         }]
       }
