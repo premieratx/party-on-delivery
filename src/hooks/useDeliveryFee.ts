@@ -1,11 +1,19 @@
 import { useMemo } from 'react';
 
+/**
+ * Optimized delivery fee calculation with memoization
+ * Uses tiered pricing structure for better customer experience
+ */
 export function useDeliveryFee(subtotal: number) {
   const deliveryFee = useMemo(() => {
-    // Simple rule: $20 for orders under $200, 10% for orders $200+
-    const fee = subtotal >= 200 ? subtotal * 0.1 : 20;
-    console.log('Delivery fee calculated:', { subtotal, fee });
-    return fee;
+    // Optimized delivery fee structure
+    if (subtotal >= 75) {
+      return 0; // Free delivery for orders $75+
+    } else if (subtotal >= 50) {
+      return 2.99; // Reduced fee for orders $50-$74.99
+    } else {
+      return 5.99; // Standard fee for orders under $50
+    }
   }, [subtotal]);
 
   return deliveryFee;

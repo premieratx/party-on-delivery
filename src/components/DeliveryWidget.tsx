@@ -87,7 +87,7 @@ export const DeliveryWidget: React.FC = () => {
   // Filter out expired orders
   const validLastOrderInfo = lastOrderInfo && !isLastOrderExpired() ? lastOrderInfo : null;
 
-  // Check for add to order flag and group order context on component mount
+  // Optimized useEffect with better dependency management
   useEffect(() => {
     const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order');
     const groupOrderData = localStorage.getItem('partyondelivery_group_order');
@@ -97,55 +97,61 @@ export const DeliveryWidget: React.FC = () => {
     console.log('groupOrderData:', groupOrderData);
     console.log('validLastOrderInfo:', validLastOrderInfo);
     
-    // Handle group order flow
-    if (groupOrderData) {
-      try {
-        const groupOrder = JSON.parse(groupOrderData);
-        console.log('Group order data:', groupOrder);
-        if (groupOrder.isGroupOrder) {
-          // Pre-fill delivery info from group order - but don't override if already set
-          if (groupOrder.deliveryDate && !deliveryInfo.date) {
-            const date = new Date(groupOrder.deliveryDate);
-            console.log('Setting group order delivery date:', date);
-            setDeliveryInfo(prev => ({ ...prev, date }));
+    // Use requestAnimationFrame to defer non-critical operations
+    requestAnimationFrame(() => {
+      // Handle group order flow
+      if (groupOrderData) {
+        try {
+          const groupOrder = JSON.parse(groupOrderData);
+          console.log('Group order data:', groupOrder);
+          if (groupOrder.isGroupOrder) {
+            // Batch delivery info updates to avoid multiple re-renders
+            const updates: Partial<DeliveryInfo> = {};
+            
+            if (groupOrder.deliveryDate && !deliveryInfo.date) {
+              updates.date = new Date(groupOrder.deliveryDate);
+            }
+            if (groupOrder.deliveryTime && !deliveryInfo.timeSlot) {
+              updates.timeSlot = groupOrder.deliveryTime;
+            }
+            if (groupOrder.address && !deliveryInfo.address) {
+              updates.address = groupOrder.address;
+            }
+            if (groupOrder.instructions && !deliveryInfo.instructions) {
+              updates.instructions = groupOrder.instructions;
+            }
+            
+            // Apply all updates in one operation
+            if (Object.keys(updates).length > 0) {
+              setDeliveryInfo(prev => ({ ...prev, ...updates }));
+            }
+            
+            // Group orders skip address confirmation
+            setUseSameAddress(true);
+            setIsAddingToOrder(true);
           }
-          if (groupOrder.deliveryTime && !deliveryInfo.timeSlot) {
-            console.log('Setting group order delivery time:', groupOrder.deliveryTime);
-            setDeliveryInfo(prev => ({ ...prev, timeSlot: groupOrder.deliveryTime }));
-          }
-          if (groupOrder.address && !deliveryInfo.address) {
-            console.log('Setting group order address:', groupOrder.address);
-            setDeliveryInfo(prev => ({ ...prev, address: groupOrder.address }));
-          }
-          if (groupOrder.instructions && !deliveryInfo.instructions) {
-            console.log('Setting group order instructions:', groupOrder.instructions);
-            setDeliveryInfo(prev => ({ ...prev, instructions: groupOrder.instructions }));
-          }
-          // Group orders skip address confirmation
-          setUseSameAddress(true);
-          setIsAddingToOrder(true);
+        } catch (error) {
+          console.error('Error parsing group order data:', error);
         }
-      } catch (error) {
-        console.error('Error parsing group order data:', error);
       }
-    }
-    
-    // Handle regular add to order flow - but only pre-fill if not already set
-    if (addToOrderFlag === 'true' && validLastOrderInfo && !groupOrderData) {
-      console.log('Processing add to order flag with lastOrderInfo:', validLastOrderInfo);
-      // Set the bundle-ready flag and enable free shipping when same address is used
-      setIsAddingToOrder(true);
       
-      // Apply bundle-ready tag until delivery date/time passes
-      localStorage.setItem('partyondelivery_bundle_ready', 'true');
-      
-      // Don't pre-fill here - let CheckoutFlow handle it to avoid conflicts
-      // Start the add to order flow
-      handleAddToRecentOrder();
-    }
+      // Handle regular add to order flow - but only pre-fill if not already set
+      if (addToOrderFlag === 'true' && validLastOrderInfo && !groupOrderData) {
+        console.log('Processing add to order flag with lastOrderInfo:', validLastOrderInfo);
+        // Set the bundle-ready flag and enable free shipping when same address is used
+        setIsAddingToOrder(true);
+        
+        // Apply bundle-ready tag until delivery date/time passes
+        localStorage.setItem('partyondelivery_bundle_ready', 'true');
+        
+        // Don't pre-fill here - let CheckoutFlow handle it to avoid conflicts
+        // Start the add to order flow
+        handleAddToRecentOrder();
+      }
+    });
     
     console.log('=== End DeliveryWidget useEffect ===');
-  }, [validLastOrderInfo]);
+  }, [validLastOrderInfo?.deliveryDate, validLastOrderInfo?.deliveryTime]); // Only depend on critical fields
 
   const handleStartNewOrder = () => {
     console.log('=== handleStartNewOrder ===');

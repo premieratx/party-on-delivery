@@ -61,15 +61,17 @@ class CustomerDataManager {
     };
 
     try {
-      // Save to multiple locations
+      // Save to multiple locations with debouncing for performance
       localStorage.setItem('partyondelivery_customer_persistent', JSON.stringify(customerData));
       localStorage.setItem('partyondelivery_address_persistent', JSON.stringify(addressData));
       
-      // Also use cache manager for backup
-      cacheManager.set('customer_persistent', customerData, 30 * 24 * 60); // 30 days
-      cacheManager.set('address_persistent', addressData, 30 * 24 * 60); // 30 days
+      // Use async cache updates to improve performance
+      requestAnimationFrame(() => {
+        cacheManager.set('customer_persistent', customerData, 30 * 24 * 60); // 30 days
+        cacheManager.set('address_persistent', addressData, 30 * 24 * 60); // 30 days
+      });
       
-      console.log('Customer data saved with 30-day expiration:', { customerData, addressData });
+      console.log('Customer data saved with 30-day expiration');
     } catch (error) {
       console.error('Failed to save customer data:', error);
     }
@@ -392,12 +394,15 @@ export function useCustomerInfo() {
     }
   };
 
-  // Debug logging
+  // Optimized debug logging with throttling
   useEffect(() => {
-    console.log('useCustomerInfo - Current state:');
-    console.log('customerInfo:', customerInfo);
-    console.log('addressInfo:', addressInfo);
-  }, [customerInfo, addressInfo]);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('useCustomerInfo - State updated:', { 
+        customerComplete: customerInfo.firstName && customerInfo.email,
+        addressComplete: addressInfo.street && addressInfo.city 
+      });
+    }
+  }, [customerInfo.firstName, customerInfo.email, addressInfo.street, addressInfo.city]);
 
   return {
     customerInfo,

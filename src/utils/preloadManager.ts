@@ -103,18 +103,35 @@ export class PreloadManager {
    * Initialize preloading when app starts
    */
   public initialize(): void {
-    // Start preloading immediately
-    this.preloadCriticalData();
+    // Start preloading with idle callback for better performance
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => this.preloadCriticalData());
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(() => this.preloadCriticalData(), 100);
+    }
 
-    // Set up periodic background refresh (every 30 minutes)
-    setInterval(() => {
-      this.backgroundRefresh();
+    // Set up optimized background refresh (every 30 minutes)
+    const refreshInterval = setInterval(() => {
+      if (!document.hidden) { // Only refresh when page is visible
+        this.backgroundRefresh();
+      }
     }, 30 * 60 * 1000);
 
-    // Preload when user becomes active after being idle
+    // Cleanup interval on page unload
+    window.addEventListener('beforeunload', () => {
+      clearInterval(refreshInterval);
+    });
+
+    // Smart preload when user becomes active after being idle
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        this.backgroundRefresh();
+      if (!document.hidden && !this.isPreloading) {
+        // Use requestIdleCallback for non-critical refresh
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => this.backgroundRefresh());
+        } else {
+          setTimeout(() => this.backgroundRefresh(), 200);
+        }
       }
     });
   }

@@ -59,6 +59,7 @@ export class CacheManager {
       return true;
     } catch (error) {
       if (error.name === 'QuotaExceededError') {
+        console.warn('Storage quota exceeded, cleaning up expired items...');
         this.clearExpiredItems();
         try {
           const cacheItem: CacheItem<T> = {
@@ -69,11 +70,11 @@ export class CacheManager {
           localStorage.setItem(key, JSON.stringify(cacheItem));
           return true;
         } catch {
-          console.warn('Failed to cache data after cleanup');
+          console.warn('Failed to cache data after cleanup - storage still full');
           return false;
         }
       }
-      console.warn(`Failed to cache data for key: ${key}`, error);
+      console.debug(`Cache storage failed for key: ${key}`, error.message);
       return false;
     }
   }

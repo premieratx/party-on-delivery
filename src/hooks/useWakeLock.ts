@@ -5,12 +5,14 @@ export function useWakeLock() {
 
   const requestWakeLock = async () => {
     try {
-      if ('wakeLock' in navigator) {
+      // Only request wake lock if page is visible and wake lock is supported
+      if ('wakeLock' in navigator && document.visibilityState === 'visible') {
         wakeLockRef.current = await navigator.wakeLock.request('screen');
         console.log('Wake lock activated');
       }
     } catch (error) {
-      console.error('Failed to request wake lock:', error);
+      // Silently handle wake lock errors as they're not critical
+      console.debug('Wake lock not available:', error.message);
     }
   };
 

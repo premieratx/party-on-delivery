@@ -59,13 +59,23 @@ export function useReliableStorage<T>(key: string, initialValue: T, backupKey?: 
     }
   };
 
-  // Auto-save to backup periodically
+  // Optimized auto-save with throttling to reduce overhead
   useEffect(() => {
+    // Only set up interval if value has meaningful data
+    if (value === initialValue) return;
+
     const interval = setInterval(() => {
-      if (value !== initialValue) {
+      // Use requestIdleCallback for background saves when available
+      const saveBackup = () => {
         cacheManager.set(backupKey || `${key}_backup`, value, 24 * 60);
+      };
+
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(saveBackup);
+      } else {
+        saveBackup();
       }
-    }, 60000); // Every minute
+    }, 120000); // Reduced frequency to every 2 minutes
 
     return () => clearInterval(interval);
   }, [value, key, backupKey, initialValue]);
