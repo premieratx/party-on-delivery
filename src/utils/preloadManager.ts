@@ -38,14 +38,16 @@ export class PreloadManager {
   }
 
   /**
-   * Preload Shopify collections in background
+   * Preload Shopify collections in background with enhanced reliability
    */
   private async preloadShopifyCollections(): Promise<void> {
     try {
-      // Check if we have recent cached data
+      // Check if we have recent cached data (valid for 24 hours)
       const cached = cacheManager.getShopifyCollections();
-      if (cached && cached.length > 0) {
-        console.log('Shopify collections already cached');
+      const isValid = cacheManager.isValid(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS, 24 * 60); // 24 hours
+      
+      if (cached && cached.length > 0 && isValid) {
+        console.log('Shopify collections already cached and valid');
         return;
       }
 
@@ -53,21 +55,40 @@ export class PreloadManager {
       
       const result = await ErrorHandler.withRetry(async () => {
         const { data, error } = await supabase.functions.invoke('get-all-collections');
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw error;
+        }
+        
+        if (!data?.collections || !Array.isArray(data.collections)) {
+          throw new Error('Invalid response format from Shopify API');
+        }
+        
+        if (data.collections.length === 0) {
+          throw new Error('No collections returned from Shopify');
+        }
+        
         return data;
       }, {
-        maxAttempts: 2,
+        maxAttempts: 3,
         delayMs: 2000,
         backoffMultiplier: 1.5
       });
 
       if (result?.collections && result.collections.length > 0) {
         cacheManager.setShopifyCollections(result.collections);
-        console.log('Shopify collections preloaded successfully');
+        console.log(`Shopify collections preloaded successfully: ${result.collections.length} collections`);
+      } else {
+        console.warn('No collections received from preload attempt');
       }
     } catch (error) {
       console.warn('Failed to preload Shopify collections:', error);
-      // Don't throw - this is background preloading
+      
+      // Try to use existing cache as fallback even if expired
+      const fallbackCache = cacheManager.getShopifyCollections();
+      if (fallbackCache && fallbackCache.length > 0) {
+        console.log('Using expired cache as fallback for Shopify collections');
+      }
     }
   }
 
@@ -84,17 +105,26 @@ export class PreloadManager {
   }
 
   /**
-   * Background refresh of data that might be stale
+   * Background refresh of data that might be stale (optimized for 30-day cache)
    */
   public async backgroundRefresh(): Promise<void> {
-    // Only refresh if we have cached data that's getting old (45+ minutes)
+    // Check if cached data needs refresh (refresh after 6 hours, but cache lasts 30 days)
     const cached = cacheManager.getShopifyCollections();
-    if (cached && !cacheManager.isValid(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS, 45)) {
-      console.log('Background refreshing Shopify collections...');
+    const needsRefresh = !cacheManager.isValid(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS, 6 * 60); // 6 hours
+    
+    if (cached && needsRefresh) {
+      console.log('Background refreshing Shopify collections (6+ hours old)...');
       try {
         await this.preloadShopifyCollections();
       } catch (error) {
-        console.warn('Background refresh failed:', error);
+        console.warn('Background refresh failed, keeping existing cache:', error);
+      }
+    } else if (!cached) {
+      console.log('No cached data found, attempting background fetch...');
+      try {
+        await this.preloadShopifyCollections();
+      } catch (error) {
+        console.warn('Background fetch failed:', error);
       }
     }
   }
@@ -111,12 +141,12 @@ export class PreloadManager {
       setTimeout(() => this.preloadCriticalData(), 100);
     }
 
-    // Set up optimized background refresh (every 30 minutes)
+    // Set up intelligent background refresh (every 2 hours, but only refresh if data is 6+ hours old)
     const refreshInterval = setInterval(() => {
-      if (!document.hidden) { // Only refresh when page is visible
+      if (!document.hidden && !this.isPreloading) { // Only refresh when page is visible and not already preloading
         this.backgroundRefresh();
       }
-    }, 30 * 60 * 1000);
+    }, 2 * 60 * 60 * 1000); // Check every 2 hours
 
     // Cleanup interval on page unload
     window.addEventListener('beforeunload', () => {

@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      cache: {
+        Row: {
+          created_at: string
+          data: Json
+          expires_at: number
+          id: string
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          expires_at: number
+          id?: string
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          expires_at?: number
+          id?: string
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      customer_profiles: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_addresses: {
+        Row: {
+          city: string
+          created_at: string
+          customer_email: string
+          id: string
+          instructions: string | null
+          is_primary: boolean | null
+          last_used_at: string
+          state: string
+          street: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          customer_email: string
+          id?: string
+          instructions?: string | null
+          is_primary?: boolean | null
+          last_used_at?: string
+          state: string
+          street: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          customer_email?: string
+          id?: string
+          instructions?: string | null
+          is_primary?: boolean | null
+          last_used_at?: string
+          state?: string
+          street?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_addresses_customer_email_fkey"
+            columns: ["customer_email"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["email"]
+          },
+        ]
+      }
       order_groups: {
         Row: {
           created_at: string
@@ -59,6 +166,105 @@ export type Database = {
         }
         Relationships: []
       }
+      recent_orders: {
+        Row: {
+          created_at: string
+          customer_email: string
+          delivery_address_id: string | null
+          delivery_date: string | null
+          delivery_time: string | null
+          expires_at: string
+          id: string
+          order_date: string
+          order_number: string | null
+          shopify_order_id: string | null
+          total_amount: number | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email: string
+          delivery_address_id?: string | null
+          delivery_date?: string | null
+          delivery_time?: string | null
+          expires_at?: string
+          id?: string
+          order_date?: string
+          order_number?: string | null
+          shopify_order_id?: string | null
+          total_amount?: number | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string
+          delivery_address_id?: string | null
+          delivery_date?: string | null
+          delivery_time?: string | null
+          expires_at?: string
+          id?: string
+          order_date?: string
+          order_number?: string | null
+          shopify_order_id?: string | null
+          total_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recent_orders_customer_email_fkey"
+            columns: ["customer_email"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["email"]
+          },
+          {
+            foreignKeyName: "recent_orders_delivery_address_id_fkey"
+            columns: ["delivery_address_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_addresses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shopify_collections_cache: {
+        Row: {
+          created_at: string
+          data: Json
+          description: string | null
+          handle: string
+          id: string
+          image_url: string | null
+          last_synced_at: string
+          products_count: number | null
+          shopify_collection_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          description?: string | null
+          handle: string
+          id?: string
+          image_url?: string | null
+          last_synced_at?: string
+          products_count?: number | null
+          shopify_collection_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          description?: string | null
+          handle?: string
+          id?: string
+          image_url?: string | null
+          last_synced_at?: string
+          products_count?: number | null
+          shopify_collection_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shopify_orders: {
         Row: {
           amount: number
@@ -100,12 +306,69 @@ export type Database = {
           },
         ]
       }
+      shopify_products_cache: {
+        Row: {
+          collection_id: string | null
+          created_at: string
+          data: Json
+          description: string | null
+          handle: string
+          id: string
+          image_url: string | null
+          price: number | null
+          shopify_product_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          collection_id?: string | null
+          created_at?: string
+          data: Json
+          description?: string | null
+          handle: string
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          shopify_product_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          collection_id?: string | null
+          created_at?: string
+          data?: Json
+          description?: string | null
+          handle?: string
+          id?: string
+          image_url?: string | null
+          price?: number | null
+          shopify_product_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shopify_products_cache_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "shopify_collections_cache"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_orders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
