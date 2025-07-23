@@ -33,44 +33,69 @@ serve(async (req) => {
       salesTax
     });
 
+    // Validate Stripe configuration
+    logStep("Validating Stripe configuration");
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      throw new Error("STRIPE_SECRET_KEY not found in environment variables");
+    }
+    logStep("✅ STRIPE_SECRET_KEY found", { keyPrefix: stripeSecretKey.substring(0, 12) + "..." });
+
     // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
-    logStep("Stripe initialized");
+    logStep("✅ Stripe keys validated successfully");
 
+    // Validate amount before processing
+    const validAmount = Math.round(amount);
+    if (validAmount !== amount) {
+      logStep("Amount rounded", { originalAmount: amount, validAmount });
+    }
+    
+    logStep("Creating payment intent", { validAmount, currency, originalAmount: amount });
+    
     // Create a concise cart summary that fits in Stripe's 500 char metadata limit
     const cartSummary = cartItems.map((item: any) => 
-      `${item.quantity}x ${item.title.substring(0, 30)}`
-    ).join(', ').substring(0, 400); // Keep under 500 chars
+      `${item.quantity}x ${item.title.substring(0, 25)}`
+    ).join(', ').substring(0, 300); // Keep well under 500 chars
     
     const itemCount = cartItems.reduce((total: number, item: any) => total + item.quantity, 0);
     
-    // Create payment intent with all pricing details in metadata
+    // Amount verification for logging
+    logStep("💰 AMOUNT VERIFICATION - Payment Intent", {
+      amountInCents: validAmount,
+      amountInDollars: (validAmount / 100).toFixed(2),
+      verificationNote: "This exact amount will be charged by Stripe and logged in Shopify",
+      subtotalFromMetadata: subtotal.toFixed(2),
+      salesTaxFromMetadata: salesTax.toFixed(2),
+      shippingFeeFromMetadata: deliveryFee.toFixed(2),
+      tipFromMetadata: tipAmount.toFixed(2)
+    });
+    
+    // Create payment intent with essential metadata only (keeping under 500 char limit per field)
     const paymentIntent = await stripe.paymentIntents.create({
-      amount,
+      amount: validAmount,
       currency,
       metadata: {
-        customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
-        customer_email: customerInfo.email,
-        customer_phone: customerInfo.phone,
-        delivery_date: deliveryInfo.date,
-        delivery_time: deliveryInfo.timeSlot,
-        delivery_address: deliveryInfo.address.substring(0, 100), // Truncate long addresses
-        delivery_instructions: (deliveryInfo.instructions || '').substring(0, 100),
-        cart_items: JSON.stringify(cartItems), // Full cart items for Shopify order creation
+        customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`.substring(0, 100),
+        customer_email: customerInfo.email.substring(0, 100),
+        customer_phone: customerInfo.phone.substring(0, 50),
+        delivery_date: deliveryInfo.date.substring(0, 50),
+        delivery_time: deliveryInfo.timeSlot.substring(0, 50),
+        delivery_address: deliveryInfo.address.substring(0, 200),
+        delivery_instructions: (deliveryInfo.instructions || '').substring(0, 200),
         cart_summary: cartSummary,
         item_count: itemCount.toString(),
-        subtotal: subtotal.toString(),
-        shipping_fee: deliveryFee.toString(),
-        sales_tax: salesTax.toString(),
-        tip_amount: tipAmount.toString(),
-        total_amount: (subtotal + deliveryFee + salesTax + tipAmount).toString(),
-        discount_code: appliedDiscount?.code || 'none',
-        discount_type: appliedDiscount?.type || 'none',
-        discount_value: appliedDiscount?.value?.toString() || '0',
-        discount_amount: appliedDiscount ? (appliedDiscount.type === 'percentage' ? (subtotal * appliedDiscount.value / 100).toString() : deliveryFee.toString()) : '0',
-        group_order_number: groupOrderNumber || ''
+        subtotal: subtotal.toFixed(2),
+        shipping_fee: deliveryFee.toFixed(2),
+        sales_tax: salesTax.toFixed(2),
+        tip_amount: tipAmount.toFixed(2),
+        total_amount: (subtotal + deliveryFee + salesTax + tipAmount).toFixed(2),
+        discount_code: (appliedDiscount?.code || 'none').substring(0, 50),
+        discount_type: (appliedDiscount?.type || 'none').substring(0, 20),
+        discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
+        group_order_number: (groupOrderNumber || '').substring(0, 50)
       }
     });
 
