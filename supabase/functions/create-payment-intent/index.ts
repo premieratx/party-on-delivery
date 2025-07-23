@@ -20,14 +20,17 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber } = await req.json();
+    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax } = await req.json();
     
     logStep("Request data received", { 
       amount, 
       currency,
       cartItems: cartItems?.length,
       customerInfo: customerInfo?.email,
-      tipAmount 
+      tipAmount,
+      subtotal,
+      deliveryFee,
+      salesTax
     });
 
     // Initialize Stripe
@@ -43,7 +46,7 @@ serve(async (req) => {
     
     const itemCount = cartItems.reduce((total: number, item: any) => total + item.quantity, 0);
     
-    // Create payment intent
+    // Create payment intent with all pricing details in metadata
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency,
@@ -55,10 +58,18 @@ serve(async (req) => {
         delivery_time: deliveryInfo.timeSlot,
         delivery_address: deliveryInfo.address.substring(0, 100), // Truncate long addresses
         delivery_instructions: (deliveryInfo.instructions || '').substring(0, 100),
+        cart_items: JSON.stringify(cartItems), // Full cart items for Shopify order creation
         cart_summary: cartSummary,
         item_count: itemCount.toString(),
+        subtotal: subtotal.toString(),
+        shipping_fee: deliveryFee.toString(),
+        sales_tax: salesTax.toString(),
         tip_amount: tipAmount.toString(),
+        total_amount: (subtotal + deliveryFee + salesTax + tipAmount).toString(),
         discount_code: appliedDiscount?.code || 'none',
+        discount_type: appliedDiscount?.type || 'none',
+        discount_value: appliedDiscount?.value?.toString() || '0',
+        discount_amount: appliedDiscount ? (appliedDiscount.type === 'percentage' ? (subtotal * appliedDiscount.value / 100).toString() : deliveryFee.toString()) : '0',
         group_order_number: groupOrderNumber || ''
       }
     });

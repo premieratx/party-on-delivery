@@ -148,20 +148,22 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       return;
     }
     try {
-      // Create payment intent
+      // Create payment intent with all pricing details
       const {
         data,
         error
       } = await supabase.functions.invoke('create-payment-intent', {
         body: {
-          amount: Math.round(total * 100),
-          // Convert to cents
+          amount: Math.round(total * 100), // Convert to cents
           currency: 'usd',
           cartItems,
           customerInfo,
           deliveryInfo,
           appliedDiscount,
-          tipAmount
+          tipAmount: validTipAmount,
+          subtotal: validSubtotal,
+          deliveryFee: validDeliveryFee,
+          salesTax: validSalesTax
         }
       });
       if (error) {

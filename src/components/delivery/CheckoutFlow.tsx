@@ -199,12 +199,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [deliveryDetailsMatch, appliedDiscount?.code, onDiscountChange]);
 
-  const salesTax = subtotal * 0.0825;
-  
-  // Calculate discounted subtotal
+  // Calculate discounted subtotal for sales tax calculation
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
+  
+  // Sales tax is always 8.25% applied to the subtotal (after discount if applicable)
+  const salesTax = discountedSubtotal * 0.0825;
   
   // Final delivery fee (already calculated in useDeliveryFee with discount consideration)
   const finalDeliveryFee = baseDeliveryFee;
@@ -317,9 +318,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             customerInfo,
             addressInfo,
             cartItems,
-            deliveryInfo,
+            deliveryInfo: {
+              ...deliveryInfo,
+              address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`
+            },
             isAddingToOrder,
-            useSameAddress
+            useSameAddress,
+            // Pass pricing details for verification
+            subtotal: discountedSubtotal,
+            deliveryFee: finalDeliveryFee,
+            salesTax: salesTax,
+            tipAmount: tipAmount,
+            appliedDiscount: appliedDiscount
           }
         });
         
