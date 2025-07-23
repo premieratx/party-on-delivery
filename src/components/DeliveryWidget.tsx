@@ -31,15 +31,11 @@ export const DeliveryWidget: React.FC = () => {
   // Enable wake lock to keep screen on during app usage
   useWakeLock();
   
-  // Check for persistent add to order flag and group order context
+  // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
-  const groupOrderData = localStorage.getItem('partyondelivery_group_order');
-  const isGroupOrder = groupOrderData ? JSON.parse(groupOrderData)?.isGroupOrder : false;
   
-  // ALWAYS start on order-continuation unless it's a group order
-  const [currentStep, setCurrentStep] = useState<DeliveryStep>(
-    isGroupOrder ? 'products' : 'order-continuation'
-  );
+  // ALWAYS start on order-continuation
+  const [currentStep, setCurrentStep] = useState<DeliveryStep>('order-continuation');
   const [deliveryInfo, setDeliveryInfo] = useLocalStorage<DeliveryInfo>('partyondelivery_delivery_info', {
     date: null,
     timeSlot: '',
@@ -49,7 +45,7 @@ export const DeliveryWidget: React.FC = () => {
   const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('partyondelivery_cart', []);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
-  const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(addToOrderFlag || isGroupOrder);
+  const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag);
   const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
   
   // State for tracking cart calculations (for cart/checkout sync) - persist discount in localStorage
@@ -90,53 +86,15 @@ export const DeliveryWidget: React.FC = () => {
   // Optimized useEffect with better dependency management
   useEffect(() => {
     const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order');
-    const groupOrderData = localStorage.getItem('partyondelivery_group_order');
     
     console.log('=== DeliveryWidget useEffect ===');
     console.log('addToOrderFlag:', addToOrderFlag);
-    console.log('groupOrderData:', groupOrderData);
     console.log('validLastOrderInfo:', validLastOrderInfo);
     
     // Use requestAnimationFrame to defer non-critical operations
     requestAnimationFrame(() => {
-      // Handle group order flow
-      if (groupOrderData) {
-        try {
-          const groupOrder = JSON.parse(groupOrderData);
-          console.log('Group order data:', groupOrder);
-          if (groupOrder.isGroupOrder) {
-            // Batch delivery info updates to avoid multiple re-renders
-            const updates: Partial<DeliveryInfo> = {};
-            
-            if (groupOrder.deliveryDate && !deliveryInfo.date) {
-              updates.date = new Date(groupOrder.deliveryDate);
-            }
-            if (groupOrder.deliveryTime && !deliveryInfo.timeSlot) {
-              updates.timeSlot = groupOrder.deliveryTime;
-            }
-            if (groupOrder.address && !deliveryInfo.address) {
-              updates.address = groupOrder.address;
-            }
-            if (groupOrder.instructions && !deliveryInfo.instructions) {
-              updates.instructions = groupOrder.instructions;
-            }
-            
-            // Apply all updates in one operation
-            if (Object.keys(updates).length > 0) {
-              setDeliveryInfo(prev => ({ ...prev, ...updates }));
-            }
-            
-            // Group orders skip address confirmation
-            setUseSameAddress(true);
-            setIsAddingToOrder(true);
-          }
-        } catch (error) {
-          console.error('Error parsing group order data:', error);
-        }
-      }
-      
       // Handle regular add to order flow - but only pre-fill if not already set
-      if (addToOrderFlag === 'true' && validLastOrderInfo && !groupOrderData) {
+      if (addToOrderFlag === 'true' && validLastOrderInfo) {
         console.log('Processing add to order flag with lastOrderInfo:', validLastOrderInfo);
         // Set the bundle-ready flag and enable free shipping when same address is used
         setIsAddingToOrder(true);
@@ -166,7 +124,6 @@ export const DeliveryWidget: React.FC = () => {
     // Clear all persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
-    localStorage.removeItem('partyondelivery_group_order');
     setCurrentStep('products');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -185,7 +142,7 @@ export const DeliveryWidget: React.FC = () => {
     // Clear persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
-    localStorage.removeItem('partyondelivery_group_order');
+    
     setCurrentStep('products');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
