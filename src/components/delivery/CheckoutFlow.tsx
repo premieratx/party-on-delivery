@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label';  
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,7 +20,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
-import { useDeliveryPricing } from '@/hooks/useDeliveryPricing';
+import { useDeliveryFee } from '@/hooks/useDeliveryFee';
 import { validateEmail, validatePhoneNumber, formatPhoneNumber, getEmailErrorMessage, getPhoneErrorMessage } from '@/utils/validation';
 
 interface CheckoutFlowProps {
@@ -38,6 +37,20 @@ interface CheckoutFlowProps {
   onTipChange?: (tip: number) => void;
   onChangesDetected?: (hasChanges: boolean) => void;
 }
+
+// Available time slots
+const timeSlots = [
+  '12:00 PM - 1:00 PM',
+  '1:00 PM - 2:00 PM', 
+  '2:00 PM - 3:00 PM',
+  '3:00 PM - 4:00 PM',
+  '4:00 PM - 5:00 PM',
+  '5:00 PM - 6:00 PM',
+  '6:00 PM - 7:00 PM',
+  '7:00 PM - 8:00 PM',
+  '8:00 PM - 9:00 PM',
+  '8:30 PM - 9:30 PM'
+];
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   cartItems,
@@ -60,18 +73,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Use custom hooks for cleaner state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo, saveCompletedOrder } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange });
-  const { deliveryPricing, isPricingLoading } = useDeliveryPricing({ 
-    addressInfo, 
-    subtotal: cartItems.reduce((total, item) => total + (item.price * item.quantity), 0),
-    isAddingToOrder,
-    hasChanges: checkoutFlow.hasChanges
-  });
   
-  console.log('CheckoutFlow delivery pricing:', { 
-    subtotal: cartItems.reduce((total, item) => total + (item.price * item.quantity), 0), 
-    deliveryPricing, 
-    isPricingLoading 
-  });
+  // Pricing calculations
+  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  
+  // Use simple delivery fee calculation that ALWAYS updates with subtotal changes
+  const baseDeliveryFee = useDeliveryFee(subtotal);
   
   // Extract from checkout flow hook
   const {
@@ -96,62 +103,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [hasAddressBeenCleared, setHasAddressBeenCleared] = useState(false);
-  
   
   // Initialize step logic - always start with datetime section open
   useEffect(() => {
-    // Always start with datetime section
     if (!confirmedDateTime && !confirmedAddress && !confirmedCustomer) {
       setCurrentStep('datetime');
     }
   }, []);
 
-  // DEBUG: Log what data we actually have on component mount
-  useEffect(() => {
-    console.log('=== CheckoutFlow Debug - Component Mount ===');
-    console.log('customerInfo from hook:', customerInfo);
-    console.log('addressInfo from hook:', addressInfo);
-    console.log('isAddingToOrder:', isAddingToOrder);
-    console.log('lastOrderInfo:', lastOrderInfo);
-    
-    // Check all possible storage locations
-    console.log('localStorage partyondelivery_customer:', localStorage.getItem('partyondelivery_customer'));
-    console.log('localStorage partyondelivery_address:', localStorage.getItem('partyondelivery_address'));
-    console.log('localStorage partyondelivery_customer_persistent:', localStorage.getItem('partyondelivery_customer_persistent'));
-    console.log('localStorage partyondelivery_address_persistent:', localStorage.getItem('partyondelivery_address_persistent'));
-    console.log('localStorage partyondelivery_last_order:', localStorage.getItem('partyondelivery_last_order'));
-    console.log('localStorage partyondelivery_completed_order:', localStorage.getItem('partyondelivery_completed_order'));
-    console.log('=== End CheckoutFlow Debug ===');
-  }, []);
-
-  // Available time slots - 1 hour windows starting at 30 min intervals from 10am
-  const timeSlots = [
-    '10:00 AM - 11:00 AM',
-    '10:30 AM - 11:30 AM',
-    '11:00 AM - 12:00 PM',
-    '11:30 AM - 12:30 PM',
-    '12:00 PM - 1:00 PM',
-    '12:30 PM - 1:30 PM',
-    '1:00 PM - 2:00 PM',
-    '1:30 PM - 2:30 PM',
-    '2:00 PM - 3:00 PM',
-    '2:30 PM - 3:30 PM',
-    '3:00 PM - 4:00 PM',
-    '3:30 PM - 4:30 PM',
-    '4:00 PM - 5:00 PM',
-    '4:30 PM - 5:30 PM',
-    '5:00 PM - 6:00 PM',
-    '5:30 PM - 6:30 PM',
-    '6:00 PM - 7:00 PM',
-    '6:30 PM - 7:30 PM',
-    '7:00 PM - 8:00 PM',
-    '7:30 PM - 8:30 PM'
-  ];
-
-  // Pricing calculations
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  
   // State declarations
   const [tipAmount, setTipAmount] = useState(0);
   const [discountCode, setDiscountCode] = useState('');
@@ -200,8 +159,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  // Calculate delivery fee using hook data
-  const baseDeliveryFee = deliveryPricing.fee;
+  // Calculate delivery fee using simple hook
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : baseDeliveryFee;
   
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
@@ -248,29 +206,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmDateTime = () => {
-    console.log('handleConfirmDateTime called, isDateTimeComplete:', isDateTimeComplete);
-    console.log('deliveryInfo:', deliveryInfo);
-    
     if (isDateTimeComplete) {
       setConfirmedDateTime(true);
-      
-      // Build comprehensive order info for saving
-      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-      const orderInfo = {
-        ...existingOrder,
-        deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
-        deliveryTime: deliveryInfo.timeSlot || '',
-        address: addressInfo.street ? `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}` : existingOrder.address,
-        instructions: addressInfo.instructions || existingOrder.instructions || '',
-        customerName: customerInfo.firstName ? `${customerInfo.firstName} ${customerInfo.lastName}`.trim() : existingOrder.customerName,
-        customerEmail: customerInfo.email || existingOrder.customerEmail,
-        customerPhone: customerInfo.phone || existingOrder.customerPhone,
-        recentpurchase: true
-      };
-      
-      // Save to localStorage
-      localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
-      console.log('Date/time confirmed and saved to localStorage:', orderInfo);
       
       // Navigate to next incomplete step or payment if all confirmed
       if (!confirmedAddress) {
@@ -280,46 +217,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       } else if (confirmedAddress && confirmedCustomer) {
         setCurrentStep('payment');
       }
-      // Scroll to top of next section on mobile
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
-    } else {
-      console.log('Cannot confirm - missing data. Date:', deliveryInfo.date, 'TimeSlot:', deliveryInfo.timeSlot);
     }
   };
 
   const handleConfirmAddress = async () => {
-    console.log('handleConfirmAddress called, isAddressComplete:', isAddressComplete);
-    console.log('addressInfo:', addressInfo);
-    
     if (isAddressComplete) {
-      // Delivery pricing is automatically calculated by the hook
       setConfirmedAddress(true);
-      
-      // Build comprehensive order info for saving
-      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-      const orderInfo = {
-        ...existingOrder,
-        address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
-        instructions: addressInfo.instructions || '',
-        deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
-        deliveryTime: deliveryInfo.timeSlot || '',
-        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`.trim(),
-        customerEmail: customerInfo.email,
-        customerPhone: customerInfo.phone,
-        recentpurchase: true // Mark as recent purchase for app identification
-      };
-      
-      // Save to multiple places for reliability
-      localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
-      
-      // Also ensure the individual address storage is updated
-      localStorage.setItem('partyondelivery_address', JSON.stringify(addressInfo));
-      localStorage.setItem('partyondelivery_customer', JSON.stringify(customerInfo));
-      
-      console.log('Address confirmed and saved to localStorage:', orderInfo);
-      console.log('Individual address storage updated:', addressInfo);
       
       // Navigate to next incomplete step or payment if all confirmed
       if (!confirmedCustomer) {
@@ -327,34 +233,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       } else if (confirmedDateTime && confirmedCustomer) {
         setCurrentStep('payment');
       }
-      // Scroll to top of next section on mobile
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
-    } else {
-      console.log('Cannot confirm address - missing data:', {
-        street: addressInfo.street,
-        city: addressInfo.city,
-        state: addressInfo.state,
-        zipCode: addressInfo.zipCode,
-        isAddressComplete
-      });
-      
-      // Show user what's missing
-      const missingFields = [];
-      if (!addressInfo.street) missingFields.push('Street Address');
-      if (!addressInfo.city) missingFields.push('City');
-      if (!addressInfo.state) missingFields.push('State');
-      if (!addressInfo.zipCode) missingFields.push('Zip Code');
-      
-      alert(`Please fill in all required address fields: ${missingFields.join(', ')}`);
     }
   };
 
   const handleConfirmCustomer = () => {
-    console.log('handleConfirmCustomer called, isCustomerComplete:', isCustomerComplete);
-    console.log('customerInfo:', customerInfo);
-    
     // Validate email and phone before proceeding
     const emailErr = getEmailErrorMessage(customerInfo.email);
     const phoneErr = getPhoneErrorMessage(customerInfo.phone);
@@ -365,32 +250,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (!emailErr && !phoneErr && customerInfo.firstName && customerInfo.lastName) {
       setConfirmedCustomer(true);
       
-      // Build comprehensive order info for saving
-      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-      const orderInfo = {
-        ...existingOrder,
-        address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
-        instructions: addressInfo.instructions || '',
-        deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
-        deliveryTime: deliveryInfo.timeSlot || '',
-        customerName: `${customerInfo.firstName} ${customerInfo.lastName}`.trim(),
-        customerEmail: customerInfo.email,
-        customerPhone: customerInfo.phone,
-        recentpurchase: true
-      };
-      
-      // Save to multiple places for reliability
-      localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
-      localStorage.setItem('partyondelivery_customer', JSON.stringify(customerInfo));
-      localStorage.setItem('partyondelivery_address', JSON.stringify(addressInfo));
-      
-      console.log('Customer confirmed and saved to localStorage:', orderInfo);
-      
       // Only proceed to payment if all sections confirmed
       if (confirmedDateTime && confirmedAddress) {
         setCurrentStep('payment');
       }
-      // Scroll to top of next section on mobile
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
@@ -398,17 +261,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handlePaymentSuccess = async (paymentIntentId?: string) => {
-    console.log('Payment success called with:', {
-      paymentIntentId,
-      cartItemsCount: cartItems.length,
-      cartItems: cartItems.map(item => ({ id: item.id, title: item.title, quantity: item.quantity }))
-    });
-    
     // Create Shopify order after successful payment
     if (paymentIntentId) {
       try {
-        console.log('Creating Shopify order with items:', cartItems.length);
-        
         const response = await supabase.functions.invoke('create-shopify-order', {
           body: { 
             paymentIntentId,
@@ -421,56 +276,40 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           }
         });
         
-        if (response.error) {
-          console.error('Error creating Shopify order:', response.error);
-        } else {
+        if (response.data?.order) {
+          const orderInfo = {
+            orderNumber: response.data.order.order_number || response.data.order.id,
+            total: finalTotal,
+            date: new Date().toLocaleDateString(),
+            orderId: response.data.order.id,
+            address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+            deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+            deliveryTime: deliveryInfo.timeSlot || '',
+            instructions: addressInfo.instructions || '',
+            customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+            customerEmail: customerInfo.email,
+            customerPhone: customerInfo.phone,
+            recentpurchase: true,
+            completedAt: new Date().toISOString(),
+            expiresAt: ''
+          };
           
-          // Save comprehensive order info with 30-day persistence
-          if (response.data?.order) {
-            const orderInfo = {
-              orderNumber: response.data.order.order_number || response.data.order.id,
-              total: finalTotal,
-              date: new Date().toLocaleDateString(),
-              orderId: response.data.order.id,
-              address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
-              deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
-              deliveryTime: deliveryInfo.timeSlot || '',
-              instructions: addressInfo.instructions || '',
-              customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
-              customerEmail: customerInfo.email,
-              customerPhone: customerInfo.phone,
-              recentpurchase: true,
-              completedAt: new Date().toISOString(),
-              expiresAt: '' // Will be set by saveCompletedOrder
-            };
-            
-            // Save with persistent 30-day storage
-            saveCompletedOrder(orderInfo);
-            
-            // Also save to legacy storage for backward compatibility
-            localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
-            
-            console.log('Order completed and saved with 30-day persistence:', orderInfo);
-          }
+          saveCompletedOrder(orderInfo);
+          localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
         }
       } catch (error) {
         console.error('Failed to create Shopify order:', error);
       }
     }
     
-    console.log('About to clear cart and redirect. Current cart items:', cartItems.length);
     // Clear cart after successful order
     cartItems.forEach(item => {
       onUpdateQuantity(item.id, item.variant, 0);
     });
     
-    // Also clear localStorage as backup
     localStorage.removeItem('partyondelivery_cart');
-    
-    // Navigate using React Router instead of window.location
     navigate('/order-complete');
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-secondary/5">
@@ -915,7 +754,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 onPaymentSuccess={handlePaymentSuccess}
                 tipAmount={tipAmount}
                 setTipAmount={handleTipChange}
-                deliveryPricing={deliveryPricing}
+                deliveryPricing={{ fee: baseDeliveryFee, minimumOrder: 0, isDistanceBased: false }}
                 isAddingToOrder={isAddingToOrder}
                 useSameAddress={useSameAddress}
                 hasChanges={hasChanges}
@@ -997,7 +836,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                          </div>
                        )}
                          <div className="flex justify-between">
-                           <span>Delivery Fee {deliveryPricing.fee >= subtotal * 0.1 ? '(10%)' : '($20 min)'}</span>
+                           <span>Delivery Fee {baseDeliveryFee >= subtotal * 0.1 ? '(10%)' : '($20 min)'}</span>
                             <div className="flex items-center gap-2">
                                 {(appliedDiscount?.type === 'free_shipping' || (isAddingToOrder && !hasChanges)) && baseDeliveryFee > 0 && (
                                   <span className="text-sm text-muted-foreground line-through">${(baseDeliveryFee || 0).toFixed(2)}</span>
@@ -1007,9 +846,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                  {(isAddingToOrder && !hasChanges) && finalDeliveryFee === 0 && (
                                    <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
                                  )}
-                                {deliveryPricing.isDistanceBased && deliveryPricing.distance && (
-                                  <span className="text-xs text-muted-foreground ml-1">({deliveryPricing.distance.toFixed(1)} mi)</span>
-                                )}
                               </span>
                             </div>
                          </div>
