@@ -16,7 +16,8 @@ import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomp
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
-import { format } from 'date-fns';
+import { format, addHours, isToday } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
@@ -51,6 +52,8 @@ const timeSlots = [
   '8:00 PM - 9:00 PM',
   '8:30 PM - 9:30 PM'
 ];
+
+const CST_TIMEZONE = 'America/Chicago';
 
 export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   cartItems,
@@ -109,12 +112,56 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   
-  // Initialize step logic - always start with datetime section open
+  
+  // Initialize step logic and pre-select today's date if no saved date exists
   useEffect(() => {
     if (!confirmedDateTime && !confirmedAddress && !confirmedCustomer) {
       setCurrentStep('datetime');
     }
+    
+    // Pre-select today's date if no date is set and no saved delivery info exists
+    if (!deliveryInfo.date && (!lastOrderInfo?.deliveryDate)) {
+      const today = new Date();
+      updateDeliveryInfo('date', today);
+      console.log('Pre-selected today for delivery date:', today);
+    }
   }, []);
+
+  // Get available time slots based on selected date (same logic as DeliveryScheduler)
+  const getAvailableTimeSlots = () => {
+    if (!deliveryInfo.date) return timeSlots;
+    
+    // Get current time in CST
+    const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
+    const minDeliveryDateCST = addHours(nowCST, 1);
+    
+    // Convert selected date to CST for comparison
+    const selectedDateCST = toZonedTime(deliveryInfo.date, CST_TIMEZONE);
+    
+    // If today is selected, filter out time slots that are within 1 hour from current CST time
+    if (isToday(selectedDateCST)) {
+      return timeSlots.filter(slot => {
+        const [timeRange] = slot.split(' - ');
+        const [time, period] = timeRange.split(' ');
+        const [hours, minutes] = time.split(':').map(Number);
+        
+        // Convert to 24-hour format
+        let slotHours = hours;
+        if (period === 'PM' && hours !== 12) slotHours += 12;
+        if (period === 'AM' && hours === 12) slotHours = 0;
+        
+        // Create a date object for the slot time in CST
+        const slotDateTime = new Date(selectedDateCST);
+        slotDateTime.setHours(slotHours, minutes, 0, 0);
+        const slotDateTimeCST = toZonedTime(slotDateTime, CST_TIMEZONE);
+        
+        // Check if slot is at least 1 hour from current CST time
+        return slotDateTimeCST >= minDeliveryDateCST;
+      });
+    }
+    
+    return timeSlots;
+  };
 
   
   // Pre-select tip to be 10% in all cases
@@ -510,7 +557,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                   updateDeliveryInfo('date', date);
                                   setIsCalendarOpen(false);
                                 }}
-                                disabled={(date) => date < new Date() || date < new Date(Date.now() + 24 * 60 * 60 * 1000)}
+                                 disabled={(date) => {
+                                   // Allow same-day delivery but prevent past dates and Sundays
+                                   const today = new Date();
+                                   today.setHours(0, 0, 0, 0); // Reset time to start of day
+                                   
+                                   const checkDay = new Date(date);
+                                   checkDay.setHours(0, 0, 0, 0); // Reset time to start of day
+                                   
+                                   // Check if it's Sunday (0 = Sunday)
+                                   const isSunday = date.getDay() === 0;
+                                   
+                                   // Check if the date is before today (not including today)
+                                   const isBeforeToday = checkDay.getTime() < today.getTime();
+                                   
+                                   return isBeforeToday || isSunday;
+                                 }}
                                 initialFocus
                                 className="p-3 pointer-events-auto"
                               />
@@ -518,25 +580,33 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           </Popover>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>Delivery Time *</Label>
-                          <Select 
-                            value={deliveryInfo.timeSlot} 
-                            onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
-                          >
+                         <div className="space-y-2">
+                           <Label>Delivery Time *</Label>
+                           <p className="text-xs text-muted-foreground">
+                             Same-day delivery available with 1-hour advance notice. We're closed Sundays.
+                           </p>
+                           <Select 
+                             value={deliveryInfo.timeSlot} 
+                             onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
+                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select a time slot" />
                             </SelectTrigger>
-                            <SelectContent className="z-50 bg-background">
-                              {timeSlots.map((slot) => (
-                                <SelectItem key={slot} value={slot}>
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4" />
-                                    {slot}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
+                             <SelectContent className="z-50 bg-background">
+                               {getAvailableTimeSlots().map((slot) => (
+                                 <SelectItem key={slot} value={slot}>
+                                   <div className="flex items-center gap-2">
+                                     <Clock className="w-4 h-4" />
+                                     {slot}
+                                   </div>
+                                 </SelectItem>
+                               ))}
+                               {getAvailableTimeSlots().length === 0 && (
+                                 <div className="p-2 text-sm text-muted-foreground text-center">
+                                   No time slots available today. Please select a future date.
+                                 </div>
+                               )}
+                             </SelectContent>
                           </Select>
                         </div>
                         

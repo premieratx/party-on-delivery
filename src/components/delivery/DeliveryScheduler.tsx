@@ -34,7 +34,14 @@ const timeSlots = [
 const CST_TIMEZONE = 'America/Chicago';
 
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
-  const [date, setDate] = useState<Date | undefined>(deliveryInfo.date || undefined);
+  // Pre-select today's date if no date is set
+  const [date, setDate] = useState<Date | undefined>(() => {
+    if (deliveryInfo.date) {
+      return deliveryInfo.date;
+    }
+    // Pre-select today if no date saved
+    return new Date();
+  });
   const [timeSlot, setTimeSlot] = useState(deliveryInfo.timeSlot);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
@@ -99,7 +106,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
               Choose your preferred delivery date and time
             </p>
             <p className="text-sm text-amber-600 dark:text-amber-500">
-              Note: We're closed on Sundays. Orders require at least 1 hour advance notice.
+              Same-day delivery available with 1-hour advance notice. We're closed Sundays.
             </p>
           </CardHeader>
           
