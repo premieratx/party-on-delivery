@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +6,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon, Clock, ArrowRight } from 'lucide-react';
-import { format, addHours, isToday, isSunday } from 'date-fns';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { format, addHours, isToday } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { cn } from '@/lib/utils';
 import { DeliveryInfo } from '../DeliveryWidget';
 
@@ -42,26 +41,6 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
   // Get current time in CST
   const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
   const minDeliveryDateCST = addHours(nowCST, 1);
-
-  // Check if a date is disabled (past dates or Sundays, but ALWAYS allow same day)
-  const isDateDisabled = (checkDate: Date) => {
-    // Convert to CST and normalize to start of day
-    const checkDateCST = toZonedTime(checkDate, CST_TIMEZONE);
-    const todayCST = toZonedTime(new Date(), CST_TIMEZONE);
-    
-    // Create proper date-only comparisons
-    const checkDateOnly = new Date(checkDateCST.getFullYear(), checkDateCST.getMonth(), checkDateCST.getDate());
-    const todayOnly = new Date(todayCST.getFullYear(), todayCST.getMonth(), todayCST.getDate());
-    
-    // Check if it's a Sunday (disable Sundays)
-    const isSundayDate = isSunday(checkDateCST);
-    
-    // Check if it's before today (disable past dates)
-    const isBeforeToday = checkDateOnly.getTime() < todayOnly.getTime();
-    
-    // Disable if it's before today OR if it's a Sunday
-    return isBeforeToday || isSundayDate;
-  };
 
   // Get available time slots based on selected date
   const getAvailableTimeSlots = () => {
@@ -154,29 +133,28 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                       setIsCalendarOpen(false);
                     }}
                     disabled={(checkDate) => {
-                      // Simple date comparison without timezone conversion
+                      // Simple and robust date validation
                       const today = new Date();
-                      today.setHours(0, 0, 0, 0);
+                      today.setHours(0, 0, 0, 0); // Reset time to start of day
                       
-                      const check = new Date(checkDate);
-                      check.setHours(0, 0, 0, 0);
+                      const checkDay = new Date(checkDate);
+                      checkDay.setHours(0, 0, 0, 0); // Reset time to start of day
                       
-                      // Disable Sundays
-                      const isSundayDate = checkDate.getDay() === 0;
+                      // Check if it's Sunday (0 = Sunday)
+                      const isSunday = checkDate.getDay() === 0;
                       
-                      // Disable past dates (before today)
-                      const isBeforeToday = check.getTime() < today.getTime();
+                      // Check if the date is before today (not including today)
+                      const isBeforeToday = checkDay.getTime() < today.getTime();
                       
-                      console.log('Date check:', {
-                        checkDate: checkDate.toDateString(),
+                      console.log('📅 Calendar validation:', {
+                        date: checkDate.toDateString(),
                         today: today.toDateString(),
+                        isSunday,
                         isBeforeToday,
-                        isSundayDate,
-                        disabled: isBeforeToday || isSundayDate
+                        disabled: isBeforeToday || isSunday
                       });
                       
-                      // Only disable if it's before today OR if it's a Sunday
-                      return isBeforeToday || isSundayDate;
+                      return isBeforeToday || isSunday;
                     }}
                     initialFocus
                     className="pointer-events-auto"
