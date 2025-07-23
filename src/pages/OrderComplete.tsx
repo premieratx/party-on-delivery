@@ -17,6 +17,13 @@ interface LastOrderInfo {
   deliveryTime: string;
   instructions?: string;
   recentpurchase: boolean;
+  items?: Array<{
+    id: string;
+    title: string;
+    variant?: string;
+    price: number;
+    quantity: number;
+  }>;
 }
 
 export default function OrderComplete() {

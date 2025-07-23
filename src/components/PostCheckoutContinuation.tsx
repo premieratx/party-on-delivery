@@ -14,6 +14,13 @@ interface PostCheckoutContinuationProps {
     deliveryDate?: string;
     deliveryTime?: string;
     instructions?: string;
+    items?: Array<{
+      id: string;
+      title: string;
+      variant?: string;
+      price: number;
+      quantity: number;
+    }>;
   };
 }
 
@@ -38,6 +45,43 @@ export const PostCheckoutContinuation: React.FC<PostCheckoutContinuationProps> =
               Enter code <span className="font-bold">PREMIER2025</span> to get free shipping on your next order!
             </p>
           </div>
+
+          {lastOrderInfo && (
+            <div className="mt-6 space-y-4">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-green-600 mb-2">Order Successful!</h2>
+                <p className="text-muted-foreground">
+                  Payment processed • Order #{lastOrderInfo.orderNumber}
+                </p>
+              </div>
+              
+              {lastOrderInfo.items && lastOrderInfo.items.length > 0 && (
+                <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+                  <h3 className="font-semibold text-sm text-muted-foreground">Order Items:</h3>
+                  {lastOrderInfo.items.map((item, index) => (
+                    <div key={index} className="flex justify-between items-center text-sm">
+                      <div className="flex-1">
+                        <span className="font-medium">{item.title}</span>
+                        {item.variant && (
+                          <span className="text-muted-foreground ml-1">• {item.variant}</span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-muted-foreground">×{item.quantity}</span>
+                        <span className="ml-2 font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between items-center font-semibold">
+                      <span>Total:</span>
+                      <span>${lastOrderInfo.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </CardHeader>
         
         <CardContent className="space-y-4">

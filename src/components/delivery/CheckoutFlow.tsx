@@ -363,6 +363,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
             customerEmail: customerInfo.email,
             customerPhone: customerInfo.phone,
+            items: cartItems.map(item => ({
+              id: item.id,
+              title: item.title,
+              variant: item.variant,
+              price: item.price,
+              quantity: item.quantity
+            })),
             recentpurchase: true,
             completedAt: new Date().toISOString(),
             expiresAt: ''
