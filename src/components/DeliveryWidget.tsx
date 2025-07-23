@@ -52,8 +52,8 @@ export const DeliveryWidget: React.FC = () => {
   const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(addToOrderFlag || isGroupOrder);
   const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
   
-  // State for tracking cart calculations (for cart/checkout sync)
-  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+  // State for tracking cart calculations (for cart/checkout sync) - persist discount in localStorage
+  const [appliedDiscount, setAppliedDiscount] = useLocalStorage<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>('partyondelivery_applied_discount', null);
   const [tipAmount, setTipAmount] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
   
@@ -371,6 +371,7 @@ export const DeliveryWidget: React.FC = () => {
           onDiscountChange={setAppliedDiscount}
           onTipChange={setTipAmount}
           onChangesDetected={setHasChanges}
+          appliedDiscount={appliedDiscount}
         />
       )}
 

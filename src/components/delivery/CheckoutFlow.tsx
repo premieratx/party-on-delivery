@@ -37,6 +37,7 @@ interface CheckoutFlowProps {
   onDiscountChange?: (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => void;
   onTipChange?: (tip: number) => void;
   onChangesDetected?: (hasChanges: boolean) => void;
+  appliedDiscount?: {code: string, type: 'percentage' | 'free_shipping', value: number} | null;
 }
 
 // Available time slots
@@ -67,7 +68,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   lastOrderInfo,
   onDiscountChange,
   onTipChange,
-  onChangesDetected
+  onChangesDetected,
+  appliedDiscount: appliedDiscountProp
 }) => {
   const navigate = useNavigate();
   
@@ -80,7 +82,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // State declarations must come before any usage
   const [tipAmount, setTipAmount] = useState(0);
   const [discountCode, setDiscountCode] = useState('');
-  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
+  
+  // State for managing discount - initialize from parent prop (which uses localStorage)
+  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(
+    appliedDiscountProp || null
+  );
+  
+  // Sync local discount state with parent prop when it changes
+  useEffect(() => {
+    if (appliedDiscountProp !== undefined) {
+      setAppliedDiscount(appliedDiscountProp);
+      // Initialize discount code from applied discount
+      if (appliedDiscountProp) {
+        setDiscountCode(appliedDiscountProp.code);
+      }
+    }
+  }, [appliedDiscountProp]);
   
   // Pricing calculations
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -359,12 +376,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       }
     }
     
-    // Clear cart after successful order
+    // Clear cart and discount after successful order
     cartItems.forEach(item => {
       onUpdateQuantity(item.id, item.variant, 0);
     });
     
     localStorage.removeItem('partyondelivery_cart');
+    localStorage.removeItem('partyondelivery_applied_discount'); // Clear discount after transaction
     navigate('/order-complete');
   };
 
