@@ -62,15 +62,21 @@ serve(async (req) => {
     
     const itemCount = cartItems.reduce((total: number, item: any) => total + item.quantity, 0);
     
+    // Validate and sanitize input amounts
+    const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
+    const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
+    const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
+    const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
+    
     // Amount verification for logging
     logStep("💰 AMOUNT VERIFICATION - Payment Intent", {
       amountInCents: validAmount,
       amountInDollars: (validAmount / 100).toFixed(2),
       verificationNote: "This exact amount will be charged by Stripe and logged in Shopify",
-      subtotalFromMetadata: subtotal.toFixed(2),
-      salesTaxFromMetadata: salesTax.toFixed(2),
-      shippingFeeFromMetadata: deliveryFee.toFixed(2),
-      tipFromMetadata: tipAmount.toFixed(2)
+      subtotalFromMetadata: validSubtotal.toFixed(2),
+      salesTaxFromMetadata: validSalesTax.toFixed(2),
+      shippingFeeFromMetadata: validDeliveryFee.toFixed(2),
+      tipFromMetadata: validTipAmount.toFixed(2)
     });
     
     // Create payment intent with essential metadata only (keeping under 500 char limit per field)
@@ -87,11 +93,11 @@ serve(async (req) => {
         delivery_instructions: (deliveryInfo.instructions || '').substring(0, 200),
         cart_summary: cartSummary,
         item_count: itemCount.toString(),
-        subtotal: subtotal.toFixed(2),
-        shipping_fee: deliveryFee.toFixed(2),
-        sales_tax: salesTax.toFixed(2),
-        tip_amount: tipAmount.toFixed(2),
-        total_amount: (subtotal + deliveryFee + salesTax + tipAmount).toFixed(2),
+        subtotal: validSubtotal.toFixed(2),
+        shipping_fee: validDeliveryFee.toFixed(2),
+        sales_tax: validSalesTax.toFixed(2),
+        tip_amount: validTipAmount.toFixed(2),
+        total_amount: (validSubtotal + validDeliveryFee + validSalesTax + validTipAmount).toFixed(2),
         discount_code: (appliedDiscount?.code || 'none').substring(0, 50),
         discount_type: (appliedDiscount?.type || 'none').substring(0, 20),
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
