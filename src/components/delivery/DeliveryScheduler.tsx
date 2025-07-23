@@ -154,19 +154,26 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                       setIsCalendarOpen(false);
                     }}
                     disabled={(checkDate) => {
-                      // Convert to CST for proper timezone handling
-                      const checkDateCST = toZonedTime(checkDate, CST_TIMEZONE);
-                      const todayCST = toZonedTime(new Date(), CST_TIMEZONE);
+                      // Simple date comparison without timezone conversion
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
                       
-                      // Create date-only comparisons (no time component)
-                      const checkDateOnly = new Date(checkDateCST.getFullYear(), checkDateCST.getMonth(), checkDateCST.getDate());
-                      const todayOnly = new Date(todayCST.getFullYear(), todayCST.getMonth(), todayCST.getDate());
+                      const check = new Date(checkDate);
+                      check.setHours(0, 0, 0, 0);
                       
                       // Disable Sundays
-                      const isSundayDate = isSunday(checkDateCST);
+                      const isSundayDate = checkDate.getDay() === 0;
                       
                       // Disable past dates (before today)
-                      const isBeforeToday = checkDateOnly.getTime() < todayOnly.getTime();
+                      const isBeforeToday = check.getTime() < today.getTime();
+                      
+                      console.log('Date check:', {
+                        checkDate: checkDate.toDateString(),
+                        today: today.toDateString(),
+                        isBeforeToday,
+                        isSundayDate,
+                        disabled: isBeforeToday || isSundayDate
+                      });
                       
                       // Only disable if it's before today OR if it's a Sunday
                       return isBeforeToday || isSundayDate;
