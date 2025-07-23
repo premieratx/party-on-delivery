@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CalendarIcon, Clock, ArrowRight } from 'lucide-react';
 import { format, addHours, isToday, isSunday } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { cn } from '@/lib/utils';
 import { DeliveryInfo } from '../DeliveryWidget';
 
@@ -17,6 +18,8 @@ interface DeliverySchedulerProps {
 }
 
 const timeSlots = [
+  '10:00 AM - 11:00 AM',
+  '11:00 AM - 12:00 PM',
   '12:00 PM - 1:00 PM',
   '1:00 PM - 2:00 PM', 
   '2:00 PM - 3:00 PM',
@@ -29,26 +32,32 @@ const timeSlots = [
   '8:30 PM - 9:30 PM'
 ];
 
+const CST_TIMEZONE = 'America/Chicago';
+
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
   const [date, setDate] = useState<Date | undefined>(deliveryInfo.date || undefined);
   const [timeSlot, setTimeSlot] = useState(deliveryInfo.timeSlot);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-  // Get the minimum allowed delivery date (1 hour from now)
-  const minDeliveryDate = addHours(new Date(), 1);
+  // Get current time in CST
+  const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
+  const minDeliveryDateCST = addHours(nowCST, 1);
 
   // Check if a date is disabled (past, Sunday, or within 1 hour)
   const isDateDisabled = (checkDate: Date) => {
-    return checkDate < minDeliveryDate || isSunday(checkDate);
+    const checkDateCST = toZonedTime(checkDate, CST_TIMEZONE);
+    return checkDateCST < minDeliveryDateCST || isSunday(checkDateCST);
   };
 
   // Get available time slots based on selected date
   const getAvailableTimeSlots = () => {
     if (!date) return timeSlots;
     
-    // If today is selected, filter out time slots that are within 1 hour
-    if (isToday(date)) {
-      const now = new Date();
+    // Convert selected date to CST for comparison
+    const selectedDateCST = toZonedTime(date, CST_TIMEZONE);
+    
+    // If today is selected, filter out time slots that are within 1 hour from current CST time
+    if (isToday(selectedDateCST)) {
       return timeSlots.filter(slot => {
         const [timeRange] = slot.split(' - ');
         const [time, period] = timeRange.split(' ');
@@ -59,12 +68,13 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
         if (period === 'PM' && hours !== 12) slotHours += 12;
         if (period === 'AM' && hours === 12) slotHours = 0;
         
-        // Create a date object for the slot time
-        const slotDateTime = new Date(date);
+        // Create a date object for the slot time in CST
+        const slotDateTime = new Date(selectedDateCST);
         slotDateTime.setHours(slotHours, minutes, 0, 0);
+        const slotDateTimeCST = toZonedTime(slotDateTime, CST_TIMEZONE);
         
-        // Check if slot is at least 1 hour from now
-        return slotDateTime >= minDeliveryDate;
+        // Check if slot is at least 1 hour from current CST time
+        return slotDateTimeCST >= minDeliveryDateCST;
       });
     }
     
