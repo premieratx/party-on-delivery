@@ -45,17 +45,21 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
 
   // Check if a date is disabled (past dates or Sundays, but ALWAYS allow same day)
   const isDateDisabled = (checkDate: Date) => {
+    // Convert to CST and normalize to start of day
     const checkDateCST = toZonedTime(checkDate, CST_TIMEZONE);
     const todayCST = toZonedTime(new Date(), CST_TIMEZONE);
     
-    // Set both dates to start of day for comparison in CST
-    const checkDateStart = new Date(checkDateCST.getFullYear(), checkDateCST.getMonth(), checkDateCST.getDate());
-    const todayStart = new Date(todayCST.getFullYear(), todayCST.getMonth(), todayCST.getDate());
+    // Create proper date-only comparisons
+    const checkDateOnly = new Date(checkDateCST.getFullYear(), checkDateCST.getMonth(), checkDateCST.getDate());
+    const todayOnly = new Date(todayCST.getFullYear(), todayCST.getMonth(), todayCST.getDate());
     
-    // Always allow today (same day delivery), disable only past dates or Sundays
-    const isBeforeToday = checkDateStart.getTime() < todayStart.getTime();
+    // Check if it's a Sunday (disable Sundays)
     const isSundayDate = isSunday(checkDateCST);
     
+    // Check if it's before today (disable past dates)
+    const isBeforeToday = checkDateOnly.getTime() < todayOnly.getTime();
+    
+    // Disable if it's before today OR if it's a Sunday
     return isBeforeToday || isSundayDate;
   };
 
