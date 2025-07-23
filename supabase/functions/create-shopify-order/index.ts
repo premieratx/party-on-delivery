@@ -73,6 +73,36 @@ serve(async (req) => {
     const groupOrderNumber = metadata?.group_order_number;
     const discountCode = metadata?.discount_code;
     const discountAmount = metadata?.discount_amount;
+    const subtotal = parseFloat(metadata?.subtotal || '0');
+    const shippingFee = parseFloat(metadata?.shipping_fee || '5.99');
+    
+    // Enhanced affiliate tracking calculations
+    let affiliateCommissionAmount = 0;
+    let discountType = '';
+    let totalOrderValue = 0;
+    let actualDiscountApplied = 0;
+    
+    // Calculate total order value and affiliate commission
+    if (cartItems.length > 0) {
+      totalOrderValue = cartItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
+    }
+    
+    if (discountCode) {
+      if (discountCode === 'PREMIER2025') {
+        discountType = 'free_shipping';
+        actualDiscountApplied = shippingFee;
+        affiliateCommissionAmount = Math.round((totalOrderValue * 0.05) * 100) / 100; // 5% commission on order value
+      } else if (discountCode === 'PARTYON10') {
+        discountType = 'percentage_discount';
+        actualDiscountApplied = Math.round((totalOrderValue * 0.10) * 100) / 100; // 10% discount
+        affiliateCommissionAmount = Math.round((totalOrderValue * 0.08) * 100) / 100; // 8% commission on order value
+      } else {
+        // Future affiliate codes - default to 5% commission
+        discountType = 'affiliate_code';
+        actualDiscountApplied = parseFloat(discountAmount || '0');
+        affiliateCommissionAmount = Math.round((totalOrderValue * 0.05) * 100) / 100;
+      }
+    }
 
     logStep("Metadata parsed", { 
       itemCount: cartItems.length, 
@@ -192,10 +222,48 @@ serve(async (req) => {
 ⏰ Delivery Time: ${deliveryTime}
 📍 Delivery Address: ${deliveryAddress}
 ${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : ''}
-${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${discountAmount ? `$${Math.abs(parseFloat(discountAmount)).toFixed(2)} off` : ''})` : ''}
+${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${actualDiscountApplied > 0 ? `$${actualDiscountApplied.toFixed(2)} ${discountType === 'free_shipping' ? 'shipping discount' : 'off'}` : ''})` : ''}
 💳 Stripe Payment ID: ${paymentIntentId}
-✅ Payment Status: Paid`,
-        tags: `delivery-order, delivery-${deliveryDate}, stripe-${paymentIntentId}${discountCode ? `, discount-${discountCode}, affiliate-${discountCode}` : ''}`,
+✅ Payment Status: Paid
+
+🏷️ RECOMSALE AFFILIATE TRACKING:
+${discountCode ? `📊 Affiliate Code: ${discountCode}
+💰 Commission Amount: $${affiliateCommissionAmount.toFixed(2)}
+📈 Order Value: $${totalOrderValue.toFixed(2)}
+🔖 Discount Type: ${discountType}
+💵 Discount Applied: $${actualDiscountApplied.toFixed(2)}
+🎯 Attribution: ${discountCode}-tracking-${Date.now()}` : 'No affiliate code used'}`,
+        tags: `delivery-order, delivery-${deliveryDate}, stripe-${paymentIntentId}${discountCode ? `, discount-${discountCode}, affiliate-${discountCode}, recomsale-${discountCode}, commission-${affiliateCommissionAmount.toFixed(2)}` : ''}`,
+        note_attributes: discountCode ? [
+          {
+            name: "RecomSale Affiliate Code",
+            value: discountCode
+          },
+          {
+            name: "Affiliate Commission Amount",
+            value: `$${affiliateCommissionAmount.toFixed(2)}`
+          },
+          {
+            name: "Order Value for Commission",
+            value: `$${totalOrderValue.toFixed(2)}`
+          },
+          {
+            name: "Discount Type",
+            value: discountType
+          },
+          {
+            name: "Actual Discount Applied",
+            value: `$${actualDiscountApplied.toFixed(2)}`
+          },
+          {
+            name: "RecomSale Tracking ID",
+            value: `${discountCode}-${orderResult?.order?.order_number || Date.now()}`
+          },
+          {
+            name: "Attribution Timestamp",
+            value: new Date().toISOString()
+          }
+        ] : [],
         shipping_lines: [{
           title: "Scheduled Delivery Service",
           price: "5.99",
