@@ -33,33 +33,11 @@ export const PostCheckoutContinuation: React.FC<PostCheckoutContinuationProps> =
             Add to Order - Save on Delivery Fee!
           </p>
           
-          {lastOrderInfo && (
-            <div className="mt-4 p-3 bg-muted/30 rounded-lg space-y-2">
-              <div>
-                <p className="text-sm text-muted-foreground">Delivery Address:</p>
-                <p className="font-medium">{lastOrderInfo.address || 'Address not saved'}</p>
-                {lastOrderInfo.instructions && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Instructions: {lastOrderInfo.instructions}
-                  </p>
-                )}
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Delivery Date & Time:</p>
-                <p className="font-medium">
-                  {lastOrderInfo.deliveryDate && lastOrderInfo.deliveryTime 
-                    ? `${new Date(lastOrderInfo.deliveryDate).toLocaleDateString()} at ${lastOrderInfo.deliveryTime}`
-                    : 'Date/time not saved'
-                  }
-                </p>
-              </div>
-              <div className="pt-1 border-t border-muted-foreground/20">
-                <p className="text-xs text-muted-foreground">
-                  Order #{lastOrderInfo.orderNumber} • ${(lastOrderInfo.total || 0).toFixed(2)} • {lastOrderInfo.date}
-                </p>
-              </div>
-            </div>
-          )}
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-green-800 font-semibold text-center">
+              Enter code <span className="font-bold">PREMIER2025</span> to get free shipping on your next order!
+            </p>
+          </div>
         </CardHeader>
         
         <CardContent className="space-y-4">

@@ -78,12 +78,6 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             <Plus className="w-4 h-4 mr-2" />
             Add to Recent Order
           </Button>
-          
-          {lastOrderInfo && (
-            <p className="text-xs text-muted-foreground text-center">
-              Use same delivery details to save on delivery fees!
-            </p>
-          )}
         </CardContent>
       </Card>
     </div>
