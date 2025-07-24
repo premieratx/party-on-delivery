@@ -84,11 +84,11 @@ const CustomerDashboard = () => {
         setCustomer(customerData);
       }
 
-      // Load customer orders
+      // Load customer orders - check both by customer_id and session tokens
       const { data: ordersData, error: ordersError } = await supabase
         .from('customer_orders')
         .select('*')
-        .eq('customer_id', customerData?.id || '')
+        .or(`customer_id.eq.${customerData?.id || ''},session_id.in.(${(customerData?.session_tokens || []).map(token => `"${token}"`).join(',') || '""'})`)
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;

@@ -4,8 +4,10 @@ import { CheckCircle, Package, Clock, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { useSessionTracking } from '@/hooks/useSessionTracking';
 
 const Success = () => {
+  const { storeSessionId } = useSessionTracking();
   const [isCreatingOrder, setIsCreatingOrder] = useState(true);
   const [orderStatus, setOrderStatus] = useState<{
     success: boolean;
@@ -25,6 +27,9 @@ const Success = () => {
         setIsCreatingOrder(false);
         return;
       }
+
+      // Store session ID for later linking when user logs in
+      storeSessionId(sessionId);
 
       try {
         const { data, error } = await supabase.functions.invoke('create-shopify-order', {

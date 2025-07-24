@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionTracking } from '@/hooks/useSessionTracking';
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { linkSessionToUser } = useSessionTracking();
   const [isLoading, setIsLoading] = useState(false);
 
   // Get return URL from query params
@@ -20,7 +22,10 @@ const CustomerLogin = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        if (redirectParam === 'dashboard') {
+        // Clear any stored redirect intent and go to dashboard
+        localStorage.removeItem('loginRedirectIntent');
+        
+        if (redirectParam === 'dashboard' || localStorage.getItem('loginRedirectIntent') === 'dashboard') {
           navigate('/customer/dashboard');
         } else if (returnUrl) {
           navigate(decodeURIComponent(returnUrl));
@@ -33,9 +38,15 @@ const CustomerLogin = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Force redirect to customer dashboard on login
+          // Link any stored session IDs to this user
+          if (session.user.email) {
+            await linkSessionToUser(session.user.email);
+          }
+          
+          // Clear redirect intent and force redirect to customer dashboard
+          localStorage.removeItem('loginRedirectIntent');
           navigate('/customer/dashboard');
         }
       }
@@ -47,10 +58,13 @@ const CustomerLogin = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
+      // Store intent to redirect to dashboard in localStorage
+      localStorage.setItem('loginRedirectIntent', 'dashboard');
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/customer/login?redirect=dashboard`,
+          redirectTo: `${window.location.origin}/customer/login`,
         },
       });
 

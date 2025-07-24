@@ -528,6 +528,7 @@ export type Database = {
           phone: string | null
           referred_by_affiliate_id: string | null
           referred_by_code: string | null
+          session_tokens: string[] | null
           total_orders: number | null
           total_spent: number | null
           updated_at: string
@@ -543,6 +544,7 @@ export type Database = {
           phone?: string | null
           referred_by_affiliate_id?: string | null
           referred_by_code?: string | null
+          session_tokens?: string[] | null
           total_orders?: number | null
           total_spent?: number | null
           updated_at?: string
@@ -558,6 +560,7 @@ export type Database = {
           phone?: string | null
           referred_by_affiliate_id?: string | null
           referred_by_code?: string | null
+          session_tokens?: string[] | null
           total_orders?: number | null
           total_spent?: number | null
           updated_at?: string
@@ -968,6 +971,10 @@ export type Database = {
       generate_affiliate_code: {
         Args: { company_name: string }
         Returns: string
+      }
+      link_customer_session: {
+        Args: { customer_email: string; session_token: string }
+        Returns: undefined
       }
       log_security_event: {
         Args: { event_type: string; user_email: string; details?: Json }
