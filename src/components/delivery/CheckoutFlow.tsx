@@ -303,13 +303,19 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleApplyDiscount = () => {
+    console.log('Applying discount code:', discountCode);
     const discount = validateDiscountCode(discountCode);
+    console.log('Validated discount:', discount);
+    
     if (discount) {
+      console.log('Setting applied discount:', discount);
       setAppliedDiscount(discount);
       if (onDiscountChange) {
+        console.log('Calling onDiscountChange with:', discount);
         onDiscountChange(discount);
       }
     } else {
+      console.log('Invalid discount code:', discountCode);
       alert('Invalid discount code');
     }
   };
