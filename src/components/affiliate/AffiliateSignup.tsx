@@ -29,31 +29,39 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
   const navigate = useNavigate();
 
   const handleGoogleAuth = async () => {
+    console.log('Google auth clicked');
     setLoading(true);
     try {
       // First check if user is already logged in
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current session:', session);
       
       if (session?.user) {
         // User is already logged in, check if they have an affiliate account
-        const { data: existingAffiliate } = await supabase
+        console.log('User already logged in, checking for affiliate account');
+        const { data: existingAffiliate, error: affiliateError } = await supabase
           .from('affiliates')
           .select('id')
           .eq('email', session.user.email)
           .single();
         
+        console.log('Existing affiliate:', existingAffiliate, 'Error:', affiliateError);
+        
         if (existingAffiliate) {
           // User already has affiliate account, go to dashboard
+          console.log('User has affiliate account, redirecting to dashboard');
           navigate('/affiliate/dashboard');
           return;
         } else {
           // User logged in but no affiliate account, go to complete signup
+          console.log('User logged in but no affiliate account, redirecting to complete signup');
           navigate('/affiliate/complete-signup');
           return;
         }
       }
 
       // User not logged in, start OAuth flow
+      console.log('Starting Google OAuth flow');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -61,8 +69,12 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('OAuth error:', error);
+        throw error;
+      }
 
+      console.log('OAuth initiated successfully');
       // The user will be redirected to Google OAuth
     } catch (error: any) {
       console.error('Google auth error:', error);
