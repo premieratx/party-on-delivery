@@ -54,3 +54,6 @@ verify_jwt = false
 
 [functions.calculate-delivery-distance]
 verify_jwt = false
+
+[functions.send-ghl-sms]
+verify_jwt = false
