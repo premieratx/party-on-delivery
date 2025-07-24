@@ -69,48 +69,78 @@ export const AffiliateDashboard: React.FC = () => {
   useEffect(() => {
     // Set up auth state listener for handling OAuth redirects
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔥 Auth state changed in dashboard:', event, session?.user?.email);
+      
       if (event === 'SIGNED_IN' && session?.user?.email) {
-        console.log('Auth state changed: SIGNED_IN', session.user.email);
-        // Load affiliate data when user signs in
+        console.log('✅ User signed in, loading affiliate data...');
+        // Small delay to ensure auth is fully established
         setTimeout(() => {
           loadAffiliateData();
-        }, 500); // Small delay to ensure auth is fully established
+        }, 100);
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('❌ User signed out, redirecting...');
+        navigate('/affiliate');
       }
     });
 
-    // Initial load
-    loadAffiliateData();
+    // Initial load - check if user is already authenticated
+    const checkInitialAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔍 Initial session check:', session?.user?.email);
+      
+      if (session?.user?.email) {
+        console.log('✅ Found existing session, loading data...');
+        loadAffiliateData();
+      } else {
+        console.log('❌ No session found, redirecting to signup...');
+        navigate('/affiliate');
+      }
+    };
+
+    checkInitialAuth();
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const loadAffiliateData = async () => {
+    console.log('🔄 Loading affiliate data...');
+    setLoading(true);
+    
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('👤 Current user:', user?.email);
+      
       if (userError || !user) {
+        console.log('❌ No user found, redirecting to signup');
         navigate('/affiliate');
         return;
       }
 
       // Load affiliate profile
+      console.log('🔍 Looking for affiliate with email:', user.email);
       const { data: affiliateData, error: affiliateError } = await supabase
         .from('affiliates')
         .select('*')
         .eq('email', user.email)
         .maybeSingle();
 
+      console.log('📊 Affiliate query result:', { affiliateData, affiliateError });
+
       if (affiliateError) {
-        console.error('Error fetching affiliate:', affiliateError);
+        console.error('❌ Error fetching affiliate:', affiliateError);
         throw affiliateError;
       }
 
       if (!affiliateData) {
         // No affiliate found, redirect to signup
-        console.log('No affiliate found for user:', user.email);
+        console.log('❌ No affiliate found for user, redirecting to signup');
         navigate('/affiliate');
         return;
       }
 
+      console.log('✅ Affiliate found:', affiliateData.name);
       setAffiliate(affiliateData);
 
       // Check if profile needs completion

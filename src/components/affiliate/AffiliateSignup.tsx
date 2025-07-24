@@ -112,7 +112,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/affiliate`,
+          redirectTo: `${window.location.origin}/affiliate/dashboard`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
