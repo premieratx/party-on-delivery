@@ -116,8 +116,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [cartItems, customerInfo, addressInfo, affiliateCode, totalPrice, isAddingToOrder]);
   
-  // State declarations must come before any usage
-  const [tipAmount, setTipAmount] = useState(0);
+  // Pricing calculations - moved before state declarations
+  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  
+  // State declarations must come before any usage  
+  const [tipAmount, setTipAmount] = useState(Math.round(subtotal * 0.10 * 100) / 100); // Initialize with 10%
   const [tipType, setTipType] = useState<'percentage' | 'custom'>('percentage'); // Track tip type
   const [tipPercentage, setTipPercentage] = useState(10); // Track selected percentage
   const [discountCode, setDiscountCode] = useState('');
@@ -137,9 +140,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       }
     }
   }, [appliedDiscountProp]);
-  
-  // Pricing calculations
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   
   // Calculate delivery fee using proper rules with discount consideration
   const baseDeliveryFee = useDeliveryFee(subtotal, appliedDiscount);
@@ -232,8 +232,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         }
       }
       // For custom tips, don't change the amount when subtotal changes
-    } else if (tipAmount === 0) {
-      // Initial 10% tip for new orders
+    } else {
+      // Always initialize with 10% tip for new checkout sessions
       const defaultTip = Math.round(subtotal * 0.10 * 100) / 100;
       setTipAmount(defaultTip);
       setTipType('percentage');

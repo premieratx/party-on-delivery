@@ -270,8 +270,8 @@ const CustomerDashboard = () => {
   };
 
   const handleShareOrder = (order: Order) => {
-    const shareUrl = `${window.location.origin}/order/${order.share_token || order.id}`;
-    const message = `Hey, I ordered drinks for us...if you want to add anything to the order, you can schedule it for the same date & time (${order.delivery_date} from ${order.delivery_time}) to ${order.delivery_address.street}, ${order.delivery_address.city}, ${order.delivery_address.state} and enter code 'PREMIER2025' to get free delivery. Join here: ${shareUrl}`;
+    const shareUrl = `${window.location.origin}/?addToOrder=${order.share_token || order.id}&customer=true&discount=PREMIER2025`;
+    const message = `Hey! I ordered drinks for delivery on ${order.delivery_date} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. You can add to my order here: ${shareUrl}`;
     
     if (navigator.share) {
       navigator.share({
@@ -280,10 +280,10 @@ const CustomerDashboard = () => {
         url: shareUrl,
       });
     } else {
-      navigator.clipboard.writeText(message);
+      navigator.clipboard.writeText(shareUrl);
       toast({
-        title: "Message Copied",
-        description: "The order sharing message has been copied to your clipboard.",
+        title: "Group Link Copied",
+        description: "Share this link with friends to add to your order!",
       });
     }
   };
