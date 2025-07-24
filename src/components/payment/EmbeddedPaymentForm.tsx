@@ -20,7 +20,9 @@ interface PaymentFormProps {
   appliedDiscount: any;
   onPaymentSuccess: (paymentIntentId?: string) => void;
   tipAmount?: number;
-  setTipAmount?: (tip: number) => void;
+  setTipAmount?: (tip: number, type?: 'percentage' | 'custom', percentage?: number) => void;
+  tipType?: 'percentage' | 'custom';
+  tipPercentage?: number;
   deliveryPricing?: {
     fee: number;
     minimumOrder: number;
@@ -46,6 +48,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   onPaymentSuccess,
   tipAmount: externalTipAmount,
   setTipAmount: externalSetTipAmount,
+  tipType: externalTipType = 'percentage',
+  tipPercentage: externalTipPercentage = 10,
   deliveryPricing,
   isAddingToOrder = false,
   useSameAddress = false,
@@ -61,8 +65,60 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   // Calculate tip percentage based on subtotal (before delivery fee adjustment for $200+)
   const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
   const tipCalculationBase = validSubtotal >= 200 ? validSubtotal : validSubtotal;
-  const [internalTipAmount, setInternalTipAmount] = useState(tipCalculationBase * 0.10); // 10% pre-selected
   
+  // Internal state for tip management
+  const [internalTipAmount, setInternalTipAmount] = useState(tipCalculationBase * 0.10); // 10% pre-selected
+  const [internalTipType, setInternalTipType] = useState<'percentage' | 'custom'>('percentage');
+  const [internalTipPercentage, setInternalTipPercentage] = useState(10);
+  
+  // Use external tip state if provided, otherwise use internal
+  const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
+  const setTipAmount = externalSetTipAmount || setInternalTipAmount;
+  const tipType = externalTipType || internalTipType;
+  const tipPercentage = externalTipPercentage || internalTipPercentage;
+  
+  const [showCustomTip, setShowCustomTip] = useState(false);
+  const [tipConfirmed, setTipConfirmed] = useState(false);
+  const [customTipConfirmed, setCustomTipConfirmed] = useState(false);
+  const [confirmedTipAmount, setConfirmedTipAmount] = useState(0);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
+  const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
+  const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
+  const total = validSubtotal + validDeliveryFee + validSalesTax + validTipAmount;
+  
+  const tipOptions = [{
+    label: '5%',
+    value: tipCalculationBase * 0.05,
+    percentage: 5
+  }, {
+    label: '10%',
+    value: tipCalculationBase * 0.10,
+    percentage: 10
+  }, {
+    label: '15%',
+    value: tipCalculationBase * 0.15,
+    percentage: 15
+  }, {
+    label: '0%',
+    value: 0,
+    percentage: 0
+  }];
+
+  // Only set initial tip amount to 10% if no tip has been set yet (user hasn't interacted)
+  const [hasUserSetTip, setHasUserSetTip] = useState(false);
+  
+  useEffect(() => {
+    if (!hasUserSetTip && tipAmount === 0 && tipCalculationBase > 0) {
+      if (externalSetTipAmount) {
+        externalSetTipAmount(tipCalculationBase * 0.10, 'percentage', 10);
+      } else {
+        setInternalTipAmount(tipCalculationBase * 0.10);
+        setInternalTipType('percentage');
+        setInternalTipPercentage(10);
+      }
+    }
+  }, [tipCalculationBase]); // Removed hasUserSetTip dependency to prevent tip adjustment when cart changes
   // Early return for empty cart
   if (cartItems.length === 0) {
     return (
@@ -84,42 +140,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       </Card>
     );
   }
-
-  // Use external tip state if provided, otherwise use internal
-  const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
-  const setTipAmount = externalSetTipAmount || setInternalTipAmount;
-  const [showCustomTip, setShowCustomTip] = useState(false);
-  const [tipConfirmed, setTipConfirmed] = useState(false);
-  const [customTipConfirmed, setCustomTipConfirmed] = useState(false);
-  const [confirmedTipAmount, setConfirmedTipAmount] = useState(0);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
-  const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
-  const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
-  const total = validSubtotal + validDeliveryFee + validSalesTax + validTipAmount;
   
-  const tipOptions = [{
-    label: '5%',
-    value: tipCalculationBase * 0.05
-  }, {
-    label: '10%',
-    value: tipCalculationBase * 0.10
-  }, {
-    label: '15%',
-    value: tipCalculationBase * 0.15
-  }, {
-    label: '0%',
-    value: 0
-  }];
-
-  // Only set initial tip amount to 10% if no tip has been set yet (user hasn't interacted)
-  const [hasUserSetTip, setHasUserSetTip] = useState(false);
-  
-  useEffect(() => {
-    if (!hasUserSetTip && tipAmount === 0 && tipCalculationBase > 0) {
-      setTipAmount(tipCalculationBase * 0.10);
-    }
-  }, [tipCalculationBase]); // Removed hasUserSetTip and tipAmount dependencies to prevent tip adjustment when cart changes
   const handleCustomTipConfirm = () => {
     if (tipAmount > 0) {
       setCustomTipConfirmed(true);
@@ -236,8 +257,14 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
             </div> : <div className="space-y-2">
               <Label className="text-sm font-semibold">Add a tip for your delivery driver</Label>
               <div className="grid grid-cols-5 gap-1 w-full">
-                {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip ? "default" : "outline"} onClick={() => {
-              setTipAmount(tip.value);
+                {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip && tipType === 'percentage' ? "default" : "outline"} onClick={() => {
+              if (externalSetTipAmount) {
+                externalSetTipAmount(tip.value, 'percentage', tip.percentage);
+              } else {
+                setInternalTipAmount(tip.value);
+                setInternalTipType('percentage');
+                setInternalTipPercentage(tip.percentage);
+              }
               setHasUserSetTip(true); // Mark that user has interacted with tip
               setShowCustomTip(false);
               setTipConfirmed(false);
@@ -249,7 +276,12 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                 <Button type="button" variant={showCustomTip ? "default" : "outline"} onClick={() => {
               setShowCustomTip(true);
               setHasUserSetTip(true); // Mark that user has interacted with tip
-              setTipAmount(0);
+              if (externalSetTipAmount) {
+                externalSetTipAmount(0, 'custom');
+              } else {
+                setInternalTipAmount(0);
+                setInternalTipType('custom');
+              }
               setTipConfirmed(false);
               setCustomTipConfirmed(false);
             }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
@@ -262,23 +294,38 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
                     <Label htmlFor="customTip" className="text-sm whitespace-nowrap">Custom tip:</Label>
                     <div className="flex items-center gap-1">
                       <span className="text-sm">$</span>
-                      <Input id="customTip" type="text" placeholder="0.00" value={tipAmount === 0 ? '' : tipAmount.toString()} onChange={e => {
+                       <Input id="customTip" type="text" placeholder="0.00" value={tipAmount === 0 ? '' : tipAmount.toString()} onChange={e => {
                   const value = e.target.value;
                   // Allow typing numbers and decimal point
                   if (value === '' || /^\d*\.?\d*$/.test(value)) {
                     const numValue = parseFloat(value) || 0;
-                    setTipAmount(numValue);
+                    if (externalSetTipAmount) {
+                      externalSetTipAmount(numValue, 'custom');
+                    } else {
+                      setInternalTipAmount(numValue);
+                      setInternalTipType('custom');
+                    }
                     setHasUserSetTip(true); // Mark that user has interacted with tip
                   }
                  }} onBlur={e => {
                   // Format to 2 decimal places on blur if there's a value
                   const value = parseFloat(e.target.value) || 0;
-                  setTipAmount(value);
+                  if (externalSetTipAmount) {
+                    externalSetTipAmount(value, 'custom');
+                  } else {
+                    setInternalTipAmount(value);
+                    setInternalTipType('custom');
+                  }
                   setHasUserSetTip(true);
                  }} onKeyDown={e => {
                   if (e.key === 'Tab' || e.key === 'Enter') {
                     const value = parseFloat(e.currentTarget.value) || 0;
-                    setTipAmount(value);
+                    if (externalSetTipAmount) {
+                      externalSetTipAmount(value, 'custom');
+                    } else {
+                      setInternalTipAmount(value);
+                      setInternalTipType('custom');
+                    }
                     setHasUserSetTip(true);
                   }
                 }} className="w-16 text-sm" />

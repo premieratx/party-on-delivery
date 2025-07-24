@@ -118,6 +118,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   // State declarations must come before any usage
   const [tipAmount, setTipAmount] = useState(0);
+  const [tipType, setTipType] = useState<'percentage' | 'custom'>('percentage'); // Track tip type
+  const [tipPercentage, setTipPercentage] = useState(10); // Track selected percentage
   const [discountCode, setDiscountCode] = useState('');
   
   // State for managing discount - initialize from parent prop (which uses localStorage)
@@ -218,16 +220,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   
-  // Pre-select tip to be 10% in all cases - but only set once to avoid loops
+  // Handle tip calculation based on type
   useEffect(() => {
-    if (subtotal > 0 && tipAmount === 0) {
-      const defaultTip = Math.round(subtotal * 0.10 * 100) / 100; // Always 10%, rounded
+    if (subtotal > 0) {
+      if (tipType === 'percentage') {
+        // Recalculate percentage-based tips when subtotal changes
+        const newTipAmount = Math.round(subtotal * (tipPercentage / 100) * 100) / 100;
+        setTipAmount(newTipAmount);
+        if (onTipChange) {
+          onTipChange(newTipAmount);
+        }
+      }
+      // For custom tips, don't change the amount when subtotal changes
+    } else if (tipAmount === 0) {
+      // Initial 10% tip for new orders
+      const defaultTip = Math.round(subtotal * 0.10 * 100) / 100;
       setTipAmount(defaultTip);
+      setTipType('percentage');
+      setTipPercentage(10);
       if (onTipChange) {
         onTipChange(defaultTip);
       }
     }
-  }, [subtotal]); // Removed tipAmount and onTipChange dependencies to prevent re-triggering
+  }, [subtotal, tipType, tipPercentage]); // Only recalculate when these change
 
   // Check if delivery details match previous order exactly for automatic free shipping
   const deliveryDetailsMatch = isAddingToOrder && 
@@ -311,9 +326,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   };
   
-  // Sync tip changes with parent
-  const handleTipChange = (newTip: number) => {
+  // Sync tip changes with parent and track tip type
+  const handleTipChange = (newTip: number, type?: 'percentage' | 'custom', percentage?: number) => {
     setTipAmount(newTip);
+    if (type) setTipType(type);
+    if (percentage !== undefined) setTipPercentage(percentage);
     if (onTipChange) {
       onTipChange(newTip);
     }
@@ -913,8 +930,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 }}
                 appliedDiscount={appliedDiscount}
                 onPaymentSuccess={handlePaymentSuccess}
-                tipAmount={tipAmount}
-                setTipAmount={handleTipChange}
+                 tipAmount={tipAmount}
+                 setTipAmount={handleTipChange}
+                 tipType={tipType}
+                 tipPercentage={tipPercentage}
                 deliveryPricing={{ fee: baseDeliveryFee, minimumOrder: 0, isDistanceBased: false }}
                 isAddingToOrder={isAddingToOrder}
                 useSameAddress={useSameAddress}
