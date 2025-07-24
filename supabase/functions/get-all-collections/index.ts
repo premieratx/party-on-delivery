@@ -67,7 +67,7 @@ serve(async (req) => {
 
     console.log("=== ATTEMPTING REAL-TIME FETCH OF ALL COLLECTIONS ===");
     
-    // First, get all collection handles using the Admin API for more comprehensive access
+    // First, get all collection handles using the Storefront API
     const getAllCollectionsQuery = `
       query getAllCollections($first: Int!) {
         collections(first: $first) {
@@ -77,7 +77,6 @@ serve(async (req) => {
               title
               handle
               description
-              productsCount
             }
           }
           pageInfo {
