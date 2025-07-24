@@ -449,11 +449,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             
             {/* Checkout tab - separate styling */}
             <div className="flex-shrink-0 w-20 sm:w-24">
-              {/* DEBUG: Cart debugging info */}
-              <div className="text-xs text-red-500 absolute top-0 right-0 z-50 bg-white p-1">
-                Cart: {cartItemCount}
-              </div>
-              
               <div className="sm:hidden flex flex-col h-full">
                 <button
                   onClick={onOpenCart}
