@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_orders: {
+        Row: {
+          abandoned_at: string
+          affiliate_code: string | null
+          affiliate_id: string | null
+          cart_items: Json
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_address: string | null
+          id: string
+          last_activity_at: string
+          session_id: string
+          subtotal: number | null
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          abandoned_at?: string
+          affiliate_code?: string | null
+          affiliate_id?: string | null
+          cart_items?: Json
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_address?: string | null
+          id?: string
+          last_activity_at?: string
+          session_id: string
+          subtotal?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          abandoned_at?: string
+          affiliate_code?: string | null
+          affiliate_id?: string | null
+          cart_items?: Json
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_address?: string | null
+          id?: string
+          last_activity_at?: string
+          session_id?: string
+          subtotal?: number | null
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           affiliate_id: string | null

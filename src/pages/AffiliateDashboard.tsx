@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -56,9 +57,28 @@ interface RecentOrder {
   order_date: string;
 }
 
+interface AbandonedOrder {
+  id: string;
+  session_id: string;
+  customer_email?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  delivery_address?: string;
+  affiliate_code?: string;
+  affiliate_id?: string;
+  cart_items: any;
+  subtotal?: number;
+  total_amount?: number;
+  abandoned_at: string;
+  created_at: string;
+  updated_at: string;
+  last_activity_at: string;
+}
+
 export const AffiliateDashboard: React.FC = () => {
   const [affiliate, setAffiliate] = useState<AffiliateData | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [abandonedOrders, setAbandonedOrders] = useState<AbandonedOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [copying, setCopying] = useState(false);
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
@@ -170,6 +190,18 @@ export const AffiliateDashboard: React.FC = () => {
       if (referralsError) throw referralsError;
 
       setRecentOrders(referrals || []);
+
+      // Load abandoned orders
+      const { data: abandoned, error: abandonedError } = await supabase
+        .from('abandoned_orders')
+        .select('*')
+        .eq('affiliate_id', affiliateData.id)
+        .order('abandoned_at', { ascending: false })
+        .limit(20);
+
+      if (abandonedError) console.warn('Failed to load abandoned orders:', abandonedError);
+      
+      setAbandonedOrders(abandoned || []);
     } catch (error: any) {
       console.error('Error loading affiliate data:', error);
       toast({
@@ -317,6 +349,32 @@ Order: ${window.location.origin}/a/${affiliate?.affiliate_code}
 
 Enjoy Austin! 🍻
 ${affiliate?.name}`;
+  };
+
+  const getInstagramTemplate = () => {
+    return `🍻✨ SURPRISE YOUR GUESTS! ✨🍻
+
+Hey ${affiliate?.company_name} fam! Want to absolutely WOW your guests? 
+
+🎉 FREE COLD DELIVERY just dropped at your rental!
+🧊 Ice-cold beer, wine & cocktails 
+🚚 Delivered straight to your door
+💰 NO delivery fees (we got you!)
+⚡ Same-day delivery available
+
+Perfect for:
+🏊‍♀️ Pool parties that pop off
+🌮 Taco Tuesday takeovers  
+🎮 Game night greatness
+🌅 Sunset sip sessions
+
+Don't let your crew settle for warm drinks from the corner store when you can have EVERYTHING delivered ice-cold! 
+
+Tag a friend who needs this! 👇
+
+#AustinLife #PartyOnDelivery #POD #VacationVibes #AustinRentals #FreeDelivery
+
+Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
   };
 
   const copyToClipboard = (text: string, type: string) => {
@@ -562,33 +620,7 @@ ${affiliate?.name}`;
         {/* Personal Concierge Website Section */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Your Personal Concierge Website</CardTitle>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <FileText className="h-4 w-4" />
-                    Marketing Templates
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => copyToClipboard(getEmailTemplate(), "Email template")}>
-                    <Mail className="h-4 w-4 mr-2" />
-                    Copy Email Template
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => copyToClipboard(getWebsiteBlurb(), "Website blurb")}>
-                    <Globe className="h-4 w-4 mr-2" />
-                    Copy Website Blurb
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => copyToClipboard(getTextTemplate(), "Text message template")}>
-                    <Smartphone className="h-4 w-4 mr-2" />
-                    Copy Text Message
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <CardTitle className="text-xl font-bold">🎉 Your Personal Concierge Website</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
@@ -677,38 +709,195 @@ ${affiliate?.name}`;
           </CardContent>
         </Card>
 
-        {/* Recent Orders */}
-        <Card>
+        {/* Marketing Templates Section */}
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
+            <CardTitle className="text-xl font-bold">🚀 Marketing Templates</CardTitle>
+            <p className="text-muted-foreground">Ready-to-use content to share with your guests and spread the POD love!</p>
           </CardHeader>
           <CardContent>
-            {recentOrders.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No orders yet. Start sharing your link to earn commissions!
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between py-2 border-b">
-                    <div>
-                      <p className="font-medium">Order #{order.order_id}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(order.order_date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{formatCurrency(order.subtotal)}</p>
-                      <p className="text-sm text-green-600">
-                        +{formatCurrency(order.commission_amount)}
-                      </p>
-                    </div>
+            <Tabs defaultValue="email" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="email">📧 Email</TabsTrigger>
+                <TabsTrigger value="text">💬 Text</TabsTrigger>
+                <TabsTrigger value="instagram">📸 IG Post</TabsTrigger>
+                <TabsTrigger value="website">🌐 Website</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="email" className="space-y-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Email Template</h4>
+                  <p className="text-sm text-muted-foreground mb-3">Perfect for sending to your guest list!</p>
+                  <div className="bg-background p-3 rounded border text-sm whitespace-pre-line">
+                    {getEmailTemplate()}
                   </div>
-                ))}
-              </div>
-            )}
+                  <Button 
+                    onClick={() => copyToClipboard(getEmailTemplate(), "Email template")} 
+                    className="mt-3 w-full"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Email Template
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="text" className="space-y-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Text Message Template</h4>
+                  <p className="text-sm text-muted-foreground mb-3">Quick and easy for instant sharing!</p>
+                  <div className="bg-background p-3 rounded border text-sm whitespace-pre-line">
+                    {getTextTemplate()}
+                  </div>
+                  <Button 
+                    onClick={() => copyToClipboard(getTextTemplate(), "Text message template")} 
+                    className="mt-3 w-full"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Text Template
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="instagram" className="space-y-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Instagram Post Template</h4>
+                  <p className="text-sm text-muted-foreground mb-3">Engaging content for your social media!</p>
+                  <div className="bg-background p-3 rounded border text-sm whitespace-pre-line">
+                    {getInstagramTemplate()}
+                  </div>
+                  <Button 
+                    onClick={() => copyToClipboard(getInstagramTemplate(), "Instagram template")} 
+                    className="mt-3 w-full"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy IG Template
+                  </Button>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="website" className="space-y-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Website Blurb</h4>
+                  <p className="text-sm text-muted-foreground mb-3">Add this to your website or booking confirmation!</p>
+                  <div className="bg-background p-3 rounded border text-sm whitespace-pre-line">
+                    {getWebsiteBlurb()}
+                  </div>
+                  <Button 
+                    onClick={() => copyToClipboard(getWebsiteBlurb(), "Website blurb")} 
+                    className="mt-3 w-full"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Website Blurb
+                  </Button>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
+
+        {/* Recent Orders & Abandoned Orders */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-green-600">✅ Recent Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentOrders.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No orders yet. Start sharing your link to earn commissions!
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {recentOrders.map((order) => (
+                    <div key={order.id} className="flex items-center justify-between py-2 border-b">
+                      <div>
+                        <p className="font-medium">Order #{order.order_id}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(order.order_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">{formatCurrency(order.subtotal)}</p>
+                        <p className="text-sm text-green-600">
+                          +{formatCurrency(order.commission_amount)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Abandoned Orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-orange-600">⏰ Abandoned Orders</CardTitle>
+              <p className="text-sm text-muted-foreground">Customers who started checkout but didn't complete - reach out to them!</p>
+            </CardHeader>
+            <CardContent>
+              {abandonedOrders.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No abandoned orders. Your customers are completing their purchases! 🎉
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {abandonedOrders.map((order) => (
+                    <div key={order.id} className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-orange-800">
+                            {order.customer_name || order.customer_email || 'Anonymous Customer'}
+                          </p>
+                          {order.customer_email && (
+                            <p className="text-sm text-orange-600">{order.customer_email}</p>
+                          )}
+                          {order.customer_phone && (
+                            <p className="text-sm text-orange-600">{order.customer_phone}</p>
+                          )}
+                          {order.delivery_address && (
+                            <p className="text-xs text-orange-500 mt-1">{order.delivery_address}</p>
+                          )}
+                          <p className="text-xs text-orange-500 mt-1">
+                            Abandoned: {new Date(order.abandoned_at).toLocaleDateString()} at {new Date(order.abandoned_at).toLocaleTimeString()}
+                          </p>
+                        </div>
+                        <div className="text-right ml-2">
+                          {order.total_amount && (
+                            <p className="font-medium text-orange-800">{formatCurrency(order.total_amount)}</p>
+                          )}
+                          <div className="flex gap-1 mt-1">
+                            {order.customer_email && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-xs px-2 py-1 h-auto"
+                                onClick={() => window.open(`mailto:${order.customer_email}?subject=Complete your Party On Delivery order&body=Hi! I noticed you started an order for delivery. Everything OK? Let me know if you need any help completing your order!`)}
+                              >
+                                📧
+                              </Button>
+                            )}
+                            {order.customer_phone && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-xs px-2 py-1 h-auto"
+                                onClick={() => window.open(`sms:${order.customer_phone}&body=Hi! I noticed you started an order for party delivery. Everything OK? Let me know if you need any help completing your order!`)}
+                              >
+                                💬
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Profile Completion Dialog */}

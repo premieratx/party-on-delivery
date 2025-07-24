@@ -47,8 +47,27 @@ interface AdminNotification {
   updated_at: string;
 }
 
+interface AbandonedOrder {
+  id: string;
+  session_id: string;
+  customer_email?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  delivery_address?: string;
+  affiliate_code?: string;
+  affiliate_id?: string;
+  cart_items: any;
+  subtotal?: number;
+  total_amount?: number;
+  abandoned_at: string;
+  created_at: string;
+  updated_at: string;
+  last_activity_at: string;
+}
+
 export const AdminDashboard: React.FC = () => {
   const [affiliates, setAffiliates] = useState<AffiliateStats[]>([]);
+  const [abandonedOrders, setAbandonedOrders] = useState<AbandonedOrder[]>([]);
   const [summary, setSummary] = useState<DashboardSummary>({
     totalAffiliates: 0,
     totalSales: 0,
@@ -91,6 +110,22 @@ export const AdminDashboard: React.FC = () => {
       }
 
       setAffiliates(affiliatesData || []);
+
+      // Load abandoned orders with affiliate information
+      const { data: abandonedData, error: abandonedError } = await supabase
+        .from('abandoned_orders')
+        .select(`
+          *,
+          affiliates!inner(name, company_name, affiliate_code)
+        `)
+        .order('abandoned_at', { ascending: false })
+        .limit(50);
+
+      if (abandonedError) {
+        console.error('Error loading abandoned orders:', abandonedError);
+      } else {
+        setAbandonedOrders(abandonedData || []);
+      }
 
       // Calculate summary stats
       const totalAffiliates = affiliatesData?.length || 0;
@@ -358,62 +393,127 @@ export const AdminDashboard: React.FC = () => {
           </Card>
         </div>
 
-        {/* Affiliate Leaderboard */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Affiliate Leaderboard</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {affiliates.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No affiliates registered yet.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {affiliates.map((affiliate, index) => (
-                  <div key={affiliate.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        {getRankIcon(index)}
+        {/* Grid Layout for Affiliate Leaderboard and Abandoned Orders */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Affiliate Leaderboard */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Affiliate Leaderboard</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {affiliates.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No affiliates registered yet.
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {affiliates.map((affiliate, index) => (
+                    <div key={affiliate.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          {getRankIcon(index)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{affiliate.name}</p>
+                          <p className="text-xs text-muted-foreground">{affiliate.company_name}</p>
+                          <p className="text-xs text-muted-foreground">Code: {affiliate.affiliate_code}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{affiliate.name}</p>
-                        <p className="text-sm text-muted-foreground">{affiliate.company_name}</p>
-                        <p className="text-xs text-muted-foreground">Code: {affiliate.affiliate_code}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-4 gap-4 text-right">
-                      <div>
-                        <p className="font-medium">{formatCurrency(affiliate.total_sales)}</p>
-                        <p className="text-xs text-muted-foreground">Total Sales</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">{affiliate.orders_count}</p>
-                        <p className="text-xs text-muted-foreground">Orders</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">{formatCurrency(affiliate.total_commission)}</p>
-                        <p className="text-xs text-muted-foreground">Total Commission</p>
-                      </div>
-                      <div>
-                        <div className="flex flex-col items-end gap-1">
-                          <p className={`font-medium ${affiliate.commission_unpaid >= 200 ? 'text-red-600' : ''}`}>
+                      
+                      <div className="text-right">
+                        <p className="font-medium text-sm">{formatCurrency(affiliate.total_sales)}</p>
+                        <p className="text-xs text-muted-foreground">{affiliate.orders_count} orders</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className={`font-medium text-xs ${affiliate.commission_unpaid >= 200 ? 'text-red-600' : ''}`}>
                             {formatCurrency(affiliate.commission_unpaid)}
                           </p>
-                          <p className="text-xs text-muted-foreground">Unpaid</p>
-                          <Badge variant={affiliate.commission_rate >= 10 ? 'default' : affiliate.commission_rate >= 7.5 ? 'secondary' : 'outline'}>
+                          <Badge variant={affiliate.commission_rate >= 10 ? 'default' : affiliate.commission_rate >= 7.5 ? 'secondary' : 'outline'} className="text-xs">
                             {affiliate.commission_rate}%
                           </Badge>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Abandoned Orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-orange-600">⏰ All Abandoned Orders</CardTitle>
+              <p className="text-sm text-muted-foreground">Customers who started checkout but didn't complete</p>
+            </CardHeader>
+            <CardContent>
+              {abandonedOrders.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No abandoned orders found.
+                </p>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {abandonedOrders.map((order) => (
+                    <div key={order.id} className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-orange-800 text-sm">
+                            {order.customer_name || order.customer_email || 'Anonymous Customer'}
+                          </p>
+                          {order.customer_email && (
+                            <p className="text-xs text-orange-600">{order.customer_email}</p>
+                          )}
+                          {order.customer_phone && (
+                            <p className="text-xs text-orange-600">{order.customer_phone}</p>
+                          )}
+                          {order.delivery_address && (
+                            <p className="text-xs text-orange-500 mt-1">{order.delivery_address}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            {order.affiliate_code && (
+                              <Badge variant="outline" className="text-xs">
+                                Affiliate: {order.affiliate_code}
+                              </Badge>
+                            )}
+                            <p className="text-xs text-orange-500">
+                              {new Date(order.abandoned_at).toLocaleDateString()} at {new Date(order.abandoned_at).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right ml-2">
+                          {order.total_amount && (
+                            <p className="font-medium text-orange-800 text-sm">{formatCurrency(order.total_amount)}</p>
+                          )}
+                          <div className="flex gap-1 mt-1">
+                            {order.customer_email && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-xs px-2 py-1 h-auto"
+                                onClick={() => window.open(`mailto:${order.customer_email}?subject=Complete your Party On Delivery order&body=Hi! I noticed you started an order for delivery. Everything OK? Let me know if you need any help completing your order!`)}
+                              >
+                                📧
+                              </Button>
+                            )}
+                            {order.customer_phone && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-xs px-2 py-1 h-auto"
+                                onClick={() => window.open(`sms:${order.customer_phone}&body=Hi! I noticed you started an order for party delivery. Everything OK? Let me know if you need any help completing your order!`)}
+                              >
+                                💬
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
