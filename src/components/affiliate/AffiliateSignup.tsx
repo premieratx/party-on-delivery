@@ -36,18 +36,17 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       await supabase.auth.signOut();
       console.log('Cleared existing session');
       
-      // Use window.location.href for direct redirect instead of popup
-      const redirectUrl = `${window.location.origin}/affiliate/complete-signup`;
-      console.log('Redirect URL:', redirectUrl);
+      // Use Supabase SDK with proper redirect URL to affiliate dashboard
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/affiliate/dashboard`
+        }
+      });
       
-      // Construct the Google OAuth URL manually to avoid frame issues
-      const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
-      const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(`${window.location.origin}/affiliate/dashboard`)}`;
-      
-      console.log('Redirecting to:', googleAuthUrl);
-      
-      // Direct redirect instead of using Supabase SDK
-      window.location.href = googleAuthUrl;
+      if (error) {
+        throw error;
+      }
       
     } catch (error: any) {
       console.error('Google auth error:', error);
