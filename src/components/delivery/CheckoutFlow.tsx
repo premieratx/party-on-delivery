@@ -218,16 +218,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   
-  // Pre-select tip to be 10% in all cases
+  // Pre-select tip to be 10% in all cases - but only set once to avoid loops
   useEffect(() => {
-    if (subtotal > 0) {
-      const defaultTip = subtotal * 0.10; // Always 10%
+    if (subtotal > 0 && tipAmount === 0) {
+      const defaultTip = Math.round(subtotal * 0.10 * 100) / 100; // Always 10%, rounded
       setTipAmount(defaultTip);
       if (onTipChange) {
         onTipChange(defaultTip);
       }
     }
-  }, [subtotal, onTipChange]);
+  }, [subtotal, onTipChange, tipAmount]);
 
   // Check if delivery details match previous order exactly for automatic free shipping
   const deliveryDetailsMatch = isAddingToOrder && 
@@ -308,37 +308,41 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmDateTime = () => {
-    if (isDateTimeComplete) {
-      setConfirmedDateTime(true);
-      
-      // Navigate to next incomplete step or payment if all confirmed
-      if (!confirmedAddress) {
-        setCurrentStep('address');
-      } else if (!confirmedCustomer) {
-        setCurrentStep('customer');
-      } else if (confirmedAddress && confirmedCustomer) {
-        setCurrentStep('payment');
-      }
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 100);
+    if (!isDateTimeComplete) return;
+    
+    setConfirmedDateTime(true);
+    
+    // Navigate to next incomplete step or payment if all confirmed
+    if (!confirmedAddress) {
+      setCurrentStep('address');
+    } else if (!confirmedCustomer) {
+      setCurrentStep('customer');
+    } else if (confirmedAddress && confirmedCustomer) {
+      setCurrentStep('payment');
     }
+    
+    // Smooth scroll to top after state update
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
 
   const handleConfirmAddress = async () => {
-    if (isAddressComplete) {
-      setConfirmedAddress(true);
-      
-      // Navigate to next incomplete step or payment if all confirmed
-      if (!confirmedCustomer) {
-        setCurrentStep('customer');
-      } else if (confirmedDateTime && confirmedCustomer) {
-        setCurrentStep('payment');
-      }
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 100);
+    if (!isAddressComplete) return;
+    
+    setConfirmedAddress(true);
+    
+    // Navigate to next incomplete step or payment if all confirmed
+    if (!confirmedCustomer) {
+      setCurrentStep('customer');
+    } else if (confirmedDateTime && confirmedCustomer) {
+      setCurrentStep('payment');
     }
+    
+    // Smooth scroll to top after state update
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
 
   const handleConfirmCustomer = () => {
@@ -349,16 +353,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     setEmailError(emailErr);
     setPhoneError(phoneErr);
     
-    if (!emailErr && !phoneErr && customerInfo.firstName && customerInfo.lastName) {
+    if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim()) {
       setConfirmedCustomer(true);
       
       // Only proceed to payment if all sections confirmed
       if (confirmedDateTime && confirmedAddress) {
         setCurrentStep('payment');
       }
-      setTimeout(() => {
+      
+      // Smooth scroll to top after state update
+      requestAnimationFrame(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      }, 100);
+      });
     }
   };
 
