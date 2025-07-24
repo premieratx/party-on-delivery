@@ -328,19 +328,20 @@ export const AffiliateDashboard: React.FC = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Profile Completion Prompt */}
         {needsProfileCompletion && (
-          <Card className="border-yellow-200 bg-yellow-50">
+          <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 shadow-lg">
             <CardHeader>
-              <CardTitle className="text-yellow-800">Complete Your Profile</CardTitle>
+              <CardTitle className="text-blue-800 text-xl">🎉 Finish signup to see your personal concierge website!</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-yellow-700 mb-4">
-                Please complete your profile to start earning commissions!
+              <p className="text-blue-700 mb-4">
+                Complete your profile with phone and company details to unlock your custom affiliate page and start earning commissions!
               </p>
               <Button 
                 onClick={() => setShowProfileForm(true)}
-                className="bg-yellow-600 hover:bg-yellow-700"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold"
+                size="lg"
               >
-                Complete Profile
+                Complete Signup
               </Button>
             </CardContent>
           </Card>
@@ -439,10 +440,10 @@ export const AffiliateDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Affiliate Link Section */}
+        {/* Personal Concierge Website Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Your Affiliate Link</CardTitle>
+            <CardTitle>Your Personal Concierge Website</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
@@ -457,6 +458,16 @@ export const AffiliateDashboard: React.FC = () => {
               </Button>
             </div>
             
+            <div className="mb-4">
+              <Button
+                onClick={() => window.open(affiliateUrl, '_blank')}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Your Custom Page
+              </Button>
+            </div>
+            
             <div className="flex flex-wrap gap-2">
               <Button onClick={generateQRCode} variant="outline" size="sm">
                 <QrCode className="h-4 w-4 mr-2" />
@@ -465,14 +476,6 @@ export const AffiliateDashboard: React.FC = () => {
               <Button onClick={addToHomeScreen} variant="outline" size="sm">
                 <Smartphone className="h-4 w-4 mr-2" />
                 Add to Home Screen
-              </Button>
-              <Button 
-                onClick={() => window.open(affiliateUrl, '_blank')} 
-                variant="outline" 
-                size="sm"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Preview Page
               </Button>
             </div>
             
