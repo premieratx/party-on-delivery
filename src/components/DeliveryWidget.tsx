@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import { ProductCategories } from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
@@ -7,6 +8,7 @@ import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useWakeLock } from '@/hooks/useWakeLock';
+import { useReliableStorage } from '@/hooks/useReliableStorage';
 
 export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'products' | 'cart' | 'checkout';
 
@@ -31,6 +33,9 @@ export const DeliveryWidget: React.FC = () => {
   // Enable wake lock to keep screen on during app usage
   useWakeLock();
   
+  const location = useLocation();
+  const [affiliateReferral, setAffiliateReferral] = useReliableStorage('affiliateReferral', '');
+  
   // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
   
@@ -47,6 +52,14 @@ export const DeliveryWidget: React.FC = () => {
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
   const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag);
   const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
+
+  // Handle affiliate tracking from navigation state
+  useEffect(() => {
+    if (location.state?.fromAffiliate) {
+      setAffiliateReferral(location.state.fromAffiliate);
+      console.log('Affiliate referral set:', location.state.fromAffiliate);
+    }
+  }, [location.state, setAffiliateReferral]);
   
   // State for tracking cart calculations (for cart/checkout sync) - persist discount in localStorage
   const [appliedDiscount, setAppliedDiscount] = useLocalStorage<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>('partyondelivery_applied_discount', null);
@@ -329,6 +342,7 @@ export const DeliveryWidget: React.FC = () => {
           onTipChange={setTipAmount}
           onChangesDetected={setHasChanges}
           appliedDiscount={appliedDiscount}
+          affiliateCode={affiliateReferral}
         />
       )}
 

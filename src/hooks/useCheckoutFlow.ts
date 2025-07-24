@@ -7,9 +7,10 @@ interface UseCheckoutFlowProps {
   lastOrderInfo: any;
   deliveryInfo: DeliveryInfo;
   onDeliveryInfoChange: (info: DeliveryInfo) => void;
+  affiliateCode?: string;
 }
 
-export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange }: UseCheckoutFlowProps) {
+export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange, affiliateCode }: UseCheckoutFlowProps) {
   const { customerInfo, addressInfo, setAddressInfo, setCustomerInfo } = useCustomerInfo();
   
   // Step management
@@ -155,6 +156,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     originalOrderInfo,
     hasChanges,
     changedFields,
+    affiliateCode,
     
     // Helpers
     updateDeliveryInfo,

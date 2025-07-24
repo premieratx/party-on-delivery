@@ -20,7 +20,8 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { paymentIntentId, isAddingToOrder, useSameAddress, sessionId } = await req.json();
+    const body = await req.json();
+    const { paymentIntentId, isAddingToOrder, useSameAddress, sessionId } = body;
     if (!paymentIntentId && !sessionId) {
       throw new Error("Payment Intent ID or Session ID is required");
     }
@@ -78,6 +79,7 @@ serve(async (req) => {
     const salesTax = parseFloat(metadata?.sales_tax || '0');
     const tipAmount = parseFloat(metadata?.tip_amount || '0');
     const totalAmount = parseFloat(metadata?.total_amount || '0');
+    const affiliateCode = body.affiliateCode;
 
     logStep("Metadata parsed", { 
       itemCount: cartItems.length, 
@@ -403,6 +405,37 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
       orderId: orderResult.order.id,
       orderNumber: orderResult.order.order_number 
     });
+
+    // Track affiliate referral if affiliate code is provided
+    if (affiliateCode) {
+      try {
+        logStep('Tracking affiliate referral', { affiliateCode });
+        
+        const supabaseService = createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+          { auth: { persistSession: false } }
+        );
+
+        const { data: trackingResult, error: trackingError } = await supabaseService.functions.invoke('track-affiliate-referral', {
+          body: {
+            affiliateCode: affiliateCode,
+            orderData: orderResult.order,
+            customerEmail: customerEmail,
+            orderId: orderResult.order.id.toString()
+          }
+        });
+
+        if (trackingError) {
+          logStep('Error tracking affiliate referral', trackingError);
+        } else {
+          logStep('Affiliate referral tracked', trackingResult);
+        }
+      } catch (affiliateError) {
+        logStep('Error in affiliate tracking', affiliateError);
+        // Don't fail the order creation if affiliate tracking fails
+      }
+    }
 
     // Store order group info in Supabase for potential future orders
     try {

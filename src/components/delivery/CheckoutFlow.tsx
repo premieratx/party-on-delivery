@@ -38,6 +38,7 @@ interface CheckoutFlowProps {
   onTipChange?: (tip: number) => void;
   onChangesDetected?: (hasChanges: boolean) => void;
   appliedDiscount?: {code: string, type: 'percentage' | 'free_shipping', value: number} | null;
+  affiliateCode?: string;
 }
 
 // Available time slots
@@ -69,7 +70,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   onDiscountChange,
   onTipChange,
   onChangesDetected,
-  appliedDiscount: appliedDiscountProp
+  appliedDiscount: appliedDiscountProp,
+  affiliateCode
 }) => {
   const navigate = useNavigate();
   
@@ -77,7 +79,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   // Use custom hooks for cleaner state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo, saveCompletedOrder } = useCustomerInfo();
-  const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange });
+  const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange, affiliateCode });
   
   // State declarations must come before any usage
   const [tipAmount, setTipAmount] = useState(0);
@@ -346,7 +348,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             deliveryFee: finalDeliveryFee,
             salesTax: salesTax,
             tipAmount: tipAmount,
-            appliedDiscount: appliedDiscount
+            appliedDiscount: appliedDiscount,
+            affiliateCode: affiliateCode
           }
         });
         
