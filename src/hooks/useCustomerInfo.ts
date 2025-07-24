@@ -308,95 +308,69 @@ function getStoredData<T>(primaryKey: string, backupKey: string, initialValue: T
 export function useCustomerInfo() {
   console.log('=== useCustomerInfo initializing ===');
   
-  // Initialize with empty state for new users, only load stored data if explicitly requested
-  const [customerInfo, setCustomerInfoState] = useState<CustomerInfo>(() => {
-    console.log('Initializing customerInfo state');
-    return {
-      firstName: '',
-      lastName: '',
-      phone: '',
-      email: ''
-    };
+  // Initialize with completely empty state - no pre-loading
+  const [customerInfo, setCustomerInfoState] = useState<CustomerInfo>({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: ''
   });
 
-  const [addressInfo, setAddressInfoState] = useState<AddressInfo>(() => {
-    console.log('Initializing addressInfo state');
-    return {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: '',
-      instructions: ''
-    };
+  const [addressInfo, setAddressInfoState] = useState<AddressInfo>({
+    street: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    instructions: ''
   });
 
-  // Load stored data only once on mount if state is empty
+  // Only try to load stored data once if user hasn't started typing
+  const [hasLoadedStoredData, setHasLoadedStoredData] = useState(false);
+
   useEffect(() => {
-    console.log('useCustomerInfo mount effect - checking for stored data');
-    
-    // Only load stored data if current state is completely empty
-    const isCustomerEmpty = !customerInfo.firstName && !customerInfo.lastName && !customerInfo.email && !customerInfo.phone;
-    const isAddressEmpty = !addressInfo.street && !addressInfo.city && !addressInfo.state && !addressInfo.zipCode;
-    
-    if (isCustomerEmpty) {
-      const storedCustomer = getStoredData('partyondelivery_customer', 'customer_backup', {
-        firstName: '',
-        lastName: '',
-        phone: '',
-        email: ''
-      });
+    if (!hasLoadedStoredData) {
+      console.log('Attempting to load stored customer data...');
       
-      if (storedCustomer.firstName || storedCustomer.email) {
-        console.log('Loading stored customer data:', storedCustomer);
-        setCustomerInfoState(storedCustomer);
+      try {
+        // Try to load from localStorage only
+        const storedCustomer = localStorage.getItem('partyondelivery_customer');
+        const storedAddress = localStorage.getItem('partyondelivery_address');
+        
+        if (storedCustomer) {
+          const customerData = JSON.parse(storedCustomer);
+          if (customerData.firstName || customerData.email) {
+            console.log('Loading stored customer:', customerData);
+            setCustomerInfoState(customerData);
+          }
+        }
+        
+        if (storedAddress) {
+          const addressData = JSON.parse(storedAddress);
+          if (addressData.street || addressData.city) {
+            console.log('Loading stored address:', addressData);
+            setAddressInfoState(addressData);
+          }
+        }
+      } catch (error) {
+        console.warn('Error loading stored data:', error);
       }
-    }
-    
-    if (isAddressEmpty) {
-      const storedAddress = getStoredData('partyondelivery_address', 'address_backup', {
-        street: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        instructions: ''
-      });
       
-      if (storedAddress.street || storedAddress.city) {
-        console.log('Loading stored address data:', storedAddress);
-        setAddressInfoState(storedAddress);
-      }
+      setHasLoadedStoredData(true);
     }
-  }, []); // Run only once on mount
+  }, [hasLoadedStoredData]);
 
-  // Enhanced setters that persist to multiple locations
+  // Simple setters that just update state and localStorage
   const setCustomerInfo = (info: CustomerInfo | ((prev: CustomerInfo) => CustomerInfo)) => {
     const newInfo = typeof info === 'function' ? info(customerInfo) : info;
     console.log('Setting customer info:', newInfo);
     
     setCustomerInfoState(newInfo);
     
-    // Persist to multiple locations
+    // Simple localStorage save
     try {
       localStorage.setItem('partyondelivery_customer', JSON.stringify(newInfo));
-      cacheManager.set('customer_backup', newInfo, 24 * 60); // 24 hour backup
-      
-      // Save persistent data (30 days) if we have meaningful data
-      if (newInfo.firstName && newInfo.email) {
-        customerDataManager.saveCustomerData(newInfo, addressInfo);
-      }
-      
-      // Also update the comprehensive order storage
-      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-      const updatedOrder = {
-        ...existingOrder,
-        customerName: newInfo.firstName && newInfo.lastName ? `${newInfo.firstName} ${newInfo.lastName}`.trim() : existingOrder.customerName,
-        customerEmail: newInfo.email || existingOrder.customerEmail,
-        customerPhone: newInfo.phone || existingOrder.customerPhone,
-        recentpurchase: true
-      };
-      localStorage.setItem('partyondelivery_last_order', JSON.stringify(updatedOrder));
     } catch (error) {
-      console.warn('Failed to persist customer info:', error);
+      console.warn('Failed to save customer info:', error);
     }
   };
 
@@ -406,31 +380,11 @@ export function useCustomerInfo() {
     
     setAddressInfoState(newInfo);
     
-    // Persist to multiple locations
+    // Simple localStorage save
     try {
       localStorage.setItem('partyondelivery_address', JSON.stringify(newInfo));
-      cacheManager.set('address_backup', newInfo, 24 * 60); // 24 hour backup
-      
-      // Save persistent data (30 days) if we have meaningful data
-      if (newInfo.street && newInfo.city) {
-        customerDataManager.saveCustomerData(customerInfo, newInfo);
-      }
-      
-      // Also update the comprehensive order storage
-      const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-      const fullAddress = newInfo.street && newInfo.city && newInfo.state && newInfo.zipCode 
-        ? `${newInfo.street}, ${newInfo.city}, ${newInfo.state} ${newInfo.zipCode}`
-        : existingOrder.address;
-      
-      const updatedOrder = {
-        ...existingOrder,
-        address: fullAddress,
-        instructions: newInfo.instructions || existingOrder.instructions,
-        recentpurchase: true
-      };
-      localStorage.setItem('partyondelivery_last_order', JSON.stringify(updatedOrder));
     } catch (error) {
-      console.warn('Failed to persist address info:', error);
+      console.warn('Failed to save address info:', error);
     }
   };
 
