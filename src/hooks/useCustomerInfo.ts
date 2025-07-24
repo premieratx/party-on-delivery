@@ -308,25 +308,65 @@ function getStoredData<T>(primaryKey: string, backupKey: string, initialValue: T
 export function useCustomerInfo() {
   console.log('=== useCustomerInfo initializing ===');
   
-  // Initialize with comprehensive data loading
-  const [customerInfo, setCustomerInfoState] = useState<CustomerInfo>(() => 
-    getStoredData('partyondelivery_customer', 'customer_backup', {
+  // Initialize with empty state for new users, only load stored data if explicitly requested
+  const [customerInfo, setCustomerInfoState] = useState<CustomerInfo>(() => {
+    console.log('Initializing customerInfo state');
+    return {
       firstName: '',
       lastName: '',
       phone: '',
       email: ''
-    })
-  );
+    };
+  });
 
-  const [addressInfo, setAddressInfoState] = useState<AddressInfo>(() => 
-    getStoredData('partyondelivery_address', 'address_backup', {
+  const [addressInfo, setAddressInfoState] = useState<AddressInfo>(() => {
+    console.log('Initializing addressInfo state');
+    return {
       street: '',
       city: '',
       state: '',
       zipCode: '',
       instructions: ''
-    })
-  );
+    };
+  });
+
+  // Load stored data only once on mount if state is empty
+  useEffect(() => {
+    console.log('useCustomerInfo mount effect - checking for stored data');
+    
+    // Only load stored data if current state is completely empty
+    const isCustomerEmpty = !customerInfo.firstName && !customerInfo.lastName && !customerInfo.email && !customerInfo.phone;
+    const isAddressEmpty = !addressInfo.street && !addressInfo.city && !addressInfo.state && !addressInfo.zipCode;
+    
+    if (isCustomerEmpty) {
+      const storedCustomer = getStoredData('partyondelivery_customer', 'customer_backup', {
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: ''
+      });
+      
+      if (storedCustomer.firstName || storedCustomer.email) {
+        console.log('Loading stored customer data:', storedCustomer);
+        setCustomerInfoState(storedCustomer);
+      }
+    }
+    
+    if (isAddressEmpty) {
+      const storedAddress = getStoredData('partyondelivery_address', 'address_backup', {
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        instructions: ''
+      });
+      
+      if (storedAddress.street || storedAddress.city) {
+        console.log('Loading stored address data:', storedAddress);
+        setAddressInfoState(storedAddress);
+      }
+    }
+  }, []); // Run only once on mount
 
   // Enhanced setters that persist to multiple locations
   const setCustomerInfo = (info: CustomerInfo | ((prev: CustomerInfo) => CustomerInfo)) => {
