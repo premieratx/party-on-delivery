@@ -47,6 +47,13 @@ const CustomerDashboard = () => {
 
   useEffect(() => {
     loadCustomerData();
+    
+    // Cleanup real-time subscription on unmount
+    return () => {
+      if ((window as any).customerOrdersSubscription) {
+        supabase.removeChannel((window as any).customerOrdersSubscription);
+      }
+    };
   }, []);
 
   const loadCustomerData = async (isRefresh = false) => {
@@ -124,6 +131,48 @@ const CustomerDashboard = () => {
 
       if (ordersError) throw ordersError;
       setOrders(ordersData || []);
+
+      // Set up real-time subscription for new orders
+      const channel = supabase
+        .channel('customer-orders-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'customer_orders',
+            filter: `customer_id=eq.${currentCustomer?.id}`
+          },
+          (payload) => {
+            console.log('New order received:', payload);
+            setOrders(prevOrders => [payload.new as Order, ...prevOrders]);
+            toast({
+              title: "New Order",
+              description: "Your order has been added to your dashboard.",
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'customer_orders',
+            filter: `customer_id=eq.${currentCustomer?.id}`
+          },
+          (payload) => {
+            console.log('Order updated:', payload);
+            setOrders(prevOrders => 
+              prevOrders.map(order => 
+                order.id === payload.new.id ? payload.new as Order : order
+              )
+            );
+          }
+        )
+        .subscribe();
+
+      // Store subscription reference for cleanup
+      (window as any).customerOrdersSubscription = channel;
 
       if (isRefresh) {
         toast({
@@ -389,7 +438,7 @@ const CustomerDashboard = () => {
                             className="flex items-center gap-2"
                           >
                             <Share2 className="h-4 w-4" />
-                            Share
+                            Copy Group Link
                           </Button>
                            <Button
                             size="sm"

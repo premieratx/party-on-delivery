@@ -140,15 +140,15 @@ const Success = () => {
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                You'll receive an order confirmation email shortly
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                 We'll prepare your order for delivery
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                You'll receive updates about your delivery
+                Track your order status in your dashboard
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                Share with friends to add to your group order
               </li>
             </ul>
           </div>
