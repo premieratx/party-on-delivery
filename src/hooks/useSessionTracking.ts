@@ -9,11 +9,12 @@ export const useSessionTracking = () => {
   const linkSessionToUser = async (userEmail: string) => {
     try {
       // Get all session IDs from localStorage that might need linking
-      const sessionKeys = [];
+      const sessionKeys = new Set<string>(); // Use Set to avoid duplicates
+      
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key?.includes('session_') || key?.includes('checkout_') || key?.includes('order_')) {
-          sessionKeys.push(key);
+          sessionKeys.add(localStorage.getItem(key) || key);
         }
       }
 
@@ -21,26 +22,35 @@ export const useSessionTracking = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const currentSessionId = urlParams.get('session_id');
       if (currentSessionId) {
-        sessionKeys.push(currentSessionId);
+        sessionKeys.add(currentSessionId);
       }
 
       // Check for stored order session IDs
       const storedSessionId = localStorage.getItem('lastOrderSessionId');
       if (storedSessionId) {
-        sessionKeys.push(storedSessionId);
+        sessionKeys.add(storedSessionId);
+      }
+
+      // Get any existing stripe session IDs from recent localStorage entries
+      const allKeys = Object.keys(localStorage);
+      for (const key of allKeys) {
+        const value = localStorage.getItem(key);
+        if (value && value.startsWith('cs_')) { // Stripe session IDs start with cs_
+          sessionKeys.add(value);
+        }
       }
 
       // Link each session to the user
-      for (const sessionKey of sessionKeys) {
-        if (sessionKey) {
+      for (const sessionKey of Array.from(sessionKeys)) {
+        if (sessionKey && sessionKey.trim()) {
           await supabase.rpc('link_customer_session', {
             customer_email: userEmail,
-            session_token: sessionKey
+            session_token: sessionKey.trim()
           });
         }
       }
 
-      console.log('Linked session tokens to user:', userEmail, sessionKeys);
+      console.log('Linked session tokens to user:', userEmail, Array.from(sessionKeys));
     } catch (error) {
       console.error('Error linking sessions to user:', error);
     }

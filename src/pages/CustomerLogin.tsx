@@ -18,52 +18,43 @@ const CustomerLogin = () => {
   const redirectParam = searchParams.get('redirect');
 
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Clear any stored redirect intent and go to dashboard
-        localStorage.removeItem('loginRedirectIntent');
-        
-        if (redirectParam === 'dashboard' || localStorage.getItem('loginRedirectIntent') === 'dashboard') {
-          navigate('/customer/dashboard');
-        } else if (returnUrl) {
-          navigate(decodeURIComponent(returnUrl));
-        } else {
-          navigate('/customer/dashboard');
-        }
-      }
-    };
-    checkUser();
+    let hasNavigated = false; // Prevent multiple navigations
 
-    // Listen for auth changes
+    // Listen for auth changes first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !hasNavigated) {
+          hasNavigated = true;
           // Link any stored session IDs to this user
           if (session.user.email) {
             await linkSessionToUser(session.user.email);
           }
           
-          // Clear redirect intent and always go to dashboard after successful login
+          // Clear redirect intent and always go to dashboard
           localStorage.removeItem('loginRedirectIntent');
-          
-          // Check if we came from the ?redirect=dashboard URL parameter
-          const urlParams = new URLSearchParams(window.location.search);
-          const redirect = urlParams.get('redirect');
-          
-          if (redirect === 'dashboard') {
-            // Always navigate to customer dashboard on successful authentication
-            navigate('/customer/dashboard', { replace: true });
-          } else {
-            navigate('/customer/dashboard', { replace: true });
-          }
+          navigate('/customer/dashboard', { replace: true });
         }
       }
     );
 
+    // Then check if user is already logged in
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && !hasNavigated) {
+        hasNavigated = true;
+        // Link any stored session IDs to this user
+        if (session.user.email) {
+          await linkSessionToUser(session.user.email);
+        }
+        
+        localStorage.removeItem('loginRedirectIntent');
+        navigate('/customer/dashboard', { replace: true });
+      }
+    };
+    checkUser();
+
     return () => subscription.unsubscribe();
-  }, [navigate, returnUrl, redirectParam]);
+  }, [navigate, returnUrl, redirectParam, linkSessionToUser]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
