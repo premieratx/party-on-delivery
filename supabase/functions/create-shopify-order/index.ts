@@ -318,20 +318,8 @@ serve(async (req) => {
           price: salesTax.toString(),
           rate: 0.0825
         }] : [],
-        // Add tip and discount as custom line items if present
-        ...(tipAmount > 0 && {
-          line_items: [
-            ...lineItems,
-            {
-              title: "Driver Tip (Gratuity)",
-              price: tipAmount.toString(),
-              quantity: 1,
-              requires_shipping: false,
-              gift_card: false,
-              taxable: false
-            }
-          ]
-        }),
+        // Standard line items only (no tip as separate line item)
+        line_items: lineItems,
         // Apply discount codes properly
         ...(discountCode && discountAmount && {
           discount_codes: [{
@@ -340,12 +328,19 @@ serve(async (req) => {
             type: discountType === 'percentage_discount' ? 'percentage' : 'fixed_amount'
           }]
         }),
-        // Set totals to match Stripe charge
+        // Set totals to match Stripe charge exactly
         subtotal_price: subtotal.toString(),
         total_tax: salesTax.toString(),
         total_shipping_price_set: {
           shop_money: {
             amount: shippingFee.toString(),
+            currency_code: "USD"
+          }
+        },
+        // Include tip in order totals
+        total_tips_set: {
+          shop_money: {
+            amount: tipAmount.toString(),
             currency_code: "USD"
           }
         },
@@ -360,13 +355,13 @@ ${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${actualDiscountA
 💳 Stripe Payment ID: ${paymentIntentId}
 ✅ Payment Status: Paid
 
-💰 PAYMENT BREAKDOWN:
+💰 PAYMENT BREAKDOWN (MATCHES STRIPE CHARGE):
    Subtotal: $${subtotal.toFixed(2)}
    Delivery Fee: $${shippingFee.toFixed(2)}
    Sales Tax: $${salesTax.toFixed(2)}
-   Tip: $${tipAmount.toFixed(2)}
+   Driver Tip: $${tipAmount.toFixed(2)}
    ${discountCode ? `Discount (${discountCode}): -$${Math.abs(parseFloat(discountAmount || '0')).toFixed(2)}` : ''}
-   Total Paid: $${totalAmount.toFixed(2)}
+   TOTAL CHARGED: $${totalAmount.toFixed(2)}
 
 🏷️ RECOMSALE AFFILIATE TRACKING:
 ${discountCode ? `📊 Affiliate Code: ${discountCode}
@@ -393,10 +388,10 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
             name: "Sales Tax",
             value: `$${salesTax.toFixed(2)}`
           },
-          {
-            name: "Tip Amount",
-            value: `$${tipAmount.toFixed(2)}`
-          },
+            {
+              name: "Driver Tip (Gratuity)",
+              value: `$${tipAmount.toFixed(2)}`
+            },
           ...(discountCode ? [
             {
               name: "RecomSale Affiliate Code",

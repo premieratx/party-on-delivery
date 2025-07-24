@@ -249,6 +249,15 @@ export const AdminDashboard: React.FC = () => {
             <Button variant="outline" onClick={loadDashboardData}>
               Refresh Data
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.href = '/';
+              }}
+            >
+              Sign Out
+            </Button>
             {unreadCount > 0 && (
               <Badge variant="destructive" className="ml-2">
                 {unreadCount} new
