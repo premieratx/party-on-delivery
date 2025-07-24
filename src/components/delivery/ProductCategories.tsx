@@ -432,15 +432,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 >
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title, no number */}
-                    <div className="sm:hidden flex flex-col items-center justify-center h-full">
-                      <div className={`text-sm font-bold leading-tight text-center ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                    <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
+                      <div className={`text-xs font-bold leading-tight text-center ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                     
-                    {/* Desktop layout: number in top left corner, large title centered */}
+                    {/* Desktop layout: large title centered, no numbers */}
                     <div className="hidden sm:block relative w-full h-full">
-                      {/* Number in top left corner */}
-                      <div className={`absolute top-1 left-1 font-bold text-lg ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
-                      
                       {/* Large title centered */}
                       <div className="flex items-center justify-center h-full">
                         <div className={`font-bold text-xl text-center ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
@@ -452,7 +449,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             })}
             
             {/* Checkout tab - separate styling */}
-            <div className="flex-shrink-0 w-20 sm:w-32">
+            <div className="flex-shrink-0 w-16 sm:w-32">
               <div className="sm:hidden flex flex-col h-full">
                 <button
                   onClick={onOpenCart}
