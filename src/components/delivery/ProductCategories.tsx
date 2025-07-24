@@ -226,7 +226,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     fetchCollections(true);
   };
 
-  const selectedCollection = collections[selectedCategory];
+  const selectedCollection = collections.find(c => c.handle === stepMapping[selectedCategory]?.handle);
 
   // Helper to get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
@@ -263,7 +263,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   };
 
   const handleNextTab = () => {
-    if (selectedCategory < collections.length - 1) {
+    if (selectedCategory < stepMapping.length - 1) {
       setSelectedCategory(selectedCategory + 1);
       // Scroll to top when changing tabs
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -488,7 +488,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               )}
               {selectedCategory === 0 && <div className="w-10"></div>}
               <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
-                {stepMapping.find(step => step.handle === selectedCollection.handle)?.pageTitle || selectedCollection.title}
+                {stepMapping.find(step => step.handle === selectedCollection?.handle)?.pageTitle || selectedCollection?.title}
               </h2>
               <button
                 onClick={() => selectedCategory < stepMapping.length - 1 && setSelectedCategory(selectedCategory + 1)}
@@ -726,7 +726,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               onClick={handleNextTab}
               className="px-8 py-3"
             >
-              {selectedCategory < collections.length - 1 ? (
+              {selectedCategory < stepMapping.length - 1 ? (
                 <>
                   Next <ChevronRight className="w-5 h-5 ml-2" />
                 </>
@@ -772,7 +772,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               Back
             </Button>
             <div className="text-sm text-muted-foreground">
-              Step 3 of 4
+              Step 4 of 6
             </div>
             {onBackToStart && (
               <Button
