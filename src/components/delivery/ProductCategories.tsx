@@ -143,13 +143,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       // Check cache first (unless force refresh)
       if (!forceRefresh) {
         const cachedCollections = cacheManager.getShopifyCollections();
-        if (cachedCollections && cachedCollections.length > 0) {
-          console.log(`Using cached collections (${cachedCollections.length} collections)`);
-          setCollections(cachedCollections);
-          setLoading(false);
-          return;
-        }
-        console.log('No valid cache found, fetching from API');
+        // TEMPORARILY DISABLE CACHE TO FORCE FRESH FETCH FOR SPIRITS
+        console.log('FORCING FRESH FETCH - Spirits collection debug mode');
+        console.log('Cache disabled temporarily to fetch spirits collection');
       } else {
         console.log('Force refresh - clearing cache and fetching fresh data');
         cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
@@ -194,6 +190,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       });
 
       console.log(`Successfully fetched ${result.collections.length} collections`);
+      
+      // DEBUG: Log all collection handles for spirits debugging
+      console.log('=== COLLECTION HANDLES DEBUG ===');
+      result.collections.forEach((collection: any, index: number) => {
+        console.log(`Collection ${index}: ${collection.handle} (${collection.title}) - ${collection.products?.length || 0} products`);
+      });
+      console.log('Looking for spirits collection with handle: "spirits"');
+      const spiritsCollection = result.collections.find((c: any) => c.handle === 'spirits');
+      console.log('Spirits collection found:', !!spiritsCollection);
+      if (spiritsCollection) {
+        console.log('Spirits collection products:', spiritsCollection.products?.length || 0);
+      }
+      console.log('=== END DEBUG ===');
+      
       setCollections(result.collections);
       setRetryCount(0); // Reset retry count on success
       
