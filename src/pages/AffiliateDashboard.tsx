@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -29,6 +31,8 @@ interface AffiliateData {
   id: string;
   name: string;
   company_name: string;
+  phone?: string;
+  venmo_handle?: string;
   affiliate_code: string;
   commission_rate: number;
   total_sales: number;
@@ -52,6 +56,13 @@ export const AffiliateDashboard: React.FC = () => {
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [copying, setCopying] = useState(false);
+  const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [profileFormData, setProfileFormData] = useState({
+    phone: '',
+    companyName: '',
+    venmoHandle: ''
+  });
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -84,6 +95,17 @@ export const AffiliateDashboard: React.FC = () => {
       }
 
       setAffiliate(affiliateData);
+
+      // Check if profile needs completion
+      const needsCompletion = !affiliateData.phone || !affiliateData.company_name;
+      setNeedsProfileCompletion(needsCompletion);
+      if (needsCompletion) {
+        setProfileFormData({
+          phone: affiliateData.phone || '',
+          companyName: affiliateData.company_name || '',
+          venmoHandle: affiliateData.venmo_handle || ''
+        });
+      }
 
       // Load recent referrals
       const { data: referrals, error: referralsError } = await supabase
@@ -255,12 +277,75 @@ export const AffiliateDashboard: React.FC = () => {
     );
   }
 
+  const handleProfileCompletion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!affiliate || !profileFormData.phone || !profileFormData.companyName) {
+      toast({
+        title: "Error",
+        description: "Please fill in phone and company name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('affiliates')
+        .update({
+          phone: profileFormData.phone,
+          company_name: profileFormData.companyName,
+          venmo_handle: profileFormData.venmoHandle || null
+        })
+        .eq('id', affiliate.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Your profile has been updated successfully.",
+      });
+
+      setNeedsProfileCompletion(false);
+      setShowProfileForm(false);
+      
+      // Reload the affiliate data
+      loadAffiliateData();
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const progressData = getProgressToNextTier();
   const affiliateUrl = `${window.location.origin}/a/${affiliate.affiliate_code}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Profile Completion Prompt */}
+        {needsProfileCompletion && (
+          <Card className="border-yellow-200 bg-yellow-50">
+            <CardHeader>
+              <CardTitle className="text-yellow-800">Complete Your Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-yellow-700 mb-4">
+                Please complete your profile to start earning commissions!
+              </p>
+              <Button 
+                onClick={() => setShowProfileForm(true)}
+                className="bg-yellow-600 hover:bg-yellow-700"
+              >
+                Complete Profile
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-brand-blue mb-2">
@@ -477,6 +562,56 @@ export const AffiliateDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Profile Completion Dialog */}
+      <Dialog open={showProfileForm} onOpenChange={setShowProfileForm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Your Profile</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleProfileCompletion} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Best Cell Phone Number *</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={profileFormData.phone}
+                onChange={(e) => setProfileFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="(555) 123-4567"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="companyName">Company Name *</Label>
+              <Input
+                id="companyName"
+                value={profileFormData.companyName}
+                onChange={(e) => setProfileFormData(prev => ({ ...prev, companyName: e.target.value }))}
+                placeholder="Enter your company name"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="venmoHandle">Venmo Handle (Optional)</Label>
+              <Input
+                id="venmoHandle"
+                value={profileFormData.venmoHandle}
+                onChange={(e) => setProfileFormData(prev => ({ ...prev, venmoHandle: e.target.value }))}
+                placeholder="@your-venmo-handle"
+              />
+              <p className="text-xs text-muted-foreground">
+                For faster commission payouts
+              </p>
+            </div>
+
+            <Button type="submit" className="w-full">
+              Complete Profile
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

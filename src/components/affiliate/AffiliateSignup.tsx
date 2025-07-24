@@ -42,7 +42,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       
       // Construct the Google OAuth URL manually to avoid frame issues
       const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
-      const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
+      const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(`${window.location.origin}/affiliate/dashboard`)}`;
       
       console.log('Redirecting to:', googleAuthUrl);
       
