@@ -14,6 +14,8 @@ import { AffiliateLanding } from "./pages/AffiliateLanding";
 import { AdminLogin } from "./pages/AdminLogin";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
+import CustomerLogin from "./pages/CustomerLogin";
+import CustomerDashboard from "./pages/CustomerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -41,10 +43,14 @@ const App = () => (
               {/* Affiliate Routes */}
               <Route path="/affiliate" element={<AffiliateIntro />} />
               <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
-          <Route path="/affiliate/admin-login" element={<AdminLogin />} />
-          <Route path="/affiliate/admin" element={<AdminDashboard />} />
-          <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
+              <Route path="/affiliate/admin-login" element={<AdminLogin />} />
+              <Route path="/affiliate/admin" element={<AdminDashboard />} />
+              <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
               <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
+              
+              {/* Customer Routes */}
+              <Route path="/customer/login" element={<CustomerLogin />} />
+              <Route path="/customer/dashboard" element={<CustomerDashboard />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

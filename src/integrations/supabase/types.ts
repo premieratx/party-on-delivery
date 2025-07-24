@@ -349,6 +349,134 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_addresses: {
+        Row: {
+          address_line_1: string
+          address_line_2: string | null
+          city: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_default: boolean | null
+          state: string
+          updated_at: string
+          zip_code: string
+        }
+        Insert: {
+          address_line_1: string
+          address_line_2?: string | null
+          city: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_default?: boolean | null
+          state: string
+          updated_at?: string
+          zip_code: string
+        }
+        Update: {
+          address_line_1?: string
+          address_line_2?: string | null
+          city?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_default?: boolean | null
+          state?: string
+          updated_at?: string
+          zip_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_addresses_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_orders: {
+        Row: {
+          affiliate_code: string | null
+          affiliate_id: string | null
+          created_at: string
+          customer_id: string | null
+          delivered_at: string | null
+          delivery_address: Json
+          delivery_date: string | null
+          delivery_fee: number | null
+          delivery_time: string | null
+          id: string
+          line_items: Json
+          order_number: string
+          session_id: string | null
+          shopify_order_id: string | null
+          special_instructions: string | null
+          status: string | null
+          subtotal: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          affiliate_code?: string | null
+          affiliate_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          delivery_address: Json
+          delivery_date?: string | null
+          delivery_fee?: number | null
+          delivery_time?: string | null
+          id?: string
+          line_items?: Json
+          order_number: string
+          session_id?: string | null
+          shopify_order_id?: string | null
+          special_instructions?: string | null
+          status?: string | null
+          subtotal: number
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          affiliate_code?: string | null
+          affiliate_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          delivery_address?: Json
+          delivery_date?: string | null
+          delivery_fee?: number | null
+          delivery_time?: string | null
+          id?: string
+          line_items?: Json
+          order_number?: string
+          session_id?: string | null
+          shopify_order_id?: string | null
+          special_instructions?: string | null
+          status?: string | null
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_orders_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_profiles: {
         Row: {
           created_at: string
@@ -378,6 +506,62 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      customers: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string | null
+          google_id: string | null
+          id: string
+          last_login_at: string | null
+          last_name: string | null
+          phone: string | null
+          referred_by_affiliate_id: string | null
+          referred_by_code: string | null
+          total_orders: number | null
+          total_spent: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name?: string | null
+          google_id?: string | null
+          id?: string
+          last_login_at?: string | null
+          last_name?: string | null
+          phone?: string | null
+          referred_by_affiliate_id?: string | null
+          referred_by_code?: string | null
+          total_orders?: number | null
+          total_spent?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          google_id?: string | null
+          id?: string
+          last_login_at?: string | null
+          last_name?: string | null
+          phone?: string | null
+          referred_by_affiliate_id?: string | null
+          referred_by_code?: string | null
+          total_orders?: number | null
+          total_spent?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_referred_by_affiliate_id_fkey"
+            columns: ["referred_by_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       delivery_addresses: {
         Row: {
