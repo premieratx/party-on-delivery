@@ -502,6 +502,30 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          user_email: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          user_email?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          user_email?: string | null
+        }
+        Relationships: []
+      }
       shopify_collections_cache: {
         Row: {
           created_at: string
@@ -651,6 +675,14 @@ export type Database = {
       generate_affiliate_code: {
         Args: { company_name: string }
         Returns: string
+      }
+      log_security_event: {
+        Args: { event_type: string; user_email: string; details?: Json }
+        Returns: undefined
+      }
+      verify_admin_password: {
+        Args: { input_email: string; input_password: string }
+        Returns: boolean
       }
     }
     Enums: {

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Plus, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Plus, ArrowRight, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/party-on-delivery-logo.png';
 
 interface OrderContinuationProps {
@@ -27,6 +28,12 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
   lastOrderInfo,
   hasCartItems
 }) => {
+  const navigate = useNavigate();
+
+  const handleAffiliateLogin = () => {
+    navigate('/affiliate');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-2">
       <Card className="max-w-sm w-full shadow-floating animate-fade-in">
@@ -78,6 +85,18 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             <Plus className="w-4 h-4 mr-2" />
             Add to Recent Order
           </Button>
+          
+          {/* Affiliate Dashboard Login button */}
+          <div className="pt-2 border-t border-border">
+            <Button 
+              onClick={handleAffiliateLogin}
+              className="w-full h-10 text-sm"
+              variant="ghost"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Affiliate Dashboard
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
