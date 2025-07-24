@@ -38,20 +38,26 @@ export class PreloadManager {
   }
 
   /**
-   * Preload Shopify collections in background with enhanced reliability
+   * Preload Shopify collections in background with enhanced reliability and fallback
    */
   private async preloadShopifyCollections(): Promise<void> {
     try {
-      // Check if we have recent cached data (valid for 24 hours)
+      // Check if we have recent cached data (extended to 48 hours since collections rarely change)
       const cached = cacheManager.getShopifyCollections();
-      const isValid = cacheManager.isValid(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS, 24 * 60); // 24 hours
+      const isValid = cacheManager.isValid(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS, 48 * 60); // 48 hours
       
       if (cached && cached.length > 0 && isValid) {
-        console.log('Shopify collections already cached and valid');
+        console.log(`Shopify collections cached and valid (${cached.length} collections)`);
         return;
       }
 
-      console.log('Preloading Shopify collections...');
+      // If we have any cache (even expired), use it while fetching fresh data
+      const hasAnyCache = cacheManager.exists(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
+      if (hasAnyCache) {
+        console.log('Using existing cache while refreshing in background...');
+      }
+
+      console.log('Fetching fresh Shopify collections...');
       
       const result = await ErrorHandler.withRetry(async () => {
         const { data, error } = await supabase.functions.invoke('get-all-collections');
@@ -70,24 +76,28 @@ export class PreloadManager {
         
         return data;
       }, {
-        maxAttempts: 3,
-        delayMs: 2000,
+        maxAttempts: 2, // Reduced attempts for faster fallback
+        delayMs: 1500,
         backoffMultiplier: 1.5
       });
 
       if (result?.collections && result.collections.length > 0) {
         cacheManager.setShopifyCollections(result.collections);
-        console.log(`Shopify collections preloaded successfully: ${result.collections.length} collections`);
+        console.log(`✅ Fresh collections cached: ${result.collections.length} collections`);
       } else {
-        console.warn('No collections received from preload attempt');
+        console.warn('No collections received from fresh fetch');
       }
     } catch (error) {
-      console.warn('Failed to preload Shopify collections:', error);
+      console.warn('Fresh fetch failed, using fallback strategy:', error);
       
-      // Try to use existing cache as fallback even if expired
-      const fallbackCache = cacheManager.getShopifyCollections();
-      if (fallbackCache && fallbackCache.length > 0) {
-        console.log('Using expired cache as fallback for Shopify collections');
+      // Enhanced fallback: Use any available cache (even expired)
+      const fallbackCache = cacheManager.getFallback(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
+      if (fallbackCache && Array.isArray(fallbackCache) && fallbackCache.length > 0) {
+        console.log(`🔄 Using fallback cache: ${fallbackCache.length} collections (may be stale)`);
+        // Re-cache the fallback data with current timestamp for temporary use
+        cacheManager.setShopifyCollections(fallbackCache);
+      } else {
+        console.error('❌ No fallback cache available - app may not function properly');
       }
     }
   }
@@ -105,27 +115,30 @@ export class PreloadManager {
   }
 
   /**
-   * Background refresh of data that might be stale (optimized for 30-day cache)
+   * Intelligent background refresh (optimized for rare collection changes)
    */
   public async backgroundRefresh(): Promise<void> {
-    // Check if cached data needs refresh (refresh after 6 hours, but cache lasts 30 days)
+    // Since collections rarely change, be more conservative with refresh timing
     const cached = cacheManager.getShopifyCollections();
-    const needsRefresh = !cacheManager.isValid(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS, 6 * 60); // 6 hours
+    const needsRefresh = !cacheManager.isValid(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS, 24 * 60); // 24 hours
     
-    if (cached && needsRefresh) {
-      console.log('Background refreshing Shopify collections (6+ hours old)...');
+    // Only refresh if data is old AND we're not currently preloading
+    if (cached && needsRefresh && !this.isPreloading) {
+      console.log('🔄 Background refresh: Collections are 24+ hours old');
       try {
         await this.preloadShopifyCollections();
       } catch (error) {
         console.warn('Background refresh failed, keeping existing cache:', error);
       }
-    } else if (!cached) {
-      console.log('No cached data found, attempting background fetch...');
+    } else if (!cached && !this.isPreloading) {
+      console.log('🔄 Background fetch: No cached data found');
       try {
         await this.preloadShopifyCollections();
       } catch (error) {
         console.warn('Background fetch failed:', error);
       }
+    } else if (cached && !needsRefresh) {
+      console.log('✅ Collections cache is fresh, no refresh needed');
     }
   }
 

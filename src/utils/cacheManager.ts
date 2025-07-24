@@ -166,7 +166,38 @@ export class CacheManager {
 
   // Specific helper methods for common operations
   public setShopifyCollections(collections: any[]): boolean {
-    return this.set(this.cacheKeys.SHOPIFY_COLLECTIONS, collections, 30 * 24 * 60); // 30 days TTL
+    // Extended cache for 7 days since collections rarely change
+    return this.set(this.cacheKeys.SHOPIFY_COLLECTIONS, collections, 7 * 24 * 60); // 7 days TTL
+  }
+
+  /**
+   * Check if cache exists regardless of age (for fallback scenarios)
+   */
+  public exists(key: string): boolean {
+    if (!this.isLocalStorageAvailable()) return false;
+    try {
+      const item = localStorage.getItem(key);
+      return item !== null;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Get cache data even if expired (for emergency fallback)
+   */
+  public getFallback<T>(key: string): T | null {
+    if (!this.isLocalStorageAvailable()) return null;
+    
+    try {
+      const item = localStorage.getItem(key);
+      if (!item) return null;
+      
+      const cacheItem: CacheItem<T> = JSON.parse(item);
+      return cacheItem.data; // Return data regardless of expiry
+    } catch {
+      return null;
+    }
   }
 
   public getShopifyCollections(): any[] | null {
