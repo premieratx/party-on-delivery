@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,68 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Set up auth state change listener for OAuth redirects
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user?.email) {
+        console.log('OAuth redirect detected, user signed in:', session.user.email);
+        
+        // Check if affiliate already exists
+        const { data: existingAffiliate } = await supabase
+          .from('affiliates')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
+        
+        if (existingAffiliate) {
+          console.log('Existing affiliate found, redirecting to dashboard');
+          navigate('/affiliate/dashboard');
+          return;
+        }
+        
+        // If no affiliate exists, proceed to details step
+        console.log('New user, showing details form');
+        setStep('details');
+        setFormData(prev => ({
+          ...prev,
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''
+        }));
+      }
+    });
+
+    // Also check initial session state for users who already completed OAuth
+    const checkInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email && !initialData) {
+        console.log('Found existing session on load:', session.user.email);
+        
+        // Check if affiliate already exists
+        const { data: existingAffiliate } = await supabase
+          .from('affiliates')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
+        
+        if (existingAffiliate) {
+          console.log('Existing affiliate found on load, redirecting to dashboard');
+          navigate('/affiliate/dashboard');
+          return;
+        }
+        
+        // If no affiliate exists, proceed to details step
+        setStep('details');
+        setFormData(prev => ({
+          ...prev,
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''
+        }));
+      }
+    };
+    
+    checkInitialSession();
+    
+    return () => subscription.unsubscribe();
+  }, [navigate, initialData]);
+
   const handleGoogleAuth = async () => {
     console.log('Google auth clicked');
     setLoading(true);
@@ -36,11 +98,11 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       await supabase.auth.signOut();
       console.log('Cleared existing session');
       
-      // Use Supabase SDK with redirect URL pointing to the current domain
+      // Use Supabase SDK with redirect URL pointing to affiliate page for processing
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/affiliate/dashboard`,
+          redirectTo: `${window.location.origin}/affiliate`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
