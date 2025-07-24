@@ -119,7 +119,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
     if (!hasUserSetTip && tipAmount === 0 && tipCalculationBase > 0) {
       setTipAmount(tipCalculationBase * 0.10);
     }
-  }, [tipCalculationBase, hasUserSetTip]);
+  }, [tipCalculationBase]); // Removed hasUserSetTip and tipAmount dependencies to prevent tip adjustment when cart changes
   const handleCustomTipConfirm = () => {
     if (tipAmount > 0) {
       setCustomTipConfirmed(true);

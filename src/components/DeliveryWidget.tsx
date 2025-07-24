@@ -55,8 +55,30 @@ export const DeliveryWidget: React.FC = () => {
   const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag);
   const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
 
+  // State for tracking cart calculations (for cart/checkout sync) - persist discount in localStorage
+  const [appliedDiscount, setAppliedDiscount] = useLocalStorage<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>('partyondelivery_applied_discount', null);
+  const [tipAmount, setTipAmount] = useState(0);
+  const [hasChanges, setHasChanges] = useState(false);
+
   // Handle affiliate tracking from navigation state and store starting page
   useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const customerParam = urlParams.get('customer');
+    const discountParam = urlParams.get('discount');
+    
+    // Handle customer=true parameter for "add to order" flow
+    if (customerParam === 'true') {
+      console.log('Customer=true detected, setting add to order mode');
+      setIsAddingToOrder(true);
+      localStorage.setItem('partyondelivery_add_to_order', 'true');
+      
+      // Auto-apply discount if provided
+      if (discountParam && discountParam.toUpperCase() === 'PREMIER2025') {
+        setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+        console.log('Auto-applied PREMIER2025 discount for group order');
+      }
+    }
+    
     if (location.state?.fromAffiliate) {
       setAffiliateReferral(location.state.fromAffiliate);
       // Store the affiliate starting page
@@ -66,12 +88,7 @@ export const DeliveryWidget: React.FC = () => {
       // Regular home page visit
       setStartingPage('/');
     }
-  }, [location.state, location.pathname, setAffiliateReferral, setStartingPage]);
-  
-  // State for tracking cart calculations (for cart/checkout sync) - persist discount in localStorage
-  const [appliedDiscount, setAppliedDiscount] = useLocalStorage<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>('partyondelivery_applied_discount', null);
-  const [tipAmount, setTipAmount] = useState(0);
-  const [hasChanges, setHasChanges] = useState(false);
+  }, [location.state, location.pathname, location.search, setAffiliateReferral, setStartingPage, setAppliedDiscount]);
   
   // Calculate subtotal for consistent delivery fee calculation
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);

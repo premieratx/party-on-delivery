@@ -227,7 +227,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         onTipChange(defaultTip);
       }
     }
-  }, [subtotal, onTipChange, tipAmount]);
+  }, [subtotal]); // Removed tipAmount and onTipChange dependencies to prevent re-triggering
 
   // Check if delivery details match previous order exactly for automatic free shipping
   const deliveryDetailsMatch = isAddingToOrder && 
@@ -237,21 +237,33 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
     deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
 
-  // Auto-apply free shipping when details match (but don't override user-applied discounts)
+  // Auto-apply PREMIER2025 for group orders and when details match (but don't override user-applied discounts)
   useEffect(() => {
-    if (deliveryDetailsMatch && (!appliedDiscount || appliedDiscount.code === 'SAME_ORDER')) {
+    if (isAddingToOrder || affiliateCode) {
+      // For group orders or affiliate referrals, always apply PREMIER2025 for free shipping unless user has a different discount
+      if (!appliedDiscount || appliedDiscount.code === 'SAME_ORDER') {
+        setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+        setDiscountCode('PREMIER2025');
+        if (onDiscountChange) {
+          onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+        }
+      }
+    } else if (deliveryDetailsMatch && (!appliedDiscount || appliedDiscount.code === 'SAME_ORDER')) {
+      // For same order details matching, apply auto discount
       setAppliedDiscount({ code: 'SAME_ORDER', type: 'free_shipping', value: 0 });
       if (onDiscountChange) {
         onDiscountChange({ code: 'SAME_ORDER', type: 'free_shipping', value: 0 });
       }
     } else if (!deliveryDetailsMatch && appliedDiscount?.code === 'SAME_ORDER') {
-      // Remove auto-applied discount if details no longer match
-      setAppliedDiscount(null);
-      if (onDiscountChange) {
-        onDiscountChange(null);
+      // Remove auto-applied discount if details no longer match but not for group orders
+      if (!isAddingToOrder && !affiliateCode) {
+        setAppliedDiscount(null);
+        if (onDiscountChange) {
+          onDiscountChange(null);
+        }
       }
     }
-  }, [deliveryDetailsMatch, appliedDiscount?.code, onDiscountChange]);
+  }, [deliveryDetailsMatch, appliedDiscount?.code, onDiscountChange, isAddingToOrder, affiliateCode]);
 
   // Calculate discounted subtotal for sales tax calculation
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
