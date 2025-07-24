@@ -80,6 +80,17 @@ serve(async (req) => {
     const salesTax = parseFloat(metadata?.sales_tax || '0');
     const tipAmount = parseFloat(metadata?.tip_amount || '0');
     const totalAmount = parseFloat(metadata?.total_amount || '0');
+    
+    // CRITICAL: Verify amounts match to prevent 100x errors
+    const calculatedTotal = subtotal + shippingFee + salesTax + tipAmount;
+    if (Math.abs(totalAmount - calculatedTotal) > 0.01) {
+      throw new Error(`Shopify order amount mismatch: Metadata total $${totalAmount.toFixed(2)} doesn't match calculated total $${calculatedTotal.toFixed(2)}`);
+    }
+    
+    // Validate reasonable amount range
+    if (totalAmount < 0.50 || totalAmount > 10000) {
+      throw new Error(`Invalid order amount: $${totalAmount.toFixed(2)}. Must be between $0.50 and $10,000.00`);
+    }
     const affiliateCode = body.affiliateCode;
 
     logStep("Metadata parsed", { 

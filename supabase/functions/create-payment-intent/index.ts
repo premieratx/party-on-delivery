@@ -47,16 +47,29 @@ serve(async (req) => {
     });
     logStep("✅ Stripe keys validated successfully");
 
-    // CRITICAL: Amount is already in cents from frontend - DO NOT multiply by 100!
-    // The frontend converts dollars to cents via Math.round(total * 100)
+    // CRITICAL: Amount validation - frontend sends amount in CENTS
     const validAmount = Math.round(amount);
     if (validAmount !== amount) {
       logStep("Amount rounded", { originalAmount: amount, validAmount });
     }
     
-    // Prevent 100x overcharging - verify amount is reasonable (between $0.50 and $10,000)
+    // CRITICAL: Cross-verify with breakdown to prevent 100x errors
+    const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
+    const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
+    const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
+    const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
+    
+    // Calculate expected amount in cents from breakdown
+    const expectedAmountInCents = Math.round((validSubtotal + validDeliveryFee + validSalesTax + validTipAmount) * 100);
+    
+    // Verify amount matches breakdown (allow 1 cent variance for rounding)
+    if (Math.abs(validAmount - expectedAmountInCents) > 1) {
+      throw new Error(`CRITICAL AMOUNT MISMATCH: Received ${validAmount} cents but breakdown totals ${expectedAmountInCents} cents. Subtotal: $${validSubtotal}, Delivery: $${validDeliveryFee}, Tax: $${validSalesTax}, Tip: $${validTipAmount}`);
+    }
+    
+    // Prevent unreasonable amounts (between $0.50 and $10,000)
     if (validAmount < 50 || validAmount > 1000000) {
-      throw new Error(`Invalid amount: ${validAmount} cents. Amount must be between 50 cents and $10,000.`);
+      throw new Error(`Invalid amount: ${validAmount} cents ($${(validAmount/100).toFixed(2)}). Amount must be between $0.50 and $10,000.`);
     }
     
     logStep("Creating payment intent", { validAmount, currency, originalAmount: amount });
@@ -67,12 +80,6 @@ serve(async (req) => {
     ).join(', ').substring(0, 300); // Keep well under 500 chars
     
     const itemCount = cartItems.reduce((total: number, item: any) => total + item.quantity, 0);
-    
-    // Validate and sanitize input amounts
-    const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
-    const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
-    const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
-    const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
     
     // Amount verification for logging
     logStep("💰 AMOUNT VERIFICATION - Payment Intent", {

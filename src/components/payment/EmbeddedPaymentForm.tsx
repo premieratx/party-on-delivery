@@ -169,13 +169,40 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       return;
     }
     try {
+      // CRITICAL PAYMENT AMOUNT VALIDATION
+      const amountInCents = Math.round(total * 100);
+      const calculatedTotal = validSubtotal + validDeliveryFee + validSalesTax + validTipAmount;
+      
+      // Verify amounts match to prevent 100x errors
+      if (Math.abs(total - calculatedTotal) > 0.01) {
+        throw new Error(`Amount mismatch: Display total $${total.toFixed(2)} doesn't match calculated total $${calculatedTotal.toFixed(2)}`);
+      }
+      
+      // Validate reasonable amount range
+      if (amountInCents < 50 || amountInCents > 1000000) {
+        throw new Error(`Invalid payment amount: $${total.toFixed(2)}. Must be between $0.50 and $10,000.00`);
+      }
+      
+      // Log for verification
+      console.log('💰 PAYMENT AMOUNT VERIFICATION:', {
+        displayTotal: `$${total.toFixed(2)}`,
+        calculatedTotal: `$${calculatedTotal.toFixed(2)}`,
+        amountInCents: amountInCents,
+        breakdown: {
+          subtotal: `$${validSubtotal.toFixed(2)}`,
+          deliveryFee: `$${validDeliveryFee.toFixed(2)}`,
+          salesTax: `$${validSalesTax.toFixed(2)}`,
+          tip: `$${validTipAmount.toFixed(2)}`
+        }
+      });
+      
       // Create payment intent with all pricing details
       const {
         data,
         error
       } = await supabase.functions.invoke('create-payment-intent', {
         body: {
-          amount: Math.round(total * 100), // Convert to cents
+          amount: amountInCents, // Amount in cents
           currency: 'usd',
           cartItems,
           customerInfo,
