@@ -36,17 +36,23 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       await supabase.auth.signOut();
       console.log('Cleared existing session');
       
-      // Use Supabase SDK with proper redirect URL to affiliate dashboard
+      // Use Supabase SDK with redirect URL pointing to the current domain
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/affiliate/dashboard`
+          redirectTo: `${window.location.origin}/affiliate/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
       if (error) {
         throw error;
       }
+      
+      // The redirect will happen automatically, no need to handle it here
       
     } catch (error: any) {
       console.error('Google auth error:', error);

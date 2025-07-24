@@ -67,7 +67,21 @@ export const AffiliateDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Set up auth state listener for handling OAuth redirects
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user?.email) {
+        console.log('Auth state changed: SIGNED_IN', session.user.email);
+        // Load affiliate data when user signs in
+        setTimeout(() => {
+          loadAffiliateData();
+        }, 500); // Small delay to ensure auth is fully established
+      }
+    });
+
+    // Initial load
     loadAffiliateData();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const loadAffiliateData = async () => {
