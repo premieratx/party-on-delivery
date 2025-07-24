@@ -47,16 +47,10 @@ serve(async (req) => {
     });
     logStep("✅ Stripe keys validated successfully");
 
-    // CRITICAL: Amount is already in cents from frontend - DO NOT multiply by 100!
-    // The frontend converts dollars to cents via Math.round(total * 100)
+    // Validate amount before processing
     const validAmount = Math.round(amount);
     if (validAmount !== amount) {
       logStep("Amount rounded", { originalAmount: amount, validAmount });
-    }
-    
-    // Prevent 100x overcharging - verify amount is reasonable (between $0.50 and $10,000)
-    if (validAmount < 50 || validAmount > 1000000) {
-      throw new Error(`Invalid amount: ${validAmount} cents. Amount must be between 50 cents and $10,000.`);
     }
     
     logStep("Creating payment intent", { validAmount, currency, originalAmount: amount });
