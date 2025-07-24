@@ -36,6 +36,17 @@ interface DashboardSummary {
   totalOrders: number;
 }
 
+interface AdminNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  affiliate_id: string | null;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export const AdminDashboard: React.FC = () => {
   const [affiliates, setAffiliates] = useState<AffiliateStats[]>([]);
   const [summary, setSummary] = useState<DashboardSummary>({
@@ -47,6 +58,8 @@ export const AdminDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [payoutAlerts, setPayoutAlerts] = useState<AffiliateStats[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -62,6 +75,20 @@ export const AdminDashboard: React.FC = () => {
         .order('total_sales', { ascending: false });
 
       if (affiliatesError) throw affiliatesError;
+
+      // Load notifications
+      const { data: notificationsData, error: notificationsError } = await supabase
+        .from('admin_notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (notificationsError) {
+        console.error('Error loading notifications:', notificationsError);
+      } else {
+        setNotifications(notificationsData || []);
+        setUnreadCount(notificationsData?.filter(n => !n.is_read).length || 0);
+      }
 
       setAffiliates(affiliatesData || []);
 
@@ -118,6 +145,36 @@ export const AdminDashboard: React.FC = () => {
     return <span className="text-muted-foreground">#{index + 1}</span>;
   };
 
+  const markNotificationAsRead = async (notificationId: string) => {
+    try {
+      await supabase
+        .from('admin_notifications')
+        .update({ is_read: true })
+        .eq('id', notificationId);
+      
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await supabase
+        .from('admin_notifications')
+        .update({ is_read: true })
+        .eq('is_read', false);
+      
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
@@ -142,10 +199,81 @@ export const AdminDashboard: React.FC = () => {
               Affiliate Program Management
             </p>
           </div>
-          <Button onClick={loadDashboardData}>
-            Refresh Data
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={loadDashboardData}>
+              Refresh Data
+            </Button>
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {unreadCount} new
+              </Badge>
+            )}
+          </div>
         </div>
+
+        {/* Notifications Section */}
+        {notifications.length > 0 && (
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  Recent Notifications
+                  {unreadCount > 0 && (
+                    <Badge variant="destructive">{unreadCount}</Badge>
+                  )}
+                </CardTitle>
+                {unreadCount > 0 && (
+                  <Button variant="outline" size="sm" onClick={markAllAsRead}>
+                    Mark All Read
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {notifications.slice(0, 10).map((notification) => (
+                  <div 
+                    key={notification.id} 
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                      notification.is_read 
+                        ? 'bg-muted/30 border-muted' 
+                        : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                    }`}
+                    onClick={() => !notification.is_read && markNotificationAsRead(notification.id)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className={`font-medium ${!notification.is_read ? 'text-blue-900' : ''}`}>
+                            {notification.title}
+                          </h4>
+                          {!notification.is_read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {new Date(notification.created_at).toLocaleDateString()} at{' '}
+                          {new Date(notification.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                      <Badge variant={
+                        notification.type === 'duplicate_name' ? 'destructive' :
+                        notification.type === 'payout_alert' ? 'secondary' :
+                        'default'
+                      }>
+                        {notification.type.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Payout Alerts */}
         {payoutAlerts.length > 0 && (

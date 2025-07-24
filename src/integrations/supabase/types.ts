@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          affiliate_id: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_users: {
         Row: {
           created_at: string | null
@@ -207,6 +248,42 @@ export type Database = {
           },
         ]
       }
+      configuration_templates: {
+        Row: {
+          configuration: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          template_name: string
+          template_type: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          configuration: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          template_name: string
+          template_type: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          template_name?: string
+          template_type?: string
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       customer_profiles: {
         Row: {
           created_at: string
@@ -329,6 +406,39 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      project_templates: {
+        Row: {
+          configuration: Json
+          created_at: string
+          description: string | null
+          id: string
+          template_name: string
+          template_type: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          configuration: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          template_name: string
+          template_type: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          template_name?: string
+          template_type?: string
+          updated_at?: string
+          version?: string | null
         }
         Relationships: []
       }

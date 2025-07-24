@@ -82,6 +82,17 @@ serve(async (req) => {
       throw new Error("An affiliate account already exists for this email");
     }
 
+    // Check for duplicate names with different emails (for admin alerts)
+    const { data: existingNames, error: nameCheckError } = await supabaseService
+      .from('affiliates')
+      .select('name, email, company_name')
+      .eq('name', name)
+      .neq('email', email);
+
+    if (nameCheckError) {
+      logStep('Error checking duplicate names', nameCheckError);
+    }
+
     // Create new affiliate
     const { data: newAffiliate, error: createError } = await supabaseService
       .from('affiliates')
@@ -106,6 +117,38 @@ serve(async (req) => {
     if (createError) {
       logStep('Error creating affiliate', createError);
       throw new Error(`Failed to create affiliate: ${createError.message}`);
+    }
+
+    // Create notifications
+    try {
+      // Create duplicate name notification if needed
+      if (existingNames && existingNames.length > 0) {
+        const duplicateEmails = existingNames.map(a => a.email).join(', ');
+        await supabaseService
+          .from('admin_notifications')
+          .insert({
+            type: 'duplicate_name',
+            title: 'Duplicate Name Alert',
+            message: `New affiliate "${name}" (${email}) has the same name as existing affiliate(s): ${duplicateEmails}`,
+            affiliate_id: newAffiliate.id
+          });
+        logStep('Created duplicate name notification');
+      }
+
+      // Create new affiliate notification
+      await supabaseService
+        .from('admin_notifications')
+        .insert({
+          type: 'new_affiliate',
+          title: 'New Affiliate Registered',
+          message: `${name} from ${companyName} has joined the affiliate program with code ${affiliateCode}`,
+          affiliate_id: newAffiliate.id
+        });
+      logStep('Created new affiliate notification');
+      
+    } catch (notificationError: any) {
+      logStep('Error creating notifications (non-critical)', notificationError);
+      // Don't fail the affiliate creation if notifications fail
     }
 
     logStep('Affiliate created successfully', { id: newAffiliate.id, code: affiliateCode });
