@@ -197,9 +197,12 @@ export const AdminLogin: React.FC = () => {
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="Enter password"
+                  placeholder="Enter secure password"
                   required
                 />
+                <p className="text-xs text-muted-foreground">
+                  Use a strong password with 8+ characters, including uppercase, lowercase, numbers, and symbols
+                </p>
               </div>
 
               <Button 
