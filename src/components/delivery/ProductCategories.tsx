@@ -481,37 +481,47 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 </button>
               </div>
 
-              {/* Desktop version */}
-              <div className="hidden sm:grid grid-cols-1 gap-1 h-full">
+              {/* Desktop version - side by side buttons */}
+              <div className="hidden sm:grid grid-cols-2 gap-1 h-full">
+                {/* Cart Button */}
+                <button
+                  onClick={onOpenCart}
+                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-2"
+                >
+                  <ShoppingCart className="w-4 h-4 mb-1 text-foreground" />
+                  <div className="text-xs font-bold text-foreground">Cart</div>
+                  {cartItemCount > 0 && (
+                    <Badge variant="default" className="text-xs mt-1 bg-primary text-primary-foreground">
+                      {cartItemCount}
+                    </Badge>
+                  )}
+                </button>
+                
+                {/* Checkout Button */}
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (cartItemCount > 0) {
                       onProceedToCheckout();
-                    } else {
-                      onOpenCart();
                     }
                   }}
                   disabled={cartItemCount === 0}
                   className={`rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-2 ${
                     cartItemCount > 0 
                       ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
-                      : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 cursor-pointer'
+                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
                   } ${selectedCategory === 4 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
                 >
                   {cartItemCount > 0 ? (
                     <>
                       <CheckCircle className="w-4 h-4 mb-1 text-primary" />
                       <div className="text-xs font-bold text-primary">Checkout</div>
-                      <Badge variant="default" className="text-xs mt-1 bg-primary text-primary-foreground">
-                        {cartItemCount}
-                      </Badge>
                     </>
                   ) : (
                     <>
-                      <ShoppingCart className="w-4 h-4 mb-1 text-foreground" />
-                      <div className="text-xs font-bold text-foreground">Cart</div>
+                      <CheckCircle className="w-4 h-4 mb-1 text-muted-foreground opacity-50" />
+                      <div className="text-xs font-bold text-muted-foreground">Checkout</div>
                     </>
                   )}
                 </button>
