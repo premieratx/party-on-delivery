@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -440,7 +440,12 @@ export const AffiliateDashboard: React.FC = () => {
                 <span>Current: {affiliate.commission_rate}%</span>
                 <span>Next: {progressData.reward}</span>
               </div>
-              <Progress value={progressData.progress} className="h-3" />
+              <div className="w-full bg-muted rounded-full h-3">
+                <div 
+                  className="bg-primary h-full rounded-full transition-all duration-300" 
+                  style={{ width: `${Math.min(progressData.progress, 100)}%` }}
+                />
+              </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{formatCurrency(affiliate.total_sales)}</span>
                 <span>{formatCurrency(progressData.nextTier)}</span>
