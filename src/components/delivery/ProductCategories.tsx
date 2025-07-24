@@ -358,9 +358,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
-        {/* Category Tabs with 5th checkout tab */}
+        {/* Category Tabs - 5 product tabs + 1 checkout tab */}
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="grid grid-cols-5 gap-1 h-16 sm:h-18">
+          <div className="flex gap-1 h-16 sm:h-20">
             {stepMapping.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 1 ? Wine : step.step === 2 ? Beer : step.step === 3 ? Martini : step.step === 4 ? Martini : Package;
@@ -377,7 +377,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       // No need to fetch, collection already loaded
                     }
                   }}
-                  className={`relative overflow-hidden rounded-lg transition-all duration-300 group ${
+                  className={`relative overflow-hidden rounded-lg transition-all duration-300 group flex-1 ${
                     isActive 
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
@@ -386,86 +386,89 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: stacked */}
                     <div className="sm:hidden flex flex-col items-center gap-1">
-                      <IconComponent className={`w-4 h-4 ${isActive ? 'text-primary' : 'text-foreground'}`} />
-                      <div className={`text-xs font-bold ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                      <IconComponent className={`w-3 h-3 ${isActive ? 'text-primary' : 'text-foreground'}`} />
+                      <div className={`text-[10px] font-bold leading-tight ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                     
                     {/* Desktop layout: side by side */}
-                    <div className="hidden sm:flex items-center justify-between w-full px-3">
-                      <div className={`font-bold text-2xl ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
-                      <div className={`font-bold text-lg text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                    <div className="hidden sm:flex items-center justify-between w-full px-2">
+                      <div className={`font-bold text-xl ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
+                      <div className={`font-bold text-sm text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                   </div>
                 </button>
               );
             })}
             
-            {/* 5th tab - Cart/Checkout split for mobile and desktop */}
-            <div className="sm:hidden flex flex-col h-full">
-              <button
-                onClick={onOpenCart}
-                className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
-              >
-                <ShoppingCart className="w-4 h-4 text-foreground" />
-                {cartItemCount > 0 && (
-                  <Badge variant="default" className="text-xs ml-1 bg-primary text-primary-foreground">
-                    {cartItemCount}
-                  </Badge>
-                )}
-              </button>
-              
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (cartItemCount > 0) {
-                    onProceedToCheckout();
-                  }
-                }}
-                disabled={cartItemCount === 0}
-                className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
-                  cartItemCount > 0 
-                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
-                    : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                } ${selectedCategory === 3 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
-              >
-                <div className={`text-xs font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
-              </button>
-            </div>
+            {/* Checkout tab - separate styling */}
+            <div className="flex-shrink-0 w-20 sm:w-24">
+              <div className="sm:hidden flex flex-col h-full">
+                <button
+                  onClick={onOpenCart}
+                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
+                >
+                  <ShoppingCart className="w-3 h-3 text-foreground" />
+                  {cartItemCount > 0 && (
+                    <Badge variant="default" className="text-[8px] ml-1 bg-primary text-primary-foreground px-1">
+                      {cartItemCount}
+                    </Badge>
+                  )}
+                </button>
+                
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (cartItemCount > 0) {
+                      onProceedToCheckout();
+                    }
+                  }}
+                  disabled={cartItemCount === 0}
+                  className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
+                    cartItemCount > 0 
+                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
+                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
+                  } ${selectedCategory === 4 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
+                >
+                  <div className={`text-[9px] font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
+                </button>
+              </div>
 
-            {/* Desktop version remains as grid */}
-            <div className="hidden sm:grid grid-cols-2 gap-1 h-full">
-              <button
-                onClick={onOpenCart}
-                className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-1"
-              >
-                <ShoppingCart className="w-4 h-4 text-foreground mb-1" />
-                <div className="text-xs font-bold text-foreground">Cart</div>
-                {cartItemCount > 0 && (
-                  <Badge variant="default" className="text-xs mt-1 bg-primary text-primary-foreground">
-                    {cartItemCount}
-                  </Badge>
-                )}
-              </button>
-              
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (cartItemCount > 0) {
-                    onProceedToCheckout();
-                  }
-                }}
-                disabled={cartItemCount === 0}
-                className={`rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-1 ${
-                  cartItemCount > 0 
-                    ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
-                    : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                } ${selectedCategory === 3 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
-              >
-                <CheckCircle className={`w-4 h-4 mb-1 ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`} />
-                <div className={`text-xs font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
-              </button>
+              {/* Desktop version */}
+              <div className="hidden sm:grid grid-cols-1 gap-1 h-full">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (cartItemCount > 0) {
+                      onProceedToCheckout();
+                    } else {
+                      onOpenCart();
+                    }
+                  }}
+                  disabled={cartItemCount === 0}
+                  className={`rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-2 ${
+                    cartItemCount > 0 
+                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
+                      : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 cursor-pointer'
+                  } ${selectedCategory === 4 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
+                >
+                  {cartItemCount > 0 ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 mb-1 text-primary" />
+                      <div className="text-xs font-bold text-primary">Checkout</div>
+                      <Badge variant="default" className="text-xs mt-1 bg-primary text-primary-foreground">
+                        {cartItemCount}
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4 mb-1 text-foreground" />
+                      <div className="text-xs font-bold text-foreground">Cart</div>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
