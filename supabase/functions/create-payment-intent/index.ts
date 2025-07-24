@@ -20,7 +20,7 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax } = await req.json();
+    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken } = await req.json();
     
     logStep("Request data received", { 
       amount, 
@@ -107,7 +107,8 @@ serve(async (req) => {
         discount_code: (appliedDiscount?.code || 'none').substring(0, 50),
         discount_type: (appliedDiscount?.type || 'none').substring(0, 20),
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
-        group_order_number: (groupOrderNumber || '').substring(0, 50)
+        group_order_number: (groupOrderNumber || '').substring(0, 50),
+        group_order_token: (groupOrderToken || '').substring(0, 50)
       }
     });
 

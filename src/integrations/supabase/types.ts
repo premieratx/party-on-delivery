@@ -407,7 +407,10 @@ export type Database = {
           delivery_date: string | null
           delivery_fee: number | null
           delivery_time: string | null
+          group_order_id: string | null
+          group_participants: Json | null
           id: string
+          is_group_order: boolean | null
           is_shareable: boolean | null
           line_items: Json
           order_number: string
@@ -431,7 +434,10 @@ export type Database = {
           delivery_date?: string | null
           delivery_fee?: number | null
           delivery_time?: string | null
+          group_order_id?: string | null
+          group_participants?: Json | null
           id?: string
+          is_group_order?: boolean | null
           is_shareable?: boolean | null
           line_items?: Json
           order_number: string
@@ -455,7 +461,10 @@ export type Database = {
           delivery_date?: string | null
           delivery_fee?: number | null
           delivery_time?: string | null
+          group_order_id?: string | null
+          group_participants?: Json | null
           id?: string
+          is_group_order?: boolean | null
           is_shareable?: boolean | null
           line_items?: Json
           order_number?: string
@@ -971,6 +980,16 @@ export type Database = {
       generate_affiliate_code: {
         Args: { company_name: string }
         Returns: string
+      }
+      join_group_order: {
+        Args: {
+          p_share_token: string
+          p_customer_email: string
+          p_customer_name: string
+          p_line_items: Json
+          p_subtotal: number
+        }
+        Returns: Json
       }
       link_customer_session: {
         Args: { customer_email: string; session_token: string }

@@ -163,7 +163,8 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           tipAmount: validTipAmount,
           subtotal: validSubtotal,
           deliveryFee: validDeliveryFee,
-          salesTax: validSalesTax
+          salesTax: validSalesTax,
+          groupOrderToken: localStorage.getItem('groupOrderToken') // Add group order token
         }
       });
       if (error) {
