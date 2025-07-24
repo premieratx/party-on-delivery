@@ -30,6 +30,9 @@ const Success = () => {
 
       // Store session ID for later linking when user logs in
       storeSessionId(sessionId);
+      
+      // Also store the payment intent ID from the session for more reliable linking
+      localStorage.setItem('lastPaymentIntent', sessionId);
 
       try {
         const { data, error } = await supabase.functions.invoke('create-shopify-order', {
