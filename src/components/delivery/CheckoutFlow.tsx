@@ -377,14 +377,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmCustomer = () => {
+    console.log('Confirming customer with info:', customerInfo);
+    
     // Validate email and phone before proceeding
-    const emailErr = getEmailErrorMessage(customerInfo.email);
-    const phoneErr = getPhoneErrorMessage(customerInfo.phone);
+    const emailErr = getEmailErrorMessage(customerInfo.email || '');
+    const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
+    
+    console.log('Email error:', emailErr);
+    console.log('Phone error:', phoneErr);
+    console.log('First name:', customerInfo.firstName?.trim());
+    console.log('Last name:', customerInfo.lastName?.trim());
     
     setEmailError(emailErr);
     setPhoneError(phoneErr);
     
     if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim()) {
+      console.log('Customer validation passed, confirming...');
       setConfirmedCustomer(true);
       
       // Only proceed to payment if all sections confirmed
@@ -396,6 +404,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       requestAnimationFrame(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
+    } else {
+      console.log('Customer validation failed');
     }
   };
 
