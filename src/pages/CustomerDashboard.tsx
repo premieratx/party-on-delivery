@@ -30,6 +30,7 @@ interface Order {
   special_instructions?: string;
   line_items: any;
   created_at: string;
+  share_token?: string;
 }
 
 const CustomerDashboard = () => {
@@ -113,13 +114,14 @@ const CustomerDashboard = () => {
   };
 
   const handleShareOrder = (order: Order) => {
-    const message = `Hey, I ordered drinks for us...if you want to add anything to the order, you can schedule it for the same date & time (${order.delivery_date} from ${order.delivery_time}) to ${order.delivery_address.street}, ${order.delivery_address.city}, ${order.delivery_address.state} and enter code 'PREMIER2025' to get free delivery.`;
+    const shareUrl = `${window.location.origin}/order/${order.share_token || order.id}`;
+    const message = `Hey, I ordered drinks for us...if you want to add anything to the order, you can schedule it for the same date & time (${order.delivery_date} from ${order.delivery_time}) to ${order.delivery_address.street}, ${order.delivery_address.city}, ${order.delivery_address.state} and enter code 'PREMIER2025' to get free delivery. Join here: ${shareUrl}`;
     
     if (navigator.share) {
       navigator.share({
         title: 'Join My Delivery Order',
         text: message,
-        url: window.location.origin,
+        url: shareUrl,
       });
     } else {
       navigator.clipboard.writeText(message);

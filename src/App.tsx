@@ -16,6 +16,7 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import SharedOrderView from "./pages/SharedOrderView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -51,6 +52,9 @@ const App = () => (
               {/* Customer Routes */}
               <Route path="/customer/login" element={<CustomerLogin />} />
               <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+              
+              {/* Shared Order Routes */}
+              <Route path="/order/:shareToken" element={<SharedOrderView />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

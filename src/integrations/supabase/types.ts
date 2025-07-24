@@ -408,9 +408,12 @@ export type Database = {
           delivery_fee: number | null
           delivery_time: string | null
           id: string
+          is_shareable: boolean | null
           line_items: Json
           order_number: string
           session_id: string | null
+          share_token: string | null
+          shared_at: string | null
           shopify_order_id: string | null
           special_instructions: string | null
           status: string | null
@@ -429,9 +432,12 @@ export type Database = {
           delivery_fee?: number | null
           delivery_time?: string | null
           id?: string
+          is_shareable?: boolean | null
           line_items?: Json
           order_number: string
           session_id?: string | null
+          share_token?: string | null
+          shared_at?: string | null
           shopify_order_id?: string | null
           special_instructions?: string | null
           status?: string | null
@@ -450,9 +456,12 @@ export type Database = {
           delivery_fee?: number | null
           delivery_time?: string | null
           id?: string
+          is_shareable?: boolean | null
           line_items?: Json
           order_number?: string
           session_id?: string | null
+          share_token?: string | null
+          shared_at?: string | null
           shopify_order_id?: string | null
           special_instructions?: string | null
           status?: string | null
@@ -771,6 +780,44 @@ export type Database = {
           user_email?: string | null
         }
         Relationships: []
+      }
+      shared_order_participants: {
+        Row: {
+          id: string
+          items_added: Json | null
+          joined_at: string
+          order_id: string
+          participant_email: string
+          participant_name: string | null
+          total_contribution: number | null
+        }
+        Insert: {
+          id?: string
+          items_added?: Json | null
+          joined_at?: string
+          order_id: string
+          participant_email: string
+          participant_name?: string | null
+          total_contribution?: number | null
+        }
+        Update: {
+          id?: string
+          items_added?: Json | null
+          joined_at?: string
+          order_id?: string
+          participant_email?: string
+          participant_name?: string | null
+          total_contribution?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_order_participants_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shopify_collections_cache: {
         Row: {

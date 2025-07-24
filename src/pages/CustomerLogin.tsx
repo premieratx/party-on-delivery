@@ -10,12 +10,20 @@ const CustomerLogin = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Get return URL from query params
+  const searchParams = new URLSearchParams(window.location.search);
+  const returnUrl = searchParams.get('return');
+
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate('/customer/dashboard');
+        if (returnUrl) {
+          navigate(decodeURIComponent(returnUrl));
+        } else {
+          navigate('/customer/dashboard');
+        }
       }
     };
     checkUser();
@@ -24,13 +32,17 @@ const CustomerLogin = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          navigate('/customer/dashboard');
+          if (returnUrl) {
+            navigate(decodeURIComponent(returnUrl));
+          } else {
+            navigate('/customer/dashboard');
+          }
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, returnUrl]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
