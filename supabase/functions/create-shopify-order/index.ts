@@ -570,7 +570,12 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
 
         // Update Shopify order with group information
         try {
-          const groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
+          let groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
+          
+          // Add group bundle tag if this is a group order
+          if (isJoiningGroupOrder || shareToken) {
+            groupTags += ', group-bundle';
+          }
           
           // Build tags array based on order type
           const tagArray = [groupTags];
