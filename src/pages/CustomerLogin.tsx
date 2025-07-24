@@ -48,8 +48,16 @@ const CustomerLogin = () => {
           // Clear redirect intent and always go to dashboard after successful login
           localStorage.removeItem('loginRedirectIntent');
           
-          // Always navigate to customer dashboard on successful authentication
-          navigate('/customer/dashboard', { replace: true });
+          // Check if we came from the ?redirect=dashboard URL parameter
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirect = urlParams.get('redirect');
+          
+          if (redirect === 'dashboard') {
+            // Always navigate to customer dashboard on successful authentication
+            navigate('/customer/dashboard', { replace: true });
+          } else {
+            navigate('/customer/dashboard', { replace: true });
+          }
         }
       }
     );

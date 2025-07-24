@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionTracking } from '@/hooks/useSessionTracking';
 import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 
@@ -37,6 +38,7 @@ interface Order {
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { linkSessionToUser } = useSessionTracking();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,11 +86,35 @@ const CustomerDashboard = () => {
         setCustomer(customerData);
       }
 
-      // Load customer orders - check both by customer_id and session tokens
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('customer_orders')
+      // First, try to link any recent sessions to this customer before loading orders
+      await linkSessionToUser(session.user.email!);
+      
+      // Refetch customer data to get updated session tokens after linking
+      const { data: updatedCustomerData } = await supabase
+        .from('customers')
         .select('*')
-        .or(`customer_id.eq.${customerData?.id || ''},session_id.in.(${(customerData?.session_tokens || []).map(token => `"${token}"`).join(',') || '""'})`)
+        .eq('email', session.user.email)
+        .single();
+      
+      const currentCustomer = updatedCustomerData || customerData;
+      
+      // Load customer orders - check both by customer_id and session tokens
+      let ordersQuery = supabase
+        .from('customer_orders')
+        .select('*');
+      
+      if (currentCustomer?.id) {
+        // Query by customer_id OR any session tokens stored in customer profile
+        const sessionTokensFilter = currentCustomer.session_tokens && currentCustomer.session_tokens.length > 0 
+          ? currentCustomer.session_tokens.map(token => `"${token}"`).join(',')
+          : '""';
+        ordersQuery = ordersQuery.or(`customer_id.eq.${currentCustomer.id},session_id.in.(${sessionTokensFilter})`);
+      } else {
+        // Fallback if no customer data
+        ordersQuery = ordersQuery.eq('customer_id', 'never-match');
+      }
+      
+      const { data: ordersData, error: ordersError } = await ordersQuery
         .order('created_at', { ascending: false });
 
       if (ordersError) throw ordersError;
