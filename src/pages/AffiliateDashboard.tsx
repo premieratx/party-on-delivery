@@ -97,11 +97,9 @@ export const AffiliateDashboard: React.FC = () => {
       console.log('🔥 Auth state changed in dashboard:', event, session?.user?.email);
       
       if (event === 'SIGNED_IN' && session?.user?.email) {
-        console.log('✅ User signed in, loading affiliate data...');
-        // Small delay to ensure auth is fully established
-        setTimeout(() => {
-          loadAffiliateData();
-        }, 100);
+        console.log('✅ User signed in via OAuth, loading affiliate data...');
+        // Load data immediately for OAuth redirects
+        loadAffiliateData();
       }
       
       if (event === 'SIGNED_OUT') {
@@ -112,14 +110,21 @@ export const AffiliateDashboard: React.FC = () => {
 
     // Initial load - check if user is already authenticated
     const checkInitialAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('🔍 Initial session check:', session?.user?.email);
-      
-      if (session?.user?.email) {
-        console.log('✅ Found existing session, loading data...');
-        loadAffiliateData();
-      } else {
-        console.log('❌ No session found, redirecting to signup...');
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔍 Initial session check:', session?.user?.email);
+        
+        if (session?.user?.email) {
+          console.log('✅ Found existing session, loading data...');
+          loadAffiliateData();
+        } else {
+          console.log('❌ No session found, redirecting to signup...');
+          setLoading(false);
+          navigate('/affiliate');
+        }
+      } catch (error) {
+        console.error('Error checking initial auth:', error);
+        setLoading(false);
         navigate('/affiliate');
       }
     };
@@ -527,6 +532,14 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
           <p className="text-muted-foreground">
             {affiliate.company_name} Affiliate Dashboard
           </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => supabase.auth.signOut()}
+            className="mt-2"
+          >
+            Sign Out
+          </Button>
         </div>
 
         {/* Stats Grid */}
