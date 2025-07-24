@@ -120,7 +120,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
   
   // State declarations must come before any usage  
-  const [tipAmount, setTipAmount] = useState(Math.round(subtotal * 0.10 * 100) / 100); // Initialize with 10%
+  const [tipAmount, setTipAmount] = useState(() => {
+    // Always start with a minimum $2 tip (10% of $20 minimum order) for new checkouts
+    const calculatedTip = Math.round(subtotal * 0.10 * 100) / 100;
+    return Math.max(calculatedTip, 2.00);
+  });
   const [tipType, setTipType] = useState<'percentage' | 'custom'>('percentage'); // Track tip type
   const [tipPercentage, setTipPercentage] = useState(10); // Track selected percentage
   const [discountCode, setDiscountCode] = useState('');
@@ -232,16 +236,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         }
       }
       // For custom tips, don't change the amount when subtotal changes
-    } else {
-      // Always initialize with 10% tip for new checkout sessions
-      const defaultTip = Math.round(subtotal * 0.10 * 100) / 100;
-      setTipAmount(defaultTip);
-      setTipType('percentage');
-      setTipPercentage(10);
-      if (onTipChange) {
-        onTipChange(defaultTip);
-      }
     }
+    // Don't reset tip to 0 when subtotal is 0 - keep the 10% preset
   }, [subtotal, tipType, tipPercentage]); // Only recalculate when these change
 
   // Check if delivery details match previous order exactly for automatic free shipping
