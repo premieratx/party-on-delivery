@@ -431,16 +431,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   }`}
                 >
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
-                    {/* Mobile layout: stacked */}
-                    <div className="sm:hidden flex flex-col items-center gap-1">
-                      <IconComponent className={`w-3 h-3 ${isActive ? 'text-primary' : 'text-foreground'}`} />
-                      <div className={`text-[10px] font-bold leading-tight ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                    {/* Mobile layout: just title, no number */}
+                    <div className="sm:hidden flex flex-col items-center justify-center h-full">
+                      <div className={`text-sm font-bold leading-tight text-center ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                     
-                    {/* Desktop layout: side by side - smaller icons for more cart/checkout space */}
-                    <div className="hidden sm:flex items-center justify-between w-full px-2">
-                      <div className={`font-bold text-lg ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
-                      <div className={`font-bold text-xs text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                    {/* Desktop layout: number in top left corner, large title centered */}
+                    <div className="hidden sm:block relative w-full h-full">
+                      {/* Number in top left corner */}
+                      <div className={`absolute top-1 left-1 font-bold text-lg ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
+                      
+                      {/* Large title centered */}
+                      <div className="flex items-center justify-center h-full">
+                        <div className={`font-bold text-xl text-center ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                      </div>
                     </div>
                   </div>
                 </button>
