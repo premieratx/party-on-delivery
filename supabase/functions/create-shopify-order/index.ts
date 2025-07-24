@@ -779,6 +779,44 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
       // Don't fail the order creation if SMS fails
     }
 
+    // Sync customer order data with real-time update
+    try {
+      const syncResult = await supabaseClient.functions.invoke('sync-customer-order-realtime', {
+        body: {
+          sessionId: sessionId || paymentIntentId,
+          paymentIntentId,
+          orderData: {
+            customerEmail: customerEmail,
+            customerName: customerName,
+            customerPhone: customerPhone,
+            orderNumber: orderResult.order.order_number,
+            shopifyOrderId: orderResult.order.id,
+            totalAmount: Number(totalAmount),
+            subtotal: Number(subtotal),
+            shippingFee: Number(shippingFee),
+            deliveryDate: deliveryDate,
+            deliveryTime: deliveryTime,
+            deliveryAddress: addressParts.street,
+            deliveryCity: addressParts.city,
+            deliveryState: addressParts.state,
+            deliveryZip: addressParts.zip,
+            deliveryInstructions: deliveryInstructions,
+            lineItems: cartItems,
+            discountCode,
+            affiliateCode
+          }
+        }
+      });
+      
+      if (syncResult.error) {
+        console.error('Error syncing customer order:', syncResult.error);
+      } else {
+        logStep("Customer order synced successfully", syncResult.data);
+      }
+    } catch (syncError) {
+      console.error('Error calling sync function:', syncError);
+    }
+
     return new Response(JSON.stringify({ 
       success: true,
       shopifyOrderId: orderResult.order.id,
