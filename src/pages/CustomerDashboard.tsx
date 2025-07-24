@@ -33,6 +33,8 @@ interface Order {
   line_items: any;
   created_at: string;
   share_token?: string;
+  customer_id?: string;
+  session_id?: string;
 }
 
 const CustomerDashboard = () => {
@@ -116,14 +118,25 @@ const CustomerDashboard = () => {
         .select('*');
       
       if (currentCustomer?.id) {
-        // Query by customer_id OR any session tokens stored in customer profile
-        const sessionTokensFilter = currentCustomer.session_tokens && currentCustomer.session_tokens.length > 0 
-          ? currentCustomer.session_tokens.map(token => `"${token}"`).join(',')
-          : '""';
-        ordersQuery = ordersQuery.or(`customer_id.eq.${currentCustomer.id},session_id.in.(${sessionTokensFilter})`);
+        // Create a comprehensive filter for all possible ways to find customer orders
+        const filters = [`customer_id.eq.${currentCustomer.id}`];
+        
+        // Add session tokens if they exist
+        if (currentCustomer.session_tokens && currentCustomer.session_tokens.length > 0) {
+          currentCustomer.session_tokens.forEach(token => {
+            if (token && token.trim()) {
+              filters.push(`session_id.eq.${token}`);
+            }
+          });
+        }
+        
+        // Also search by email for orders that might not have customer_id linked yet
+        filters.push(`delivery_address->>email.eq.${session.user.email}`);
+        
+        ordersQuery = ordersQuery.or(filters.join(','));
       } else {
-        // Fallback if no customer data
-        ordersQuery = ordersQuery.eq('customer_id', 'never-match');
+        // Fallback if no customer data - search by email
+        ordersQuery = ordersQuery.or(`delivery_address->>email.eq.${session.user.email}`);
       }
       
       const { data: ordersData, error: ordersError } = await ordersQuery
@@ -132,41 +145,45 @@ const CustomerDashboard = () => {
       if (ordersError) throw ordersError;
       setOrders(ordersData || []);
 
-      // Set up real-time subscription for new orders
+      // Set up real-time subscription for new orders - listen to all orders for this user
       const channel = supabase
         .channel('customer-orders-changes')
         .on(
           'postgres_changes',
           {
-            event: 'INSERT',
+            event: '*', // Listen to all changes
             schema: 'public',
-            table: 'customer_orders',
-            filter: `customer_id=eq.${currentCustomer?.id}`
+            table: 'customer_orders'
           },
           (payload) => {
-            console.log('New order received:', payload);
-            setOrders(prevOrders => [payload.new as Order, ...prevOrders]);
-            toast({
-              title: "New Order",
-              description: "Your order has been added to your dashboard.",
-            });
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'customer_orders',
-            filter: `customer_id=eq.${currentCustomer?.id}`
-          },
-          (payload) => {
-            console.log('Order updated:', payload);
-            setOrders(prevOrders => 
-              prevOrders.map(order => 
-                order.id === payload.new.id ? payload.new as Order : order
-              )
-            );
+            console.log('Order change received:', payload);
+            const order = payload.new as Order;
+            
+            // Check if this order belongs to current customer
+            const belongsToCustomer = order.customer_id === currentCustomer?.id ||
+              (currentCustomer?.session_tokens && currentCustomer.session_tokens.includes(order.session_id)) ||
+              (order.delivery_address && typeof order.delivery_address === 'object' && 
+               order.delivery_address.email === session.user.email);
+            
+            if (belongsToCustomer) {
+              if (payload.eventType === 'INSERT') {
+                setOrders(prevOrders => {
+                  // Avoid duplicates
+                  if (prevOrders.some(o => o.id === order.id)) return prevOrders;
+                  return [order, ...prevOrders];
+                });
+                toast({
+                  title: "New Order",
+                  description: "Your order has been added to your dashboard.",
+                });
+              } else if (payload.eventType === 'UPDATE') {
+                setOrders(prevOrders => 
+                  prevOrders.map(o => 
+                    o.id === order.id ? order : o
+                  )
+                );
+              }
+            }
           }
         )
         .subscribe();
