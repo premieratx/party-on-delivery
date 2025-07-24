@@ -16,6 +16,7 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import OrderContinuation from "./pages/OrderContinuation";
 import SharedOrderView from "./pages/SharedOrderView";
 import GroupOrderView from "./pages/GroupOrderView";
 import NotFound from "./pages/NotFound";
@@ -53,6 +54,7 @@ const App = () => (
               {/* Customer Routes */}
               <Route path="/customer/login" element={<CustomerLogin />} />
               <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+              <Route path="/order-continuation" element={<OrderContinuation />} />
               <Route path="/manage-order" element={<CustomerLogin />} />
               
               {/* Shared Order Routes */}
