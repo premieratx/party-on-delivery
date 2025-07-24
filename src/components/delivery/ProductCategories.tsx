@@ -223,6 +223,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const clearCacheAndRefresh = () => {
     console.log('=== clearCacheAndRefresh called ===');
     cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
+    // Also clear any local storage cache
+    localStorage.removeItem('shopify-collections-cache');
     fetchCollections(true);
   };
 

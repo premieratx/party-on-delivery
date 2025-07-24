@@ -63,6 +63,7 @@ serve(async (req) => {
     
     // Validate that we have the correct collections in Shopify
     const targetCollections = [
+      "spirits",              // NEW: Added spirits collection 
       "tailgate-beer",
       "seltzer-collection", 
       "cocktail-kits",
@@ -84,7 +85,7 @@ serve(async (req) => {
             title
             handle
             description
-            products(first: 50) {
+            products(first: 100) {
               edges {
                 node {
                   id
