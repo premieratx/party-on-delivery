@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import { ProductCategories } from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
@@ -34,7 +34,9 @@ export const DeliveryWidget: React.FC = () => {
   useWakeLock();
   
   const location = useLocation();
+  const navigate = useNavigate();
   const [affiliateReferral, setAffiliateReferral] = useReliableStorage('affiliateReferral', '');
+  const [startingPage, setStartingPage] = useReliableStorage('startingPage', '/');
   
   // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
@@ -53,13 +55,18 @@ export const DeliveryWidget: React.FC = () => {
   const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag);
   const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
 
-  // Handle affiliate tracking from navigation state
+  // Handle affiliate tracking from navigation state and store starting page
   useEffect(() => {
     if (location.state?.fromAffiliate) {
       setAffiliateReferral(location.state.fromAffiliate);
+      // Store the affiliate starting page
+      setStartingPage(`/a/${location.state.fromAffiliate}`);
       console.log('Affiliate referral set:', location.state.fromAffiliate);
+    } else if (location.pathname === '/') {
+      // Regular home page visit
+      setStartingPage('/');
     }
-  }, [location.state, setAffiliateReferral]);
+  }, [location.state, location.pathname, setAffiliateReferral, setStartingPage]);
   
   // State for tracking cart calculations (for cart/checkout sync) - persist discount in localStorage
   const [appliedDiscount, setAppliedDiscount] = useLocalStorage<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>('partyondelivery_applied_discount', null);
@@ -253,6 +260,10 @@ export const DeliveryWidget: React.FC = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const handleBackToStart = () => {
+    navigate(startingPage);
+  };
+
   const handleCheckout = () => {
     try {
       console.log('=== CHECKOUT BUTTON CLICKED ===');
@@ -324,6 +335,7 @@ export const DeliveryWidget: React.FC = () => {
           onUpdateQuantity={updateQuantity}
           onProceedToCheckout={handleCheckout}
           onBack={handleBackToOrderContinuation}
+          onBackToStart={handleBackToStart}
         />
       )}
 

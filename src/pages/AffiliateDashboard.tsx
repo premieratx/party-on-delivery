@@ -792,6 +792,24 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
                 </div>
               </TabsContent>
             </Tabs>
+            
+            {/* Back to Start Button */}
+            <div className="mt-6 pt-4 border-t border-border">
+              <Button 
+                onClick={() => {
+                  const affiliateCode = affiliate?.affiliate_code;
+                  if (affiliateCode) {
+                    navigate(`/a/${affiliateCode}`);
+                  } else {
+                    navigate('/');
+                  }
+                }}
+                className="w-full h-12 text-base"
+                variant="outline"
+              >
+                🏠 Back to Start
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

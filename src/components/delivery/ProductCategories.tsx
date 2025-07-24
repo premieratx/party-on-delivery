@@ -49,6 +49,7 @@ interface ProductCategoriesProps {
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
   onProceedToCheckout: () => void;
   onBack?: () => void;
+  onBackToStart?: () => void;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -58,7 +59,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   cartItems,
   onUpdateQuantity,
   onProceedToCheckout,
-  onBack
+  onBack,
+  onBackToStart
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
@@ -703,6 +705,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <div className="text-sm text-muted-foreground">
               Step 3 of 4
             </div>
+            {onBackToStart && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onBackToStart}
+                className="flex items-center gap-2"
+              >
+                🏠 Back to Start
+              </Button>
+            )}
           </div>
         </div>
       )}
