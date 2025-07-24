@@ -52,8 +52,22 @@ serve(async (req) => {
       throw new Error("Affiliate not found");
     }
 
-    // Calculate commission
-    const subtotal = parseFloat(orderData.subtotal || orderData.total_price || '0');
+    // Calculate commission - get subtotal from order notes or stripe data since Shopify order details may be incorrect
+    let subtotal = 0;
+    
+    // Try to extract from order notes (format: "Subtotal: $29.99")
+    if (orderData.note) {
+      const subtotalMatch = orderData.note.match(/Subtotal:\s*\$?([\d,]+\.?\d*)/i);
+      if (subtotalMatch) {
+        subtotal = parseFloat(subtotalMatch[1].replace(/,/g, ''));
+      }
+    }
+    
+    // Fallback to Stripe data or order data if notes don't have it
+    if (subtotal === 0) {
+      subtotal = parseFloat(orderData.stripe_subtotal || orderData.subtotal || orderData.total_price || '0');
+    }
+    
     const commissionAmount = (subtotal * affiliate.commission_rate) / 100;
 
     logStep('Commission calculated', { subtotal, commissionRate: affiliate.commission_rate, commissionAmount });
