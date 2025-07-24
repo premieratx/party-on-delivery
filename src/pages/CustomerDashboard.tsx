@@ -213,7 +213,7 @@ const CustomerDashboard = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate('/customer/login');
+    navigate('/success');
   };
 
   const handleAddToOrder = () => {
