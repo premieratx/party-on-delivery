@@ -31,11 +31,17 @@ export const useSessionTracking = () => {
         sessionKeys.add(storedSessionId);
       }
 
-      // Get any existing stripe session IDs from recent localStorage entries
+      // Check for stored payment intent IDs
+      const storedPaymentIntent = localStorage.getItem('lastPaymentIntent');
+      if (storedPaymentIntent) {
+        sessionKeys.add(storedPaymentIntent);
+      }
+
+      // Get any existing stripe session IDs and payment intent IDs from recent localStorage entries
       const allKeys = Object.keys(localStorage);
       for (const key of allKeys) {
         const value = localStorage.getItem(key);
-        if (value && value.startsWith('cs_')) { // Stripe session IDs start with cs_
+        if (value && (value.startsWith('cs_') || value.startsWith('pi_'))) { // Stripe session IDs and payment intent IDs
           sessionKeys.add(value);
         }
       }

@@ -159,7 +159,7 @@ const Success = () => {
             </p>
             
             <Button asChild className="w-full" size="lg">
-              <Link to="/customer/login?redirect=dashboard">Login to Manage Order</Link>
+              <Link to="/customer/login">Login to Manage Order</Link>
             </Button>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4">

@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionTracking } from '@/hooks/useSessionTracking';
-import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
+import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown, RefreshCw } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 
 interface Customer {
@@ -42,14 +42,19 @@ const CustomerDashboard = () => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     loadCustomerData();
   }, []);
 
-  const loadCustomerData = async () => {
+  const loadCustomerData = async (isRefresh = false) => {
     try {
+      if (isRefresh) {
+        setIsRefreshing(true);
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         navigate('/customer/login');
@@ -120,6 +125,13 @@ const CustomerDashboard = () => {
       if (ordersError) throw ordersError;
       setOrders(ordersData || []);
 
+      if (isRefresh) {
+        toast({
+          title: "Data Refreshed",
+          description: "Your dashboard has been updated with the latest information.",
+        });
+      }
+
     } catch (error) {
       console.error('Error loading customer data:', error);
       toast({
@@ -129,6 +141,7 @@ const CustomerDashboard = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -243,10 +256,21 @@ const CustomerDashboard = () => {
               </h1>
               <p className="text-sm text-muted-foreground">{customer?.email}</p>
             </div>
-            <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => loadCustomerData(true)} 
+                disabled={isRefreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -479,11 +503,9 @@ const CustomerDashboard = () => {
           </div>
         )}
 
-        {/* Individual Orders - Show dropdown if multiple orders */}
+        {/* Individual Orders - Show all in full detail */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">
-            {orders.length > 1 ? 'Individual Orders' : 'Order History'}
-          </h2>
+          <h2 className="text-xl font-semibold mb-4">Order History</h2>
           {orders.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">
@@ -497,95 +519,24 @@ const CustomerDashboard = () => {
                 </Button>
               </CardContent>
             </Card>
-          ) : orders.length > 1 ? (
-            <div className="space-y-4">
-              {/* Order Selector */}
-              <div className="mb-4">
-                <Select value={selectedOrderId || ''} onValueChange={setSelectedOrderId}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select an order to view details" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {orders.map((order) => (
-                      <SelectItem key={order.id} value={order.id}>
-                        Order #{order.order_number} - ${order.total_amount} ({order.line_items.length} items)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Selected Order Details */}
-              {selectedOrderId && (() => {
-                const selectedOrder = orders.find(o => o.id === selectedOrderId);
-                if (!selectedOrder) return null;
-                
-                return (
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>Order #{selectedOrder.order_number}</CardTitle>
-                          <CardDescription>
-                            Ordered on {format(new Date(selectedOrder.created_at), 'MMMM do, yyyy')}
-                          </CardDescription>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant={selectedOrder.status === 'delivered' ? 'default' : 'secondary'}>
-                            {selectedOrder.status}
-                          </Badge>
-                          <p className="text-lg font-semibold mt-1">${selectedOrder.total_amount}</p>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {/* Order Items */}
-                        <div>
-                          <h4 className="font-medium mb-3">Items ({selectedOrder.line_items.length})</h4>
-                          <div className="space-y-2">
-                            {selectedOrder.line_items.map((item: any, index: number) => (
-                              <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
-                                <span>{item.quantity}x {item.title}</span>
-                                <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        <div className="flex justify-between items-center">
-                          <p className="text-muted-foreground text-sm">
-                            ⚠️ This order is final and cannot be modified
-                          </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleTextUs}
-                            className="flex items-center gap-2"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                            Text Us for Changes
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })()}
-            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {orders.map((order) => (
                 <Card key={order.id}>
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-semibold">Order #{order.order_number}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {format(new Date(order.created_at), 'MMMM do, yyyy')}
-                        </p>
+                        <CardTitle>Order #{order.order_number}</CardTitle>
+                        <CardDescription>
+                          Ordered on {format(new Date(order.created_at), 'MMMM do, yyyy')}
+                          {order.delivery_date && (
+                            <span className="flex items-center gap-2 mt-1">
+                              <CalendarDays className="h-4 w-4" />
+                              Delivery: {format(new Date(order.delivery_date), 'EEEE, MMMM do')} 
+                              {order.delivery_time && ` at ${order.delivery_time}`}
+                            </span>
+                          )}
+                        </CardDescription>
                       </div>
                       <div className="text-right">
                         <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
@@ -594,21 +545,69 @@ const CustomerDashboard = () => {
                         <p className="text-lg font-semibold mt-1">${order.total_amount}</p>
                       </div>
                     </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-muted-foreground">
-                        {order.line_items.length} items • 
-                        {order.delivery_date && ` Delivered ${format(new Date(order.delivery_date), 'MMM do')}`}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {/* Delivery Address */}
+                      {order.delivery_address && (
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">Delivery Address</p>
+                            <p className="text-sm text-muted-foreground">
+                              {order.delivery_address.street}, {order.delivery_address.city}, {order.delivery_address.state} {order.delivery_address.zipCode}
+                            </p>
+                            {order.special_instructions && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Instructions: {order.special_instructions}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Order Items */}
+                      <div>
+                        <h4 className="font-medium mb-3">Items ({order.line_items?.length || 0})</h4>
+                        <div className="space-y-2">
+                          {order.line_items && order.line_items.length > 0 ? (
+                            order.line_items.map((item: any, index: number) => (
+                              <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
+                                <div className="flex-1">
+                                  <span className="font-medium">{item.quantity}x {item.title}</span>
+                                  <span className="text-sm text-muted-foreground block">
+                                    ${item.price} each • Ordered by {customer?.first_name} {customer?.last_name}
+                                  </span>
+                                </div>
+                                <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-4 text-muted-foreground">
+                              <Package className="h-8 w-8 mx-auto mb-2" />
+                              <p>No items found for this order</p>
+                              <p className="text-sm">This may be due to a data sync issue</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleTextUs}
-                        className="flex items-center gap-2"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        Text Us
-                      </Button>
+
+                      <Separator />
+
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-muted-foreground">
+                          {order.line_items?.length || 0} items • Order total: ${order.total_amount}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleTextUs}
+                          className="flex items-center gap-2"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Text Us for Changes
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
