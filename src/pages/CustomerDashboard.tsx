@@ -110,7 +110,7 @@ const CustomerDashboard = () => {
   };
 
   const handleAddToOrder = () => {
-    navigate('/?customer=true');
+    navigate('/?customer=true&discount=PREMIER2025');
   };
 
   const handleShareOrder = (order: Order) => {
@@ -290,13 +290,13 @@ const CustomerDashboard = () => {
                             <Share2 className="h-4 w-4" />
                             Share
                           </Button>
-                          <Button
+                           <Button
                             size="sm"
                             onClick={handleAddToOrder}
                             className="flex items-center gap-2"
                           >
                             <Package className="h-4 w-4" />
-                            Add Items
+                            Add to Order
                           </Button>
                         </div>
                       </div>

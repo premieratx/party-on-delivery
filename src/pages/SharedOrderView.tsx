@@ -111,8 +111,8 @@ const SharedOrderView = () => {
       // Check if user already joined
       const existingParticipant = participants.find(p => p.participant_email === currentUser.email);
       if (existingParticipant) {
-        // Navigate to add items to order
-        navigate(`/?share=${shareToken}&customer=true`);
+        // Navigate to add items to order with auto-applied discount
+        navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
         return;
       }
 
@@ -134,8 +134,8 @@ const SharedOrderView = () => {
         description: "You can now add items to this delivery order.",
       });
 
-      // Navigate to shopping with share token
-      navigate(`/?share=${shareToken}&customer=true`);
+      // Navigate to shopping with share token and auto-apply discount
+      navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
 
     } catch (error) {
       console.error('Error joining order:', error);
