@@ -52,20 +52,49 @@ serve(async (req) => {
       throw new Error("Affiliate not found");
     }
 
-    // Calculate commission - get subtotal from order notes or stripe data since Shopify order details may be incorrect
+    // Calculate commission - get subtotal from multiple sources since Shopify order details may be incorrect
     let subtotal = 0;
     
-    // Try to extract from order notes (format: "Subtotal: $29.99")
+    // Priority 1: Extract from order notes (format: "Subtotal: $29.99")
     if (orderData.note) {
       const subtotalMatch = orderData.note.match(/Subtotal:\s*\$?([\d,]+\.?\d*)/i);
       if (subtotalMatch) {
         subtotal = parseFloat(subtotalMatch[1].replace(/,/g, ''));
+        logStep('Subtotal extracted from order notes', { subtotal });
       }
     }
     
-    // Fallback to Stripe data or order data if notes don't have it
+    // Priority 2: Check for line items total (more reliable than order totals)
+    if (subtotal === 0 && orderData.line_items) {
+      subtotal = orderData.line_items.reduce((sum: number, item: any) => {
+        const price = parseFloat(item.price || '0');
+        const quantity = parseInt(item.quantity || '1');
+        return sum + (price * quantity);
+      }, 0);
+      if (subtotal > 0) {
+        logStep('Subtotal calculated from line items', { subtotal });
+      }
+    }
+    
+    // Priority 3: Try subtotal_price field
+    if (subtotal === 0 && orderData.subtotal_price) {
+      subtotal = parseFloat(orderData.subtotal_price);
+      logStep('Subtotal from subtotal_price field', { subtotal });
+    }
+    
+    // Priority 4: Fallback to total_price minus tax and shipping
+    if (subtotal === 0 && orderData.total_price) {
+      const total = parseFloat(orderData.total_price);
+      const tax = parseFloat(orderData.total_tax || '0');
+      const shipping = parseFloat(orderData.shipping_lines?.[0]?.price || '0');
+      subtotal = total - tax - shipping;
+      logStep('Subtotal calculated from total minus tax/shipping', { subtotal, total, tax, shipping });
+    }
+    
+    // Final fallback
     if (subtotal === 0) {
-      subtotal = parseFloat(orderData.stripe_subtotal || orderData.subtotal || orderData.total_price || '0');
+      subtotal = parseFloat(orderData.subtotal || orderData.total_price || '0');
+      logStep('Subtotal from fallback fields', { subtotal });
     }
     
     const commissionAmount = (subtotal * affiliate.commission_rate) / 100;
