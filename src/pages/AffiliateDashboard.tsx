@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -23,13 +23,18 @@ import {
   Facebook,
   Twitter,
   Instagram,
-  MessageSquare
+  MessageSquare,
+  ChevronDown,
+  FileText,
+  Mail,
+  Globe
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface AffiliateData {
   id: string;
   name: string;
+  email: string;
   company_name: string;
   phone?: string;
   venmo_handle?: string;
@@ -258,6 +263,68 @@ export const AffiliateDashboard: React.FC = () => {
     if (shareUrl) {
       window.open(shareUrl, '_blank', 'width=600,height=400');
     }
+  };
+
+  const getEmailTemplate = () => {
+    return `🎉 SURPRISE! Free Cold Delivery to Your Rental! 🎉
+
+Hey there!
+
+Hope you're having an amazing time at your rental! I'm with ${affiliate?.company_name}, and I've got some exciting news for you.
+
+Since you're staying at one of our partner properties, you qualify for FREE DELIVERY from Party on Delivery Austin! 🚚❄️
+
+🍺 Ice-cold beer, wine, seltzers & cocktails
+🧊 Delivered COLD directly to your door
+💰 FREE shipping (normally $12.99)
+⚡ Same-day delivery available
+
+Perfect for pool parties, game nights, or just relaxing after exploring Austin!
+
+Use this special link to order:
+${window.location.origin}/a/${affiliate?.affiliate_code}
+
+Questions? Just reply to this email!
+
+Cheers to your Austin adventure! 🍻
+${affiliate?.name}
+${affiliate?.company_name}`;
+  };
+
+  const getWebsiteBlurb = () => {
+    return `🍻 FREE Cold Delivery for Our Guests! 🍻
+
+Welcome to your Austin getaway! As our valued guest, you get FREE DELIVERY on ice-cold drinks from Party on Delivery Austin.
+
+✅ Beer, wine, cocktails & seltzers
+✅ Delivered ice-cold to your door  
+✅ FREE shipping (save $12.99!)
+✅ Same-day delivery available
+
+Perfect for pool time, BBQs, or exploring Austin's nightlife scene!
+
+ORDER NOW: ${window.location.origin}/a/${affiliate?.affiliate_code}
+
+Questions? Contact ${affiliate?.name} at ${affiliate?.email}`;
+  };
+
+  const getTextTemplate = () => {
+    return `🎉 Hey! Free cold delivery perk at your rental! 
+
+${affiliate?.company_name} guests get FREE shipping on ice-cold drinks delivered to your door. Beer, wine, cocktails - all delivered cold! 
+
+Order: ${window.location.origin}/a/${affiliate?.affiliate_code}
+
+Enjoy Austin! 🍻
+${affiliate?.name}`;
+  };
+
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: `${type} copied to clipboard!`,
+    });
   };
 
   const getProgressToNextTier = () => {
@@ -495,7 +562,33 @@ export const AffiliateDashboard: React.FC = () => {
         {/* Personal Concierge Website Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Your Personal Concierge Website</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Your Personal Concierge Website</CardTitle>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <FileText className="h-4 w-4" />
+                    Marketing Templates
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => copyToClipboard(getEmailTemplate(), "Email template")}>
+                    <Mail className="h-4 w-4 mr-2" />
+                    Copy Email Template
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => copyToClipboard(getWebsiteBlurb(), "Website blurb")}>
+                    <Globe className="h-4 w-4 mr-2" />
+                    Copy Website Blurb
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => copyToClipboard(getTextTemplate(), "Text message template")}>
+                    <Smartphone className="h-4 w-4 mr-2" />
+                    Copy Text Message
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
