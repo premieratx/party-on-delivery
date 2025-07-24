@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle, Wine } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,7 @@ import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
 import partySuppliesCategoryBg from '@/assets/party-supplies-category-bg.jpg';
+import spiritsCategoryBg from '@/assets/spirits-category-bg.jpg';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 
@@ -71,18 +72,64 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [selectedVariants, setSelectedVariants] = useState<{[productId: string]: string}>({});
   const [lightboxProduct, setLightboxProduct] = useState<ShopifyProduct | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [visibleProductCounts, setVisibleProductCounts] = useState<{[collectionIndex: number]: number}>({});
 
-  // Step-based order flow mapping to collection handles
+  // Step-based order flow mapping to collection handles - Spirits first!
   const stepMapping = [
-    { step: 1, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
-    { step: 2, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
-    { step: 3, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
-    { step: 4, title: 'Party Supplies', handle: 'party-supplies', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Party Supplies' }
+    { step: 1, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
+    { step: 2, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
+    { step: 3, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
+    { step: 4, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
+    { step: 5, title: 'Party Supplies', handle: 'party-supplies', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Party Supplies' }
   ];
 
   useEffect(() => {
     fetchCollections();
   }, []);
+
+  // Initialize visible counts and lazy loading
+  useEffect(() => {
+    if (collections.length > 0) {
+      const initialVisibleCounts: {[collectionIndex: number]: number} = {};
+      collections.forEach((_, index) => {
+        // Load 50 items initially, or all if less than 50
+        const totalProducts = collections[index]?.products?.length || 0;
+        initialVisibleCounts[index] = Math.min(50, totalProducts);
+      });
+      setVisibleProductCounts(initialVisibleCounts);
+    }
+  }, [collections]);
+
+  // Scroll event listener for lazy loading
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Load more when user is 200px from bottom
+      if (scrollPosition >= documentHeight - 200) {
+        loadMoreProducts();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [selectedCategory, visibleProductCounts, collections]);
+
+  const loadMoreProducts = () => {
+    if (!selectedCollection) return;
+    
+    const currentVisible = visibleProductCounts[selectedCategory] || 50;
+    const totalProducts = selectedCollection.products.length;
+    
+    if (currentVisible < totalProducts) {
+      const nextVisible = Math.min(currentVisible + 25, totalProducts); // Load 25 more at a time
+      setVisibleProductCounts(prev => ({
+        ...prev,
+        [selectedCategory]: nextVisible
+      }));
+    }
+  };
 
   const fetchCollections = async (forceRefresh = false) => {
     try {
@@ -231,10 +278,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     onProceedToCheckout();
   };
 
-  // Handle product click for cocktails (step 3)
+  // Handle product click for cocktails (step 4 now)
   const handleProductClick = (product: ShopifyProduct) => {
-    // Only enable lightbox for cocktails (step 3)
-    if (selectedCategory === 2) { // Cocktails is index 2
+    // Only enable lightbox for cocktails (step 4, index 3)
+    if (selectedCategory === 3) { // Cocktails is now index 3
       setLightboxProduct(product);
       setIsLightboxOpen(true);
     }
@@ -316,7 +363,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <div className="grid grid-cols-5 gap-1 h-16 sm:h-18">
             {stepMapping.map((step, index) => {
               const isActive = selectedCategory === index;
-              const IconComponent = step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Martini : Package;
+              const IconComponent = step.step === 1 ? Wine : step.step === 2 ? Beer : step.step === 3 ? Martini : step.step === 4 ? Martini : Package;
               const stepNumber = step.step;
               const stepTitle = step.title;
               
@@ -454,7 +501,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </div>
             
             {/* Add instruction text for cocktails only */}
-            {selectedCategory === 2 && (
+            {selectedCategory === 3 && (
               <div className="text-center mt-2">
                 <p className="text-sm text-muted-foreground">Click each item to see photos and details</p>
               </div>
@@ -464,40 +511,40 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       <div className="max-w-7xl mx-auto p-4">
-        {/* Product Grid - smaller tiles for beer section, consistent for others */}
-        <div className={`grid gap-1.5 lg:gap-3 ${selectedCategory === 0 ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
-          {selectedCollection?.products.map((product) => {
+        {/* Product Grid - smaller tiles for spirits and beer, consistent for others */}
+        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
+          {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
             const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
             const cartQty = getCartItemQuantity(product.id, selectedVariant?.id);
             
             return (
-              <div 
-                key={product.id} 
-                className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
-                  selectedCategory === 2 ? 'cursor-pointer hover:border-primary/50' : ''
-                }`}
-                onClick={() => handleProductClick(product)}
-              >
-                {/* Product image - smaller for beer section */}
-                <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${selectedCategory === 0 ? 'mb-2' : 'mb-3'}`}>
+               <div 
+                 key={product.id} 
+                 className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
+                   selectedCategory === 3 ? 'cursor-pointer hover:border-primary/50' : ''
+                 }`}
+                 onClick={() => handleProductClick(product)}
+               >
+                 {/* Product image - smaller for spirits and beer sections */}
+                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${(selectedCategory === 0 || selectedCategory === 1) ? 'mb-2' : 'mb-3'}`}>
                   <img
                     src={product.image}
                     alt={product.title}
                     className="w-full h-full object-contain"
                   />
                 </div>
-                
-                {/* Product info with smaller height for beer */}
-                <div className={`flex flex-col flex-1 justify-between ${selectedCategory === 0 ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
-                  <div className="flex-1 flex flex-col justify-start">
-                    <h4 className={`font-bold leading-tight text-center ${selectedCategory === 0 ? 'text-xs mb-1' : 'text-sm mb-2'} ${selectedCategory === 2 ? '' : 'line-clamp-2'}`}>
-                      {(() => {
-                        // For cocktails (selectedCategory === 2), show full title without truncation
-                        if (selectedCategory === 2) {
-                          return product.title;
-                        }
+                 
+                 {/* Product info with smaller height for spirits and beer */}
+                 <div className={`flex flex-col flex-1 justify-between ${(selectedCategory === 0 || selectedCategory === 1) ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
+                   <div className="flex-1 flex flex-col justify-start">
+                     <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-xs mb-1' : 'text-sm mb-2'} ${selectedCategory === 3 ? '' : 'line-clamp-2'}`}>
+                       {(() => {
+                         // For cocktails (selectedCategory === 3), show full title without truncation
+                         if (selectedCategory === 3) {
+                           return product.title;
+                         }
                         
                         // Clean title and remove pack info if it will be shown separately for other categories
                         const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
@@ -552,10 +599,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       </div>
                     ) : null}
 
-                    {/* Pack size info for variant products OR cocktail drink count */}
-                    {(() => {
-                      // For cocktails (selectedCategory === 2), extract drink count from description
-                      if (selectedCategory === 2) {
+                     {/* Pack size info for variant products OR cocktail drink count */}
+                     {(() => {
+                       // For cocktails (selectedCategory === 3), extract drink count from description
+                       if (selectedCategory === 3) {
                         const drinkMatch = product.description.match(/(\d+)\s*(?:drinks?|servings?|cocktails?)/i);
                         if (drinkMatch) {
                           return (
@@ -570,10 +617,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       // For other categories, show pack size info
                       const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
                       const sizeMatch = product.title.match(/(\d+)\s*oz/i);
-                      if (packMatch && sizeMatch) {
-                        return (
-                          <p className={`text-foreground text-center mb-1 ${selectedCategory === 0 ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
-                            {packMatch[1]}pk × {sizeMatch[1]}oz
+                       if (packMatch && sizeMatch) {
+                         return (
+                           <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                             {packMatch[1]}pk × {sizeMatch[1]}oz
                           </p>
                         );
                       }
@@ -617,11 +664,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             <Plus size={10} />
                           </Button>
                         </div>
-                       ) : (
-                        <button
-                          className={`bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors ${selectedCategory === 0 ? 'w-6 h-6' : 'w-8 h-8'}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
+                        ) : (
+                         <button
+                           className={`bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors ${(selectedCategory === 0 || selectedCategory === 1) ? 'w-6 h-6' : 'w-8 h-8'}`}
+                           onClick={(e) => {
+                             e.stopPropagation();
                              if (selectedVariant) {
                                onAddToCart({
                                  id: product.id,
@@ -634,9 +681,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               setCartCountAnimation(true);
                               setTimeout(() => setCartCountAnimation(false), 300);
                             }
-                          }}
-                        >
-                          <Plus size={selectedCategory === 0 ? 12 : 16} />
+                           }}
+                         >
+                           <Plus size={(selectedCategory === 0 || selectedCategory === 1) ? 12 : 16} />
                         </button>
                       )}
                     </div>
@@ -683,10 +730,29 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               ) : (
                 'Proceed to Checkout'
               )}
-            </Button>
-          </div>
-        )}
-      </div>
+             </Button>
+           </div>
+         )}
+
+         {/* Show loading indicator when more products are available */}
+         {selectedCollection && (visibleProductCounts[selectedCategory] || 0) < selectedCollection.products.length && (
+           <div className="text-center py-8">
+             <div className="flex items-center justify-center gap-2">
+               <Loader2 className="h-6 w-6 animate-spin" />
+               <p className="text-muted-foreground">
+                 Showing {visibleProductCounts[selectedCategory] || 0} of {selectedCollection.products.length} products
+               </p>
+             </div>
+             <Button 
+               variant="outline" 
+               onClick={loadMoreProducts}
+               className="mt-4"
+             >
+               Load More Products
+             </Button>
+           </div>
+         )}
+       </div>
 
       
       {/* Navigation Footer */}
