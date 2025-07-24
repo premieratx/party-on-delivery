@@ -437,10 +437,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <div className={`text-[10px] font-bold leading-tight ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                     
-                    {/* Desktop layout: side by side */}
+                    {/* Desktop layout: side by side - smaller icons for more cart/checkout space */}
                     <div className="hidden sm:flex items-center justify-between w-full px-2">
-                      <div className={`font-bold text-xl ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
-                      <div className={`font-bold text-sm text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                      <div className={`font-bold text-lg ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepNumber}</div>
+                      <div className={`font-bold text-xs text-right ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
                     </div>
                   </div>
                 </button>
@@ -448,7 +448,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             })}
             
             {/* Checkout tab - separate styling */}
-            <div className="flex-shrink-0 w-20 sm:w-24">
+            <div className="flex-shrink-0 w-20 sm:w-32">
               <div className="sm:hidden flex flex-col h-full">
                 <button
                   onClick={onOpenCart}
