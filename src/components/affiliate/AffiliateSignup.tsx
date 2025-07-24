@@ -218,7 +218,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
           </CardContent>
         </Card>
         <div className="text-center mt-4">
-          <Button variant="link" size="sm" onClick={() => window.location.href = '/affiliate/admin-login'} className="text-xs text-muted-foreground hover:text-foreground">
+          <Button variant="link" size="sm" onClick={() => navigate('/affiliate/admin-login')} className="text-xs text-muted-foreground hover:text-foreground">
             Admin Login
           </Button>
         </div>
@@ -296,7 +296,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         </CardContent>
       </Card>
       <div className="text-center mt-4">
-        <Button variant="link" size="sm" onClick={() => window.location.href = '/affiliate/admin-login'} className="text-xs text-muted-foreground hover:text-foreground">
+        <Button variant="link" size="sm" onClick={() => navigate('/affiliate/admin-login')} className="text-xs text-muted-foreground hover:text-foreground">
           Admin Login
         </Button>
       </div>
