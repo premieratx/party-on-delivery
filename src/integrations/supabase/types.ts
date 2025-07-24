@@ -123,21 +123,21 @@ export type Database = {
           email: string
           id: string
           name: string
-          password_hash: string
+          password_hash: string | null
         }
         Insert: {
           created_at?: string | null
           email: string
           id?: string
           name: string
-          password_hash: string
+          password_hash?: string | null
         }
         Update: {
           created_at?: string | null
           email?: string
           id?: string
           name?: string
-          password_hash?: string
+          password_hash?: string | null
         }
         Relationships: []
       }
