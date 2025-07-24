@@ -81,6 +81,41 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo, saveCompletedOrder } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange, affiliateCode });
   
+  // Track abandoned cart when checkout starts
+  useEffect(() => {
+    if (cartItems.length > 0 && !isAddingToOrder) {
+      // Track abandoned order after 30 seconds of inactivity
+      const abandonedTimer = setTimeout(async () => {
+        try {
+          const sessionId = `checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const totalAmount = totalPrice;
+          const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+          
+          await supabase.functions.invoke('track-abandoned-order', {
+            body: {
+              sessionId,
+              customerEmail: customerInfo.email || undefined,
+              customerName: customerInfo.firstName && customerInfo.lastName ? 
+                `${customerInfo.firstName} ${customerInfo.lastName}` : undefined,
+              customerPhone: customerInfo.phone || undefined,
+              deliveryAddress: addressInfo.street ? 
+                `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}` : 
+                undefined,
+              affiliateCode: affiliateCode || undefined,
+              cartItems,
+              subtotal: subtotal.toString(),
+              totalAmount: totalAmount.toString()
+            }
+          });
+        } catch (error) {
+          console.error('Error tracking abandoned order:', error);
+        }
+      }, 30000); // 30 seconds
+      
+      return () => clearTimeout(abandonedTimer);
+    }
+  }, [cartItems, customerInfo, addressInfo, affiliateCode, totalPrice, isAddingToOrder]);
+  
   // State declarations must come before any usage
   const [tipAmount, setTipAmount] = useState(0);
   const [discountCode, setDiscountCode] = useState('');

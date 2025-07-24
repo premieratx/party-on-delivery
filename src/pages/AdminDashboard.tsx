@@ -116,13 +116,18 @@ export const AdminDashboard: React.FC = () => {
         .from('abandoned_orders')
         .select(`
           *,
-          affiliates!inner(name, company_name, affiliate_code)
+          affiliates(name, company_name, affiliate_code)
         `)
         .order('abandoned_at', { ascending: false })
         .limit(50);
 
       if (abandonedError) {
         console.error('Error loading abandoned orders:', abandonedError);
+        toast({
+          title: "Error loading abandoned orders",
+          description: abandonedError.message,
+          variant: "destructive",
+        });
       } else {
         setAbandonedOrders(abandonedData || []);
       }
