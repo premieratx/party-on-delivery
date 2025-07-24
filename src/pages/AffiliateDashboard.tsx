@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -15,7 +16,12 @@ import {
   ExternalLink,
   Smartphone,
   Trophy,
-  ArrowUpIcon
+  ArrowUpIcon,
+  Share2,
+  Facebook,
+  Twitter,
+  Instagram,
+  MessageSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -147,6 +153,41 @@ export const AffiliateDashboard: React.FC = () => {
         title: "Add to Home Screen",
         description: "Visit your affiliate link and use your browser's 'Add to Home Screen' feature.",
       });
+    }
+  };
+
+  const shareToSocial = (platform: string) => {
+    if (!affiliate) return;
+    const affiliateUrl = `${window.location.origin}/a/${affiliate.affiliate_code}`;
+    const text = `Get FREE delivery on your party supplies with ${affiliate.company_name}! 🎉`;
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(affiliateUrl)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(affiliateUrl)}`;
+        break;
+      case 'instagram':
+        // Instagram doesn't support direct URL sharing, so copy link
+        copyAffiliateLink();
+        toast({
+          title: "Link Copied!",
+          description: "Share your affiliate link in your Instagram story or bio.",
+        });
+        return;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + affiliateUrl)}`;
+        break;
+      case 'sms':
+        shareUrl = `sms:?&body=${encodeURIComponent(text + ' ' + affiliateUrl)}`;
+        break;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
     }
   };
 
@@ -348,6 +389,57 @@ export const AffiliateDashboard: React.FC = () => {
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Preview Page
               </Button>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Share on Social Media</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  onClick={() => shareToSocial('facebook')} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                >
+                  <Facebook className="h-4 w-4 mr-2" />
+                  Facebook
+                </Button>
+                <Button 
+                  onClick={() => shareToSocial('twitter')} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200"
+                >
+                  <Twitter className="h-4 w-4 mr-2" />
+                  Twitter
+                </Button>
+                <Button 
+                  onClick={() => shareToSocial('instagram')} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200"
+                >
+                  <Instagram className="h-4 w-4 mr-2" />
+                  Instagram
+                </Button>
+                <Button 
+                  onClick={() => shareToSocial('whatsapp')} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  WhatsApp
+                </Button>
+                <Button 
+                  onClick={() => shareToSocial('sms')} 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200"
+                >
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  SMS
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

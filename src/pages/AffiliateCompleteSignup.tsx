@@ -44,6 +44,12 @@ export const AffiliateCompleteSignup: React.FC = () => {
             navigate('/affiliate/dashboard');
             return;
           }
+          
+          // Populate name from Google profile if available
+          const userData = session.user.user_metadata;
+          if (userData?.full_name) {
+            // This will be passed to the AffiliateSignup component
+          }
         } else {
           // No session, redirect to signup
           navigate('/affiliate');
@@ -94,7 +100,13 @@ export const AffiliateCompleteSignup: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
-        <AffiliateSignup onSuccess={handleSuccess} />
+        <AffiliateSignup 
+          onSuccess={handleSuccess} 
+          initialData={{
+            name: user?.user_metadata?.full_name || '',
+            email: user?.email || ''
+          }}
+        />
       </div>
     </div>
   );

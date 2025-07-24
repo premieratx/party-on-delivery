@@ -38,7 +38,7 @@ serve(async (req) => {
     logStep('User authenticated', { email: user.email });
 
     // Parse request body
-    const { name, phone, companyName, email } = await req.json();
+    const { name, phone, companyName, venmoHandle, email } = await req.json();
 
     if (!name || !companyName || !email) {
       throw new Error("Missing required fields: name, companyName, email");
@@ -102,6 +102,7 @@ serve(async (req) => {
         name: name,
         phone: phone || null,
         company_name: companyName,
+        venmo_handle: venmoHandle || null,
         affiliate_code: affiliateCode,
         commission_rate: 5.00,
         total_sales: 0.00,

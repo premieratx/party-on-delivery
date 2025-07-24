@@ -10,15 +10,20 @@ import { useNavigate } from 'react-router-dom';
 
 interface AffiliateSignupProps {
   onSuccess: () => void;
+  initialData?: {
+    name?: string;
+    email?: string;
+  };
 }
 
-export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess }) => {
+export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, initialData }) => {
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<'google' | 'details'>('google');
+  const [step, setStep] = useState<'google' | 'details'>(initialData ? 'details' : 'google');
   const [formData, setFormData] = useState({
-    name: '',
+    name: initialData?.name || '',
     phone: '',
-    companyName: ''
+    companyName: '',
+    venmoHandle: ''
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -50,10 +55,10 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess }) =
 
   const handleDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.companyName) {
+    if (!formData.name || !formData.companyName || !formData.phone) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields (name, company, and phone).",
         variant: "destructive"
       });
       return;
@@ -71,6 +76,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess }) =
           name: formData.name,
           phone: formData.phone,
           companyName: formData.companyName,
+          venmoHandle: formData.venmoHandle,
           email: user.email
         }
       });
@@ -159,14 +165,28 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess }) =
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Best Cell Phone Number *</Label>
             <Input
               id="phone"
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="(555) 123-4567"
+              required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="venmoHandle">Venmo Handle (Optional)</Label>
+            <Input
+              id="venmoHandle"
+              value={formData.venmoHandle}
+              onChange={(e) => setFormData(prev => ({ ...prev, venmoHandle: e.target.value }))}
+              placeholder="@your-venmo-handle"
+            />
+            <p className="text-xs text-muted-foreground">
+              For faster commission payouts
+            </p>
           </div>
 
           <Button 

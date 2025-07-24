@@ -144,6 +144,7 @@ export type Database = {
           total_commission: number | null
           total_sales: number | null
           updated_at: string | null
+          venmo_handle: string | null
         }
         Insert: {
           affiliate_code: string
@@ -162,6 +163,7 @@ export type Database = {
           total_commission?: number | null
           total_sales?: number | null
           updated_at?: string | null
+          venmo_handle?: string | null
         }
         Update: {
           affiliate_code?: string
@@ -180,6 +182,7 @@ export type Database = {
           total_commission?: number | null
           total_sales?: number | null
           updated_at?: string | null
+          venmo_handle?: string | null
         }
         Relationships: []
       }
