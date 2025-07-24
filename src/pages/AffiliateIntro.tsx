@@ -5,20 +5,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AffiliateSignup } from '@/components/affiliate/AffiliateSignup';
 import { Users, DollarSign, TrendingUp, Gift } from 'lucide-react';
 import logoImage from '@/assets/party-on-delivery-logo.png';
-
 export const AffiliateIntro: React.FC = () => {
   const [showSignup, setShowSignup] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
+  return <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <img 
-            src={logoImage} 
-            alt="Party On Delivery Logo" 
-            className="w-32 h-32 mx-auto mb-4"
-          />
+          <img src={logoImage} alt="Party On Delivery Logo" className="w-32 h-32 mx-auto mb-4" />
           <h1 className="text-4xl font-bold text-brand-blue mb-2">
             Affiliate Program
           </h1>
@@ -35,7 +28,7 @@ export const AffiliateIntro: React.FC = () => {
               <CardTitle className="text-lg">5% Commission</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-base font-semibold">
                 Start earning 5% on every sale you refer
               </p>
             </CardContent>
@@ -47,7 +40,7 @@ export const AffiliateIntro: React.FC = () => {
               <CardTitle className="text-lg">Tiered Rewards</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-base font-semibold">
                 7.5% at $10k sales, 10% at $20k sales
               </p>
             </CardContent>
@@ -59,7 +52,7 @@ export const AffiliateIntro: React.FC = () => {
               <CardTitle className="text-lg">Free Shipping</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-base font-semibold">
                 Your customers get automatic free delivery
               </p>
             </CardContent>
@@ -71,7 +64,7 @@ export const AffiliateIntro: React.FC = () => {
               <CardTitle className="text-lg">Boat Party</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-base font-semibold">
                 Free boat party when you hit $20k in sales!
               </p>
             </CardContent>
@@ -88,11 +81,7 @@ export const AffiliateIntro: React.FC = () => {
             </p>
           </CardHeader>
           <CardContent className="text-center">
-            <Button 
-              onClick={() => setShowSignup(true)}
-              size="lg"
-              className="w-full max-w-sm"
-            >
+            <Button onClick={() => setShowSignup(true)} size="lg" className="w-full max-w-sm">
               Sign Up as Affiliate
             </Button>
             <p className="text-sm text-muted-foreground mt-4">
@@ -145,6 +134,5 @@ export const AffiliateIntro: React.FC = () => {
           <AffiliateSignup onSuccess={() => setShowSignup(false)} />
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
