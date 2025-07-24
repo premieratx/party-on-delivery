@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarDays, MapPin, Package, Share2, LogOut } from 'lucide-react';
+import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 
 interface Customer {
@@ -39,6 +40,7 @@ const CustomerDashboard = () => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     loadCustomerData();
@@ -111,6 +113,55 @@ const CustomerDashboard = () => {
 
   const handleAddToOrder = () => {
     navigate('/?customer=true&discount=PREMIER2025');
+  };
+
+  const handleTextUs = () => {
+    const phoneNumber = '7377377376';
+    const message = `Hi! I need to make changes to my order. Customer: ${customer?.first_name} ${customer?.last_name} (${customer?.email})`;
+    
+    // Check if on mobile device
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      window.location.href = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+    } else {
+      // For desktop, copy message and show instructions
+      navigator.clipboard.writeText(`${phoneNumber}: ${message}`);
+      toast({
+        title: "Message Copied",
+        description: `Message copied! Text us at ${phoneNumber}`,
+      });
+    }
+  };
+
+  // Create combined order summary
+  const getCombinedOrderSummary = () => {
+    const allItems: any[] = [];
+    const orderMap = new Map();
+    
+    orders.forEach(order => {
+      orderMap.set(order.id, {
+        order_number: order.order_number,
+        customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
+        delivery_date: order.delivery_date,
+        delivery_time: order.delivery_time,
+        delivery_address: order.delivery_address
+      });
+      
+      order.line_items.forEach((item: any) => {
+        allItems.push({
+          ...item,
+          order_id: order.id,
+          order_number: order.order_number,
+          customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim()
+        });
+      });
+    });
+    
+    // Sort items alphabetically
+    allItems.sort((a, b) => a.title.localeCompare(b.title));
+    
+    return { allItems, orderMap };
   };
 
   const handleShareOrder = (order: Order) => {
@@ -308,9 +359,105 @@ const CustomerDashboard = () => {
           </div>
         )}
 
-        {/* Recent Orders */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Order History</h2>
+        {/* Combined Order Summary - Only show if multiple orders */}
+        {orders.length > 1 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">Complete Order Summary</h2>
+            <Card>
+              <CardHeader>
+                <CardTitle>All Items Combined</CardTitle>
+                <CardDescription>
+                  Summary of all orders placed by your group
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const { allItems, orderMap } = getCombinedOrderSummary();
+                  const firstOrder = orders[0];
+                  
+                  return (
+                    <div className="space-y-4">
+                      {/* Delivery Info */}
+                      {firstOrder?.delivery_date && (
+                        <div className="bg-muted/50 p-4 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CalendarDays className="h-4 w-4" />
+                            <span className="font-medium">
+                              Delivery: {format(new Date(firstOrder.delivery_date), 'EEEE, MMMM do, yyyy')}
+                              {firstOrder.delivery_time && ` at ${firstOrder.delivery_time}`}
+                            </span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 mt-1" />
+                            <span className="text-sm">
+                              {firstOrder.delivery_address.street}, {firstOrder.delivery_address.city}, {firstOrder.delivery_address.state} {firstOrder.delivery_address.zipCode}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Items List */}
+                      <div>
+                        <h4 className="font-medium mb-3">Items ({allItems.length})</h4>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {allItems.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
+                              <div className="flex-1">
+                                <span className="font-medium">{item.quantity}x {item.title}</span>
+                                <span className="text-sm text-muted-foreground ml-2">
+                                  (Order #{item.order_number} - {item.customer_name})
+                                </span>
+                              </div>
+                              <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleTextUs}
+                            className="flex items-center gap-2"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            Text Us for Changes
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleAddToOrder}
+                            className="flex items-center gap-2"
+                          >
+                            <Package className="h-4 w-4" />
+                            Add to Order
+                          </Button>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold">
+                            Total: ${orders.reduce((sum, order) => sum + order.total_amount, 0).toFixed(2)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {orders.length} separate orders
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Individual Orders - Show dropdown if multiple orders */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">
+            {orders.length > 1 ? 'Individual Orders' : 'Order History'}
+          </h2>
           {orders.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8">
@@ -324,6 +471,84 @@ const CustomerDashboard = () => {
                 </Button>
               </CardContent>
             </Card>
+          ) : orders.length > 1 ? (
+            <div className="space-y-4">
+              {/* Order Selector */}
+              <div className="mb-4">
+                <Select value={selectedOrderId || ''} onValueChange={setSelectedOrderId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select an order to view details" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orders.map((order) => (
+                      <SelectItem key={order.id} value={order.id}>
+                        Order #{order.order_number} - ${order.total_amount} ({order.line_items.length} items)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Selected Order Details */}
+              {selectedOrderId && (() => {
+                const selectedOrder = orders.find(o => o.id === selectedOrderId);
+                if (!selectedOrder) return null;
+                
+                return (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle>Order #{selectedOrder.order_number}</CardTitle>
+                          <CardDescription>
+                            Ordered on {format(new Date(selectedOrder.created_at), 'MMMM do, yyyy')}
+                          </CardDescription>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant={selectedOrder.status === 'delivered' ? 'default' : 'secondary'}>
+                            {selectedOrder.status}
+                          </Badge>
+                          <p className="text-lg font-semibold mt-1">${selectedOrder.total_amount}</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {/* Order Items */}
+                        <div>
+                          <h4 className="font-medium mb-3">Items ({selectedOrder.line_items.length})</h4>
+                          <div className="space-y-2">
+                            {selectedOrder.line_items.map((item: any, index: number) => (
+                              <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
+                                <span>{item.quantity}x {item.title}</span>
+                                <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <Separator />
+
+                        <div className="flex justify-between items-center">
+                          <p className="text-muted-foreground text-sm">
+                            ⚠️ This order is final and cannot be modified
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleTextUs}
+                            className="flex items-center gap-2"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                            Text Us for Changes
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+            </div>
           ) : (
             <div className="space-y-4">
               {orders.map((order) => (
@@ -344,9 +569,20 @@ const CustomerDashboard = () => {
                       </div>
                     </div>
                     
-                    <div className="text-sm text-muted-foreground">
-                      {order.line_items.length} items • 
-                      {order.delivery_date && ` Delivered ${format(new Date(order.delivery_date), 'MMM do')}`}
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-muted-foreground">
+                        {order.line_items.length} items • 
+                        {order.delivery_date && ` Delivered ${format(new Date(order.delivery_date), 'MMM do')}`}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTextUs}
+                        className="flex items-center gap-2"
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Text Us
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

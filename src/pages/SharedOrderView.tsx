@@ -41,6 +41,7 @@ const SharedOrderView = () => {
   const { toast } = useToast();
   const [order, setOrder] = useState<SharedOrder | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [groupOrders, setGroupOrders] = useState<SharedOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -77,6 +78,21 @@ const SharedOrderView = () => {
       }
 
       setOrder(orderData as SharedOrder);
+
+      // Load ALL orders in this group (same share_token)
+      const { data: allGroupOrders, error: groupError } = await supabase
+        .from('customer_orders')
+        .select(`
+          *,
+          customer:customers(first_name, last_name, email)
+        `)
+        .eq('share_token', shareToken);
+
+      if (groupError) {
+        console.error('Error loading group orders:', groupError);
+      } else {
+        setGroupOrders(allGroupOrders || []);
+      }
 
       // Get participants
       const { data: participantsData, error: participantsError } = await supabase
@@ -262,41 +278,72 @@ const SharedOrderView = () => {
           </CardContent>
         </Card>
 
-        {/* Original Order Items */}
+        {/* All Group Orders */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Package className="h-5 w-5" />
-              Original Order Items
+              Group Orders Summary
             </CardTitle>
             <CardDescription>
-              Items ordered by {order.customer.first_name || order.customer.email}
+              All orders placed by {order.customer.first_name}'s group
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {originalItems.map((item: any, index: number) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
-                  <div className="flex items-center gap-3">
-                    {item.image && (
-                      <img 
-                        src={item.image} 
-                        alt={item.title}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    )}
+            <div className="space-y-4">
+              {groupOrders.length > 0 ? groupOrders.map((groupOrder, orderIndex) => (
+                <div key={groupOrder.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <p className="font-medium">{item.title}</p>
-                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                      <h4 className="font-medium">Order #{groupOrder.order_number}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        by {groupOrder.customer.first_name || groupOrder.customer.email}
+                      </p>
                     </div>
+                    <Badge variant="outline">${groupOrder.total_amount}</Badge>
                   </div>
-                  <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                  
+                  <div className="space-y-2">
+                    {Array.isArray(groupOrder.line_items) && groupOrder.line_items.map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center py-1 text-sm">
+                        <span>{item.quantity}x {item.title}</span>
+                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {orderIndex < groupOrders.length - 1 && <Separator className="mt-3" />}
                 </div>
-              ))}
+              )) : (
+                <div className="space-y-3">
+                  {originalItems.map((item: any, index: number) => (
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                      <div className="flex items-center gap-3">
+                        {item.image && (
+                          <img 
+                            src={item.image} 
+                            alt={item.title}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{item.title}</p>
+                          <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                        </div>
+                      </div>
+                      <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <Separator />
               <div className="flex justify-between items-center font-semibold">
-                <span>Original Order Total</span>
-                <span>${order.total_amount}</span>
+                <span>Group Total</span>
+                <span>${groupOrders.length > 0 ? 
+                  groupOrders.reduce((sum, order) => sum + order.total_amount, 0).toFixed(2) : 
+                  order.total_amount
+                }</span>
               </div>
             </div>
           </CardContent>

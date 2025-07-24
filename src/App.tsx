@@ -52,6 +52,7 @@ const App = () => (
               {/* Customer Routes */}
               <Route path="/customer/login" element={<CustomerLogin />} />
               <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+              <Route path="/manage-order" element={<CustomerLogin />} />
               
               {/* Shared Order Routes */}
               <Route path="/order/:shareToken" element={<SharedOrderView />} />

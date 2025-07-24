@@ -87,6 +87,12 @@ export const AdminDashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
+      // Check for delivery alerts
+      try {
+        await supabase.functions.invoke('check-delivery-alerts');
+      } catch (alertError) {
+        console.error('Error checking delivery alerts:', alertError);
+      }
       // Load all affiliates with their stats
       const { data: affiliatesData, error: affiliatesError } = await supabase
         .from('affiliates')

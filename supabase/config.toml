@@ -60,3 +60,30 @@ verify_jwt = false
 
 [functions.test-sms]
 verify_jwt = false
+
+[functions.check-delivery-alerts]
+verify_jwt = false
+
+[functions.create-affiliate]
+verify_jwt = false
+
+[functions.track-affiliate-referral]
+verify_jwt = false
+
+[functions.notify-commission-payout]
+verify_jwt = false
+
+[functions.sync-customer-order]
+verify_jwt = false
+
+[functions.send-order-confirmation]
+verify_jwt = false
+
+[functions.track-abandoned-order]
+verify_jwt = false
+
+[functions.verify-admin-google]
+verify_jwt = false
+
+[functions.admin-login]
+verify_jwt = false
