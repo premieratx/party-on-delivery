@@ -999,6 +999,10 @@ export type Database = {
         Args: { event_type: string; user_email: string; details?: Json }
         Returns: undefined
       }
+      safe_cache_upsert: {
+        Args: { cache_key: string; cache_data: Json; expires_timestamp: number }
+        Returns: string
+      }
       verify_admin_password: {
         Args: { input_email: string; input_password: string }
         Returns: boolean
