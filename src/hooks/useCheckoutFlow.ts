@@ -35,52 +35,47 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     console.log('Current customerInfo:', customerInfo);
     console.log('Current addressInfo:', addressInfo);
     
-    // Only pre-fill if current data is empty
-    const isCustomerEmpty = !customerInfo.firstName && !customerInfo.lastName && !customerInfo.email && !customerInfo.phone;
-    const isAddressEmpty = !addressInfo.street && !addressInfo.city && !addressInfo.state && !addressInfo.zipCode;
-    
-    console.log('isCustomerEmpty:', isCustomerEmpty);
-    console.log('isAddressEmpty:', isAddressEmpty);
-    
-    if (!isCustomerEmpty && !isAddressEmpty) {
-      console.log('Data already present, skipping pre-fill');
-      return;
-    }
-    
-    // Get draft order data from localStorage for delivery info only
-    const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-    console.log('draftOrder for delivery info:', draftOrder);
-    
     // For add-to-order flow, save the original info for change tracking
     if (isAddingToOrder && lastOrderInfo) {
       setOriginalOrderInfo(lastOrderInfo);
       console.log('Set original order info for add-to-order flow:', lastOrderInfo);
     }
     
-    // Pre-fill delivery date and time ONLY (address/customer managed by useCustomerInfo)
-    const sourceData = (isAddingToOrder && lastOrderInfo?.recentpurchase) ? lastOrderInfo : draftOrder;
-    
-    if (sourceData?.deliveryDate && sourceData?.deliveryTime) {
-      try {
-        const savedDate = new Date(sourceData.deliveryDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-        
-        // Only prefill if the saved date is today or in the future
-        if (!isNaN(savedDate.getTime()) && savedDate >= today) {
-          console.log('Pre-filling delivery date:', savedDate);
-          updateDeliveryInfo('date', savedDate);
+    // Pre-fill delivery date and time for new users or when empty
+    if (!deliveryInfo.date || !deliveryInfo.timeSlot) {
+      // Get draft order data from localStorage for delivery info only
+      const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
+      console.log('draftOrder for delivery info:', draftOrder);
+      
+      // Pre-fill delivery date and time ONLY (address/customer managed by useCustomerInfo)
+      const sourceData = (isAddingToOrder && lastOrderInfo?.recentpurchase) ? lastOrderInfo : draftOrder;
+      
+      if (sourceData?.deliveryDate && sourceData?.deliveryTime) {
+        try {
+          const savedDate = new Date(sourceData.deliveryDate);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
           
-          if (sourceData.deliveryTime) {
-            console.log('Pre-filling delivery time:', sourceData.deliveryTime);
-            updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
+          // Only prefill if the saved date is today or in the future
+          if (!isNaN(savedDate.getTime()) && savedDate >= today) {
+            console.log('Pre-filling delivery date:', savedDate);
+            updateDeliveryInfo('date', savedDate);
+            
+            if (sourceData.deliveryTime) {
+              console.log('Pre-filling delivery time:', sourceData.deliveryTime);
+              updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
+            }
+          } else {
+            console.log('Saved date is in the past, using today as default');
+            updateDeliveryInfo('date', new Date());
           }
-        } else {
-          console.log('Saved date is in the past, using today as default');
+        } catch (error) {
+          console.error('Error parsing delivery date:', error);
           updateDeliveryInfo('date', new Date());
         }
-      } catch (error) {
-        console.error('Error parsing delivery date:', error);
+      } else {
+        // For new users, set today as default date
+        console.log('No saved delivery data, setting today as default');
         updateDeliveryInfo('date', new Date());
       }
     }
@@ -89,7 +84,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     setCurrentStep('datetime');
     
     console.log('=== End useCheckoutFlow pre-fill ===');
-  }, [isAddingToOrder]); // Only depend on isAddingToOrder to prevent infinite loops
+  }, []); // Remove dependency to prevent infinite loops - run once on mount
 
   // Update delivery info when address changes
   useEffect(() => {
