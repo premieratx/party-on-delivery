@@ -28,9 +28,32 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleGoogleSignup = async () => {
+  const handleGoogleAuth = async () => {
     setLoading(true);
     try {
+      // First check if user is already logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // User is already logged in, check if they have an affiliate account
+        const { data: existingAffiliate } = await supabase
+          .from('affiliates')
+          .select('id')
+          .eq('email', session.user.email)
+          .single();
+        
+        if (existingAffiliate) {
+          // User already has affiliate account, go to dashboard
+          navigate('/affiliate/dashboard');
+          return;
+        } else {
+          // User logged in but no affiliate account, go to complete signup
+          navigate('/affiliate/complete-signup');
+          return;
+        }
+      }
+
+      // User not logged in, start OAuth flow
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -42,10 +65,10 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
 
       // The user will be redirected to Google OAuth
     } catch (error: any) {
-      console.error('Google signup error:', error);
+      console.error('Google auth error:', error);
       toast({
         title: "Error",
-        description: "Failed to sign up with Google. Please try again.",
+        description: "Failed to authenticate with Google. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -106,11 +129,11 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-center">Sign Up with Google</CardTitle>
+          <CardTitle className="text-center">Continue with Google</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button 
-            onClick={handleGoogleSignup}
+            onClick={handleGoogleAuth}
             disabled={loading}
             className="w-full"
             size="lg"

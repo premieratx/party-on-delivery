@@ -96,7 +96,7 @@ export const AffiliateIntro: React.FC = () => {
               Sign Up as Affiliate
             </Button>
             <p className="text-sm text-muted-foreground mt-4">
-              Already have an account? <a href="/affiliate/login" className="text-primary hover:underline">Sign in here</a>
+              Already have an account? <button onClick={() => setShowSignup(true)} className="text-primary hover:underline">Sign in here</button>
             </p>
           </CardContent>
         </Card>
