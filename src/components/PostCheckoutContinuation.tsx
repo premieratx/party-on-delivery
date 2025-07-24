@@ -48,20 +48,13 @@ export const PostCheckoutContinuation: React.FC<PostCheckoutContinuationProps> =
 
           {lastOrderInfo && (
             <div className="mt-6 space-y-4">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-green-600 mb-2">Order Successful!</h2>
-                <p className="text-muted-foreground">
-                  Payment processed • Order #{lastOrderInfo.orderNumber}
-                </p>
-              </div>
-              
               {lastOrderInfo.items && lastOrderInfo.items.length > 0 && (
                 <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-                  <h3 className="font-semibold text-sm text-muted-foreground">Order Items:</h3>
+                  <h3 className="font-semibold text-sm text-muted-foreground">Order Summary:</h3>
                   {lastOrderInfo.items.map((item, index) => (
                     <div key={index} className="flex justify-between items-center text-sm">
                       <div className="flex-1">
-                        <span className="font-medium">{item.title}</span>
+                        <span className="font-medium">{item.title.replace(/^gid:\/\/shopify\/.*?\s*/, '').trim()}</span>
                         {item.variant && (
                           <span className="text-muted-foreground ml-1">• {item.variant}</span>
                         )}
