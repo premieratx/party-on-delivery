@@ -73,6 +73,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [lightboxProduct, setLightboxProduct] = useState<ShopifyProduct | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [visibleProductCounts, setVisibleProductCounts] = useState<{[collectionIndex: number]: number}>({});
+  const [retryCount, setRetryCount] = useState(0);
+  const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
 
   // Step-based order flow mapping to collection handles - Spirits first!
   const stepMapping = [
@@ -193,6 +195,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       console.log(`Successfully fetched ${result.collections.length} collections`);
       setCollections(result.collections);
+      setRetryCount(0); // Reset retry count on success
       
       // Cache the successful result
       cacheManager.setShopifyCollections(result.collections);
@@ -203,16 +206,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.error('Error details:', error);
       ErrorHandler.logError(error, 'fetchCollections');
       
+      // Auto-retry logic with exponential backoff
+      if (autoRetryEnabled && retryCount < 3 && !forceRefresh) {
+        const retryDelay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s delays
+        console.log(`Auto-retry ${retryCount + 1}/3 in ${retryDelay}ms...`);
+        
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchCollections(false);
+        }, retryDelay);
+        
+        setError(`Connection issue detected. Auto-retry ${retryCount + 1}/3 in progress...`);
+        return;
+      }
+      
       // Try to use cached data as fallback
       const cachedCollections = cacheManager.getShopifyCollections();
       if (cachedCollections && cachedCollections.length > 0) {
         console.log(`Using cached collections as fallback (${cachedCollections.length} collections)`);
         setCollections(cachedCollections);
-        setError('Using cached data - connection issues detected. Click refresh to retry.');
+        setError('Using cached data - connection issues detected. Collections may not be current.');
       } else {
         console.log('No cache available - showing full error to user');
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        setError(`Failed to load collections: ${errorMessage}. Please check Shopify connection.`);
+        setError(`Failed to load collections: ${errorMessage}. Click retry or check Shopify connection.`);
       }
     } finally {
       setLoading(false);
@@ -222,6 +239,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const clearCacheAndRefresh = () => {
     console.log('=== clearCacheAndRefresh called ===');
+    setRetryCount(0); // Reset retry count
+    setAutoRetryEnabled(true); // Re-enable auto retry
     cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
     // Also clear any local storage cache
     localStorage.removeItem('shopify-collections-cache');
@@ -310,24 +329,40 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 flex items-center justify-center">
         <div className="text-center max-w-md">
-          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-destructive mb-2">Shopify Connection Error</h3>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Please check that your Shopify credentials are properly configured in the Supabase secrets:
-              <br />• SHOPIFY_STORE_URL
-              <br />• SHOPIFY_STOREFRONT_ACCESS_TOKEN
-              <br />• SHOPIFY_ADMIN_API_ACCESS_TOKEN
-            </p>
-            <div className="flex gap-2 justify-center">
-              <Button onClick={() => fetchCollections(true)} variant="outline">
-                Retry
-              </Button>
-              <Button onClick={clearCacheAndRefresh} variant="outline">
-                Clear Cache & Retry
-              </Button>
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-destructive mb-2">Shopify Connection Error</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              
+              {retryCount > 0 && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800">
+                    Auto-retry attempt {retryCount}/3 {retryCount < 3 ? 'in progress...' : 'failed'}
+                  </p>
+                </div>
+              )}
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                Please check that your Shopify credentials are properly configured in the Supabase secrets:
+                <br />• SHOPIFY_STORE_URL
+                <br />• SHOPIFY_STOREFRONT_ACCESS_TOKEN
+                <br />• SHOPIFY_ADMIN_API_ACCESS_TOKEN
+              </p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Button onClick={() => fetchCollections(true)} variant="outline">
+                  Manual Retry
+                </Button>
+                <Button onClick={clearCacheAndRefresh} variant="outline">
+                  Clear Cache & Force Refresh
+                </Button>
+                <Button 
+                  onClick={() => setAutoRetryEnabled(!autoRetryEnabled)} 
+                  variant={autoRetryEnabled ? "default" : "secondary"}
+                  size="sm"
+                >
+                  Auto-retry: {autoRetryEnabled ? 'ON' : 'OFF'}
+                </Button>
+              </div>
             </div>
-          </div>
         </div>
       </div>
     );
