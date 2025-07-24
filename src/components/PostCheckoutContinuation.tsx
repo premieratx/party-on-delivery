@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, RotateCcw, ArrowRight } from 'lucide-react';
@@ -29,6 +30,7 @@ export const PostCheckoutContinuation: React.FC<PostCheckoutContinuationProps> =
   onAddToOrder,
   lastOrderInfo
 }) => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
       <Card className="max-w-2xl w-full">
@@ -72,7 +74,7 @@ export const PostCheckoutContinuation: React.FC<PostCheckoutContinuationProps> =
             </p>
             
             <Button 
-              onClick={() => window.location.href = '/customer/login'}
+              onClick={() => navigate('/customer/login?redirect=dashboard')}
               className="w-full" 
               size="lg"
             >

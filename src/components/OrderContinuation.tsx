@@ -78,7 +78,7 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           
           {/* Login to Manage Order button - always show */}
           <Button 
-            onClick={() => window.location.href = '/customer/login'}
+            onClick={() => navigate('/customer/login?redirect=dashboard')}
             className="w-full h-12 text-base"
             variant="outline"
           >

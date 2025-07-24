@@ -45,9 +45,11 @@ const CustomerLogin = () => {
             await linkSessionToUser(session.user.email);
           }
           
-          // Clear redirect intent and force redirect to customer dashboard
+          // Clear redirect intent and always go to dashboard after successful login
           localStorage.removeItem('loginRedirectIntent');
-          navigate('/customer/dashboard');
+          
+          // Always navigate to customer dashboard on successful authentication
+          navigate('/customer/dashboard', { replace: true });
         }
       }
     );

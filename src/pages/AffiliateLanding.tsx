@@ -154,7 +154,7 @@ export const AffiliateLanding: React.FC = () => {
             </button>
             
             <button 
-              onClick={() => window.location.href = '/customer/login'}
+              onClick={() => navigate('/customer/login?redirect=dashboard')}
               className="w-full h-12 text-base border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md flex items-center justify-center"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
