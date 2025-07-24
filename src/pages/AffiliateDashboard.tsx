@@ -535,7 +535,10 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => supabase.auth.signOut()}
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate('/affiliate');
+            }}
             className="mt-2"
           >
             Sign Out
