@@ -221,7 +221,47 @@ serve(async (req) => {
       }
     }
 
-    // Create order in Shopify with proper totals structure
+    // Add shipping fee as line item
+    if (shippingFee > 0) {
+      lineItems.push({
+        title: "Scheduled Delivery Service",
+        price: shippingFee.toString(),
+        quantity: 1,
+        requires_shipping: false
+      });
+    }
+
+    // Add sales tax as line item
+    if (salesTax > 0) {
+      lineItems.push({
+        title: "Sales Tax (8.25%)",
+        price: salesTax.toString(),
+        quantity: 1,
+        requires_shipping: false
+      });
+    }
+
+    // Add tip as line item
+    if (tipAmount > 0) {
+      lineItems.push({
+        title: "Driver Tip",
+        price: tipAmount.toString(),
+        quantity: 1,
+        requires_shipping: false
+      });
+    }
+
+    // Add discount line item if discount code was used
+    if (discountCode && discountAmount) {
+      lineItems.push({
+        title: `Discount Applied: ${discountCode}`,
+        price: `-${Math.abs(parseFloat(discountAmount)).toString()}`,
+        quantity: 1,
+        requires_shipping: false,
+      });
+    }
+
+    // Create order in Shopify
     const orderData = {
       order: {
         line_items: lineItems,
@@ -250,51 +290,6 @@ serve(async (req) => {
         phone: customerPhone || '',
         financial_status: 'paid',
         fulfillment_status: 'unfulfilled',
-        // Proper Shopify shipping lines structure
-        shipping_lines: shippingFee > 0 ? [{
-          title: "Scheduled Delivery Service",
-          price: shippingFee.toString(),
-          code: "DELIVERY"
-        }] : [],
-        // Proper Shopify tax lines structure  
-        tax_lines: salesTax > 0 ? [{
-          title: "Sales Tax",
-          price: salesTax.toString(),
-          rate: 0.0825
-        }] : [],
-        // Add tip and discount as custom line items if present
-        ...(tipAmount > 0 && {
-          line_items: [
-            ...lineItems,
-            {
-              title: "Driver Tip (Gratuity)",
-              price: tipAmount.toString(),
-              quantity: 1,
-              requires_shipping: false,
-              gift_card: false,
-              taxable: false
-            }
-          ]
-        }),
-        // Apply discount codes properly
-        ...(discountCode && discountAmount && {
-          discount_codes: [{
-            code: discountCode,
-            amount: Math.abs(parseFloat(discountAmount)).toString(),
-            type: discountType === 'percentage_discount' ? 'percentage' : 'fixed_amount'
-          }]
-        }),
-        // Set totals to match Stripe charge
-        subtotal_price: subtotal.toString(),
-        total_tax: salesTax.toString(),
-        total_shipping_price_set: {
-          shop_money: {
-            amount: shippingFee.toString(),
-            currency_code: "USD"
-          }
-        },
-        current_total_price: totalAmount.toString(),
-        total_price: totalAmount.toString(),
         note: `🚚 DELIVERY ORDER 🚚
 📅 Delivery Date: ${deliveryDate}
 ⏰ Delivery Time: ${deliveryTime}
@@ -304,14 +299,6 @@ ${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${actualDiscountA
 💳 Stripe Payment ID: ${paymentIntentId}
 ✅ Payment Status: Paid
 
-💰 PAYMENT BREAKDOWN:
-   Subtotal: $${subtotal.toFixed(2)}
-   Delivery Fee: $${shippingFee.toFixed(2)}
-   Sales Tax: $${salesTax.toFixed(2)}
-   Tip: $${tipAmount.toFixed(2)}
-   ${discountCode ? `Discount (${discountCode}): -$${Math.abs(parseFloat(discountAmount || '0')).toFixed(2)}` : ''}
-   Total Paid: $${totalAmount.toFixed(2)}
-
 🏷️ RECOMSALE AFFILIATE TRACKING:
 ${discountCode ? `📊 Affiliate Code: ${discountCode}
 💰 Commission Amount: $${affiliateCommissionAmount.toFixed(2)}
@@ -320,58 +307,41 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
 💵 Discount Applied: $${actualDiscountApplied.toFixed(2)}
 🎯 Attribution: ${discountCode}-tracking-${Date.now()}` : 'No affiliate code used'}`,
         tags: `delivery-order,stripe-payment${discountCode ? `,discount-${discountCode}` : ''}`,
-        note_attributes: [
+        note_attributes: discountCode ? [
           {
-            name: "Stripe Payment Total",
-            value: `$${totalAmount.toFixed(2)}`
+            name: "RecomSale Affiliate Code",
+            value: discountCode
           },
           {
-            name: "Subtotal",
-            value: `$${subtotal.toFixed(2)}`
+            name: "Affiliate Commission Amount",
+            value: `$${affiliateCommissionAmount.toFixed(2)}`
           },
           {
-            name: "Delivery Fee",
-            value: `$${shippingFee.toFixed(2)}`
+            name: "Order Value for Commission",
+            value: `$${totalOrderValue.toFixed(2)}`
           },
           {
-            name: "Sales Tax",
-            value: `$${salesTax.toFixed(2)}`
+            name: "Discount Type",
+            value: discountType
           },
           {
-            name: "Tip Amount",
-            value: `$${tipAmount.toFixed(2)}`
+            name: "Actual Discount Applied",
+            value: `$${actualDiscountApplied.toFixed(2)}`
           },
-          ...(discountCode ? [
-            {
-              name: "RecomSale Affiliate Code",
-              value: discountCode
-            },
-            {
-              name: "Affiliate Commission Amount",
-              value: `$${affiliateCommissionAmount.toFixed(2)}`
-            },
-            {
-              name: "Order Value for Commission",
-              value: `$${totalOrderValue.toFixed(2)}`
-            },
-            {
-              name: "Discount Type",
-              value: discountType
-            },
-            {
-              name: "Actual Discount Applied",
-              value: `$${actualDiscountApplied.toFixed(2)}`
-            },
-            {
-              name: "RecomSale Tracking ID",
-              value: `${discountCode}-${Date.now()}`
-            },
-            {
-              name: "Attribution Timestamp",
-              value: new Date().toISOString()
-            }
-          ] : [])
-        ]
+          {
+            name: "RecomSale Tracking ID",
+            value: `${discountCode}-${Date.now()}`
+          },
+          {
+            name: "Attribution Timestamp",
+            value: new Date().toISOString()
+          }
+        ] : [],
+        shipping_lines: [{
+          title: "Scheduled Delivery Service",
+          price: shippingFee.toString(),
+          code: "DELIVERY"
+        }]
       }
     };
 
