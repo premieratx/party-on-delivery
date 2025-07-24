@@ -36,28 +36,19 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       await supabase.auth.signOut();
       console.log('Cleared existing session');
       
-      // Start OAuth flow immediately without checking session
-      console.log('Starting Google OAuth flow');
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/affiliate/complete-signup`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      });
-
-      console.log('OAuth response:', { data, error });
-
-      if (error) {
-        console.error('OAuth error:', error);
-        throw error;
-      }
-
-      console.log('OAuth initiated successfully, user should be redirected');
-      // The user will be redirected to Google OAuth
+      // Use window.location.href for direct redirect instead of popup
+      const redirectUrl = `${window.location.origin}/affiliate/complete-signup`;
+      console.log('Redirect URL:', redirectUrl);
+      
+      // Construct the Google OAuth URL manually to avoid frame issues
+      const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
+      const googleAuthUrl = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
+      
+      console.log('Redirecting to:', googleAuthUrl);
+      
+      // Direct redirect instead of using Supabase SDK
+      window.location.href = googleAuthUrl;
+      
     } catch (error: any) {
       console.error('Google auth error:', error);
       toast({
@@ -65,7 +56,6 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         description: `Authentication failed: ${error.message}. Please try again.`,
         variant: "destructive"
       });
-    } finally {
       setLoading(false);
     }
   };
