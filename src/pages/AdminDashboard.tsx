@@ -412,7 +412,7 @@ export const AdminDashboard: React.FC = () => {
                 </p>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {affiliates.map((affiliate, index) => (
+                  {affiliates.slice(0, 10).map((affiliate, index) => (
                     <div key={affiliate.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
