@@ -640,6 +640,36 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
       // Don't fail the order creation if email fails
     }
 
+    // Send SMS notification
+    try {
+      if (customerPhone) {
+        const smsMessage = `Thank you for ordering from Party On Delivery, we've got your order! Add more items with FREE shipping using code PREMIER2025: ${Deno.env.get('SUPABASE_URL')?.replace('/functions/v1', '').replace('https://acmlfzfliqupwxwoefdq.supabase.co', 'https://party-on-delivery.lovable.app')}`;
+        
+        const smsResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-ghl-sms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
+            'apikey': Deno.env.get('SUPABASE_ANON_KEY') || ''
+          },
+          body: JSON.stringify({
+            phone: customerPhone,
+            message: smsMessage
+          })
+        });
+
+        if (smsResponse.ok) {
+          logStep('SMS notification sent successfully');
+        } else {
+          const smsError = await smsResponse.text();
+          logStep('Failed to send SMS notification', { error: smsError });
+        }
+      }
+    } catch (smsError) {
+      logStep('Error sending SMS notification', smsError);
+      // Don't fail the order creation if SMS fails
+    }
+
     return new Response(JSON.stringify({ 
       success: true,
       shopifyOrderId: orderResult.order.id,

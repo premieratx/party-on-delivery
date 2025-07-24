@@ -57,3 +57,6 @@ verify_jwt = false
 
 [functions.send-ghl-sms]
 verify_jwt = false
+
+[functions.test-sms]
+verify_jwt = false
