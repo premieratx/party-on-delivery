@@ -35,11 +35,16 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         console.log('OAuth redirect detected, user signed in:', session.user.email);
         
         // Check if affiliate already exists
-        const { data: existingAffiliate } = await supabase
+        const { data: existingAffiliate, error: checkError } = await supabase
           .from('affiliates')
           .select('id')
           .eq('email', session.user.email)
-          .single();
+          .maybeSingle();
+        
+        if (checkError) {
+          console.error('Error checking affiliate:', checkError);
+          return;
+        }
         
         if (existingAffiliate) {
           console.log('Existing affiliate found, redirecting to dashboard');
@@ -64,11 +69,16 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         console.log('Found existing session on load:', session.user.email);
         
         // Check if affiliate already exists
-        const { data: existingAffiliate } = await supabase
+        const { data: existingAffiliate, error: checkError } = await supabase
           .from('affiliates')
           .select('id')
           .eq('email', session.user.email)
-          .single();
+          .maybeSingle();
+        
+        if (checkError) {
+          console.error('Error checking affiliate:', checkError);
+          return;
+        }
         
         if (existingAffiliate) {
           console.log('Existing affiliate found on load, redirecting to dashboard');

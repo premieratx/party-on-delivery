@@ -97,15 +97,18 @@ export const AffiliateDashboard: React.FC = () => {
         .from('affiliates')
         .select('*')
         .eq('email', user.email)
-        .single();
+        .maybeSingle();
 
       if (affiliateError) {
-        if (affiliateError.code === 'PGRST116') {
-          // No affiliate found, redirect to signup
-          navigate('/affiliate');
-          return;
-        }
+        console.error('Error fetching affiliate:', affiliateError);
         throw affiliateError;
+      }
+
+      if (!affiliateData) {
+        // No affiliate found, redirect to signup
+        console.log('No affiliate found for user:', user.email);
+        navigate('/affiliate');
+        return;
       }
 
       setAffiliate(affiliateData);

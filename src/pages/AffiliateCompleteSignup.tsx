@@ -30,11 +30,16 @@ export const AffiliateCompleteSignup: React.FC = () => {
           setUser(session.user);
           
           // Check if user already has an affiliate account
-          const { data: existingAffiliate } = await supabase
+          const { data: existingAffiliate, error: checkError } = await supabase
             .from('affiliates')
             .select('id')
             .eq('email', session.user.email)
-            .single();
+            .maybeSingle();
+          
+          if (checkError) {
+            console.error('Error checking affiliate:', checkError);
+            return;
+          }
           
           if (existingAffiliate) {
             toast({
