@@ -108,11 +108,11 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       await supabase.auth.signOut();
       console.log('Cleared existing session');
       
-      // Use Supabase SDK with redirect URL pointing to affiliate page for processing
+      // Use Supabase SDK with redirect URL pointing back to affiliate signup page for processing
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/affiliate/dashboard`,
+          redirectTo: `${window.location.origin}/affiliate`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -218,7 +218,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
           </CardContent>
         </Card>
         <div className="text-center mt-4">
-          <Button variant="link" size="sm" onClick={() => window.location.href = '/admin'} className="text-xs text-muted-foreground hover:text-foreground">
+          <Button variant="link" size="sm" onClick={() => window.location.href = '/affiliate/admin-login'} className="text-xs text-muted-foreground hover:text-foreground">
             Admin Login
           </Button>
         </div>
@@ -296,7 +296,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         </CardContent>
       </Card>
       <div className="text-center mt-4">
-        <Button variant="link" size="sm" onClick={() => window.location.href = '/admin'} className="text-xs text-muted-foreground hover:text-foreground">
+        <Button variant="link" size="sm" onClick={() => window.location.href = '/affiliate/admin-login'} className="text-xs text-muted-foreground hover:text-foreground">
           Admin Login
         </Button>
       </div>
