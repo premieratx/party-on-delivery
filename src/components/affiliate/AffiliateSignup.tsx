@@ -32,37 +32,13 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
     console.log('Google auth clicked');
     setLoading(true);
     try {
-      // First check if user is already logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Current session:', session);
+      // Clear any existing session first to ensure clean OAuth flow
+      await supabase.auth.signOut();
+      console.log('Cleared existing session');
       
-      if (session?.user) {
-        // User is already logged in, check if they have an affiliate account
-        console.log('User already logged in, checking for affiliate account');
-        const { data: existingAffiliate, error: affiliateError } = await supabase
-          .from('affiliates')
-          .select('id')
-          .eq('email', session.user.email)
-          .single();
-        
-        console.log('Existing affiliate:', existingAffiliate, 'Error:', affiliateError);
-        
-        if (existingAffiliate) {
-          // User already has affiliate account, go to dashboard
-          console.log('User has affiliate account, redirecting to dashboard');
-          navigate('/affiliate/dashboard');
-          return;
-        } else {
-          // User logged in but no affiliate account, go to complete signup
-          console.log('User logged in but no affiliate account, redirecting to complete signup');
-          navigate('/affiliate/complete-signup');
-          return;
-        }
-      }
-
-      // User not logged in, start OAuth flow
+      // Start OAuth flow immediately without checking session
       console.log('Starting Google OAuth flow');
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/affiliate/complete-signup`,
@@ -73,18 +49,20 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         }
       });
 
+      console.log('OAuth response:', { data, error });
+
       if (error) {
         console.error('OAuth error:', error);
         throw error;
       }
 
-      console.log('OAuth initiated successfully');
+      console.log('OAuth initiated successfully, user should be redirected');
       // The user will be redirected to Google OAuth
     } catch (error: any) {
       console.error('Google auth error:', error);
       toast({
         title: "Error",
-        description: "Failed to authenticate with Google. Please try again.",
+        description: `Authentication failed: ${error.message}. Please try again.`,
         variant: "destructive"
       });
     } finally {
