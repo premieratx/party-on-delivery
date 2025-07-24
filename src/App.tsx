@@ -8,7 +8,11 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Success from "./pages/Success";
 import OrderComplete from "./pages/OrderComplete";
-
+import { AffiliateIntro } from "./pages/AffiliateIntro";
+import { AffiliateDashboard } from "./pages/AffiliateDashboard";
+import { AffiliateLanding } from "./pages/AffiliateLanding";
+import { AdminLogin } from "./pages/AdminLogin";
+import { AdminDashboard } from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -32,6 +36,13 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/success" element={<Success />} />
               <Route path="/order-complete" element={<OrderComplete />} />
+              
+              {/* Affiliate Routes */}
+              <Route path="/affiliate" element={<AffiliateIntro />} />
+              <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+              <Route path="/affiliate/admin-login" element={<AdminLogin />} />
+              <Route path="/affiliate/admin" element={<AdminDashboard />} />
+              <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
