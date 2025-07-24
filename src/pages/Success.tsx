@@ -124,22 +124,6 @@ const Success = () => {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <div className="bg-white rounded-lg p-4 border border-green-200">
-            <h3 className="font-semibold text-lg mb-2">Order Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-muted-foreground">Order Number:</span>
-                <span className="font-medium">#{orderStatus.orderNumber}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-muted-foreground">Status:</span>
-                <span className="font-medium text-green-600">Confirmed</span>
-              </div>
-            </div>
-          </div>
-
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-blue-600" />
@@ -161,43 +145,20 @@ const Success = () => {
             </ul>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <Button asChild className="w-full">
-              <Link to="/customer/login">Manage My Order</Link>
+          <div className="text-center space-y-4">
+            <p className="text-lg font-medium text-muted-foreground">
+              Ready to manage your order or invite friends?
+            </p>
+            
+            <Button asChild className="w-full" size="lg">
+              <Link to="/customer/login">Login to Manage Order</Link>
             </Button>
             
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <Button variant="outline" asChild className="flex-1">
                 <Link to="/?customer=true&discount=PREMIER2025">Continue Shopping</Link>
               </Button>
-              <Button variant="outline" asChild className="flex-1">
-                <Link to={`/order-tracking?order=${orderStatus.orderNumber}`}>
-                  Track Order
-                </Link>
-              </Button>
             </div>
-          </div>
-
-          {/* Send to Friends Button */}
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              Ordering with friends at the same location?
-            </h4>
-            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-              Share this link so friends can add to your order and get free delivery!
-            </p>
-            <Button 
-              onClick={() => {
-                const shareUrl = `${window.location.origin}/group-order?order=${orderStatus.orderNumber}`;
-                navigator.clipboard.writeText(shareUrl).then(() => {
-                  alert('Link copied to clipboard!');
-                });
-              }}
-              variant="outline"
-              className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
-            >
-              Send to Friends
-            </Button>
           </div>
         </CardContent>
       </Card>
