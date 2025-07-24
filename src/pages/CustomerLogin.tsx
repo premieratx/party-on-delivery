@@ -13,13 +13,16 @@ const CustomerLogin = () => {
   // Get return URL from query params
   const searchParams = new URLSearchParams(window.location.search);
   const returnUrl = searchParams.get('return');
+  const redirectParam = searchParams.get('redirect');
 
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        if (returnUrl) {
+        if (redirectParam === 'dashboard') {
+          navigate('/customer/dashboard');
+        } else if (returnUrl) {
           navigate(decodeURIComponent(returnUrl));
         } else {
           navigate('/customer/dashboard');
@@ -32,17 +35,14 @@ const CustomerLogin = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          if (returnUrl) {
-            navigate(decodeURIComponent(returnUrl));
-          } else {
-            navigate('/customer/dashboard');
-          }
+          // Force redirect to customer dashboard on login
+          navigate('/customer/dashboard');
         }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate, returnUrl]);
+  }, [navigate, returnUrl, redirectParam]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -50,7 +50,7 @@ const CustomerLogin = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/customer/dashboard`,
+          redirectTo: `${window.location.origin}/customer/login?redirect=dashboard`,
         },
       });
 

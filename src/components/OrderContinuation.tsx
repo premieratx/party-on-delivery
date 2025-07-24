@@ -76,14 +76,14 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             Resume Order
           </Button>
           
-          {/* Add to Recent Order button - always show */}
+          {/* Login to Manage Order button - always show */}
           <Button 
-            onClick={onAddToRecentOrder}
+            onClick={() => window.location.href = '/customer/login'}
             className="w-full h-12 text-base"
             variant="outline"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add to Recent Order
+            Login to Manage Order
           </Button>
           
           {/* Affiliate Dashboard Login button */}
