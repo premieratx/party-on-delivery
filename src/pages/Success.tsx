@@ -35,26 +35,26 @@ const Success = () => {
       localStorage.setItem('lastPaymentIntent', sessionId);
 
       try {
-        const { data, error } = await supabase.functions.invoke('create-shopify-order', {
+        const { data, error } = await supabase.functions.invoke('process-order-complete', {
           body: { sessionId }
         });
 
         if (error) {
-          console.error('Error creating Shopify order:', error);
+          console.error('Error processing order:', error);
           setOrderStatus({ success: false, error: error.message });
         } else {
           setOrderStatus({
             success: true,
-            shopifyOrderId: data.shopifyOrderId,
-            orderNumber: data.orderNumber
+            shopifyOrderId: data.order.id,
+            orderNumber: data.order.order_number
           });
           
           // Update localStorage with completed order info immediately
           const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
           const completedOrderInfo = {
             ...existingOrder,
-            orderNumber: data.orderNumber,
-            orderId: data.shopifyOrderId,
+            orderNumber: data.order.order_number,
+            orderId: data.order.id,
             recentpurchase: true,
             total: existingOrder.total || 0
           };
