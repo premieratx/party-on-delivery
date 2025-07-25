@@ -81,6 +81,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo, saveCompletedOrder } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange, affiliateCode });
   
+  // Ensure checkout flow state is accessible
+  const { 
+    currentStep, 
+    setCurrentStep, 
+    confirmedDateTime, 
+    confirmedAddress, 
+    confirmedCustomer,
+    updateDeliveryInfo,
+    isDateTimeComplete,
+    isAddressComplete,
+    isCustomerComplete,
+    hasChanges,
+    changedFields
+  } = checkoutFlow;
+  
   // Track abandoned cart when checkout starts
   useEffect(() => {
     if (cartItems.length > 0 && !isAddingToOrder) {
@@ -148,23 +163,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Calculate delivery fee using proper rules with discount consideration
   const baseDeliveryFee = useDeliveryFee(subtotal, appliedDiscount);
   
-  // Extract from checkout flow hook
+  // Extract additional properties from checkout flow hook
   const {
-    currentStep,
-    setCurrentStep,
-    confirmedDateTime,
-    setConfirmedDateTime,
-    confirmedAddress,
-    setConfirmedAddress,
-    confirmedCustomer,
-    setConfirmedCustomer,
     originalOrderInfo,
-    hasChanges,
-    changedFields,
-    updateDeliveryInfo,
-    isDateTimeComplete,
-    isAddressComplete,
-    isCustomerComplete
+    setConfirmedDateTime,
+    setConfirmedAddress,
+    setConfirmedCustomer
   } = checkoutFlow;
 
   // Local UI state

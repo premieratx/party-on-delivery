@@ -80,8 +80,11 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       }
     }
     
-    // Always start at datetime step
+    // Always start at datetime step for proper flow
     setCurrentStep('datetime');
+    setConfirmedDateTime(false);
+    setConfirmedAddress(false);
+    setConfirmedCustomer(false);
     
     console.log('=== End useCheckoutFlow pre-fill ===');
   }, []); // Remove dependency to prevent infinite loops - run once on mount

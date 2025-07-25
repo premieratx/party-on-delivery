@@ -268,24 +268,34 @@ async function getAffiliateDashboardData(supabase: any, userEmail?: string, affi
 
   if (!affiliate) throw new Error("Affiliate not found");
 
-  // Get affiliate's referrals with order details
+  // Get affiliate's referrals 
   const { data: affiliateReferrals, error: referralsError } = await supabase
     .from('affiliate_referrals')
-    .select(`
-      *,
-      customer_orders!left(
-        id,
-        order_number,
-        status,
-        delivery_date,
-        delivery_time,
-        created_at
-      )
-    `)
+    .select('*')
     .eq('affiliate_id', affiliate.id)
     .order('created_at', { ascending: false });
 
-  if (referralsError) throw referralsError;
+  if (referralsError) {
+    logStep("Error fetching affiliate referrals", referralsError);
+    throw referralsError;
+  }
+
+  // Get related customer orders separately
+  let customerOrders = [];
+  if (affiliateReferrals && affiliateReferrals.length > 0) {
+    const orderIds = affiliateReferrals.map(ref => ref.order_id).filter(Boolean);
+    if (orderIds.length > 0) {
+      const { data: orders, error: ordersError } = await supabase
+        .from('customer_orders')
+        .select('id, order_number, status, delivery_date, delivery_time, created_at, shopify_order_id')
+        .in('shopify_order_id', orderIds);
+      
+      if (!ordersError && orders) {
+        customerOrders = orders;
+      }
+    }
+  }
+
 
   // Get commission payouts
   const { data: payouts, error: payoutsError } = await supabase
@@ -299,15 +309,18 @@ async function getAffiliateDashboardData(supabase: any, userEmail?: string, affi
   const pendingCommissions = affiliate.commission_unpaid || 0;
 
   const recentActivity = [
-    ...affiliateReferrals.slice(0, 10).map((ref: any) => ({
-      type: 'referral',
-      id: ref.id,
-      description: `Commission earned from order ${ref.customer_orders?.order_number || ref.order_id}`,
-      amount: ref.commission_amount,
-      date: ref.created_at,
-      orderNumber: ref.customer_orders?.order_number,
-      paidOut: ref.paid_out
-    })),
+    ...affiliateReferrals.slice(0, 10).map((ref: any) => {
+      const relatedOrder = customerOrders.find(order => order.shopify_order_id === ref.order_id);
+      return {
+        type: 'referral',
+        id: ref.id,
+        description: `Commission earned from order ${relatedOrder?.order_number || ref.order_id}`,
+        amount: ref.commission_amount,
+        date: ref.created_at,
+        orderNumber: relatedOrder?.order_number,
+        paidOut: ref.paid_out
+      };
+    }),
     ...(payouts || []).slice(0, 5).map((payout: any) => ({
       type: 'payout',
       id: payout.id,
@@ -319,7 +332,7 @@ async function getAffiliateDashboardData(supabase: any, userEmail?: string, affi
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 15);
 
   return {
-    orders: affiliateReferrals.map(ref => ref.customer_orders).filter(Boolean),
+    orders: customerOrders,
     customers: [],
     affiliateReferrals,
     totalRevenue,
