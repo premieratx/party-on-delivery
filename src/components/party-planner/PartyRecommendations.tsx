@@ -128,7 +128,7 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
           case 'beer':
             subcategories = calc.details.beerTypes && calc.details.beerTypes.length > 0 ? calc.details.beerTypes : ['Light'];
             recommendedQuantity = calc.recommendations.beer;
-            unitType = 'cans';
+            unitType = 'beers';
             break;
           case 'wine':
             subcategories = calc.details.wineTypes && calc.details.wineTypes.length > 0 ? calc.details.wineTypes : ['Chardonnay'];
@@ -264,6 +264,16 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
     );
   };
 
+  const getPartyRunningTotal = (partyType: string) => {
+    return allSelections
+      .filter(selection => selection.eventName === partyType)
+      .reduce((total, selection) => 
+        total + selection.items.reduce((itemTotal, item) => 
+          itemTotal + (item.price * item.quantity), 0
+        ), 0
+      );
+  };
+
   if (showProductSelection && currentSelection) {
     return (
       <div className="space-y-6">
@@ -281,6 +291,8 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
           recommendedQuantity={currentSelection.recommendedQuantity}
           unitType={currentSelection.unitType}
           budget={currentSelection.budget}
+          totalPartyBudget={calculations.find(c => c.eventName === currentSelection.eventName)?.details.budget || 0}
+          runningTotal={getPartyRunningTotal(currentSelection.eventName)}
           onAddToCart={handleAddToCart}
           onComplete={handleNextCategory}
         />

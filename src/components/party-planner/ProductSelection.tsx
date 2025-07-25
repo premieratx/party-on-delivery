@@ -27,8 +27,10 @@ interface ProductSelectionProps {
   category: string;
   subcategories: string[];
   recommendedQuantity: number;
-  unitType: string; // 'cans', 'bottles', 'kits'
+  unitType: string; // 'beers', 'bottles', 'kits'
   budget: number;
+  totalPartyBudget: number;
+  runningTotal: number;
   onAddToCart: (items: CartItem[]) => void;
   onComplete: () => void;
 }
@@ -39,6 +41,8 @@ export const ProductSelection = ({
   recommendedQuantity, 
   unitType, 
   budget, 
+  totalPartyBudget,
+  runningTotal,
   onAddToCart,
   onComplete 
 }: ProductSelectionProps) => {
@@ -195,133 +199,169 @@ export const ProductSelection = ({
     );
   }
 
+  const totalPartySpent = runningTotal + getTotalCost();
+  const remainingPartyBudget = totalPartyBudget - totalPartySpent;
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="text-2xl font-bold">Choose Your {category.charAt(0).toUpperCase() + category.slice(1)}</span>
-          {isCompleted && <Check className="w-5 h-5 text-green-500" />}
-        </CardTitle>
-        <div className="text-lg font-semibold mb-2">
-          Select {getContainersNeeded()} containers ({recommendedQuantity} {unitType} needed)
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Category Budget: ${budget.toFixed(2)}</span>
-          <span>Remaining: ${remainingBudget.toFixed(2)}</span>
-        </div>
-        <div className="w-full bg-muted rounded-full h-2">
-          <div 
-            className="bg-primary h-2 rounded-full transition-all duration-300"
-            style={{ width: `${Math.min(100, (getTotalServings() / recommendedQuantity) * 100)}%` }}
-          />
-        </div>
-        <div className="text-sm text-muted-foreground">
-          Selected: {getTotalServings()} / {recommendedQuantity} {unitType} ({getTotalQuantity()} containers)
-        </div>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {products.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No products found for this category. Please try different selections.
+    <div className="space-y-6">
+      {/* Party Budget Overview - Top Section */}
+      <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+        <CardContent className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Party Budget Tracker</h3>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-primary">${totalPartySpent.toFixed(2)}</div>
+              <div className="text-sm text-muted-foreground">Running Total</div>
+            </div>
           </div>
-        ) : (
-          <div className="grid gap-4 max-h-96 overflow-y-auto">
-            {products.map((product) => {
-              const quantity = selections[product.id] || 0;
-              const productTotal = (product.price || 0) * quantity;
-              
-              return (
-                <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3 flex-1">
-                    {product.imageUrl && (
-                      <img 
-                        src={product.imageUrl} 
-                        alt={product.title}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    )}
-                     <div className="flex-1 min-w-0">
-                       <h4 className="font-medium truncate">{product.title}</h4>
-                       <div className="flex items-center gap-2">
-                         <span className="text-sm font-medium">${product.price?.toFixed(2) || '0.00'}</span>
-                         <span className="text-xs text-muted-foreground">({product.containerSize} {unitType})</span>
-                         {product.subcategory && (
-                           <Badge variant="outline" className="text-xs">
-                             {product.subcategory}
-                           </Badge>
-                         )}
+          
+          <div className="w-full bg-muted rounded-full h-4 mb-3">
+            <div 
+              className="bg-primary h-4 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, (totalPartySpent / totalPartyBudget) * 100)}%` }}
+            />
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-2xl font-bold text-green-600">${remainingPartyBudget.toFixed(2)}</div>
+              <div className="text-sm text-muted-foreground">Remaining Budget</div>
+            </div>
+            <div className="text-right text-sm text-muted-foreground">
+              <div>Total Budget: ${totalPartyBudget.toFixed(2)}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Product Selection */}
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="text-2xl font-bold">Choose Your {category.charAt(0).toUpperCase() + category.slice(1)}</span>
+            {isCompleted && <Check className="w-5 h-5 text-green-500" />}
+          </CardTitle>
+          <div className="text-3xl font-bold mb-2 text-center">
+            {recommendedQuantity} {unitType === 'beers' ? 'Beers' : unitType} Needed
+          </div>
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Category Budget: ${budget.toFixed(2)}</span>
+            <span>Remaining: ${remainingBudget.toFixed(2)}</span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-3">
+            <div 
+              className="bg-primary h-3 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, (getTotalServings() / recommendedQuantity) * 100)}%` }}
+            />
+          </div>
+          <div className="text-sm text-muted-foreground text-center">
+            Selected: {getTotalServings()} / {recommendedQuantity} {unitType === 'beers' ? 'Beers' : unitType} ({getTotalQuantity()} containers)
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {products.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No products found for this category. Please try different selections.
+            </div>
+          ) : (
+            <div className="grid gap-4 max-h-96 overflow-y-auto">
+              {products.map((product) => {
+                const quantity = selections[product.id] || 0;
+                const productTotal = (product.price || 0) * quantity;
+                
+                return (
+                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3 flex-1">
+                      {product.imageUrl && (
+                        <img 
+                          src={product.imageUrl} 
+                          alt={product.title}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                      )}
+                       <div className="flex-1 min-w-0">
+                         <h4 className="font-medium truncate">{product.title}</h4>
+                         <div className="flex items-center gap-2">
+                           <span className="text-sm font-medium">${product.price?.toFixed(2) || '0.00'}</span>
+                           <span className="text-xs text-muted-foreground">({product.containerSize} {unitType === 'beers' ? 'beers' : unitType})</span>
+                           {product.subcategory && (
+                             <Badge variant="outline" className="text-xs">
+                               {product.subcategory}
+                             </Badge>
+                           )}
+                         </div>
                        </div>
-                     </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(product.id, -1)}
+                        disabled={quantity === 0}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="w-8 text-center">{quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(product.id, 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                      {productTotal > 0 && (
+                        <span className="text-sm font-medium ml-2 min-w-16 text-right">
+                          ${productTotal.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateQuantity(product.id, -1)}
-                      disabled={quantity === 0}
-                    >
-                      <Minus className="w-3 h-3" />
-                    </Button>
-                    <span className="w-8 text-center">{quantity}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateQuantity(product.id, 1)}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                    {productTotal > 0 && (
-                      <span className="text-sm font-medium ml-2 min-w-16 text-right">
-                        ${productTotal.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
 
-        {/* Summary */}
-        {getTotalQuantity() > 0 && (
-          <div className="border-t pt-4 space-y-2">
-            <div className="flex justify-between">
-              <span>Total Containers:</span>
-              <span>{getTotalQuantity()}</span>
+          {/* Summary */}
+          {getTotalQuantity() > 0 && (
+            <div className="border-t pt-4 space-y-2">
+              <div className="flex justify-between">
+                <span>Total Containers:</span>
+                <span>{getTotalQuantity()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total {unitType === 'beers' ? 'Beers' : unitType}:</span>
+                <span>{getTotalServings()}/{recommendedQuantity}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Cost:</span>
+                <span className="font-medium">${getTotalCost().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Budget Remaining:</span>
+                <span className={remainingBudget < 0 ? 'text-red-500' : 'text-green-600'}>
+                  ${remainingBudget.toFixed(2)}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span>Total {unitType}:</span>
-              <span>{getTotalServings()}/{recommendedQuantity}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Total Cost:</span>
-              <span className="font-medium">${getTotalCost().toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span>Budget Remaining:</span>
-              <span className={remainingBudget < 0 ? 'text-red-500' : 'text-green-600'}>
-                ${remainingBudget.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        )}
+          )}
 
-        <div className="flex gap-2 pt-4">
-          <Button 
-            onClick={handleConfirmSelection}
-            disabled={getTotalQuantity() === 0}
-            className="flex-1"
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Confirm & Add to Cart
-          </Button>
-          <Button onClick={onComplete} variant="outline">
-            Continue
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex gap-2 pt-4">
+            <Button 
+              onClick={handleConfirmSelection}
+              disabled={getTotalQuantity() === 0}
+              className="flex-1"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Confirm & Add to Cart
+            </Button>
+            <Button onClick={onComplete} variant="outline">
+              Continue
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
