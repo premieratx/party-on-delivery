@@ -196,16 +196,7 @@ async function createShopifyOrder(orderData: StandardOrderData): Promise<any> {
     order: {
       line_items: lineItems,
       customer: shopifyCustomer ? { id: shopifyCustomer.id } : undefined,
-      billing_address: {
-        first_name: orderData.customerName.split(' ')[0] || '',
-        last_name: orderData.customerName.split(' ').slice(1).join(' ') || '',
-        address1: orderData.deliveryAddress.street,
-        city: orderData.deliveryAddress.city,
-        province: orderData.deliveryAddress.state,
-        country: "US",
-        zip: orderData.deliveryAddress.zipCode,
-        phone: orderData.customerPhone,
-      },
+      // Note: No billing_address collected in app - only shipping/delivery address
       shipping_address: {
         first_name: orderData.customerName.split(' ')[0] || '',
         last_name: orderData.customerName.split(' ').slice(1).join(' ') || '',

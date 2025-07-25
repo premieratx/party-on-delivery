@@ -50,19 +50,17 @@ serve(async (req: Request) => {
 
     logStep('Sending SMS via GHL', { phone, messageLength: message.length });
 
-    // Send SMS using GHL LeadConnector API - Updated endpoint and format
-    const ghlResponse = await fetch('https://services.leadconnectorhq.com/conversations/messages', {
+    // Try alternative GHL API endpoint and format
+    const ghlResponse = await fetch('https://rest.gohighlevel.com/v1/conversations/messages', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${ghlApiKey}`,
-        'Content-Type': 'application/json',
-        'Version': '2021-07-28'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         type: 'SMS',
-        contactId: contactId || undefined,
         message: message,
-        ...(contactId ? { contactId } : { phone })
+        phone: `+1${phone.replace(/\D/g, '')}` // Format as +1 followed by digits
       })
     });
 
