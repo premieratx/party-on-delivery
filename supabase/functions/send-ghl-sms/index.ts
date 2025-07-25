@@ -50,7 +50,7 @@ serve(async (req: Request) => {
 
     logStep('Sending SMS via GHL', { phone, messageLength: message.length });
 
-    // Send SMS using GHL LeadConnector API
+    // Send SMS using GHL LeadConnector API - Updated endpoint and format
     const ghlResponse = await fetch('https://services.leadconnectorhq.com/conversations/messages', {
       method: 'POST',
       headers: {
@@ -60,9 +60,9 @@ serve(async (req: Request) => {
       },
       body: JSON.stringify({
         type: 'SMS',
-        contactId: contactId,
-        phone: phone,
-        message: message
+        contactId: contactId || undefined,
+        message: message,
+        ...(contactId ? { contactId } : { phone })
       })
     });
 

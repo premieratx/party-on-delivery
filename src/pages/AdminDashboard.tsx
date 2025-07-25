@@ -512,14 +512,15 @@ export const AdminDashboard: React.FC = () => {
                             <p className="font-medium text-orange-800 text-sm">{formatCurrency(order.total_amount)}</p>
                           )}
                           <div className="flex gap-1 mt-1">
-                            {order.customer_email && (
+                            {order.customer_phone && (
                               <Button 
                                 size="sm" 
                                 variant="outline"
                                 className="text-xs px-2 py-1 h-auto"
-                                onClick={() => window.open(`mailto:${order.customer_email}?subject=Complete your Party On Delivery order&body=Hi! I noticed you started an order for delivery. Everything OK? Let me know if you need any help completing your order!`)}
+                                onClick={() => window.open(`tel:${order.customer_phone}`)}
+                                title="Call customer"
                               >
-                                📧
+                                📞
                               </Button>
                             )}
                             {order.customer_phone && (
@@ -528,8 +529,20 @@ export const AdminDashboard: React.FC = () => {
                                 variant="outline"
                                 className="text-xs px-2 py-1 h-auto"
                                 onClick={() => window.open(`sms:${order.customer_phone}&body=Hi! I noticed you started an order for party delivery. Everything OK? Let me know if you need any help completing your order!`)}
+                                title="Text customer"
                               >
                                 💬
+                              </Button>
+                            )}
+                            {order.customer_email && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-xs px-2 py-1 h-auto"
+                                onClick={() => window.open(`mailto:${order.customer_email}?subject=Complete your Party On Delivery order&body=Hi! I noticed you started an order for delivery. Everything OK? Let me know if you need any help completing your order!`)}
+                                title="Email customer"
+                              >
+                                📧
                               </Button>
                             )}
                           </div>

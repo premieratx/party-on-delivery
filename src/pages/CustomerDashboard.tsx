@@ -265,7 +265,7 @@ const CustomerDashboard = () => {
     }
   };
 
-  // Create combined order summary
+  // Create combined order summary grouped by product collections
   const getCombinedOrderSummary = () => {
     const allItems: any[] = [];
     const orderMap = new Map();
@@ -289,10 +289,37 @@ const CustomerDashboard = () => {
       });
     });
     
-    // Sort items alphabetically
-    allItems.sort((a, b) => a.title.localeCompare(b.title));
+    // Group items by product category/collection
+    const groupedItems = allItems.reduce((groups, item) => {
+      let category = 'Other';
+      
+      // Categorize based on product title or type
+      const title = item.title.toLowerCase();
+      if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager')) {
+        category = 'Beer';
+      } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || title.includes('tequila') || title.includes('bourbon')) {
+        category = 'Liquor';
+      } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || title.includes('truly')) {
+        category = 'Seltzers';
+      } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
+        category = 'Wine & Champagne';
+      } else if (title.includes('mixer') || title.includes('soda') || title.includes('juice') || title.includes('water') || title.includes('non-alcoholic')) {
+        category = 'Mixers & N/A';
+      }
+      
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(item);
+      return groups;
+    }, {} as Record<string, any[]>);
     
-    return { allItems, orderMap };
+    // Sort items within each category alphabetically
+    Object.keys(groupedItems).forEach(category => {
+      groupedItems[category].sort((a, b) => a.title.localeCompare(b.title));
+    });
+    
+    return { groupedItems, orderMap };
   };
 
   const handleShareOrder = (order: Order) => {
@@ -514,7 +541,7 @@ const CustomerDashboard = () => {
               </CardHeader>
               <CardContent>
                 {(() => {
-                  const { allItems, orderMap } = getCombinedOrderSummary();
+                  const { groupedItems, orderMap } = getCombinedOrderSummary();
                   const firstOrder = orders[0];
                   
                   return (
@@ -538,19 +565,26 @@ const CustomerDashboard = () => {
                         </div>
                       )}
 
-                      {/* Items List */}
+                      {/* Items List by Category */}
                       <div>
-                        <h4 className="font-medium mb-3">Items ({allItems.length})</h4>
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                          {allItems.map((item, index) => (
-                            <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
-                              <div className="flex-1">
-                                <span className="font-medium">{item.quantity}x {item.title}</span>
-                                <span className="text-sm text-muted-foreground ml-2">
-                                  (Order #{item.order_number} - {item.customer_name})
-                                </span>
+                        <h4 className="font-medium mb-3">Items by Category</h4>
+                        <div className="space-y-4 max-h-80 overflow-y-auto">
+                          {Object.entries(groupedItems).map(([category, items]) => (
+                            <div key={category}>
+                              <h5 className="font-medium text-sm text-primary mb-2">{category}</h5>
+                              <div className="space-y-1 pl-4">
+                                {(items as any[]).map((item, index) => (
+                                  <div key={index} className="flex justify-between items-center py-1 px-2 bg-muted/20 rounded text-sm">
+                                    <div className="flex-1">
+                                      <span className="font-medium">{item.quantity}x {item.title}</span>
+                                      <span className="text-xs text-muted-foreground ml-2">
+                                        (Order #{item.order_number} - {item.customer_name})
+                                      </span>
+                                    </div>
+                                    <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                                  </div>
+                                ))}
                               </div>
-                              <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
                             </div>
                           ))}
                         </div>
