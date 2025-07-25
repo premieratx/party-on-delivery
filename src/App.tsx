@@ -20,6 +20,7 @@ import OrderContinuation from "./pages/OrderContinuation";
 import SharedOrderView from "./pages/SharedOrderView";
 import GroupOrderView from "./pages/GroupOrderView";
 import NotFound from "./pages/NotFound";
+import TestSMS from "./components/TestSMS";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +61,9 @@ const App = () => (
               {/* Shared Order Routes */}
               <Route path="/order/:shareToken" element={<GroupOrderView />} />
               <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
+              
+              {/* Test Routes */}
+              <Route path="/test-sms" element={<TestSMS />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

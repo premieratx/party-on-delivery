@@ -20,7 +20,24 @@ const CustomerLogin = () => {
   useEffect(() => {
     let hasNavigated = false; // Prevent multiple navigations
 
-    // Listen for auth changes first
+    // Check if user is already logged in first
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && !hasNavigated) {
+        hasNavigated = true;
+        // Link any stored session IDs to this user
+        if (session.user.email) {
+          await linkSessionToUser(session.user.email);
+        }
+        
+        localStorage.removeItem('loginRedirectIntent');
+        navigate('/customer/dashboard', { replace: true });
+        return;
+      }
+    };
+    checkUser();
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !hasNavigated) {
@@ -37,24 +54,8 @@ const CustomerLogin = () => {
       }
     );
 
-    // Then check if user is already logged in
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && !hasNavigated) {
-        hasNavigated = true;
-        // Link any stored session IDs to this user
-        if (session.user.email) {
-          await linkSessionToUser(session.user.email);
-        }
-        
-        localStorage.removeItem('loginRedirectIntent');
-        navigate('/customer/dashboard', { replace: true });
-      }
-    };
-    checkUser();
-
     return () => subscription.unsubscribe();
-  }, [navigate, returnUrl, redirectParam, linkSessionToUser]);
+  }, [navigate, linkSessionToUser]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);

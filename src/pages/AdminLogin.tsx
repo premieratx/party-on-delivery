@@ -21,16 +21,20 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already authenticated
+    let hasNavigated = false;
+
+    // Check if user is already authenticated first
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
+      if (session?.user?.email && !hasNavigated) {
         // Check if user is admin
         const { data } = await supabase.functions.invoke('verify-admin-google', {
           body: { email: session.user.email }
         });
         if (data?.isAdmin) {
+          hasNavigated = true;
           navigate('/affiliate/admin');
+          return;
         }
       }
     };
@@ -38,12 +42,13 @@ export const AdminLogin: React.FC = () => {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user?.email) {
+      if (event === 'SIGNED_IN' && session?.user?.email && !hasNavigated) {
         // Check if user is admin after Google sign in
         const { data } = await supabase.functions.invoke('verify-admin-google', {
           body: { email: session.user.email }
         });
         if (data?.isAdmin) {
+          hasNavigated = true;
           toast({
             title: "Welcome!",
             description: "Successfully logged in as admin.",
