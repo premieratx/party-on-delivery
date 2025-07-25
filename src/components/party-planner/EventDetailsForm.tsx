@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, DollarSign, Clock } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
 
 interface EventDetailsFormProps {
   eventName: string;
@@ -24,41 +22,14 @@ interface EventDetailsFormProps {
   onUpdate: (details: any) => void;
 }
 
-const drinkOptions = [
-  { id: 'beer', label: 'Beer' },
-  { id: 'wine', label: 'Wine' },
-  { id: 'liquor', label: 'Liquor/Spirits' },
-  { id: 'cocktails', label: 'Cocktails' }
-];
-
-const beerTypes = ['Light Beer', 'Dark Beer', 'Hoppy/IPA', 'Local Craft', 'Mexican Beer'];
-const wineTypes = ['Pinot Grigio', 'Chardonnay', 'Cabernet Sauvignon', 'Pinot Noir', 'Rosé'];
-const liquorTypes = ['Whiskey', 'Tequila', 'Gin', 'Rum', 'Vodka'];
-const cocktailTypes = ['Margarita', 'Spicy Margarita', 'Paloma', 'Cosmopolitan', 'Rum Punch'];
-
-// Suggested max people by event type
 const getMaxPeople = (eventName: string) => {
   const suggestions = {
-    'bachelor': 15,
-    'bachelorette': 15,
-    'wedding party': 200,
-    'corporate event': 100,
-    'birthday': 50,
-    'graduation': 75,
-    'house party': 30,
-    'need delivery now': 20,
-    'no reason': 25,
-    'Rehearsal Dinner': 50,
-    'Bachelor Party': 15,
-    'Bachelorette Party': 15,
-    'Pre-Wedding Party': 100,
-    'Groomsman Suite': 8,
-    'Bridal Suite': 10,
-    'Wedding Cocktail Hour': 200,
-    'Wedding Ceremony': 200,
-    'Wedding Reception': 200,
-    'Post-Wedding Party': 150,
-    'Wedding After Party': 100
+    'bachelor': 15, 'bachelorette': 15, 'wedding party': 200, 'corporate event': 100,
+    'birthday': 50, 'graduation': 75, 'house party': 30, 'need delivery now': 20,
+    'no reason': 25, 'Rehearsal Dinner': 50, 'Bachelor Party': 15, 'Bachelorette Party': 15,
+    'Pre-Wedding Party': 100, 'Groomsman Suite': 8, 'Bridal Suite': 10,
+    'Wedding Cocktail Hour': 200, 'Wedding Ceremony': 200, 'Wedding Reception': 200,
+    'Post-Wedding Party': 150, 'Wedding After Party': 100
   };
   return suggestions[eventName] || 50;
 };
@@ -82,225 +53,186 @@ export const EventDetailsForm = ({ eventName, details, onUpdate }: EventDetailsF
     onUpdate(formData);
   }, [formData, onUpdate]);
 
-  const handleDrinkTypeToggle = (type: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({ ...prev, drinkTypes: [...prev.drinkTypes, type] }));
-    } else {
-      setFormData(prev => ({ 
-        ...prev, 
-        drinkTypes: prev.drinkTypes.filter(t => t !== type),
-        // Clear subcategories when main type is unchecked
-        [`${type}Types`]: []
-      }));
-    }
+  const updateFormData = (updates: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...updates }));
   };
 
-  const handleSubTypeToggle = (category: string, type: string, checked: boolean) => {
-    const field = `${category}Types` as keyof typeof formData;
-    const current = formData[field] as string[] || [];
-    
-    if (checked) {
-      setFormData(prev => ({ ...prev, [field]: [...current, type] }));
-    } else {
-      setFormData(prev => ({ ...prev, [field]: current.filter(t => t !== type) }));
-    }
+  const toggleDrinkType = (type: string) => {
+    const newTypes = formData.drinkTypes.includes(type)
+      ? formData.drinkTypes.filter(t => t !== type)
+      : [...formData.drinkTypes, type];
+    updateFormData({ drinkTypes: newTypes });
+  };
+
+  const toggleSubType = (mainType: string, subType: string) => {
+    const key = `${mainType}Types` as keyof typeof formData;
+    const current = formData[key] as string[] || [];
+    const updated = current.includes(subType)
+      ? current.filter(t => t !== subType)
+      : [...current, subType];
+    updateFormData({ [key]: updated });
+  };
+
+  const drinkTypeOptions = [
+    { id: 'beer', label: 'Beer', icon: '🍺' },
+    { id: 'wine', label: 'Wine', icon: '🍷' },
+    { id: 'liquor', label: 'Liquor', icon: '🥃' },
+    { id: 'cocktails', label: 'Cocktails', icon: '🍹' }
+  ];
+
+  const subTypeOptions = {
+    beer: ['Light', 'Dark', 'Hoppy', 'Local', 'Mexican'],
+    wine: ['Pinot Grigio', 'Chardonnay', 'Cabernet', 'Pinot Noir', 'Rosé'],
+    liquor: ['Whiskey', 'Tequila', 'Gin', 'Rum', 'Vodka'],
+    cocktails: ['Margarita', 'Spicy Margarita', 'Paloma', 'Cosmo', 'Rum Punch']
   };
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-semibold text-center">
-        Let's plan drinks for: {eventName}
-      </h2>
+    <div className="space-y-4 max-w-4xl mx-auto">
+      <div className="text-center mb-4">
+        <h3 className="text-xl font-semibold">{eventName}</h3>
+        <p className="text-sm text-muted-foreground">Quick event details</p>
+      </div>
 
-      {/* Number of People */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Users className="w-5 h-5 text-primary" />
-            <Label className="text-lg font-medium">How many people?</Label>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Input
-                type="number"
-                value={formData.numberOfPeople}
-                onChange={(e) => setFormData(prev => ({ ...prev, numberOfPeople: parseInt(e.target.value) || 1 }))}
-                min="1"
-                max={maxPeople}
-                className="w-24"
-              />
-              <span className="text-sm text-muted-foreground">people</span>
-            </div>
-            
-            <div className="px-2">
-              <Slider
-                value={[formData.numberOfPeople]}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, numberOfPeople: value[0] }))}
-                max={maxPeople}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>1</span>
-                <span>{maxPeople}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Drinker Type */}
-      <Card>
-        <CardContent className="p-6">
-          <Label className="text-lg font-medium mb-4 block">What kind of drinkers are they?</Label>
-          <RadioGroup
-            value={formData.drinkerType}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, drinkerType: value as 'light' | 'medium' | 'heavy' }))}
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="light" id="light" />
-              <Label htmlFor="light">Light (1 drink/hour)</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="medium" id="medium" />
-              <Label htmlFor="medium">Medium (2 drinks/hour)</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="heavy" id="heavy" />
-              <Label htmlFor="heavy">Heavy (3 drinks/hour)</Label>
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
-
-      {/* Event Duration */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Clock className="w-5 h-5 text-primary" />
-            <Label className="text-lg font-medium">How many hours will the event last?</Label>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Input
-                type="number"
-                value={formData.eventDuration}
-                onChange={(e) => setFormData(prev => ({ ...prev, eventDuration: parseInt(e.target.value) || 1 }))}
-                min="1"
-                max="12"
-                className="w-24"
-              />
-              <span className="text-sm text-muted-foreground">hours</span>
-            </div>
-            
-            <div className="px-2">
-              <Slider
-                value={[formData.eventDuration]}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, eventDuration: value[0] }))}
-                max={12}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>1hr</span>
-                <span>12hrs</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Budget */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <DollarSign className="w-5 h-5 text-primary" />
-            <Label className="text-lg font-medium">What's your budget for drinks?</Label>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <span className="text-2xl font-semibold">$</span>
-            <Input
-              type="number"
-              value={formData.budget}
-              onChange={(e) => setFormData(prev => ({ ...prev, budget: parseInt(e.target.value) || 0 }))}
-              min="0"
-              className="text-lg"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Drink Types */}
-      <Card>
-        <CardContent className="p-6">
-          <Label className="text-lg font-medium mb-4 block">What types of drinks do you want?</Label>
-          
-          <div className="space-y-6">
-            {drinkOptions.map((drink) => (
-              <div key={drink.id} className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id={drink.id}
-                    checked={formData.drinkTypes.includes(drink.id)}
-                    onCheckedChange={(checked) => handleDrinkTypeToggle(drink.id, !!checked)}
-                  />
-                  <Label htmlFor={drink.id} className="font-medium">{drink.label}</Label>
+        <CardContent className="p-4 space-y-4">
+          {/* Row 1: People & Duration */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">People</Label>
+              <div className="space-y-1">
+                <Slider
+                  value={[formData.numberOfPeople]}
+                  onValueChange={(value) => updateFormData({ numberOfPeople: value[0] })}
+                  max={maxPeople}
+                  min={1}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>1</span>
+                  <Badge variant="secondary" className="text-xs">{formData.numberOfPeople}</Badge>
+                  <span>{maxPeople}</span>
                 </div>
-                
-                {formData.drinkTypes.includes(drink.id) && (
-                  <div className="ml-6 pl-4 border-l-2 border-muted space-y-2">
-                    {drink.id === 'beer' && beerTypes.map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`beer-${type}`}
-                          checked={formData.beerTypes?.includes(type) || false}
-                          onCheckedChange={(checked) => handleSubTypeToggle('beer', type, !!checked)}
-                        />
-                        <Label htmlFor={`beer-${type}`} className="text-sm">{type}</Label>
-                      </div>
-                    ))}
-                    
-                    {drink.id === 'wine' && wineTypes.map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`wine-${type}`}
-                          checked={formData.wineTypes?.includes(type) || false}
-                          onCheckedChange={(checked) => handleSubTypeToggle('wine', type, !!checked)}
-                        />
-                        <Label htmlFor={`wine-${type}`} className="text-sm">{type}</Label>
-                      </div>
-                    ))}
-                    
-                    {drink.id === 'liquor' && liquorTypes.map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`liquor-${type}`}
-                          checked={formData.liquorTypes?.includes(type) || false}
-                          onCheckedChange={(checked) => handleSubTypeToggle('liquor', type, !!checked)}
-                        />
-                        <Label htmlFor={`liquor-${type}`} className="text-sm">{type}</Label>
-                      </div>
-                    ))}
-                    
-                    {drink.id === 'cocktails' && cocktailTypes.map((type) => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`cocktail-${type}`}
-                          checked={formData.cocktailTypes?.includes(type) || false}
-                          onCheckedChange={(checked) => handleSubTypeToggle('cocktails', type, !!checked)}
-                        />
-                        <Label htmlFor={`cocktail-${type}`} className="text-sm">{type}</Label>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
-            ))}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Duration (hrs)</Label>
+              <div className="space-y-1">
+                <Slider
+                  value={[formData.eventDuration]}
+                  onValueChange={(value) => updateFormData({ eventDuration: value[0] })}
+                  max={12}
+                  min={1}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>1</span>
+                  <Badge variant="secondary" className="text-xs">{formData.eventDuration}hrs</Badge>
+                  <span>12</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Drinker Type & Budget */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Drinker Type</Label>
+              <div className="grid grid-cols-3 gap-1">
+                {(['light', 'medium', 'heavy'] as const).map((type) => (
+                  <Button
+                    key={type}
+                    variant={formData.drinkerType === type ? "default" : "outline"}
+                    onClick={() => updateFormData({ drinkerType: type })}
+                    className="h-8 text-xs px-2"
+                  >
+                    {type === 'light' && '1/hr'}
+                    {type === 'medium' && '2/hr'}
+                    {type === 'heavy' && '3/hr'}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Budget</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">$</span>
+                <Input
+                  type="number"
+                  value={formData.budget}
+                  onChange={(e) => updateFormData({ budget: parseInt(e.target.value) || 0 })}
+                  min="0"
+                  className="text-sm h-8"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Drink Types */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Drink Types</Label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {drinkTypeOptions.map((option) => (
+                <Button
+                  key={option.id}
+                  variant={formData.drinkTypes.includes(option.id) ? "default" : "outline"}
+                  onClick={() => toggleDrinkType(option.id)}
+                  className="h-8 text-xs flex items-center gap-1 px-2"
+                >
+                  <span className="text-sm">{option.icon}</span>
+                  <span>{option.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sub-type selections - compact */}
+          {formData.drinkTypes.map((drinkType) => (
+            <div key={drinkType} className="space-y-2">
+              <Label className="text-xs font-medium capitalize text-muted-foreground">{drinkType} Types</Label>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
+                {subTypeOptions[drinkType as keyof typeof subTypeOptions]?.map((subType) => {
+                  const subTypeArray = formData[`${drinkType}Types` as keyof typeof formData] as string[] || [];
+                  return (
+                    <Button
+                      key={subType}
+                      variant={subTypeArray.includes(subType) ? "default" : "outline"}
+                      onClick={() => toggleSubType(drinkType, subType)}
+                      className="h-7 text-xs px-1 truncate"
+                      title={subType}
+                    >
+                      {subType}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* Compact Summary */}
+          <div className="bg-muted/30 rounded p-3 mt-4">
+            <div className="grid grid-cols-4 gap-2 text-center text-xs">
+              <div>
+                <div className="font-medium">{formData.numberOfPeople}</div>
+                <div className="text-muted-foreground">People</div>
+              </div>
+              <div>
+                <div className="font-medium">{formData.eventDuration}h</div>
+                <div className="text-muted-foreground">Duration</div>
+              </div>
+              <div>
+                <div className="font-medium capitalize">{formData.drinkerType}</div>
+                <div className="text-muted-foreground">Drinkers</div>
+              </div>
+              <div>
+                <div className="font-medium">${formData.budget}</div>
+                <div className="text-muted-foreground">Budget</div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
