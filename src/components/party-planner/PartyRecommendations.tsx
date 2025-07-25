@@ -3,6 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Calculator } from "lucide-react";
+import { useState } from "react";
+import { ProductSelection } from "./ProductSelection";
+import { useToast } from "@/hooks/use-toast";
 
 interface PartyRecommendationsProps {
   partyDetails: {
@@ -24,6 +27,10 @@ interface PartyRecommendationsProps {
 
 export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [currentSelectionStep, setCurrentSelectionStep] = useState(0);
+  const [allSelections, setAllSelections] = useState<Array<{eventName: string, category: string, items: any[]}>>([]);
+  const [showProductSelection, setShowProductSelection] = useState(false);
 
   const getDrinksPerHour = (drinkerType: 'light' | 'medium' | 'heavy') => {
     switch (drinkerType) {
@@ -77,6 +84,166 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
   }));
 
   const totalBudget = calculations.reduce((sum, calc) => sum + calc.details.budget, 0);
+
+  // Generate all category selections needed
+  const getAllCategorySelections = () => {
+    const selections: Array<{
+      eventName: string;
+      category: string;
+      subcategories: string[];
+      recommendedQuantity: number;
+      unitType: string;
+      budget: number;
+    }> = [];
+
+    calculations.forEach(calc => {
+      const eventBudget = calc.details.budget;
+      const categoriesInEvent = calc.details.drinkTypes.length;
+      const budgetPerCategory = eventBudget / categoriesInEvent;
+
+      calc.details.drinkTypes.forEach((category: string) => {
+        let subcategories: string[] = [];
+        let recommendedQuantity = 0;
+        let unitType = '';
+
+        switch (category) {
+          case 'beer':
+            subcategories = calc.details.beerTypes || ['light'];
+            recommendedQuantity = calc.recommendations.beer;
+            unitType = 'cans';
+            break;
+          case 'wine':
+            subcategories = calc.details.wineTypes || ['chardonnay'];
+            recommendedQuantity = calc.containers.wineBottles;
+            unitType = 'bottles';
+            break;
+          case 'liquor':
+            subcategories = calc.details.liquorTypes || ['whiskey'];
+            recommendedQuantity = calc.containers.liquorBottles;
+            unitType = 'bottles';
+            break;
+          case 'cocktails':
+            subcategories = calc.details.cocktailTypes || ['margarita'];
+            recommendedQuantity = calc.containers.cocktailKits;
+            unitType = 'kits';
+            break;
+        }
+
+        selections.push({
+          eventName: calc.eventName,
+          category,
+          subcategories,
+          recommendedQuantity,
+          unitType,
+          budget: budgetPerCategory
+        });
+      });
+    });
+
+    return selections;
+  };
+
+  const categorySelections = getAllCategorySelections();
+  const currentSelection = categorySelections[currentSelectionStep];
+
+  const handleAddToCart = (items: any[]) => {
+    setAllSelections(prev => [...prev, {
+      eventName: currentSelection.eventName,
+      category: currentSelection.category,
+      items
+    }]);
+    
+    toast({
+      title: "Added to selections!",
+      description: `Added ${items.length} ${currentSelection.category} items`,
+    });
+  };
+
+  const handleNextCategory = () => {
+    if (currentSelectionStep < categorySelections.length - 1) {
+      setCurrentSelectionStep(prev => prev + 1);
+    } else {
+      // All categories completed, show final summary
+      toast({
+        title: "All selections complete!",
+        description: "Ready to add everything to your cart",
+      });
+    }
+  };
+
+  const getTotalSelectionCost = () => {
+    return allSelections.reduce((total, selection) => 
+      total + selection.items.reduce((itemTotal, item) => 
+        itemTotal + (item.price * item.quantity), 0
+      ), 0
+    );
+  };
+
+  if (showProductSelection && currentSelection) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold mb-2">Select Your Products</h2>
+          <p className="text-muted-foreground">
+            Step {currentSelectionStep + 1} of {categorySelections.length}: {currentSelection.eventName} - {currentSelection.category}
+          </p>
+        </div>
+
+        <ProductSelection
+          category={currentSelection.category}
+          subcategories={currentSelection.subcategories}
+          recommendedQuantity={currentSelection.recommendedQuantity}
+          unitType={currentSelection.unitType}
+          budget={currentSelection.budget}
+          onAddToCart={handleAddToCart}
+          onComplete={handleNextCategory}
+        />
+
+        {/* Mini Cart Preview */}
+        {allSelections.length > 0 && (
+          <Card className="border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Your Selections So Far</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                {allSelections.map((selection, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span>{selection.eventName} - {selection.category}: {selection.items.length} items</span>
+                    <span>${selection.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="border-t pt-2 flex justify-between font-medium">
+                  <span>Total:</span>
+                  <span>${getTotalSelectionCost().toFixed(2)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {currentSelectionStep >= categorySelections.length - 1 && allSelections.length === categorySelections.length && (
+          <Card className="bg-primary/5 border-primary/30">
+            <CardContent className="p-6 text-center">
+              <h3 className="text-xl font-semibold mb-4">Ready to Checkout!</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Total: ${getTotalSelectionCost().toFixed(2)} (Budget: ${totalBudget})
+              </p>
+              <div className="flex gap-3 justify-center">
+                <Button onClick={() => navigate('/')} className="flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  Add to Cart & Checkout
+                </Button>
+                <Button variant="outline" onClick={() => setShowProductSelection(false)}>
+                  Review Recommendations
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -204,11 +371,17 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
             
             <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
               <Button 
-                onClick={() => navigate('/')}
+                onClick={() => setShowProductSelection(true)}
                 className="flex items-center gap-2"
               >
                 <ShoppingCart className="w-4 h-4" />
-                Shop Now
+                Shop Recommended Products
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/')}
+              >
+                Browse All Products
               </Button>
               <Button 
                 variant="outline"

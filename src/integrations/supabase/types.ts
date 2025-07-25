@@ -679,6 +679,42 @@ export type Database = {
         }
         Relationships: []
       }
+      product_categories: {
+        Row: {
+          assigned_category: string
+          confidence_score: number | null
+          created_at: string
+          id: string
+          product_handle: string
+          product_title: string
+          shopify_product_id: string
+          subcategory: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_category: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          product_handle: string
+          product_title: string
+          shopify_product_id: string
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_category?: string
+          confidence_score?: number | null
+          created_at?: string
+          id?: string
+          product_handle?: string
+          product_title?: string
+          shopify_product_id?: string
+          subcategory?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       project_templates: {
         Row: {
           configuration: Json
