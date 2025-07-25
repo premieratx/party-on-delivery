@@ -29,7 +29,7 @@ serve(async (req: Request) => {
           'Version': '2021-07-28'
         },
         body: JSON.stringify({
-          phone: '5125767975'
+          phone: '7373719700'
         })
       });
       
@@ -57,7 +57,7 @@ serve(async (req: Request) => {
           body: JSON.stringify({
             firstName: 'Test',
             lastName: 'Contact',
-            phone: '5125767975',
+            phone: '7373719700',
             email: 'test@partyondelivery.com'
           })
         });
@@ -80,7 +80,7 @@ serve(async (req: Request) => {
         'apikey': Deno.env.get('SUPABASE_ANON_KEY') || ''
       },
       body: JSON.stringify({
-        phone: '5125767975',
+        phone: '7373719700',
         message: testMessage,
         contactId: contactId
       })

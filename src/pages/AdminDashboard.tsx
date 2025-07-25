@@ -13,6 +13,7 @@ import {
   Medal,
   Award
 } from 'lucide-react';
+import TestSMS from '@/components/TestSMS';
 
 interface AffiliateStats {
   id: string;
@@ -252,6 +253,7 @@ export const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <TestSMS />
             <Button variant="outline" onClick={loadDashboardData}>
               Refresh Data
             </Button>
