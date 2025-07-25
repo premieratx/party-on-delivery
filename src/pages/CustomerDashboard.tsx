@@ -244,7 +244,7 @@ const CustomerDashboard = () => {
   };
 
   const handleTextUs = () => {
-    const phoneNumber = '5125767975'; // Business phone number
+    const phoneNumber = '7373719700'; // Customer service phone number
     const customerName = customer?.first_name && customer?.last_name 
       ? `${customer.first_name} ${customer.last_name}` 
       : customer?.email || 'Customer';

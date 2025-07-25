@@ -472,7 +472,7 @@ async function sendSMSNotifications(orderData: StandardOrderData, shopifyOrder: 
         },
         notifyCustomer: true,
         notifyAdmin: true,
-        adminPhone: "5125767975" // Party On Delivery business number
+        adminPhone: "7373719700" // Customer service phone number
       }
     });
     
