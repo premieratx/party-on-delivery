@@ -2,20 +2,15 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Minus, Plus, ShoppingCart, Check } from "lucide-react";
 
 interface Product {
   id: string;
-  shopify_product_id: string;
   title: string;
-  handle: string;
-  description?: string;
-  image_url?: string;
-  price?: number;
-  data: any;
-  assigned_category: string;
+  price: number;
+  imageUrl: string;
+  category: string;
   subcategory?: string;
 }
 
@@ -56,73 +51,59 @@ export const ProductSelection = ({
     fetchProducts();
   }, [category, subcategories]);
 
+  const generateSampleProducts = (): Product[] => {
+    const baseProducts = [
+      // Beer products
+      { category: 'beer', subcategory: 'Light', title: 'Miller Lite 12-Pack', price: 15.99 },
+      { category: 'beer', subcategory: 'Light', title: 'Bud Light 24-Pack', price: 22.99 },
+      { category: 'beer', subcategory: 'Light', title: 'Corona Light 12-Pack', price: 17.99 },
+      { category: 'beer', subcategory: 'IPA', title: 'Sierra Nevada IPA 6-Pack', price: 12.99 },
+      { category: 'beer', subcategory: 'Lager', title: 'Stella Artois 12-Pack', price: 19.99 },
+      
+      // Wine products  
+      { category: 'wine', subcategory: 'Chardonnay', title: 'Kendall-Jackson Chardonnay', price: 18.99 },
+      { category: 'wine', subcategory: 'Cabernet', title: 'Caymus Cabernet Sauvignon', price: 89.99 },
+      { category: 'wine', subcategory: 'Pinot Noir', title: 'La Crema Pinot Noir', price: 24.99 },
+      { category: 'wine', subcategory: 'Sauvignon Blanc', title: 'Whitehaven Sauvignon Blanc', price: 16.99 },
+      
+      // Spirits/Liquor products
+      { category: 'liquor', subcategory: 'Whiskey', title: 'Jack Daniels Old No. 7 (750ml)', price: 26.99 },
+      { category: 'liquor', subcategory: 'Whiskey', title: 'Jameson Irish Whiskey (750ml)', price: 29.99 },
+      { category: 'liquor', subcategory: 'Whiskey', title: 'Buffalo Trace Bourbon (750ml)', price: 24.99 },
+      { category: 'liquor', subcategory: 'Vodka', title: 'Titos Handmade Vodka (750ml)', price: 21.99 },
+      { category: 'liquor', subcategory: 'Rum', title: 'Bacardi Superior Rum (750ml)', price: 17.99 },
+      { category: 'liquor', subcategory: 'Gin', title: 'Hendricks Gin (750ml)', price: 34.99 },
+      
+      // Cocktail products
+      { category: 'cocktails', subcategory: 'Margarita', title: 'Margarita Party Kit (serves 12)', price: 45.99 },
+      { category: 'cocktails', subcategory: 'Cosmopolitan', title: 'Cosmo Cocktail Kit', price: 39.99 },
+      { category: 'cocktails', subcategory: 'Mojito', title: 'Mojito Mix & Rum Bundle', price: 42.99 },
+    ];
+
+    return baseProducts
+      .filter(product => 
+        product.category === category && 
+        (subcategories.length === 0 || subcategories.includes(product.subcategory))
+      )
+      .map((product, index) => ({
+        id: `sample-${category}-${index}`,
+        title: product.title,
+        price: product.price,
+        imageUrl: '/placeholder.svg',
+        category: product.category,
+        subcategory: product.subcategory
+      }));
+  };
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
       
-      // First, categorize products if not done yet
-      await supabase.functions.invoke('categorize-products');
-      
-      // Get categorized products for this category
-      let categorizedQuery = supabase
-        .from('product_categories')
-        .select('*')
-        .eq('assigned_category', category);
-
-      // Filter by subcategories if specified
-      if (subcategories.length > 0) {
-        categorizedQuery = categorizedQuery.in('subcategory', subcategories);
-      }
-
-      const { data: categorizedProducts, error: categorizedError } = await categorizedQuery;
-
-      if (categorizedError) {
-        throw categorizedError;
-      }
-
-      if (!categorizedProducts || categorizedProducts.length === 0) {
-        setProducts([]);
-        return;
-      }
-
-      // Get product details from cache
-      const productIds = categorizedProducts.map(p => p.shopify_product_id);
-      const { data: productCache, error: cacheError } = await supabase
-        .from('shopify_products_cache')
-        .select('*')
-        .in('shopify_product_id', productIds);
-
-      if (cacheError) {
-        throw cacheError;
-      }
-
-      if (!productCache || productCache.length === 0) {
-        setProducts([]);
-        return;
-      }
-
-      // Transform the data by combining categorization info with product cache
-      const transformedProducts = categorizedProducts.map(categorized => {
-        const cached = productCache.find(p => p.shopify_product_id === categorized.shopify_product_id);
-        if (!cached) return null;
-        
-        return {
-          id: categorized.id,
-          shopify_product_id: categorized.shopify_product_id,
-          title: categorized.product_title,
-          handle: categorized.product_handle,
-          assigned_category: categorized.assigned_category,
-          subcategory: categorized.subcategory,
-          description: cached.description,
-          image_url: cached.image_url,
-          price: cached.price || 0,
-          data: cached.data || {}
-        };
-      }).filter(Boolean) as Product[];
-
-      setProducts(transformedProducts);
+      // Create sample products based on category and subcategories for demo
+      const sampleProducts = generateSampleProducts();
+      setProducts(sampleProducts);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching products:', error);
       toast({
         title: "Error",
         description: "Failed to load products",
@@ -161,7 +142,7 @@ export const ProductSelection = ({
           title: product.title,
           price: product.price || 0,
           quantity,
-          image: product.image_url
+          image: product.imageUrl
         };
       });
   };
@@ -234,9 +215,9 @@ export const ProductSelection = ({
               return (
                 <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3 flex-1">
-                    {product.image_url && (
+                    {product.imageUrl && (
                       <img 
-                        src={product.image_url} 
+                        src={product.imageUrl} 
                         alt={product.title}
                         className="w-12 h-12 object-cover rounded"
                       />

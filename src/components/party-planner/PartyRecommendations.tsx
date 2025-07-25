@@ -268,9 +268,10 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-2">Select Your Products</h2>
-          <p className="text-muted-foreground">
-            Step {currentSelectionStep + 1} of {categorySelections.length}: {currentSelection.eventName} - {currentSelection.category}
+          <h1 className="text-4xl font-bold mb-2">{currentSelection.eventName}</h1>
+          <h2 className="text-xl text-muted-foreground mb-4">Choose Your Drinks</h2>
+          <p className="text-sm text-muted-foreground">
+            Step {currentSelectionStep + 1} of {categorySelections.length}: {currentSelection.category} selection
           </p>
         </div>
 
@@ -529,6 +530,16 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
     );
   }
 
+  const handleEditParty = (eventIndex: number) => {
+    const eventToEdit = events[eventIndex];
+    // Set the current selection step to the first category for this event
+    const firstCategoryIndex = categorySelections.findIndex(sel => sel.eventName === eventToEdit);
+    if (firstCategoryIndex !== -1) {
+      setCurrentSelectionStep(firstCategoryIndex);
+      setShowProductSelection(true);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -543,9 +554,19 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center justify-between">
               <span>{calc.eventName}</span>
-              <Badge variant="secondary">
-                {calc.details.numberOfPeople} people • {calc.details.eventDuration}hrs • {calc.details.drinkerType} drinkers
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {calc.details.numberOfPeople} people • {calc.details.eventDuration}hrs • {calc.details.drinkerType} drinkers
+                </Badge>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleEditParty(index)}
+                  className="text-xs"
+                >
+                  Edit
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
