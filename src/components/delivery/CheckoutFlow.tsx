@@ -180,12 +180,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Initialize step logic and ensure proper navigation for incomplete data
   useEffect(() => {
     // Always start at the first incomplete step
-    if (!confirmedDateTime || !isDateTimeComplete) {
-      setCurrentStep('datetime');
+    if (!confirmedDateTime || !isDateTimeComplete || !confirmedCustomer || !isCustomerComplete) {
+      setCurrentStep('datetime'); // Combined datetime/contact step
     } else if (!confirmedAddress || !isAddressComplete) {
       setCurrentStep('address');
-    } else if (!confirmedCustomer || !isCustomerComplete) {
-      setCurrentStep('datetime');
     } else if (confirmedDateTime && confirmedAddress && confirmedCustomer) {
       setCurrentStep('payment');
     }
@@ -350,23 +348,32 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmDateTime = () => {
-    if (!isDateTimeComplete) return;
+    // Combined datetime and customer validation
+    if (!isDateTimeComplete || !isCustomerComplete) return;
     
-    setConfirmedDateTime(true);
+    // Validate email and phone before proceeding
+    const emailErr = getEmailErrorMessage(customerInfo.email || '');
+    const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
     
-    // Navigate to next incomplete step or payment if all confirmed
-    if (!confirmedAddress) {
-      setCurrentStep('address');
-    } else if (!confirmedCustomer) {
-      setCurrentStep('datetime');
-    } else if (confirmedAddress && confirmedCustomer) {
-      setCurrentStep('payment');
+    setEmailError(emailErr);
+    setPhoneError(phoneErr);
+    
+    if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim()) {
+      setConfirmedDateTime(true);
+      setConfirmedCustomer(true);
+      
+      // Navigate to address step
+      if (!confirmedAddress) {
+        setCurrentStep('address');
+      } else {
+        setCurrentStep('payment');
+      }
+      
+      // Smooth scroll to top after state update
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
     }
-    
-    // Smooth scroll to top after state update
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
   };
 
   const handleConfirmAddress = async () => {
@@ -374,12 +381,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     setConfirmedAddress(true);
     
-    // Navigate to next incomplete step or payment if all confirmed
-    if (!confirmedCustomer) {
-      setCurrentStep('datetime');
-    } else if (confirmedDateTime && confirmedCustomer) {
-      setCurrentStep('payment');
-    }
+    // Navigate directly to payment since datetime/customer already confirmed
+    setCurrentStep('payment');
     
     // Smooth scroll to top after state update
     requestAnimationFrame(() => {
