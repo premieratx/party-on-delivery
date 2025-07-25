@@ -21,6 +21,8 @@ interface CartItem {
   price: number;
   quantity: number;
   image?: string;
+  eventName: string;
+  category: string;
 }
 
 interface ProductSelectionProps {
@@ -54,11 +56,13 @@ export const ProductSelection = ({
   const [loading, setLoading] = useState(true);
   const [selections, setSelections] = useState<Record<string, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isAddedToCart, setIsAddedToCart] = useState(false);
   const { toast } = useToast();
 
   // Reset state when category changes, but restore if we have current selections
   useEffect(() => {
     setIsCompleted(false);
+    setIsAddedToCart(currentSelections && currentSelections.length > 0);
     fetchProducts();
     
     // Restore current selections if available
@@ -71,7 +75,7 @@ export const ProductSelection = ({
     } else {
       setSelections({});
     }
-  }, [category, subcategories, currentSelections]);
+  }, [category, subcategories]);
 
   const generateSampleProducts = (): Product[] => {
     const baseProducts = [
@@ -176,12 +180,16 @@ export const ProductSelection = ({
           title: product.title,
           price: product.price || 0,
           quantity,
-          image: product.imageUrl
+          image: product.imageUrl,
+          eventName: '',
+          category: ''
         };
       });
   };
 
   const handleConfirmSelection = () => {
+    if (isAddedToCart) return;
+    
     const selectedItems = getSelectedItems();
     if (selectedItems.length === 0) {
       toast({
@@ -194,6 +202,7 @@ export const ProductSelection = ({
 
     onAddToCart(selectedItems);
     setIsCompleted(true);
+    setIsAddedToCart(true);
     toast({
       title: "Added to cart!",
       description: `Added ${selectedItems.length} items to your cart`,
@@ -369,14 +378,19 @@ export const ProductSelection = ({
             )}
             <Button 
               onClick={handleConfirmSelection}
-              disabled={getTotalQuantity() === 0}
+              disabled={getTotalQuantity() === 0 || isAddedToCart}
               className="flex-1"
+              variant={isAddedToCart ? "secondary" : "default"}
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              {currentSelections.length > 0 ? 'Update Selection' : 'Add to Cart'}
+              {isAddedToCart ? 'Added to Cart' : (currentSelections.length > 0 ? 'Update Selection' : 'Add to Cart')}
             </Button>
-            <Button onClick={onComplete} variant="outline">
-              {getTotalQuantity() > 0 ? 'Save & Continue' : 'Skip Category'}
+            <Button 
+              onClick={onComplete} 
+              variant={isAddedToCart ? "default" : "outline"}
+              className={isAddedToCart ? "animate-pulse bg-primary" : ""}
+            >
+              {isAddedToCart ? 'Confirm & Continue' : (getTotalQuantity() > 0 ? 'Save & Continue' : 'Skip Category')}
             </Button>
           </div>
         </CardContent>

@@ -7,7 +7,19 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { PartyTypeSelection } from "@/components/party-planner/PartyTypeSelection";
 import { WeddingEventSelection } from "@/components/party-planner/WeddingEventSelection";
 import { EventDetailsForm } from "@/components/party-planner/EventDetailsForm";
+import { ProductSelection } from "@/components/party-planner/ProductSelection";
 import { PartyRecommendations } from "@/components/party-planner/PartyRecommendations";
+import { CartWidget } from "@/components/party-planner/CartWidget";
+
+interface CartItem {
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  image?: string;
+  eventName: string;
+  category: string;
+}
 
 export interface PartyDetails {
   partyType: string;
@@ -23,6 +35,7 @@ export interface PartyDetails {
     liquorTypes?: string[];
     cocktailTypes?: string[];
   }>;
+  categorySelections?: Record<string, Record<string, CartItem[]>>;
 }
 
 export const PartyPlanner = () => {
@@ -30,30 +43,45 @@ export const PartyPlanner = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [partyDetails, setPartyDetails] = useState<PartyDetails>({
     partyType: '',
-    eventDetails: {}
+    eventDetails: {},
+    categorySelections: {}
   });
 
   const [eventDetailIndex, setEventDetailIndex] = useState(0);
+  const [currentEventForProducts, setCurrentEventForProducts] = useState('');
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [editingEventCategory, setEditingEventCategory] = useState<{event: string, category: string} | null>(null);
 
   // Calculate total steps based on party type and selected events
   const getTotalSteps = () => {
     if (!partyDetails.partyType) return 1;
     if (partyDetails.partyType === 'wedding party') {
       if (!partyDetails.weddingEvents) return 2;
-      return 2 + partyDetails.weddingEvents.length + 1; // Type + Events + Details for each + Summary
+      const eventDetailsSteps = partyDetails.weddingEvents.length;
+      const productSelectionSteps = partyDetails.weddingEvents.reduce((total, event) => {
+        const drinkTypes = partyDetails.eventDetails[event]?.drinkTypes || [];
+        return total + drinkTypes.length;
+      }, 0);
+      return 2 + eventDetailsSteps + productSelectionSteps + 1; // Type + Events + Details + Product Selections + Summary
     }
-    return 3; // Type + Details + Summary
+    const drinkTypes = Object.values(partyDetails.eventDetails)[0]?.drinkTypes || [];
+    return 2 + drinkTypes.length + 1; // Type + Details + Product Selections + Summary
   };
 
   const getCurrentStepType = () => {
+    if (editingEventCategory) return 'product-selection';
     if (currentStep === 0) return 'party-type';
     if (partyDetails.partyType === 'wedding party') {
       if (currentStep === 1) return 'wedding-events';
       if (currentStep === getTotalSteps() - 1) return 'summary';
-      return 'event-details';
+      const eventDetailsSteps = partyDetails.weddingEvents?.length || 0;
+      if (currentStep <= 1 + eventDetailsSteps) return 'event-details';
+      return 'product-selection';
     }
     if (currentStep === 1) return 'event-details';
-    return 'summary';
+    if (currentStep === getTotalSteps() - 1) return 'summary';
+    return 'product-selection';
   };
 
   const getCurrentEventForDetails = () => {
@@ -61,6 +89,49 @@ export const PartyPlanner = () => {
       return partyDetails.weddingEvents[eventDetailIndex];
     }
     return partyDetails.partyType;
+  };
+
+  const getCurrentEventForProducts = () => {
+    if (editingEventCategory) return editingEventCategory.event;
+    if (partyDetails.partyType === 'wedding party' && partyDetails.weddingEvents) {
+      return currentEventForProducts || partyDetails.weddingEvents[0];
+    }
+    return partyDetails.partyType;
+  };
+
+  const getCurrentCategory = () => {
+    if (editingEventCategory) return editingEventCategory.category;
+    const currentEvent = getCurrentEventForProducts();
+    const drinkTypes = partyDetails.eventDetails[currentEvent]?.drinkTypes || [];
+    return drinkTypes[currentCategoryIndex] || '';
+  };
+
+  const addToCart = (eventName: string, category: string, items: CartItem[]) => {
+    const newItems = items.map(item => ({
+      ...item,
+      eventName,
+      category
+    }));
+    
+    setCart(prev => {
+      // Remove existing items for this event/category combination
+      const filtered = prev.filter(item => 
+        !(item.eventName === eventName && item.category === category)
+      );
+      return [...filtered, ...newItems];
+    });
+
+    // Update category selections
+    setPartyDetails(prev => ({
+      ...prev,
+      categorySelections: {
+        ...prev.categorySelections,
+        [eventName]: {
+          ...prev.categorySelections?.[eventName],
+          [category]: newItems
+        }
+      }
+    }));
   };
 
   const isCurrentEventValid = () => {
@@ -74,18 +145,46 @@ export const PartyPlanner = () => {
   };
 
   const handleNext = () => {
+    if (editingEventCategory) {
+      setEditingEventCategory(null);
+      return;
+    }
+
     const stepType = getCurrentStepType();
     
     if (stepType === 'event-details') {
       const currentEvent = getCurrentEventForDetails();
       if (!partyDetails.eventDetails[currentEvent]) {
-        // Don't proceed if current event details aren't filled
         return;
       }
       
       if (partyDetails.partyType === 'wedding party' && partyDetails.weddingEvents) {
         if (eventDetailIndex < partyDetails.weddingEvents.length - 1) {
           setEventDetailIndex(prev => prev + 1);
+        } else {
+          // Move to product selection phase
+          setCurrentEventForProducts(partyDetails.weddingEvents[0]);
+          setCurrentCategoryIndex(0);
+        }
+      } else {
+        // Single event, move to product selection
+        setCurrentEventForProducts(partyDetails.partyType);
+        setCurrentCategoryIndex(0);
+      }
+    } else if (stepType === 'product-selection') {
+      const currentEvent = getCurrentEventForProducts();
+      const drinkTypes = partyDetails.eventDetails[currentEvent]?.drinkTypes || [];
+      
+      if (currentCategoryIndex < drinkTypes.length - 1) {
+        setCurrentCategoryIndex(prev => prev + 1);
+      } else {
+        // Move to next event or summary
+        if (partyDetails.partyType === 'wedding party' && partyDetails.weddingEvents) {
+          const currentEventIndex = partyDetails.weddingEvents.indexOf(currentEvent);
+          if (currentEventIndex < partyDetails.weddingEvents.length - 1) {
+            setCurrentEventForProducts(partyDetails.weddingEvents[currentEventIndex + 1]);
+            setCurrentCategoryIndex(0);
+          }
         }
       }
     }
@@ -96,16 +195,42 @@ export const PartyPlanner = () => {
   };
 
   const handleBack = () => {
+    if (editingEventCategory) {
+      setEditingEventCategory(null);
+      return;
+    }
+
     if (currentStep > 0) {
       const stepType = getCurrentStepType();
       
-      if (stepType === 'event-details' && partyDetails.partyType === 'wedding party') {
+      if (stepType === 'product-selection') {
+        if (currentCategoryIndex > 0) {
+          setCurrentCategoryIndex(prev => prev - 1);
+        } else {
+          // Go back to previous event or event details
+          if (partyDetails.partyType === 'wedding party' && partyDetails.weddingEvents) {
+            const currentEventIndex = partyDetails.weddingEvents.indexOf(getCurrentEventForProducts());
+            if (currentEventIndex > 0) {
+              const prevEvent = partyDetails.weddingEvents[currentEventIndex - 1];
+              const prevDrinkTypes = partyDetails.eventDetails[prevEvent]?.drinkTypes || [];
+              setCurrentEventForProducts(prevEvent);
+              setCurrentCategoryIndex(prevDrinkTypes.length - 1);
+            } else {
+              setCurrentStep(prev => prev - 1);
+            }
+          } else {
+            setCurrentStep(prev => prev - 1);
+          }
+        }
+      } else if (stepType === 'event-details' && partyDetails.partyType === 'wedding party') {
         if (eventDetailIndex > 0) {
           setEventDetailIndex(prev => prev - 1);
+        } else {
+          setCurrentStep(prev => prev - 1);
         }
+      } else {
+        setCurrentStep(prev => prev - 1);
       }
-      
-      setCurrentStep(prev => prev - 1);
     } else {
       navigate('/');
     }
@@ -179,8 +304,69 @@ export const PartyPlanner = () => {
               />
             )}
 
+            {getCurrentStepType() === 'product-selection' && (
+              <ProductSelection
+                category={getCurrentCategory()}
+                subcategories={(() => {
+                  const currentEvent = getCurrentEventForProducts();
+                  const category = getCurrentCategory();
+                  if (category === 'beer') return partyDetails.eventDetails[currentEvent]?.beerTypes || [];
+                  if (category === 'wine') return partyDetails.eventDetails[currentEvent]?.wineTypes || [];
+                  if (category === 'liquor') return partyDetails.eventDetails[currentEvent]?.liquorTypes || [];
+                  if (category === 'cocktails') return partyDetails.eventDetails[currentEvent]?.cocktailTypes || [];
+                  return [];
+                })()}
+                recommendedQuantity={(() => {
+                  const currentEvent = getCurrentEventForProducts();
+                  const eventDetails = partyDetails.eventDetails[currentEvent];
+                  if (!eventDetails) return 0;
+                  
+                  const { numberOfPeople, drinkerType, eventDuration, drinkTypes } = eventDetails;
+                  const category = getCurrentCategory();
+                  
+                  let drinksPerPersonPerHour = 0.5;
+                  if (drinkerType === 'light') drinksPerPersonPerHour = 0.5;
+                  else if (drinkerType === 'medium') drinksPerPersonPerHour = 1;
+                  else if (drinkerType === 'heavy') drinksPerPersonPerHour = 1.5;
+                  
+                  const totalDrinks = numberOfPeople * drinksPerPersonPerHour * eventDuration;
+                  const categoryRatio = 1 / drinkTypes.length;
+                  
+                  return Math.ceil(totalDrinks * categoryRatio);
+                })()}
+                unitType={(() => {
+                  const category = getCurrentCategory();
+                  if (category === 'beer') return 'beers';
+                  if (category === 'wine') return 'glasses';
+                  if (category === 'liquor') return 'shots';
+                  if (category === 'cocktails') return 'drinks';
+                  return 'items';
+                })()}
+                budget={(() => {
+                  const currentEvent = getCurrentEventForProducts();
+                  const eventDetails = partyDetails.eventDetails[currentEvent];
+                  if (!eventDetails) return 0;
+                  
+                  const categoryRatio = 1 / eventDetails.drinkTypes.length;
+                  return eventDetails.budget * categoryRatio;
+                })()}
+                totalPartyBudget={(() => {
+                  return Object.values(partyDetails.eventDetails).reduce((sum, details) => sum + details.budget, 0);
+                })()}
+                runningTotal={cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
+                currentSelections={partyDetails.categorySelections?.[getCurrentEventForProducts()]?.[getCurrentCategory()] || []}
+                onAddToCart={(items) => addToCart(getCurrentEventForProducts(), getCurrentCategory(), items)}
+                onComplete={handleNext}
+                onPrevious={handleBack}
+              />
+            )}
+
             {getCurrentStepType() === 'summary' && (
-              <PartyRecommendations partyDetails={partyDetails} />
+              <PartyRecommendations 
+                partyDetails={partyDetails} 
+                cart={cart}
+                onEditCategory={(event, category) => setEditingEventCategory({event, category})}
+              />
             )}
 
             {/* Navigation */}
@@ -194,7 +380,7 @@ export const PartyPlanner = () => {
                 {currentStep === 0 ? 'Back to Home' : 'Back'}
               </Button>
 
-              {getCurrentStepType() !== 'summary' && (
+              {getCurrentStepType() !== 'summary' && getCurrentStepType() !== 'product-selection' && (
                 <Button
                   onClick={handleNext}
                   disabled={
@@ -211,6 +397,8 @@ export const PartyPlanner = () => {
             </div>
           </CardContent>
         </Card>
+        
+        <CartWidget items={cart} />
       </div>
     </div>
   );

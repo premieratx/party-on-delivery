@@ -10,6 +10,16 @@ import { ProductSelection } from "./ProductSelection";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+interface CartItem {
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  image?: string;
+  eventName: string;
+  category: string;
+}
+
 interface PartyRecommendationsProps {
   partyDetails: {
     partyType: string;
@@ -25,10 +35,13 @@ interface PartyRecommendationsProps {
       liquorTypes?: string[];
       cocktailTypes?: string[];
     }>;
+    categorySelections?: Record<string, Record<string, CartItem[]>>;
   };
+  cart: CartItem[];
+  onEditCategory: (event: string, category: string) => void;
 }
 
-export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps) => {
+export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: PartyRecommendationsProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentSelectionStep, setCurrentSelectionStep] = useState(0);
