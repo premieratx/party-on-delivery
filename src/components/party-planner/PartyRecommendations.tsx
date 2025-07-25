@@ -140,12 +140,12 @@ export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: Par
 
         switch (category) {
           case 'beer':
-            subcategories = calc.details.beerTypes && calc.details.beerTypes.length > 0 ? calc.details.beerTypes : ['Light'];
-            recommendedQuantity = calc.recommendations.beer;
-            unitType = 'beers';
+            subcategories = ['all']; // Show all beer products
+            recommendedQuantity = calc.containers.beer12Packs;
+            unitType = '12-packs';
             break;
           case 'wine':
-            subcategories = calc.details.wineTypes && calc.details.wineTypes.length > 0 ? calc.details.wineTypes : ['Chardonnay'];
+            subcategories = ['all']; // Show all wine products
             recommendedQuantity = calc.containers.wineBottles;
             unitType = 'bottles';
             break;
@@ -155,9 +155,9 @@ export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: Par
             unitType = 'bottles';
             break;
           case 'cocktails':
-            subcategories = calc.details.cocktailTypes && calc.details.cocktailTypes.length > 0 ? calc.details.cocktailTypes : ['Margarita'];
-            recommendedQuantity = calc.containers.cocktailKits;
-            unitType = 'kits';
+            subcategories = ['all']; // Show all cocktail products
+            recommendedQuantity = calc.recommendations.cocktails;
+            unitType = 'drinks';
             break;
         }
 

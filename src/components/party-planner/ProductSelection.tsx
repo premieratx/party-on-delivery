@@ -87,10 +87,11 @@ export const ProductSelection = ({
       { category: 'beer', subcategory: 'Lager', title: 'Stella Artois 12-Pack', price: 19.99, containerSize: 12 },
       
       // Wine products (bottles - 5 drinks per bottle)
-      { category: 'wine', subcategory: 'Chardonnay', title: 'Kendall-Jackson Chardonnay', price: 18.99, containerSize: 5 },
-      { category: 'wine', subcategory: 'Cabernet', title: 'Caymus Cabernet Sauvignon', price: 89.99, containerSize: 5 },
-      { category: 'wine', subcategory: 'Pinot Noir', title: 'La Crema Pinot Noir', price: 24.99, containerSize: 5 },
-      { category: 'wine', subcategory: 'Sauvignon Blanc', title: 'Whitehaven Sauvignon Blanc', price: 16.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'Red', title: 'Kendall-Jackson Vintner\'s Reserve Cabernet', price: 18.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'Red', title: 'Caymus Cabernet Sauvignon', price: 89.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'Red', title: 'La Crema Pinot Noir', price: 24.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'White', title: 'Kendall-Jackson Chardonnay', price: 16.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'White', title: 'Whitehaven Sauvignon Blanc', price: 16.99, containerSize: 5 },
       
       // Spirits/Liquor products (bottles - 25 drinks per 750ml bottle)
       { category: 'liquor', subcategory: 'Whiskey', title: 'Jack Daniels Old No. 7 (750ml)', price: 26.99, containerSize: 25 },
@@ -109,7 +110,7 @@ export const ProductSelection = ({
     return baseProducts
       .filter(product => 
         product.category === category && 
-        (subcategories.length === 0 || subcategories.includes(product.subcategory))
+        (subcategories.includes('all') || subcategories.length === 0 || subcategories.includes(product.subcategory))
       )
       .map((product, index) => ({
         id: `sample-${category}-${index}`,
@@ -266,7 +267,12 @@ export const ProductSelection = ({
             {isCompleted && <Check className="w-5 h-5 text-green-500" />}
           </CardTitle>
           <div className="text-3xl font-bold mb-2 text-center">
-            Choose {Math.ceil(recommendedQuantity / (unitType === 'beers' ? 12 : unitType === 'bottles' && category === 'wine' ? 5 : unitType === 'bottles' && category === 'liquor' ? 25 : unitType === 'kits' ? 12 : 1))} {category === 'beer' ? '12-Packs' : unitType === 'bottles' ? 'Bottles' : 'Kits'}
+            Choose {recommendedQuantity} {
+              unitType === '12-packs' ? '12-Packs' :
+              unitType === 'bottles' ? 'Bottles' :
+              unitType === 'drinks' ? 'Cocktail Kits' : 
+              unitType
+            }
           </div>
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Category Budget: ${budget.toFixed(2)}</span>
@@ -279,7 +285,13 @@ export const ProductSelection = ({
             />
           </div>
           <div className="text-sm text-muted-foreground text-center">
-            Selected: {getTotalServings()} / {recommendedQuantity} {unitType === 'beers' ? 'Beers' : unitType} ({getTotalQuantity()} containers)
+            Selected: {getTotalServings()} / {
+              unitType === 'drinks' ? recommendedQuantity + ' drinks' :
+              unitType === '12-packs' ? (recommendedQuantity * 12) + ' beers' :
+              unitType === 'bottles' && category === 'wine' ? (recommendedQuantity * 5) + ' drinks' :
+              unitType === 'bottles' && category === 'liquor' ? (recommendedQuantity * 25) + ' drinks' :
+              recommendedQuantity + ' ' + unitType
+            } ({getTotalQuantity()} containers)
           </div>
         </CardHeader>
         
@@ -308,7 +320,11 @@ export const ProductSelection = ({
                          <h4 className="font-medium truncate">{product.title}</h4>
                          <div className="flex items-center gap-2">
                            <span className="text-sm font-medium">${product.price?.toFixed(2) || '0.00'}</span>
-                           <span className="text-xs text-muted-foreground">({product.containerSize} {unitType === 'beers' ? 'beers' : unitType === 'bottles' ? 'drinks' : 'drinks'})</span>
+                            <span className="text-xs text-muted-foreground">({product.containerSize} {
+                              category === 'beer' ? 'beers' : 
+                              category === 'cocktails' ? 'drinks' :
+                              'drinks'
+                            })</span>
                            {product.subcategory && (
                              <Badge variant="outline" className="text-xs">
                                {product.subcategory}

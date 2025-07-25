@@ -174,15 +174,20 @@ export const EventDetailsForm = ({ eventName, details, onUpdate }: EventDetailsF
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">Budget</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-sm">$</span>
-                <Input
-                  type="number"
-                  value={formData.budget}
-                  onChange={(e) => updateFormData({ budget: parseInt(e.target.value) || 0 })}
-                  min="0"
-                  className="text-sm h-8"
+              <div className="space-y-1">
+                <Slider
+                  value={[formData.budget]}
+                  onValueChange={(value) => updateFormData({ budget: value[0] })}
+                  max={maxPeople * 30}
+                  min={50}
+                  step={25}
+                  className="w-full"
                 />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>$50</span>
+                  <Badge variant="secondary" className="text-xs">${formData.budget}</Badge>
+                  <span>${maxPeople * 30}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -205,18 +210,18 @@ export const EventDetailsForm = ({ eventName, details, onUpdate }: EventDetailsF
             </div>
           </div>
 
-          {/* Sub-type selections - compact */}
-          {formData.drinkTypes.map((drinkType) => (
-            <div key={drinkType} className="space-y-2">
-              <Label className="text-xs font-medium capitalize text-muted-foreground">{drinkType} Types</Label>
+          {/* Liquor sub-type selection only */}
+          {formData.drinkTypes.includes('liquor') && (
+            <div className="space-y-2">
+              <Label className="text-xs font-medium capitalize text-muted-foreground">Liquor Types</Label>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1">
-                {subTypeOptions[drinkType as keyof typeof subTypeOptions]?.map((subType) => {
-                  const subTypeArray = formData[`${drinkType}Types` as keyof typeof formData] as string[] || [];
+                {subTypeOptions.liquor?.map((subType) => {
+                  const subTypeArray = formData.liquorTypes || [];
                   return (
                     <Button
                       key={subType}
                       variant={subTypeArray.includes(subType) ? "default" : "outline"}
-                      onClick={() => toggleSubType(drinkType, subType)}
+                      onClick={() => toggleSubType('liquor', subType)}
                       className="h-7 text-xs px-1 truncate"
                       title={subType}
                     >
@@ -226,7 +231,7 @@ export const EventDetailsForm = ({ eventName, details, onUpdate }: EventDetailsF
                 })}
               </div>
             </div>
-          ))}
+          )}
 
           {/* Compact Summary */}
           <div className="bg-muted/30 rounded p-3 mt-4">
