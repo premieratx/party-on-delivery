@@ -33,6 +33,7 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
   const { toast } = useToast();
   const [currentSelectionStep, setCurrentSelectionStep] = useState(0);
   const [allSelections, setAllSelections] = useState<Array<{eventName: string, category: string, items: any[]}>>([]);
+  const [savedCategorySelections, setSavedCategorySelections] = useState<Record<string, any[]>>({});
   const [showProductSelection, setShowProductSelection] = useState(false);
   const [showFinalProposal, setShowFinalProposal] = useState(false);
   const [email, setEmail] = useState("");
@@ -168,11 +169,36 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
   const currentSelection = categorySelections[currentSelectionStep];
 
   const handleAddToCart = (items: any[]) => {
-    setAllSelections(prev => [...prev, {
-      eventName: currentSelection.eventName,
-      category: currentSelection.category,
-      items
-    }]);
+    const selectionKey = `${currentSelection.eventName}-${currentSelection.category}`;
+    
+    // Update category selections for navigation
+    setSavedCategorySelections(prev => ({
+      ...prev,
+      [selectionKey]: items
+    }));
+    
+    // Update or add to allSelections
+    setAllSelections(prev => {
+      const existingIndex = prev.findIndex(
+        s => s.eventName === currentSelection.eventName && s.category === currentSelection.category
+      );
+      
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = {
+          eventName: currentSelection.eventName,
+          category: currentSelection.category,
+          items
+        };
+        return updated;
+      } else {
+        return [...prev, {
+          eventName: currentSelection.eventName,
+          category: currentSelection.category,
+          items
+        }];
+      }
+    });
     
     toast({
       title: "Added to selections!",
@@ -191,6 +217,28 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
         description: "Review your final proposal",
       });
     }
+  };
+
+  const handlePreviousCategory = () => {
+    if (currentSelectionStep > 0) {
+      setCurrentSelectionStep(prev => prev - 1);
+    }
+  };
+
+  const navigateToCategory = (eventName: string, category: string) => {
+    const targetIndex = categorySelections.findIndex(
+      sel => sel.eventName === eventName && sel.category === category
+    );
+    if (targetIndex !== -1) {
+      setCurrentSelectionStep(targetIndex);
+      setShowProductSelection(true);
+    }
+  };
+
+  const getCurrentSelections = () => {
+    if (!currentSelection) return [];
+    const selectionKey = `${currentSelection.eventName}-${currentSelection.category}`;
+    return savedCategorySelections[selectionKey] || [];
   };
 
   const handleSendProposal = async () => {
@@ -293,32 +341,75 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
           budget={currentSelection.budget}
           totalPartyBudget={calculations.find(c => c.eventName === currentSelection.eventName)?.details.budget || 0}
           runningTotal={getPartyRunningTotal(currentSelection.eventName)}
+          currentSelections={getCurrentSelections()}
           onAddToCart={handleAddToCart}
           onComplete={handleNextCategory}
+          onPrevious={currentSelectionStep > 0 ? handlePreviousCategory : undefined}
         />
 
-        {/* Mini Cart Preview */}
-        {allSelections.length > 0 && (
-          <Card className="border-primary/20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Your Selections So Far</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-sm">
-                {allSelections.map((selection, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span>{selection.eventName} - {selection.category}: {selection.items.length} items</span>
-                    <span>${selection.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
-                  </div>
-                ))}
-                <div className="border-t pt-2 flex justify-between font-medium">
-                  <span>Total:</span>
-                  <span>${getTotalSelectionCost().toFixed(2)}</span>
-                </div>
+        {/* Navigation & Progress */}
+        <Card className="border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <div className="text-sm">
+                <div className="font-semibold">Category Progress</div>
+                <div className="text-muted-foreground">Step {currentSelectionStep + 1} of {categorySelections.length}</div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="flex gap-2">
+                {currentSelectionStep > 0 && (
+                  <Button variant="outline" size="sm" onClick={handlePreviousCategory}>
+                    Previous
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => setShowProductSelection(false)}>
+                  Review All
+                </Button>
+              </div>
+            </div>
+            
+            {/* Category Summary for Current Event */}
+            {(() => {
+              const currentEventSelections = allSelections.filter(s => s.eventName === currentSelection.eventName);
+              const currentEventBudget = calculations.find(c => c.eventName === currentSelection.eventName)?.details.budget || 0;
+              const currentEventSpent = getPartyRunningTotal(currentSelection.eventName);
+              const currentEventRecs = calculations.find(c => c.eventName === currentSelection.eventName);
+              
+              return currentEventSelections.length > 0 && (
+                <div className="space-y-2 text-sm border-t pt-4">
+                  <div className="font-medium">{currentSelection.eventName} Summary:</div>
+                  {currentEventSelections.map((selection, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <button 
+                        onClick={() => navigateToCategory(selection.eventName, selection.category)}
+                        className="text-left hover:text-primary transition-colors"
+                      >
+                        <span className="capitalize">{selection.category}: {selection.items.length} items</span>
+                        <div className="text-xs text-muted-foreground">
+                          {selection.category === 'beer' && `${selection.items.reduce((sum, item) => sum + ((item.containerSize || 12) * item.quantity), 0)} beers`}
+                          {selection.category === 'wine' && `${selection.items.reduce((sum, item) => sum + item.quantity, 0)} bottles`}
+                          {selection.category === 'liquor' && `${selection.items.reduce((sum, item) => sum + item.quantity, 0)} bottles`}
+                          {selection.category === 'cocktails' && `${selection.items.reduce((sum, item) => sum + item.quantity, 0)} kits`}
+                          {' vs '}
+                          {selection.category === 'beer' && `${currentEventRecs?.recommendations.beer || 0} recommended`}
+                          {selection.category === 'wine' && `${currentEventRecs?.containers.wineBottles || 0} recommended`}
+                          {selection.category === 'liquor' && `${currentEventRecs?.containers.liquorBottles || 0} recommended`}
+                          {selection.category === 'cocktails' && `${currentEventRecs?.containers.cocktailKits || 0} recommended`}
+                        </div>
+                      </button>
+                      <span className="font-medium">${selection.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div className="border-t pt-2 flex justify-between font-medium">
+                    <span>Event Total: ${currentEventSpent.toFixed(2)} / ${currentEventBudget.toFixed(2)}</span>
+                    <span className={currentEventSpent <= currentEventBudget ? 'text-green-600' : 'text-red-500'}>
+                      {currentEventSpent <= currentEventBudget ? 'Within Budget' : 'Over Budget'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
 
         {currentSelectionStep >= categorySelections.length - 1 && allSelections.length === categorySelections.length && (
           <Card className="bg-primary/5 border-primary/30">

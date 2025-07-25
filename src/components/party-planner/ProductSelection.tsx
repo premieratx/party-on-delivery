@@ -31,8 +31,10 @@ interface ProductSelectionProps {
   budget: number;
   totalPartyBudget: number;
   runningTotal: number;
+  currentSelections?: CartItem[];
   onAddToCart: (items: CartItem[]) => void;
   onComplete: () => void;
+  onPrevious?: () => void;
 }
 
 export const ProductSelection = ({ 
@@ -43,8 +45,10 @@ export const ProductSelection = ({
   budget, 
   totalPartyBudget,
   runningTotal,
+  currentSelections = [],
   onAddToCart,
-  onComplete 
+  onComplete,
+  onPrevious 
 }: ProductSelectionProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,12 +56,22 @@ export const ProductSelection = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const { toast } = useToast();
 
-  // Reset state when category changes
+  // Reset state when category changes, but restore if we have current selections
   useEffect(() => {
-    setSelections({});
     setIsCompleted(false);
     fetchProducts();
-  }, [category, subcategories]);
+    
+    // Restore current selections if available
+    if (currentSelections && currentSelections.length > 0) {
+      const restoredSelections: Record<string, number> = {};
+      currentSelections.forEach(item => {
+        restoredSelections[item.productId] = item.quantity;
+      });
+      setSelections(restoredSelections);
+    } else {
+      setSelections({});
+    }
+  }, [category, subcategories, currentSelections]);
 
   const generateSampleProducts = (): Product[] => {
     const baseProducts = [
@@ -348,16 +362,21 @@ export const ProductSelection = ({
           )}
 
           <div className="flex gap-2 pt-4">
+            {onPrevious && (
+              <Button variant="outline" onClick={onPrevious}>
+                Previous
+              </Button>
+            )}
             <Button 
               onClick={handleConfirmSelection}
               disabled={getTotalQuantity() === 0}
               className="flex-1"
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              Confirm & Add to Cart
+              {currentSelections.length > 0 ? 'Update Selection' : 'Add to Cart'}
             </Button>
             <Button onClick={onComplete} variant="outline">
-              Continue
+              {getTotalQuantity() > 0 ? 'Save & Continue' : 'Skip Category'}
             </Button>
           </div>
         </CardContent>
