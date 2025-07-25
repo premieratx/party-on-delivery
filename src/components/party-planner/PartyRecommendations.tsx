@@ -80,7 +80,7 @@ export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: Par
     );
 
     if (selectedDrinkTypes.length === 0) {
-      return { recommendations, containers: { beerCans: 0, wineBottles: 0, liquorBottles: 0, cocktailKits: 0 } };
+      return { recommendations, containers: { beer12Packs: 0, wineBottles: 0, liquorBottles: 0, cocktailKits: 0 } };
     }
 
     // Divide drinks evenly among selected types
@@ -92,7 +92,7 @@ export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: Par
 
     // Convert to containers
     const containers = {
-      beerCans: recommendations.beer, // 12oz cans
+      beer12Packs: Math.ceil(recommendations.beer / 12), // 12-packs for beer
       wineBottles: Math.ceil(recommendations.wine / 5), // 5 glasses per bottle
       liquorBottles: Math.ceil(recommendations.liquor / 25), // 25 drinks per 750ml
       cocktailKits: Math.ceil(recommendations.cocktails / 12) // 12 drinks per kit
@@ -398,12 +398,12 @@ export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: Par
                       >
                         <span className="capitalize">{selection.category}: {selection.items.length} items</span>
                         <div className="text-xs text-muted-foreground">
-                          {selection.category === 'beer' && `${selection.items.reduce((sum, item) => sum + ((item.containerSize || 12) * item.quantity), 0)} beers`}
+                          {selection.category === 'beer' && `${selection.items.reduce((sum, item) => sum + item.quantity, 0)} 12-packs (${selection.items.reduce((sum, item) => sum + ((item.containerSize || 12) * item.quantity), 0)} beers)`}
                           {selection.category === 'wine' && `${selection.items.reduce((sum, item) => sum + item.quantity, 0)} bottles`}
                           {selection.category === 'liquor' && `${selection.items.reduce((sum, item) => sum + item.quantity, 0)} bottles`}
                           {selection.category === 'cocktails' && `${selection.items.reduce((sum, item) => sum + item.quantity, 0)} kits`}
                           {' vs '}
-                          {selection.category === 'beer' && `${currentEventRecs?.recommendations.beer || 0} recommended`}
+                          {selection.category === 'beer' && `${currentEventRecs?.containers.beer12Packs || 0} recommended`}
                           {selection.category === 'wine' && `${currentEventRecs?.containers.wineBottles || 0} recommended`}
                           {selection.category === 'liquor' && `${currentEventRecs?.containers.liquorBottles || 0} recommended`}
                           {selection.category === 'cocktails' && `${currentEventRecs?.containers.cocktailKits || 0} recommended`}

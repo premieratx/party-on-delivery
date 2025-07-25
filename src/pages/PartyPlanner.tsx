@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useReliableStorage } from "@/hooks/useReliableStorage";
 import { PartyTypeSelection } from "@/components/party-planner/PartyTypeSelection";
 import { WeddingEventSelection } from "@/components/party-planner/WeddingEventSelection";
 import { EventDetailsForm } from "@/components/party-planner/EventDetailsForm";
@@ -41,7 +42,7 @@ export interface PartyDetails {
 export const PartyPlanner = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
-  const [partyDetails, setPartyDetails] = useState<PartyDetails>({
+  const [partyDetails, setPartyDetails, clearPartyDetails] = useReliableStorage<PartyDetails>('party-details', {
     partyType: '',
     eventDetails: {},
     categorySelections: {}

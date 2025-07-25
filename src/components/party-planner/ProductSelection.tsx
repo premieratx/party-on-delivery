@@ -79,26 +79,26 @@ export const ProductSelection = ({
 
   const generateSampleProducts = (): Product[] => {
     const baseProducts = [
-      // Beer products with container sizes
+      // Beer products with container sizes (12-packs)
       { category: 'beer', subcategory: 'Light', title: 'Miller Lite 12-Pack', price: 15.99, containerSize: 12 },
-      { category: 'beer', subcategory: 'Light', title: 'Bud Light 24-Pack', price: 22.99, containerSize: 24 },
+      { category: 'beer', subcategory: 'Light', title: 'Bud Light 12-Pack', price: 16.99, containerSize: 12 },
       { category: 'beer', subcategory: 'Light', title: 'Corona Light 12-Pack', price: 17.99, containerSize: 12 },
-      { category: 'beer', subcategory: 'IPA', title: 'Sierra Nevada IPA 6-Pack', price: 12.99, containerSize: 6 },
+      { category: 'beer', subcategory: 'IPA', title: 'Sierra Nevada IPA 12-Pack', price: 18.99, containerSize: 12 },
       { category: 'beer', subcategory: 'Lager', title: 'Stella Artois 12-Pack', price: 19.99, containerSize: 12 },
       
-      // Wine products (bottles)
-      { category: 'wine', subcategory: 'Chardonnay', title: 'Kendall-Jackson Chardonnay', price: 18.99, containerSize: 1 },
-      { category: 'wine', subcategory: 'Cabernet', title: 'Caymus Cabernet Sauvignon', price: 89.99, containerSize: 1 },
-      { category: 'wine', subcategory: 'Pinot Noir', title: 'La Crema Pinot Noir', price: 24.99, containerSize: 1 },
-      { category: 'wine', subcategory: 'Sauvignon Blanc', title: 'Whitehaven Sauvignon Blanc', price: 16.99, containerSize: 1 },
+      // Wine products (bottles - 5 drinks per bottle)
+      { category: 'wine', subcategory: 'Chardonnay', title: 'Kendall-Jackson Chardonnay', price: 18.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'Cabernet', title: 'Caymus Cabernet Sauvignon', price: 89.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'Pinot Noir', title: 'La Crema Pinot Noir', price: 24.99, containerSize: 5 },
+      { category: 'wine', subcategory: 'Sauvignon Blanc', title: 'Whitehaven Sauvignon Blanc', price: 16.99, containerSize: 5 },
       
-      // Spirits/Liquor products (bottles)
-      { category: 'liquor', subcategory: 'Whiskey', title: 'Jack Daniels Old No. 7 (750ml)', price: 26.99, containerSize: 1 },
-      { category: 'liquor', subcategory: 'Whiskey', title: 'Jameson Irish Whiskey (750ml)', price: 29.99, containerSize: 1 },
-      { category: 'liquor', subcategory: 'Whiskey', title: 'Buffalo Trace Bourbon (750ml)', price: 24.99, containerSize: 1 },
-      { category: 'liquor', subcategory: 'Vodka', title: 'Titos Handmade Vodka (750ml)', price: 21.99, containerSize: 1 },
-      { category: 'liquor', subcategory: 'Rum', title: 'Bacardi Superior Rum (750ml)', price: 17.99, containerSize: 1 },
-      { category: 'liquor', subcategory: 'Gin', title: 'Hendricks Gin (750ml)', price: 34.99, containerSize: 1 },
+      // Spirits/Liquor products (bottles - 25 drinks per 750ml bottle)
+      { category: 'liquor', subcategory: 'Whiskey', title: 'Jack Daniels Old No. 7 (750ml)', price: 26.99, containerSize: 25 },
+      { category: 'liquor', subcategory: 'Whiskey', title: 'Jameson Irish Whiskey (750ml)', price: 29.99, containerSize: 25 },
+      { category: 'liquor', subcategory: 'Whiskey', title: 'Buffalo Trace Bourbon (750ml)', price: 24.99, containerSize: 25 },
+      { category: 'liquor', subcategory: 'Vodka', title: 'Titos Handmade Vodka (750ml)', price: 21.99, containerSize: 25 },
+      { category: 'liquor', subcategory: 'Rum', title: 'Bacardi Superior Rum (750ml)', price: 17.99, containerSize: 25 },
+      { category: 'liquor', subcategory: 'Gin', title: 'Hendricks Gin (750ml)', price: 34.99, containerSize: 25 },
       
       // Cocktail products (kits)
       { category: 'cocktails', subcategory: 'Margarita', title: 'Margarita Party Kit (serves 12)', price: 45.99, containerSize: 12 },
@@ -142,6 +142,7 @@ export const ProductSelection = ({
   };
 
   const updateQuantity = (productId: string, change: number) => {
+    if (isAddedToCart) return; // Prevent changes after adding to cart
     setSelections(prev => ({
       ...prev,
       [productId]: Math.max(0, (prev[productId] || 0) + change)
@@ -265,7 +266,7 @@ export const ProductSelection = ({
             {isCompleted && <Check className="w-5 h-5 text-green-500" />}
           </CardTitle>
           <div className="text-3xl font-bold mb-2 text-center">
-            {recommendedQuantity} {unitType === 'beers' ? 'Beers' : unitType} Needed
+            Choose {Math.ceil(recommendedQuantity / (unitType === 'beers' ? 12 : unitType === 'bottles' && category === 'wine' ? 5 : unitType === 'bottles' && category === 'liquor' ? 25 : unitType === 'kits' ? 12 : 1))} {category === 'beer' ? '12-Packs' : unitType === 'bottles' ? 'Bottles' : 'Kits'}
           </div>
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Category Budget: ${budget.toFixed(2)}</span>
@@ -307,7 +308,7 @@ export const ProductSelection = ({
                          <h4 className="font-medium truncate">{product.title}</h4>
                          <div className="flex items-center gap-2">
                            <span className="text-sm font-medium">${product.price?.toFixed(2) || '0.00'}</span>
-                           <span className="text-xs text-muted-foreground">({product.containerSize} {unitType === 'beers' ? 'beers' : unitType})</span>
+                           <span className="text-xs text-muted-foreground">({product.containerSize} {unitType === 'beers' ? 'beers' : unitType === 'bottles' ? 'drinks' : 'drinks'})</span>
                            {product.subcategory && (
                              <Badge variant="outline" className="text-xs">
                                {product.subcategory}
@@ -322,7 +323,7 @@ export const ProductSelection = ({
                         variant="outline"
                         size="sm"
                         onClick={() => updateQuantity(product.id, -1)}
-                        disabled={quantity === 0}
+                        disabled={quantity === 0 || isAddedToCart}
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
@@ -331,14 +332,10 @@ export const ProductSelection = ({
                         variant="outline"
                         size="sm"
                         onClick={() => updateQuantity(product.id, 1)}
+                        disabled={isAddedToCart}
                       >
                         <Plus className="w-3 h-3" />
                       </Button>
-                      {productTotal > 0 && (
-                        <span className="text-sm font-medium ml-2 min-w-16 text-right">
-                          ${productTotal.toFixed(2)}
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
