@@ -173,10 +173,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   
   
-  // Initialize step logic and pre-select today's date if no saved date exists
+  // Initialize step logic and ensure proper navigation for incomplete data
   useEffect(() => {
-    if (!confirmedDateTime && !confirmedAddress && !confirmedCustomer) {
+    // Always start at the first incomplete step
+    if (!confirmedDateTime || !isDateTimeComplete) {
       setCurrentStep('datetime');
+    } else if (!confirmedAddress || !isAddressComplete) {
+      setCurrentStep('address');
+    } else if (!confirmedCustomer || !isCustomerComplete) {
+      setCurrentStep('customer');
+    } else if (confirmedDateTime && confirmedAddress && confirmedCustomer) {
+      setCurrentStep('payment');
     }
     
     // Pre-select today's date if no date is set and no saved delivery info exists
@@ -185,7 +192,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       updateDeliveryInfo('date', today);
       console.log('Pre-selected today for delivery date:', today);
     }
-  }, []);
+  }, [confirmedDateTime, confirmedAddress, confirmedCustomer, isDateTimeComplete, isAddressComplete, isCustomerComplete]);
 
   // Get available time slots based on selected date (same logic as DeliveryScheduler)
   const getAvailableTimeSlots = () => {
@@ -642,8 +649,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             {/* Step-by-Step Forms - Mobile optimized */}
             <div className="space-y-3 md:space-y-6">
                
-                {/* Date/Time Section - Only show when not confirmed */}
-                {!confirmedDateTime && (
+                {/* Date/Time Section - Always show when not confirmed OR when it's the current step */}
+                {(!confirmedDateTime || currentStep === 'datetime') && (
                   <Card className={`shadow-card ${currentStep === 'datetime' ? 'border-2 border-green-500' : 'border'}`}>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -742,8 +749,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </Card>
                 )}
 
-               {/* Address Section - Only show when not confirmed */}
-               {!confirmedAddress && (
+               {/* Address Section - Always show when not confirmed OR when it's the current step */}
+               {(!confirmedAddress || currentStep === 'address') && (
                 <Card className={`shadow-card ${currentStep === 'address' ? 'border-2 border-green-500' : 'border'}`}>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -840,8 +847,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                    </Card>
                 )}
 
-              {/* Customer Information - Only show when not confirmed */}
-              {!confirmedCustomer && (
+              {/* Customer Information - Always show when not confirmed OR when it's the current step */}
+              {(!confirmedCustomer || currentStep === 'customer') && (
                 <Card className={`shadow-card ${currentStep === 'customer' ? 'border-2 border-green-500' : 'border'}`}>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
