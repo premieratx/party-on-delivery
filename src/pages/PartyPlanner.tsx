@@ -63,6 +63,16 @@ export const PartyPlanner = () => {
     return partyDetails.partyType;
   };
 
+  const isCurrentEventValid = () => {
+    const currentEvent = getCurrentEventForDetails();
+    const eventDetails = partyDetails.eventDetails[currentEvent];
+    return eventDetails && 
+           eventDetails.numberOfPeople > 0 && 
+           eventDetails.budget > 0 && 
+           eventDetails.drinkTypes.length > 0 &&
+           eventDetails.eventDuration > 0;
+  };
+
   const handleNext = () => {
     const stepType = getCurrentStepType();
     
@@ -190,7 +200,7 @@ export const PartyPlanner = () => {
                   disabled={
                     (getCurrentStepType() === 'party-type' && !partyDetails.partyType) ||
                     (getCurrentStepType() === 'wedding-events' && (!partyDetails.weddingEvents || partyDetails.weddingEvents.length === 0)) ||
-                    (getCurrentStepType() === 'event-details' && !partyDetails.eventDetails[getCurrentEventForDetails()])
+                    (getCurrentStepType() === 'event-details' && !isCurrentEventValid())
                   }
                   className="flex items-center gap-2"
                 >

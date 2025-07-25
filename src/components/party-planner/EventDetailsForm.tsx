@@ -61,7 +61,22 @@ export const EventDetailsForm = ({ eventName, details, onUpdate }: EventDetailsF
     const newTypes = formData.drinkTypes.includes(type)
       ? formData.drinkTypes.filter(t => t !== type)
       : [...formData.drinkTypes, type];
-    updateFormData({ drinkTypes: newTypes });
+    
+    // Clear sub-types when main type is unselected
+    if (formData.drinkTypes.includes(type) && !newTypes.includes(type)) {
+      // Main type is being unselected, clear its sub-types
+      if (type === 'beer') {
+        updateFormData({ drinkTypes: newTypes, beerTypes: [] });
+      } else if (type === 'wine') {
+        updateFormData({ drinkTypes: newTypes, wineTypes: [] });
+      } else if (type === 'liquor') {
+        updateFormData({ drinkTypes: newTypes, liquorTypes: [] });
+      } else if (type === 'cocktails') {
+        updateFormData({ drinkTypes: newTypes, cocktailTypes: [] });
+      }
+    } else {
+      updateFormData({ drinkTypes: newTypes });
+    }
   };
 
   const toggleSubType = (mainType: string, subType: string) => {

@@ -44,8 +44,8 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
   const calculateRecommendations = (eventName: string, details: any) => {
     const drinksPerHour = getDrinksPerHour(details.drinkerType);
     const totalDrinks = details.numberOfPeople * details.eventDuration * drinksPerHour;
-    const drinksPerType = Math.ceil(totalDrinks / details.drinkTypes.length);
-
+    
+    // Initialize recommendations
     const recommendations = {
       totalDrinks,
       beer: 0,
@@ -54,7 +54,19 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
       cocktails: 0
     };
 
-    details.drinkTypes.forEach((type: string) => {
+    // Only calculate for selected drink types
+    const selectedDrinkTypes = details.drinkTypes.filter((type: string) => 
+      type === 'beer' || type === 'wine' || type === 'liquor' || type === 'cocktails'
+    );
+
+    if (selectedDrinkTypes.length === 0) {
+      return { recommendations, containers: { beerCans: 0, wineBottles: 0, liquorBottles: 0, cocktailKits: 0 } };
+    }
+
+    // Divide drinks evenly among selected types
+    const drinksPerType = Math.ceil(totalDrinks / selectedDrinkTypes.length);
+
+    selectedDrinkTypes.forEach((type: string) => {
       recommendations[type as keyof typeof recommendations] = drinksPerType;
     });
 
@@ -108,35 +120,38 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
 
         switch (category) {
           case 'beer':
-            subcategories = calc.details.beerTypes || ['light'];
+            subcategories = calc.details.beerTypes && calc.details.beerTypes.length > 0 ? calc.details.beerTypes : ['Light'];
             recommendedQuantity = calc.recommendations.beer;
             unitType = 'cans';
             break;
           case 'wine':
-            subcategories = calc.details.wineTypes || ['chardonnay'];
+            subcategories = calc.details.wineTypes && calc.details.wineTypes.length > 0 ? calc.details.wineTypes : ['Chardonnay'];
             recommendedQuantity = calc.containers.wineBottles;
             unitType = 'bottles';
             break;
           case 'liquor':
-            subcategories = calc.details.liquorTypes || ['whiskey'];
+            subcategories = calc.details.liquorTypes && calc.details.liquorTypes.length > 0 ? calc.details.liquorTypes : ['Whiskey'];
             recommendedQuantity = calc.containers.liquorBottles;
             unitType = 'bottles';
             break;
           case 'cocktails':
-            subcategories = calc.details.cocktailTypes || ['margarita'];
+            subcategories = calc.details.cocktailTypes && calc.details.cocktailTypes.length > 0 ? calc.details.cocktailTypes : ['Margarita'];
             recommendedQuantity = calc.containers.cocktailKits;
             unitType = 'kits';
             break;
         }
 
-        selections.push({
-          eventName: calc.eventName,
-          category,
-          subcategories,
-          recommendedQuantity,
-          unitType,
-          budget: budgetPerCategory
-        });
+        // Only add selections if the main category has drinks allocated
+        if (recommendedQuantity > 0) {
+          selections.push({
+            eventName: calc.eventName,
+            category,
+            subcategories,
+            recommendedQuantity,
+            unitType,
+            budget: budgetPerCategory
+          });
+        }
       });
     });
 
