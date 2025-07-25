@@ -122,7 +122,6 @@ export const AdminLogin: React.FC = () => {
         description: "Failed to sign in with Google. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setGoogleLoading(false);
     }
   };

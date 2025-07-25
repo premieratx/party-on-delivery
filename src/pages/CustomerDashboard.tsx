@@ -112,38 +112,61 @@ const CustomerDashboard = () => {
       
       const currentCustomer = updatedCustomerData || customerData;
       
-      // Load customer orders - check both by customer_id and session tokens
-      let ordersQuery = supabase
-        .from('customer_orders')
-        .select('*');
-      
-      if (currentCustomer?.id) {
-        // Create a comprehensive filter for all possible ways to find customer orders
-        const filters = [`customer_id.eq.${currentCustomer.id}`];
+      // Use the unified dashboard data service for customer orders
+      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
+        body: { 
+          type: 'customer', 
+          email: session.user.email 
+        }
+      });
+
+      if (dashboardError) {
+        console.error('Dashboard data error:', dashboardError);
+        // Fallback to direct queries if service fails
+        let ordersQuery = supabase
+          .from('customer_orders')
+          .select('*');
         
-        // Add session tokens if they exist
-        if (currentCustomer.session_tokens && currentCustomer.session_tokens.length > 0) {
-          currentCustomer.session_tokens.forEach(token => {
-            if (token && token.trim()) {
-              filters.push(`session_id.eq.${token}`);
-            }
-          });
+        if (currentCustomer?.id) {
+          // Create a comprehensive filter for all possible ways to find customer orders
+          const filters = [`customer_id.eq.${currentCustomer.id}`];
+          
+          // Add session tokens if they exist
+          if (currentCustomer.session_tokens && currentCustomer.session_tokens.length > 0) {
+            currentCustomer.session_tokens.forEach(token => {
+              if (token && token.trim()) {
+                filters.push(`session_id.eq.${token}`);
+              }
+            });
+          }
+          
+          // Also search by email for orders that might not have customer_id linked yet
+          filters.push(`delivery_address->>email.eq.${session.user.email}`);
+          
+          ordersQuery = ordersQuery.or(filters.join(','));
+        } else {
+          // Fallback if no customer data - search by email
+          ordersQuery = ordersQuery.or(`delivery_address->>email.eq.${session.user.email}`);
         }
         
-        // Also search by email for orders that might not have customer_id linked yet
-        filters.push(`delivery_address->>email.eq.${session.user.email}`);
-        
-        ordersQuery = ordersQuery.or(filters.join(','));
-      } else {
-        // Fallback if no customer data - search by email
-        ordersQuery = ordersQuery.or(`delivery_address->>email.eq.${session.user.email}`);
-      }
-      
-      const { data: ordersData, error: ordersError } = await ordersQuery
-        .order('created_at', { ascending: false });
+        const { data: ordersData, error: ordersError } = await ordersQuery
+          .order('created_at', { ascending: false });
 
-      if (ordersError) throw ordersError;
-      setOrders(ordersData || []);
+        if (ordersError) throw ordersError;
+        setOrders(ordersData || []);
+      } else if (dashboardData.error) {
+        throw new Error(dashboardData.error);
+      } else {
+        // Use dashboard service data
+        setOrders(dashboardData.data.orders || []);
+        // Update customer stats if available
+        if (dashboardData.data.customers && dashboardData.data.customers[0]) {
+          setCustomer(prev => ({
+            ...prev,
+            ...dashboardData.data.customers[0]
+          }));
+        }
+      }
 
       // Set up real-time subscription for new orders - listen to all orders for this user
       const channel = supabase

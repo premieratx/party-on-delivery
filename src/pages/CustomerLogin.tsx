@@ -79,6 +79,7 @@ const CustomerLogin = () => {
           description: error.message,
           variant: "destructive",
         });
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -87,7 +88,6 @@ const CustomerLogin = () => {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

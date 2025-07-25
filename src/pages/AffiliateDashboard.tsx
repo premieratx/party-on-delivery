@@ -184,17 +184,40 @@ export const AffiliateDashboard: React.FC = () => {
         });
       }
 
-      // Load recent referrals
-      const { data: referrals, error: referralsError } = await supabase
-        .from('affiliate_referrals')
-        .select('*')
-        .eq('affiliate_id', affiliateData.id)
-        .order('order_date', { ascending: false })
-        .limit(10);
+      // Use the unified dashboard data service
+      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
+        body: { 
+          type: 'affiliate', 
+          email: user.email,
+          affiliateCode: affiliateData.affiliate_code
+        }
+      });
 
-      if (referralsError) throw referralsError;
+      if (dashboardError) {
+        console.error('Dashboard data error:', dashboardError);
+        // Fallback to direct queries
+        const { data: referrals, error: referralsError } = await supabase
+          .from('affiliate_referrals')
+          .select('*')
+          .eq('affiliate_id', affiliateData.id)
+          .order('order_date', { ascending: false })
+          .limit(10);
 
-      setRecentOrders(referrals || []);
+        if (referralsError) throw referralsError;
+        setRecentOrders(referrals || []);
+      } else if (dashboardData.error) {
+        throw new Error(dashboardData.error);
+      } else {
+        // Use dashboard service data  
+        setRecentOrders(dashboardData.data.affiliateReferrals || []);
+        // Update affiliate stats from dashboard data
+        setAffiliate(prev => ({
+          ...prev,
+          total_sales: dashboardData.data.totalRevenue || prev.total_sales,
+          orders_count: dashboardData.data.totalOrders || prev.orders_count,
+          commission_unpaid: dashboardData.data.pendingCommissions || prev.commission_unpaid
+        }));
+      }
 
       // Load abandoned orders
       const { data: abandoned, error: abandonedError } = await supabase

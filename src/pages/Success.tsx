@@ -36,7 +36,7 @@ const Success = () => {
 
       try {
         const { data, error } = await supabase.functions.invoke('process-order-complete', {
-          body: { sessionId }
+          body: { session_id: sessionId }
         });
 
         if (error) {
@@ -45,21 +45,34 @@ const Success = () => {
         } else {
           setOrderStatus({
             success: true,
-            shopifyOrderId: data.order.id,
-            orderNumber: data.order.order_number
+            shopifyOrderId: data.order?.id || data.shopifyOrderId,
+            orderNumber: data.order?.order_number || data.orderNumber
           });
           
           // Update localStorage with completed order info immediately
           const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
           const completedOrderInfo = {
             ...existingOrder,
-            orderNumber: data.order.order_number,
-            orderId: data.order.id,
+            orderNumber: data.order?.order_number || data.orderNumber,
+            orderId: data.order?.id || data.shopifyOrderId,
             recentpurchase: true,
             total: existingOrder.total || 0
           };
           localStorage.setItem('partyondelivery_last_order', JSON.stringify(completedOrderInfo));
           console.log('Completed order info saved to localStorage:', completedOrderInfo);
+          
+          // Send SMS notifications after successful processing
+          try {
+            await supabase.functions.invoke('send-order-sms', {
+              body: {
+                orderData: data,
+                type: 'customer_confirmation'
+              }
+            });
+            console.log('Customer SMS sent successfully');
+          } catch (smsError) {
+            console.warn('Failed to send customer SMS:', smsError);
+          }
         }
       } catch (error) {
         console.error('Error:', error);

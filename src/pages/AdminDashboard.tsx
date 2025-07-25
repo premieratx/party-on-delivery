@@ -93,11 +93,17 @@ export const AdminDashboard: React.FC = () => {
       } catch (alertError) {
         console.error('Error checking delivery alerts:', alertError);
       }
-      // Load all affiliates with their stats
-      const { data: affiliatesData, error: affiliatesError } = await supabase
-        .from('affiliates')
-        .select('*')
-        .order('total_sales', { ascending: false });
+      
+      // Use the unified dashboard data service
+      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
+        body: { type: 'admin' }
+      });
+
+      if (dashboardError) throw dashboardError;
+      if (dashboardData.error) throw new Error(dashboardData.error);
+
+      const { orders, customers, affiliateReferrals, totalRevenue, totalOrders, pendingCommissions, recentActivity } = dashboardData.data;
+      const { data: affiliatesData, error: affiliatesError } = await supabase.from('affiliates').select('*').order('total_sales', { ascending: false });
 
       if (affiliatesError) throw affiliatesError;
 
@@ -138,19 +144,19 @@ export const AdminDashboard: React.FC = () => {
         setAbandonedOrders(abandonedData || []);
       }
 
-      // Calculate summary stats
+      // Calculate summary stats from dashboard data or fallback to affiliate data
       const totalAffiliates = affiliatesData?.length || 0;
-      const totalSales = affiliatesData?.reduce((sum, a) => sum + Number(a.total_sales), 0) || 0;
+      const totalSales = dashboardData.data.totalRevenue || affiliatesData?.reduce((sum, a) => sum + Number(a.total_sales), 0) || 0;
       const totalCommissions = affiliatesData?.reduce((sum, a) => sum + Number(a.total_commission), 0) || 0;
-      const unpaidCommissions = affiliatesData?.reduce((sum, a) => sum + Number(a.commission_unpaid), 0) || 0;
-      const totalOrders = affiliatesData?.reduce((sum, a) => sum + Number(a.orders_count), 0) || 0;
+      const unpaidCommissions = dashboardData.data.pendingCommissions || affiliatesData?.reduce((sum, a) => sum + Number(a.commission_unpaid), 0) || 0;
+      const orderCount = dashboardData.data.totalOrders || affiliatesData?.reduce((sum, a) => sum + Number(a.orders_count), 0) || 0;
 
       setSummary({
         totalAffiliates,
         totalSales,
         totalCommissions,
         unpaidCommissions,
-        totalOrders
+        totalOrders: orderCount
       });
 
       // Check for payout alerts (affiliates with $200+ unpaid commissions)
