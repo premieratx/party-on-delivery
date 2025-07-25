@@ -32,51 +32,53 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <StripeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/success" element={<Success />} />
-              <Route path="/order-complete" element={<OrderComplete />} />
-              
-              {/* Affiliate Routes */}
-              <Route path="/affiliate" element={<AffiliateIntro />} />
-              <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
-              <Route path="/affiliate/admin-login" element={<AdminLogin />} />
-              <Route path="/affiliate/admin" element={<AdminDashboard />} />
-              <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
-              <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
-              
-              {/* Customer Routes */}
-              <Route path="/customer/login" element={<CustomerLogin />} />
-              <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-              <Route path="/order-continuation" element={<OrderContinuation />} />
-              <Route path="/manage-order" element={<CustomerLogin />} />
-              
-              {/* Shared Order Routes */}
-              <Route path="/order/:shareToken" element={<GroupOrderView />} />
-              <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
-              
-              {/* Party Planning Routes */}
-              <Route path="/plan-my-party" element={<PartyPlanner />} />
-              
-              {/* Test Routes */}
-              <Route path="/test-sms" element={<TestSMS />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </StripeProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <StripeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/success" element={<Success />} />
+                <Route path="/order-complete" element={<OrderComplete />} />
+                
+                {/* Affiliate Routes */}
+                <Route path="/affiliate" element={<AffiliateIntro />} />
+                <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+                <Route path="/affiliate/admin-login" element={<AdminLogin />} />
+                <Route path="/affiliate/admin" element={<AdminDashboard />} />
+                <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
+                <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
+                
+                {/* Customer Routes */}
+                <Route path="/customer/login" element={<CustomerLogin />} />
+                <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+                <Route path="/order-continuation" element={<OrderContinuation />} />
+                <Route path="/manage-order" element={<CustomerLogin />} />
+                
+                {/* Shared Order Routes */}
+                <Route path="/order/:shareToken" element={<GroupOrderView />} />
+                <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
+                
+                {/* Party Planning Routes */}
+                <Route path="/plan-my-party" element={<PartyPlanner />} />
+                
+                {/* Test Routes */}
+                <Route path="/test-sms" element={<TestSMS />} />
+                
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </StripeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
