@@ -452,11 +452,17 @@ async function sendSMSNotifications(orderData: StandardOrderData, shopifyOrder: 
   logStep("Sending SMS notifications");
   
   try {
+    // Format customer name properly - handle null/undefined values
+    const customerName = orderData.customerName || 
+                        (orderData.customerInfo?.firstName && orderData.customerInfo?.lastName 
+                          ? `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}` 
+                          : 'Customer');
+    
     const { data: smsResult, error: smsError } = await supabase.functions.invoke('send-order-sms', {
       body: {
         orderData: {
           orderNumber: shopifyOrder.order_number,
-          customerName: orderData.customerName,
+          customerName: customerName,
           customerPhone: orderData.customerPhone,
           deliveryDate: orderData.deliveryDate,
           deliveryTime: orderData.deliveryTime,
@@ -466,7 +472,7 @@ async function sendSMSNotifications(orderData: StandardOrderData, shopifyOrder: 
         },
         notifyCustomer: true,
         notifyAdmin: true,
-        adminPhone: "+1234567890" // Replace with actual admin phone
+        adminPhone: "5125767975" // Party On Delivery business number
       }
     });
     

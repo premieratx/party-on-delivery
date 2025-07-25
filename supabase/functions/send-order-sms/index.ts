@@ -75,7 +75,7 @@ serve(async (req: Request) => {
       const customerMessage = `🎉 ORDER CONFIRMED!
 
 Order #${orderData.orderNumber}
-${orderData.customerName}
+${orderData.customerName || 'Customer'}
 
 📦 ITEMS:
 ${itemsList}${moreItems}
@@ -151,7 +151,7 @@ Track your order: partyondelivery.com/customer/login`;
       const adminMessage = `🚨 NEW ORDER ALERT!
 
 Order #${orderData.orderNumber}
-Customer: ${orderData.customerName}
+Customer: ${orderData.customerName || 'Customer'}
 
 📦 ITEMS:
 ${adminItemsList}

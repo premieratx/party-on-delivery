@@ -244,8 +244,11 @@ const CustomerDashboard = () => {
   };
 
   const handleTextUs = () => {
-    const phoneNumber = '7377377376';
-    const message = `Hi! I need to make changes to my order. Customer: ${customer?.first_name} ${customer?.last_name} (${customer?.email})`;
+    const phoneNumber = '5125767975'; // Business phone number
+    const customerName = customer?.first_name && customer?.last_name 
+      ? `${customer.first_name} ${customer.last_name}` 
+      : customer?.email || 'Customer';
+    const message = `Hi! I need to make changes to my order. Customer: ${customerName} (${customer?.email})`;
     
     // Check if on mobile device
     const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
