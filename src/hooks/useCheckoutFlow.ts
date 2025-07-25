@@ -14,7 +14,7 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
   const { customerInfo, addressInfo, setAddressInfo, setCustomerInfo } = useCustomerInfo();
   
   // Step management
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'customer' | 'payment'>('datetime');
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>('datetime');
   const [confirmedDateTime, setConfirmedDateTime] = useState(false);
   const [confirmedAddress, setConfirmedAddress] = useState(false);
   const [confirmedCustomer, setConfirmedCustomer] = useState(false);

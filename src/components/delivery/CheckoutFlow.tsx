@@ -185,7 +185,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     } else if (!confirmedAddress || !isAddressComplete) {
       setCurrentStep('address');
     } else if (!confirmedCustomer || !isCustomerComplete) {
-      setCurrentStep('customer');
+      setCurrentStep('datetime');
     } else if (confirmedDateTime && confirmedAddress && confirmedCustomer) {
       setCurrentStep('payment');
     }
@@ -358,7 +358,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     if (!confirmedAddress) {
       setCurrentStep('address');
     } else if (!confirmedCustomer) {
-      setCurrentStep('customer');
+      setCurrentStep('datetime');
     } else if (confirmedAddress && confirmedCustomer) {
       setCurrentStep('payment');
     }
@@ -376,7 +376,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     // Navigate to next incomplete step or payment if all confirmed
     if (!confirmedCustomer) {
-      setCurrentStep('customer');
+      setCurrentStep('datetime');
     } else if (confirmedDateTime && confirmedCustomer) {
       setCurrentStep('payment');
     }
@@ -636,7 +636,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         size="sm"
                         onClick={() => {
                           setConfirmedCustomer(false);
-                          setCurrentStep('customer');
+                          setCurrentStep('datetime');
                         }}
                         className="text-purple-600 hover:text-purple-800 h-6 px-2"
                       >
@@ -741,12 +741,97 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           </Select>
                         </div>
                         
+                        {/* Customer Information in same step */}
+                        <Separator />
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            <Label className="text-base font-medium">Contact Information</Label>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="firstName">First Name *</Label>
+                              <Input
+                                id="firstName"
+                                name="given-name"
+                                autoComplete="given-name"
+                                placeholder="John"
+                                value={customerInfo.firstName}
+                                onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="lastName">Last Name *</Label>
+                              <Input
+                                id="lastName"
+                                name="family-name"
+                                autoComplete="family-name"
+                                placeholder="Doe"
+                                value={customerInfo.lastName}
+                                onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
+                                className="text-sm"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number *</Label>
+                            <Input
+                              id="phone"
+                              name="tel"
+                              type="tel"
+                              autoComplete="tel"
+                              placeholder="(555) 123-4567"
+                              value={customerInfo.phone}
+                              onChange={(e) => {
+                                const formatted = formatPhoneNumber(e.target.value);
+                                setCustomerInfo(prev => ({ ...prev, phone: formatted }));
+                                if (phoneError) setPhoneError(null);
+                              }}
+                              className={`text-sm ${phoneError ? 'border-red-500' : ''}`}
+                            />
+                            {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email Address *</Label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              autoComplete="email"
+                              placeholder="john.doe@example.com"
+                              value={customerInfo.email}
+                              onChange={(e) => {
+                                setCustomerInfo(prev => ({ ...prev, email: e.target.value }));
+                                if (emailError) setEmailError(null);
+                              }}
+                              className={`text-sm ${emailError ? 'border-red-500' : ''}`}
+                            />
+                            {emailError && <p className="text-sm text-red-600">{emailError}</p>}
+                          </div>
+                        </div>
+                        
                         <Button 
-                          onClick={handleConfirmDateTime}
-                          disabled={!isDateTimeComplete}
+                          onClick={() => {
+                            // Validate customer info first
+                            const emailErr = getEmailErrorMessage(customerInfo.email || '');
+                            const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
+                            
+                            setEmailError(emailErr);
+                            setPhoneError(phoneErr);
+                            
+                            if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim() && isDateTimeComplete) {
+                              setConfirmedCustomer(true);
+                              handleConfirmDateTime();
+                            }
+                          }}
+                          disabled={!isDateTimeComplete || !customerInfo.firstName?.trim() || !customerInfo.lastName?.trim() || !customerInfo.email?.trim() || !customerInfo.phone?.trim()}
                           className="w-full"
                         >
-                          Confirm Date & Time
+                          Confirm Date & Contact Info
                         </Button>
                       </div>
                     </CardContent>
@@ -851,91 +936,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                    </Card>
                 )}
 
-              {/* Customer Information - Always show when not confirmed OR when it's the current step */}
-              {(!confirmedCustomer || currentStep === 'customer') && (
-                <Card className={`shadow-card ${currentStep === 'customer' ? 'border-2 border-green-500' : 'border'}`}>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <User className="w-5 h-5" />
-                      Contact Information
-                    </CardTitle>
-                  </CardHeader>
-                  
-                   <CardContent className="space-y-4">
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="firstName">First Name *</Label>
-                            <Input
-                              id="firstName"
-                              name="given-name"
-                              autoComplete="given-name"
-                              placeholder="John"
-                              value={customerInfo.firstName}
-                              onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="lastName">Last Name *</Label>
-                            <Input
-                              id="lastName"
-                              name="family-name"
-                              autoComplete="family-name"
-                              placeholder="Doe"
-                              value={customerInfo.lastName}
-                              onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">Phone Number *</Label>
-                          <Input
-                            id="phone"
-                            name="tel"
-                            type="tel"
-                            autoComplete="tel"
-                            placeholder="(555) 123-4567"
-                            value={customerInfo.phone}
-                            onChange={(e) => {
-                              const formatted = formatPhoneNumber(e.target.value);
-                              setCustomerInfo(prev => ({ ...prev, phone: formatted }));
-                              if (phoneError) setPhoneError(null);
-                            }}
-                            className={phoneError ? 'border-red-500' : ''}
-                          />
-                          {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="email">Email Address *</Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            placeholder="john.doe@example.com"
-                            value={customerInfo.email}
-                            onChange={(e) => {
-                              setCustomerInfo(prev => ({ ...prev, email: e.target.value }));
-                              if (emailError) setEmailError(null);
-                            }}
-                            className={emailError ? 'border-red-500' : ''}
-                          />
-                          {emailError && <p className="text-sm text-red-600">{emailError}</p>}
-                        </div>
-                        
-                        <Button 
-                          onClick={handleConfirmCustomer}
-                          disabled={!isCustomerComplete}
-                          className="w-full"
-                        >
-                          Confirm Contact Info
-                        </Button>
-                      </div>
-                    </CardContent>
-                </Card>
-              )}
+              {/* Customer Information moved inside Date/Time section */}
 
              {/* Embedded Payment */}
              {currentStep === 'payment' && (
@@ -979,6 +980,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {currentStep === 'payment' && (
+                  <div className="text-center py-2 text-sm text-muted-foreground border-b mb-4">
+                    Edit qty of products below
+                  </div>
+                )}
                  {cartItems.map((item) => (
                    <div key={`${item.id}-${item.variant || ''}`} className="flex justify-between items-center gap-2">
                      <div className="flex-1 min-w-0">
