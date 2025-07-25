@@ -21,6 +21,7 @@ import SharedOrderView from "./pages/SharedOrderView";
 import GroupOrderView from "./pages/GroupOrderView";
 import NotFound from "./pages/NotFound";
 import TestSMS from "./components/TestSMS";
+import { PartyPlanner } from "./pages/PartyPlanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,9 @@ const App = () => (
               {/* Shared Order Routes */}
               <Route path="/order/:shareToken" element={<GroupOrderView />} />
               <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
+              
+              {/* Party Planning Routes */}
+              <Route path="/plan-my-party" element={<PartyPlanner />} />
               
               {/* Test Routes */}
               <Route path="/test-sms" element={<TestSMS />} />
