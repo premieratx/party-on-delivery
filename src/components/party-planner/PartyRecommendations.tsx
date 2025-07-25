@@ -1,11 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Calculator } from "lucide-react";
+import { ShoppingCart, Calculator, Mail, Send } from "lucide-react";
 import { useState } from "react";
 import { ProductSelection } from "./ProductSelection";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PartyRecommendationsProps {
   partyDetails: {
@@ -31,6 +34,9 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
   const [currentSelectionStep, setCurrentSelectionStep] = useState(0);
   const [allSelections, setAllSelections] = useState<Array<{eventName: string, category: string, items: any[]}>>([]);
   const [showProductSelection, setShowProductSelection] = useState(false);
+  const [showFinalProposal, setShowFinalProposal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const getDrinksPerHour = (drinkerType: 'light' | 'medium' | 'heavy') => {
     switch (drinkerType) {
@@ -178,11 +184,75 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
     if (currentSelectionStep < categorySelections.length - 1) {
       setCurrentSelectionStep(prev => prev + 1);
     } else {
-      // All categories completed, show final summary
+      // All categories completed, show final proposal
+      setShowFinalProposal(true);
       toast({
         title: "All selections complete!",
-        description: "Ready to add everything to your cart",
+        description: "Review your final proposal",
       });
+    }
+  };
+
+  const handleSendProposal = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      // Format the proposal data
+      const proposalData = {
+        eventType: partyDetails.partyType,
+        events: calculations.map(calc => ({
+          eventName: calc.eventName,
+          numberOfPeople: calc.details.numberOfPeople,
+          drinkerType: calc.details.drinkerType,
+          budget: calc.details.budget,
+          eventDuration: calc.details.eventDuration,
+          drinkTypes: calc.details.drinkTypes,
+          recommendations: {
+            beerCans: calc.recommendations.beer,
+            wineBottles: calc.containers.wineBottles,
+            liquorBottles: calc.containers.liquorBottles,
+            cocktailKits: calc.containers.cocktailKits,
+          },
+          selectedItems: allSelections
+            .filter(selection => selection.eventName === calc.eventName)
+            .map(selection => ({
+              category: selection.category,
+              items: selection.items,
+              totalCost: selection.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            }))
+        })),
+        totalBudget,
+        totalSpent: getTotalSelectionCost()
+      };
+
+      const { error } = await supabase.functions.invoke('send-proposal', {
+        body: { email, proposal: proposalData }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email sent!",
+        description: "Your party proposal has been sent to your email",
+      });
+      setEmail("");
+    } catch (error) {
+      console.error('Error sending proposal:', error);
+      toast({
+        title: "Error sending email",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -256,6 +326,205 @@ export const PartyRecommendations = ({ partyDetails }: PartyRecommendationsProps
             </CardContent>
           </Card>
         )}
+      </div>
+    );
+  }
+
+  if (showFinalProposal) {
+    const eventTypeDisplay = partyDetails.partyType === 'wedding party' ? 'Wedding Celebration' : 
+      partyDetails.partyType.charAt(0).toUpperCase() + partyDetails.partyType.slice(1);
+
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="text-center">
+          <h2 className="text-4xl font-bold mb-2">🎉 Your Party Proposal</h2>
+          <h3 className="text-2xl text-primary mb-4">{eventTypeDisplay}</h3>
+          <p className="text-muted-foreground">
+            Complete proposal ready for your event planning
+          </p>
+        </div>
+
+        {/* Budget Overview */}
+        <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-3xl font-bold text-primary">${totalBudget}</div>
+                <div className="text-sm text-muted-foreground">Total Budget</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-green-600">${getTotalSelectionCost().toFixed(2)}</div>
+                <div className="text-sm text-muted-foreground">Total Selected</div>
+              </div>
+              <div>
+                <div className={`text-3xl font-bold ${getTotalSelectionCost() <= totalBudget ? 'text-green-600' : 'text-red-500'}`}>
+                  {getTotalSelectionCost() <= totalBudget ? '✓ Within Budget' : `$${(getTotalSelectionCost() - totalBudget).toFixed(2)} Over`}
+                </div>
+                <div className="text-sm text-muted-foreground">Budget Status</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Event Details */}
+        {calculations.map((calc, index) => (
+          <Card key={index} className="border-primary/20">
+            <CardHeader className="bg-muted/30">
+              <CardTitle className="text-xl">{calc.eventName}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-3 bg-muted/50 rounded">
+                  <div className="text-2xl font-bold">{calc.details.numberOfPeople}</div>
+                  <div className="text-xs text-muted-foreground">People</div>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded">
+                  <div className="text-2xl font-bold">{calc.details.eventDuration}</div>
+                  <div className="text-xs text-muted-foreground">Hours</div>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded">
+                  <div className="text-2xl font-bold capitalize">{calc.details.drinkerType}</div>
+                  <div className="text-xs text-muted-foreground">Drinkers</div>
+                </div>
+                <div className="text-center p-3 bg-muted/50 rounded">
+                  <div className="text-2xl font-bold">${calc.details.budget}</div>
+                  <div className="text-xs text-muted-foreground">Budget</div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h4 className="font-semibold mb-2">Recommended Quantities</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                  {calc.recommendations.beer > 0 && (
+                    <div className="p-2 bg-blue-50 rounded">
+                      <div className="font-bold">{calc.recommendations.beer}</div>
+                      <div className="text-xs">Beer Cans</div>
+                    </div>
+                  )}
+                  {calc.containers.wineBottles > 0 && (
+                    <div className="p-2 bg-purple-50 rounded">
+                      <div className="font-bold">{calc.containers.wineBottles}</div>
+                      <div className="text-xs">Wine Bottles</div>
+                    </div>
+                  )}
+                  {calc.containers.liquorBottles > 0 && (
+                    <div className="p-2 bg-amber-50 rounded">
+                      <div className="font-bold">{calc.containers.liquorBottles}</div>
+                      <div className="text-xs">Liquor Bottles</div>
+                    </div>
+                  )}
+                  {calc.containers.cocktailKits > 0 && (
+                    <div className="p-2 bg-green-50 rounded">
+                      <div className="font-bold">{calc.containers.cocktailKits}</div>
+                      <div className="text-xs">Cocktail Kits</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Selected Products */}
+              {allSelections.filter(s => s.eventName === calc.eventName).length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Selected Products</h4>
+                  {allSelections
+                    .filter(s => s.eventName === calc.eventName)
+                    .map((selection, idx) => {
+                      const categoryTotal = selection.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                      return (
+                        <div key={idx} className="mb-3 p-3 border rounded">
+                          <div className="flex justify-between items-center mb-2">
+                            <h5 className="font-medium capitalize">{selection.category}</h5>
+                            <span className="font-bold">${categoryTotal.toFixed(2)}</span>
+                          </div>
+                          <div className="space-y-1 text-sm">
+                            {selection.items.map((item, itemIdx) => (
+                              <div key={itemIdx} className="flex justify-between">
+                                <span>{item.quantity}x {item.title}</span>
+                                <span>${(item.price * item.quantity).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* Email Proposal Section */}
+        <Card className="bg-primary/5 border-primary/30">
+          <CardContent className="p-6">
+            <div className="text-center space-y-4">
+              <Mail className="w-12 h-12 mx-auto text-primary" />
+              <h3 className="text-xl font-semibold">Email This Proposal</h3>
+              <p className="text-sm text-muted-foreground">
+                Get a beautifully formatted copy of your party proposal sent to your email
+              </p>
+              
+              <div className="max-w-md mx-auto space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleSendProposal}
+                    disabled={sendingEmail || !email}
+                    className="flex items-center gap-2"
+                  >
+                    {sendingEmail ? (
+                      <>Sending...</>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Send
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  We'll send you a detailed proposal with all your selections and recommendations
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <Card>
+          <CardContent className="p-6 text-center">
+            <h3 className="text-lg font-semibold mb-4">Ready to Order?</h3>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2"
+                size="lg"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                Add Selected Items to Cart
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowFinalProposal(false)}
+                size="lg"
+              >
+                Edit Selections
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => window.location.reload()}
+                size="lg"
+              >
+                Plan Another Party
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
