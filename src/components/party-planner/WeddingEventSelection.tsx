@@ -35,15 +35,15 @@ export const WeddingEventSelection = ({ selectedEvents, onSelect }: WeddingEvent
         Which wedding events do you need to plan drinks for?
       </h2>
       
-      <div className="space-y-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {weddingEvents.map((event) => (
-          <div key={event} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50">
+          <div key={event} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-muted/50 border">
             <Checkbox
               id={event}
               checked={selectedEvents.includes(event)}
               onCheckedChange={(checked) => handleEventToggle(event, !!checked)}
             />
-            <Label htmlFor={event} className="text-base cursor-pointer flex-1">
+            <Label htmlFor={event} className="text-sm cursor-pointer flex-1 leading-tight">
               {event}
             </Label>
           </div>

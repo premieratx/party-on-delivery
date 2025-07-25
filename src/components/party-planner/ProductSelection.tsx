@@ -57,6 +57,7 @@ export const ProductSelection = ({
   const [selections, setSelections] = useState<Record<string, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
+  const [addedToCartItems, setAddedToCartItems] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
   // Reset state when category changes, but restore if we have current selections
@@ -68,12 +69,16 @@ export const ProductSelection = ({
     // Restore current selections if available
     if (currentSelections && currentSelections.length > 0) {
       const restoredSelections: Record<string, number> = {};
+      const addedItems: Record<string, number> = {};
       currentSelections.forEach(item => {
         restoredSelections[item.productId] = item.quantity;
+        addedItems[item.productId] = item.quantity;
       });
       setSelections(restoredSelections);
+      setAddedToCartItems(addedItems);
     } else {
       setSelections({});
+      setAddedToCartItems({});
     }
   }, [category, subcategories]);
 
@@ -143,7 +148,6 @@ export const ProductSelection = ({
   };
 
   const updateQuantity = (productId: string, change: number) => {
-    if (isAddedToCart) return; // Prevent changes after adding to cart
     setSelections(prev => ({
       ...prev,
       [productId]: Math.max(0, (prev[productId] || 0) + change)
@@ -189,10 +193,34 @@ export const ProductSelection = ({
       });
   };
 
+  const hasNewSelections = () => {
+    return Object.entries(selections).some(([productId, quantity]) => 
+      quantity > (addedToCartItems[productId] || 0)
+    );
+  };
+
+  const getNewItems = (): CartItem[] => {
+    return Object.entries(selections)
+      .filter(([productId, quantity]) => quantity > (addedToCartItems[productId] || 0))
+      .map(([productId, quantity]) => {
+        const product = products.find(p => p.id === productId)!;
+        const newQuantity = quantity - (addedToCartItems[productId] || 0);
+        return {
+          productId,
+          title: product.title,
+          price: product.price || 0,
+          quantity: newQuantity,
+          image: product.imageUrl,
+          eventName: '',
+          category: ''
+        };
+      });
+  };
+
   const handleConfirmSelection = () => {
-    if (isAddedToCart) return;
-    
     const selectedItems = getSelectedItems();
+    const newItems = getNewItems();
+    
     if (selectedItems.length === 0) {
       toast({
         title: "No items selected",
@@ -202,12 +230,30 @@ export const ProductSelection = ({
       return;
     }
 
-    onAddToCart(selectedItems);
+    if (isAddedToCart && newItems.length === 0) {
+      toast({
+        title: "No new items",
+        description: "No new items to add to cart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const itemsToAdd = isAddedToCart ? newItems : selectedItems;
+    onAddToCart(itemsToAdd);
+    
+    // Update added to cart items
+    const newAddedItems = { ...addedToCartItems };
+    Object.entries(selections).forEach(([productId, quantity]) => {
+      newAddedItems[productId] = quantity;
+    });
+    setAddedToCartItems(newAddedItems);
+    
     setIsCompleted(true);
     setIsAddedToCart(true);
     toast({
       title: "Added to cart!",
-      description: `Added ${selectedItems.length} items to your cart`,
+      description: `Added ${itemsToAdd.length} items to your cart`,
     });
   };
 
@@ -301,32 +347,32 @@ export const ProductSelection = ({
               No products found for this category. Please try different selections.
             </div>
           ) : (
-            <div className="grid gap-4 max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
               {products.map((product) => {
                 const quantity = selections[product.id] || 0;
                 const productTotal = (product.price || 0) * quantity;
                 
                 return (
-                  <div key={product.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3 flex-1">
+                  <div key={product.id} className="flex flex-col p-3 border rounded-lg space-y-3">
+                    <div className="flex flex-col">
                       {product.imageUrl && (
                         <img 
                           src={product.imageUrl} 
                           alt={product.title}
-                          className="w-12 h-12 object-cover rounded"
+                          className="w-full h-32 object-cover rounded mb-2"
                         />
                       )}
-                       <div className="flex-1 min-w-0">
-                         <h4 className="font-medium truncate">{product.title}</h4>
-                         <div className="flex items-center gap-2">
-                           <span className="text-sm font-medium">${product.price?.toFixed(2) || '0.00'}</span>
+                       <div className="flex-1">
+                         <h4 className="font-medium text-sm mb-1">{product.title}</h4>
+                         <div className="flex flex-col gap-1">
+                           <span className="text-lg font-bold">${product.price?.toFixed(2) || '0.00'}</span>
                             <span className="text-xs text-muted-foreground">({product.containerSize} {
                               category === 'beer' ? 'beers' : 
                               category === 'cocktails' ? 'drinks' :
                               'drinks'
                             })</span>
                            {product.subcategory && (
-                             <Badge variant="outline" className="text-xs">
+                             <Badge variant="outline" className="text-xs w-fit">
                                {product.subcategory}
                              </Badge>
                            )}
@@ -334,21 +380,20 @@ export const ProductSelection = ({
                        </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => updateQuantity(product.id, -1)}
-                        disabled={quantity === 0 || isAddedToCart}
+                        disabled={quantity === 0}
                       >
                         <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="w-8 text-center">{quantity}</span>
+                      <span className="w-8 text-center font-medium">{quantity}</span>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => updateQuantity(product.id, 1)}
-                        disabled={isAddedToCart}
                       >
                         <Plus className="w-3 h-3" />
                       </Button>
@@ -363,12 +408,27 @@ export const ProductSelection = ({
           {getTotalQuantity() > 0 && (
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between">
-                <span>Total Containers:</span>
+                <span>Total {
+                  unitType === '12-packs' ? '12-Packs' :
+                  unitType === 'bottles' ? 'Bottles' :
+                  unitType === 'drinks' ? 'Kits' : 
+                  'Containers'
+                }:</span>
                 <span>{getTotalQuantity()}</span>
               </div>
               <div className="flex justify-between">
-                <span>Total {unitType === 'beers' ? 'Beers' : unitType}:</span>
-                <span>{getTotalServings()}/{recommendedQuantity}</span>
+                <span>Total {
+                  category === 'cocktails' ? 'Drinks' :
+                  category === 'beer' ? 'Beers' :
+                  'Drinks'
+                }:</span>
+                <span>{getTotalServings()}/{
+                  category === 'cocktails' ? recommendedQuantity :
+                  category === 'beer' ? recommendedQuantity * 12 :
+                  category === 'wine' ? recommendedQuantity * 5 :
+                  category === 'liquor' ? recommendedQuantity * 25 :
+                  recommendedQuantity
+                }</span>
               </div>
               <div className="flex justify-between">
                 <span>Total Cost:</span>
@@ -391,12 +451,14 @@ export const ProductSelection = ({
             )}
             <Button 
               onClick={handleConfirmSelection}
-              disabled={getTotalQuantity() === 0 || isAddedToCart}
-              className="flex-1"
-              variant={isAddedToCart ? "secondary" : "default"}
+              disabled={getTotalQuantity() === 0 || (isAddedToCart && !hasNewSelections())}
+              className={`flex-1 ${isAddedToCart && !hasNewSelections() ? 'opacity-50' : ''}`}
+              variant={isAddedToCart && !hasNewSelections() ? "secondary" : "default"}
             >
               <ShoppingCart className="w-4 h-4 mr-2" />
-              {isAddedToCart ? 'Added to Cart' : (currentSelections.length > 0 ? 'Update Selection' : 'Add to Cart')}
+              {isAddedToCart && !hasNewSelections() ? 'Added to Cart' : 
+               isAddedToCart && hasNewSelections() ? 'Add New Items' :
+               'Add to Cart'}
             </Button>
             <Button 
               onClick={onComplete} 
