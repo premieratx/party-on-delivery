@@ -405,13 +405,14 @@ export const ProductSelection = ({
               >
                 <CardContent className="p-2">
                   <div className="flex flex-col items-center text-center h-full gap-1">
-                    {/* Optimized Image */}
+                    {/* Optimized Image with priority for first few products */}
                     <div className="w-full aspect-[3/2] rounded overflow-hidden flex-shrink-0">
                       <OptimizedImage 
                         src={product.image} 
                         alt={product.title}
                         className="w-full h-full"
                         onClick={category === 'cocktails' ? () => handleProductClick(product) : undefined}
+                        priority={products.indexOf(product) < 6}
                       />
                     </div>
                     

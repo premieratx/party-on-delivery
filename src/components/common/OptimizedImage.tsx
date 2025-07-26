@@ -16,8 +16,15 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
 
   useEffect(() => {
     if (src) {
-      // Preload image
+      // Fast preload with priority handling
       const img = new Image();
+      
+      // Enable faster loading for priority images
+      if (priority) {
+        img.loading = 'eager';
+        img.fetchPriority = 'high';
+      }
+      
       img.onload = () => {
         setIsLoading(false);
         setHasError(false);
@@ -26,9 +33,17 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
         setIsLoading(false);
         setHasError(true);
       };
+      
+      // Start loading immediately
       img.src = src;
+      
+      // Cleanup on unmount
+      return () => {
+        img.onload = null;
+        img.onerror = null;
+      };
     }
-  }, [src]);
+  }, [src, priority]);
 
   if (hasError) {
     return (
@@ -52,7 +67,9 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
         className={`w-full h-full object-cover transition-opacity duration-200 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         } ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        decoding="async"
       />
     </div>
   );
