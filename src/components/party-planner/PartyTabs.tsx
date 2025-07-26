@@ -256,7 +256,14 @@ export const PartyTabs = ({
                   {isTabCompleted(tab.id) && (
                     <Check className="w-3 h-3 text-green-500" />
                   )}
-                  <span className="font-semibold text-xs text-center leading-tight" style={{ fontSize: '80%' }}>{tab.label}</span>
+                  <span className="font-semibold text-xs text-center leading-tight md:whitespace-nowrap" style={{ fontSize: '80%' }}>
+                    {tab.id === 'details' ? (
+                      <span className="block md:inline">
+                        <span className="block md:inline">Event</span>
+                        <span className="block md:inline md:ml-1">Details</span>
+                      </span>
+                    ) : tab.label}
+                  </span>
                 </div>
                 {getTabState(tab.id) === 'added' && (
                   <Check className="w-3 h-3 text-green-500" />
@@ -267,9 +274,10 @@ export const PartyTabs = ({
         </Tabs>
 
         {/* Navigation Arrows */}
-        <div className="flex justify-between items-center mt-4 px-4">
+        <div className="flex justify-between items-center mt-2 px-4">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => {
               const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
               if (currentIndex > 0) {
@@ -277,39 +285,33 @@ export const PartyTabs = ({
               }
             }}
             disabled={tabs.findIndex(tab => tab.id === activeTab) === 0}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-8"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3 h-3" />
             Previous
           </Button>
           
-          <div className="text-sm text-muted-foreground">
-            Step {tabs.findIndex(tab => tab.id === activeTab) + 1} of {tabs.length}
-          </div>
-          
           <Button
             variant="outline"
+            size="sm"
             onClick={handleNextTab}
             disabled={tabs.findIndex(tab => tab.id === activeTab) === tabs.length - 1}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 h-8"
           >
             Next
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsContent value="details" className="mt-0">
-            {/* Party Type Heading */}
-            <div className="text-left mb-4">
+            {/* Centered Party Type Heading */}
+            <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-green-600 uppercase tracking-wide">
                 Plan Your {eventName.replace(/\b\w/g, l => l.toUpperCase())} Drinks
               </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Choose your event details and preferences
-              </p>
             </div>
             
             <EventDetailsForm
@@ -333,14 +335,11 @@ export const PartyTabs = ({
 
           {eventDetails.drinkTypes.map(category => (
             <TabsContent key={category} value={category} className="mt-0">
-              {/* Party Type Heading */}
-              <div className="text-left mb-4">
+              {/* Centered Party Type Heading */}
+              <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-green-600 uppercase tracking-wide">
                   Plan Your {eventName.replace(/\b\w/g, l => l.toUpperCase())} Drinks
                 </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Selecting {category.charAt(0).toUpperCase() + category.slice(1)} for your event
-                </p>
               </div>
               
               <ProductSelection
