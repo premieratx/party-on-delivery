@@ -3,16 +3,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Minus, Plus, ShoppingCart, Check } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Check, Loader2 } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import { cacheManager } from '@/utils/cacheManager';
+import { ErrorHandler } from '@/utils/errorHandler';
 
-interface Product {
+interface ShopifyProduct {
   id: string;
   title: string;
   price: number;
-  imageUrl: string;
-  category: string;
-  subcategory?: string;
-  containerSize?: number; // Number of servings/units per container
+  image: string;
+  description: string;
+  handle: string;
+  variants: Array<{
+    id: string;
+    title: string;
+    price: number;
+    available: boolean;
+  }>;
+}
+
+interface ShopifyCollection {
+  id: string;
+  title: string;
+  handle: string;
+  description: string;
+  products: ShopifyProduct[];
 }
 
 interface CartItem {
@@ -39,6 +55,14 @@ interface ProductSelectionProps {
   onPrevious?: () => void;
 }
 
+// Category to Shopify collection mapping
+const categoryCollectionMap: Record<string, string> = {
+  'beer': 'tailgate-beer',
+  'wine': 'wine-champagne',
+  'liquor': 'spirits',
+  'cocktails': 'cocktail-kits'
+};
+
 export const ProductSelection = ({ 
   category, 
   subcategories, 
@@ -52,7 +76,7 @@ export const ProductSelection = ({
   onComplete,
   onPrevious 
 }: ProductSelectionProps) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [selections, setSelections] = useState<Record<string, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
@@ -82,64 +106,54 @@ export const ProductSelection = ({
     }
   }, [category, subcategories]);
 
-  const generateSampleProducts = (): Product[] => {
-    const baseProducts = [
-      // Beer products with container sizes (12-packs)
-      { category: 'beer', subcategory: 'Light', title: 'Miller Lite 12-Pack', price: 15.99, containerSize: 12 },
-      { category: 'beer', subcategory: 'Light', title: 'Bud Light 12-Pack', price: 16.99, containerSize: 12 },
-      { category: 'beer', subcategory: 'Light', title: 'Corona Light 12-Pack', price: 17.99, containerSize: 12 },
-      { category: 'beer', subcategory: 'IPA', title: 'Sierra Nevada IPA 12-Pack', price: 18.99, containerSize: 12 },
-      { category: 'beer', subcategory: 'Lager', title: 'Stella Artois 12-Pack', price: 19.99, containerSize: 12 },
-      
-      // Wine products (bottles - 5 drinks per bottle)
-      { category: 'wine', subcategory: 'Red', title: 'Kendall-Jackson Vintner\'s Reserve Cabernet', price: 18.99, containerSize: 5 },
-      { category: 'wine', subcategory: 'Red', title: 'Caymus Cabernet Sauvignon', price: 89.99, containerSize: 5 },
-      { category: 'wine', subcategory: 'Red', title: 'La Crema Pinot Noir', price: 24.99, containerSize: 5 },
-      { category: 'wine', subcategory: 'White', title: 'Kendall-Jackson Chardonnay', price: 16.99, containerSize: 5 },
-      { category: 'wine', subcategory: 'White', title: 'Whitehaven Sauvignon Blanc', price: 16.99, containerSize: 5 },
-      
-      // Spirits/Liquor products (bottles - 25 drinks per 750ml bottle)
-      { category: 'liquor', subcategory: 'Whiskey', title: 'Jack Daniels Old No. 7 (750ml)', price: 26.99, containerSize: 25 },
-      { category: 'liquor', subcategory: 'Whiskey', title: 'Jameson Irish Whiskey (750ml)', price: 29.99, containerSize: 25 },
-      { category: 'liquor', subcategory: 'Whiskey', title: 'Buffalo Trace Bourbon (750ml)', price: 24.99, containerSize: 25 },
-      { category: 'liquor', subcategory: 'Vodka', title: 'Titos Handmade Vodka (750ml)', price: 21.99, containerSize: 25 },
-      { category: 'liquor', subcategory: 'Rum', title: 'Bacardi Superior Rum (750ml)', price: 17.99, containerSize: 25 },
-      { category: 'liquor', subcategory: 'Gin', title: 'Hendricks Gin (750ml)', price: 34.99, containerSize: 25 },
-      
-      // Cocktail products (kits)
-      { category: 'cocktails', subcategory: 'Margarita', title: 'Margarita Party Kit (serves 12)', price: 45.99, containerSize: 12 },
-      { category: 'cocktails', subcategory: 'Cosmopolitan', title: 'Cosmo Cocktail Kit', price: 39.99, containerSize: 8 },
-      { category: 'cocktails', subcategory: 'Mojito', title: 'Mojito Mix & Rum Bundle', price: 42.99, containerSize: 10 },
-    ];
-
-    return baseProducts
-      .filter(product => 
-        product.category === category && 
-        (subcategories.includes('all') || subcategories.length === 0 || subcategories.includes(product.subcategory))
-      )
-      .map((product, index) => ({
-        id: `sample-${category}-${index}`,
-        title: product.title,
-        price: product.price,
-        imageUrl: '/placeholder.svg',
-        category: product.category,
-        subcategory: product.subcategory,
-        containerSize: product.containerSize || 1
-      }));
-  };
-
   const fetchProducts = async () => {
     try {
       setLoading(true);
       
-      // Create sample products based on category and subcategories for demo
-      const sampleProducts = generateSampleProducts();
-      setProducts(sampleProducts);
+      // Get collection handle from category
+      const collectionHandle = categoryCollectionMap[category];
+      if (!collectionHandle) {
+        console.error('No collection mapping found for category:', category);
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      // Check cache first
+      const cachedCollections = cacheManager.getShopifyCollections();
+      let collections: ShopifyCollection[] = [];
+
+      if (cachedCollections && cachedCollections.length > 0) {
+        collections = cachedCollections;
+      } else {
+        // Fetch fresh data
+        const { data, error } = await supabase.functions.invoke('get-all-collections');
+        
+        if (error || data?.error) {
+          throw new Error(`Failed to fetch collections: ${error?.message || data?.error}`);
+        }
+        
+        collections = data.collections || [];
+        cacheManager.setShopifyCollections(collections);
+      }
+
+      // Find the collection for this category
+      const targetCollection = collections.find(c => c.handle === collectionHandle);
+      
+      if (targetCollection && targetCollection.products) {
+        setProducts(targetCollection.products);
+      } else {
+        console.warn(`No products found for collection: ${collectionHandle}`);
+        setProducts([]);
+      }
+      
     } catch (error) {
       console.error('Error fetching products:', error);
+      ErrorHandler.logError(error, 'fetchProducts');
+      setProducts([]);
       toast({
-        title: "Error",
-        description: "Failed to load products",
+        title: "Error Loading Products",
+        description: "Failed to load products for this category. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -147,329 +161,248 @@ export const ProductSelection = ({
     }
   };
 
-  const updateQuantity = (productId: string, change: number) => {
-    setSelections(prev => ({
-      ...prev,
-      [productId]: Math.max(0, (prev[productId] || 0) + change)
-    }));
+  const handleQuantityChange = (productId: string, change: number) => {
+    setSelections(prev => {
+      const newQuantity = Math.max(0, (prev[productId] || 0) + change);
+      return {
+        ...prev,
+        [productId]: newQuantity
+      };
+    });
   };
 
-  const getTotalQuantity = () => {
-    return Object.values(selections).reduce((sum, qty) => sum + qty, 0);
+  const getSelectionTotal = () => {
+    return Object.entries(selections).reduce((total, [productId, quantity]) => {
+      const product = products.find(p => p.id === productId);
+      return total + (product ? product.price * quantity : 0);
+    }, 0);
   };
 
   const getTotalServings = () => {
     return Object.entries(selections).reduce((total, [productId, quantity]) => {
       const product = products.find(p => p.id === productId);
-      return total + (product?.containerSize || 1) * quantity;
+      const containerSize = category === 'beer' ? 12 : 
+                           category === 'wine' ? 5 : 
+                           category === 'liquor' ? 25 : 
+                           category === 'cocktails' ? 12 : 1;
+      return total + (quantity * containerSize);
     }, 0);
   };
 
-  const getContainersNeeded = () => {
-    return Math.ceil(recommendedQuantity / (products.length > 0 ? Math.max(...products.map(p => p.containerSize || 1)) : 1));
-  };
-
-  const getTotalCost = () => {
-    return Object.entries(selections).reduce((total, [productId, quantity]) => {
-      const product = products.find(p => p.id === productId);
-      return total + (product?.price || 0) * quantity;
-    }, 0);
-  };
-
-  const getSelectedItems = (): CartItem[] => {
-    return Object.entries(selections)
+  const handleSaveAndContinue = () => {
+    const selectedItems: CartItem[] = Object.entries(selections)
       .filter(([_, quantity]) => quantity > 0)
       .map(([productId, quantity]) => {
-        const product = products.find(p => p.id === productId)!;
+        const product = products.find(p => p.id === productId);
         return {
           productId,
-          title: product.title,
-          price: product.price || 0,
+          title: product?.title || '',
+          price: product?.price || 0,
           quantity,
-          image: product.imageUrl,
+          image: product?.image,
           eventName: '',
-          category: ''
+          category
         };
       });
-  };
 
-  const hasNewSelections = () => {
-    return Object.entries(selections).some(([productId, quantity]) => 
-      quantity > (addedToCartItems[productId] || 0)
-    );
-  };
-
-  const getNewItems = (): CartItem[] => {
-    return Object.entries(selections)
-      .filter(([productId, quantity]) => quantity > (addedToCartItems[productId] || 0))
-      .map(([productId, quantity]) => {
-        const product = products.find(p => p.id === productId)!;
-        const newQuantity = quantity - (addedToCartItems[productId] || 0);
-        return {
-          productId,
-          title: product.title,
-          price: product.price || 0,
-          quantity: newQuantity,
-          image: product.imageUrl,
-          eventName: '',
-          category: ''
-        };
-      });
-  };
-
-  const handleConfirmSelection = () => {
-    const selectedItems = getSelectedItems();
-    const newItems = getNewItems();
-    
     if (selectedItems.length === 0) {
       toast({
-        title: "No items selected",
-        description: "Please select at least one item",
+        title: "No Items Selected",
+        description: "Please select at least one item to continue.",
         variant: "destructive",
       });
       return;
     }
 
-    if (isAddedToCart && newItems.length === 0) {
-      toast({
-        title: "No new items",
-        description: "No new items to add to cart",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const itemsToAdd = isAddedToCart ? newItems : selectedItems;
-    onAddToCart(itemsToAdd);
-    
-    // Update added to cart items
-    const newAddedItems = { ...addedToCartItems };
-    Object.entries(selections).forEach(([productId, quantity]) => {
-      newAddedItems[productId] = quantity;
-    });
-    setAddedToCartItems(newAddedItems);
-    
-    setIsCompleted(true);
-    setIsAddedToCart(true);
-    toast({
-      title: "Added to cart!",
-      description: `Added ${itemsToAdd.length} items to your cart`,
-    });
+    onComplete();
   };
 
-  const remainingBudget = budget - getTotalCost();
-  const totalSelected = getTotalQuantity();
+  const handleAddToCart = () => {
+    const selectedItems: CartItem[] = Object.entries(selections)
+      .filter(([_, quantity]) => quantity > 0)
+      .map(([productId, quantity]) => {
+        const product = products.find(p => p.id === productId);
+        return {
+          productId,
+          title: product?.title || '',
+          price: product?.price || 0,
+          quantity,
+          image: product?.image,
+          eventName: '',
+          category
+        };
+      });
+
+    if (selectedItems.length === 0) {
+      toast({
+        title: "No Items Selected",
+        description: "Please select at least one item to add to cart.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for new items that weren't in the cart before
+    const newItems = selectedItems.filter(item => 
+      !addedToCartItems[item.productId] || 
+      selections[item.productId] > addedToCartItems[item.productId]
+    );
+
+    if (newItems.length === 0 && isAddedToCart) {
+      toast({
+        title: "No New Items",
+        description: "All selected items are already in your cart.",
+      });
+      return;
+    }
+
+    onAddToCart(selectedItems);
+    setIsAddedToCart(true);
+    setAddedToCartItems({...selections});
+    
+    toast({
+      title: "Added to Cart",
+      description: `${selectedItems.length} item(s) added to your cart!`,
+    });
+  };
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">Loading products...</div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading {category} products...</p>
+        </div>
+      </div>
     );
   }
 
-  const totalPartySpent = runningTotal + getTotalCost();
-  const remainingPartyBudget = totalPartyBudget - totalPartySpent;
+  const selectionTotal = getSelectionTotal();
+  const totalServings = getTotalServings();
+  const remainingBudget = budget - selectionTotal;
 
   return (
     <div className="space-y-6">
-      {/* Party Budget Overview - Top Section */}
-      <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Party Budget Tracker</h3>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-primary">${totalPartySpent.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">Running Total</div>
-            </div>
-          </div>
-          
-          <div className="w-full bg-muted rounded-full h-4 mb-3">
-            <div 
-              className="bg-primary h-4 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(100, (totalPartySpent / totalPartyBudget) * 100)}%` }}
-            />
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="text-2xl font-bold text-green-600">${remainingPartyBudget.toFixed(2)}</div>
-              <div className="text-sm text-muted-foreground">Remaining Budget</div>
-            </div>
-            <div className="text-right text-sm text-muted-foreground">
-              <div>Total Budget: ${totalPartyBudget.toFixed(2)}</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center">
+        <h3 className="text-2xl font-bold mb-2 capitalize">
+          Choose Your {category === 'cocktails' ? 'Cocktail Kits' : category}
+        </h3>
+        <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+          <span>Recommended: {recommendedQuantity} {unitType}</span>
+          <span>Budget: ${budget.toFixed(2)}</span>
+          <span>Selected: {totalServings} drinks</span>
+        </div>
+      </div>
 
-      {/* Product Selection */}
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="text-2xl font-bold">Choose Your {category.charAt(0).toUpperCase() + category.slice(1)}</span>
-            {isCompleted && <Check className="w-5 h-5 text-green-500" />}
-          </CardTitle>
-          <div className="text-3xl font-bold mb-2 text-center">
-            Choose {recommendedQuantity} {
-              unitType === '12-packs' ? '12-Packs' :
-              unitType === 'bottles' ? 'Bottles' :
-              unitType === 'drinks' ? 'Cocktail Kits' : 
-              unitType
-            }
-          </div>
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Category Budget: ${budget.toFixed(2)}</span>
-            <span>Remaining: ${remainingBudget.toFixed(2)}</span>
-          </div>
-          <div className="w-full bg-muted rounded-full h-3">
-            <div 
-              className="bg-primary h-3 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(100, (getTotalServings() / recommendedQuantity) * 100)}%` }}
-            />
-          </div>
-          <div className="text-sm text-muted-foreground text-center">
-            Selected: {getTotalServings()} / {
-              unitType === 'drinks' ? recommendedQuantity + ' drinks' :
-              unitType === '12-packs' ? (recommendedQuantity * 12) + ' beers' :
-              unitType === 'bottles' && category === 'wine' ? (recommendedQuantity * 5) + ' drinks' :
-              unitType === 'bottles' && category === 'liquor' ? (recommendedQuantity * 25) + ' drinks' :
-              recommendedQuantity + ' ' + unitType
-            } ({getTotalQuantity()} containers)
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {products.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No products found for this category. Please try different selections.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {products.map((product) => {
-                const quantity = selections[product.id] || 0;
-                const productTotal = (product.price || 0) * quantity;
-                
-                return (
-                  <div key={product.id} className="flex flex-col p-3 border rounded-lg space-y-3">
-                    <div className="flex flex-col">
-                      {product.imageUrl && (
-                        <img 
-                          src={product.imageUrl} 
-                          alt={product.title}
-                          className="w-full h-32 object-cover rounded mb-2"
-                        />
-                      )}
-                       <div className="flex-1">
-                         <h4 className="font-medium text-sm mb-1">{product.title}</h4>
-                         <div className="flex flex-col gap-1">
-                           <span className="text-lg font-bold">${product.price?.toFixed(2) || '0.00'}</span>
-                            <span className="text-xs text-muted-foreground">({product.containerSize} {
-                              category === 'beer' ? 'beers' : 
-                              category === 'cocktails' ? 'drinks' :
-                              'drinks'
-                            })</span>
-                           {product.subcategory && (
-                             <Badge variant="outline" className="text-xs w-fit">
-                               {product.subcategory}
-                             </Badge>
-                           )}
-                         </div>
-                       </div>
+      {products.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No products available for {category}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {products.map((product) => {
+            const quantity = selections[product.id] || 0;
+            const isSelected = quantity > 0;
+            const wasAddedToCart = addedToCartItems[product.id] > 0;
+
+            return (
+              <Card 
+                key={product.id} 
+                className={`transition-all duration-200 ${
+                  isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
+                } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
+              >
+                <CardHeader className="pb-2">
+                  {product.image && (
+                    <div className="aspect-square rounded-lg overflow-hidden mb-2">
+                      <img 
+                        src={product.image} 
+                        alt={product.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    
-                    <div className="flex items-center justify-center gap-2">
+                  )}
+                  <CardTitle className="text-lg line-clamp-2">{product.title}</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl font-bold">${product.price}</span>
+                    {wasAddedToCart && (
+                      <Badge variant="default" className="bg-green-100 text-green-800">
+                        <Check className="w-3 h-3 mr-1" />
+                        In Cart
+                      </Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(product.id, -1)}
-                        disabled={quantity === 0}
+                        onClick={() => handleQuantityChange(product.id, -1)}
+                        disabled={quantity <= 0}
                       >
-                        <Minus className="w-3 h-3" />
+                        <Minus className="w-4 h-4" />
                       </Button>
                       <span className="w-8 text-center font-medium">{quantity}</span>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => updateQuantity(product.id, 1)}
+                        onClick={() => handleQuantityChange(product.id, 1)}
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-4 h-4" />
                       </Button>
                     </div>
+                    {quantity > 0 && (
+                      <span className="text-sm font-medium">
+                        ${(product.price * quantity).toFixed(2)}
+                      </span>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-          {/* Summary */}
-          {getTotalQuantity() > 0 && (
-            <div className="border-t pt-4 space-y-2">
-              <div className="flex justify-between">
-                <span>Total {
-                  unitType === '12-packs' ? '12-Packs' :
-                  unitType === 'bottles' ? 'Bottles' :
-                  unitType === 'drinks' ? 'Kits' : 
-                  'Containers'
-                }:</span>
-                <span>{getTotalQuantity()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Total {
-                  category === 'cocktails' ? 'Drinks' :
-                  category === 'beer' ? 'Beers' :
-                  'Drinks'
-                }:</span>
-                <span>{getTotalServings()}/{
-                  category === 'cocktails' ? recommendedQuantity :
-                  category === 'beer' ? recommendedQuantity * 12 :
-                  category === 'wine' ? recommendedQuantity * 5 :
-                  category === 'liquor' ? recommendedQuantity * 25 :
-                  recommendedQuantity
-                }</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Total Cost:</span>
-                <span className="font-medium">${getTotalCost().toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Budget Remaining:</span>
-                <span className={remainingBudget < 0 ? 'text-red-500' : 'text-green-600'}>
-                  ${remainingBudget.toFixed(2)}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-4">
-            {onPrevious && (
-              <Button variant="outline" onClick={onPrevious}>
-                Previous
-              </Button>
-            )}
-            <Button 
-              onClick={handleConfirmSelection}
-              disabled={getTotalQuantity() === 0 || (isAddedToCart && !hasNewSelections())}
-              className={`flex-1 ${isAddedToCart && !hasNewSelections() ? 'opacity-50' : ''}`}
-              variant={isAddedToCart && !hasNewSelections() ? "secondary" : "default"}
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              {isAddedToCart && !hasNewSelections() ? 'Added to Cart' : 
-               isAddedToCart && hasNewSelections() ? 'Add New Items' :
-               'Add to Cart'}
-            </Button>
-            <Button 
-              onClick={onComplete} 
-              variant={isAddedToCart ? "default" : "outline"}
-              className={isAddedToCart ? "animate-pulse bg-primary" : ""}
-            >
-              {isAddedToCart ? 'Confirm & Continue' : (getTotalQuantity() > 0 ? 'Save & Continue' : 'Skip Category')}
-            </Button>
+      {/* Summary and Actions */}
+      <div className="bg-muted/30 rounded-lg p-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-lg font-semibold">Selection Summary</p>
+            <p className="text-sm text-muted-foreground">
+              {Object.values(selections).reduce((sum, qty) => sum + qty, 0)} containers • {totalServings} drinks
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-right">
+            <p className="text-2xl font-bold">${selectionTotal.toFixed(2)}</p>
+            <p className={`text-sm ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              Budget: ${remainingBudget.toFixed(2)} {remainingBudget >= 0 ? 'remaining' : 'over'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-3 justify-end">
+          <Button
+            variant="outline"
+            onClick={handleAddToCart}
+            disabled={Object.values(selections).every(qty => qty === 0)}
+            className={`flex items-center gap-2 ${isAddedToCart && Object.values(selections).every(qty => addedToCartItems[products.find(p => selections[p.id] > 0)?.id || ''] >= qty) ? 'opacity-50' : ''}`}
+          >
+            <ShoppingCart className="w-4 h-4" />
+            {isAddedToCart ? 'Update Cart' : 'Add to Cart'}
+          </Button>
+          
+          <Button
+            onClick={handleSaveAndContinue}
+            disabled={Object.values(selections).every(qty => qty === 0)}
+            className="flex items-center gap-2"
+          >
+            Save & Continue
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

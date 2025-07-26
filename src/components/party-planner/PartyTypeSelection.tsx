@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Heart, Briefcase, Cake, GraduationCap, Clock, Home, PartyPopper } from "lucide-react";
 
 interface PartyTypeSelectionProps {
@@ -20,12 +21,12 @@ const partyTypes = [
 
 export const PartyTypeSelection = ({ selectedType, onSelect }: PartyTypeSelectionProps) => {
   return (
-    <div>
+    <div className="space-y-8">
       <h2 className="text-2xl font-semibold text-center mb-6">
         What kind of party are you throwing?
       </h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {partyTypes.map((type) => {
           const Icon = type.icon;
           return (
@@ -38,13 +39,23 @@ export const PartyTypeSelection = ({ selectedType, onSelect }: PartyTypeSelectio
               }`}
               onClick={() => onSelect(type.id)}
             >
-              <CardContent className="p-6 text-center">
-                <Icon className="w-8 h-8 mx-auto mb-3 text-primary" />
-                <p className="font-medium">{type.label}</p>
+              <CardContent className="p-4 md:p-6 text-center">
+                <Icon className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 md:mb-3 text-primary" />
+                <p className="font-medium text-xs md:text-sm">{type.label}</p>
               </CardContent>
             </Card>
           );
         })}
+      </div>
+      
+      <div className="text-center">
+        <Button 
+          size="lg" 
+          className="px-8 py-3 text-lg font-semibold"
+          disabled={!selectedType}
+        >
+          Order Delivery Now
+        </Button>
       </div>
     </div>
   );
