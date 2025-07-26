@@ -212,7 +212,13 @@ export const PartyPlanner = () => {
               <Button 
                 variant="default" 
                 size="sm"
-                onClick={() => navigate('/checkout')}
+                onClick={() => {
+                  console.log('Mobile checkout button clicked, cart items:', cart);
+                  if (cart.length > 0) {
+                    localStorage.setItem('party-cart', JSON.stringify(cart));
+                    navigate('/checkout');
+                  }
+                }}
                 disabled={cart.length === 0}
                 className="px-2 h-8 text-xs"
               >
@@ -241,7 +247,13 @@ export const PartyPlanner = () => {
               <Button 
                 variant="default" 
                 size="sm"
-                onClick={() => navigate('/checkout')}
+                onClick={() => {
+                  console.log('Desktop checkout button clicked, cart items:', cart);
+                  if (cart.length > 0) {
+                    localStorage.setItem('party-cart', JSON.stringify(cart));
+                    navigate('/checkout');
+                  }
+                }}
                 disabled={cart.length === 0}
               >
                 Checkout
@@ -418,7 +430,13 @@ export const PartyPlanner = () => {
                       </div>
                     </div>
                   </div>
-                  <Button size="lg" onClick={() => navigate('/checkout')}>
+                  <Button size="lg" onClick={() => {
+                    console.log('Checkout button clicked, cart items:', cart);
+                    console.log('Navigating to checkout with cart data');
+                    // Store cart data in localStorage for checkout page
+                    localStorage.setItem('party-cart', JSON.stringify(cart));
+                    navigate('/checkout');
+                  }}>
                     Proceed to Checkout
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>

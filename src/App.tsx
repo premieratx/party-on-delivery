@@ -23,6 +23,7 @@ import GroupOrderView from "./pages/GroupOrderView";
 import NotFound from "./pages/NotFound";
 import TestSMS from "./components/TestSMS";
 import { PartyPlanner } from "./pages/PartyPlanner";
+import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ const App = () => {
                 
                 {/* Party Planning Routes */}
                 <Route path="/plan-my-party" element={<PartyPlanner />} />
+                <Route path="/checkout" element={<Checkout />} />
                 
                 {/* Test Routes */}
                 <Route path="/test-sms" element={<TestSMS />} />

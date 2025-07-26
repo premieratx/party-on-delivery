@@ -517,8 +517,6 @@ export const ProductSelection = ({
                       <Button
                         onClick={() => {
                           console.log('Adding product to cart:', product.title);
-                          // Update local selections first
-                          handleQuantityChange(product.id, 1);
                           
                           // Create cart item
                           const cartItem: CartItem = {
@@ -531,16 +529,19 @@ export const ProductSelection = ({
                             category
                           };
                           
+                          // Update local selections first to trigger +/- controls
+                          handleQuantityChange(product.id, 1);
+                          
                           // Add to cart immediately
                           onAddToCart([cartItem]);
                           
-                          // Update local tracking
+                          // Update local tracking so it shows as added
                           setAddedToCartItems(prev => ({
                             ...prev,
                             [product.id]: 1
                           }));
                           
-                          console.log('Product added to cart:', cartItem);
+                          console.log('Product added to cart, switching to +/- controls:', cartItem);
                         }}
                         className="w-6 h-6 md:w-8 md:h-8 p-0 rounded-full bg-green-600 hover:bg-green-700 text-white mt-auto"
                         type="button"
