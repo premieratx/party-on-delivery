@@ -40,6 +40,7 @@ export interface PartyDetails {
 export const PartyPlanner = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
+  const [cartFlash, setCartFlash] = useState(false);
   const [partyDetails, setPartyDetails, clearPartyDetails] = useReliableStorage<PartyDetails>('party-details', {
     partyType: '',
     eventDetails: {},
@@ -83,6 +84,10 @@ export const PartyPlanner = () => {
         }
       }
     }));
+
+    // Trigger cart flash animation
+    setCartFlash(true);
+    setTimeout(() => setCartFlash(false), 600);
   };
 
   const updatePartyDetails = (updates: Partial<PartyDetails>) => {
@@ -179,10 +184,15 @@ export const PartyPlanner = () => {
         {/* Compact Sticky Header */}
         <div className="sticky top-0 z-50 bg-background border-b mb-2">
           <div className="flex justify-between items-center px-3 py-1">
-            {/* Mobile Layout: Cart Icon - Centered Text - Checkout Icon */}
+            {/* Mobile Layout: Cart Icon - Centered Text - Checkout Button */}
             <div className="md:hidden flex items-center justify-between w-full">
-              <Button variant="outline" size="sm" className="p-1 h-8">
+              <Button variant="outline" size="sm" className="p-1 h-8 relative">
                 <ShoppingCart className="w-4 h-4" />
+                {cart.length > 0 && (
+                  <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
+                    {cart.length}
+                  </span>
+                )}
               </Button>
               
               <div className="text-center flex-1 px-2">
@@ -196,17 +206,22 @@ export const PartyPlanner = () => {
                 size="sm"
                 onClick={() => navigate('/checkout')}
                 disabled={cart.length === 0}
-                className="p-1 h-8"
+                className="px-2 h-8 text-xs"
               >
-                <ArrowRight className="w-4 h-4" />
+                Checkout
               </Button>
             </div>
 
             {/* Desktop Layout: Full Text with Buttons */}
             <div className="hidden md:flex justify-between items-center w-full">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="relative">
                 <ShoppingCart className="w-4 h-4 mr-1" />
                 Cart ({cart.length})
+                {cart.length > 0 && cartFlash && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-ping">
+                    {cart.length}
+                  </span>
+                )}
               </Button>
               
               <div className="text-center flex-1 px-4">

@@ -1,96 +1,59 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import { ImageOptimizer, NetworkOptimizer } from '@/utils/performanceOptimizer';
+import { useState, useRef, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface OptimizedImageProps {
   src: string;
   alt: string;
   className?: string;
-  width?: number;
-  height?: number;
+  onClick?: () => void;
   priority?: boolean;
-  quality?: 'low' | 'medium' | 'high';
-  placeholder?: string;
-  onLoad?: () => void;
-  onError?: () => void;
 }
 
-export function OptimizedImage({
-  src,
-  alt,
-  className,
-  width,
-  height,
-  priority = false,
-  quality,
-  placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"%3E%3C/svg%3E',
-  onLoad,
-  onError
-}: OptimizedImageProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+export const OptimizedImage = ({ src, alt, className = '', onClick, priority = false }: OptimizedImageProps) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    const img = imgRef.current;
-    if (!img) return;
-
-    if (priority) {
-      // Load immediately for priority images
+    if (src) {
+      // Preload image
+      const img = new Image();
+      img.onload = () => {
+        setIsLoading(false);
+        setHasError(false);
+      };
+      img.onerror = () => {
+        setIsLoading(false);
+        setHasError(true);
+      };
       img.src = src;
-    } else {
-      // Use lazy loading for non-priority images
-      img.dataset.src = src;
-      ImageOptimizer.observeImage(img);
     }
-  }, [src, priority]);
+  }, [src]);
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-    onLoad?.();
-  };
-
-  const handleError = () => {
-    setHasError(true);
-    onError?.();
-  };
-
-  const getOptimalSrc = () => {
-    const optimalQuality = quality || NetworkOptimizer.getOptimalImageQuality();
-    
-    // In a real implementation, you'd have different quality versions
-    // For now, we'll use the original src
-    return src;
-  };
+  if (hasError) {
+    return (
+      <div className={`bg-muted flex items-center justify-center ${className}`}>
+        <span className="text-xs text-muted-foreground">No image</span>
+      </div>
+    );
+  }
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
-      <img
-        ref={imgRef}
-        alt={alt}
-        width={width}
-        height={height}
-        src={priority ? getOptimalSrc() : placeholder}
-        onLoad={handleLoad}
-        onError={handleError}
-        className={cn(
-          "transition-opacity duration-300",
-          isLoaded ? "opacity-100" : "opacity-0",
-          hasError && "opacity-50"
-        )}
-        loading={priority ? "eager" : "lazy"}
-        decoding="async"
-      />
-      
-      {!isLoaded && !hasError && (
-        <div className="absolute inset-0 bg-muted animate-pulse" />
-      )}
-      
-      {hasError && (
+    <div className={`relative ${className}`} onClick={onClick}>
+      {isLoading && (
         <div className="absolute inset-0 bg-muted flex items-center justify-center">
-          <span className="text-muted-foreground text-sm">Failed to load</span>
+          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
         </div>
       )}
+      <img
+        ref={imgRef}
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-200 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        } ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
+        loading="lazy"
+      />
     </div>
   );
-}
+};

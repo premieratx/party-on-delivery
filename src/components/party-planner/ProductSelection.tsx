@@ -8,6 +8,7 @@ import { Minus, Plus, ShoppingCart, Check, Loader2, X, ArrowRight } from "lucide
 import { supabase } from '@/integrations/supabase/client';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface ShopifyProduct {
   id: string;
@@ -56,7 +57,7 @@ interface ProductSelectionProps {
   onPrevious?: () => void;
 }
 
-// Category to Shopify collection mapping - Updated with working collections
+// Category to Shopify collection mapping - Fixed beer collection
 const categoryCollectionMap: Record<string, string> = {
   'beer': 'all-beer',
   'wine': 'spirits', // Using spirits collection for wine since wine collection doesn't exist
@@ -310,10 +311,7 @@ export const ProductSelection = ({
     setIsAddedToCart(true);
     setAddedToCartItems({...selections});
     
-    toast({
-      title: "Added to Cart",
-      description: `${selectedItems.length} item(s) added to your cart!`,
-    });
+    // Don't show success toast - cart will show bubble flash
   };
 
   const handleProductClick = (product: ShopifyProduct) => {
@@ -342,10 +340,7 @@ export const ProductSelection = ({
         [product.id]: quantity
       }));
       
-      toast({
-        title: "Added to Cart",
-        description: `${product.title} added to your cart!`,
-      });
+      // Don't show toast - cart will show bubble flash
     }
     setIsDialogOpen(false);
   };
@@ -416,13 +411,13 @@ export const ProductSelection = ({
               >
                 <CardContent className="p-2">
                   <div className="flex flex-col items-center text-center h-full gap-1">
-                    {/* Image */}
+                    {/* Optimized Image */}
                     <div className="w-full aspect-[3/2] rounded overflow-hidden flex-shrink-0">
-                      <img 
+                      <OptimizedImage 
                         src={product.image} 
                         alt={product.title}
-                        className={`w-full h-full object-cover ${category === 'cocktails' ? 'cursor-pointer hover:opacity-80' : ''}`}
-                        onClick={() => handleProductClick(product)}
+                        className="w-full h-full"
+                        onClick={category === 'cocktails' ? () => handleProductClick(product) : undefined}
                       />
                     </div>
                     
@@ -451,32 +446,32 @@ export const ProductSelection = ({
                       <Check className="w-4 h-4 text-green-600" />
                     )}
                     
-                    {/* Quantity Controls or Add to Cart */}
+                    {/* Quantity Controls or Add to Cart - Like Liquor Tab */}
                     {quantity > 0 ? (
                       // Show +/- controls when item has quantity
-                      <div className="flex items-center gap-2 mt-auto">
+                      <div className="flex items-center gap-1 mt-auto">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleQuantityChange(product.id, -1)}
-                          className="h-6 w-6 p-0 rounded-full"
+                          className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
                           type="button"
                         >
-                          <Minus className="w-3 h-3" />
+                          <Minus className="w-2 h-2 md:w-3 md:h-3" />
                         </Button>
-                        <span className="w-6 text-center font-medium text-xs">{quantity}</span>
+                        <span className="w-4 md:w-6 text-center font-medium text-xs">{quantity}</span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleQuantityChange(product.id, 1)}
-                          className="h-6 w-6 p-0 rounded-full"
+                          className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
                           type="button"
                         >
-                          <Plus className="w-3 h-3" />
+                          <Plus className="w-2 h-2 md:w-3 md:h-3" />
                         </Button>
                       </div>
                     ) : (
-                      // Show green + circle for initial add to cart
+                      // Show smaller green + circle for initial add to cart
                       <Button
                         onClick={() => {
                           handleQuantityChange(product.id, 1);
@@ -494,15 +489,12 @@ export const ProductSelection = ({
                             ...prev,
                             [product.id]: 1
                           }));
-                          toast({
-                            title: "Added to Cart",
-                            description: `${product.title} added to your cart!`,
-                          });
+                          // Don't show toast - will show cart bubble flash instead
                         }}
-                        className="w-8 h-8 p-0 rounded-full bg-green-600 hover:bg-green-700 text-white mt-auto"
+                        className="w-6 h-6 md:w-8 md:h-8 p-0 rounded-full bg-green-600 hover:bg-green-700 text-white mt-auto"
                         type="button"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-3 h-3 md:w-4 md:h-4" />
                       </Button>
                     )}
                   </div>

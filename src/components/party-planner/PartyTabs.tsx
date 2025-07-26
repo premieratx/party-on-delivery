@@ -270,15 +270,15 @@ export const PartyTabs = ({
 
   return (
     <div className="w-full">
-      {/* Sticky Header - Only Tabs and Navigation */}
-      <div className="sticky top-0 z-40 bg-background border-b pb-4">
+      {/* Sticky Header - Full Width on Mobile */}
+      <div className="sticky top-0 z-40 bg-background border-b pb-2 -mx-2 px-2 md:mx-0 md:px-0">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '80px' }}>
+          <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
             {tabs.map((tab) => (
               <TabsTrigger 
                 key={tab.id} 
                 value={tab.id} 
-                className="relative flex flex-col items-center justify-center text-xs px-1 py-2 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
+                className="relative flex flex-col items-center justify-center text-xs px-1 py-1 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
               >
                 <div className="flex items-center gap-1 mb-1">
                   {isTabCompleted(tab.id) && (
@@ -302,7 +302,7 @@ export const PartyTabs = ({
         </Tabs>
 
         {/* Navigation Arrows - Smaller */}
-        <div className="flex justify-between items-center mt-2 px-4">
+        <div className="flex justify-between items-center mt-1 px-2">
           <Button
             variant="outline"
             size="sm"
@@ -313,7 +313,7 @@ export const PartyTabs = ({
               }
             }}
             disabled={tabs.findIndex(tab => tab.id === activeTab) === 0}
-            className="flex items-center gap-1 h-6 px-2"
+            className="flex items-center gap-1 h-6 px-2 text-xs"
           >
             <ArrowLeft className="w-3 h-3" />
             <span className="text-xs">Prev</span>
@@ -324,7 +324,7 @@ export const PartyTabs = ({
             size="sm"
             onClick={handleNextTab}
             disabled={tabs.findIndex(tab => tab.id === activeTab) === tabs.length - 1}
-            className="flex items-center gap-1 h-6 px-2"
+            className="flex items-center gap-1 h-6 px-2 text-xs"
           >
             <span className="text-xs">Next</span>
             <ArrowRight className="w-3 h-3" />
