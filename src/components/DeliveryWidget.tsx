@@ -68,7 +68,17 @@ export const DeliveryWidget: React.FC = () => {
     const urlParams = new URLSearchParams(location.search);
     const customerParam = urlParams.get('customer');
     const discountParam = urlParams.get('discount');
+    const shareParam = urlParams.get('share');
     
+    // Handle share parameter for group orders
+    if (shareParam) {
+      console.log('Share token detected, storing for group order:', shareParam);
+      localStorage.setItem('groupOrderToken', shareParam);
+      // Clear the URL params to clean up the URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+
     // Handle customer=true parameter for "add to order" flow
     if (customerParam === 'true') {
       console.log('Customer=true detected, setting add to order mode');

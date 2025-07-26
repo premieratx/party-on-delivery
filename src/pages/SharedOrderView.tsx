@@ -127,7 +127,8 @@ const SharedOrderView = () => {
       // Check if user already joined
       const existingParticipant = participants.find(p => p.participant_email === currentUser.email);
       if (existingParticipant) {
-        // Navigate to add items to order with auto-applied discount
+        // Store group order token and navigate to add items to order with auto-applied discount
+        localStorage.setItem('groupOrderToken', shareToken);
         navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
         return;
       }
@@ -150,7 +151,8 @@ const SharedOrderView = () => {
         description: "You can now add items to this delivery order.",
       });
 
-      // Navigate to shopping with share token and auto-apply discount
+      // Store group order token and navigate to shopping with share token and auto-apply discount
+      localStorage.setItem('groupOrderToken', shareToken);
       navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
 
     } catch (error) {

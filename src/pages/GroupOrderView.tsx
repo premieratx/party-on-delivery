@@ -92,9 +92,9 @@ const GroupOrderView = () => {
   };
 
   const handleJoinOrder = () => {
-    // Store the share token and redirect to shopping
+    // Store the share token and redirect to shopping with share parameter
     localStorage.setItem('groupOrderToken', shareToken || '');
-    navigate('/');
+    navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
   };
 
   const handleLogin = () => {
