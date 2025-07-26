@@ -169,21 +169,38 @@ export const PartyTabs = ({
 
     return (
       <div className="space-y-6">
-        {/* Top Summary Bar */}
+        {/* Page Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold mb-2">Party Planner Summary</h1>
+          <h2 className="text-xl text-muted-foreground">
+            {eventName} Event Overview
+          </h2>
+        </div>
+
+        {/* Top Summary Bar - Updated Stats */}
         <Card className="bg-gradient-to-r from-primary/10 to-secondary/10">
           <CardContent className="p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
               <div>
                 <div className="text-lg font-bold">
                   {Object.values(categorySelections).flat().reduce((sum, item) => sum + item.quantity, 0)}
                 </div>
-                <div className="text-xs text-muted-foreground">Items Selected</div>
+                <div className="text-xs text-muted-foreground">Planner Cart</div>
               </div>
               <div>
                 <div className="text-lg font-bold">
-                  {eventDetails.drinkTypes.map(category => getRecommendedQuantity(category)).reduce((a, b) => a + b, 0)}
+                  {/* This will be updated to show unified cart total */}
+                  {Object.values(categorySelections).flat().reduce((sum, item) => sum + item.quantity, 0)}
                 </div>
-                <div className="text-xs text-muted-foreground">Recommended Total</div>
+                <div className="text-xs text-muted-foreground">Total Cart</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold">${eventDetails.budget.toFixed(2)}</div>
+                <div className="text-xs text-muted-foreground">Total Budget</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold">${totalSpent.toFixed(2)}</div>
+                <div className="text-xs text-muted-foreground">Total Spent</div>
               </div>
               <div>
                 <div className={`text-lg font-bold ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -191,140 +208,156 @@ export const PartyTabs = ({
                 </div>
                 <div className="text-xs text-muted-foreground">Remaining Budget</div>
               </div>
-              <div>
-                <div className="text-lg font-bold">${totalSpent.toFixed(2)}</div>
-                <div className="text-xs text-muted-foreground">Total Cost</div>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Side - Event Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">{eventName} Event Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Event Info */}
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <div className="text-lg font-bold">{eventDetails.numberOfPeople}</div>
-                    <div className="text-xs text-muted-foreground">Guests</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <div className="text-lg font-bold capitalize">{eventDetails.drinkerType}</div>
-                    <div className="text-xs text-muted-foreground">Drinker Type</div>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <div className="text-lg font-bold">{eventDetails.eventDuration}h</div>
-                    <div className="text-xs text-muted-foreground">Duration</div>
-                  </div>
-                  <div className="text-center p-3 bg-muted/50 rounded">
-                    <div className="text-lg font-bold">{eventDetails.drinkTypes.length}</div>
-                    <div className="text-xs text-muted-foreground">Categories</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Buttons */}
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    // Use callback if provided, otherwise navigate to party planner
-                    if (onBackToPartyType) {
-                      onBackToPartyType();
-                    } else {
-                      window.location.href = '/plan-my-party';
-                    }
-                  }}
-                  className="flex-1"
-                >
-                  Back to Party Type
-                </Button>
-                <Button 
-                  onClick={onComplete} 
-                  className="flex-1"
-                >
-                  Continue
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Right Side - Order Summary */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl">Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        {/* Category Summary Bar */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               {eventDetails.drinkTypes.map(category => {
-                console.log(`Processing category: ${category}`);
-                console.log(`Category selections:`, categorySelections[category]);
-                
                 const items = categorySelections[category] || [];
-                const categoryTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const recommendedQty = getRecommendedQuantity(category);
                 const actualQty = items.reduce((sum, item) => sum + item.quantity, 0);
-
+                const recommendedQty = getRecommendedQuantity(category);
+                
                 return (
-                  <div key={category} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <h5 className="font-medium capitalize text-base">{category}</h5>
-                        <div className="text-xs text-muted-foreground">
-                          {actualQty} selected • {recommendedQty} recommended
-                        </div>
-                      </div>
-                      <span className="font-bold text-lg">${categoryTotal.toFixed(2)}</span>
+                  <div key={category} className="space-y-1">
+                    <div className="text-lg font-semibold capitalize">{category}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {actualQty} Selected
                     </div>
-                    {items.length === 0 ? (
-                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded text-center">
-                        No items selected
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {items.map((item, idx) => {
-                          console.log(`Rendering item ${idx}:`, item);
-                          return (
-                            <div key={`${item.productId}-${idx}`} className="flex justify-between items-center text-sm bg-muted/30 p-2 rounded">
-                              <div className="flex-1">
-                                <div className="font-medium">{item.title}</div>
-                                <div className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs">×{item.quantity}</span>
-                                <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                    <div className="text-xs text-muted-foreground">
+                      {recommendedQty} Recommended
+                    </div>
                   </div>
                 );
               })}
-              
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center text-xl font-bold">
-                  <span>Total</span>
-                  <span>${totalSpent.toFixed(2)}</span>
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  Budget: ${eventDetails.budget.toFixed(2)} • 
-                  Remaining: <span className={remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    ${remainingBudget.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Order Summary - Desktop 4 columns, Mobile dropdowns */}
+        <div className="hidden md:grid md:grid-cols-4 gap-4">
+          {eventDetails.drinkTypes.map(category => {
+            const items = categorySelections[category] || [];
+            const categoryTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const recommendedQty = getRecommendedQuantity(category);
+            const actualQty = items.reduce((sum, item) => sum + item.quantity, 0);
+
+            return (
+              <Card key={category}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg capitalize text-center">{category}</CardTitle>
+                  <div className="text-center text-sm text-muted-foreground">
+                    {actualQty} Selected • {recommendedQty} Recommended
+                  </div>
+                  <div className="text-center font-bold text-lg">${categoryTotal.toFixed(2)}</div>
+                </CardHeader>
+                <CardContent className="pt-2">
+                  {items.length === 0 ? (
+                    <div className="text-xs text-muted-foreground text-center p-2 bg-muted/30 rounded">
+                      No items selected
+                    </div>
+                  ) : (
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {items.map((item, idx) => (
+                        <div key={`${item.productId}-${idx}`} className="text-xs bg-muted/30 p-2 rounded">
+                          <div className="font-medium truncate">{item.title}</div>
+                          <div className="flex justify-between items-center mt-1">
+                            <span className="text-muted-foreground">×{item.quantity}</span>
+                            <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
+
+        {/* Mobile Order Summary - Collapsible */}
+        <div className="md:hidden space-y-2">
+          {eventDetails.drinkTypes.map(category => {
+            const items = categorySelections[category] || [];
+            const categoryTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const recommendedQty = getRecommendedQuantity(category);
+            const actualQty = items.reduce((sum, item) => sum + item.quantity, 0);
+
+            return (
+              <Card key={category} className="overflow-hidden">
+                <CardHeader 
+                  className="pb-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => {
+                    const content = document.getElementById(`mobile-${category}-content`);
+                    if (content) {
+                      content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                    }
+                  }}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="text-lg capitalize">{category}</CardTitle>
+                      <div className="text-sm text-muted-foreground">
+                        {actualQty} Selected • {recommendedQty} Recommended
+                      </div>
+                    </div>
+                    <div className="font-bold text-lg">${categoryTotal.toFixed(2)}</div>
+                  </div>
+                </CardHeader>
+                <CardContent id={`mobile-${category}-content`} className="pt-2" style={{ display: 'none' }}>
+                  {items.length === 0 ? (
+                    <div className="text-sm text-muted-foreground text-center p-3 bg-muted/30 rounded">
+                      No items selected
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {items.map((item, idx) => (
+                        <div key={`${item.productId}-${idx}`} className="flex justify-between items-center text-sm bg-muted/30 p-2 rounded">
+                          <div className="flex-1">
+                            <div className="font-medium">{item.title}</div>
+                            <div className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs">×{item.quantity}</span>
+                            <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Everything Good to Go Section */}
+        <Card className="bg-gradient-to-r from-secondary/10 to-primary/10">
+          <CardContent className="p-6 text-center">
+            <h3 className="text-2xl font-bold mb-4">Everything Good to Go?</h3>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => window.location.href = '/product-search'}
+                className="flex-1 sm:flex-none"
+              >
+                Add More Stuff
+              </Button>
+              <Button 
+                size="lg"
+                onClick={() => window.location.href = '/checkout'}
+                className="flex-1 sm:flex-none"
+              >
+                Checkout
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   };

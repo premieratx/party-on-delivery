@@ -53,11 +53,11 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       if (sourceData?.deliveryDate && sourceData?.deliveryTime) {
         try {
           const savedDate = new Date(sourceData.deliveryDate);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+          const now = new Date();
           
-          // Only prefill if the saved date is today or in the future
-          if (!isNaN(savedDate.getTime()) && savedDate >= today) {
+          // Only prefill if the saved date/time is in the future
+          // Compare full date and time, not just date
+          if (!isNaN(savedDate.getTime()) && savedDate > now) {
             console.log('Pre-filling delivery date:', savedDate);
             updateDeliveryInfo('date', savedDate);
             
@@ -66,17 +66,16 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
               updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
             }
           } else {
-            console.log('Saved date is in the past, using today as default');
-            updateDeliveryInfo('date', new Date());
+            console.log('Saved date/time is in the past, forcing user to select new date/time');
+            // Don't prefill anything - force user to select fresh date/time
           }
         } catch (error) {
           console.error('Error parsing delivery date:', error);
-          updateDeliveryInfo('date', new Date());
+          // Don't prefill on error - force user to select
         }
       } else {
-        // For new users, set today as default date
-        console.log('No saved delivery data, setting today as default');
-        updateDeliveryInfo('date', new Date());
+        // For new users, don't prefill - let them choose
+        console.log('No saved delivery data, user must select date/time');
       }
     }
     
