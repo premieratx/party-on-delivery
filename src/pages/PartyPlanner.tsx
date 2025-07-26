@@ -168,37 +168,26 @@ export const PartyPlanner = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <div className="container mx-auto px-4 py-8">
-        {/* Main Header - Full Width with Logos */}
-        <div className="text-center mb-4 md:mb-6">
-          <div className="flex items-center justify-center gap-4 px-4 py-2">
-            {/* Left Logo */}
-            <img src="/src/assets/party-on-delivery-logo.svg" alt="Party On Delivery" className="w-16 h-16 flex-shrink-0" />
-            
-            {/* Title */}
-            <div className="flex-1">
-              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-foreground">
-                Let's Get This Party Started! 🎉
-              </h1>
-            </div>
-            
-            {/* Right Logo */}
-            <img src="/src/assets/party-on-delivery-logo.svg" alt="Party On Delivery" className="w-16 h-16 flex-shrink-0" />
-          </div>
+      <div className="container mx-auto px-2 py-2">
+        {/* Compact Header - Single Row */}
+        <div className="text-center mb-2">
+          <h1 className="text-xl md:text-3xl font-bold text-foreground">
+            Let's Get This Party Started! 🎉
+          </h1>
         </div>
 
-        {/* Sticky Header - Cart/Checkout and Plan Text */}
-        <div className="sticky top-0 z-50 bg-background border-b mb-4 md:mb-6">
-          <div className="flex justify-between items-center px-4 py-2">
+        {/* Compact Sticky Header */}
+        <div className="sticky top-0 z-50 bg-background border-b mb-2">
+          <div className="flex justify-between items-center px-3 py-1">
             {/* Mobile Layout: Cart Icon - Centered Text - Checkout Icon */}
             <div className="md:hidden flex items-center justify-between w-full">
-              <Button variant="outline" size="sm" className="p-2">
+              <Button variant="outline" size="sm" className="p-1 h-8">
                 <ShoppingCart className="w-4 h-4" />
               </Button>
               
-              <div className="text-center flex-1 px-4">
+              <div className="text-center flex-1 px-2">
                 <p className="text-xs text-muted-foreground leading-tight">
-                  Plan your perfect<br />party experience
+                  Plan your perfect party
                 </p>
               </div>
 
@@ -207,7 +196,7 @@ export const PartyPlanner = () => {
                 size="sm"
                 onClick={() => navigate('/checkout')}
                 disabled={cart.length === 0}
-                className="p-2"
+                className="p-1 h-8"
               >
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -240,13 +229,13 @@ export const PartyPlanner = () => {
 
         {getCurrentStepType() === 'party-type' && (
           <Card className="max-w-4xl mx-auto">
-            <CardContent className="p-8">
+            <CardContent className="p-4 md:p-8">
               <PartyTypeSelection 
                 selectedType={partyDetails.partyType}
                 onSelect={(type) => updatePartyDetails({ partyType: type })}
               />
               
-              <div className="flex justify-between mt-8">
+              <div className="flex justify-between mt-4 md:mt-8">
                 <Button
                   variant="outline"
                   onClick={handleBack}
@@ -271,13 +260,13 @@ export const PartyPlanner = () => {
 
         {getCurrentStepType() === 'wedding-events' && (
           <Card className="max-w-4xl mx-auto">
-            <CardContent className="p-8">
+            <CardContent className="p-4 md:p-8">
               <WeddingEventSelection
                 selectedEvents={partyDetails.weddingEvents || []}
                 onSelect={(events) => updatePartyDetails({ weddingEvents: events })}
               />
               
-              <div className="flex justify-between mt-8">
+              <div className="flex justify-between mt-4 md:mt-8">
                 <Button
                   variant="outline"
                   onClick={handleBack}
@@ -301,7 +290,7 @@ export const PartyPlanner = () => {
         )}
 
         {getCurrentStepType() === 'planning' && (
-          <div className="max-w-7xl mx-auto space-y-8">
+          <div className="max-w-7xl mx-auto space-y-4 md:space-y-8">
             {events.map((eventName, index) => {
               const eventDetails = partyDetails.eventDetails[eventName];
               const isCompleted = completedEvents.has(eventName);
