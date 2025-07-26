@@ -36,12 +36,14 @@ export const ProductSearch = () => {
 
   const categories = [
     { id: "all", label: "All Categories" },
+    { id: "spirits", label: "Spirits" },
     { id: "beer", label: "Beer" },
     { id: "seltzers", label: "Seltzers" },
     { id: "cocktails", label: "Cocktails" },
     { id: "mixers", label: "Mixers & N/A" },
-    { id: "spirits", label: "Spirits" },
-    { id: "wine", label: "Wine" }
+    { id: "wine", label: "Wine" },
+    { id: "party-supplies", label: "Party Supplies" },
+    { id: "other", label: "Other" }
   ];
 
   // Load products from Shopify
@@ -105,14 +107,23 @@ export const ProductSearch = () => {
     loadProducts();
   }, [toast]);
 
-  // Map collection handles to our category system
+  // Map collection handles to our category system - match delivery widget mapping
   const mapCollectionToCategory = (handle: string): string => {
-    if (handle.includes('beer') || handle.includes('texas-beer') || handle.includes('tailgate-beer')) return 'beer';
-    if (handle.includes('seltzer')) return 'seltzers';
-    if (handle.includes('cocktail') || handle.includes('ready-to-drink')) return 'cocktails';
-    if (handle.includes('mixer') || handle.includes('non-alcoholic')) return 'mixers';
-    if (handle.includes('spirits') || handle.includes('gin-rum') || handle.includes('tequila') || handle.includes('liqueur')) return 'spirits';
-    if (handle.includes('champagne') || handle.includes('wine')) return 'wine';
+    // Spirits (first in delivery widget)
+    if (handle === 'spirits' || handle === 'gin-rum' || handle === 'tequila-mezcal' || handle === 'liqueurs-cordials-cocktail-ingredients') return 'spirits';
+    // Beer (second in delivery widget)
+    if (handle === 'tailgate-beer' || handle === 'texas-beer-collection' || handle.includes('beer')) return 'beer';
+    // Seltzers (third in delivery widget)  
+    if (handle === 'seltzer-collection' || handle.includes('seltzer')) return 'seltzers';
+    // Cocktails (fourth in delivery widget)
+    if (handle === 'cocktail-kits' || handle === 'ready-to-drink-cocktails' || handle.includes('cocktail')) return 'cocktails';
+    // Mixers & N/A (fifth in delivery widget)
+    if (handle === 'mixers-non-alcoholic' || handle.includes('mixer') || handle.includes('non-alcoholic')) return 'mixers';
+    // Wine
+    if (handle === 'champagne' || handle.includes('wine')) return 'wine';
+    // Party Supplies
+    if (handle === 'party-supplies' || handle === 'decorations' || handle === 'hats-sunglasses' || handle === 'costumes') return 'party-supplies';
+    // Everything else
     return 'other';
   };
 

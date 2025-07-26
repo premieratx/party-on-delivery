@@ -57,12 +57,12 @@ interface ProductSelectionProps {
   onPrevious?: () => void;
 }
 
-// Category to Shopify collection mapping - Fixed beer collection
+// Category to Shopify collection mapping - match delivery widget exactly
 const categoryCollectionMap: Record<string, string> = {
-  'beer': 'all-beer',
-  'wine': 'spirits', // Using spirits collection for wine since wine collection doesn't exist
-  'liquor': 'spirits',
-  'cocktails': 'cocktail-kits'
+  'beer': 'tailgate-beer',  // Second tab in delivery widget
+  'wine': 'champagne',      // Wine collections 
+  'liquor': 'spirits',      // First tab in delivery widget - all spirits
+  'cocktails': 'cocktail-kits'  // Fourth tab in delivery widget
 };
 
 export const ProductSelection = ({ 
