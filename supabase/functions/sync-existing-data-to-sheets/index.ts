@@ -159,26 +159,15 @@ serve(async (req) => {
         order.session_id || ''
       ]);
 
-      const completedOrdersUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Completed%20Orders:A:R?valueInputOption=RAW&key=${googleSheetsApiKey}`;
-      
-      const completedOrdersResponse = await fetch(completedOrdersUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          values: [
-            // Header row
-            ['Date', 'Order #', 'Customer Email', 'First Name', 'Last Name', 'Phone', 'Delivery Address', 'Delivery Date', 'Delivery Time', 'Items', 'Subtotal', 'Delivery Fee', 'Total', 'Affiliate Code', 'Status', 'Special Instructions', 'Shopify Order ID', 'Session ID'],
-            ...completedOrdersData
-          ]
-        })
-      });
-
-      if (!completedOrdersResponse.ok) {
-        logStep('Error syncing completed orders', await completedOrdersResponse.text());
-      } else {
+      try {
+        await appendToSheet('Completed Orders', 
+          ['Date', 'Order #', 'Customer Email', 'First Name', 'Last Name', 'Phone', 'Delivery Address', 'Delivery Date', 'Delivery Time', 'Items', 'Subtotal', 'Delivery Fee', 'Total', 'Affiliate Code', 'Status', 'Special Instructions', 'Shopify Order ID', 'Session ID'],
+          completedOrdersData
+        );
         logStep(`Successfully synced ${completedOrdersData.length} completed orders`);
+      } catch (error) {
+        logStep('Error syncing completed orders', error);
+        throw error;
       }
     }
 
@@ -200,32 +189,21 @@ serve(async (req) => {
         new Date(order.created_at).toLocaleString()
       ]);
 
-      const abandonedOrdersUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Abandoned%20Orders:A:K?valueInputOption=RAW&key=${googleSheetsApiKey}`;
-      
-      const abandonedOrdersResponse = await fetch(abandonedOrdersUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          values: [
-            // Header row
-            ['Abandoned Date', 'Customer Email', 'Customer Name', 'Phone', 'Delivery Address', 'Items', 'Subtotal', 'Total', 'Affiliate Code', 'Session ID', 'Created At'],
-            ...abandonedOrdersData
-          ]
-        })
-      });
-
-      if (!abandonedOrdersResponse.ok) {
-        logStep('Error syncing abandoned orders', await abandonedOrdersResponse.text());
-      } else {
+      try {
+        await appendToSheet('Abandoned Orders',
+          ['Abandoned Date', 'Customer Email', 'Customer Name', 'Phone', 'Delivery Address', 'Items', 'Subtotal', 'Total', 'Affiliate Code', 'Session ID', 'Created At'],
+          abandonedOrdersData
+        );
         logStep(`Successfully synced ${abandonedOrdersData.length} abandoned orders`);
+      } catch (error) {
+        logStep('Error syncing abandoned orders', error);
+        throw error;
       }
     }
 
     logStep('Syncing affiliate referrals to Google Sheets');
 
-    // Sync affiliate referrals to "Affiliates" tab
+    // Sync affiliate referrals to "Affiliate Tracker" tab
     if (affiliateReferrals && affiliateReferrals.length > 0) {
       const affiliateData = affiliateReferrals.map(referral => [
         new Date(referral.order_date).toLocaleString(),
@@ -242,26 +220,15 @@ serve(async (req) => {
         new Date(referral.created_at).toLocaleString()
       ]);
 
-      const affiliateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Affiliates:A:L?valueInputOption=RAW&key=${googleSheetsApiKey}`;
-      
-      const affiliateResponse = await fetch(affiliateUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          values: [
-            // Header row
-            ['Order Date', 'Affiliate Name', 'Company', 'Affiliate Code', 'Affiliate Email', 'Customer Email', 'Order ID', 'Subtotal', 'Commission Rate %', 'Commission Amount', 'Paid Out', 'Created At'],
-            ...affiliateData
-          ]
-        })
-      });
-
-      if (!affiliateResponse.ok) {
-        logStep('Error syncing affiliate data', await affiliateResponse.text());
-      } else {
+      try {
+        await appendToSheet('Affiliate Tracker',
+          ['Order Date', 'Affiliate Name', 'Company', 'Affiliate Code', 'Affiliate Email', 'Customer Email', 'Order ID', 'Subtotal', 'Commission Rate %', 'Commission Amount', 'Paid Out', 'Created At'],
+          affiliateData
+        );
         logStep(`Successfully synced ${affiliateData.length} affiliate referrals`);
+      } catch (error) {
+        logStep('Error syncing affiliate data', error);
+        throw error;
       }
     }
 
