@@ -137,7 +137,7 @@ export const PartyTabs = ({
     const categoryDrinks = Math.ceil(totalDrinks * categoryRatio);
 
     // Convert to containers
-    if (category === 'beer') return Math.ceil(categoryDrinks / 12); // 12-packs
+    if (category === 'beer') return Math.ceil(categoryDrinks / 12); // cases
     if (category === 'wine') return Math.ceil(categoryDrinks / 5); // bottles (5 drinks each)
     if (category === 'liquor') return Math.ceil(categoryDrinks / 25); // bottles (25 drinks each)
     if (category === 'cocktails') return Math.ceil(categoryDrinks / 12); // kits (12 drinks each)
@@ -146,11 +146,49 @@ export const PartyTabs = ({
   };
 
   const getUnitType = (category: string) => {
-    if (category === 'beer') return '12-packs';
+    if (category === 'beer') return 'Cases';
     if (category === 'wine') return 'bottles';
     if (category === 'liquor') return 'bottles';
-    if (category === 'cocktails') return 'drinks';
+    if (category === 'cocktails') return 'Cocktail Kits';
     return 'items';
+  };
+
+  const getTotalDrinksForCategory = (category: string) => {
+    const recommendedQty = getRecommendedQuantity(category);
+    if (category === 'beer') return recommendedQty * 12; // 12 beers per case
+    if (category === 'wine') return recommendedQty * 5; // 5 glasses per bottle
+    if (category === 'liquor') return recommendedQty * 25; // 25 drinks per bottle
+    if (category === 'cocktails') return recommendedQty * 12; // 12 cocktails per kit
+    return recommendedQty;
+  };
+
+  const getSelectedDrinksForCategory = (category: string) => {
+    const items = categorySelections[category] || [];
+    return items.reduce((total, item) => {
+      // Parse package size from product title to get actual drink count
+      const { packageSize } = { packageSize: '' }; // You might need to import parseProductTitle
+      
+      switch (category) {
+        case 'beer':
+          // Try to extract pack size (e.g., "12 Pack", "24 Pack")
+          const beerMatch = item.title.match(/(\d+)\s*(pack|pk)/i);
+          const beersPerPack = beerMatch ? parseInt(beerMatch[1]) : 12;
+          return total + (item.quantity * beersPerPack);
+        case 'wine':
+          // 5 glasses per bottle (standard assumption)
+          return total + (item.quantity * 5);
+        case 'liquor':
+          // 25 drinks per bottle (standard 750mL assumption)
+          return total + (item.quantity * 25);
+        case 'cocktails':
+          // Extract drink count from title
+          const cocktailMatch = item.title.match(/(\d+)\s*(drink|cocktail|serve)/i);
+          const drinksPerKit = cocktailMatch ? parseInt(cocktailMatch[1]) : 12;
+          return total + (item.quantity * drinksPerKit);
+        default:
+          return total + item.quantity;
+      }
+    }, 0);
   };
 
   const getCategoryBudget = (category: string) => {
@@ -216,23 +254,33 @@ export const PartyTabs = ({
         <Card>
           <CardContent className="p-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-              {eventDetails.drinkTypes.map(category => {
-                const items = categorySelections[category] || [];
-                const actualQty = items.reduce((sum, item) => sum + item.quantity, 0);
-                const recommendedQty = getRecommendedQuantity(category);
-                
-                return (
-                  <div key={category} className="space-y-1">
-                    <div className="text-lg font-semibold capitalize">{category}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {actualQty} Selected
+                {eventDetails.drinkTypes.map(category => {
+                  const items = categorySelections[category] || [];
+                  const recommendedQty = getRecommendedQuantity(category);
+                  const unitType = getUnitType(category);
+                  const totalRecommendedDrinks = getTotalDrinksForCategory(category);
+                  const selectedDrinks = getSelectedDrinksForCategory(category);
+                  
+                  return (
+                    <div key={category} className="space-y-1">
+                      <div className="text-lg font-semibold capitalize">{category}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {category === 'beer' && `${Math.ceil(selectedDrinks / 12)} ${unitType} (${selectedDrinks} Beers)`}
+                        {category === 'wine' && `${Math.ceil(selectedDrinks / 5)} ${unitType} (~${selectedDrinks} glasses)`}
+                        {category === 'liquor' && `${Math.ceil(selectedDrinks / 25)} ${unitType}`}
+                        {category === 'cocktails' && `${Math.ceil(selectedDrinks / 12)} ${unitType} (~${selectedDrinks} Cocktails)`}
+                        {!['beer', 'wine', 'liquor', 'cocktails'].includes(category) && `${items.reduce((sum, item) => sum + item.quantity, 0)} Selected`}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {category === 'beer' && `${recommendedQty} ${unitType} (${totalRecommendedDrinks} Beers)`}
+                        {category === 'wine' && `${recommendedQty} ${unitType} (~${totalRecommendedDrinks} glasses)`}
+                        {category === 'liquor' && `${recommendedQty} ${unitType}`}
+                        {category === 'cocktails' && `${recommendedQty} ${unitType} (~${totalRecommendedDrinks} Cocktails)`}
+                        {!['beer', 'wine', 'liquor', 'cocktails'].includes(category) && `${recommendedQty} Recommended`}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {recommendedQty} Recommended
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </CardContent>
         </Card>
@@ -243,14 +291,20 @@ export const PartyTabs = ({
             const items = categorySelections[category] || [];
             const categoryTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const recommendedQty = getRecommendedQuantity(category);
-            const actualQty = items.reduce((sum, item) => sum + item.quantity, 0);
+            const unitType = getUnitType(category);
+            const totalRecommendedDrinks = getTotalDrinksForCategory(category);
+            const selectedDrinks = getSelectedDrinksForCategory(category);
 
             return (
               <Card key={category}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg capitalize text-center">{category}</CardTitle>
                   <div className="text-center text-sm text-muted-foreground">
-                    {actualQty} Selected • {recommendedQty} Recommended
+                    {category === 'beer' && `${Math.ceil(selectedDrinks / 12)} ${unitType} Selected • ${recommendedQty} ${unitType} (${totalRecommendedDrinks} Beers) Recommended`}
+                    {category === 'wine' && `${Math.ceil(selectedDrinks / 5)} ${unitType} Selected • ${recommendedQty} ${unitType} (~${totalRecommendedDrinks} glasses) Recommended`}
+                    {category === 'liquor' && `${Math.ceil(selectedDrinks / 25)} ${unitType} Selected • ${recommendedQty} ${unitType} Recommended`}
+                    {category === 'cocktails' && `${Math.ceil(selectedDrinks / 12)} ${unitType} Selected • ${recommendedQty} ${unitType} (~${totalRecommendedDrinks} Cocktails) Recommended`}
+                    {!['beer', 'wine', 'liquor', 'cocktails'].includes(category) && `${items.reduce((sum, item) => sum + item.quantity, 0)} Selected • ${recommendedQty} Recommended`}
                   </div>
                   <div className="text-center font-bold text-lg">${categoryTotal.toFixed(2)}</div>
                 </CardHeader>
@@ -284,7 +338,9 @@ export const PartyTabs = ({
             const items = categorySelections[category] || [];
             const categoryTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const recommendedQty = getRecommendedQuantity(category);
-            const actualQty = items.reduce((sum, item) => sum + item.quantity, 0);
+            const unitType = getUnitType(category);
+            const totalRecommendedDrinks = getTotalDrinksForCategory(category);
+            const selectedDrinks = getSelectedDrinksForCategory(category);
 
             return (
               <Card key={category} className="overflow-hidden">
@@ -301,7 +357,11 @@ export const PartyTabs = ({
                     <div>
                       <CardTitle className="text-lg capitalize">{category}</CardTitle>
                       <div className="text-sm text-muted-foreground">
-                        {actualQty} Selected • {recommendedQty} Recommended
+                        {category === 'beer' && `${Math.ceil(selectedDrinks / 12)} ${unitType} Selected • ${recommendedQty} ${unitType} (${totalRecommendedDrinks} Beers) Recommended`}
+                        {category === 'wine' && `${Math.ceil(selectedDrinks / 5)} ${unitType} Selected • ${recommendedQty} ${unitType} (~${totalRecommendedDrinks} glasses) Recommended`}
+                        {category === 'liquor' && `${Math.ceil(selectedDrinks / 25)} ${unitType} Selected • ${recommendedQty} ${unitType} Recommended`}
+                        {category === 'cocktails' && `${Math.ceil(selectedDrinks / 12)} ${unitType} Selected • ${recommendedQty} ${unitType} (~${totalRecommendedDrinks} Cocktails) Recommended`}
+                        {!['beer', 'wine', 'liquor', 'cocktails'].includes(category) && `${items.reduce((sum, item) => sum + item.quantity, 0)} Selected • ${recommendedQty} Recommended`}
                       </div>
                     </div>
                     <div className="font-bold text-lg">${categoryTotal.toFixed(2)}</div>

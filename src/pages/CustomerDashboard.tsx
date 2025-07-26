@@ -164,13 +164,40 @@ const CustomerDashboard = () => {
             });
           }
           
-          // Also search by email for orders that might not have customer_id linked yet
+          // Add group order sharing - find orders with same share_token
           filters.push(`delivery_address->>email.eq.${session.user.email}`);
+          
+          // Also look for orders that have been shared with this user (group orders)
+          const { data: sharedOrders } = await supabase
+            .from('customer_orders')
+            .select('share_token')
+            .or(`customer_id.eq.${currentCustomer.id},delivery_address->>email.eq.${session.user.email}`)
+            .not('share_token', 'is', null);
+          
+          if (sharedOrders && sharedOrders.length > 0) {
+            const shareTokens = sharedOrders.map(o => `share_token.eq.${o.share_token}`);
+            if (shareTokens.length > 0) {
+              filters.push(...shareTokens);
+            }
+          }
           
           ordersQuery = ordersQuery.or(filters.join(','));
         } else {
-          // Fallback if no customer data - search by email
-          ordersQuery = ordersQuery.or(`delivery_address->>email.eq.${session.user.email}`);
+          // Fallback if no customer data - search by email and look for group orders
+          const emailFilter = `delivery_address->>email.eq.${session.user.email}`;
+          
+          // Also look for group orders where this email might be in group_participants
+          const { data: groupOrders } = await supabase
+            .from('customer_orders')
+            .select('id, share_token')
+            .contains('group_participants', [{ email: session.user.email }]);
+          
+          if (groupOrders && groupOrders.length > 0) {
+            const groupFilters = groupOrders.map(o => `id.eq.${o.id}`);
+            ordersQuery = ordersQuery.or([emailFilter, ...groupFilters].join(','));
+          } else {
+            ordersQuery = ordersQuery.or(emailFilter);
+          }
         }
         
         const { data: ordersData, error: ordersError } = await ordersQuery

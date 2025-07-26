@@ -202,12 +202,56 @@ async function getCustomerDashboardData(supabase: any, customerEmail: string): P
 
   if (customerError) throw customerError;
 
-  // Get customer's orders
-  const { data: orders, error: ordersError } = await supabase
+  // Get customer's orders - include group orders and shared orders
+  let ordersQuery = supabase
     .from('customer_orders')
     .select('*')
-    .eq('customer_id', customer.id)
     .order('created_at', { ascending: false });
+
+  // Build comprehensive filter for all related orders
+  const filters = [`customer_id.eq.${customer.id}`];
+  
+  // Add session tokens if they exist
+  if (customer.session_tokens && customer.session_tokens.length > 0) {
+    customer.session_tokens.forEach((token: string) => {
+      if (token && token.trim()) {
+        filters.push(`session_id.eq.${token}`);
+      }
+    });
+  }
+  
+  // Add email-based orders
+  filters.push(`delivery_address->>email.eq.${customerEmail}`);
+  
+  // Look for group orders where this customer is a participant
+  const { data: groupOrders } = await supabase
+    .from('customer_orders')
+    .select('id, share_token')
+    .contains('group_participants', [{ email: customerEmail }]);
+  
+  if (groupOrders && groupOrders.length > 0) {
+    groupOrders.forEach((order: any) => {
+      filters.push(`id.eq.${order.id}`);
+    });
+  }
+  
+  // Also find orders that might be linked by share_token
+  const { data: sharedTokenOrders } = await supabase
+    .from('customer_orders')
+    .select('share_token')
+    .or(`customer_id.eq.${customer.id},delivery_address->>email.eq.${customerEmail}`)
+    .not('share_token', 'is', null);
+  
+  if (sharedTokenOrders && sharedTokenOrders.length > 0) {
+    const uniqueTokens = [...new Set(sharedTokenOrders.map(o => o.share_token))];
+    uniqueTokens.forEach(token => {
+      if (token) {
+        filters.push(`share_token.eq.${token}`);
+      }
+    });
+  }
+  
+  const { data: orders, error: ordersError } = await ordersQuery.or(filters.join(','));
 
   if (ordersError) throw ordersError;
 

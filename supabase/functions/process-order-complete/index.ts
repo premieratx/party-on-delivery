@@ -582,6 +582,11 @@ serve(async (req) => {
     }).then(() => logStep("Dashboard sync triggered successfully"))
      .catch((error) => logStep("Dashboard sync trigger failed", error));
 
+    // Trigger admin order alerts to check for duplicates and notifications
+    supabase.functions.invoke('admin-order-alerts')
+      .then(() => logStep("Admin alerts triggered successfully"))
+      .catch((error) => logStep("Admin alerts trigger failed", error));
+
     logStep("Order processing completed successfully", {
       shopifyOrderId: shopifyOrder.id,
       orderNumber: shopifyOrder.order_number,

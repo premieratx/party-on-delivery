@@ -231,16 +231,11 @@ export const PartyPlanner = () => {
               <Button 
                 variant="default" 
                 size="sm"
-                onClick={() => {
-                  console.log('Mobile checkout button clicked, cart items:', cartItems);
-                  if (getTotalItems() > 0) {
-                    setShowCart(true);
-                  }
-                }}
+                onClick={() => setShowCart(true)}
                 disabled={getTotalItems() === 0}
                 className="px-2 h-8 text-xs"
               >
-                Checkout
+                Cart
               </Button>
             </div>
 
@@ -273,15 +268,10 @@ export const PartyPlanner = () => {
               <Button 
                 variant="default" 
                 size="sm"
-                onClick={() => {
-                  console.log('Desktop checkout button clicked, cart items:', cartItems);
-                  if (getTotalItems() > 0) {
-                    setShowCart(true);
-                  }
-                }}
+                onClick={() => setShowCart(true)}
                 disabled={getTotalItems() === 0}
               >
-                Checkout
+                Cart
               </Button>
             </div>
           </div>
