@@ -6,6 +6,7 @@ import { CheckCircle, Package, Truck, Plus, Clock, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, isAfter } from 'date-fns';
 import { PostCheckoutContinuation } from '@/components/PostCheckoutContinuation';
+import { QuickSyncTest } from '@/components/QuickSyncTest';
 
 interface LastOrderInfo {
   orderNumber: string;
@@ -248,6 +249,8 @@ export default function OrderComplete() {
           </CardContent>
         </Card>
 
+        {/* Google Sheets Sync Test */}
+        <QuickSyncTest />
 
         {/* Back to Home */}
         <div className="text-center pt-4">

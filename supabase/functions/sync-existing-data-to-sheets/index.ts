@@ -73,6 +73,45 @@ serve(async (req) => {
       throw new Error(`Failed to fetch affiliate referrals: ${affiliateError.message}`);
     }
 
+    // Helper function to append data to a specific tab (creating it if it doesn't exist)
+    const appendToSheet = async (tabName: string, headers: string[], data: any[][]) => {
+      const range = `${tabName}:A:${String.fromCharCode(65 + headers.length - 1)}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW&key=${googleSheetsApiKey}`;
+      
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            values: [headers, ...data]
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          logStep(`Error appending to ${tabName}`, { status: response.status, error: errorText });
+          
+          // If the tab doesn't exist, try to create it first
+          if (response.status === 400 && errorText.includes('Unable to parse range')) {
+            logStep(`Tab ${tabName} might not exist, attempting to create...`);
+            // For now, just log the error - Google Sheets API would need additional permissions to create tabs
+            throw new Error(`Tab "${tabName}" does not exist in the Google Sheet. Please create tabs named: "Completed Orders", "Abandoned Orders", and "Affiliates"`);
+          }
+          
+          throw new Error(`Failed to sync to ${tabName}: ${errorText}`);
+        }
+
+        const result = await response.json();
+        logStep(`Successfully synced to ${tabName}`, result);
+        return result;
+      } catch (error) {
+        logStep(`Error syncing to ${tabName}`, error);
+        throw error;
+      }
+    };
+
     // Helper function to format items list
     const formatItems = (lineItems: any[]) => {
       if (!lineItems || lineItems.length === 0) return '';
