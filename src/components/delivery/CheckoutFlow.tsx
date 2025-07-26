@@ -43,14 +43,26 @@ interface CheckoutFlowProps {
 
 // Available time slots
 const timeSlots = [
+  '10:00 AM - 11:00 AM',
+  '10:30 AM - 11:30 AM',
+  '11:00 AM - 12:00 PM',
+  '11:30 AM - 12:30 PM',
   '12:00 PM - 1:00 PM',
-  '1:00 PM - 2:00 PM', 
+  '12:30 PM - 1:30 PM',
+  '1:00 PM - 2:00 PM',
+  '1:30 PM - 2:30 PM',
   '2:00 PM - 3:00 PM',
+  '2:30 PM - 3:30 PM',
   '3:00 PM - 4:00 PM',
+  '3:30 PM - 4:30 PM',
   '4:00 PM - 5:00 PM',
+  '4:30 PM - 5:30 PM',
   '5:00 PM - 6:00 PM',
+  '5:30 PM - 6:30 PM',
   '6:00 PM - 7:00 PM',
+  '6:30 PM - 7:30 PM',
   '7:00 PM - 8:00 PM',
+  '7:30 PM - 8:30 PM',
   '8:00 PM - 9:00 PM',
   '8:30 PM - 9:30 PM'
 ];
@@ -726,21 +738,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select a time slot" />
                             </SelectTrigger>
-                             <SelectContent className="z-50 bg-background">
-                               {getAvailableTimeSlots().map((slot) => (
-                                 <SelectItem key={slot} value={slot}>
-                                   <div className="flex items-center gap-2">
-                                     <Clock className="w-4 h-4" />
-                                     {slot}
-                                   </div>
-                                 </SelectItem>
-                               ))}
-                               {getAvailableTimeSlots().length === 0 && (
-                                 <div className="p-2 text-sm text-muted-foreground text-center">
-                                   No time slots available today. Please select a future date.
-                                 </div>
-                               )}
-                             </SelectContent>
+                              <SelectContent className="z-[100] bg-background border shadow-lg max-h-[300px] overflow-y-auto">
+                                {getAvailableTimeSlots().map((slot) => (
+                                  <SelectItem key={slot} value={slot} className="cursor-pointer hover:bg-muted">
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="w-4 h-4" />
+                                      {slot}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                                {getAvailableTimeSlots().length === 0 && (
+                                  <div className="p-2 text-sm text-muted-foreground text-center">
+                                    No time slots available today. Please select a future date.
+                                  </div>
+                                )}
+                              </SelectContent>
                           </Select>
                         </div>
                         
