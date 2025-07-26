@@ -28,7 +28,7 @@ interface Product {
 export const ProductSearch = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("favorites");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -37,6 +37,7 @@ export const ProductSearch = () => {
   const { toast } = useToast();
 
   const categories = [
+    { id: "favorites", label: "⭐ Favorites" },
     { id: "all", label: "All Categories" },
     { id: "spirits", label: "Spirits" },
     { id: "beer", label: "Beer" },
@@ -129,12 +130,67 @@ export const ProductSearch = () => {
     return 'other';
   };
 
+  // Get favorites/best selling products
+  const getFavoritesProducts = (allProducts: Product[]) => {
+    // Get products from popular collections and brands
+    const favoritesProducts = allProducts
+      .filter(product => {
+        const title = product.title.toLowerCase();
+        const isPopularItem = title.includes('deep eddy') || 
+                             title.includes('tito') || 
+                             title.includes('casamigos') || 
+                             title.includes('bulleit') ||
+                             title.includes('teremana') ||
+                             title.includes('cocktail kit') ||
+                             product.category === 'spirits' ||
+                             product.category === 'cocktails';
+        return isPopularItem;
+      })
+      .sort((a, b) => {
+        // Sort by popularity score
+        const aScore = getPopularityScore(a);
+        const bScore = getPopularityScore(b);
+        return bScore - aScore;
+      })
+      .slice(0, 50); // Limit to 50 favorite items
+
+    return favoritesProducts;
+  };
+
+  // Helper function to calculate popularity score
+  const getPopularityScore = (product: Product) => {
+    const title = product.title.toLowerCase();
+    let score = 0;
+    
+    // Brand popularity (based on common premium brands)
+    if (title.includes('tito')) score += 10;
+    if (title.includes('deep eddy')) score += 9;
+    if (title.includes('casamigos')) score += 8;
+    if (title.includes('bulleit')) score += 7;
+    if (title.includes('teremana')) score += 6;
+    
+    // Product type popularity
+    if (title.includes('vodka')) score += 5;
+    if (title.includes('tequila')) score += 5;
+    if (title.includes('bourbon')) score += 4;
+    if (title.includes('cocktail')) score += 4;
+    
+    // Size preference (750ml is standard, 1.75L is value)
+    if (title.includes('750ml')) score += 2;
+    if (title.includes('1.75l')) score += 3;
+    
+    return score;
+  };
+
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
     let filtered = products;
 
-    // Filter by category
-    if (selectedCategory !== "all") {
+    // Handle favorites category specially
+    if (selectedCategory === "favorites") {
+      filtered = getFavoritesProducts(products);
+    } else if (selectedCategory !== "all") {
+      // Filter by category
       filtered = filtered.filter(product => product.category === selectedCategory);
     }
 
