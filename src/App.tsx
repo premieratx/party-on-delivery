@@ -13,6 +13,7 @@ import { AffiliateDashboard } from "./pages/AffiliateDashboard";
 import { AffiliateLanding } from "./pages/AffiliateLanding";
 import { AdminLogin } from "./pages/AdminLogin";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { ProductManagement } from "./pages/ProductManagement";
 import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -51,6 +52,8 @@ const App = () => {
                 <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
                 <Route path="/affiliate/admin-login" element={<AdminLogin />} />
                 <Route path="/affiliate/admin" element={<AdminDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/product-management" element={<ProductManagement />} />
                 <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
                 <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                 

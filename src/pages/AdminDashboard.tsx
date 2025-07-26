@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +12,8 @@ import {
   AlertTriangle,
   Crown,
   Medal,
-  Award
+  Award,
+  Package
 } from 'lucide-react';
 import TestSMS from '@/components/TestSMS';
 import { SyncDataToSheets } from '@/components/SyncDataToSheets';
@@ -68,6 +70,7 @@ interface AbandonedOrder {
 }
 
 export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [affiliates, setAffiliates] = useState<AffiliateStats[]>([]);
   const [abandonedOrders, setAbandonedOrders] = useState<AbandonedOrder[]>([]);
   const [summary, setSummary] = useState<DashboardSummary>({
@@ -254,6 +257,14 @@ export const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="default" 
+              onClick={() => navigate('/admin/product-management')}
+              className="flex items-center gap-2"
+            >
+              <Package className="h-4 w-4" />
+              Product Management
+            </Button>
             <TestSMS />
             <Button variant="outline" onClick={loadDashboardData}>
               Refresh Data
