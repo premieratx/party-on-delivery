@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Filter, X, ArrowLeft, Plus, Minus, ShoppingCart } from "lucide-react";
+import { Search, Filter, X, ArrowLeft, Plus, Minus, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
 import { useNavigate } from "react-router-dom";
+import { UnifiedCart } from "@/components/common/UnifiedCart";
 
 interface Product {
   id: string;
@@ -31,6 +32,7 @@ export const ProductSearch = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [showCart, setShowCart] = useState(false);
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = useUnifiedCart();
   const { toast } = useToast();
 
@@ -188,11 +190,11 @@ export const ProductSearch = () => {
                 </div>
                 <Button 
                   size="sm"
-                  onClick={() => navigate('/checkout')}
+                  onClick={() => setShowCart(true)}
                   className="flex items-center gap-2"
                 >
                   <ShoppingCart className="w-4 h-4" />
-                  Checkout
+                  View Cart
                 </Button>
               </div>
             )}
@@ -223,21 +225,45 @@ export const ProductSearch = () => {
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="shrink-0"
+              className="shrink-0 md:hidden"
             >
               <Filter className="w-4 h-4 mr-2" />
               Filters
+              {showFilters ? (
+                <ChevronUp className="w-4 h-4 ml-2" />
+              ) : (
+                <ChevronDown className="w-4 h-4 ml-2" />
+              )}
             </Button>
           </div>
 
-          {/* Filter Panel */}
+          {/* Desktop Categories Row */}
+          <div className="hidden md:flex items-center gap-4 mb-4">
+            <span className="text-sm font-medium text-foreground">Categories:</span>
+            <RadioGroup 
+              value={selectedCategory} 
+              onValueChange={setSelectedCategory}
+              className="flex flex-wrap gap-2"
+            >
+              {categories.map((category) => (
+                <div key={category.id} className="flex items-center space-x-1">
+                  <RadioGroupItem value={category.id} id={category.id} className="w-3 h-3" />
+                  <Label htmlFor={category.id} className="text-xs cursor-pointer">
+                    {category.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+
+          {/* Mobile Filter Panel */}
           {showFilters && (
-            <Card className="mb-4">
+            <Card className="mb-4 md:hidden">
               <CardContent className="p-4">
                 <div className="space-y-4">
                   <h3 className="font-medium">Categories</h3>
                   <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {categories.map((category) => (
                         <div key={category.id} className="flex items-center space-x-2">
                           <RadioGroupItem value={category.id} id={category.id} />
@@ -375,6 +401,9 @@ export const ProductSearch = () => {
           </div>
         )}
       </div>
+
+      {/* Unified Cart */}
+      <UnifiedCart isOpen={showCart} onClose={() => setShowCart(false)} />
     </div>
   );
 };

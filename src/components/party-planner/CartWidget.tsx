@@ -3,13 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface CartItem {
-  productId: string;
+  id: string;
+  productId?: string;
   title: string;
   price: number;
   quantity: number;
   image?: string;
-  eventName: string;
-  category: string;
+  eventName?: string;
+  category?: string;
 }
 
 interface CartWidgetProps {

@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Minimize2, ShoppingCart } from "lucide-react";
 import { useReliableStorage } from "@/hooks/useReliableStorage";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
+import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { PartyTypeSelection } from "@/components/party-planner/PartyTypeSelection";
 import { WeddingEventSelection } from "@/components/party-planner/WeddingEventSelection";
 import { PartyTabs } from "@/components/party-planner/PartyTabs";
@@ -42,6 +43,7 @@ export interface PartyDetails {
 export const PartyPlanner = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
+  const [showCart, setShowCart] = useState(false);
   const { cartItems, cartFlash, addToCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   const [partyDetails, setPartyDetails, clearPartyDetails] = useReliableStorage<PartyDetails>('party-details', {
     partyType: '',
@@ -191,7 +193,7 @@ export const PartyPlanner = () => {
             <div className="md:hidden flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <SearchIcon size="sm" variant="mobile" />
-                <Button variant="outline" size="sm" className="p-1 h-8 relative">
+                <Button variant="outline" size="sm" className="p-1 h-8 relative" onClick={() => setShowCart(true)}>
                 <ShoppingCart className="w-4 h-4" />
                 {getTotalItems() > 0 && (
                   <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
@@ -213,7 +215,7 @@ export const PartyPlanner = () => {
                 onClick={() => {
                   console.log('Mobile checkout button clicked, cart items:', cartItems);
                   if (getTotalItems() > 0) {
-                    navigate('/checkout');
+                    setShowCart(true);
                   }
                 }}
                 disabled={getTotalItems() === 0}
@@ -227,7 +229,7 @@ export const PartyPlanner = () => {
             <div className="hidden md:flex justify-between items-center w-full">
               <div className="flex items-center gap-3">
                 <SearchIcon size="md" variant="desktop" />
-                <Button variant="outline" size="sm" className="relative">
+                <Button variant="outline" size="sm" className="relative" onClick={() => setShowCart(true)}>
                 <ShoppingCart className="w-4 h-4 mr-1" />
                 Cart ({getTotalItems()})
                 {getTotalItems() > 0 && cartFlash && (
@@ -250,7 +252,7 @@ export const PartyPlanner = () => {
                 onClick={() => {
                   console.log('Desktop checkout button clicked, cart items:', cartItems);
                   if (getTotalItems() > 0) {
-                    navigate('/checkout');
+                    setShowCart(true);
                   }
                 }}
                 disabled={getTotalItems() === 0}
@@ -429,10 +431,10 @@ export const PartyPlanner = () => {
                       </div>
                     </div>
                   </div>
-                  <Button size="lg" onClick={() => {
+                   <Button size="lg" onClick={() => {
                     console.log('Checkout button clicked, cart items:', cartItems);
-                    console.log('Navigating to checkout with cart data');
-                    navigate('/checkout');
+                    console.log('Opening checkout cart');
+                    setShowCart(true);
                   }}>
                     Proceed to Checkout
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -455,7 +457,11 @@ export const PartyPlanner = () => {
           </div>
         )}
         
-        {/* Remove CartWidget - no cart pop-out on mobile */}
+        {/* Cart Widget */}
+        <CartWidget items={cartItems} />
+
+        {/* Unified Cart */}
+        <UnifiedCart isOpen={showCart} onClose={() => setShowCart(false)} />
       </div>
     </div>
   );
