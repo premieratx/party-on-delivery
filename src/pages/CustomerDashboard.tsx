@@ -8,6 +8,9 @@ import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionTracking } from '@/hooks/useSessionTracking';
+import { useDashboardSync } from '@/hooks/useDashboardSync';
+import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
+import { formatCurrency } from '@/utils/currency';
 import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown, RefreshCw } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 
@@ -57,6 +60,24 @@ const CustomerDashboard = () => {
       }
     };
   }, []);
+
+  // Set up dashboard sync
+  const { refreshDashboardData } = useDashboardSync({
+    dashboardType: 'customer',
+    userEmail: customer?.email,
+    onOrderUpdate: (order) => {
+      setOrders(prevOrders => {
+        const exists = prevOrders.some(o => o.id === order.id);
+        if (!exists) {
+          return [order, ...prevOrders];
+        }
+        return prevOrders.map(o => o.id === order.id ? order : o);
+      });
+    },
+    onCustomerUpdate: (updatedCustomer) => {
+      setCustomer(prev => ({ ...prev, ...updatedCustomer }));
+    }
+  });
 
   const loadCustomerData = async (isRefresh = false) => {
     try {
@@ -443,7 +464,7 @@ const CustomerDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Spent</p>
-                  <p className="text-2xl font-bold">${customer?.total_spent || 0}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(customer?.total_spent || 0)}</p>
                 </div>
                 <CalendarDays className="h-8 w-8 text-primary" />
               </div>
@@ -461,6 +482,17 @@ const CustomerDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Live Recent Orders Feed */}
+        <div className="mb-8">
+          <RecentOrdersFeed 
+            orders={orders.slice(0, 5)} 
+            title="Recent Orders"
+            showCustomerInfo={false}
+            onRefresh={refreshDashboardData}
+            refreshInterval={30000}
+          />
         </div>
 
         {/* Active Orders */}
@@ -610,7 +642,7 @@ const CustomerDashboard = () => {
                                         (Order #{item.order_number} - {item.customer_name})
                                       </span>
                                     </div>
-                                    <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                                    <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
                                   </div>
                                 ))}
                               </div>
@@ -642,9 +674,9 @@ const CustomerDashboard = () => {
                           </Button>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold">
-                            Total: ${orders.reduce((sum, order) => sum + order.total_amount, 0).toFixed(2)}
-                          </p>
+                           <p className="text-lg font-bold">
+                             Total: {formatCurrency(orders.reduce((sum, order) => sum + order.total_amount, 0))}
+                           </p>
                           <p className="text-sm text-muted-foreground">
                             {orders.length} separate orders
                           </p>
@@ -697,7 +729,7 @@ const CustomerDashboard = () => {
                         <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
                           {order.status}
                         </Badge>
-                        <p className="text-lg font-semibold mt-1">${order.total_amount}</p>
+                        <p className="text-lg font-semibold mt-1">{formatCurrency(order.total_amount)}</p>
                       </div>
                     </div>
                   </CardHeader>
@@ -729,12 +761,12 @@ const CustomerDashboard = () => {
                             order.line_items.map((item: any, index: number) => (
                               <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
                                 <div className="flex-1">
-                                  <span className="font-medium">{item.quantity}x {item.title}</span>
-                                  <span className="text-sm text-muted-foreground block">
-                                    ${item.price} each • Ordered by {customer?.first_name} {customer?.last_name}
-                                  </span>
-                                </div>
-                                <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                                   <span className="font-medium">{item.quantity}x {item.title}</span>
+                                   <span className="text-sm text-muted-foreground block">
+                                     {formatCurrency(item.price)} each • Ordered by {customer?.first_name} {customer?.last_name}
+                                   </span>
+                                 </div>
+                                 <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
                               </div>
                             ))
                           ) : (
@@ -750,9 +782,9 @@ const CustomerDashboard = () => {
                       <Separator />
 
                       <div className="flex justify-between items-center">
-                        <div className="text-sm text-muted-foreground">
-                          {order.line_items?.length || 0} items • Order total: ${order.total_amount}
-                        </div>
+                         <div className="text-sm text-muted-foreground">
+                           {order.line_items?.length || 0} items • Order total: {formatCurrency(order.total_amount)}
+                         </div>
                         <Button
                           variant="outline"
                           size="sm"

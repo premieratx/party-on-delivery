@@ -9,6 +9,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardSync } from '@/hooks/useDashboardSync';
+import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
+import { formatCurrency } from '@/utils/currency';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -88,8 +91,25 @@ export const AffiliateDashboard: React.FC = () => {
     companyName: '',
     venmoHandle: ''
   });
+  const [affiliateOrders, setAffiliateOrders] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Set up dashboard sync
+  const { refreshDashboardData } = useDashboardSync({
+    dashboardType: 'affiliate',
+    userEmail: affiliate?.email,
+    affiliateCode: affiliate?.affiliate_code,
+    onAffiliateUpdate: (referral) => {
+      setRecentOrders(prev => {
+        const exists = prev.some(o => o.id === referral.id);
+        if (!exists) {
+          return [referral, ...prev.slice(0, 9)];
+        }
+        return prev;
+      });
+    }
+  });
 
   useEffect(() => {
     // Set up auth state listener for handling OAuth redirects
@@ -210,6 +230,7 @@ export const AffiliateDashboard: React.FC = () => {
       } else {
         // Use dashboard service data  
         setRecentOrders(dashboardData.data.affiliateReferrals || []);
+        setAffiliateOrders(dashboardData.data.orders || []);
         // Update affiliate stats from dashboard data
         setAffiliate(prev => ({
           ...prev,
@@ -441,12 +462,6 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
 
   if (loading) {
     return (

@@ -571,6 +571,17 @@ serve(async (req) => {
     // Don't wait for notifications to complete - let them run in background
     notifications.catch(error => logStep("Notification error", error));
 
+    // Trigger dashboard sync for real-time updates
+    supabase.functions.invoke('trigger-dashboard-sync', {
+      body: {
+        orderId: shopifyOrder.id,
+        customerId: customer.id,
+        affiliateId: customerOrder.affiliate_id,
+        syncType: 'order_complete'
+      }
+    }).then(() => logStep("Dashboard sync triggered successfully"))
+     .catch((error) => logStep("Dashboard sync trigger failed", error));
+
     logStep("Order processing completed successfully", {
       shopifyOrderId: shopifyOrder.id,
       orderNumber: shopifyOrder.order_number,

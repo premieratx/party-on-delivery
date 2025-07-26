@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useDashboardSync } from '@/hooks/useDashboardSync';
+import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
+import { formatCurrency } from '@/utils/currency';
 import { 
   Users, 
   DollarSign, 
@@ -84,7 +87,22 @@ export const AdminDashboard: React.FC = () => {
   const [payoutAlerts, setPayoutAlerts] = useState<AffiliateStats[]>([]);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const { toast } = useToast();
+
+  // Set up dashboard sync
+  const { refreshDashboardData } = useDashboardSync({
+    dashboardType: 'admin',
+    onOrderUpdate: (order) => {
+      setRecentOrders(prev => {
+        const exists = prev.some(o => o.id === order.id);
+        if (!exists) {
+          return [order, ...prev.slice(0, 9)]; // Keep only 10 most recent
+        }
+        return prev.map(o => o.id === order.id ? order : o);
+      });
+    }
+  });
 
   useEffect(() => {
     loadDashboardData();
@@ -109,6 +127,9 @@ export const AdminDashboard: React.FC = () => {
 
       const { orders, customers, affiliateReferrals, totalRevenue, totalOrders, pendingCommissions, recentActivity } = dashboardData.data;
       const { data: affiliatesData, error: affiliatesError } = await supabase.from('affiliates').select('*').order('total_sales', { ascending: false });
+      
+      // Update recent orders for live feed
+      setRecentOrders(orders?.slice(0, 10) || []);
 
       if (affiliatesError) throw affiliatesError;
 
@@ -431,6 +452,16 @@ export const AdminDashboard: React.FC = () => {
               <div className="text-2xl font-bold">{summary.totalOrders}</div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Live Recent Orders Feed */}
+        <div className="mb-6">
+          <RecentOrdersFeed 
+            orders={recentOrders} 
+            title="Live Order Feed"
+            onRefresh={refreshDashboardData}
+            refreshInterval={15000}
+          />
         </div>
 
         {/* Google Sheets Sync */}
