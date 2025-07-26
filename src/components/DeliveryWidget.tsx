@@ -9,6 +9,7 @@ import { AddressConfirmation } from './AddressConfirmation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useReliableStorage } from '@/hooks/useReliableStorage';
+import { useUnifiedCart, UnifiedCartItem } from '@/hooks/useUnifiedCart';
 
 export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'products' | 'cart' | 'checkout';
 
@@ -38,6 +39,9 @@ export const DeliveryWidget: React.FC = () => {
   const [affiliateReferral, setAffiliateReferral] = useReliableStorage('affiliateReferral', '');
   const [startingPage, setStartingPage] = useReliableStorage('startingPage', '/');
   
+  // Use unified cart system
+  const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
+  
   // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
   
@@ -49,7 +53,6 @@ export const DeliveryWidget: React.FC = () => {
     address: '',
     instructions: ''
   });
-  const [cartItems, setCartItems] = useLocalStorage<CartItem[]>('partyondelivery_cart', []);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
   const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag);
@@ -91,7 +94,7 @@ export const DeliveryWidget: React.FC = () => {
   }, [location.state, location.pathname, location.search, setAffiliateReferral, setStartingPage, setAppliedDiscount]);
   
   // Calculate subtotal for consistent delivery fee calculation
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const subtotal = getTotalPrice();
 
   // Check if last order has expired (delivery date/time has passed)
   const isLastOrderExpired = () => {
@@ -225,40 +228,22 @@ export const DeliveryWidget: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const addToCart = (item: Omit<CartItem, 'quantity'>) => {
-    setCartItems(prev => {
-      const existing = prev.find(i => i.id === item.id && i.variant === item.variant);
-      if (existing) {
-        return prev.map(i => 
-          i.id === item.id && i.variant === item.variant 
-            ? { ...i, quantity: i.quantity + 1 }
-            : i
-        );
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
+  const handleAddToCart = (item: Omit<UnifiedCartItem, 'quantity'>) => {
+    addToCart(item);
     // Don't auto-open cart anymore - user requested this change
   };
 
-  const updateQuantity = (id: string, variant: string | undefined, quantity: number) => {
-    if (quantity <= 0) {
-      setCartItems(prev => prev.filter(i => !(i.id === id && i.variant === variant)));
-    } else {
-      setCartItems(prev => prev.map(i => 
-        i.id === id && i.variant === variant 
-          ? { ...i, quantity }
-          : i
-      ));
-    }
+  const handleUpdateQuantity = (id: string, variant: string | undefined, quantity: number) => {
+    updateQuantity(id, variant, quantity);
   };
 
-  const removeFromCart = (id: string, variant?: string) => {
-    setCartItems(prev => prev.filter(i => !(i.id === id && i.variant === variant)));
+  const handleRemoveFromCart = (id: string, variant?: string) => {
+    removeItem(id, variant);
   };
 
-  const emptyCart = () => {
+  const handleEmptyCart = () => {
     console.log('=== emptyCart ===');
-    setCartItems([]);
+    emptyCart();
     // Show confirmation message
     import('@/hooks/use-toast').then(({ useToast }) => {
       const { toast } = useToast();
@@ -267,14 +252,6 @@ export const DeliveryWidget: React.FC = () => {
         description: "All items have been removed from your cart.",
       });
     });
-  };
-
-  const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const getTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
   const handleBackToStart = () => {
@@ -345,11 +322,11 @@ export const DeliveryWidget: React.FC = () => {
     <div className="min-h-screen bg-background">
       {currentStep === 'products' && (
         <ProductCategories 
-          onAddToCart={addToCart}
+          onAddToCart={handleAddToCart}
           cartItemCount={getTotalItems()}
           onOpenCart={() => setIsCartOpen(true)}
           cartItems={cartItems}
-          onUpdateQuantity={updateQuantity}
+          onUpdateQuantity={handleUpdateQuantity}
           onProceedToCheckout={handleCheckout}
           onBack={handleBackToOrderContinuation}
           onBackToStart={handleBackToStart}
@@ -363,7 +340,7 @@ export const DeliveryWidget: React.FC = () => {
           totalPrice={getTotalPrice()}
           onBack={handleBackToProducts}
           onDeliveryInfoChange={setDeliveryInfo}
-          onUpdateQuantity={updateQuantity}
+          onUpdateQuantity={handleUpdateQuantity}
           isAddingToOrder={isAddingToOrder}
           useSameAddress={useSameAddress}
           lastOrderInfo={validLastOrderInfo}
@@ -380,8 +357,8 @@ export const DeliveryWidget: React.FC = () => {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeFromCart}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveFromCart}
         totalPrice={getTotalPrice()}
         onCheckout={handleCheckout}
         deliveryInfo={deliveryInfo}
@@ -390,7 +367,7 @@ export const DeliveryWidget: React.FC = () => {
         hasChanges={hasChanges}
         appliedDiscount={appliedDiscount}
         tipAmount={tipAmount}
-        onEmptyCart={emptyCart}
+        onEmptyCart={handleEmptyCart}
       />
     </div>
   );

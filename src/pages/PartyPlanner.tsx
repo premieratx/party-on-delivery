@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Minimize2, ShoppingCart } from "lucide-react";
 import { useReliableStorage } from "@/hooks/useReliableStorage";
+import { useUnifiedCart } from "@/hooks/useUnifiedCart";
 import { PartyTypeSelection } from "@/components/party-planner/PartyTypeSelection";
 import { WeddingEventSelection } from "@/components/party-planner/WeddingEventSelection";
 import { PartyTabs } from "@/components/party-planner/PartyTabs";
@@ -41,14 +42,13 @@ export interface PartyDetails {
 export const PartyPlanner = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
-  const [cartFlash, setCartFlash] = useState(false);
+  const { cartItems, cartFlash, addToCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   const [partyDetails, setPartyDetails, clearPartyDetails] = useReliableStorage<PartyDetails>('party-details', {
     partyType: '',
     eventDetails: {},
     categorySelections: {}
   });
 
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [completedEvents, setCompletedEvents] = useState<Set<string>>(new Set());
   const [minimizedEvents, setMinimizedEvents] = useState<Set<string>>(new Set());
 
@@ -59,24 +59,22 @@ export const PartyPlanner = () => {
     return partyDetails.partyType ? [partyDetails.partyType] : [];
   };
 
-  const addToCart = (eventName: string, category: string, items: CartItem[]) => {
+  const handleAddToCart = (eventName: string, category: string, items: CartItem[]) => {
     console.log('PartyPlanner: Adding to cart for event:', eventName, 'category:', category, 'items:', items);
     
-    const newItems = items.map(item => ({
-      ...item,
+    const unifiedItems = items.map(item => ({
+      id: item.productId,
+      productId: item.productId,
+      title: item.title,
+      name: item.title,
+      price: item.price,
+      quantity: item.quantity,
+      image: item.image,
       eventName,
       category
     }));
     
-    setCart(prev => {
-      // Remove existing items for this event/category combination
-      const filtered = prev.filter(item => 
-        !(item.eventName === eventName && item.category === category)
-      );
-      const newCart = [...filtered, ...newItems];
-      console.log('PartyPlanner: Cart updated from', prev.length, 'to', newCart.length, 'items');
-      return newCart;
-    });
+    addToCart(unifiedItems);
 
     // Update category selections in partyDetails
     setPartyDetails(prev => {
@@ -86,17 +84,13 @@ export const PartyPlanner = () => {
           ...prev.categorySelections,
           [eventName]: {
             ...prev.categorySelections?.[eventName],
-            [category]: newItems
+            [category]: items
           }
         }
       };
       console.log('PartyPlanner: Updated party details categorySelections:', updatedDetails.categorySelections);
       return updatedDetails;
     });
-
-    // Trigger cart flash animation
-    setCartFlash(true);
-    setTimeout(() => setCartFlash(false), 600);
   };
 
   const updatePartyDetails = (updates: Partial<PartyDetails>) => {
@@ -145,7 +139,7 @@ export const PartyPlanner = () => {
   };
 
   const getRunningTotal = () => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return getTotalPrice();
   };
 
   const getCurrentStepType = () => {
@@ -199,9 +193,9 @@ export const PartyPlanner = () => {
                 <SearchIcon size="sm" variant="mobile" />
                 <Button variant="outline" size="sm" className="p-1 h-8 relative">
                 <ShoppingCart className="w-4 h-4" />
-                {cart.length > 0 && (
+                {getTotalItems() > 0 && (
                   <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
-                    {cart.length}
+                    {getTotalItems()}
                   </span>
                 )}
                 </Button>
@@ -217,13 +211,12 @@ export const PartyPlanner = () => {
                 variant="default" 
                 size="sm"
                 onClick={() => {
-                  console.log('Mobile checkout button clicked, cart items:', cart);
-                  if (cart.length > 0) {
-                    localStorage.setItem('party-cart', JSON.stringify(cart));
+                  console.log('Mobile checkout button clicked, cart items:', cartItems);
+                  if (getTotalItems() > 0) {
                     navigate('/checkout');
                   }
                 }}
-                disabled={cart.length === 0}
+                disabled={getTotalItems() === 0}
                 className="px-2 h-8 text-xs"
               >
                 Checkout
@@ -236,10 +229,10 @@ export const PartyPlanner = () => {
                 <SearchIcon size="md" variant="desktop" />
                 <Button variant="outline" size="sm" className="relative">
                 <ShoppingCart className="w-4 h-4 mr-1" />
-                Cart ({cart.length})
-                {cart.length > 0 && cartFlash && (
+                Cart ({getTotalItems()})
+                {getTotalItems() > 0 && cartFlash && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-ping">
-                    {cart.length}
+                    {getTotalItems()}
                   </span>
                 )}
                 </Button>
@@ -255,13 +248,12 @@ export const PartyPlanner = () => {
                 variant="default" 
                 size="sm"
                 onClick={() => {
-                  console.log('Desktop checkout button clicked, cart items:', cart);
-                  if (cart.length > 0) {
-                    localStorage.setItem('party-cart', JSON.stringify(cart));
+                  console.log('Desktop checkout button clicked, cart items:', cartItems);
+                  if (getTotalItems() > 0) {
                     navigate('/checkout');
                   }
                 }}
-                disabled={cart.length === 0}
+                disabled={getTotalItems() === 0}
               >
                 Checkout
               </Button>
@@ -398,7 +390,7 @@ export const PartyPlanner = () => {
                             eventDuration: 4
                           }}
                           onUpdateEventDetails={(details) => updateEventDetails(eventName, details)}
-                          onAddToCart={(eventName, category, items) => addToCart(eventName, category, items)}
+                          onAddToCart={(eventName, category, items) => handleAddToCart(eventName, category, items)}
                           categorySelections={categorySelections}
                           totalPartyBudget={getTotalPartyBudget()}
                           runningTotal={getRunningTotal()}
@@ -421,11 +413,11 @@ export const PartyPlanner = () => {
                   <p className="text-lg text-green-600 mb-6">
                     Your party planning is complete. Ready to proceed to checkout?
                   </p>
-                  <div className="space-y-2 mb-6">
+                    <div className="space-y-2 mb-6">
                     <div className="flex justify-center gap-8 text-sm">
                       <div>
                         <span className="font-medium">Total Items: </span>
-                        <span>{cart.length}</span>
+                        <span>{getTotalItems()}</span>
                       </div>
                       <div>
                         <span className="font-medium">Total Cost: </span>
@@ -438,10 +430,8 @@ export const PartyPlanner = () => {
                     </div>
                   </div>
                   <Button size="lg" onClick={() => {
-                    console.log('Checkout button clicked, cart items:', cart);
+                    console.log('Checkout button clicked, cart items:', cartItems);
                     console.log('Navigating to checkout with cart data');
-                    // Store cart data in localStorage for checkout page
-                    localStorage.setItem('party-cart', JSON.stringify(cart));
                     navigate('/checkout');
                   }}>
                     Proceed to Checkout

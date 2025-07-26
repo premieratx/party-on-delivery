@@ -25,7 +25,7 @@ import TestSMS from "./components/TestSMS";
 import { PartyPlanner } from "./pages/PartyPlanner";
 import Checkout from "./pages/Checkout";
 import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
-import ProductSearch from "./pages/ProductSearch";
+import { ProductSearch } from "./pages/ProductSearch";
 
 const queryClient = new QueryClient({
   defaultOptions: {

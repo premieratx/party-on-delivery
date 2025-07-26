@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, ArrowLeft, Plus, Minus, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +8,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { OptimizedImage } from "@/components/common/OptimizedImage";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useUnifiedCart } from "@/hooks/useUnifiedCart";
+import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -22,22 +24,14 @@ interface Product {
   images?: string[];
 }
 
-interface CartItem {
-  productId: string;
-  title: string;
-  price: number;
-  quantity: number;
-  image?: string;
-  category: string;
-}
-
-const ProductSearch = () => {
+export const ProductSearch = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = useUnifiedCart();
   const { toast } = useToast();
 
   const categories = [
@@ -143,58 +137,22 @@ const ProductSearch = () => {
     return filtered;
   }, [products, selectedCategory, searchTerm]);
 
-  const getQuantityInCart = (productId: string) => {
-    const item = cart.find(item => item.productId === productId);
-    return item ? item.quantity : 0;
-  };
-
-  const updateCartQuantity = (product: Product, quantity: number) => {
-    setCart(prevCart => {
-      const existingItemIndex = prevCart.findIndex(item => item.productId === product.id);
-      
-      if (quantity === 0) {
-        // Remove item if quantity is 0
-        return prevCart.filter(item => item.productId !== product.id);
-      }
-      
-      const cartItem: CartItem = {
-        productId: product.id,
-        title: product.title,
-        price: product.price,
-        quantity,
-        image: product.image,
-        category: product.category
-      };
-
-      if (existingItemIndex >= 0) {
-        // Update existing item
-        const newCart = [...prevCart];
-        newCart[existingItemIndex] = cartItem;
-        return newCart;
-      } else {
-        // Add new item
-        return [...prevCart, cartItem];
-      }
-    });
-
-    toast({
-      title: quantity === 0 ? "Removed from cart" : "Added to cart",
-      description: `${product.title} ${quantity === 0 ? 'removed' : 'updated'}`,
-      duration: 2000,
+  const handleAddToCart = (product: Product) => {
+    addToCart({
+      id: product.id,
+      title: product.title,
+      name: product.title,
+      price: product.price,
+      image: product.image,
+      variant: product.variants?.[0]?.id,
+      category: product.category
     });
   };
 
-  const addToCart = (product: Product) => {
-    const currentQuantity = getQuantityInCart(product.id);
-    updateCartQuantity(product, currentQuantity + 1);
-  };
-
-  const getTotalCartItems = () => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  };
-
-  const getTotalCartValue = () => {
-    return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const handleQuantityChange = (product: Product, change: number) => {
+    const currentQty = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+    const newQty = Math.max(0, currentQty + change);
+    updateQuantity(product.id, product.variants?.[0]?.id, newQty);
   };
 
   return (
@@ -205,19 +163,25 @@ const ProductSearch = () => {
           <div className="flex items-center justify-between mb-4">
             <Button
               variant="ghost"
-              onClick={() => window.history.back()}
-              className="text-muted-foreground hover:text-foreground"
+              onClick={() => navigate('/')}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-2"
             >
-              ← Back
+              <ArrowLeft className="w-4 h-4" />
+              Back
             </Button>
             
-            {cart.length > 0 && (
+            {getTotalItems() > 0 && (
               <div className="flex items-center gap-4">
                 <div className="text-sm text-muted-foreground">
-                  {getTotalCartItems()} items • ${getTotalCartValue().toFixed(2)}
+                  {getTotalItems()} items • ${getTotalPrice().toFixed(2)}
                 </div>
-                <Button size="sm">
-                  View Cart
+                <Button 
+                  size="sm"
+                  onClick={() => navigate('/checkout')}
+                  className="flex items-center gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Checkout
                 </Button>
               </div>
             )}
@@ -322,12 +286,12 @@ const ProductSearch = () => {
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-8 gap-4">
             {filteredProducts.map((product, index) => {
-              const quantity = getQuantityInCart(product.id);
+              const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
               return (
                 <Card 
                   key={product.id} 
-                  className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
+                  className={`group transition-all duration-200 ${quantity > 0 ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-lg'}`}
                 >
                   <CardContent className="p-2">
                     <div className="flex flex-col items-center text-center h-full gap-1">
@@ -361,31 +325,32 @@ const ProductSearch = () => {
                         <div className="w-full">
                           {quantity === 0 ? (
                             <Button
-                              onClick={() => addToCart(product)}
+                              onClick={() => handleAddToCart(product)}
                               size="sm"
-                              className="w-full h-8 text-xs bg-green-600 hover:bg-green-700 text-white rounded-full"
+                              className="w-8 h-8 p-0 rounded-full bg-green-500 hover:bg-green-600 text-white"
                             >
-                              +
+                              <Plus className="w-4 h-4" />
                             </Button>
                           ) : (
-                            <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1 justify-center">
                               <Button
-                                onClick={() => updateCartQuantity(product, quantity - 1)}
+                                onClick={() => handleQuantityChange(product, -1)}
                                 size="sm"
                                 variant="outline"
-                                className="w-8 h-8 p-0 rounded-full"
+                                className="w-6 h-6 p-0 rounded-full"
                               >
-                                -
+                                <Minus className="w-3 h-3" />
                               </Button>
-                              <span className="text-sm font-medium px-2">
+                              <span className="text-sm font-medium w-6 text-center">
                                 {quantity}
                               </span>
                               <Button
-                                onClick={() => updateCartQuantity(product, quantity + 1)}
+                                onClick={() => handleQuantityChange(product, 1)}
                                 size="sm"
-                                className="w-8 h-8 p-0 rounded-full bg-green-600 hover:bg-green-700 text-white"
+                                variant="outline"
+                                className="w-6 h-6 p-0 rounded-full"
                               >
-                                +
+                                <Plus className="w-3 h-3" />
                               </Button>
                             </div>
                           )}
@@ -403,4 +368,3 @@ const ProductSearch = () => {
   );
 };
 
-export default ProductSearch;
