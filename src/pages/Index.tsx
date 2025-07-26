@@ -6,11 +6,13 @@ import { TestSheetsConnection } from '@/components/TestSheetsConnection';
 import { TestGHLConnection } from '@/components/TestGHLConnection';
 import { DirectSyncNow } from '@/components/DirectSyncNow';
 import { CheckSheetTabs } from '@/components/CheckSheetTabs';
+import { TestWriteMethods } from '@/components/TestWriteMethods';
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <TestSMS />
+      <TestWriteMethods />
       <CheckSheetTabs />
       <TestSheetsConnection />
       <TestGHLConnection />
