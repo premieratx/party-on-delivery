@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { PartyPlanningButton } from '@/components/PartyPlanningButton';
 import { ShoppingBag, Plus, ArrowRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/party-on-delivery-logo.png';
@@ -96,6 +97,11 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
               <Users className="w-4 h-4 mr-2" />
               Affiliate Dashboard
             </Button>
+          </div>
+          
+          {/* Plan My Party button */}
+          <div className="pt-2">
+            <PartyPlanningButton />
           </div>
         </CardContent>
       </Card>
