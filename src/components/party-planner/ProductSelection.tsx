@@ -473,7 +473,8 @@ export const ProductSelection = ({
                             console.log('Decreasing quantity for:', product.title);
                             handleQuantityChange(product.id, -1);
                             // Update cart with new quantity
-                            const newQuantity = (selections[product.id] || 0) - 1;
+                            const newQuantity = Math.max(0, (selections[product.id] || 0) - 1);
+                            
                             if (newQuantity > 0) {
                               const cartItem: CartItem = {
                                 productId: product.id,
@@ -527,7 +528,10 @@ export const ProductSelection = ({
                         onClick={() => {
                           console.log('Adding product to cart:', product.title);
                           
-                          // Create cart item
+                          // Update local selections first to trigger +/- controls
+                          handleQuantityChange(product.id, 1);
+                          
+                          // Create cart item for unified cart
                           const cartItem: CartItem = {
                             productId: product.id,
                             title: product.title,
@@ -538,13 +542,10 @@ export const ProductSelection = ({
                             category
                           };
                           
-                          // Update local selections first to trigger +/- controls
-                          handleQuantityChange(product.id, 1);
-                          
-                          // Add to cart immediately
+                          // Add to both party cart and unified cart
                           onAddToCart(eventName, category, [cartItem]);
                           
-                          // Update local tracking so it shows as added
+                          // Update local tracking
                           setAddedToCartItems(prev => ({
                             ...prev,
                             [product.id]: 1

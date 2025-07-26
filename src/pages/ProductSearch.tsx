@@ -238,17 +238,17 @@ export const ProductSearch = () => {
           </div>
 
           {/* Desktop Categories Row */}
-          <div className="hidden md:flex items-center gap-4 mb-4">
-            <span className="text-sm font-medium text-foreground">Categories:</span>
+          <div className="hidden md:flex items-start gap-4 mb-4">
+            <span className="text-sm font-medium text-foreground mt-2">Categories:</span>
             <RadioGroup 
               value={selectedCategory} 
               onValueChange={setSelectedCategory}
-              className="flex flex-wrap gap-2"
+              className="flex flex-wrap gap-4"
             >
               {categories.map((category) => (
-                <div key={category.id} className="flex items-center space-x-1">
-                  <RadioGroupItem value={category.id} id={category.id} className="w-3 h-3" />
-                  <Label htmlFor={category.id} className="text-xs cursor-pointer">
+                <div key={category.id} className="flex items-center space-x-2">
+                  <RadioGroupItem value={category.id} id={category.id} className="w-4 h-4" />
+                  <Label htmlFor={category.id} className="text-sm cursor-pointer whitespace-nowrap">
                     {category.label}
                   </Label>
                 </div>
@@ -327,7 +327,7 @@ export const ProductSearch = () => {
               
               return (
                 <Card 
-                  key={product.id} 
+                  key={`${product.id}-${index}`} 
                   className={`group transition-all duration-200 ${quantity > 0 ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-lg'}`}
                 >
                   <CardContent className="p-2">

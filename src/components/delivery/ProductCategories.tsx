@@ -278,14 +278,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }, [cartItemCount]);
 
   const handleAddToCart = (product: ShopifyProduct, variant?: any) => {
-    onAddToCart({
+    const cartItem = {
       id: product.id,
       title: product.title,
-      name: product.title, // Add name field for Shopify compatibility
+      name: product.title,
       price: variant ? variant.price : product.price,
       image: product.image,
-      variant: variant ? variant.id : product.variants[0]?.id // Use variant ID, not title
-    });
+      variant: variant ? variant.id : product.variants[0]?.id
+    };
+    
+    console.log('Adding to cart - delivery widget:', cartItem);
+    onAddToCart(cartItem);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
