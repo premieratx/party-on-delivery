@@ -349,6 +349,56 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_affiliate_sites: {
+        Row: {
+          affiliate_id: string | null
+          business_address: Json | null
+          business_name: string
+          created_at: string
+          custom_promo_code: string | null
+          id: string
+          is_active: boolean | null
+          site_name: string
+          site_slug: string
+          site_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id?: string | null
+          business_address?: Json | null
+          business_name: string
+          created_at?: string
+          custom_promo_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          site_name: string
+          site_slug: string
+          site_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string | null
+          business_address?: Json | null
+          business_name?: string
+          created_at?: string
+          custom_promo_code?: string | null
+          id?: string
+          is_active?: boolean | null
+          site_name?: string
+          site_slug?: string
+          site_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_affiliate_sites_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_addresses: {
         Row: {
           address_line_1: string
@@ -996,6 +1046,76 @@ export type Database = {
             columns: ["collection_id"]
             isOneToOne: false
             referencedRelation: "shopify_collections_cache"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_configurations: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string
+          id: string
+          site_id: string
+          updated_at: string
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          created_at?: string
+          id?: string
+          site_id: string
+          updated_at?: string
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          id?: string
+          site_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_configurations_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "custom_affiliate_sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_product_collections: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          id: string
+          is_enabled: boolean | null
+          shopify_collection_handle: string
+          site_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          shopify_collection_handle: string
+          site_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          shopify_collection_handle?: string
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_product_collections_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "custom_affiliate_sites"
             referencedColumns: ["id"]
           },
         ]

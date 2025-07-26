@@ -26,6 +26,8 @@ import { PartyPlanner } from "./pages/PartyPlanner";
 import Checkout from "./pages/Checkout";
 import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 import { ProductSearch } from "./pages/ProductSearch";
+import CustomSiteManagement from "./pages/CustomSiteManagement";
+import CustomSiteView from "./pages/CustomSiteView";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +81,10 @@ const App = () => {
                 
                 {/* Search Route */}
                 <Route path="/search" element={<ProductSearch />} />
+                
+                {/* Custom Site Routes */}
+                <Route path="/custom-sites" element={<CustomSiteManagement />} />
+                <Route path="/sites/:siteSlug" element={<CustomSiteView />} />
                 
                 {/* Test Routes */}
                 <Route path="/test-sms" element={<TestSMS />} />

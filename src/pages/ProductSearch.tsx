@@ -10,6 +10,7 @@ import { OptimizedImage } from "@/components/common/OptimizedImage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
+import { useCustomSiteProducts } from "@/hooks/useCustomSiteProducts";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
@@ -30,86 +31,30 @@ export const ProductSearch = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("favorites");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = useUnifiedCart();
   const { toast } = useToast();
+  
+  const { 
+    products, 
+    isLoading: loading, 
+    isCustomSite, 
+    customSiteData, 
+    availableCategories 
+  } = useCustomSiteProducts();
 
+  // Generate categories based on custom site or default
   const categories = [
     { id: "favorites", label: "⭐ Favorites" },
     { id: "all", label: "All Categories" },
-    { id: "spirits", label: "Spirits" },
-    { id: "beer", label: "Beer" },
-    { id: "seltzers", label: "Seltzers" },
-    { id: "cocktails", label: "Cocktails" },
-    { id: "mixers", label: "Mixers & N/A" },
-    { id: "wine", label: "Wine" },
-    { id: "party-supplies", label: "Party Supplies" },
-    { id: "other", label: "Other" }
+    ...availableCategories.filter(cat => cat !== 'favorites').map(cat => ({
+      id: cat,
+      label: cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    }))
   ];
 
-  // Load products from Shopify
-  useEffect(() => {
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-        
-        // Use the existing get-all-collections function to fetch products
-        const { data, error } = await supabase.functions.invoke('get-all-collections');
-        
-        if (error) {
-          console.error('Error fetching collections:', error);
-          toast({
-            title: "Error loading products",
-            description: "Failed to load product catalog",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // Transform collections data into a flat products array
-        const allProducts: Product[] = [];
-        
-        if (data?.collections) {
-          data.collections.forEach((collection: any) => {
-            if (collection.products) {
-              collection.products.forEach((product: any) => {
-                allProducts.push({
-                  id: product.id,
-                  title: product.title,
-                  price: product.price || 0,
-                  image: product.image || '/placeholder.svg',
-                  description: product.description || '',
-                  handle: product.handle || '',
-                  category: mapCollectionToCategory(collection.handle),
-                  variants: product.variants || [],
-                  images: product.images || []
-                });
-              });
-            }
-          });
-        }
-
-        // Sort alphabetically by title
-        allProducts.sort((a, b) => a.title.localeCompare(b.title));
-        setProducts(allProducts);
-        
-      } catch (error) {
-        console.error('Error loading products:', error);
-        toast({
-          title: "Error loading products",
-          description: "Failed to load product catalog",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProducts();
-  }, [toast]);
+  // Products are now loaded via useCustomSiteProducts hook
 
   // Map collection handles to our category system - match delivery widget mapping
   const mapCollectionToCategory = (handle: string): string => {

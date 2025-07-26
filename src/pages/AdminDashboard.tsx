@@ -16,7 +16,8 @@ import {
   Crown,
   Medal,
   Award,
-  Package
+  Package,
+  Globe
 } from 'lucide-react';
 import TestSMS from '@/components/TestSMS';
 import { SyncDataToSheets } from '@/components/SyncDataToSheets';
@@ -285,6 +286,14 @@ export const AdminDashboard: React.FC = () => {
             >
               <Package className="h-4 w-4" />
               Product Management
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={() => navigate('/custom-sites')}
+              className="flex items-center gap-2"
+            >
+              <Globe className="h-4 w-4" />
+              Custom Sites
             </Button>
             <TestSMS />
             <Button variant="outline" onClick={loadDashboardData}>
