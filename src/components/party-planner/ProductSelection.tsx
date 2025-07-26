@@ -441,6 +441,7 @@ export const ProductSelection = ({
                         size="sm"
                         onClick={() => handleQuantityChange(product.id, 1)}
                         className="h-8 w-8 p-0 rounded-full"
+                        type="button"
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
