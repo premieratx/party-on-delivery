@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import TestSMS from "./components/TestSMS";
 import { PartyPlanner } from "./pages/PartyPlanner";
 import Checkout from "./pages/Checkout";
+import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +58,9 @@ const App = () => {
                 <Route path="/admin/product-management" element={<ProductManagement />} />
                 <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
                 <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
+                
+                {/* Custom Affiliate Landing Pages */}
+                <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
                 
                 {/* Customer Routes */}
                 <Route path="/customer/login" element={<CustomerLogin />} />
