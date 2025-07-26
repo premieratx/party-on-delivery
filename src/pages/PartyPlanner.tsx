@@ -428,7 +428,7 @@ export const PartyPlanner = () => {
           </div>
         )}
         
-        <CartWidget items={cart} />
+        {/* Remove CartWidget - no cart pop-out on mobile */}
       </div>
     </div>
   );

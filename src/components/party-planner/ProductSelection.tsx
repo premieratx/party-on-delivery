@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Minus, Plus, ShoppingCart, Check, Loader2, X } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Check, Loader2, X, ArrowRight } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
@@ -56,10 +56,10 @@ interface ProductSelectionProps {
   onPrevious?: () => void;
 }
 
-// Category to Shopify collection mapping (using same collections as main app)
+// Category to Shopify collection mapping - Updated with working collections
 const categoryCollectionMap: Record<string, string> = {
-  'beer': 'tailgate-beer',
-  'wine': 'wine-champagne',
+  'beer': 'all-beer',
+  'wine': 'spirits', // Using spirits collection for wine since wine collection doesn't exist
   'liquor': 'spirits',
   'cocktails': 'cocktail-kits'
 };
@@ -122,23 +122,58 @@ export const ProductSelection = ({
         return;
       }
 
-      // Always fetch fresh data - ignore cache as requested
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
-      
-      if (error || data?.error) {
-        throw new Error(`Failed to fetch collections: ${error?.message || data?.error}`);
+      // Try to get cached data first for faster loading
+      const cachedCollections = cacheManager.getShopifyCollections();
+      let collections: ShopifyCollection[] = [];
+
+      if (cachedCollections && cachedCollections.length > 0) {
+        console.log('Using cached collections');
+        collections = cachedCollections;
+      } else {
+        console.log('Fetching fresh collections from Supabase function');
+        // Fetch fresh data with better error handling
+        try {
+          const { data, error } = await supabase.functions.invoke('get-all-collections');
+          
+          if (error) {
+            console.error('Supabase function error:', error);
+            throw new Error(`Supabase function error: ${error.message}`);
+          }
+          
+          if (data?.error) {
+            console.error('Function response error:', data.error);
+            throw new Error(`Function response error: ${data.error}`);
+          }
+          
+          collections = data?.collections || [];
+          
+          if (collections.length === 0) {
+            console.warn('No collections returned from function');
+          } else {
+            console.log(`Fetched ${collections.length} collections`);
+            cacheManager.setShopifyCollections(collections);
+          }
+        } catch (functionError) {
+          console.error('Failed to fetch from Supabase function:', functionError);
+          // Fallback to cached data if available
+          if (cachedCollections && cachedCollections.length > 0) {
+            console.log('Falling back to cached data');
+            collections = cachedCollections;
+          } else {
+            throw functionError;
+          }
+        }
       }
-      
-      const collections = data.collections || [];
-      cacheManager.setShopifyCollections(collections);
 
       // Find the collection for this category
       const targetCollection = collections.find(c => c.handle === collectionHandle);
       
-      if (targetCollection && targetCollection.products) {
+      if (targetCollection && targetCollection.products && targetCollection.products.length > 0) {
+        console.log(`Found ${targetCollection.products.length} products for ${collectionHandle}`);
         setProducts(targetCollection.products);
       } else {
         console.warn(`No products found for collection: ${collectionHandle}`);
+        console.log('Available collections:', collections.map(c => c.handle));
         setProducts([]);
       }
       
@@ -148,7 +183,7 @@ export const ProductSelection = ({
       setProducts([]);
       toast({
         title: "Error Loading Products",
-        description: "Failed to load products for this category. Please try again.",
+        description: "Using cached data. Some products may not be available.",
         variant: "destructive",
       });
     } finally {
@@ -348,12 +383,12 @@ export const ProductSelection = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="text-center">
-        <h3 className="text-lg font-bold mb-2 capitalize">
+        <h3 className="text-base font-bold mb-1 capitalize">
           Choose Your {category === 'cocktails' ? 'Cocktail Kits' : category}
         </h3>
-        <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
+        <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
           <span>Recommended: {recommendedQuantity} {unitType}</span>
           <span>Budget: ${budget.toFixed(2)}</span>
           <span>Selected: {totalServings} {getServingName()}</span>
@@ -365,7 +400,7 @@ export const ProductSelection = ({
           <p className="text-muted-foreground">No products available for {category}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {products.map((product) => {
             const quantity = selections[product.id] || 0;
             const isSelected = quantity > 0;
@@ -379,10 +414,10 @@ export const ProductSelection = ({
                   isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
                 } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
               >
-                <CardContent className="p-3">
-                  <div className="flex flex-col items-center text-center h-full gap-2">
+                <CardContent className="p-2">
+                  <div className="flex flex-col items-center text-center h-full gap-1">
                     {/* Image */}
-                    <div className="w-full aspect-[3/2] rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-full aspect-[3/2] rounded overflow-hidden flex-shrink-0">
                       <img 
                         src={product.image} 
                         alt={product.title}
@@ -416,36 +451,60 @@ export const ProductSelection = ({
                       <Check className="w-4 h-4 text-green-600" />
                     )}
                     
-                    {/* Green Add to Cart Button */}
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => {
-                        const cartItem: CartItem = {
-                          productId: product.id,
-                          title: product.title,
-                          price: product.price,
-                          quantity: 1,
-                          image: product.image,
-                          eventName: '',
-                          category
-                        };
-                        onAddToCart([cartItem]);
-                        setAddedToCartItems(prev => ({
-                          ...prev,
-                          [product.id]: (prev[product.id] || 0) + 1
-                        }));
-                        toast({
-                          title: "Added to Cart",
-                          description: `${product.title} added to your cart!`,
-                        });
-                      }}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white mt-auto"
-                      type="button"
-                    >
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add to Cart
-                    </Button>
+                    {/* Quantity Controls or Add to Cart */}
+                    {quantity > 0 ? (
+                      // Show +/- controls when item has quantity
+                      <div className="flex items-center gap-2 mt-auto">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(product.id, -1)}
+                          className="h-6 w-6 p-0 rounded-full"
+                          type="button"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-6 text-center font-medium text-xs">{quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(product.id, 1)}
+                          className="h-6 w-6 p-0 rounded-full"
+                          type="button"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      // Show green + circle for initial add to cart
+                      <Button
+                        onClick={() => {
+                          handleQuantityChange(product.id, 1);
+                          const cartItem: CartItem = {
+                            productId: product.id,
+                            title: product.title,
+                            price: product.price,
+                            quantity: 1,
+                            image: product.image,
+                            eventName: '',
+                            category
+                          };
+                          onAddToCart([cartItem]);
+                          setAddedToCartItems(prev => ({
+                            ...prev,
+                            [product.id]: 1
+                          }));
+                          toast({
+                            title: "Added to Cart",
+                            description: `${product.title} added to your cart!`,
+                          });
+                        }}
+                        className="w-8 h-8 p-0 rounded-full bg-green-600 hover:bg-green-700 text-white mt-auto"
+                        type="button"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -543,31 +602,19 @@ export const ProductSelection = ({
       </Dialog>
 
 
-      {/* Summary and Actions - simplified without Add to Cart button */}
-      <div className="bg-muted/30 rounded-lg p-6 space-y-4">
+      {/* Summary Section - Condensed */}
+      <div className="bg-muted/30 rounded-lg p-3 space-y-3">
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-lg font-semibold">Cart Summary</p>
-            <p className="text-sm text-muted-foreground">
-              {Object.values(addedToCartItems).reduce((sum, qty) => sum + qty, 0)} {getUnitName(Object.values(addedToCartItems).reduce((sum, qty) => sum + qty, 0) !== 1)} in cart
+            <p className="text-sm font-semibold">Selection Summary</p>
+            <p className="text-xs text-muted-foreground">
+              {Object.values(selections).reduce((sum, qty) => sum + qty, 0)} {getUnitName(Object.values(selections).reduce((sum, qty) => sum + qty, 0) !== 1)} selected
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold">${Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
-              const product = products.find(p => p.id === productId);
-              return total + (product ? product.price * quantity : 0);
-            }, 0).toFixed(2)}</p>
-            <p className={`text-sm ${(budget - Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
-              const product = products.find(p => p.id === productId);
-              return total + (product ? product.price * quantity : 0);
-            }, 0)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              Budget: ${(budget - Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
-                const product = products.find(p => p.id === productId);
-                return total + (product ? product.price * quantity : 0);
-              }, 0)).toFixed(2)} {(budget - Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
-                const product = products.find(p => p.id === productId);
-                return total + (product ? product.price * quantity : 0);
-              }, 0)) >= 0 ? 'remaining' : 'over'}
+            <p className="text-lg font-bold">${selectionTotal.toFixed(2)}</p>
+            <p className={`text-xs ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              ${remainingBudget.toFixed(2)} {remainingBudget >= 0 ? 'remaining' : 'over budget'}
             </p>
           </div>
         </div>
@@ -576,24 +623,31 @@ export const ProductSelection = ({
         <div className="w-full bg-muted rounded-full h-2">
           <div 
             className={`h-2 rounded-full transition-all duration-300 ${
-              Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
-                const product = products.find(p => p.id === productId);
-                return total + (product ? product.price * quantity : 0);
-              }, 0) <= budget ? 'bg-green-400' : 'bg-red-500'
+              selectionTotal <= budget ? 'bg-green-400' : 'bg-red-500'
             }`}
-            style={{ width: `${Math.min((Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
-              const product = products.find(p => p.id === productId);
-              return total + (product ? product.price * quantity : 0);
-            }, 0) / budget) * 100, 100)}%` }}
+            style={{ width: `${Math.min((selectionTotal / budget) * 100, 100)}%` }}
           />
         </div>
 
-        <div className="flex gap-3 justify-end">
+        <div className="flex gap-2 justify-end">
+          {Object.values(selections).some(qty => qty > 0) && (
+            <Button
+              onClick={handleAddToCart}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              <ShoppingCart className="w-3 h-3 mr-1" />
+              Add to Cart
+            </Button>
+          )}
           <Button
             onClick={handleSaveAndContinue}
-            className="flex items-center gap-2"
+            size="sm"
+            className="text-xs"
           >
-            Save & Continue
+            Continue
+            <ArrowRight className="w-3 h-3 ml-1" />
           </Button>
         </div>
       </div>
