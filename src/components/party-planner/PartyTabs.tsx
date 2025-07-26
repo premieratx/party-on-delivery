@@ -270,6 +270,16 @@ export const PartyTabs = ({
 
         <div className="mt-6">
           <TabsContent value="details" className="mt-0">
+            {/* Party Type Heading */}
+            <div className="text-center mb-6 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border">
+              <h2 className="text-xl font-bold text-primary">
+                Planning: {eventName}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Choose your event details and preferences
+              </p>
+            </div>
+            
             <EventDetailsForm
               eventName={eventName}
               details={eventDetails}
@@ -291,6 +301,16 @@ export const PartyTabs = ({
 
           {eventDetails.drinkTypes.map(category => (
             <TabsContent key={category} value={category} className="mt-0">
+              {/* Party Type Heading */}
+              <div className="text-center mb-6 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border">
+                <h2 className="text-xl font-bold text-primary">
+                  Planning: {eventName}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Selecting {category.charAt(0).toUpperCase() + category.slice(1)} for your event
+                </p>
+              </div>
+              
               <ProductSelection
                 category={category}
                 subcategories={category === 'liquor' ? (eventDetails.liquorTypes || []) : []}

@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Minus, Plus, ShoppingCart, Check, Loader2 } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Check, Loader2, X } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
@@ -82,6 +83,8 @@ export const ProductSelection = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isAddedToCart, setIsAddedToCart] = useState(false);
   const [addedToCartItems, setAddedToCartItems] = useState<Record<string, number>>({});
+  const [selectedProduct, setSelectedProduct] = useState<ShopifyProduct | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Reset state when category changes, but restore if we have current selections
@@ -265,6 +268,40 @@ export const ProductSelection = ({
     });
   };
 
+  const handleProductClick = (product: ShopifyProduct) => {
+    if (category === 'cocktails') {
+      setSelectedProduct(product);
+      setIsDialogOpen(true);
+    }
+  };
+
+  const handleDialogAddToCart = (product: ShopifyProduct, quantity: number) => {
+    if (quantity > 0) {
+      const cartItem: CartItem = {
+        productId: product.id,
+        title: product.title,
+        price: product.price,
+        quantity,
+        image: product.image,
+        eventName: '',
+        category
+      };
+      
+      onAddToCart([cartItem]);
+      setIsAddedToCart(true);
+      setAddedToCartItems(prev => ({
+        ...prev,
+        [product.id]: quantity
+      }));
+      
+      toast({
+        title: "Added to Cart",
+        description: `${product.title} added to your cart!`,
+      });
+    }
+    setIsDialogOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -320,7 +357,7 @@ export const ProductSelection = ({
           <p className="text-muted-foreground">No products available for {category}</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {products.map((product) => {
             const quantity = selections[product.id] || 0;
             const isSelected = quantity > 0;
@@ -333,70 +370,69 @@ export const ProductSelection = ({
                   isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
                 } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    {/* Image - Far Left */}
-                    <div className="flex-shrink-0 w-16 h-16">
-                      {product.image && (
-                        <img 
-                          src={product.image} 
-                          alt={product.title}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      )}
+                <CardContent className="p-3">
+                  <div className="space-y-2">
+                    {/* Image */}
+                    <div className="aspect-square rounded-lg overflow-hidden">
+                      <img 
+                        src={product.image} 
+                        alt={product.title}
+                        className={`w-full h-full object-cover ${category === 'cocktails' ? 'cursor-pointer hover:opacity-80' : ''}`}
+                        onClick={() => handleProductClick(product)}
+                      />
                     </div>
                     
-                    {/* Description - Middle */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {product.description || 'Premium quality product for your event'}
+                    {/* Title */}
+                    <h4 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem]">{product.title}</h4>
+                    
+                    {/* Description (only for cocktails) */}
+                    {category === 'cocktails' && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {product.description || 'Click image for details'}
                       </p>
-                    </div>
+                    )}
                     
-                    {/* Title, Price, and Controls - Right */}
-                    <div className="flex items-center gap-4">
-                      <div className="text-right min-w-0">
-                        <h4 className="font-semibold text-lg line-clamp-1">{product.title}</h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl font-bold">${product.price}</span>
-                          {wasAddedToCart && (
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              <Check className="w-3 h-3 mr-1" />
-                              In Cart
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Quantity Controls */}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleQuantityChange(product.id, -1)}
-                          disabled={quantity <= 0}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </Button>
-                        <span className="w-8 text-center font-medium">{quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleQuantityChange(product.id, 1)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      
-                      {/* Line Total */}
-                      {quantity > 0 && (
-                        <div className="text-right min-w-[80px]">
-                          <span className="text-lg font-semibold">
-                            ${(product.price * quantity).toFixed(2)}
-                          </span>
-                        </div>
+                    {/* Price */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold">${product.price}</span>
+                      {wasAddedToCart && (
+                        <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
+                          <Check className="w-3 h-3 mr-1" />
+                          In Cart
+                        </Badge>
                       )}
                     </div>
+                    
+                    {/* Quantity Controls */}
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(product.id, -1)}
+                        disabled={quantity <= 0}
+                        className="h-7 w-7 p-0"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="w-8 text-center font-medium text-sm">{quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(product.id, 1)}
+                        className="h-7 w-7 p-0"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    
+                    {/* Line Total */}
+                    {quantity > 0 && (
+                      <div className="text-center">
+                        <span className="text-sm font-semibold">
+                          ${(product.price * quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -404,6 +440,94 @@ export const ProductSelection = ({
           })}
         </div>
       )}
+
+      {/* Cocktail Product Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>{selectedProduct?.title}</DialogTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDialogOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogHeader>
+          
+          {selectedProduct && (
+            <div className="space-y-4">
+              {/* Large Image */}
+              <div className="aspect-square rounded-lg overflow-hidden">
+                <img 
+                  src={selectedProduct.image} 
+                  alt={selectedProduct.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {/* Description */}
+              <div>
+                <h4 className="font-semibold mb-2">Description</h4>
+                <p className="text-muted-foreground">
+                  {selectedProduct.description || 'Premium cocktail kit perfect for your party.'}
+                </p>
+              </div>
+              
+              {/* Price */}
+              <div className="text-2xl font-bold">${selectedProduct.price}</div>
+              
+              {/* Add to Cart Controls */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const currentQty = selections[selectedProduct.id] || 0;
+                      if (currentQty > 0) {
+                        handleQuantityChange(selectedProduct.id, -1);
+                      }
+                    }}
+                    disabled={(selections[selectedProduct.id] || 0) <= 0}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </Button>
+                  <span className="w-12 text-center font-medium text-lg">
+                    {selections[selectedProduct.id] || 0}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleQuantityChange(selectedProduct.id, 1)}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => handleDialogAddToCart(selectedProduct, selections[selectedProduct.id] || 1)}
+                    className="flex-1"
+                    disabled={(selections[selectedProduct.id] || 0) <= 0}
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Add to Cart
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)}
+                    className="flex-1"
+                  >
+                    Keep Shopping
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Summary and Actions */}
       <div className="bg-muted/30 rounded-lg p-6 space-y-4">
