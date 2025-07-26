@@ -92,7 +92,12 @@ serve(async (req) => {
       tipFromMetadata: validTipAmount.toFixed(2)
     });
     
-    // Create payment intent with essential metadata only (keeping under 500 char limit per field)
+    // CRITICAL FIX: Store the full cart items as JSON string in metadata
+    // This is essential for create-shopify-order to access the complete cart data
+    const cartItemsJson = JSON.stringify(cartItems);
+    logStep("Cart items being stored in metadata", { cartItemsLength: cartItemsJson.length, itemCount });
+    
+    // Create payment intent with essential metadata (including full cart items)
     const paymentIntent = await stripe.paymentIntents.create({
       amount: validAmount,
       currency,
@@ -105,6 +110,7 @@ serve(async (req) => {
         delivery_address: deliveryInfo.address.substring(0, 200),
         delivery_instructions: (deliveryInfo.instructions || '').substring(0, 200),
         cart_summary: cartSummary,
+        cart_items: cartItemsJson, // CRITICAL: Full cart items for Shopify order creation
         item_count: itemCount.toString(),
         subtotal: validSubtotal.toFixed(2),
         shipping_fee: validDeliveryFee.toFixed(2),
@@ -114,6 +120,7 @@ serve(async (req) => {
         discount_code: (appliedDiscount?.code || 'none').substring(0, 50),
         discount_type: (appliedDiscount?.type || 'none').substring(0, 20),
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
+        discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
         group_order_number: (groupOrderNumber || '').substring(0, 50),
         group_order_token: (groupOrderToken || '').substring(0, 50)
       }

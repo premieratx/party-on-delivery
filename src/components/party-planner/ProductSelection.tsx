@@ -529,6 +529,79 @@ export const ProductSelection = ({
         </DialogContent>
       </Dialog>
 
+      {products.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No products available for {category}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-4 gap-3">
+          {products.map((product) => {
+            const quantity = selections[product.id] || 0;
+            const isSelected = quantity > 0;
+            const wasAddedToCart = addedToCartItems[product.id] > 0;
+
+            return (
+              <Card 
+                key={product.id} 
+                className={`transition-all duration-200 h-[100px] ${
+                  isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
+                } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
+              >
+                <CardContent className="p-2 h-full flex items-center gap-2">
+                  {/* Image */}
+                  <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.title}
+                      className={`w-full h-full object-cover ${category === 'cocktails' ? 'cursor-pointer hover:opacity-80' : ''}`}
+                      onClick={() => handleProductClick(product)}
+                    />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-1">
+                    {/* Title and Price */}
+                    <div>
+                      <h4 className="font-semibold text-xs line-clamp-2 mb-1">{product.title}</h4>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-bold">${product.price}</span>
+                        {wasAddedToCart && (
+                          <Badge variant="default" className="bg-green-100 text-green-800 text-[10px] px-1 py-0">
+                            <Check className="w-2 h-2 mr-1" />
+                            In Cart
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Quantity Controls */}
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(product.id, -1)}
+                        disabled={quantity <= 0}
+                        className="h-5 w-5 p-0"
+                      >
+                        <Minus className="w-2 h-2" />
+                      </Button>
+                      <span className="w-6 text-center font-medium text-xs">{quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(product.id, 1)}
+                        className="h-5 w-5 p-0"
+                      >
+                        <Plus className="w-2 h-2" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
       {/* Summary and Actions */}
       <div className="bg-muted/30 rounded-lg p-6 space-y-4">
         <div className="flex justify-between items-center">
