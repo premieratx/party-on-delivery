@@ -109,6 +109,10 @@ export default {
 				'glow-pulse': {
 					'0%, 100%': { boxShadow: '0 0 20px hsl(var(--primary) / 0.3)' },
 					'50%': { boxShadow: '0 0 40px hsl(var(--primary) / 0.6)' }
+				},
+				'slide-diagonal': {
+					'0%': { transform: 'translate(-100px, 100vh) rotate(12deg)' },
+					'100%': { transform: 'translate(100vw, -100px) rotate(12deg)' }
 				}
 			},
 			animation: {
@@ -118,7 +122,8 @@ export default {
 				'slide-out-right': 'slide-out-right 0.3s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
 				'scale-in': 'scale-in 0.2s ease-out',
-				'glow-pulse': 'glow-pulse 2s ease-in-out infinite'
+				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+				'slide-diagonal': 'slide-diagonal 20s linear infinite'
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
