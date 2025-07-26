@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useUnifiedCart } from "@/hooks/useUnifiedCart";
 import { Minus, Plus, ShoppingCart, Check, Loader2, X, ArrowRight } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { cacheManager } from '@/utils/cacheManager';
@@ -88,6 +89,9 @@ export const ProductSelection = ({
   const [addedToCartItems, setAddedToCartItems] = useState<Record<string, number>>({});
   const [selectedProduct, setSelectedProduct] = useState<ShopifyProduct | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Use unified cart hook for consistent cart management
+  const { addToCart: addToUnifiedCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   const { toast } = useToast();
 
   // Reset state when category changes, but restore if we have current selections
@@ -452,113 +456,128 @@ export const ProductSelection = ({
                       </div>
                     )}
                     
-                    {/* Price */}
-                    <div className="text-sm font-bold">
-                      ${product.price}
-                    </div>
-                    
-                    {/* Cart indicator */}
-                    {wasAddedToCart && (
-                      <Check className="w-4 h-4 text-green-600" />
-                    )}
-                    
-                    {/* Quantity Controls or Add to Cart - Like Liquor Tab */}
-                    {quantity > 0 ? (
-                      // Show +/- controls when item has quantity
-                      <div className="flex items-center gap-1 mt-auto">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            console.log('Decreasing quantity for:', product.title);
-                            handleQuantityChange(product.id, -1);
-                            // Update cart with new quantity
-                            const newQuantity = Math.max(0, (selections[product.id] || 0) - 1);
+                    <div className="w-full">
+                      {/* Get quantity from unified cart */}
+                      {(() => {
+                        const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
+                        return cartQty > 0 ? (
+                          // Show +/- controls if item is in cart
+                          <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1 border border-primary/20">
+                            <Button
+                              onClick={() => {
+                                console.log('Decreasing quantity for:', product.title);
+                                // Update unified cart
+                                updateQuantity(product.id, product.variants[0]?.id, cartQty - 1);
+                                
+                                // Update local selections to keep UI in sync
+                                handleQuantityChange(product.id, -1);
+                                
+                                // Update party cart for backward compatibility
+                                const newQuantity = Math.max(0, cartQty - 1);
+                                if (newQuantity > 0) {
+                                  const cartItem: CartItem = {
+                                    productId: product.id,
+                                    title: product.title,
+                                    price: product.price,
+                                    quantity: newQuantity,
+                                    image: product.image,
+                                    eventName: eventName,
+                                    category
+                                  };
+                                  onAddToCart(eventName, category, [cartItem]);
+                                }
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="w-5 h-5 md:w-6 md:h-6 p-0 rounded-full"
+                              type="button"
+                            >
+                              <Minus className="w-2 h-2 md:w-3 md:h-3" />
+                            </Button>
                             
-                            if (newQuantity > 0) {
+                            <span className="text-xs md:text-sm font-semibold min-w-[1rem] text-center">
+                              {cartQty}
+                            </span>
+                            
+                            <Button
+                              onClick={() => {
+                                console.log('Increasing quantity for:', product.title);
+                                // Update unified cart
+                                updateQuantity(product.id, product.variants[0]?.id, cartQty + 1);
+                                
+                                // Update local selections to keep UI in sync
+                                handleQuantityChange(product.id, 1);
+                                
+                                // Update party cart for backward compatibility
+                                const cartItem: CartItem = {
+                                  productId: product.id,
+                                  title: product.title,
+                                  price: product.price,
+                                  quantity: cartQty + 1,
+                                  image: product.image,
+                                  eventName: eventName,
+                                  category
+                                };
+                                onAddToCart(eventName, category, [cartItem]);
+                              }}
+                              size="sm"
+                              variant="outline"
+                              className="w-5 h-5 md:w-6 md:h-6 p-0 rounded-full"
+                              type="button"
+                            >
+                              <Plus className="w-2 h-2 md:w-3 md:h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          // Show smaller green + circle for initial add to cart
+                          <Button
+                            onClick={() => {
+                              console.log('Adding product to cart:', product.title);
+                              
+                              // Add to unified cart first
+                              addToUnifiedCart({
+                                id: product.id,
+                                title: product.title,
+                                name: product.title,
+                                price: product.price,
+                                image: product.image,
+                                variant: product.variants[0]?.id,
+                                eventName: eventName,
+                                category
+                              });
+                              
+                              // Update local selections to trigger +/- controls
+                              handleQuantityChange(product.id, 1);
+                              
+                              // Create cart item for party cart backward compatibility
                               const cartItem: CartItem = {
                                 productId: product.id,
                                 title: product.title,
                                 price: product.price,
-                                quantity: newQuantity,
+                                quantity: 1,
                                 image: product.image,
                                 eventName: eventName,
                                 category
                               };
+                              
+                              // Add to party cart for backward compatibility
                               onAddToCart(eventName, category, [cartItem]);
-                            } else {
-                              // Remove from cart if quantity becomes 0
-                              onAddToCart(eventName, category, []);
-                            }
-                          }}
-                          className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
-                          type="button"
-                        >
-                          <Minus className="w-2 h-2 md:w-3 md:h-3" />
-                        </Button>
-                        <span className="w-4 md:w-6 text-center font-medium text-xs">{quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            console.log('Increasing quantity for:', product.title);
-                            handleQuantityChange(product.id, 1);
-                            // Update cart with new quantity
-                            const newQuantity = (selections[product.id] || 0) + 1;
-                            const cartItem: CartItem = {
-                              productId: product.id,
-                              title: product.title,
-                              price: product.price,
-                              quantity: newQuantity,
-                              image: product.image,
-                              eventName: eventName,
-                              category
-                            };
-                            onAddToCart(eventName, category, [cartItem]);
-                          }}
-                          className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
-                          type="button"
-                        >
-                          <Plus className="w-2 h-2 md:w-3 md:h-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      // Show smaller green + circle for initial add to cart
-                      <Button
-                        onClick={() => {
-                          console.log('Adding product to cart:', product.title);
-                          
-                          // Update local selections first to trigger +/- controls
-                          handleQuantityChange(product.id, 1);
-                          
-                          // Create cart item for unified cart
-                          const cartItem: CartItem = {
-                            productId: product.id,
-                            title: product.title,
-                            price: product.price,
-                            quantity: 1,
-                            image: product.image,
-                            eventName: eventName,
-                            category
-                          };
-                          
-                          // Add to both party cart and unified cart
-                          onAddToCart(eventName, category, [cartItem]);
-                          
-                          // Update local tracking
-                          setAddedToCartItems(prev => ({
-                            ...prev,
-                            [product.id]: 1
-                          }));
-                          
-                          console.log('Product added to cart, switching to +/- controls:', cartItem);
-                        }}
-                        className="w-6 h-6 md:w-8 md:h-8 p-0 rounded-full bg-green-600 hover:bg-green-700 text-white mt-auto"
-                        type="button"
-                      >
-                        <Plus className="w-3 h-3 md:w-4 md:h-4" />
-                      </Button>
-                    )}
+                              
+                              // Update local tracking
+                              setAddedToCartItems(prev => ({
+                                ...prev,
+                                [product.id]: 1
+                              }));
+                            }}
+                            size="sm"
+                            className="w-6 h-6 md:w-8 md:h-8 p-0 rounded-full bg-green-500 hover:bg-green-600 text-white border-0 shadow-lg"
+                            type="button"
+                          >
+                            <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                          </Button>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
