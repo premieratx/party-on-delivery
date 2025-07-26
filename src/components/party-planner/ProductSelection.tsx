@@ -335,21 +335,16 @@ export const ProductSelection = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="text-center">
-        <h3 className="text-2xl font-bold mb-2 capitalize">
+        <h3 className="text-lg font-bold mb-2 capitalize">
           Choose Your {category === 'cocktails' ? 'Cocktail Kits' : category}
         </h3>
-        <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
           <span>Recommended: {recommendedQuantity} {unitType}</span>
           <span>Budget: ${budget.toFixed(2)}</span>
           <span>Selected: {totalServings} {getServingName()}</span>
         </div>
-      </div>
-
-      {/* Party Budget Tracker - One row high */}
-      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-3 rounded-lg border">
-        <h4 className="text-center font-semibold text-lg">Party Budget Tracker</h4>
       </div>
 
       {products.length === 0 ? (
@@ -357,7 +352,7 @@ export const ProductSelection = ({
           <p className="text-muted-foreground">No products available for {category}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {products.map((product) => {
             const quantity = selections[product.id] || 0;
             const isSelected = quantity > 0;
@@ -370,10 +365,10 @@ export const ProductSelection = ({
                   isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
                 } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
               >
-                <CardContent className="p-3">
-                  <div className="space-y-2">
-                    {/* Image */}
-                    <div className="aspect-square rounded-lg overflow-hidden">
+                <CardContent className="p-2">
+                  <div className="flex items-center gap-3" style={{ aspectRatio: '4/1' }}>
+                    {/* Image - 1 unit tall, taking about 1/4 of width */}
+                    <div className="w-1/4 aspect-square rounded-lg overflow-hidden flex-shrink-0">
                       <img 
                         src={product.image} 
                         alt={product.title}
@@ -382,58 +377,56 @@ export const ProductSelection = ({
                       />
                     </div>
                     
-                    {/* Title */}
-                    <h4 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem]">{product.title}</h4>
-                    
-                    {/* Description (only for cocktails) */}
-                    {category === 'cocktails' && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {product.description || 'Click image for details'}
-                      </p>
-                    )}
-                    
-                    {/* Price */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold">${product.price}</span>
-                      {wasAddedToCart && (
-                        <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
-                          <Check className="w-3 h-3 mr-1" />
-                          In Cart
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {/* Quantity Controls */}
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, -1)}
-                        disabled={quantity <= 0}
-                        className="h-7 w-7 p-0"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="w-8 text-center font-medium text-sm">{quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, 1)}
-                        className="h-7 w-7 p-0"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    
-                    {/* Line Total */}
-                    {quantity > 0 && (
-                      <div className="text-center">
-                        <span className="text-sm font-semibold">
-                          ${(product.price * quantity).toFixed(2)}
-                        </span>
+                    {/* Product Info - Takes remaining width */}
+                    <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                      {/* Title - flex-1 to take remaining space */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate">{product.title}</h4>
+                        {wasAddedToCart && (
+                          <Badge variant="default" className="bg-green-100 text-green-800 text-xs mt-1">
+                            <Check className="w-3 h-3 mr-1" />
+                            In Cart
+                          </Badge>
+                        )}
                       </div>
-                    )}
+                      
+                      {/* Price */}
+                      <div className="text-sm font-bold whitespace-nowrap">
+                        ${product.price}
+                      </div>
+                      
+                      {/* Quantity Controls + Button */}
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(product.id, -1)}
+                          disabled={quantity <= 0}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-6 text-center font-medium text-xs">{quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(product.id, 1)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* Line Total - Below the main row if quantity > 0 */}
+                  {quantity > 0 && (
+                    <div className="text-center mt-1">
+                      <span className="text-xs font-semibold">
+                        Total: ${(product.price * quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

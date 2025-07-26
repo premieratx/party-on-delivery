@@ -161,11 +161,7 @@ export const PartyPlanner = () => {
   };
 
   const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
-    } else {
-      navigate('/');
-    }
+    navigate('/');
   };
 
   const events = getEventsToProcess();

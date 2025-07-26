@@ -243,23 +243,23 @@ export const PartyTabs = ({
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(120px, 1fr))`, height: '80px' }}>
+        <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
           {tabs.map((tab) => (
             <TabsTrigger 
               key={tab.id} 
               value={tab.id} 
-              className="relative flex flex-col items-center gap-1 text-xs min-w-[100px] px-2 py-3 h-full whitespace-nowrap border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
+              className="relative flex flex-col items-center justify-center text-xs px-1 py-2 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
             >
               <div className="flex items-center gap-1 mb-1">
                 {isTabCompleted(tab.id) && (
-                  <Check className="w-4 h-4 text-green-500" />
+                  <Check className="w-3 h-3 text-green-500" />
                 )}
-                <span className="font-semibold text-xs max-w-[80px] text-center leading-tight">{tab.label}</span>
+                <span className="font-semibold text-xs text-center leading-tight" style={{ fontSize: '80%' }}>{tab.label}</span>
               </div>
               {getTabState(tab.id) && (
                 <Badge 
                   variant={getTabState(tab.id) === 'added' ? 'default' : 'secondary'} 
-                  className="text-xs h-4 px-2 leading-none border border-black/20"
+                  className="text-xs h-3 px-1 leading-none border border-black/20"
                 >
                   {getTabState(tab.id) === 'added' ? 'Cart' : 'Saved'}
                 </Badge>
@@ -271,9 +271,9 @@ export const PartyTabs = ({
         <div className="mt-6">
           <TabsContent value="details" className="mt-0">
             {/* Party Type Heading */}
-            <div className="text-center mb-6 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border">
-              <h2 className="text-xl font-bold text-primary">
-                Planning: {eventName}
+            <div className="text-left mb-4">
+              <h2 className="text-2xl font-bold text-green-600 uppercase tracking-wide">
+                Plan Your {eventName.replace(/\b\w/g, l => l.toUpperCase())} Drinks
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Choose your event details and preferences
@@ -302,9 +302,9 @@ export const PartyTabs = ({
           {eventDetails.drinkTypes.map(category => (
             <TabsContent key={category} value={category} className="mt-0">
               {/* Party Type Heading */}
-              <div className="text-center mb-6 p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border">
-                <h2 className="text-xl font-bold text-primary">
-                  Planning: {eventName}
+              <div className="text-left mb-4">
+                <h2 className="text-2xl font-bold text-green-600 uppercase tracking-wide">
+                  Plan Your {eventName.replace(/\b\w/g, l => l.toUpperCase())} Drinks
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
                   Selecting {category.charAt(0).toUpperCase() + category.slice(1)} for your event

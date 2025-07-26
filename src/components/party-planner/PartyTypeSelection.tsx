@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Briefcase, Cake, GraduationCap, Clock, Home, PartyPopper } from "lucide-react";
+import { Heart, Briefcase, Cake, GraduationCap, Home, PartyPopper } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PartyTypeSelectionProps {
   selectedType: string;
@@ -15,11 +16,16 @@ const partyTypes = [
   { id: 'birthday', label: 'Birthday Party', icon: Cake },
   { id: 'graduation', label: 'Graduation Party', icon: GraduationCap },
   { id: 'house party', label: 'House Party', icon: Home },
-  { id: 'need delivery now', label: 'Need Delivery Now', icon: Clock },
   { id: 'no reason', label: 'No Reason - Just Party!', icon: PartyPopper },
 ];
 
 export const PartyTypeSelection = ({ selectedType, onSelect }: PartyTypeSelectionProps) => {
+  const navigate = useNavigate();
+
+  const handleOrderDeliveryNow = () => {
+    navigate('/');
+  };
+
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-semibold text-center mb-6">
@@ -53,6 +59,7 @@ export const PartyTypeSelection = ({ selectedType, onSelect }: PartyTypeSelectio
           size="lg" 
           className="px-8 py-3 text-lg font-semibold"
           disabled={!selectedType}
+          onClick={handleOrderDeliveryNow}
         >
           Order Delivery Now
         </Button>
