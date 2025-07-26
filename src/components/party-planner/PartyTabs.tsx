@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, ShoppingCart, ArrowRight } from "lucide-react";
+import { Check, ShoppingCart, ArrowRight, ArrowLeft } from "lucide-react";
 import { ProductSelection } from "./ProductSelection";
 import { EventDetailsForm } from "./EventDetailsForm";
 
@@ -242,28 +242,65 @@ export const PartyTabs = ({
 
   return (
     <div className="w-full">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
-          {tabs.map((tab) => (
-            <TabsTrigger 
-              key={tab.id} 
-              value={tab.id} 
-              className="relative flex flex-col items-center justify-center text-xs px-1 py-2 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
-            >
-              <div className="flex items-center gap-1 mb-1">
-                {isTabCompleted(tab.id) && (
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-40 bg-background border-b pb-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
+            {tabs.map((tab) => (
+              <TabsTrigger 
+                key={tab.id} 
+                value={tab.id} 
+                className="relative flex flex-col items-center justify-center text-xs px-1 py-2 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
+              >
+                <div className="flex items-center gap-1 mb-1">
+                  {isTabCompleted(tab.id) && (
+                    <Check className="w-3 h-3 text-green-500" />
+                  )}
+                  <span className="font-semibold text-xs text-center leading-tight" style={{ fontSize: '80%' }}>{tab.label}</span>
+                </div>
+                {getTabState(tab.id) === 'added' && (
                   <Check className="w-3 h-3 text-green-500" />
                 )}
-                <span className="font-semibold text-xs text-center leading-tight" style={{ fontSize: '80%' }}>{tab.label}</span>
-              </div>
-              {getTabState(tab.id) === 'added' && (
-                <Check className="w-3 h-3 text-green-500" />
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
-        <div className="mt-6">
+        {/* Navigation Arrows */}
+        <div className="flex justify-between items-center mt-4 px-4">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const currentIndex = tabs.findIndex(tab => tab.id === activeTab);
+              if (currentIndex > 0) {
+                setActiveTab(tabs[currentIndex - 1].id);
+              }
+            }}
+            disabled={tabs.findIndex(tab => tab.id === activeTab) === 0}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Previous
+          </Button>
+          
+          <div className="text-sm text-muted-foreground">
+            Step {tabs.findIndex(tab => tab.id === activeTab) + 1} of {tabs.length}
+          </div>
+          
+          <Button
+            variant="outline"
+            onClick={handleNextTab}
+            disabled={tabs.findIndex(tab => tab.id === activeTab) === tabs.length - 1}
+            className="flex items-center gap-2"
+          >
+            Next
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsContent value="details" className="mt-0">
             {/* Party Type Heading */}
             <div className="text-left mb-4">
@@ -329,8 +366,8 @@ export const PartyTabs = ({
           <TabsContent value="summary" className="mt-0">
             {renderSummary()}
           </TabsContent>
-        </div>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 };

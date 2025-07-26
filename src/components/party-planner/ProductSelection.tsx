@@ -174,6 +174,27 @@ export const ProductSelection = ({
     });
   };
 
+  // Parse product title to extract name and pack info
+  const parseProductTitle = (title: string) => {
+    // Look for patterns like "12pk", "24 pack", "6-pack", etc.
+    const packPattern = /(\d+)\s*(-|pk|pack)\s*(x\s*\d+\s*(oz|ml|cl)?)?/gi;
+    const match = title.match(packPattern);
+    
+    if (match) {
+      const packInfo = match[0];
+      const cleanTitle = title.replace(packPattern, '').trim();
+      return {
+        name: cleanTitle,
+        packInfo: packInfo
+      };
+    }
+    
+    return {
+      name: title,
+      packInfo: ''
+    };
+  };
+
   const getSelectionTotal = () => {
     return Object.entries(selections).reduce((total, [productId, quantity]) => {
       const product = products.find(p => p.id === productId);
@@ -357,6 +378,7 @@ export const ProductSelection = ({
             const quantity = selections[product.id] || 0;
             const isSelected = quantity > 0;
             const wasAddedToCart = addedToCartItems[product.id] > 0;
+            const { name, packInfo } = parseProductTitle(product.title);
 
             return (
               <Card 
@@ -365,9 +387,9 @@ export const ProductSelection = ({
                   isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
                 } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
               >
-                <CardContent className="p-2">
-                  <div className="flex flex-col gap-2 h-full">
-                    {/* Image - landscape aspect ratio */}
+                <CardContent className="p-3">
+                  <div className="flex flex-col items-center text-center h-full gap-2">
+                    {/* Image */}
                     <div className="w-full aspect-[3/2] rounded-lg overflow-hidden flex-shrink-0">
                       <img 
                         src={product.image} 
@@ -377,48 +399,51 @@ export const ProductSelection = ({
                       />
                     </div>
                     
-                    {/* Product Info */}
-                    <div className="flex flex-col gap-1 flex-grow">
-                      {/* Title */}
-                      <h4 className="font-medium text-xs leading-tight overflow-hidden" style={{ 
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
-                      }}>{product.title}</h4>
-                      
-                      {/* Price */}
-                      <div className="text-sm font-bold">
-                        ${product.price}
+                    {/* Product Name */}
+                    <h4 className="font-medium text-xs leading-tight text-center" style={{ 
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}>{name}</h4>
+                    
+                    {/* Pack Info */}
+                    {packInfo && (
+                      <div className="text-xs text-muted-foreground">
+                        {packInfo}
                       </div>
-                      
-                      {/* Quantity Controls */}
-                      <div className="flex items-center justify-between gap-1 mt-auto">
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleQuantityChange(product.id, -1)}
-                            disabled={quantity <= 0}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="w-6 text-center font-medium text-xs">{quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleQuantityChange(product.id, 1)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                        
-                        {/* Cart indicator */}
-                        {wasAddedToCart && (
-                          <Check className="w-4 h-4 text-green-600" />
-                        )}
-                      </div>
+                    )}
+                    
+                    {/* Price */}
+                    <div className="text-sm font-bold">
+                      ${product.price}
+                    </div>
+                    
+                    {/* Cart indicator */}
+                    {wasAddedToCart && (
+                      <Check className="w-4 h-4 text-green-600" />
+                    )}
+                    
+                    {/* Quantity Controls - centered at bottom */}
+                    <div className="flex items-center gap-2 mt-auto">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(product.id, -1)}
+                        disabled={quantity <= 0}
+                        className="h-8 w-8 p-0 rounded-full"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="w-8 text-center font-medium text-sm">{quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuantityChange(product.id, 1)}
+                        className="h-8 w-8 p-0 rounded-full"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
