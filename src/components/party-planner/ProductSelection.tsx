@@ -258,7 +258,7 @@ export const ProductSelection = ({
           price: product?.price || 0,
           quantity,
           image: product?.image,
-          eventName: '',
+          eventName: eventName,
           category
         };
       });
@@ -331,7 +331,7 @@ export const ProductSelection = ({
         price: product.price,
         quantity,
         image: product.image,
-        eventName: '',
+        eventName: eventName,
         category
       };
       
@@ -381,14 +381,25 @@ export const ProductSelection = ({
 
   return (
     <div className="space-y-3">
-      <div className="text-center">
-        <h3 className="text-base font-bold mb-1 capitalize">
+      <div className="text-center space-y-3">
+        <h3 className="text-xl md:text-2xl font-bold capitalize">
           Choose Your {category === 'cocktails' ? 'Cocktail Kits' : category}
         </h3>
-        <div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground">
-          <span>Recommended: {recommendedQuantity} {unitType}</span>
-          <span>Budget: ${budget.toFixed(2)}</span>
-          <span>Selected: {totalServings} {getServingName()}</span>
+        <div className="bg-primary/10 rounded-lg p-4 mx-auto max-w-2xl">
+          <div className="flex flex-wrap justify-center gap-6 text-sm">
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-primary">Recommended</span>
+              <span className="text-lg font-bold">{recommendedQuantity} {unitType}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-primary">Budget</span>
+              <span className="text-lg font-bold">${budget.toFixed(2)}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-primary">Selected</span>
+              <span className="text-lg font-bold">{totalServings} {getServingName()}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -470,7 +481,7 @@ export const ProductSelection = ({
                                 price: product.price,
                                 quantity: newQuantity,
                                 image: product.image,
-                                eventName: '',
+                                eventName: eventName,
                                 category
                               };
                               onAddToCart(eventName, category, [cartItem]);
@@ -499,7 +510,7 @@ export const ProductSelection = ({
                               price: product.price,
                               quantity: newQuantity,
                               image: product.image,
-                              eventName: '',
+                              eventName: eventName,
                               category
                             };
                             onAddToCart(eventName, category, [cartItem]);
@@ -523,7 +534,7 @@ export const ProductSelection = ({
                             price: product.price,
                             quantity: 1,
                             image: product.image,
-                            eventName: '',
+                            eventName: eventName,
                             category
                           };
                           
