@@ -6,12 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionTracking } from '@/hooks/useSessionTracking';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { formatCurrency } from '@/utils/currency';
-import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown, RefreshCw } from 'lucide-react';
+import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown, RefreshCw, ChevronUp } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 
 interface Customer {
@@ -49,6 +50,8 @@ const CustomerDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [expandedOrderItems, setExpandedOrderItems] = useState<Set<string>>(new Set());
+  const [showFullOrderSummary, setShowFullOrderSummary] = useState(false);
 
   useEffect(() => {
     loadCustomerData();
@@ -297,7 +300,8 @@ const CustomerDashboard = () => {
         customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
         delivery_date: order.delivery_date,
         delivery_time: order.delivery_time,
-        delivery_address: order.delivery_address
+        delivery_address: order.delivery_address,
+        created_at: order.created_at
       });
       
       order.line_items.forEach((item: any) => {
@@ -305,27 +309,31 @@ const CustomerDashboard = () => {
           ...item,
           order_id: order.id,
           order_number: order.order_number,
-          customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim()
+          customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
+          order_created_at: order.created_at
         });
       });
     });
     
-    // Group items by product category/collection
+    // Group items by product category
     const groupedItems = allItems.reduce((groups, item) => {
       let category = 'Other';
       
-      // Categorize based on product title or type
       const title = item.title.toLowerCase();
-      if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager')) {
+      if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
+          title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
         category = 'Beer';
-      } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || title.includes('tequila') || title.includes('bourbon')) {
+      } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
+                 title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
         category = 'Liquor';
-      } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || title.includes('truly')) {
+      } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
+                 title.includes('truly') || title.includes('high noon')) {
         category = 'Seltzers';
       } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
         category = 'Wine & Champagne';
-      } else if (title.includes('mixer') || title.includes('soda') || title.includes('juice') || title.includes('water') || title.includes('non-alcoholic')) {
-        category = 'Mixers & N/A';
+      } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
+                 title.includes('cosmopolitan') || title.includes('mojito')) {
+        category = 'Cocktails';
       }
       
       if (!groups[category]) {
@@ -335,12 +343,21 @@ const CustomerDashboard = () => {
       return groups;
     }, {} as Record<string, any[]>);
     
-    // Sort items within each category alphabetically
     Object.keys(groupedItems).forEach(category => {
       groupedItems[category].sort((a, b) => a.title.localeCompare(b.title));
     });
     
     return { groupedItems, orderMap };
+  };
+
+  const toggleOrderItems = (orderId: string) => {
+    const newExpanded = new Set(expandedOrderItems);
+    if (newExpanded.has(orderId)) {
+      newExpanded.delete(orderId);
+    } else {
+      newExpanded.add(orderId);
+    }
+    setExpandedOrderItems(newExpanded);
   };
 
   const handleShareOrder = (order: Order) => {
@@ -484,6 +501,73 @@ const CustomerDashboard = () => {
           </Card>
         </div>
 
+        {/* Full Order Summary Dropdown */}
+        {orders.length > 0 && (
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Complete Order Summary</CardTitle>
+                    <CardDescription>All items across all orders, organized by category</CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowFullOrderSummary(!showFullOrderSummary)}
+                    className="flex items-center gap-2"
+                  >
+                    {showFullOrderSummary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    {showFullOrderSummary ? 'Hide' : 'Show'} Full Summary
+                  </Button>
+                </div>
+              </CardHeader>
+              <Collapsible open={showFullOrderSummary} onOpenChange={setShowFullOrderSummary}>
+                <CollapsibleContent>
+                  <CardContent>
+                    {(() => {
+                      const { groupedItems } = getCombinedOrderSummary();
+                      const totalItems = Object.values(groupedItems).flat().length;
+                      const totalValue = Object.values(groupedItems).flat().reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0);
+                      
+                      return (
+                        <div className="space-y-6">
+                          <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
+                            <div>
+                              <p className="font-semibold text-lg">Total Summary</p>
+                              <p className="text-sm text-muted-foreground">{totalItems} items across {orders.length} orders</p>
+                            </div>
+                            <p className="text-xl font-bold">{formatCurrency(Number(totalValue) || 0)}</p>
+                          </div>
+                          
+                          {Object.entries(groupedItems).map(([category, items]) => (
+                            <div key={category} className="space-y-2">
+                              <h4 className="font-semibold text-primary text-lg border-b pb-2">{category}</h4>
+                              <div className="space-y-1 pl-4">
+                                {(items as any[]).map((item, index) => (
+                                  <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/20 rounded text-sm">
+                                    <div className="flex-1">
+                                      <span className="font-medium">{item.quantity}x {item.title}</span>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Order #{item.order_number} • {format(new Date(item.order_created_at), 'MMM d, yyyy')} • 
+                                        Ordered by <span className="font-medium">{item.customer_name}</span>
+                                      </div>
+                                    </div>
+                                    <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+          </div>
+        )}
+
         {/* Live Recent Orders Feed */}
         <div className="mb-8">
           <RecentOrdersFeed 
@@ -539,27 +623,87 @@ const CustomerDashboard = () => {
 
                       {/* Order Items */}
                       <div>
-                        <p className="font-medium mb-2">Items ({order.line_items.length})</p>
-                        <div className="space-y-1">
-                          {order.line_items.slice(0, 3).map((item: any, index: number) => (
-                            <div key={index} className="flex justify-between text-sm">
-                              <span>{item.quantity}x {item.title}</span>
-                              <span>${(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                          ))}
-                          {order.line_items.length > 3 && (
-                            <p className="text-sm text-muted-foreground">
-                              +{order.line_items.length - 3} more items
-                            </p>
-                          )}
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-medium">Items ({order.line_items.length})</p>
+                          <p className="text-sm text-muted-foreground">
+                            Ordered on {format(new Date(order.created_at), 'MMM d, yyyy \'at\' h:mm a')}
+                          </p>
                         </div>
+                        
+                        {order.line_items.length === 1 ? (
+                          <div className="flex justify-between text-sm py-2 px-3 bg-muted/30 rounded">
+                            <div>
+                              <span className="font-medium">{order.line_items[0].quantity}x {order.line_items[0].title}</span>
+                              <div className="text-xs text-muted-foreground">
+                                Ordered by <span className="font-medium text-base">{customer?.first_name} {customer?.last_name}</span>
+                              </div>
+                            </div>
+                            <span className="font-medium">{formatCurrency(order.line_items[0].price * order.line_items[0].quantity)}</span>
+                          </div>
+                        ) : order.line_items.length <= 3 ? (
+                          <div className="space-y-1">
+                            {order.line_items.map((item: any, index: number) => (
+                              <div key={index} className="flex justify-between text-sm py-1 px-2 bg-muted/20 rounded">
+                                <div>
+                                  <span className="font-medium">{item.quantity}x {item.title}</span>
+                                  <div className="text-xs text-muted-foreground">
+                                    Ordered by <span className="font-medium">{customer?.first_name} {customer?.last_name}</span>
+                                  </div>
+                                </div>
+                                <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="space-y-1 mb-2">
+                              {order.line_items.slice(0, 2).map((item: any, index: number) => (
+                                <div key={index} className="flex justify-between text-sm py-1 px-2 bg-muted/20 rounded">
+                                  <div>
+                                    <span className="font-medium">{item.quantity}x {item.title}</span>
+                                    <div className="text-xs text-muted-foreground">
+                                      Ordered by <span className="font-medium">{customer?.first_name} {customer?.last_name}</span>
+                                    </div>
+                                  </div>
+                                  <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <Collapsible open={expandedOrderItems.has(order.id)} onOpenChange={() => toggleOrderItems(order.id)}>
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm" className="w-full">
+                                  {expandedOrderItems.has(order.id) ? (
+                                    <>Hide {order.line_items.length - 2} more items <ChevronUp className="h-4 w-4 ml-1" /></>
+                                  ) : (
+                                    <>Show {order.line_items.length - 2} more items <ChevronDown className="h-4 w-4 ml-1" /></>
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <div className="space-y-1 mt-2">
+                                  {order.line_items.slice(2).map((item: any, index: number) => (
+                                    <div key={index + 2} className="flex justify-between text-sm py-1 px-2 bg-muted/20 rounded">
+                                      <div>
+                                        <span className="font-medium">{item.quantity}x {item.title}</span>
+                                        <div className="text-xs text-muted-foreground">
+                                          Ordered by <span className="font-medium">{customer?.first_name} {customer?.last_name}</span>
+                                        </div>
+                                      </div>
+                                      <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          </div>
+                        )}
                       </div>
 
                       <Separator />
 
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="font-semibold">Total: ${order.total_amount}</p>
+                          <p className="font-semibold">Total: {formatCurrency(order.total_amount)}</p>
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -712,19 +856,21 @@ const CustomerDashboard = () => {
                 <Card key={order.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>Order #{order.order_number}</CardTitle>
-                        <CardDescription>
-                          Ordered on {format(new Date(order.created_at), 'MMMM do, yyyy')}
-                          {order.delivery_date && (
-                            <span className="flex items-center gap-2 mt-1">
-                              <CalendarDays className="h-4 w-4" />
-                              Delivery: {format(new Date(order.delivery_date), 'EEEE, MMMM do')} 
-                              {order.delivery_time && ` at ${order.delivery_time}`}
-                            </span>
-                          )}
-                        </CardDescription>
-                      </div>
+                       <div>
+                         <CardTitle>Order #{order.order_number}</CardTitle>
+                         <CardDescription>
+                           <div className="flex items-center gap-2 mb-1">
+                             Ordered on {format(new Date(order.created_at), 'MMMM do, yyyy \'at\' h:mm a')}
+                           </div>
+                           {order.delivery_date && (
+                             <span className="flex items-center gap-2">
+                               <CalendarDays className="h-4 w-4" />
+                               Delivery: {format(new Date(order.delivery_date), 'EEEE, MMMM do')} 
+                               {order.delivery_time && ` at ${order.delivery_time}`}
+                             </span>
+                           )}
+                         </CardDescription>
+                       </div>
                       <div className="text-right">
                         <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
                           {order.status}
@@ -753,31 +899,31 @@ const CustomerDashboard = () => {
                         </div>
                       )}
 
-                      {/* Order Items */}
-                      <div>
-                        <h4 className="font-medium mb-3">Items ({order.line_items?.length || 0})</h4>
-                        <div className="space-y-2">
-                          {order.line_items && order.line_items.length > 0 ? (
-                            order.line_items.map((item: any, index: number) => (
-                              <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
-                                <div className="flex-1">
-                                   <span className="font-medium">{item.quantity}x {item.title}</span>
-                                   <span className="text-sm text-muted-foreground block">
-                                     {formatCurrency(item.price)} each • Ordered by {customer?.first_name} {customer?.last_name}
-                                   </span>
-                                 </div>
-                                 <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-center py-4 text-muted-foreground">
-                              <Package className="h-8 w-8 mx-auto mb-2" />
-                              <p>No items found for this order</p>
-                              <p className="text-sm">This may be due to a data sync issue</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                       {/* Order Items */}
+                       <div>
+                         <h4 className="font-medium mb-3">Items ({order.line_items?.length || 0})</h4>
+                         <div className="space-y-2">
+                           {order.line_items && order.line_items.length > 0 ? (
+                             order.line_items.map((item: any, index: number) => (
+                               <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
+                                 <div className="flex-1">
+                                    <span className="font-medium">{item.quantity}x {item.title}</span>
+                                    <span className="text-sm text-muted-foreground block">
+                                      {formatCurrency(item.price)} each • Ordered by <span className="font-medium text-base">{customer?.first_name} {customer?.last_name}</span>
+                                    </span>
+                                  </div>
+                                  <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                               </div>
+                             ))
+                           ) : (
+                             <div className="text-center py-4 text-muted-foreground">
+                               <Package className="h-8 w-8 mx-auto mb-2" />
+                               <p>No items found for this order</p>
+                               <p className="text-sm">This may be due to a data sync issue</p>
+                             </div>
+                           )}
+                         </div>
+                       </div>
 
                       <Separator />
 
