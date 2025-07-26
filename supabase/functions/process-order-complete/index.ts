@@ -539,11 +539,33 @@ serve(async (req) => {
     const shopifyOrder = await createShopifyOrder(orderData);
     const { customer, customerOrder } = await storeCustomerOrder(orderData, shopifyOrder, supabase);
     
+    // Sync to Google Sheets (background task)
+    const syncToSheets = supabase.functions.invoke('sync-google-sheets', {
+      body: {
+        type: 'completed_order',
+        data: {
+          orderNumber: shopifyOrder.order_number,
+          customerName: orderData.customerName,
+          customerEmail: orderData.customerEmail,
+          customerPhone: orderData.customerPhone,
+          deliveryDate: orderData.deliveryDate,
+          deliveryTime: orderData.deliveryTime,
+          deliveryAddress: orderData.deliveryAddress.fullAddress,
+          subtotal: orderData.subtotal,
+          deliveryFee: orderData.deliveryFee,
+          salesTax: orderData.salesTax,
+          totalAmount: orderData.totalAmount,
+          affiliateCode: orderData.affiliateCode
+        }
+      }
+    }).catch(error => logStep("Google Sheets sync error", error));
+    
     // Run notifications in parallel (background tasks)
     const notifications = Promise.all([
       trackAffiliateReferral(orderData, shopifyOrder, supabase),
       sendEmailConfirmations(orderData, shopifyOrder, supabase),
-      sendSMSNotifications(orderData, shopifyOrder, supabase)
+      sendSMSNotifications(orderData, shopifyOrder, supabase),
+      syncToSheets
     ]);
 
     // Don't wait for notifications to complete - let them run in background

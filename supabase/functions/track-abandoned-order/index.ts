@@ -121,6 +121,36 @@ serve(async (req) => {
       logStep('Abandoned order tracked', { orderId: result.id });
     }
 
+    // Sync to Google Sheets
+    try {
+      const { error: sheetsError } = await supabaseService.functions.invoke('sync-google-sheets', {
+        body: {
+          type: 'abandoned_order',
+          data: {
+            sessionId: result.session_id,
+            customerName: result.customer_name,
+            customerEmail: result.customer_email,
+            customerPhone: result.customer_phone,
+            deliveryAddress: result.delivery_address,
+            subtotal: result.subtotal,
+            totalAmount: result.total_amount,
+            affiliateCode: result.affiliate_code,
+            cartItems: result.cart_items,
+            abandonedAt: result.abandoned_at,
+            lastActivityAt: result.last_activity_at
+          }
+        }
+      });
+      
+      if (sheetsError) {
+        logStep('Google Sheets sync error', sheetsError);
+      } else {
+        logStep('Abandoned order synced to Google Sheets');
+      }
+    } catch (error) {
+      logStep('Exception in Google Sheets sync', error);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

@@ -323,7 +323,7 @@ const CustomerDashboard = () => {
   };
 
   const handleShareOrder = (order: Order) => {
-    const shareUrl = `${window.location.origin}/?addToOrder=${order.share_token || order.id}&customer=true&discount=PREMIER2025`;
+    const shareUrl = `${window.location.origin}/?addToOrder=${order.share_token || order.id}&customer=true&discount=FREESHIPPING`;
     const message = `Hey! I ordered drinks for delivery on ${order.delivery_date} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. You can add to my order here: ${shareUrl}`;
     
     if (navigator.share) {
@@ -336,9 +336,20 @@ const CustomerDashboard = () => {
       navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Group Link Copied",
-        description: "Share this link with friends to add to your order!",
+        description: "Share this link with friends to add to your order with free shipping!",
       });
     }
+  };
+
+  const handleCopyGroupLink = () => {
+    // Create a general group ordering link with free shipping
+    const groupUrl = `${window.location.origin}/?discount=FREESHIPPING&group=true`;
+    
+    navigator.clipboard.writeText(groupUrl);
+    toast({
+      title: "Group Link Copied",
+      description: "Share this link with friends for group ordering with free shipping!",
+    });
   };
 
   const getDaysUntilDelivery = (deliveryDate: string) => {
@@ -395,6 +406,24 @@ const CustomerDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Group Ordering Action */}
+        <div className="mb-6">
+          <Card className="border-dashed border-2 border-primary/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-lg mb-1">Start Group Order</h3>
+                  <p className="text-muted-foreground text-sm">Share this link with friends to order together with free shipping!</p>
+                </div>
+                <Button onClick={handleCopyGroupLink} className="flex items-center gap-2">
+                  <Share2 className="h-4 w-4" />
+                  Copy Group Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>

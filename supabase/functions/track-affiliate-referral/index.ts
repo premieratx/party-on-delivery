@@ -123,6 +123,29 @@ serve(async (req) => {
 
     logStep('Referral tracked successfully', { referralId: referral.id });
 
+    // Get affiliate details for Google Sheets
+    const { data: affiliateDetails } = await supabaseService
+      .from('affiliates')
+      .select('name, total_commission')
+      .eq('id', affiliate.id)
+      .single();
+
+    // Sync affiliate referral to Google Sheets (background task)
+    supabaseService.functions.invoke('sync-google-sheets', {
+      body: {
+        type: 'affiliate_referral',
+        data: {
+          affiliateCode: affiliateCode,
+          affiliateName: affiliateDetails?.name || 'Unknown',
+          orderNumber: orderData.order_number || orderId,
+          customerEmail: customerEmail,
+          subtotal: subtotal,
+          commissionAmount: commissionAmount,
+          totalCommissionEarned: affiliateDetails?.total_commission || 0
+        }
+      }
+    }).catch(error => logStep('Google Sheets sync error', error));
+
     return new Response(
       JSON.stringify({
         success: true,
