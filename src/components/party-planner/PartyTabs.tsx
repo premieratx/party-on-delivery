@@ -93,6 +93,9 @@ export const PartyTabs = ({
       ...prev,
       [tabId]: isAddedToCart ? 'added' : 'saved'
     }));
+    
+    // Ensure the updated state persists
+    onUpdateEventDetails(eventDetails);
   };
 
   const handleCategoryAddToCart = (category: string, items: CartItem[]) => {
@@ -240,23 +243,23 @@ export const PartyTabs = ({
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full overflow-x-auto" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(80px, 1fr))` }}>
+        <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(120px, 1fr))`, height: '80px' }}>
           {tabs.map((tab) => (
             <TabsTrigger 
               key={tab.id} 
               value={tab.id} 
-              className="relative flex flex-col items-center gap-0.5 text-xs min-w-[70px] px-1 py-2 h-auto whitespace-nowrap"
+              className="relative flex flex-col items-center gap-1 text-xs min-w-[100px] px-2 py-3 h-full whitespace-nowrap border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
             >
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 mb-1">
                 {isTabCompleted(tab.id) && (
-                  <Check className="w-3 h-3 text-green-500" />
+                  <Check className="w-4 h-4 text-green-500" />
                 )}
-                <span className="truncate text-xs max-w-[60px]">{tab.label}</span>
+                <span className="font-semibold text-xs max-w-[80px] text-center leading-tight">{tab.label}</span>
               </div>
               {getTabState(tab.id) && (
                 <Badge 
                   variant={getTabState(tab.id) === 'added' ? 'default' : 'secondary'} 
-                  className="text-xs h-3 px-1 leading-none"
+                  className="text-xs h-4 px-2 leading-none border border-black/20"
                 >
                   {getTabState(tab.id) === 'added' ? 'Cart' : 'Saved'}
                 </Badge>

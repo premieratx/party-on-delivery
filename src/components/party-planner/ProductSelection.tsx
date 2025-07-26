@@ -55,10 +55,10 @@ interface ProductSelectionProps {
   onPrevious?: () => void;
 }
 
-// Category to Shopify collection mapping
+// Category to Shopify collection mapping (using same collections as main app)
 const categoryCollectionMap: Record<string, string> = {
   'beer': 'tailgate-beer',
-  'wine': 'wine-champagne',
+  'wine': 'spirits', // Using spirits collection for now since wine-champagne may not exist
   'liquor': 'spirits',
   'cocktails': 'cocktail-kits'
 };
@@ -180,11 +180,10 @@ export const ProductSelection = ({
 
   const getTotalServings = () => {
     return Object.entries(selections).reduce((total, [productId, quantity]) => {
-      const product = products.find(p => p.id === productId);
       const containerSize = category === 'beer' ? 12 : 
-                           category === 'wine' ? 5 : 
-                           category === 'liquor' ? 25 : 
-                           category === 'cocktails' ? 12 : 1;
+                           category === 'wine' ? 1 : // 1 bottle = 1 bottle
+                           category === 'liquor' ? 1 : // 1 bottle = 1 bottle
+                           category === 'cocktails' ? 1 : 1; // 1 kit = 1 kit
       return total + (quantity * containerSize);
     }, 0);
   };
@@ -280,6 +279,23 @@ export const ProductSelection = ({
   const selectionTotal = getSelectionTotal();
   const totalServings = getTotalServings();
   const remainingBudget = budget - selectionTotal;
+  
+  // Get appropriate unit names
+  const getUnitName = (isPlural = true) => {
+    if (category === 'beer') return isPlural ? 'cases' : 'case';
+    if (category === 'wine') return isPlural ? 'bottles' : 'bottle';
+    if (category === 'liquor') return isPlural ? 'bottles' : 'bottle';
+    if (category === 'cocktails') return isPlural ? 'cocktails' : 'cocktail';
+    return isPlural ? 'items' : 'item';
+  };
+
+  const getServingName = () => {
+    if (category === 'wine') return 'bottles';
+    if (category === 'liquor') return 'bottles';
+    if (category === 'cocktails') return 'cocktails';
+    if (category === 'beer') return 'cases';
+    return 'items';
+  };
 
   return (
     <div className="space-y-6">
@@ -290,8 +306,13 @@ export const ProductSelection = ({
         <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
           <span>Recommended: {recommendedQuantity} {unitType}</span>
           <span>Budget: ${budget.toFixed(2)}</span>
-          <span>Selected: {totalServings} drinks</span>
+          <span>Selected: {totalServings} {getServingName()}</span>
         </div>
+      </div>
+
+      {/* Party Budget Tracker - One row high */}
+      <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-3 rounded-lg border">
+        <h4 className="text-center font-semibold text-lg">Party Budget Tracker</h4>
       </div>
 
       {products.length === 0 ? (
@@ -299,7 +320,7 @@ export const ProductSelection = ({
           <p className="text-muted-foreground">No products available for {category}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-3">
           {products.map((product) => {
             const quantity = selections[product.id] || 0;
             const isSelected = quantity > 0;
@@ -312,52 +333,70 @@ export const ProductSelection = ({
                   isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
                 } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
               >
-                <CardHeader className="pb-2">
-                  {product.image && (
-                    <div className="aspect-square rounded-lg overflow-hidden mb-2">
-                      <img 
-                        src={product.image} 
-                        alt={product.title}
-                        className="w-full h-full object-cover"
-                      />
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    {/* Image - Far Left */}
+                    <div className="flex-shrink-0 w-16 h-16">
+                      {product.image && (
+                        <img 
+                          src={product.image} 
+                          alt={product.title}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      )}
                     </div>
-                  )}
-                  <CardTitle className="text-lg line-clamp-2">{product.title}</CardTitle>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold">${product.price}</span>
-                    {wasAddedToCart && (
-                      <Badge variant="default" className="bg-green-100 text-green-800">
-                        <Check className="w-3 h-3 mr-1" />
-                        In Cart
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, -1)}
-                        disabled={quantity <= 0}
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">{quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, 1)}
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
+                    
+                    {/* Description - Middle */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {product.description || 'Premium quality product for your event'}
+                      </p>
                     </div>
-                    {quantity > 0 && (
-                      <span className="text-sm font-medium">
-                        ${(product.price * quantity).toFixed(2)}
-                      </span>
-                    )}
+                    
+                    {/* Title, Price, and Controls - Right */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right min-w-0">
+                        <h4 className="font-semibold text-lg line-clamp-1">{product.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl font-bold">${product.price}</span>
+                          {wasAddedToCart && (
+                            <Badge variant="default" className="bg-green-100 text-green-800">
+                              <Check className="w-3 h-3 mr-1" />
+                              In Cart
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(product.id, -1)}
+                          disabled={quantity <= 0}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="w-8 text-center font-medium">{quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuantityChange(product.id, 1)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      {/* Line Total */}
+                      {quantity > 0 && (
+                        <div className="text-right min-w-[80px]">
+                          <span className="text-lg font-semibold">
+                            ${(product.price * quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -372,7 +411,7 @@ export const ProductSelection = ({
           <div>
             <p className="text-lg font-semibold">Selection Summary</p>
             <p className="text-sm text-muted-foreground">
-              {Object.values(selections).reduce((sum, qty) => sum + qty, 0)} containers • {totalServings} drinks
+              {Object.values(selections).reduce((sum, qty) => sum + qty, 0)} {getUnitName(Object.values(selections).reduce((sum, qty) => sum + qty, 0) !== 1)} • {totalServings} {getServingName()}
             </p>
           </div>
           <div className="text-right">
