@@ -99,8 +99,10 @@ export const PartyTabs = ({
   };
 
   const handleCategoryAddToCart = (category: string, items: CartItem[]) => {
+    console.log('PartyTabs: Adding to cart for category:', category, 'items:', items);
     onAddToCart(eventName, category, items);
     handleTabSave(category, true);
+    console.log('PartyTabs: Cart updated, tab saved as added');
   };
 
   const handleNextTab = () => {

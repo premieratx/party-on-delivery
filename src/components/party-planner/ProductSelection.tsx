@@ -90,6 +90,7 @@ export const ProductSelection = ({
 
   // Reset state when category changes, but restore if we have current selections
   useEffect(() => {
+    console.log('ProductSelection: category changed to', category, 'with current selections:', currentSelections);
     setIsCompleted(false);
     setIsAddedToCart(currentSelections && currentSelections.length > 0);
     fetchProducts();
@@ -101,14 +102,18 @@ export const ProductSelection = ({
       currentSelections.forEach(item => {
         restoredSelections[item.productId] = item.quantity;
         addedItems[item.productId] = item.quantity;
+        console.log('Restoring selection:', item.title, 'quantity:', item.quantity);
       });
       setSelections(restoredSelections);
       setAddedToCartItems(addedItems);
+      console.log('Restored selections:', restoredSelections);
+      console.log('Restored cart items:', addedItems);
     } else {
       setSelections({});
       setAddedToCartItems({});
+      console.log('No previous selections to restore');
     }
-  }, [category, subcategories]);
+  }, [category, subcategories, currentSelections]);
 
   const fetchProducts = async () => {
     try {
@@ -402,6 +407,8 @@ export const ProductSelection = ({
             const wasAddedToCart = addedToCartItems[product.id] > 0;
             const { name, packInfo } = parseProductTitle(product.title);
 
+            console.log('Rendering product:', product.title, 'quantity:', quantity, 'wasAddedToCart:', wasAddedToCart);
+
             return (
               <Card 
                 key={product.id} 
@@ -453,7 +460,27 @@ export const ProductSelection = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleQuantityChange(product.id, -1)}
+                          onClick={() => {
+                            console.log('Decreasing quantity for:', product.title);
+                            handleQuantityChange(product.id, -1);
+                            // Update cart with new quantity
+                            const newQuantity = (selections[product.id] || 0) - 1;
+                            if (newQuantity > 0) {
+                              const cartItem: CartItem = {
+                                productId: product.id,
+                                title: product.title,
+                                price: product.price,
+                                quantity: newQuantity,
+                                image: product.image,
+                                eventName: '',
+                                category
+                              };
+                              onAddToCart([cartItem]);
+                            } else {
+                              // Remove from cart if quantity becomes 0
+                              onAddToCart([]);
+                            }
+                          }}
                           className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
                           type="button"
                         >
@@ -463,7 +490,22 @@ export const ProductSelection = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleQuantityChange(product.id, 1)}
+                          onClick={() => {
+                            console.log('Increasing quantity for:', product.title);
+                            handleQuantityChange(product.id, 1);
+                            // Update cart with new quantity
+                            const newQuantity = (selections[product.id] || 0) + 1;
+                            const cartItem: CartItem = {
+                              productId: product.id,
+                              title: product.title,
+                              price: product.price,
+                              quantity: newQuantity,
+                              image: product.image,
+                              eventName: '',
+                              category
+                            };
+                            onAddToCart([cartItem]);
+                          }}
                           className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
                           type="button"
                         >
@@ -474,7 +516,11 @@ export const ProductSelection = ({
                       // Show smaller green + circle for initial add to cart
                       <Button
                         onClick={() => {
+                          console.log('Adding product to cart:', product.title);
+                          // Update local selections first
                           handleQuantityChange(product.id, 1);
+                          
+                          // Create cart item
                           const cartItem: CartItem = {
                             productId: product.id,
                             title: product.title,
@@ -484,12 +530,17 @@ export const ProductSelection = ({
                             eventName: '',
                             category
                           };
+                          
+                          // Add to cart immediately
                           onAddToCart([cartItem]);
+                          
+                          // Update local tracking
                           setAddedToCartItems(prev => ({
                             ...prev,
                             [product.id]: 1
                           }));
-                          // Don't show toast - will show cart bubble flash instead
+                          
+                          console.log('Product added to cart:', cartItem);
                         }}
                         className="w-6 h-6 md:w-8 md:h-8 p-0 rounded-full bg-green-600 hover:bg-green-700 text-white mt-auto"
                         type="button"

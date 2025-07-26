@@ -59,6 +59,8 @@ export const PartyPlanner = () => {
   };
 
   const addToCart = (eventName: string, category: string, items: CartItem[]) => {
+    console.log('PartyPlanner: Adding to cart for event:', eventName, 'category:', category, 'items:', items);
+    
     const newItems = items.map(item => ({
       ...item,
       eventName,
@@ -70,20 +72,26 @@ export const PartyPlanner = () => {
       const filtered = prev.filter(item => 
         !(item.eventName === eventName && item.category === category)
       );
-      return [...filtered, ...newItems];
+      const newCart = [...filtered, ...newItems];
+      console.log('PartyPlanner: Cart updated from', prev.length, 'to', newCart.length, 'items');
+      return newCart;
     });
 
     // Update category selections in partyDetails
-    setPartyDetails(prev => ({
-      ...prev,
-      categorySelections: {
-        ...prev.categorySelections,
-        [eventName]: {
-          ...prev.categorySelections?.[eventName],
-          [category]: newItems
+    setPartyDetails(prev => {
+      const updatedDetails = {
+        ...prev,
+        categorySelections: {
+          ...prev.categorySelections,
+          [eventName]: {
+            ...prev.categorySelections?.[eventName],
+            [category]: newItems
+          }
         }
-      }
-    }));
+      };
+      console.log('PartyPlanner: Updated party details categorySelections:', updatedDetails.categorySelections);
+      return updatedDetails;
+    });
 
     // Trigger cart flash animation
     setCartFlash(true);
