@@ -270,7 +270,7 @@ export const PartyTabs = ({
 
   return (
     <div className="w-full">
-      {/* Sticky Header */}
+      {/* Sticky Header - Only Tabs and Navigation */}
       <div className="sticky top-0 z-40 bg-background border-b pb-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '80px' }}>
@@ -301,7 +301,7 @@ export const PartyTabs = ({
           </TabsList>
         </Tabs>
 
-        {/* Navigation Arrows */}
+        {/* Navigation Arrows - Smaller */}
         <div className="flex justify-between items-center mt-2 px-4">
           <Button
             variant="outline"
@@ -313,10 +313,10 @@ export const PartyTabs = ({
               }
             }}
             disabled={tabs.findIndex(tab => tab.id === activeTab) === 0}
-            className="flex items-center gap-1 h-8"
+            className="flex items-center gap-1 h-6 px-2"
           >
             <ArrowLeft className="w-3 h-3" />
-            Previous
+            <span className="text-xs">Prev</span>
           </Button>
           
           <Button
@@ -324,9 +324,9 @@ export const PartyTabs = ({
             size="sm"
             onClick={handleNextTab}
             disabled={tabs.findIndex(tab => tab.id === activeTab) === tabs.length - 1}
-            className="flex items-center gap-1 h-8"
+            className="flex items-center gap-1 h-6 px-2"
           >
-            Next
+            <span className="text-xs">Next</span>
             <ArrowRight className="w-3 h-3" />
           </Button>
         </div>

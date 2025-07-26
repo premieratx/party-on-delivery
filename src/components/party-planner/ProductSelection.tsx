@@ -572,6 +572,22 @@ export const ProductSelection = ({
           </div>
         </div>
 
+        {/* Progress Bar */}
+        <div className="w-full bg-muted rounded-full h-2">
+          <div 
+            className={`h-2 rounded-full transition-all duration-300 ${
+              Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
+                const product = products.find(p => p.id === productId);
+                return total + (product ? product.price * quantity : 0);
+              }, 0) <= budget ? 'bg-green-400' : 'bg-red-500'
+            }`}
+            style={{ width: `${Math.min((Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
+              const product = products.find(p => p.id === productId);
+              return total + (product ? product.price * quantity : 0);
+            }, 0) / budget) * 100, 100)}%` }}
+          />
+        </div>
+
         <div className="flex gap-3 justify-end">
           <Button
             onClick={handleSaveAndContinue}

@@ -169,31 +169,72 @@ export const PartyPlanner = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <div className="container mx-auto px-4 py-8">
-        {/* Header with Cart and Checkout */}
-        <div className="sticky top-0 z-50 bg-background border-b mb-4 md:mb-6">
-          <div className="flex justify-between items-center px-4 py-2">
-            <Button variant="outline" size="sm">
-              <ShoppingCart className="w-4 h-4 mr-1" />
-              Cart ({cart.length})
-            </Button>
+        {/* Main Header - Full Width with Logos */}
+        <div className="text-center mb-4 md:mb-6">
+          <div className="flex items-center justify-center gap-4 px-4 py-2">
+            {/* Left Logo */}
+            <img src="/src/assets/party-on-delivery-logo.svg" alt="Party On Delivery" className="w-16 h-16 flex-shrink-0" />
             
-            <div className="text-center flex-1 px-4">
-              <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-foreground">
+            {/* Title */}
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-foreground">
                 Let's Get This Party Started! 🎉
               </h1>
-              <p className="text-xs md:text-sm text-muted-foreground">
-                Plan the perfect party with our smart recommendation system
-              </p>
+            </div>
+            
+            {/* Right Logo */}
+            <img src="/src/assets/party-on-delivery-logo.svg" alt="Party On Delivery" className="w-16 h-16 flex-shrink-0" />
+          </div>
+        </div>
+
+        {/* Sticky Header - Cart/Checkout and Plan Text */}
+        <div className="sticky top-0 z-50 bg-background border-b mb-4 md:mb-6">
+          <div className="flex justify-between items-center px-4 py-2">
+            {/* Mobile Layout: Cart Icon - Centered Text - Checkout Icon */}
+            <div className="md:hidden flex items-center justify-between w-full">
+              <Button variant="outline" size="sm" className="p-2">
+                <ShoppingCart className="w-4 h-4" />
+              </Button>
+              
+              <div className="text-center flex-1 px-4">
+                <p className="text-xs text-muted-foreground leading-tight">
+                  Plan your perfect<br />party experience
+                </p>
+              </div>
+
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => navigate('/checkout')}
+                disabled={cart.length === 0}
+                className="p-2"
+              >
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </div>
 
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => navigate('/checkout')}
-              disabled={cart.length === 0}
-            >
-              Checkout
-            </Button>
+            {/* Desktop Layout: Full Text with Buttons */}
+            <div className="hidden md:flex justify-between items-center w-full">
+              <Button variant="outline" size="sm">
+                <ShoppingCart className="w-4 h-4 mr-1" />
+                Cart ({cart.length})
+              </Button>
+              
+              <div className="text-center flex-1 px-4">
+                <p className="text-sm text-muted-foreground">
+                  Plan the perfect party with our smart recommendation system
+                </p>
+              </div>
+
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => navigate('/checkout')}
+                disabled={cart.length === 0}
+              >
+                Checkout
+              </Button>
+            </div>
           </div>
         </div>
 
