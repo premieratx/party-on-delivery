@@ -59,7 +59,7 @@ interface ProductSelectionProps {
 // Category to Shopify collection mapping (using same collections as main app)
 const categoryCollectionMap: Record<string, string> = {
   'beer': 'tailgate-beer',
-  'wine': 'spirits', // Using spirits collection for now since wine-champagne may not exist
+  'wine': 'wine-champagne',
   'liquor': 'spirits',
   'cocktails': 'cocktail-kits'
 };
@@ -352,7 +352,7 @@ export const ProductSelection = ({
           <p className="text-muted-foreground">No products available for {category}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
           {products.map((product) => {
             const quantity = selections[product.id] || 0;
             const isSelected = quantity > 0;
@@ -366,9 +366,9 @@ export const ProductSelection = ({
                 } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
               >
                 <CardContent className="p-2">
-                  <div className="flex items-center gap-3" style={{ aspectRatio: '4/1' }}>
-                    {/* Image - 1 unit tall, taking about 1/4 of width */}
-                    <div className="w-1/4 aspect-square rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="flex flex-col gap-2 h-full">
+                    {/* Image - landscape aspect ratio */}
+                    <div className="w-full aspect-[3/2] rounded-lg overflow-hidden flex-shrink-0">
                       <img 
                         src={product.image} 
                         alt={product.title}
@@ -377,56 +377,50 @@ export const ProductSelection = ({
                       />
                     </div>
                     
-                    {/* Product Info - Takes remaining width */}
-                    <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                      {/* Title - flex-1 to take remaining space */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">{product.title}</h4>
-                        {wasAddedToCart && (
-                          <Badge variant="default" className="bg-green-100 text-green-800 text-xs mt-1">
-                            <Check className="w-3 h-3 mr-1" />
-                            In Cart
-                          </Badge>
-                        )}
-                      </div>
+                    {/* Product Info */}
+                    <div className="flex flex-col gap-1 flex-grow">
+                      {/* Title */}
+                      <h4 className="font-medium text-xs leading-tight overflow-hidden" style={{ 
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical'
+                      }}>{product.title}</h4>
                       
                       {/* Price */}
-                      <div className="text-sm font-bold whitespace-nowrap">
+                      <div className="text-sm font-bold">
                         ${product.price}
                       </div>
                       
-                      {/* Quantity Controls + Button */}
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleQuantityChange(product.id, -1)}
-                          disabled={quantity <= 0}
-                          className="h-6 w-6 p-0"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        <span className="w-6 text-center font-medium text-xs">{quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleQuantityChange(product.id, 1)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
+                      {/* Quantity Controls */}
+                      <div className="flex items-center justify-between gap-1 mt-auto">
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleQuantityChange(product.id, -1)}
+                            disabled={quantity <= 0}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="w-6 text-center font-medium text-xs">{quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleQuantityChange(product.id, 1)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        
+                        {/* Cart indicator */}
+                        {wasAddedToCart && (
+                          <Check className="w-4 h-4 text-green-600" />
+                        )}
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Line Total - Below the main row if quantity > 0 */}
-                  {quantity > 0 && (
-                    <div className="text-center mt-1">
-                      <span className="text-xs font-semibold">
-                        Total: ${(product.price * quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             );
@@ -522,78 +516,6 @@ export const ProductSelection = ({
         </DialogContent>
       </Dialog>
 
-      {products.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No products available for {category}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-4 gap-3">
-          {products.map((product) => {
-            const quantity = selections[product.id] || 0;
-            const isSelected = quantity > 0;
-            const wasAddedToCart = addedToCartItems[product.id] > 0;
-
-            return (
-              <Card 
-                key={product.id} 
-                className={`transition-all duration-200 h-[100px] ${
-                  isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'
-                } ${wasAddedToCart ? 'bg-green-50 border-green-200' : ''}`}
-              >
-                <CardContent className="p-2 h-full flex items-center gap-2">
-                  {/* Image */}
-                  <div className="w-16 h-16 flex-shrink-0 rounded overflow-hidden">
-                    <img 
-                      src={product.image} 
-                      alt={product.title}
-                      className={`w-full h-full object-cover ${category === 'cocktails' ? 'cursor-pointer hover:opacity-80' : ''}`}
-                      onClick={() => handleProductClick(product)}
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0 flex flex-col justify-between h-full py-1">
-                    {/* Title and Price */}
-                    <div>
-                      <h4 className="font-semibold text-xs line-clamp-2 mb-1">{product.title}</h4>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-bold">${product.price}</span>
-                        {wasAddedToCart && (
-                          <Badge variant="default" className="bg-green-100 text-green-800 text-[10px] px-1 py-0">
-                            <Check className="w-2 h-2 mr-1" />
-                            In Cart
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Quantity Controls */}
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, -1)}
-                        disabled={quantity <= 0}
-                        className="h-5 w-5 p-0"
-                      >
-                        <Minus className="w-2 h-2" />
-                      </Button>
-                      <span className="w-6 text-center font-medium text-xs">{quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, 1)}
-                        className="h-5 w-5 p-0"
-                      >
-                        <Plus className="w-2 h-2" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
 
       {/* Summary and Actions */}
       <div className="bg-muted/30 rounded-lg p-6 space-y-4">

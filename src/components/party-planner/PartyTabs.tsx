@@ -256,13 +256,8 @@ export const PartyTabs = ({
                 )}
                 <span className="font-semibold text-xs text-center leading-tight" style={{ fontSize: '80%' }}>{tab.label}</span>
               </div>
-              {getTabState(tab.id) && (
-                <Badge 
-                  variant={getTabState(tab.id) === 'added' ? 'default' : 'secondary'} 
-                  className="text-xs h-3 px-1 leading-none border border-black/20"
-                >
-                  {getTabState(tab.id) === 'added' ? 'Cart' : 'Saved'}
-                </Badge>
+              {getTabState(tab.id) === 'added' && (
+                <Check className="w-3 h-3 text-green-500" />
               )}
             </TabsTrigger>
           ))}
