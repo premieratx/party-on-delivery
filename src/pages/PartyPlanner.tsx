@@ -430,30 +430,24 @@ export const PartyPlanner = () => {
                   <p className="text-lg text-green-600 mb-6">
                     Your party planning is complete. Ready to proceed to checkout?
                   </p>
-                    <div className="space-y-2 mb-6">
-                    <div className="flex justify-center gap-8 text-sm">
-                      <div>
-                        <span className="font-medium">Total Items: </span>
-                        <span>{getTotalItems()}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium">Total Cost: </span>
-                        <span className="font-bold text-green-600">${getRunningTotal().toFixed(2)}</span>
-                      </div>
-                      <div>
-                        <span className="font-medium">Total Budget: </span>
-                        <span>${getTotalPartyBudget().toFixed(2)}</span>
-                      </div>
-                    </div>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button 
+                      variant="outline" 
+                      size="lg"
+                      onClick={() => window.location.href = '/product-search'}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Add More Items
+                    </Button>
+                    <Button 
+                      size="lg"
+                      onClick={() => window.location.href = '/checkout'}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Proceed to Checkout
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                   </div>
-                   <Button size="lg" onClick={() => {
-                    console.log('Checkout button clicked, cart items:', cartItems);
-                    console.log('Opening checkout cart');
-                    setShowCart(true);
-                  }}>
-                    Proceed to Checkout
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
                 </CardContent>
               </Card>
             )}

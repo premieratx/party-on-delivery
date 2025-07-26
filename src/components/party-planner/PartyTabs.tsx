@@ -412,7 +412,7 @@ export const PartyTabs = ({
                 onClick={() => window.location.href = '/checkout'}
                 className="flex-1 sm:flex-none"
               >
-                Checkout
+                Proceed to Checkout
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
