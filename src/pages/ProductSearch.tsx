@@ -132,22 +132,39 @@ export const ProductSearch = () => {
 
   // Get favorites/best selling products
   const getFavoritesProducts = (allProducts: Product[]) => {
-    // Get products from popular collections and brands
-    const favoritesProducts = allProducts
-      .filter(product => {
-        const title = product.title.toLowerCase();
-        const isPopularItem = title.includes('deep eddy') || 
-                             title.includes('tito') || 
-                             title.includes('casamigos') || 
-                             title.includes('bulleit') ||
-                             title.includes('teremana') ||
-                             title.includes('cocktail kit') ||
-                             product.category === 'spirits' ||
-                             product.category === 'cocktails';
-        return isPopularItem;
-      })
+    // Create a Map to track unique products by ID to avoid duplicates
+    const uniqueProducts = new Map<string, Product>();
+    
+    // Filter for popular products
+    allProducts.forEach(product => {
+      const title = product.title.toLowerCase();
+      const isPopularItem = title.includes('deep eddy') || 
+                           title.includes('tito') || 
+                           title.includes('casamigos') || 
+                           title.includes('bulleit') ||
+                           title.includes('teremana') ||
+                           title.includes('high noon') ||
+                           title.includes('modelo') ||
+                           title.includes('miller lite') ||
+                           title.includes('coors light') ||
+                           title.includes('coors original') ||
+                           title.includes('lone star') ||
+                           title.includes('cocktail kit') ||
+                           product.category === 'spirits' ||
+                           product.category === 'cocktail-kits' ||
+                           product.category === 'tailgate-beer' ||
+                           product.category === 'texas-beer-collection' ||
+                           product.category === 'seltzer-collection';
+      
+      // Only add if it's a popular item and not already in the map
+      if (isPopularItem && !uniqueProducts.has(product.id)) {
+        uniqueProducts.set(product.id, product);
+      }
+    });
+
+    // Convert back to array and sort by popularity score
+    const favoritesProducts = Array.from(uniqueProducts.values())
       .sort((a, b) => {
-        // Sort by popularity score
         const aScore = getPopularityScore(a);
         const bScore = getPopularityScore(b);
         return bScore - aScore;
@@ -162,22 +179,37 @@ export const ProductSearch = () => {
     const title = product.title.toLowerCase();
     let score = 0;
     
-    // Brand popularity (based on common premium brands)
+    // Premium spirit brands
     if (title.includes('tito')) score += 10;
     if (title.includes('deep eddy')) score += 9;
     if (title.includes('casamigos')) score += 8;
     if (title.includes('bulleit')) score += 7;
     if (title.includes('teremana')) score += 6;
     
+    // Popular beer brands
+    if (title.includes('modelo')) score += 8;
+    if (title.includes('miller lite')) score += 7;
+    if (title.includes('coors light')) score += 7;
+    if (title.includes('coors original')) score += 6;
+    if (title.includes('lone star')) score += 6;
+    
+    // Seltzer brands
+    if (title.includes('high noon')) score += 8;
+    
     // Product type popularity
     if (title.includes('vodka')) score += 5;
     if (title.includes('tequila')) score += 5;
     if (title.includes('bourbon')) score += 4;
     if (title.includes('cocktail')) score += 4;
+    if (title.includes('beer')) score += 4;
+    if (title.includes('seltzer')) score += 4;
     
-    // Size preference (750ml is standard, 1.75L is value)
+    // Size preference (750ml is standard, 1.75L is value, beer cases/packs)
     if (title.includes('750ml')) score += 2;
     if (title.includes('1.75l')) score += 3;
+    if (title.includes('12 pack') || title.includes('12-pack')) score += 3;
+    if (title.includes('24 pack') || title.includes('24-pack')) score += 4;
+    if (title.includes('case')) score += 3;
     
     return score;
   };
