@@ -20,10 +20,13 @@ serve(async (req) => {
 
     const googleSheetsApiKey = Deno.env.get("GOOGLE_SHEETS_API_KEY");
     if (!googleSheetsApiKey) {
+      logStep('ERROR: GOOGLE_SHEETS_API_KEY not configured');
       throw new Error("GOOGLE_SHEETS_API_KEY not configured");
     }
 
+    logStep('Google Sheets API key found');
     const SHEET_ID = "1eWrTf1BKWlXTBWlYAIiQTfmYAE4hT1_wM27Pjiyk8xc";
+    logStep('Using Sheet ID:', SHEET_ID);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -78,36 +81,62 @@ serve(async (req) => {
       const range = `${tabName}:A:${String.fromCharCode(65 + headers.length - 1)}`;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW&key=${googleSheetsApiKey}`;
       
+      logStep(`Attempting to sync to tab: ${tabName}`);
+      logStep(`API URL: ${url}`);
+      logStep(`Data rows to sync: ${data.length}`);
+      
       try {
+        const requestBody = {
+          values: [headers, ...data]
+        };
+        
+        logStep(`Request body preview`, { 
+          totalRows: requestBody.values.length,
+          headers: headers,
+          firstDataRow: data[0] || 'No data rows'
+        });
+
         const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            values: [headers, ...data]
-          })
+          body: JSON.stringify(requestBody)
         });
+
+        logStep(`Google Sheets API response status: ${response.status}`);
 
         if (!response.ok) {
           const errorText = await response.text();
-          logStep(`Error appending to ${tabName}`, { status: response.status, error: errorText });
+          logStep(`ERROR: Google Sheets API failed`, { 
+            status: response.status, 
+            statusText: response.statusText,
+            error: errorText,
+            tabName: tabName,
+            url: url
+          });
           
-          // If the tab doesn't exist, try to create it first
+          // If the tab doesn't exist, provide helpful error message
           if (response.status === 400 && errorText.includes('Unable to parse range')) {
-            logStep(`Tab ${tabName} might not exist, attempting to create...`);
-            // For now, just log the error - Google Sheets API would need additional permissions to create tabs
-            throw new Error(`Tab "${tabName}" does not exist in the Google Sheet. Please create tabs named: "Completed Orders", "Abandoned Orders", and "Affiliates"`);
+            logStep(`Tab ${tabName} does not exist in the sheet`);
+            throw new Error(`Tab "${tabName}" does not exist in the Google Sheet. Please create this tab first.`);
           }
           
-          throw new Error(`Failed to sync to ${tabName}: ${errorText}`);
+          throw new Error(`Failed to sync to ${tabName}: Status ${response.status} - ${errorText}`);
         }
 
         const result = await response.json();
-        logStep(`Successfully synced to ${tabName}`, result);
+        logStep(`Successfully synced to ${tabName}`, { 
+          updatedRows: result.updates?.updatedRows || 'unknown',
+          updatedColumns: result.updates?.updatedColumns || 'unknown'
+        });
         return result;
       } catch (error) {
-        logStep(`Error syncing to ${tabName}`, error);
+        logStep(`CATCH ERROR syncing to ${tabName}`, { 
+          errorMessage: error.message,
+          errorName: error.name,
+          tabName: tabName
+        });
         throw error;
       }
     };
