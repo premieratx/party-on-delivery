@@ -37,6 +37,7 @@ interface PartyTabsProps {
   totalPartyBudget: number;
   runningTotal: number;
   onComplete: () => void;
+  onBackToPartyType?: () => void; // Add callback for back button
 }
 
 export const PartyTabs = ({
@@ -47,7 +48,8 @@ export const PartyTabs = ({
   categorySelections,
   totalPartyBudget,
   runningTotal,
-  onComplete
+  onComplete,
+  onBackToPartyType
 }: PartyTabsProps) => {
   const [activeTab, setActiveTab] = useState("details");
   const [completedTabs, setCompletedTabs] = useState<Set<string>>(new Set());
@@ -232,7 +234,14 @@ export const PartyTabs = ({
               <div className="flex gap-3 pt-4">
                 <Button 
                   variant="outline" 
-                  onClick={() => window.history.back()}
+                  onClick={() => {
+                    // Use callback if provided, otherwise navigate to party planner
+                    if (onBackToPartyType) {
+                      onBackToPartyType();
+                    } else {
+                      window.location.href = '/plan-my-party';
+                    }
+                  }}
                   className="flex-1"
                 >
                   Back to Party Type

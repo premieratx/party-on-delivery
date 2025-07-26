@@ -421,6 +421,7 @@ export const PartyPlanner = () => {
                           totalPartyBudget={getTotalPartyBudget()}
                           runningTotal={getRunningTotal()}
                           onComplete={() => handleEventComplete(eventName)}
+                          onBackToPartyType={() => setCurrentStep(0)} // Add back callback
                         />
                       </CardContent>
                     </Card>
