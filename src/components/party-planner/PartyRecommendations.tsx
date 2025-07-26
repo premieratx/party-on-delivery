@@ -181,8 +181,8 @@ export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: Par
   const categorySelections = getAllCategorySelections();
   const currentSelection = categorySelections[currentSelectionStep];
 
-  const handleAddToCart = (items: any[]) => {
-    const selectionKey = `${currentSelection.eventName}-${currentSelection.category}`;
+  const handleAddToCart = (eventName: string, category: string, items: any[]) => {
+    const selectionKey = `${eventName}-${category}`;
     
     // Update category selections for navigation
     setSavedCategorySelections(prev => ({
@@ -347,6 +347,7 @@ export const PartyRecommendations = ({ partyDetails, cart, onEditCategory }: Par
         </div>
 
         <ProductSelection
+          eventName={currentSelection.eventName}
           category={currentSelection.category}
           subcategories={currentSelection.subcategories}
           recommendedQuantity={currentSelection.recommendedQuantity}

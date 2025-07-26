@@ -10,7 +10,6 @@ import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { PartyTypeSelection } from "@/components/party-planner/PartyTypeSelection";
 import { WeddingEventSelection } from "@/components/party-planner/WeddingEventSelection";
 import { PartyTabs } from "@/components/party-planner/PartyTabs";
-import { CartWidget } from "@/components/party-planner/CartWidget";
 import { SearchIcon } from "@/components/common/SearchIcon";
 
 interface CartItem {
@@ -209,13 +208,18 @@ export const PartyPlanner = () => {
               <div className="flex items-center gap-2">
                 <SearchIcon size="sm" variant="mobile" />
                 <Button variant="outline" size="sm" className="p-1 h-8 relative" onClick={() => setShowCart(true)}>
-                <ShoppingCart className="w-4 h-4" />
+                  <ShoppingCart className="w-4 h-4" />
+                  {getTotalItems() > 0 && (
+                    <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </Button>
                 {getTotalItems() > 0 && (
-                  <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
-                    {getTotalItems()}
+                  <span className="text-xs font-medium text-muted-foreground">
+                    ${getTotalPrice().toFixed(2)}
                   </span>
                 )}
-                </Button>
               </div>
               
               <div className="text-center flex-1 px-2">
@@ -245,14 +249,19 @@ export const PartyPlanner = () => {
               <div className="flex items-center gap-3">
                 <SearchIcon size="md" variant="desktop" />
                 <Button variant="outline" size="sm" className="relative" onClick={() => setShowCart(true)}>
-                <ShoppingCart className="w-4 h-4 mr-1" />
-                Cart ({getTotalItems()})
-                {getTotalItems() > 0 && cartFlash && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-ping">
-                    {getTotalItems()}
+                  <ShoppingCart className="w-4 h-4 mr-1" />
+                  Cart ({getTotalItems()})
+                  {getTotalItems() > 0 && cartFlash && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-ping">
+                      {getTotalItems()}
+                    </span>
+                  )}
+                </Button>
+                {getTotalItems() > 0 && (
+                  <span className="text-sm font-medium text-muted-foreground border rounded px-2 py-1 bg-muted/50">
+                    Running Total: ${getTotalPrice().toFixed(2)}
                   </span>
                 )}
-                </Button>
               </div>
               
               <div className="text-center flex-1 px-4">
@@ -472,9 +481,6 @@ export const PartyPlanner = () => {
           </div>
         )}
         
-        {/* Cart Widget */}
-        <CartWidget items={cartItems} />
-
         {/* Unified Cart */}
         <UnifiedCart isOpen={showCart} onClose={() => setShowCart(false)} />
       </div>

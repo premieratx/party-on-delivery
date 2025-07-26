@@ -44,6 +44,7 @@ interface CartItem {
 }
 
 interface ProductSelectionProps {
+  eventName: string; // Add event name
   category: string;
   subcategories: string[];
   recommendedQuantity: number;
@@ -52,7 +53,7 @@ interface ProductSelectionProps {
   totalPartyBudget: number;
   runningTotal: number;
   currentSelections?: CartItem[];
-  onAddToCart: (items: CartItem[]) => void;
+  onAddToCart: (eventName: string, category: string, items: CartItem[]) => void; // Fix signature
   onComplete: () => void;
   onPrevious?: () => void;
 }
@@ -66,6 +67,7 @@ const categoryCollectionMap: Record<string, string> = {
 };
 
 export const ProductSelection = ({ 
+  eventName, // Add eventName
   category, 
   subcategories, 
   recommendedQuantity, 
@@ -289,7 +291,7 @@ export const ProductSelection = ({
           price: product.price,
           quantity,
           image: product.image,
-          eventName: '', // Will be set by parent component
+          eventName: eventName || '', // Use the actual event name passed from parent
           category
         };
       })
@@ -307,7 +309,7 @@ export const ProductSelection = ({
     }
 
     console.log('ProductSelection: Adding items to cart:', selectedItems);
-    onAddToCart(selectedItems);
+    onAddToCart(eventName, category, selectedItems);
     setIsAddedToCart(true);
     setAddedToCartItems({...selections});
     
@@ -333,7 +335,7 @@ export const ProductSelection = ({
         category
       };
       
-      onAddToCart([cartItem]);
+      onAddToCart(eventName, category, [cartItem]);
       setIsAddedToCart(true);
       setAddedToCartItems(prev => ({
         ...prev,
@@ -471,10 +473,10 @@ export const ProductSelection = ({
                                 eventName: '',
                                 category
                               };
-                              onAddToCart([cartItem]);
+                              onAddToCart(eventName, category, [cartItem]);
                             } else {
                               // Remove from cart if quantity becomes 0
-                              onAddToCart([]);
+                              onAddToCart(eventName, category, []);
                             }
                           }}
                           className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
@@ -500,7 +502,7 @@ export const ProductSelection = ({
                               eventName: '',
                               category
                             };
-                            onAddToCart([cartItem]);
+                            onAddToCart(eventName, category, [cartItem]);
                           }}
                           className="h-5 w-5 md:h-6 md:w-6 p-0 rounded-full"
                           type="button"
@@ -529,7 +531,7 @@ export const ProductSelection = ({
                           handleQuantityChange(product.id, 1);
                           
                           // Add to cart immediately
-                          onAddToCart([cartItem]);
+                          onAddToCart(eventName, category, [cartItem]);
                           
                           // Update local tracking so it shows as added
                           setAddedToCartItems(prev => ({

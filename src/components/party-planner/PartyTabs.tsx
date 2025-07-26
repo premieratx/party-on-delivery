@@ -431,7 +431,7 @@ export const PartyTabs = ({
             </div>
             
             <EventDetailsForm
-              eventName={eventName}
+            eventName={eventName}
               details={eventDetails}
               onUpdate={onUpdateEventDetails}
             />
@@ -459,6 +459,7 @@ export const PartyTabs = ({
               </div>
               
               <ProductSelection
+                eventName={eventName}
                 category={category}
                 subcategories={category === 'liquor' ? (eventDetails.liquorTypes || []) : []}
                 recommendedQuantity={getRecommendedQuantity(category)}
@@ -467,7 +468,7 @@ export const PartyTabs = ({
                 totalPartyBudget={totalPartyBudget}
                 runningTotal={runningTotal}
                 currentSelections={categorySelections[category] || []}
-                onAddToCart={(items) => handleCategoryAddToCart(category, items)}
+                onAddToCart={(eventName, category, items) => handleCategoryAddToCart(category, items)}
                 onComplete={() => {
                   if (!isTabCompleted(category)) {
                     handleTabSave(category);
