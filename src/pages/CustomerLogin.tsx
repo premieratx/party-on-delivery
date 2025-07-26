@@ -60,21 +60,26 @@ const CustomerLogin = () => {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      // Store intent to redirect to dashboard in localStorage
-      localStorage.setItem('loginRedirectIntent', 'dashboard');
+      // Clear any existing redirect intents
+      localStorage.removeItem('loginRedirectIntent');
+      
+      // Use current origin for redirect with proper mobile detection
+      const redirectUrl = `${window.location.origin}/customer/dashboard`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/customer/dashboard`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account', // Changed from 'consent' to avoid multiple prompts
           },
+          skipBrowserRedirect: false, // Ensure proper redirect handling
         },
       });
 
       if (error) {
+        console.error('OAuth error:', error);
         toast({
           title: "Login Error",
           description: error.message,

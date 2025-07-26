@@ -64,6 +64,12 @@ serve(async (req) => {
 
     // Parse cart items from metadata
     const cartItems = JSON.parse(metadata?.cart_items || '[]');
+    
+    // Validate cart items exist
+    if (!cartItems || cartItems.length === 0) {
+      throw new Error("No cart items found in payment metadata");
+    }
+    
     const deliveryDate = metadata?.delivery_date;
     const deliveryTime = metadata?.delivery_time;
     const deliveryAddress = metadata?.delivery_address;

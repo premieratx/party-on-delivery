@@ -174,12 +174,12 @@ export const PartyPlanner = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <div className="container mx-auto px-4 py-8">
         {/* Header - Made wider and shorter */}
-        <div className="text-center mb-6">
-          <div className="max-w-6xl mx-auto h-32 flex flex-col justify-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-2">
+        <div className="text-center mb-4 md:mb-6">
+          <div className="max-w-6xl mx-auto h-20 md:h-32 flex flex-col justify-center px-2">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground mb-1 md:mb-2">
               Let's Get This Party Started! 🎉
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-sm md:text-xl text-muted-foreground">
               Plan the perfect party with our smart recommendation system
             </p>
           </div>

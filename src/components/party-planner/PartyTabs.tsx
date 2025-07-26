@@ -240,21 +240,23 @@ export const PartyTabs = ({
   return (
     <div className="w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)` }}>
+        <TabsList className="grid w-full overflow-x-auto" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(80px, 1fr))` }}>
           {tabs.map((tab) => (
             <TabsTrigger 
               key={tab.id} 
               value={tab.id} 
-              className="relative flex items-center gap-1 text-xs sm:text-sm"
+              className="relative flex flex-col items-center gap-0.5 text-xs min-w-[70px] px-1 py-2 h-auto whitespace-nowrap"
             >
-              {isTabCompleted(tab.id) && (
-                <Check className="w-3 h-3 text-green-500" />
-              )}
-              <span className="truncate">{tab.label}</span>
+              <div className="flex items-center gap-1">
+                {isTabCompleted(tab.id) && (
+                  <Check className="w-3 h-3 text-green-500" />
+                )}
+                <span className="truncate text-xs max-w-[60px]">{tab.label}</span>
+              </div>
               {getTabState(tab.id) && (
                 <Badge 
                   variant={getTabState(tab.id) === 'added' ? 'default' : 'secondary'} 
-                  className="text-xs h-4 px-1 ml-1"
+                  className="text-xs h-3 px-1 leading-none"
                 >
                   {getTabState(tab.id) === 'added' ? 'Cart' : 'Saved'}
                 </Badge>
