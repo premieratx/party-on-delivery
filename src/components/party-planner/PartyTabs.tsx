@@ -160,68 +160,94 @@ export const PartyTabs = ({
     const remainingBudget = eventDetails.budget - totalSpent;
 
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Summary - {eventName}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Budget Overview */}
-          <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-4 rounded-lg">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold">${totalSpent.toFixed(2)}</div>
-                <div className="text-sm text-muted-foreground">Total Spent</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold">${eventDetails.budget.toFixed(2)}</div>
-                <div className="text-sm text-muted-foreground">Budget</div>
-              </div>
-              <div>
-                <div className={`text-2xl font-bold ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ${remainingBudget.toFixed(2)}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Side - Event Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">{eventName} Event Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Event Info */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-lg font-bold">{eventDetails.numberOfPeople}</div>
+                  <div className="text-sm text-muted-foreground">Guests</div>
                 </div>
-                <div className="text-sm text-muted-foreground">Remaining</div>
+                <div>
+                  <div className="text-lg font-bold capitalize">{eventDetails.drinkerType}</div>
+                  <div className="text-sm text-muted-foreground">Drinker Type</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-lg font-bold">{eventDetails.eventDuration}h</div>
+                  <div className="text-sm text-muted-foreground">Duration</div>
+                </div>
+                <div>
+                  <div className="text-lg font-bold">{eventDetails.drinkTypes.length}</div>
+                  <div className="text-sm text-muted-foreground">Drink Categories</div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Category Breakdown */}
-          <div className="space-y-4">
-            <h4 className="font-semibold">Items by Category</h4>
+            {/* Budget Overview */}
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 p-4 rounded-lg">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-xl font-bold">${totalSpent.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">Total Spent</div>
+                </div>
+                <div>
+                  <div className="text-xl font-bold">${eventDetails.budget.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">Budget</div>
+                </div>
+                <div>
+                  <div className={`text-xl font-bold ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ${remainingBudget.toFixed(2)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Remaining</div>
+                </div>
+              </div>
+            </div>
+
+            <Button onClick={onComplete} className="w-full" size="lg">
+              Complete {eventName} Planning
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Right Side - Order Summary */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Order Summary</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {eventDetails.drinkTypes.map(category => {
               const items = categorySelections[category] || [];
               const categoryTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-              const totalServings = items.reduce((sum, item) => {
-                const containerSize = category === 'beer' ? 12 : 
-                                   category === 'wine' ? 5 : 
-                                   category === 'liquor' ? 25 : 
-                                   category === 'cocktails' ? 12 : 1;
-                return sum + (item.quantity * containerSize);
-              }, 0);
 
               return (
                 <div key={category} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <h5 className="font-medium capitalize">{category}</h5>
-                    <div className="text-sm">
-                      <span className="font-medium">${categoryTotal.toFixed(2)}</span>
-                      <span className="text-muted-foreground ml-2">
-                        ({totalServings} {
-                          category === 'cocktails' ? 'drinks' :
-                          category === 'beer' ? 'beers' :
-                          'drinks'
-                        })
-                      </span>
-                    </div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h5 className="font-medium capitalize text-lg">{category}</h5>
+                    <span className="font-bold">${categoryTotal.toFixed(2)}</span>
                   </div>
                   {items.length === 0 ? (
                     <div className="text-sm text-muted-foreground">No items selected</div>
                   ) : (
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {items.map((item, idx) => (
-                        <div key={idx} className="flex justify-between text-sm">
-                          <span>{item.title} x{item.quantity}</span>
-                          <span>${(item.price * item.quantity).toFixed(2)}</span>
+                        <div key={idx} className="flex justify-between items-center text-sm bg-muted/50 p-2 rounded">
+                          <div className="flex-1">
+                            <div className="font-medium">{item.title}</div>
+                            <div className="text-xs text-muted-foreground">${item.price.toFixed(2)} each</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-8 text-center">×{item.quantity}</span>
+                            <span className="font-medium w-16 text-right">${(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -229,14 +255,16 @@ export const PartyTabs = ({
                 </div>
               );
             })}
-          </div>
-
-          <Button onClick={onComplete} className="w-full" size="lg">
-            Complete {eventName} Planning
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </CardContent>
-      </Card>
+            
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center text-lg font-bold">
+                <span>Total</span>
+                <span>${totalSpent.toFixed(2)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   };
 
@@ -245,7 +273,7 @@ export const PartyTabs = ({
       {/* Sticky Header */}
       <div className="sticky top-0 z-40 bg-background border-b pb-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
+          <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '80px' }}>
             {tabs.map((tab) => (
               <TabsTrigger 
                 key={tab.id} 

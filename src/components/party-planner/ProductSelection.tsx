@@ -122,23 +122,15 @@ export const ProductSelection = ({
         return;
       }
 
-      // Check cache first
-      const cachedCollections = cacheManager.getShopifyCollections();
-      let collections: ShopifyCollection[] = [];
-
-      if (cachedCollections && cachedCollections.length > 0) {
-        collections = cachedCollections;
-      } else {
-        // Fetch fresh data
-        const { data, error } = await supabase.functions.invoke('get-all-collections');
-        
-        if (error || data?.error) {
-          throw new Error(`Failed to fetch collections: ${error?.message || data?.error}`);
-        }
-        
-        collections = data.collections || [];
-        cacheManager.setShopifyCollections(collections);
+      // Always fetch fresh data - ignore cache as requested
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      
+      if (error || data?.error) {
+        throw new Error(`Failed to fetch collections: ${error?.message || data?.error}`);
       }
+      
+      const collections = data.collections || [];
+      cacheManager.setShopifyCollections(collections);
 
       // Find the collection for this category
       const targetCollection = collections.find(c => c.handle === collectionHandle);
@@ -424,28 +416,36 @@ export const ProductSelection = ({
                       <Check className="w-4 h-4 text-green-600" />
                     )}
                     
-                    {/* Quantity Controls - centered at bottom */}
-                    <div className="flex items-center gap-2 mt-auto">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, -1)}
-                        disabled={quantity <= 0}
-                        className="h-8 w-8 p-0 rounded-full"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <span className="w-8 text-center font-medium text-sm">{quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(product.id, 1)}
-                        className="h-8 w-8 p-0 rounded-full"
-                        type="button"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {/* Green Add to Cart Button */}
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => {
+                        const cartItem: CartItem = {
+                          productId: product.id,
+                          title: product.title,
+                          price: product.price,
+                          quantity: 1,
+                          image: product.image,
+                          eventName: '',
+                          category
+                        };
+                        onAddToCart([cartItem]);
+                        setAddedToCartItems(prev => ({
+                          ...prev,
+                          [product.id]: (prev[product.id] || 0) + 1
+                        }));
+                        toast({
+                          title: "Added to Cart",
+                          description: `${product.title} added to your cart!`,
+                        });
+                      }}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white mt-auto"
+                      type="button"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add to Cart
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -543,37 +543,38 @@ export const ProductSelection = ({
       </Dialog>
 
 
-      {/* Summary and Actions */}
+      {/* Summary and Actions - simplified without Add to Cart button */}
       <div className="bg-muted/30 rounded-lg p-6 space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-lg font-semibold">Selection Summary</p>
+            <p className="text-lg font-semibold">Cart Summary</p>
             <p className="text-sm text-muted-foreground">
-              {Object.values(selections).reduce((sum, qty) => sum + qty, 0)} {getUnitName(Object.values(selections).reduce((sum, qty) => sum + qty, 0) !== 1)} • {totalServings} {getServingName()}
+              {Object.values(addedToCartItems).reduce((sum, qty) => sum + qty, 0)} {getUnitName(Object.values(addedToCartItems).reduce((sum, qty) => sum + qty, 0) !== 1)} in cart
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold">${selectionTotal.toFixed(2)}</p>
-            <p className={`text-sm ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              Budget: ${remainingBudget.toFixed(2)} {remainingBudget >= 0 ? 'remaining' : 'over'}
+            <p className="text-2xl font-bold">${Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
+              const product = products.find(p => p.id === productId);
+              return total + (product ? product.price * quantity : 0);
+            }, 0).toFixed(2)}</p>
+            <p className={`text-sm ${(budget - Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
+              const product = products.find(p => p.id === productId);
+              return total + (product ? product.price * quantity : 0);
+            }, 0)) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              Budget: ${(budget - Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
+                const product = products.find(p => p.id === productId);
+                return total + (product ? product.price * quantity : 0);
+              }, 0)).toFixed(2)} {(budget - Object.entries(addedToCartItems).reduce((total, [productId, quantity]) => {
+                const product = products.find(p => p.id === productId);
+                return total + (product ? product.price * quantity : 0);
+              }, 0)) >= 0 ? 'remaining' : 'over'}
             </p>
           </div>
         </div>
 
         <div className="flex gap-3 justify-end">
           <Button
-            variant="outline"
-            onClick={handleAddToCart}
-            disabled={Object.values(selections).every(qty => qty === 0)}
-            className={`flex items-center gap-2 ${isAddedToCart && Object.values(selections).every(qty => addedToCartItems[products.find(p => selections[p.id] > 0)?.id || ''] >= qty) ? 'opacity-50' : ''}`}
-          >
-            <ShoppingCart className="w-4 h-4" />
-            {isAddedToCart ? 'Update Cart' : 'Add to Cart'}
-          </Button>
-          
-          <Button
             onClick={handleSaveAndContinue}
-            disabled={Object.values(selections).every(qty => qty === 0)}
             className="flex items-center gap-2"
           >
             Save & Continue

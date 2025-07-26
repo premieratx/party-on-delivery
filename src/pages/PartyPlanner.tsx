@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Minimize2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Minimize2, ShoppingCart } from "lucide-react";
 import { useReliableStorage } from "@/hooks/useReliableStorage";
 import { PartyTypeSelection } from "@/components/party-planner/PartyTypeSelection";
 import { WeddingEventSelection } from "@/components/party-planner/WeddingEventSelection";
@@ -169,15 +169,31 @@ export const PartyPlanner = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <div className="container mx-auto px-4 py-8">
-        {/* Header - Made wider and shorter */}
-        <div className="text-center mb-4 md:mb-6">
-          <div className="max-w-6xl mx-auto h-20 md:h-32 flex flex-col justify-center px-2">
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground mb-1 md:mb-2">
-              Let's Get This Party Started! 🎉
-            </h1>
-            <p className="text-sm md:text-xl text-muted-foreground">
-              Plan the perfect party with our smart recommendation system
-            </p>
+        {/* Header with Cart and Checkout */}
+        <div className="sticky top-0 z-50 bg-background border-b mb-4 md:mb-6">
+          <div className="flex justify-between items-center px-4 py-2">
+            <Button variant="outline" size="sm">
+              <ShoppingCart className="w-4 h-4 mr-1" />
+              Cart ({cart.length})
+            </Button>
+            
+            <div className="text-center flex-1 px-4">
+              <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-foreground">
+                Let's Get This Party Started! 🎉
+              </h1>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                Plan the perfect party with our smart recommendation system
+              </p>
+            </div>
+
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={() => navigate('/checkout')}
+              disabled={cart.length === 0}
+            >
+              Checkout
+            </Button>
           </div>
         </div>
 
