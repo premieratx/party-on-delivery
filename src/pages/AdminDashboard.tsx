@@ -14,6 +14,7 @@ import {
   Award
 } from 'lucide-react';
 import TestSMS from '@/components/TestSMS';
+import { SyncDataToSheets } from '@/components/SyncDataToSheets';
 
 interface AffiliateStats {
   id: string;
@@ -419,6 +420,11 @@ export const AdminDashboard: React.FC = () => {
               <div className="text-2xl font-bold">{summary.totalOrders}</div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Google Sheets Sync */}
+        <div className="flex justify-center">
+          <SyncDataToSheets />
         </div>
 
         {/* Grid Layout for Affiliate Leaderboard and Abandoned Orders */}
