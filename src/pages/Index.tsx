@@ -1,10 +1,15 @@
 import { DeliveryWidget } from "@/components/DeliveryWidget";
 import { SearchIcon } from "@/components/common/SearchIcon";
+import { PartyPlanningButton } from "@/components/PartyPlanningButton";
+import { useReliableStorage } from "@/hooks/useReliableStorage";
 import nightclubDisco1 from "@/assets/nightclub-disco-1.jpg";
 import nightclubDisco2 from "@/assets/nightclub-disco-2.jpg";
 import nightclubDisco3 from "@/assets/nightclub-disco-3.jpg";
 
 const Index = () => {
+  const [partyDetails] = useReliableStorage('party-details', null);
+  const hasProgress = partyDetails && (partyDetails.partyType || Object.keys(partyDetails.eventDetails || {}).length > 0);
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Video Background (using images as frames for now) */}
@@ -45,6 +50,8 @@ const Index = () => {
           <SearchIcon size="md" variant="mobile" />
         </div>
         <DeliveryWidget />
+        {/* Show Resume Planning button if there's progress */}
+        {hasProgress && <PartyPlanningButton />}
       </div>
     </div>
   );

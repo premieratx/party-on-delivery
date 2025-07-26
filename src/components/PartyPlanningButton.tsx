@@ -1,20 +1,32 @@
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PartyPopper } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-export const PartyPlanningButton = () => {
+interface PartyPlanningButtonProps {
+  variant?: 'default' | 'resume';
+}
+
+export const PartyPlanningButton = ({ variant = 'default' }: PartyPlanningButtonProps) => {
   const navigate = useNavigate();
 
+  if (variant === 'resume') {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button 
+          onClick={() => navigate('/plan-my-party')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-lg"
+        >
+          Resume Planning
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex justify-center py-6 px-4">
-      <Button 
-        onClick={() => navigate('/plan-my-party')}
-        size="lg"
-        className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3"
-      >
-        <PartyPopper className="w-6 h-6" />
-        Plan My Party
-      </Button>
-    </div>
+    <Button 
+      onClick={() => navigate('/plan-my-party')}
+      className="w-full"
+    >
+      Plan My Party
+    </Button>
   );
 };

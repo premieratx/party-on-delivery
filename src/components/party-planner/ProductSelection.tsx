@@ -274,20 +274,28 @@ export const ProductSelection = ({
   };
 
   const handleAddToCart = () => {
+    console.log('ProductSelection: Adding to cart, selections:', selections);
     const selectedItems: CartItem[] = Object.entries(selections)
       .filter(([_, quantity]) => quantity > 0)
       .map(([productId, quantity]) => {
         const product = products.find(p => p.id === productId);
+        if (!product) {
+          console.error('ProductSelection: Product not found for ID:', productId);
+          return null;
+        }
         return {
           productId,
-          title: product?.title || '',
-          price: product?.price || 0,
+          title: product.title,
+          price: product.price,
           quantity,
-          image: product?.image,
-          eventName: '',
+          image: product.image,
+          eventName: '', // Will be set by parent component
           category
         };
-      });
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    console.log('ProductSelection: Cart items to add:', selectedItems);
 
     if (selectedItems.length === 0) {
       toast({

@@ -184,6 +184,21 @@ export const PartyPlanner = () => {
           <h1 className="text-xl md:text-3xl font-bold text-foreground">
             Let's Get This Party Started! 🎉
           </h1>
+          {/* Reset Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              clearPartyDetails();
+              setCurrentStep(0);
+              setCompletedEvents(new Set());
+              setMinimizedEvents(new Set());
+              navigate('/', { replace: true });
+            }}
+            className="mt-2 text-xs"
+          >
+            Reset & Start Over
+          </Button>
         </div>
 
         {/* Compact Sticky Header */}
