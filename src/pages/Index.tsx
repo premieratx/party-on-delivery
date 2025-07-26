@@ -1,4 +1,5 @@
 import { DeliveryWidget } from "@/components/DeliveryWidget";
+import { SearchIcon } from "@/components/common/SearchIcon";
 import nightclubDisco1 from "@/assets/nightclub-disco-1.jpg";
 import nightclubDisco2 from "@/assets/nightclub-disco-2.jpg";
 import nightclubDisco3 from "@/assets/nightclub-disco-3.jpg";
@@ -39,6 +40,10 @@ const Index = () => {
 
       {/* Content - Just the main delivery widget */}
       <div className="relative z-10">
+        {/* Search Icon - Top Left */}
+        <div className="absolute top-4 left-4 z-20">
+          <SearchIcon size="md" variant="mobile" />
+        </div>
         <DeliveryWidget />
       </div>
     </div>

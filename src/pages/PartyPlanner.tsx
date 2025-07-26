@@ -9,6 +9,7 @@ import { PartyTypeSelection } from "@/components/party-planner/PartyTypeSelectio
 import { WeddingEventSelection } from "@/components/party-planner/WeddingEventSelection";
 import { PartyTabs } from "@/components/party-planner/PartyTabs";
 import { CartWidget } from "@/components/party-planner/CartWidget";
+import { SearchIcon } from "@/components/common/SearchIcon";
 
 interface CartItem {
   productId: string;
@@ -192,16 +193,19 @@ export const PartyPlanner = () => {
         {/* Compact Sticky Header */}
         <div className="sticky top-0 z-50 bg-background border-b mb-2">
           <div className="flex justify-between items-center px-3 py-1">
-            {/* Mobile Layout: Cart Icon - Centered Text - Checkout Button */}
+            {/* Mobile Layout: Search Icon - Cart Icon - Centered Text - Checkout Button */}
             <div className="md:hidden flex items-center justify-between w-full">
-              <Button variant="outline" size="sm" className="p-1 h-8 relative">
+              <div className="flex items-center gap-2">
+                <SearchIcon size="sm" variant="mobile" />
+                <Button variant="outline" size="sm" className="p-1 h-8 relative">
                 <ShoppingCart className="w-4 h-4" />
                 {cart.length > 0 && (
                   <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
                     {cart.length}
                   </span>
                 )}
-              </Button>
+                </Button>
+              </div>
               
               <div className="text-center flex-1 px-2">
                 <p className="text-xs text-muted-foreground leading-tight">
@@ -226,9 +230,11 @@ export const PartyPlanner = () => {
               </Button>
             </div>
 
-            {/* Desktop Layout: Full Text with Buttons */}
+            {/* Desktop Layout: Search Icon - Cart - Centered Text - Checkout Button */}
             <div className="hidden md:flex justify-between items-center w-full">
-              <Button variant="outline" size="sm" className="relative">
+              <div className="flex items-center gap-3">
+                <SearchIcon size="md" variant="desktop" />
+                <Button variant="outline" size="sm" className="relative">
                 <ShoppingCart className="w-4 h-4 mr-1" />
                 Cart ({cart.length})
                 {cart.length > 0 && cartFlash && (
@@ -236,7 +242,8 @@ export const PartyPlanner = () => {
                     {cart.length}
                   </span>
                 )}
-              </Button>
+                </Button>
+              </div>
               
               <div className="text-center flex-1 px-4">
                 <p className="text-sm text-muted-foreground">

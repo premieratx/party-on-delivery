@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ShoppingCart, ArrowRight, ArrowLeft } from "lucide-react";
 import { ProductSelection } from "./ProductSelection";
 import { EventDetailsForm } from "./EventDetailsForm";
+import { SearchIcon } from "@/components/common/SearchIcon";
 
 interface CartItem {
   productId: string;
@@ -323,34 +324,70 @@ export const PartyTabs = ({
     <div className="w-full">
       {/* Sticky Header - Full Width on Mobile */}
       <div className="sticky top-0 z-40 bg-background border-b pb-2 -mx-2 px-2 md:mx-0 md:px-0">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
-            {tabs.map((tab) => (
-              <TabsTrigger 
-                key={tab.id} 
-                value={tab.id} 
-                className="relative flex flex-col items-center justify-center text-xs px-1 py-1 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
-              >
-                <div className="flex items-center gap-1 mb-1">
-                  {isTabCompleted(tab.id) && (
+        {/* Desktop: Search Icon + Tabs */}
+        <div className="hidden md:flex items-center gap-2 mb-2">
+          <SearchIcon size="md" variant="tabs" />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+            <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
+              {tabs.map((tab) => (
+                <TabsTrigger 
+                  key={tab.id} 
+                  value={tab.id} 
+                  className="relative flex flex-col items-center justify-center text-xs px-1 py-1 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
+                >
+                  <div className="flex items-center gap-1 mb-1">
+                    {isTabCompleted(tab.id) && (
+                      <Check className="w-3 h-3 text-green-500" />
+                    )}
+                    <span className="font-semibold text-xs text-center leading-tight md:whitespace-nowrap" style={{ fontSize: '80%' }}>
+                      {tab.id === 'details' ? (
+                        <span className="block md:inline">
+                          <span className="block md:inline">Event</span>
+                          <span className="block md:inline md:ml-1">Details</span>
+                        </span>
+                      ) : tab.label}
+                    </span>
+                  </div>
+                  {getTabState(tab.id) === 'added' && (
                     <Check className="w-3 h-3 text-green-500" />
                   )}
-                  <span className="font-semibold text-xs text-center leading-tight md:whitespace-nowrap" style={{ fontSize: '80%' }}>
-                    {tab.id === 'details' ? (
-                      <span className="block md:inline">
-                        <span className="block md:inline">Event</span>
-                        <span className="block md:inline md:ml-1">Details</span>
-                      </span>
-                    ) : tab.label}
-                  </span>
-                </div>
-                {getTabState(tab.id) === 'added' && (
-                  <Check className="w-3 h-3 text-green-500" />
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
+        
+        {/* Mobile: Just Tabs */}
+        <div className="md:hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full overflow-x-auto bg-background border-2 border-black shadow-lg" style={{ gridTemplateColumns: `repeat(${tabs.length}, 1fr)`, height: '60px' }}>
+              {tabs.map((tab) => (
+                <TabsTrigger 
+                  key={tab.id} 
+                  value={tab.id} 
+                  className="relative flex flex-col items-center justify-center text-xs px-1 py-1 h-full border-r border-black last:border-r-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-200 hover:bg-muted/50"
+                >
+                  <div className="flex items-center gap-1 mb-1">
+                    {isTabCompleted(tab.id) && (
+                      <Check className="w-3 h-3 text-green-500" />
+                    )}
+                    <span className="font-semibold text-xs text-center leading-tight md:whitespace-nowrap" style={{ fontSize: '80%' }}>
+                      {tab.id === 'details' ? (
+                        <span className="block md:inline">
+                          <span className="block md:inline">Event</span>
+                          <span className="block md:inline md:ml-1">Details</span>
+                        </span>
+                      ) : tab.label}
+                    </span>
+                  </div>
+                  {getTabState(tab.id) === 'added' && (
+                    <Check className="w-3 h-3 text-green-500" />
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
         {/* Navigation Arrows - Smaller */}
         <div className="flex justify-between items-center mt-1 px-2">

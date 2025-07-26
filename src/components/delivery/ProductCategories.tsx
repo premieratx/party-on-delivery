@@ -10,6 +10,7 @@ import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
+import { SearchIcon } from '@/components/common/SearchIcon';
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
@@ -405,6 +406,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+        {/* Search Icon - Top Left */}
+        <div className="absolute top-4 left-4 z-10">
+          <SearchIcon size="md" variant="desktop" />
+        </div>
+        
         {/* Category Tabs - 5 product tabs + 1 checkout tab */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-1 h-16 sm:h-20">

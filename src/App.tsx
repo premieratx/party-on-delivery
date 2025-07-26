@@ -25,6 +25,7 @@ import TestSMS from "./components/TestSMS";
 import { PartyPlanner } from "./pages/PartyPlanner";
 import Checkout from "./pages/Checkout";
 import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
+import ProductSearch from "./pages/ProductSearch";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,9 @@ const App = () => {
                 {/* Party Planning Routes */}
                 <Route path="/plan-my-party" element={<PartyPlanner />} />
                 <Route path="/checkout" element={<Checkout />} />
+                
+                {/* Search Route */}
+                <Route path="/search" element={<ProductSearch />} />
                 
                 {/* Test Routes */}
                 <Route path="/test-sms" element={<TestSMS />} />
