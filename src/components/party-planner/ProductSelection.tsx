@@ -298,20 +298,7 @@ export const ProductSelection = ({
       return;
     }
 
-    // Check for new items that weren't in the cart before
-    const newItems = selectedItems.filter(item => 
-      !addedToCartItems[item.productId] || 
-      selections[item.productId] > addedToCartItems[item.productId]
-    );
-
-    if (newItems.length === 0 && isAddedToCart) {
-      toast({
-        title: "No New Items",
-        description: "All selected items are already in your cart.",
-      });
-      return;
-    }
-
+    console.log('ProductSelection: Adding items to cart:', selectedItems);
     onAddToCart(selectedItems);
     setIsAddedToCart(true);
     setAddedToCartItems({...selections});
