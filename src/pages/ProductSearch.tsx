@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
+import { parseProductTitle } from '@/utils/productUtils';
 
 interface Product {
   id: string;
@@ -430,16 +431,28 @@ export const ProductSearch = () => {
                         />
                       </div>
                       
-                      {/* Product Info */}
-                      <div className="flex-1 flex flex-col justify-between min-h-0 w-full">
-                        <div>
-                          <h4 className="font-medium text-xs leading-tight line-clamp-2 mb-1">
-                            {product.title}
-                          </h4>
-                          <p className="text-lg font-bold text-primary mb-2">
-                            ${product.price.toFixed(2)}
-                          </p>
-                        </div>
+                       {/* Product Info */}
+                        <div className="flex-1 flex flex-col justify-between min-h-0 w-full">
+                          <div>
+                            {(() => {
+                              const { cleanTitle, packageSize } = parseProductTitle(product.title);
+                              return (
+                                <>
+                                  <h4 className="font-medium text-xs leading-tight line-clamp-2 mb-1">
+                                    {cleanTitle}
+                                  </h4>
+                                  {packageSize && (
+                                    <p className="text-xs text-muted-foreground mb-1">
+                                      {packageSize}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            })()}
+                            <p className="text-lg font-bold text-primary mb-2">
+                              ${product.price.toFixed(2)}
+                            </p>
+                          </div>
                         
                         {/* Category Badge */}
                         <Badge variant="secondary" className="text-xs mb-2 capitalize">

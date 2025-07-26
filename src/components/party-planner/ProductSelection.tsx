@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
+import { parseProductTitle } from '@/utils/productUtils';
 import { Minus, Plus, ShoppingCart, Check, Loader2, X, ArrowRight } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { cacheManager } from '@/utils/cacheManager';
@@ -213,26 +214,6 @@ export const ProductSelection = ({
     });
   };
 
-  // Parse product title to extract name and pack info
-  const parseProductTitle = (title: string) => {
-    // Look for patterns like "12pk", "24 pack", "6-pack", etc.
-    const packPattern = /(\d+)\s*(-|pk|pack)\s*(x\s*\d+\s*(oz|ml|cl)?)?/gi;
-    const match = title.match(packPattern);
-    
-    if (match) {
-      const packInfo = match[0];
-      const cleanTitle = title.replace(packPattern, '').trim();
-      return {
-        name: cleanTitle,
-        packInfo: packInfo
-      };
-    }
-    
-    return {
-      name: title,
-      packInfo: ''
-    };
-  };
 
   const getSelectionTotal = () => {
     return Object.entries(selections).reduce((total, [productId, quantity]) => {
@@ -417,7 +398,7 @@ export const ProductSelection = ({
             const quantity = selections[product.id] || 0;
             const isSelected = quantity > 0;
             const wasAddedToCart = addedToCartItems[product.id] > 0;
-            const { name, packInfo } = parseProductTitle(product.title);
+            const { cleanTitle: name, packageSize: packInfo } = parseProductTitle(product.title);
 
             console.log('Rendering product:', product.title, 'quantity:', quantity, 'wasAddedToCart:', wasAddedToCart);
 

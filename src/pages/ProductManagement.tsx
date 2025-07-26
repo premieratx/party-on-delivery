@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { parseProductTitle } from '@/utils/productUtils';
 import { 
   ArrowLeft, 
   Package, 
@@ -384,9 +385,19 @@ export const ProductManagement: React.FC = () => {
                               className="w-12 h-12 object-cover rounded"
                             />
                             <div>
-                              <h3 className="font-medium">{product.title}</h3>
-                              <p className="text-sm text-muted-foreground">${product.price}</p>
-                              <p className="text-xs text-muted-foreground">Handle: {product.handle}</p>
+                              {(() => {
+                                const { cleanTitle, packageSize } = parseProductTitle(product.title);
+                                return (
+                                  <>
+                                    <h3 className="font-medium">{cleanTitle}</h3>
+                                    {packageSize && (
+                                      <p className="text-xs text-muted-foreground">{packageSize}</p>
+                                    )}
+                                    <p className="text-sm text-muted-foreground">${product.price}</p>
+                                    <p className="text-xs text-muted-foreground">Handle: {product.handle}</p>
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -481,8 +492,18 @@ export const ProductManagement: React.FC = () => {
                             />
                           </div>
                           <CardContent className="p-3">
-                            <h3 className="font-medium text-sm truncate">{product.title}</h3>
-                            <p className="text-sm text-muted-foreground">${product.price}</p>
+                            {(() => {
+                              const { cleanTitle, packageSize } = parseProductTitle(product.title);
+                              return (
+                                <>
+                                  <h3 className="font-medium text-sm truncate">{cleanTitle}</h3>
+                                  {packageSize && (
+                                    <p className="text-xs text-muted-foreground">{packageSize}</p>
+                                  )}
+                                  <p className="text-sm text-muted-foreground">${product.price}</p>
+                                </>
+                              );
+                            })()}
                             {category ? (
                               <Badge variant="default" className="text-xs mt-2">
                                 {category.assigned_category}

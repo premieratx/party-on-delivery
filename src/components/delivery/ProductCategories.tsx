@@ -10,6 +10,7 @@ import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
+import { parseProductTitle } from '@/utils/productUtils';
 import { SearchIcon } from '@/components/common/SearchIcon';
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
@@ -609,41 +610,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                  {/* Product info with smaller height for spirits and beer */}
                  <div className={`flex flex-col flex-1 justify-between ${(selectedCategory === 0 || selectedCategory === 1) ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
                    <div className="flex-1 flex flex-col justify-start">
-                     <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-xs mb-1' : 'text-sm mb-2'} ${selectedCategory === 3 ? '' : 'line-clamp-2'}`}>
-                       {(() => {
-                         // For cocktails (selectedCategory === 3), show full title without truncation
-                         if (selectedCategory === 3) {
-                           return product.title;
-                         }
-                        
-                        // Clean title and remove pack info if it will be shown separately for other categories
-                        const hasPackInfo = product.title.match(/(\d+)\s*(?:pk|pack)/i) && product.title.match(/(\d+)\s*oz/i);
-                        
-                        let cleanedTitle;
-                        if (hasPackInfo) {
-                          cleanedTitle = product.title
-                            .replace(/(\d+)\s*(?:pk|pack)\s*[×x*]\s*(\d+)\s*oz/gi, '')
-                            .replace(/(\d+)\s*(?:pk|pack)/gi, '')
-                            .replace(/(\d+)\s*oz/gi, '')
-                            .replace(/Can/gi, '')
-                            .replace(/Hard Seltzer/gi, '')
-                            .replace(/\s+/g, ' ')
-                            .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '')
-                            .trim();
-                        } else {
-                          cleanedTitle = product.title
-                            .replace(/(\d+)\s*Pack/gi, '$1pk')
-                            .replace(/(\d+)\s*oz/gi, '$1oz')
-                            .replace(/Can/gi, '')
-                            .replace(/Hard Seltzer/gi, '')
-                            .replace(/\s+/g, ' ')
-                            .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '')
-                            .trim();
-                        }
-                        
-                        return cleanedTitle;
-                      })()}
-                    </h4>
+                    {(() => {
+                      // For cocktails (selectedCategory === 3), show full title without truncation
+                      if (selectedCategory === 3) {
+                        return (
+                          <h4 className="font-bold leading-tight text-center text-sm mb-2">
+                            {product.title}
+                          </h4>
+                        );
+                      }
+                      
+                      // For other categories, use the utility function to parse title and package size
+                      const { cleanTitle, packageSize } = parseProductTitle(product.title);
+                      
+                      return (
+                        <>
+                          <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-xs mb-1' : 'text-sm mb-1'} line-clamp-2`}>
+                            {cleanTitle}
+                          </h4>
+                          {packageSize && (
+                            <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                              {packageSize}
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
 
                     {/* Variant selector for products with multiple variants */}
                     {product.variants.length > 1 ? (
@@ -669,33 +661,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       </div>
                     ) : null}
 
-                     {/* Pack size info for variant products OR cocktail drink count */}
-                     {(() => {
-                       // For cocktails (selectedCategory === 3), extract drink count from description
-                       if (selectedCategory === 3) {
+                      {/* Cocktail drink count - only show for cocktails */}
+                      {selectedCategory === 3 && (() => {
                         const drinkMatch = product.description.match(/(\d+)\s*(?:drinks?|servings?|cocktails?)/i);
                         if (drinkMatch) {
                           return (
-                            <p className="text-foreground text-center mb-1 text-[10px] leading-3 whitespace-nowrap overflow-hidden text-ellipsis">
+                            <p className="text-foreground text-center mb-1 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                               {drinkMatch[1]} drinks
                             </p>
                           );
                         }
                         return null;
-                      }
-                      
-                      // For other categories, show pack size info
-                      const packMatch = product.title.match(/(\d+)\s*(?:pk|pack)/i);
-                      const sizeMatch = product.title.match(/(\d+)\s*oz/i);
-                       if (packMatch && sizeMatch) {
-                         return (
-                           <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
-                             {packMatch[1]}pk × {sizeMatch[1]}oz
-                          </p>
-                        );
-                      }
-                      return null;
-                    })()}
+                      })()}
                   </div>
                   
                   {/* Price and cart controls container - always at bottom */}

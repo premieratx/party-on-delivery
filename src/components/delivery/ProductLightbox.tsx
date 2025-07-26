@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { parseProductTitle } from '@/utils/productUtils';
 
 interface ShopifyProduct {
   id: string;
@@ -140,7 +141,17 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
           {/* Product Details */}
           <div className="p-6 flex flex-col justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-4">{product.title}</h2>
+              {(() => {
+                const { cleanTitle, packageSize } = parseProductTitle(product.title);
+                return (
+                  <>
+                    <h2 className="text-2xl font-bold mb-2">{cleanTitle}</h2>
+                    {packageSize && (
+                      <p className="text-lg text-muted-foreground mb-4">{packageSize}</p>
+                    )}
+                  </>
+                );
+              })()}
               
               {/* Price */}
               <Badge variant="secondary" className="text-lg font-semibold mb-4 px-3 py-1">

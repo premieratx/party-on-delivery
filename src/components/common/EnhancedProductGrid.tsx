@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus } from 'lucide-react';
+import { parseProductTitle } from '@/utils/productUtils';
 
 interface Product {
   id: string;
@@ -139,11 +140,25 @@ function ProductCard({
 
         {/* Product Info */}
         <div className="flex-1 flex flex-col">
-          <h3 className={`font-medium line-clamp-2 mb-2 ${
-            isMobile ? 'text-sm' : 'text-base'
-          }`}>
-            {product.title}
-          </h3>
+          {(() => {
+            const { cleanTitle, packageSize } = parseProductTitle(product.title);
+            return (
+              <>
+                <h3 className={`font-medium line-clamp-2 mb-1 ${
+                  isMobile ? 'text-sm' : 'text-base'
+                }`}>
+                  {cleanTitle}
+                </h3>
+                {packageSize && (
+                  <p className={`text-muted-foreground mb-2 ${
+                    isMobile ? 'text-xs' : 'text-sm'
+                  }`}>
+                    {packageSize}
+                  </p>
+                )}
+              </>
+            );
+          })()}
           
           <div className="mt-auto">
             <div className="flex items-center justify-between mb-3">
