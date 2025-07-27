@@ -69,6 +69,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCustomSite, setIsCustomSite] = useState(false);
+  const [customSiteCollections, setCustomSiteCollections] = useState<string[]>([]);
   const [cartCountAnimation, setCartCountAnimation] = useState(false);
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<{[productId: string]: string}>({});
@@ -78,18 +80,66 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
 
-  // Step-based order flow mapping to collection handles - Spirits first!
-  const stepMapping = [
-    { step: 1, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
-    { step: 2, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
-    { step: 3, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
-    { step: 4, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
-    { step: 5, title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Mixers & Non-Alcoholic Drinks' }
-  ];
+  // Dynamic step mapping based on available collections
+  const getStepMapping = () => {
+    if (isCustomSite) {
+      // For custom sites, create tabs based on available collections
+      return collections.map((collection, index) => ({
+        step: index + 1,
+        title: collection.title,
+        handle: collection.handle,
+        backgroundImage: getBackgroundForHandle(collection.handle),
+        pageTitle: `Choose Your ${collection.title}`
+      }));
+    } else {
+      // Default step mapping for main site
+      return [
+        { step: 1, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
+        { step: 2, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
+        { step: 3, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
+        { step: 4, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
+        { step: 5, title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Mixers & Non-Alcoholic Drinks' }
+      ];
+    }
+  };
+
+  // Helper function to get appropriate background image for collection handle
+  const getBackgroundForHandle = (handle: string) => {
+    if (handle.includes('spirit')) return spiritsCategoryBg;
+    if (handle.includes('beer')) return beerCategoryBg;
+    if (handle.includes('seltzer')) return seltzerCategoryBg;
+    if (handle.includes('cocktail')) return cocktailCategoryBg;
+    return partySuppliesCategoryBg;
+  };
+
+  const stepMapping = getStepMapping();
 
   useEffect(() => {
+    // Check if we're on a custom site first
+    const customSiteData = localStorage.getItem('customSiteData');
+    if (customSiteData) {
+      try {
+        const data = JSON.parse(customSiteData);
+        if (data.isCustomSite && data.allowedCollections) {
+          setIsCustomSite(true);
+          setCustomSiteCollections(data.allowedCollections);
+          console.log('Custom site detected with collections:', data.allowedCollections);
+        }
+      } catch (error) {
+        console.error('Error parsing custom site data:', error);
+      }
+    }
+    
     fetchCollections();
   }, []);
+
+  // Re-fetch collections when custom site data changes
+  useEffect(() => {
+    if (isCustomSite && customSiteCollections.length > 0) {
+      console.log('Custom site collections changed, re-fetching:', customSiteCollections);
+      fetchCollections();
+    }
+  }, [isCustomSite, customSiteCollections.join(',')]);
 
   // Initialize visible counts and lazy loading
   useEffect(() => {
@@ -193,20 +243,24 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       console.log(`Successfully fetched ${result.collections.length} collections`);
       
-      // DEBUG: Log all collection handles for spirits debugging
+      // Filter collections for custom sites
+      let collectionsToShow = result.collections;
+      if (isCustomSite && customSiteCollections.length > 0) {
+        collectionsToShow = result.collections.filter((collection: any) => 
+          customSiteCollections.includes(collection.handle)
+        );
+        console.log(`Custom site: filtered from ${result.collections.length} to ${collectionsToShow.length} collections`);
+        console.log('Custom site collections:', collectionsToShow.map((c: any) => `${c.handle} (${c.title})`));
+      }
+      
+      // DEBUG: Log all collection handles for debugging
       console.log('=== COLLECTION HANDLES DEBUG ===');
-      result.collections.forEach((collection: any, index: number) => {
+      collectionsToShow.forEach((collection: any, index: number) => {
         console.log(`Collection ${index}: ${collection.handle} (${collection.title}) - ${collection.products?.length || 0} products`);
       });
-      console.log('Looking for spirits collection with handle: "spirits"');
-      const spiritsCollection = result.collections.find((c: any) => c.handle === 'spirits');
-      console.log('Spirits collection found:', !!spiritsCollection);
-      if (spiritsCollection) {
-        console.log('Spirits collection products:', spiritsCollection.products?.length || 0);
-      }
       console.log('=== END DEBUG ===');
       
-      setCollections(result.collections);
+      setCollections(collectionsToShow);
       setRetryCount(0); // Reset retry count on success
       
       // Cache the successful result
