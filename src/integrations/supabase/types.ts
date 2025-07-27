@@ -275,6 +275,39 @@ export type Database = {
         }
         Relationships: []
       }
+      collection_drafts: {
+        Row: {
+          created_at: string
+          created_by_admin_id: string | null
+          description: string | null
+          handle: string
+          id: string
+          selected_product_ids: string[]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin_id?: string | null
+          description?: string | null
+          handle: string
+          id?: string
+          selected_product_ids?: string[]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_admin_id?: string | null
+          description?: string | null
+          handle?: string
+          id?: string
+          selected_product_ids?: string[]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       commission_payouts: {
         Row: {
           affiliate_id: string | null
@@ -401,6 +434,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      custom_collections: {
+        Row: {
+          created_at: string
+          created_by_admin_id: string | null
+          description: string | null
+          handle: string
+          id: string
+          is_published: boolean
+          product_ids: string[]
+          shopify_collection_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_admin_id?: string | null
+          description?: string | null
+          handle: string
+          id?: string
+          is_published?: boolean
+          product_ids?: string[]
+          shopify_collection_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_admin_id?: string | null
+          description?: string | null
+          handle?: string
+          id?: string
+          is_published?: boolean
+          product_ids?: string[]
+          shopify_collection_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       custom_product_categories: {
         Row: {

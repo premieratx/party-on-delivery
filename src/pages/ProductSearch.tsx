@@ -77,13 +77,31 @@ export const ProductSearch = () => {
   }, [loading, allProducts, availableCategories]);
   
   // Get products for current category
-  const products = productsLoaded[selectedCategory] || (selectedCategory === 'all' ? allProducts : []);
+  const products = useMemo(() => {
+    if (selectedCategory === 'favorites') {
+      return productsLoaded[selectedCategory] || [];
+    } else if (selectedCategory === 'all') {
+      return allProducts;
+    } else {
+      // Filter products by the selected category
+      return allProducts.filter(product => product.category === selectedCategory);
+    }
+  }, [selectedCategory, allProducts, productsLoaded]);
 
   // Generate categories based on custom site or default
   const categories = [
     { id: "favorites", label: "⭐ Favorites" },
     { id: "all", label: "All Categories" },
-    ...availableCategories.filter(cat => cat !== 'favorites').map(cat => ({
+    // Standard category filters
+    { id: "spirits", label: "🥃 Spirits" },
+    { id: "beer", label: "🍺 Beer" },
+    { id: "seltzers", label: "🥤 Seltzers" },
+    { id: "cocktails", label: "🍹 Cocktails" },
+    { id: "wine", label: "🍷 Wine" },
+    { id: "mixers", label: "🧊 Mixers & N/A" },
+    { id: "party-supplies", label: "🎉 Party Supplies" },
+    // Add collection-based categories for available collections
+    ...availableCategories.filter(cat => !['favorites', 'spirits', 'beer', 'seltzers', 'cocktails', 'wine', 'mixers', 'party-supplies'].includes(cat)).map(cat => ({
       id: cat,
       label: cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     }))

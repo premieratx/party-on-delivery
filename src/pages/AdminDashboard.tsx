@@ -18,7 +18,8 @@ import {
   Medal,
   Award,
   Package,
-  Globe
+  Globe,
+  Plus
 } from 'lucide-react';
 import TestSMS from '@/components/TestSMS';
 import { SyncDataToSheets } from '@/components/SyncDataToSheets';
@@ -295,6 +296,14 @@ export const AdminDashboard: React.FC = () => {
             >
               <Globe className="h-4 w-4" />
               Custom Sites
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/admin/create-collection')}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create New Collection
             </Button>
             <TestSMS />
             <Button variant="outline" onClick={loadDashboardData}>

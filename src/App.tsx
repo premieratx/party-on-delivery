@@ -28,6 +28,7 @@ import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 import { ProductSearch } from "./pages/ProductSearch";
 import CustomSiteManagement from "./pages/CustomSiteManagement";
 import CustomSiteView from "./pages/CustomSiteView";
+import { CustomCollectionCreator } from "./pages/CustomCollectionCreator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ const App = () => {
                 <Route path="/affiliate/admin" element={<AdminDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/product-management" element={<ProductManagement />} />
+                <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
                 <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
                 <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                 
