@@ -217,24 +217,41 @@ const TelegramBotSetup: React.FC = () => {
                       Open @BotFather
                     </Button>
                     <div className="space-y-2">
+                      <div>
+                        <Input
+                          placeholder="Paste your bot token here (e.g., 123456:ABC-DEF1234...)"
+                          value={botToken}
+                          onChange={(e) => setBotToken(e.target.value)}
+                          className="w-full"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          ⚠️ Enter the TOKEN (long string with numbers and letters), not the username or link
+                        </p>
+                      </div>
                       <Input
-                        placeholder="Enter your bot token"
-                        value={botToken}
-                        onChange={(e) => setBotToken(e.target.value)}
-                      />
-                      <Input
-                        placeholder="Enter your bot username (optional)"
+                        placeholder="Enter your bot username (optional, e.g., partyONCONCIERGE2025)"
                         value={botUsername}
                         onChange={(e) => setBotUsername(e.target.value)}
+                        className="w-full"
                       />
-                      {botToken && (
+                      {botToken && botToken.includes(':') && botToken.length > 20 ? (
                         <Button
-                          onClick={() => setCurrentStep(1)}
+                          onClick={() => {
+                            setCurrentStep(1);
+                            toast({
+                              title: "Step 1 Complete!",
+                              description: "Moving to webhook setup",
+                            });
+                          }}
                           size="sm"
                           className="w-full"
                         >
                           Next Step
                         </Button>
+                      ) : (
+                        <div className="text-xs text-orange-600 p-2 bg-orange-50 rounded">
+                          Please enter a valid bot token (should contain ':' and be at least 20 characters)
+                        </div>
                       )}
                     </div>
                   </div>
