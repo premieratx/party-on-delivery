@@ -415,12 +415,12 @@ export default function VoucherManagement() {
 
               <div className="space-y-2">
                 <Label htmlFor="affiliate_id">Link to Affiliate (Optional)</Label>
-                <Select value={form.affiliate_id} onValueChange={(value) => setForm({...form, affiliate_id: value})}>
+                <Select value={form.affiliate_id || "none"} onValueChange={(value) => setForm({...form, affiliate_id: value === "none" ? "" : value})}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select affiliate" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No Affiliate</SelectItem>
+                    <SelectItem value="none">No Affiliate</SelectItem>
                     {affiliates.map((affiliate) => (
                       <SelectItem key={affiliate.id} value={affiliate.id}>
                         {affiliate.name} - {affiliate.company_name}
@@ -430,7 +430,7 @@ export default function VoucherManagement() {
                 </Select>
               </div>
 
-              {form.affiliate_id && (
+              {form.affiliate_id && form.affiliate_id !== "none" && (
                 <div className="space-y-2">
                   <Label htmlFor="commission_rate">Affiliate Commission (%)</Label>
                   <Input
