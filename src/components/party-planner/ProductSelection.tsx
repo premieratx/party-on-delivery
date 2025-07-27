@@ -607,7 +607,7 @@ export const ProductSelection = ({
               onClick={handleAddToCart}
               variant="outline"
               size="sm"
-              className="text-xs"
+              className="text-xs bg-primary/10 border-primary hover:bg-primary hover:text-primary-foreground"
             >
               <ShoppingCart className="w-3 h-3 mr-1" />
               Add to Cart

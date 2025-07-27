@@ -791,7 +791,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </div>
                         ) : (
                          <button
-                           className={`bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center transition-colors ${(selectedCategory === 0 || selectedCategory === 1) ? 'w-6 h-6' : 'w-8 h-8'}`}
+                            className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors ${(selectedCategory === 0 || selectedCategory === 1) ? 'w-6 h-6' : 'w-8 h-8'}`}
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {

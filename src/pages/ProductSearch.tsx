@@ -455,7 +455,7 @@ export const ProductSearch = () => {
                             <Button
                               onClick={() => handleAddToCart(product)}
                               size="sm"
-                              className="w-8 h-8 p-0 rounded-full bg-green-500 hover:bg-green-600 text-white"
+                              className="w-8 h-8 p-0 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
                             >
                               <Plus className="w-4 h-4" />
                             </Button>

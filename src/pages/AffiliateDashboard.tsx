@@ -35,6 +35,7 @@ import {
   Edit
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { VoucherDisplay } from '@/components/common/VoucherDisplay';
 
 interface AffiliateData {
   id: string;
@@ -79,10 +80,26 @@ interface AbandonedOrder {
   last_activity_at: string;
 }
 
+interface Voucher {
+  id: string;
+  voucher_code: string;
+  voucher_name: string;
+  voucher_type: string;
+  discount_value?: number;
+  prepaid_amount?: number;
+  minimum_spend: number;
+  max_uses: number;
+  current_uses: number;
+  expires_at?: string;
+  is_active: boolean;
+  commission_rate: number;
+}
+
 export const AffiliateDashboard: React.FC = () => {
   const [affiliate, setAffiliate] = useState<AffiliateData | null>(null);
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [abandonedOrders, setAbandonedOrders] = useState<AbandonedOrder[]>([]);
+  const [affiliateVouchers, setAffiliateVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [copying, setCopying] = useState(false);
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
@@ -252,6 +269,17 @@ export const AffiliateDashboard: React.FC = () => {
       if (abandonedError) console.warn('Failed to load abandoned orders:', abandonedError);
       
       setAbandonedOrders(abandoned || []);
+
+      // Load affiliate vouchers
+      const { data: vouchers, error: vouchersError } = await supabase
+        .from('vouchers')
+        .select('*')
+        .eq('affiliate_id', affiliateData.id)
+        .order('created_at', { ascending: false });
+
+      if (vouchersError) console.warn('Failed to load vouchers:', vouchersError);
+      
+      setAffiliateVouchers(vouchers || []);
     } catch (error: any) {
       console.error('Error loading affiliate data:', error);
       toast({
@@ -800,11 +828,12 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="email" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="email">📧 Email</TabsTrigger>
                 <TabsTrigger value="text">💬 Text</TabsTrigger>
                 <TabsTrigger value="instagram">📸 IG Post</TabsTrigger>
                 <TabsTrigger value="website">🌐 Website</TabsTrigger>
+                <TabsTrigger value="vouchers">🎟️ Vouchers</TabsTrigger>
               </TabsList>
               
               <TabsContent value="email" className="space-y-4">
@@ -873,6 +902,10 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
                     Copy Website Blurb
                   </Button>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="vouchers" className="space-y-4">
+                <VoucherDisplay vouchers={affiliateVouchers} title="Your Vouchers" />
               </TabsContent>
             </Tabs>
             

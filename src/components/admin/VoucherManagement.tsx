@@ -321,9 +321,9 @@ export default function VoucherManagement() {
               
               <div className="space-y-2">
                 <Label htmlFor="voucher_type">Voucher Type</Label>
-                <Select value={form.voucher_type} onValueChange={(value: any) => setForm({...form, voucher_type: value})}>
+                <Select value={form.voucher_type} onValueChange={(value: 'percentage' | 'fixed_amount' | 'prepaid_credit') => setForm({...form, voucher_type: value})}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select voucher type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="percentage">Percentage Discount</SelectItem>
@@ -419,7 +419,7 @@ export default function VoucherManagement() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select affiliate" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border border-border">
                     <SelectItem value="none">No Affiliate</SelectItem>
                     {affiliates.map((affiliate) => (
                       <SelectItem key={affiliate.id} value={affiliate.id}>
@@ -561,24 +561,34 @@ export default function VoucherManagement() {
                       
                       <div>
                         <h5 className="font-medium text-sm text-muted-foreground mb-2">Actions</h5>
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => copyVoucherLink(voucher)}
-                          >
-                            <Copy className="h-3 w-3 mr-1" />
-                            Copy Link
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`${window.location.origin}?voucher=${voucher.voucher_code}`, '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Preview
-                          </Button>
-                        </div>
+                         <div className="flex flex-wrap gap-2">
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => copyVoucherLink(voucher)}
+                           >
+                             <Copy className="h-3 w-3 mr-1" />
+                             Copy Link
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => {
+                               const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}?voucher=${voucher.voucher_code}`)}`;
+                               window.open(qrUrl, '_blank');
+                             }}
+                           >
+                             QR Code
+                           </Button>
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => window.open(`${window.location.origin}?voucher=${voucher.voucher_code}`, '_blank')}
+                           >
+                             <ExternalLink className="h-3 w-3 mr-1" />
+                             Preview
+                           </Button>
+                         </div>
                       </div>
                     </div>
                   </CardContent>
