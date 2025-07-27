@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import AITestingControl from '@/components/AITestingControl';
+import TelegramBotSetup from '@/components/TelegramBotSetup';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -218,6 +219,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="ai-testing">🤖 AI Testing</TabsTrigger>
+              <TabsTrigger value="bot-setup">🤖 Bot Setup</TabsTrigger>
             </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -431,6 +433,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="ai-testing" className="space-y-4">
             <AITestingControl />
+          </TabsContent>
+
+          <TabsContent value="bot-setup" className="space-y-4">
+            <TelegramBotSetup />
           </TabsContent>
         </Tabs>
       </div>
