@@ -13,57 +13,84 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let isMounted = true;
     let hasNavigated = false;
 
-    // Check if user is already authenticated first
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email && !hasNavigated) {
-        // Check if user is admin
-        const { data } = await supabase.functions.invoke('verify-admin-google', {
-          body: { email: session.user.email }
-        });
-        if (data?.isAdmin) {
-          hasNavigated = true;
-          navigate('/affiliate/admin');
-          return;
-        }
-      }
-    };
-    checkAuth();
-
-    // Listen for auth state changes
+    // Set up auth state listener first to catch all events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user?.email && !hasNavigated) {
-        setGoogleLoading(false); // Stop loading when auth completes
-        // Check if user is admin after Google sign in
-        const { data } = await supabase.functions.invoke('verify-admin-google', {
-          body: { email: session.user.email }
-        });
-        if (data?.isAdmin) {
-          hasNavigated = true;
-          toast({
-            title: "Welcome!",
-            description: "Successfully logged in as admin.",
+      if (!isMounted || hasNavigated) return;
+      
+      // Handle successful sign in
+      if (event === 'SIGNED_IN' && session?.user?.email) {
+        setGoogleLoading(false);
+        try {
+          const { data } = await supabase.functions.invoke('verify-admin-google', {
+            body: { email: session.user.email }
           });
-          navigate('/affiliate/admin');
-        } else {
-          // Sign out non-admin users
-          await supabase.auth.signOut();
+          
+          if (data?.isAdmin && !hasNavigated) {
+            hasNavigated = true;
+            toast({
+              title: "Welcome!",
+              description: "Successfully logged in as admin.",
+            });
+            navigate('/affiliate/admin', { replace: true });
+          } else {
+            // Sign out non-admin users
+            await supabase.auth.signOut();
+            toast({
+              title: "Access Denied",
+              description: "You don't have admin access.",
+              variant: "destructive"
+            });
+          }
+        } catch (error) {
+          console.error('Admin verification error:', error);
+          setGoogleLoading(false);
           toast({
-            title: "Access Denied",
-            description: "You don't have admin access.",
+            title: "Error",
+            description: "Failed to verify admin access.",
             variant: "destructive"
           });
         }
       }
+      
+      // Handle sign out
+      if (event === 'SIGNED_OUT') {
+        setGoogleLoading(false);
+      }
     });
 
-    return () => subscription.unsubscribe();
+    // Check existing session after setting up listener
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email && !hasNavigated && isMounted) {
+          const { data } = await supabase.functions.invoke('verify-admin-google', {
+            body: { email: session.user.email }
+          });
+          if (data?.isAdmin) {
+            hasNavigated = true;
+            navigate('/affiliate/admin', { replace: true });
+          }
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      }
+    };
+
+    checkExistingSession();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate, toast]);
 
 
   const handleGoogleLogin = async () => {
+    if (googleLoading) return; // Prevent double clicks
+    
     setGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -72,7 +99,7 @@ export const AdminLogin: React.FC = () => {
           redirectTo: `${window.location.origin}/affiliate/admin-login`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account', // Changed from 'consent' to prevent forcing account selection every time
           }
         }
       });

@@ -18,30 +18,18 @@ const CustomerLogin = () => {
   const redirectParam = searchParams.get('redirect');
 
   useEffect(() => {
-    let hasNavigated = false; // Prevent multiple navigations
+    let isMounted = true;
+    let hasNavigated = false;
 
-    // Check if user is already logged in first
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && !hasNavigated) {
-        hasNavigated = true;
-        // Link any stored session IDs to this user
-        if (session.user.email) {
-          await linkSessionToUser(session.user.email);
-        }
-        
-        localStorage.removeItem('loginRedirectIntent');
-        navigate('/customer/dashboard', { replace: true });
-        return;
-      }
-    };
-    checkUser();
-
-    // Listen for auth changes
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session && !hasNavigated) {
+        if (!isMounted || hasNavigated) return;
+        
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
           hasNavigated = true;
+          setIsLoading(false);
+          
           // Link any stored session IDs to this user
           if (session.user.email) {
             await linkSessionToUser(session.user.email);
@@ -51,13 +39,43 @@ const CustomerLogin = () => {
           localStorage.removeItem('loginRedirectIntent');
           navigate('/customer/dashboard', { replace: true });
         }
+        
+        if (event === 'SIGNED_OUT') {
+          setIsLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
+    // Check existing session after setting up listener
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && !hasNavigated && isMounted) {
+          hasNavigated = true;
+          // Link any stored session IDs to this user
+          if (session.user.email) {
+            await linkSessionToUser(session.user.email);
+          }
+          
+          localStorage.removeItem('loginRedirectIntent');
+          navigate('/customer/dashboard', { replace: true });
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      }
+    };
+
+    checkExistingSession();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [navigate, linkSessionToUser]);
 
   const handleGoogleLogin = async () => {
+    if (isLoading) return; // Prevent double clicks
+    
     setIsLoading(true);
     try {
       // Clear any existing redirect intents
@@ -72,9 +90,9 @@ const CustomerLogin = () => {
           redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
-            prompt: 'select_account', // Changed from 'consent' to avoid multiple prompts
+            prompt: 'select_account',
           },
-          skipBrowserRedirect: false, // Ensure proper redirect handling
+          skipBrowserRedirect: false,
         },
       });
 

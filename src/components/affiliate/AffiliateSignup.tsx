@@ -109,13 +109,11 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
   }, [navigate, initialData]);
 
   const handleGoogleAuth = async () => {
+    if (loading) return; // Prevent double clicks
+    
     console.log('Google auth clicked');
     setLoading(true);
     try {
-      // Clear any existing session first to ensure clean OAuth flow
-      await supabase.auth.signOut();
-      console.log('Cleared existing session');
-      
       // Use Supabase SDK with redirect URL pointing to dashboard for direct login
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -123,7 +121,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
           redirectTo: `${window.location.origin}/affiliate/dashboard`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           }
         }
       });
