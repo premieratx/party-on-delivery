@@ -248,6 +248,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_coordinator_logs: {
+        Row: {
+          ai_response: string
+          chat_id: number
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          intent_detected: string | null
+          user_message: string
+        }
+        Insert: {
+          ai_response: string
+          chat_id: number
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          intent_detected?: string | null
+          user_message: string
+        }
+        Update: {
+          ai_response?: string
+          chat_id?: number
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          intent_detected?: string | null
+          user_message?: string
+        }
+        Relationships: []
+      }
       ai_fix_requests: {
         Row: {
           created_at: string
@@ -281,6 +311,143 @@ export type Database = {
           priority?: string
           processed_at?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      ai_testing_issues: {
+        Row: {
+          created_at: string | null
+          description: string
+          fix_applied: boolean | null
+          fix_suggested: string | null
+          flow: string
+          id: string
+          resolved: boolean | null
+          screenshot_url: string | null
+          session_id: string | null
+          severity: string | null
+          test_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          fix_applied?: boolean | null
+          fix_suggested?: string | null
+          flow: string
+          id?: string
+          resolved?: boolean | null
+          screenshot_url?: string | null
+          session_id?: string | null
+          severity?: string | null
+          test_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          fix_applied?: boolean | null
+          fix_suggested?: string | null
+          flow?: string
+          id?: string
+          resolved?: boolean | null
+          screenshot_url?: string | null
+          session_id?: string | null
+          severity?: string | null
+          test_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_testing_issues_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_testing_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_testing_sessions: {
+        Row: {
+          app_url: string | null
+          chat_id: number | null
+          created_at: string | null
+          current_flow: string | null
+          flows_tested: Json | null
+          id: string
+          session_id: string
+          status: string | null
+          test_type: string
+          tests_failed: number | null
+          tests_passed: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          app_url?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          current_flow?: string | null
+          flows_tested?: Json | null
+          id?: string
+          session_id: string
+          status?: string | null
+          test_type: string
+          tests_failed?: number | null
+          tests_passed?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          app_url?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          current_flow?: string | null
+          flows_tested?: Json | null
+          id?: string
+          session_id?: string
+          status?: string | null
+          test_type?: string
+          tests_failed?: number | null
+          tests_passed?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      autonomous_execution_logs: {
+        Row: {
+          action: string
+          chat_id: number
+          created_at: string | null
+          details: Json | null
+          error_message: string | null
+          id: string
+          phase: string
+          retry_count: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action: string
+          chat_id: number
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          phase: string
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action?: string
+          chat_id?: number
+          created_at?: string | null
+          details?: Json | null
+          error_message?: string | null
+          id?: string
+          phase?: string
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -821,6 +988,48 @@ export type Database = {
             referencedColumns: ["email"]
           },
         ]
+      }
+      launch_phases: {
+        Row: {
+          actual_completion: string | null
+          chat_id: number | null
+          created_at: string | null
+          description: string | null
+          estimated_completion: string | null
+          id: string
+          phase_name: string
+          progress_percentage: number | null
+          status: string | null
+          tasks: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_completion?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_completion?: string | null
+          id?: string
+          phase_name: string
+          progress_percentage?: number | null
+          status?: string | null
+          tasks?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_completion?: string | null
+          chat_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          estimated_completion?: string | null
+          id?: string
+          phase_name?: string
+          progress_percentage?: number | null
+          status?: string | null
+          tasks?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       order_groups: {
         Row: {
