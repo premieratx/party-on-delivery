@@ -72,6 +72,7 @@ export default function CustomSiteManagement() {
   });
 
   useEffect(() => {
+    console.log('CustomSiteManagement mounted');
     loadData();
   }, []);
 
@@ -143,6 +144,7 @@ export default function CustomSiteManagement() {
   };
 
   const handleSaveSite = async () => {
+    console.log('handleSaveSite called with formData:', formData);
     try {
       const siteData = {
         site_slug: formData.site_slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
@@ -309,7 +311,10 @@ export default function CustomSiteManagement() {
           <h1 className="text-3xl font-bold">Custom Affiliate Sites</h1>
           <p className="text-muted-foreground">Manage custom branded delivery sites for your affiliates</p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)} className="flex items-center gap-2">
+        <Button onClick={() => {
+          console.log('Create New Site button clicked');
+          setShowCreateForm(true);
+        }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Create New Site
         </Button>

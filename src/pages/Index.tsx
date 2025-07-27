@@ -49,6 +49,17 @@ const Index = () => {
         <div className="absolute top-4 left-4 z-20">
           <SearchIcon size="md" variant="mobile" />
         </div>
+
+        {/* Admin Access - Top Right */}
+        <div className="absolute top-4 right-4 z-20">
+          <button
+            onClick={() => window.location.href = '/custom-sites'}
+            className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg shadow-md text-sm font-medium hover:bg-white/90 transition-colors"
+          >
+            Admin
+          </button>
+        </div>
+        
         <DeliveryWidget />
         {/* Show Resume Planning button if there's progress */}
         {hasProgress && <PartyPlanningButton />}
