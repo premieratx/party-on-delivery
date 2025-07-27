@@ -23,6 +23,18 @@ const TelegramBotSetup: React.FC = () => {
   const [webhookSet, setWebhookSet] = useState(false);
   const [botTested, setBotTested] = useState(false);
 
+  const resetWizard = () => {
+    setCurrentStep(0);
+    setBotToken('');
+    setBotUsername('');
+    setWebhookSet(false);
+    setBotTested(false);
+    toast({
+      title: "Setup Reset",
+      description: "Wizard has been reset to start fresh",
+    });
+  };
+
   const webhookUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co/functions/v1/telegram-bot';
   
   const botCommands = [
@@ -140,9 +152,16 @@ curl -X POST "https://api.telegram.org/bot${botToken}/setWebhook" \\
           <Bot className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold">Telegram Bot Setup</h1>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-4">
           Automated AI Testing Agent - Complete setup in minutes
         </p>
+        <Button 
+          variant="outline" 
+          onClick={resetWizard}
+          className="mb-4"
+        >
+          Reset Wizard
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
