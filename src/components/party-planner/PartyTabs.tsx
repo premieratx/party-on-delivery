@@ -7,6 +7,7 @@ import { Check, ShoppingCart, ArrowRight, ArrowLeft } from "lucide-react";
 import { ProductSelection } from "./ProductSelection";
 import { EventDetailsForm } from "./EventDetailsForm";
 import { SearchIcon } from "@/components/common/SearchIcon";
+import { CartWidget } from "./CartWidget";
 
 interface CartItem {
   productId: string;
@@ -422,8 +423,23 @@ export const PartyTabs = ({
     );
   };
 
+  // Calculate cart items for CartWidget - transform to match CartWidget interface
+  const allCartItems = Object.values(categorySelections).flat().map(item => ({
+    id: item.productId,
+    productId: item.productId,
+    title: item.title,
+    price: item.price,
+    quantity: item.quantity,
+    image: item.image,
+    eventName: item.eventName,
+    category: item.category
+  }));
+
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      {/* Cart Widget - Show running totals */}
+      <CartWidget items={allCartItems} />
+      
       {/* Sticky Header - Full Width on Mobile */}
       <div className="sticky top-0 z-40 bg-background border-b pb-2 -mx-2 px-2 md:mx-0 md:px-0">
         {/* Desktop: Search Icon + Tabs */}

@@ -438,126 +438,44 @@ export const ProductSelection = ({
                     )}
                     
                     <div className="w-full">
-                      {/* Get quantity from unified cart */}
-                      {(() => {
-                        const cartQty = getCartItemQuantity(product.id, product.variants[0]?.id);
-                        return cartQty > 0 ? (
-                          // Show +/- controls if item is in cart
-                          <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1 border border-primary/20">
-                            <Button
-                              onClick={() => {
-                                console.log('Decreasing quantity for:', product.title);
-                                // Update unified cart
-                                updateQuantity(product.id, product.variants[0]?.id, cartQty - 1);
-                                
-                                // Update local selections to keep UI in sync
-                                handleQuantityChange(product.id, -1);
-                                
-                                // Update party cart for backward compatibility
-                                const newQuantity = Math.max(0, cartQty - 1);
-                                if (newQuantity > 0) {
-                                  const cartItem: CartItem = {
-                                    productId: product.id,
-                                    title: product.title,
-                                    price: product.price,
-                                    quantity: newQuantity,
-                                    image: product.image,
-                                    eventName: eventName,
-                                    category
-                                  };
-                                  onAddToCart(eventName, category, [cartItem]);
-                                }
-                              }}
-                              size="sm"
-                              variant="outline"
-                              className="w-5 h-5 md:w-6 md:h-6 p-0 rounded-full"
-                              type="button"
-                            >
-                              <Minus className="w-2 h-2 md:w-3 md:h-3" />
-                            </Button>
-                            
-                            <span className="text-xs md:text-sm font-semibold min-w-[1rem] text-center">
-                              {cartQty}
-                            </span>
-                            
-                            <Button
-                              onClick={() => {
-                                console.log('Increasing quantity for:', product.title);
-                                // Update unified cart
-                                updateQuantity(product.id, product.variants[0]?.id, cartQty + 1);
-                                
-                                // Update local selections to keep UI in sync
-                                handleQuantityChange(product.id, 1);
-                                
-                                // Update party cart for backward compatibility
-                                const cartItem: CartItem = {
-                                  productId: product.id,
-                                  title: product.title,
-                                  price: product.price,
-                                  quantity: cartQty + 1,
-                                  image: product.image,
-                                  eventName: eventName,
-                                  category
-                                };
-                                onAddToCart(eventName, category, [cartItem]);
-                              }}
-                              size="sm"
-                              variant="outline"
-                              className="w-5 h-5 md:w-6 md:h-6 p-0 rounded-full"
-                              type="button"
-                            >
-                              <Plus className="w-2 h-2 md:w-3 md:h-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          // Show smaller green + circle for initial add to cart
+                      {/* Price */}
+                      <p className="text-sm font-bold text-primary mb-2">
+                        ${product.price.toFixed(2)}
+                      </p>
+                      
+                      {/* Quantity Controls */}
+                      {quantity === 0 ? (
+                        <Button
+                          onClick={() => handleQuantityChange(product.id, 1)}
+                          size="sm"
+                          className="w-full h-8 bg-green-500 hover:bg-green-600 text-white rounded-md"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add
+                        </Button>
+                      ) : (
+                        <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1 border border-primary/20">
                           <Button
-                            onClick={() => {
-                              console.log('Adding product to cart:', product.title);
-                              
-                              // Add to unified cart first
-                              addToUnifiedCart({
-                                id: product.id,
-                                title: product.title,
-                                name: product.title,
-                                price: product.price,
-                                image: product.image,
-                                variant: product.variants[0]?.id,
-                                eventName: eventName,
-                                category
-                              });
-                              
-                              // Update local selections to trigger +/- controls
-                              handleQuantityChange(product.id, 1);
-                              
-                              // Create cart item for party cart backward compatibility
-                              const cartItem: CartItem = {
-                                productId: product.id,
-                                title: product.title,
-                                price: product.price,
-                                quantity: 1,
-                                image: product.image,
-                                eventName: eventName,
-                                category
-                              };
-                              
-                              // Add to party cart for backward compatibility
-                              onAddToCart(eventName, category, [cartItem]);
-                              
-                              // Update local tracking
-                              setAddedToCartItems(prev => ({
-                                ...prev,
-                                [product.id]: 1
-                              }));
-                            }}
+                            onClick={() => handleQuantityChange(product.id, -1)}
                             size="sm"
-                            className="w-6 h-6 md:w-8 md:h-8 p-0 rounded-full bg-green-500 hover:bg-green-600 text-white border-0 shadow-lg"
-                            type="button"
+                            variant="ghost"
+                            className="w-6 h-6 p-0 rounded-full text-foreground hover:bg-destructive hover:text-destructive-foreground"
                           >
-                            <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                            <Minus className="w-3 h-3" />
                           </Button>
-                        );
-                      })()}
+                          <span className="text-sm font-bold text-primary px-2">
+                            {quantity}
+                          </span>
+                          <Button
+                            onClick={() => handleQuantityChange(product.id, 1)}
+                            size="sm"
+                            variant="ghost"
+                            className="w-6 h-6 p-0 rounded-full text-foreground hover:bg-primary hover:text-primary-foreground"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

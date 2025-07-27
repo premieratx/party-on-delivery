@@ -36,13 +36,48 @@ export const ProductSearch = () => {
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = useUnifiedCart();
   const { toast } = useToast();
   
+  // Load favorites first, then other tabs progressively
+  const [productsLoaded, setProductsLoaded] = useState<{ [key: string]: Product[] }>({});
+  const [loadingCategories, setLoadingCategories] = useState<Set<string>>(new Set(['favorites']));
+  
   const { 
-    products, 
+    products: allProducts, 
     isLoading: loading, 
     isCustomSite, 
     customSiteData, 
     availableCategories 
   } = useCustomSiteProducts();
+  
+  // Progressive loading: load favorites first, then other categories
+  useEffect(() => {
+    if (!loading && allProducts.length > 0) {
+      // Load favorites immediately
+      const favs = getFavoritesProducts(allProducts);
+      setProductsLoaded(prev => ({ ...prev, favorites: favs }));
+      setLoadingCategories(prev => {
+        const newSet = new Set(prev);
+        newSet.delete('favorites');
+        return newSet;
+      });
+      
+      // Load other categories progressively with delay
+      const otherCategories = availableCategories.filter(cat => cat !== 'favorites');
+      otherCategories.forEach((category, index) => {
+        setTimeout(() => {
+          const categoryProducts = allProducts.filter(product => product.category === category);
+          setProductsLoaded(prev => ({ ...prev, [category]: categoryProducts }));
+          setLoadingCategories(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(category);
+            return newSet;
+          });
+        }, (index + 1) * 200); // Stagger loading by 200ms
+      });
+    }
+  }, [loading, allProducts, availableCategories]);
+  
+  // Get products for current category
+  const products = productsLoaded[selectedCategory] || (selectedCategory === 'all' ? allProducts : []);
 
   // Generate categories based on custom site or default
   const categories = [
@@ -163,14 +198,6 @@ export const ProductSearch = () => {
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
     let filtered = products;
-
-    // Handle favorites category specially
-    if (selectedCategory === "favorites") {
-      filtered = getFavoritesProducts(products);
-    } else if (selectedCategory !== "all") {
-      // Filter by category
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
 
     // Filter by search term
     if (searchTerm.trim()) {
@@ -316,7 +343,7 @@ export const ProductSearch = () => {
           {/* Results Summary */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              {loading ? "Loading..." : `${filteredProducts.length} products found`}
+              {loadingCategories.has(selectedCategory) ? "Loading..." : `${filteredProducts.length} products found`}
               {searchTerm && ` for "${searchTerm}"`}
               {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
             </span>
@@ -336,7 +363,7 @@ export const ProductSearch = () => {
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-6">
-        {loading ? (
+        {loadingCategories.has(selectedCategory) ? (
           <div className="grid grid-cols-3 md:grid-cols-8 gap-4">
             {Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="animate-pulse">
