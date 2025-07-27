@@ -101,8 +101,8 @@ export function handleOrientationChange() {
 // Preload critical resources for faster initial load
 export function preloadCriticalResources() {
   const criticalImages = [
-    '/hero-party-austin.jpg',
-    '/party-on-delivery-logo.png'
+    '/hero-party-austin.jpg'
+    // Note: party-on-delivery-logo.png should be imported as ES6 module where used
   ];
 
   criticalImages.forEach(src => {
