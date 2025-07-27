@@ -93,8 +93,11 @@ export const CustomCollectionCreator: React.FC = () => {
   const loadCategories = async () => {
     try {
       console.log('Loading categories...');
+      setLoading(true);
       
       const { data: collections, error } = await supabase.functions.invoke('get-all-collections');
+      
+      console.log('Collections response:', collections, 'Error:', error);
       
       if (error) {
         console.error('Error loading collections:', error);
@@ -104,12 +107,16 @@ export const CustomCollectionCreator: React.FC = () => {
       const availableCategories = new Set<string>();
 
       if (collections?.collections) {
+        console.log('Found collections:', collections.collections.length);
         collections.collections.forEach((collection: any) => {
+          console.log('Processing collection:', collection.handle, 'Products:', collection.products?.length);
           if (collection.products && collection.products.length > 0) {
             const category = mapCollectionToCategory(collection.handle);
             availableCategories.add(category);
           }
         });
+      } else {
+        console.log('No collections found in response');
       }
 
       // Create categories array with "All Categories" at the end
@@ -121,6 +128,7 @@ export const CustomCollectionCreator: React.FC = () => {
         { id: 'all', label: 'All Categories' }
       ];
 
+      console.log('Setting categories:', categoriesArray);
       setCategories(categoriesArray);
       
       // Set default to first specific category to avoid loading all products
