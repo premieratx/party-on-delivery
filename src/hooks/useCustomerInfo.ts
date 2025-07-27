@@ -80,6 +80,9 @@ class CustomerDataManager {
   // Load customer data if not expired
   loadCustomerData(): { customerInfo: CustomerInfo; addressInfo: AddressInfo } | null {
     try {
+      // Check for prefilled delivery address from custom site
+      const prefilledAddress = localStorage.getItem('prefilled_delivery_address');
+      
       // Try primary storage first
       const customerData = localStorage.getItem('partyondelivery_customer_persistent');
       const addressData = localStorage.getItem('partyondelivery_address_persistent');
@@ -91,6 +94,28 @@ class CustomerDataManager {
         // Check if expired
         if (customer.expiresAt && new Date() < new Date(customer.expiresAt)) {
           console.log('Loading persistent customer data:', { customer, address });
+          
+          // Use prefilled address if available
+          let finalAddress = {
+            street: address.street,
+            city: address.city,
+            state: address.state,
+            zipCode: address.zipCode,
+            instructions: address.instructions
+          };
+          
+          if (prefilledAddress) {
+            const prefilled = JSON.parse(prefilledAddress);
+            finalAddress = {
+              street: prefilled.street || address.street,
+              city: prefilled.city || address.city,
+              state: prefilled.state || address.state,
+              zipCode: prefilled.zip_code || address.zipCode,
+              instructions: prefilled.instructions || address.instructions
+            };
+            console.log('Using prefilled delivery address from custom site:', finalAddress);
+          }
+          
           return {
             customerInfo: {
               firstName: customer.firstName,
@@ -98,13 +123,7 @@ class CustomerDataManager {
               phone: customer.phone,
               email: customer.email
             },
-            addressInfo: {
-              street: address.street,
-              city: address.city,
-              state: address.state,
-              zipCode: address.zipCode,
-              instructions: address.instructions
-            }
+            addressInfo: finalAddress
           };
         } else {
           console.log('Persistent customer data expired, clearing...');
@@ -210,6 +229,27 @@ const customerDataManager = CustomerDataManager.getInstance();
 // Helper to get data from multiple sources with fallback
 function getStoredData<T>(primaryKey: string, backupKey: string, initialValue: T): T {
   try {
+    // Check for prefilled delivery address from custom site first
+    if (primaryKey === 'partyondelivery_address') {
+      const prefilledAddress = localStorage.getItem('prefilled_delivery_address');
+      if (prefilledAddress) {
+        try {
+          const prefilled = JSON.parse(prefilledAddress);
+          const addressFromPrefilled = {
+            street: prefilled.street || '',
+            city: prefilled.city || '',
+            state: prefilled.state || '',
+            zipCode: prefilled.zip_code || '',
+            instructions: prefilled.instructions || ''
+          } as T;
+          console.log('Using prefilled delivery address from custom site:', addressFromPrefilled);
+          return addressFromPrefilled;
+        } catch (e) {
+          console.error('Failed to parse prefilled address:', e);
+        }
+      }
+    }
+    
     // First try to load persistent data (30-day storage)
     const persistentData = customerDataManager.loadCustomerData();
     if (persistentData) {
@@ -344,7 +384,24 @@ export function useCustomerInfo() {
           }
         }
         
-        if (storedAddress) {
+        // Check for prefilled delivery address first
+        const prefilledAddress = localStorage.getItem('prefilled_delivery_address');
+        if (prefilledAddress) {
+          try {
+            const prefilled = JSON.parse(prefilledAddress);
+            const prefilledAddressData = {
+              street: prefilled.street || '',
+              city: prefilled.city || '',
+              state: prefilled.state || '',
+              zipCode: prefilled.zip_code || '',
+              instructions: prefilled.instructions || ''
+            };
+            console.log('Loading prefilled delivery address from custom site:', prefilledAddressData);
+            setAddressInfoState(prefilledAddressData);
+          } catch (e) {
+            console.error('Failed to parse prefilled address:', e);
+          }
+        } else if (storedAddress) {
           const addressData = JSON.parse(storedAddress);
           if (addressData.street || addressData.city) {
             console.log('Loading stored address:', addressData);

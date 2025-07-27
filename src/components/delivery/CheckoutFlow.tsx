@@ -161,6 +161,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     appliedDiscountProp || null
   );
   
+  // Check for custom site free shipping and auto-apply
+  useEffect(() => {
+    const freeShippingEnabled = localStorage.getItem('free_shipping_enabled') === 'true';
+    const customSiteData = localStorage.getItem('customSiteData');
+    
+    if (freeShippingEnabled && customSiteData) {
+      const siteData = JSON.parse(customSiteData);
+      if (siteData.promoCode && !appliedDiscount) {
+        const customSiteDiscount = {
+          code: siteData.promoCode,
+          type: 'free_shipping' as const,
+          value: 0
+        };
+        setAppliedDiscount(customSiteDiscount);
+        setDiscountCode(siteData.promoCode);
+        if (onDiscountChange) {
+          onDiscountChange(customSiteDiscount);
+        }
+        console.log('Auto-applied custom site free shipping:', customSiteDiscount);
+      }
+    }
+  }, []);
+  
   // Sync local discount state with parent prop when it changes
   useEffect(() => {
     if (appliedDiscountProp !== undefined) {

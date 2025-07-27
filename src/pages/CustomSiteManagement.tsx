@@ -58,6 +58,13 @@ export default function CustomSiteManagement() {
       zip_code: '',
       instructions: ''
     },
+    delivery_address: {
+      street: '',
+      city: '',
+      state: '',
+      zip_code: '',
+      instructions: ''
+    },
     custom_promo_code: '',
     site_type: 'custom',
     affiliate_id: '',
@@ -86,14 +93,26 @@ export default function CustomSiteManagement() {
       if (sitesError) throw sitesError;
       setSites(sitesData || []);
 
-      // Load collections
-      const { data: collectionsData, error: collectionsError } = await supabase
-        .from('shopify_collections_cache')
-        .select('handle, title, products_count')
-        .order('title');
-
-      if (collectionsError) throw collectionsError;
-      setCollections(collectionsData || []);
+      // Load collections from Shopify
+      const { data: collectionsData, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
+      
+      if (collectionsError) {
+        console.error('Error loading collections:', collectionsError);
+        // Fallback to cached collections
+        const { data: cachedCollections } = await supabase
+          .from('shopify_collections_cache')
+          .select('handle, title, products_count')
+          .order('title');
+        setCollections(cachedCollections || []);
+      } else {
+        // Transform collection data to match expected format
+        const formattedCollections = collectionsData.map((collection: any) => ({
+          handle: collection.handle,
+          title: collection.title,
+          products_count: collection.products?.length || 0
+        }));
+        setCollections(formattedCollections);
+      }
 
       // Load affiliates
       const { data: affiliatesData, error: affiliatesError } = await supabase
@@ -120,6 +139,7 @@ export default function CustomSiteManagement() {
         site_name: formData.site_name,
         business_name: formData.business_name,
         business_address: formData.business_address,
+        delivery_address: formData.delivery_address,
         custom_promo_code: formData.custom_promo_code || null,
         site_type: formData.site_type,
         affiliate_id: formData.affiliate_id || null,
@@ -219,6 +239,13 @@ export default function CustomSiteManagement() {
         zip_code: '',
         instructions: ''
       },
+      delivery_address: (site as any).delivery_address || site.business_address || {
+        street: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        instructions: ''
+      },
       custom_promo_code: site.custom_promo_code || '',
       site_type: site.site_type,
       affiliate_id: site.affiliate_id || '',
@@ -235,6 +262,13 @@ export default function CustomSiteManagement() {
       site_name: '',
       business_name: '',
       business_address: {
+        street: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        instructions: ''
+      },
+      delivery_address: {
         street: '',
         city: '',
         state: '',
@@ -279,9 +313,10 @@ export default function CustomSiteManagement() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="address">Business Address</TabsTrigger>
+                <TabsTrigger value="business">Business Address</TabsTrigger>
+                <TabsTrigger value="delivery">Delivery Address</TabsTrigger>
                 <TabsTrigger value="products">Product Collections</TabsTrigger>
               </TabsList>
 
@@ -353,18 +388,27 @@ export default function CustomSiteManagement() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="promo_code">Custom Promo Code</Label>
+                    <Label htmlFor="promo_code">Custom Promo Code (Free Shipping)</Label>
                     <Input
                       id="promo_code"
                       value={formData.custom_promo_code}
                       onChange={(e) => setFormData({...formData, custom_promo_code: e.target.value})}
                       placeholder="FREESHIP2025"
                     />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      This code will automatically provide free shipping and be prefilled at checkout.
+                    </p>
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="address" className="space-y-4">
+              <TabsContent value="business" className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Business Mailing Address</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This address is used for billing and administrative purposes.
+                  </p>
+                </div>
                 <div>
                   <Label htmlFor="street">Street Address</Label>
                   <Input
@@ -423,6 +467,77 @@ export default function CustomSiteManagement() {
                     onChange={(e) => setFormData({
                       ...formData,
                       business_address: {...formData.business_address, instructions: e.target.value}
+                    })}
+                    placeholder="Special delivery instructions for this location"
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="delivery" className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Default Delivery Address</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This address will be prefilled at checkout for customers using this custom site.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="delivery_street">Street Address</Label>
+                  <Input
+                    id="delivery_street"
+                    value={formData.delivery_address.street}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      delivery_address: {...formData.delivery_address, street: e.target.value}
+                    })}
+                    placeholder="123 Event Venue Street"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="delivery_city">City</Label>
+                    <Input
+                      id="delivery_city"
+                      value={formData.delivery_address.city}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        delivery_address: {...formData.delivery_address, city: e.target.value}
+                      })}
+                      placeholder="Austin"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="delivery_state">State</Label>
+                    <Input
+                      id="delivery_state"
+                      value={formData.delivery_address.state}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        delivery_address: {...formData.delivery_address, state: e.target.value}
+                      })}
+                      placeholder="TX"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="delivery_zip">ZIP Code</Label>
+                    <Input
+                      id="delivery_zip"
+                      value={formData.delivery_address.zip_code}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        delivery_address: {...formData.delivery_address, zip_code: e.target.value}
+                      })}
+                      placeholder="78701"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="delivery_instructions">Delivery Instructions</Label>
+                  <Textarea
+                    id="delivery_instructions"
+                    value={formData.delivery_address.instructions}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      delivery_address: {...formData.delivery_address, instructions: e.target.value}
                     })}
                     placeholder="Special delivery instructions for this location"
                   />

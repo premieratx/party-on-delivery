@@ -356,6 +356,7 @@ export type Database = {
           business_name: string
           created_at: string
           custom_promo_code: string | null
+          delivery_address: Json | null
           id: string
           is_active: boolean | null
           site_name: string
@@ -369,6 +370,7 @@ export type Database = {
           business_name: string
           created_at?: string
           custom_promo_code?: string | null
+          delivery_address?: Json | null
           id?: string
           is_active?: boolean | null
           site_name: string
@@ -382,6 +384,7 @@ export type Database = {
           business_name?: string
           created_at?: string
           custom_promo_code?: string | null
+          delivery_address?: Json | null
           id?: string
           is_active?: boolean | null
           site_name?: string

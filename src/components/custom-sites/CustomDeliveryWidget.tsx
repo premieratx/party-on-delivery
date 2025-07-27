@@ -30,10 +30,12 @@ export function CustomDeliveryWidget({ siteConfig }: CustomDeliveryWidgetProps) 
       affiliateCode: siteConfig.affiliate_code,
       promoCode: siteConfig.custom_promo_code,
       businessAddress: siteConfig.business_address,
+      deliveryAddress: (siteConfig as any).delivery_address || siteConfig.business_address,
       allowedCollections: siteConfig.collections,
       siteName: siteConfig.site_name,
       businessName: siteConfig.business_name,
-      siteType: siteConfig.site_type
+      siteType: siteConfig.site_type,
+      freeShipping: true // Custom sites get free shipping
     };
 
     localStorage.setItem('customSiteData', JSON.stringify(customSiteData));
@@ -48,10 +50,14 @@ export function CustomDeliveryWidget({ siteConfig }: CustomDeliveryWidgetProps) 
       localStorage.setItem('discount_code', siteConfig.custom_promo_code);
     }
 
-    // Pre-fill business address if available
-    if (siteConfig.business_address) {
-      localStorage.setItem('business_address', JSON.stringify(siteConfig.business_address));
+    // Pre-fill delivery address if available
+    const deliveryAddress = (siteConfig as any).delivery_address || siteConfig.business_address;
+    if (deliveryAddress) {
+      localStorage.setItem('prefilled_delivery_address', JSON.stringify(deliveryAddress));
     }
+
+    // Set free shipping for custom sites
+    localStorage.setItem('free_shipping_enabled', 'true');
 
     console.log('Custom site configuration applied:', customSiteData);
 
