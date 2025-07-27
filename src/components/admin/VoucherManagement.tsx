@@ -325,7 +325,7 @@ export default function VoucherManagement() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select voucher type" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border border-border z-50 max-h-60 overflow-auto">
                     <SelectItem value="percentage">Percentage Discount</SelectItem>
                     <SelectItem value="fixed_amount">Fixed Amount Discount</SelectItem>
                     <SelectItem value="prepaid_credit">Prepaid Credit</SelectItem>
@@ -419,7 +419,7 @@ export default function VoucherManagement() {
                   <SelectTrigger>
                     <SelectValue placeholder="Select affiliate" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
+                  <SelectContent className="bg-background border border-border z-50 max-h-60 overflow-auto">
                     <SelectItem value="none">No Affiliate</SelectItem>
                     {affiliates.map((affiliate) => (
                       <SelectItem key={affiliate.id} value={affiliate.id}>
