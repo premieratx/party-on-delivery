@@ -478,9 +478,95 @@ export const AdminDashboard: React.FC = () => {
           <SyncDataToSheets />
         </div>
 
-        {/* Grid Layout for Affiliate Leaderboard and Abandoned Orders */}
+        {/* Enhanced Affiliate Management Section */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Affiliate Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {affiliates.map((affiliate, index) => (
+                <div key={affiliate.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      {getRankIcon(index)}
+                      <div>
+                        <h3 className="font-semibold">{affiliate.name}</h3>
+                        <p className="text-sm text-muted-foreground">{affiliate.company_name}</p>
+                        <p className="text-sm text-muted-foreground">{affiliate.affiliate_code}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">{formatCurrency(affiliate.total_sales)}</p>
+                      <p className="text-sm text-muted-foreground">{affiliate.orders_count} orders</p>
+                      <p className="text-sm text-green-600">{formatCurrency(affiliate.total_commission)} earned</p>
+                      {affiliate.commission_unpaid > 0 && (
+                        <p className="text-sm text-red-600">{formatCurrency(affiliate.commission_unpaid)} unpaid</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Affiliate details dropdown - expanded view */}
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm font-medium text-primary hover:underline">
+                      View Details & Custom Sites
+                    </summary>
+                    <div className="mt-3 p-3 bg-muted/30 rounded-md space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <h4 className="font-medium mb-1">Commission Info</h4>
+                          <p>Rate: {affiliate.commission_rate}%</p>
+                          <p>Largest Order: {formatCurrency(affiliate.largest_order)}</p>
+                          <p>Joined: {new Date(affiliate.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-medium mb-1">Actions</h4>
+                          <div className="flex gap-2 flex-wrap">
+                            <Button size="sm" variant="outline" onClick={() => navigate('/custom-sites')}>
+                              Manage Sites
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              View Orders
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              Process Payout
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Custom Sites for this affiliate */}
+                      <div className="border-t pt-3">
+                        <h4 className="font-medium mb-2">Custom Sites</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Custom sites will be displayed here when linked to this affiliate.
+                        </p>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="mt-2"
+                          onClick={() => {
+                            navigate('/custom-sites');
+                            // Could add affiliate filter here
+                          }}
+                        >
+                          Create Custom Site
+                        </Button>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Grid Layout for Quick Stats and Abandoned Orders */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Affiliate Leaderboard */}
+          {/* Top Performers Quick View */}
           <Card>
             <CardHeader>
               <CardTitle>Affiliate Leaderboard</CardTitle>

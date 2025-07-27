@@ -77,52 +77,62 @@ export default function CustomSiteManagement() {
 
   const loadData = async () => {
     try {
-      // Load sites
-      const { data: sitesData, error: sitesError } = await supabase
-        .from('custom_affiliate_sites')
-        .select(`
-          *,
-          affiliates:affiliate_id (
-            name,
-            email,
-            affiliate_code
-          )
-        `)
-        .order('created_at', { ascending: false });
+      setIsLoading(true);
+      
+      // Load sites and affiliates in parallel for faster loading
+      const [sitesResponse, affiliatesResponse] = await Promise.all([
+        supabase
+          .from('custom_affiliate_sites')
+          .select(`
+            *,
+            affiliates:affiliate_id (
+              name,
+              email,
+              affiliate_code
+            )
+          `)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('affiliates')
+          .select('id, name, email, affiliate_code')
+          .eq('status', 'active')
+          .order('name')
+      ]);
+
+      const { data: sitesData, error: sitesError } = sitesResponse;
+      const { data: affiliatesData, error: affiliatesError } = affiliatesResponse;
 
       if (sitesError) throw sitesError;
-      setSites(sitesData || []);
+      if (affiliatesError) throw affiliatesError;
 
-      // Load collections from Shopify
-      const { data: collectionsData, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
-      
-      if (collectionsError) {
-        console.error('Error loading collections:', collectionsError);
-        // Fallback to cached collections
-        const { data: cachedCollections } = await supabase
-          .from('shopify_collections_cache')
-          .select('handle, title, products_count')
-          .order('title');
-        setCollections(cachedCollections || []);
-      } else {
-        // Transform collection data to match expected format
-        const formattedCollections = collectionsData.map((collection: any) => ({
-          handle: collection.handle,
-          title: collection.title,
-          products_count: collection.products?.length || 0
-        }));
-        setCollections(formattedCollections);
+      setSites(sitesData || []);
+      setAffiliates(affiliatesData || []);
+
+      // Load collections from cache first for faster loading, then refresh if needed
+      const { data: cachedCollections } = await supabase
+        .from('shopify_collections_cache')
+        .select('handle, title, products_count')
+        .order('title');
+
+      if (cachedCollections && cachedCollections.length > 0) {
+        setCollections(cachedCollections);
       }
 
-      // Load affiliates
-      const { data: affiliatesData, error: affiliatesError } = await supabase
-        .from('affiliates')
-        .select('id, name, email, affiliate_code')
-        .eq('status', 'active')
-        .order('name');
-
-      if (affiliatesError) throw affiliatesError;
-      setAffiliates(affiliatesData || []);
+      // Try to get fresh collections from Shopify in background
+      try {
+        const { data: freshCollections, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
+        
+        if (!collectionsError && freshCollections) {
+          const formattedCollections = freshCollections.map((collection: any) => ({
+            handle: collection.handle,
+            title: collection.title,
+            products_count: collection.products?.length || 0
+          }));
+          setCollections(formattedCollections);
+        }
+      } catch (error) {
+        console.warn('Fresh collections loading failed, using cache:', error);
+      }
 
     } catch (error) {
       console.error('Error loading data:', error);
@@ -375,17 +385,26 @@ export default function CustomSiteManagement() {
                   <div>
                     <Label htmlFor="affiliate">Linked Affiliate</Label>
                     <Select value={formData.affiliate_id} onValueChange={(value) => setFormData({...formData, affiliate_id: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select affiliate" />
+                      <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select affiliate to link this site" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border max-h-60 overflow-y-auto z-50">
+                        <SelectItem value="">No affiliate (standalone site)</SelectItem>
                         {affiliates.map((affiliate) => (
                           <SelectItem key={affiliate.id} value={affiliate.id}>
-                            {affiliate.name} ({affiliate.affiliate_code})
+                            <div className="flex flex-col">
+                              <span className="font-medium">{affiliate.name}</span>
+                              <span className="text-sm text-muted-foreground">
+                                {affiliate.affiliate_code} • {affiliate.email}
+                              </span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Linking to an affiliate will credit them for all sales through this site.
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="promo_code">Custom Promo Code (Free Shipping)</Label>
@@ -546,39 +565,73 @@ export default function CustomSiteManagement() {
 
               <TabsContent value="products" className="space-y-4">
                 <div>
-                  <Label>Select Product Collections</Label>
+                  <Label>Select Product Collections (Maximum 5)</Label>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Choose which Shopify collections will be available on this custom site
+                    Choose up to 5 Shopify collections that will be available on this custom site
                   </p>
-                  <div className="grid grid-cols-2 gap-4 max-h-64 overflow-y-auto">
-                    {collections.map((collection) => (
-                      <div key={collection.handle} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={collection.handle}
-                          checked={formData.selected_collections.includes(collection.handle)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setFormData({
-                                ...formData,
-                                selected_collections: [...formData.selected_collections, collection.handle]
-                              });
-                            } else {
-                              setFormData({
-                                ...formData,
-                                selected_collections: formData.selected_collections.filter(h => h !== collection.handle)
-                              });
-                            }
-                          }}
-                        />
-                        <Label htmlFor={collection.handle} className="flex-1">
-                          {collection.title}
-                          <span className="text-sm text-muted-foreground ml-2">
-                            ({collection.products_count} products)
-                          </span>
-                        </Label>
-                      </div>
-                    ))}
+                  <div className="mb-4">
+                    <p className="text-sm font-medium">
+                      Selected: {formData.selected_collections.length}/5
+                    </p>
                   </div>
+                  <div className="border rounded-md p-4 max-h-80 overflow-y-auto bg-background">
+                    <div className="space-y-2">
+                      {collections.length === 0 ? (
+                        <p className="text-muted-foreground text-center py-4">
+                          Loading collections...
+                        </p>
+                      ) : (
+                        collections.map((collection) => (
+                          <div key={collection.handle} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50">
+                            <Checkbox
+                              id={collection.handle}
+                              checked={formData.selected_collections.includes(collection.handle)}
+                              disabled={
+                                !formData.selected_collections.includes(collection.handle) && 
+                                formData.selected_collections.length >= 5
+                              }
+                              onCheckedChange={(checked) => {
+                                if (checked && formData.selected_collections.length < 5) {
+                                  setFormData({
+                                    ...formData,
+                                    selected_collections: [...formData.selected_collections, collection.handle]
+                                  });
+                                } else if (!checked) {
+                                  setFormData({
+                                    ...formData,
+                                    selected_collections: formData.selected_collections.filter(h => h !== collection.handle)
+                                  });
+                                }
+                              }}
+                            />
+                            <Label htmlFor={collection.handle} className="flex-1 cursor-pointer">
+                              <div className="flex justify-between items-center">
+                                <span className="font-medium">{collection.title}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {collection.products_count} products
+                                </span>
+                              </div>
+                            </Label>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                  {formData.selected_collections.length > 0 && (
+                    <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                      <h4 className="font-medium mb-2">Selected Collections:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.selected_collections.map((handle) => {
+                          const collection = collections.find(c => c.handle === handle);
+                          return (
+                            <Badge key={handle} variant="secondary">
+                              {collection?.title || handle}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
