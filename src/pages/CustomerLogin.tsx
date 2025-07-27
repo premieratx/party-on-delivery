@@ -19,22 +19,12 @@ const CustomerLogin = () => {
 
   useEffect(() => {
     let mounted = true;
-    
-    // Prevent multiple processing with session storage flag
-    const authProcessingKey = 'customer-auth-processing';
-    const isProcessing = sessionStorage.getItem(authProcessingKey);
-    
-    if (isProcessing) {
-      console.log('Customer auth already processing, skipping...');
-      return;
-    }
+    let authProcessed = false;
 
     const processAuth = async (session: any) => {
-      if (!mounted) return;
+      if (!mounted || authProcessed) return;
       
-      // Set processing flag
-      sessionStorage.setItem(authProcessingKey, 'true');
-      
+      authProcessed = true;
       console.log('Processing customer auth');
       setIsLoading(false);
       
@@ -46,11 +36,9 @@ const CustomerLogin = () => {
         
         // Clear redirect intent and navigate to dashboard
         localStorage.removeItem('loginRedirectIntent');
-        sessionStorage.removeItem(authProcessingKey);
         window.location.replace('/customer/dashboard');
       } catch (error) {
         console.error('Customer auth processing error:', error);
-        sessionStorage.removeItem(authProcessingKey);
         setIsLoading(false);
       }
     };
@@ -67,7 +55,7 @@ const CustomerLogin = () => {
         }
         
         if (event === 'SIGNED_OUT') {
-          sessionStorage.removeItem(authProcessingKey);
+          authProcessed = false;
           setIsLoading(false);
         }
       }

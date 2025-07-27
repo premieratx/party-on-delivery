@@ -38,20 +38,12 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
 
   useEffect(() => {
     let mounted = true;
-    
-    // Prevent multiple processing with session storage flag
-    const authProcessingKey = 'affiliate-auth-processing';
-    const isProcessing = sessionStorage.getItem(authProcessingKey);
-    
-    if (isProcessing) {
-      console.log('Affiliate auth already processing, skipping...');
-      return;
-    }
+    let authProcessed = false;
 
     const processAuth = async (session: any) => {
-      if (!mounted) return;
+      if (!mounted || authProcessed) return;
       
-      sessionStorage.setItem(authProcessingKey, 'true');
+      authProcessed = true;
       console.log('Processing affiliate auth for:', session.user.email);
       
       try {
@@ -64,7 +56,6 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
 
         if (existingAffiliate) {
           console.log('Existing affiliate found, redirecting to dashboard');
-          sessionStorage.removeItem(authProcessingKey);
           window.location.replace('/affiliate/dashboard');
           return;
         }
@@ -80,10 +71,8 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
         // Move to details step
         setLoading(false);
         setStep('details');
-        sessionStorage.removeItem(authProcessingKey);
       } catch (error) {
         console.error('Affiliate auth processing error:', error);
-        sessionStorage.removeItem(authProcessingKey);
         setLoading(false);
       }
     };
@@ -99,7 +88,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       }
       
       if (event === 'SIGNED_OUT') {
-        sessionStorage.removeItem(authProcessingKey);
+        authProcessed = false;
         setLoading(false);
         setStep('google');
       }

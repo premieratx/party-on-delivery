@@ -14,22 +14,12 @@ export const AdminLogin: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
+    let authProcessed = false;
     
-    // Prevent multiple processing with session storage flag
-    const authProcessingKey = 'admin-auth-processing';
-    const isProcessing = sessionStorage.getItem(authProcessingKey);
-    
-    if (isProcessing) {
-      console.log('Auth already processing, skipping...');
-      return;
-    }
-
     const processAuth = async (email: string) => {
-      if (!mounted) return;
+      if (!mounted || authProcessed) return;
       
-      // Set processing flag
-      sessionStorage.setItem(authProcessingKey, 'true');
-      
+      authProcessed = true;
       console.log(`Processing admin auth for ${email}`);
       
       try {
@@ -44,13 +34,10 @@ export const AdminLogin: React.FC = () => {
             title: "Welcome!",
             description: "Successfully logged in as admin.",
           });
-          // Clear processing flag before redirect
-          sessionStorage.removeItem(authProcessingKey);
           window.location.replace('/affiliate/admin');
         } else if (mounted) {
           console.log('User is not admin, signing out');
           await supabase.auth.signOut();
-          sessionStorage.removeItem(authProcessingKey);
           setGoogleLoading(false);
           toast({
             title: "Access Denied", 
@@ -60,7 +47,6 @@ export const AdminLogin: React.FC = () => {
         }
       } catch (error) {
         console.error('Admin verification error:', error);
-        sessionStorage.removeItem(authProcessingKey);
         if (mounted) {
           setGoogleLoading(false);
           toast({
@@ -91,7 +77,7 @@ export const AdminLogin: React.FC = () => {
       }
       
       if (event === 'SIGNED_OUT') {
-        sessionStorage.removeItem(authProcessingKey);
+        authProcessed = false;
         setGoogleLoading(false);
       }
     });
