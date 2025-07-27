@@ -29,6 +29,7 @@ import { ProductSearch } from "./pages/ProductSearch";
 import CustomSiteManagement from "./pages/CustomSiteManagement";
 import CustomSiteView from "./pages/CustomSiteView";
 import { CustomCollectionCreator } from "./pages/CustomCollectionCreator";
+import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +80,7 @@ const App = () => {
                 
                 {/* Party Planning Routes */}
                 <Route path="/plan-my-party" element={<PartyPlanner />} />
+                <Route path="/chat-party-planner" element={<ChatPartyPlanner />} />
                 <Route path="/checkout" element={<Checkout />} />
                 
                 {/* Search Route */}

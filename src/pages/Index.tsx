@@ -51,7 +51,13 @@ const Index = () => {
         </div>
 
         {/* Admin Access - Top Right */}
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-4 right-4 z-20 flex gap-2">
+          <button
+            onClick={() => window.location.href = '/chat-party-planner'}
+            className="bg-primary/80 backdrop-blur-sm text-primary-foreground px-3 py-2 rounded-lg shadow-md text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            Chat Planner
+          </button>
           <button
             onClick={() => window.location.href = '/custom-sites'}
             className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-lg shadow-md text-sm font-medium hover:bg-white/90 transition-colors"
