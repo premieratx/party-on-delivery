@@ -261,8 +261,8 @@ export const ChatPartyPlanner = () => {
   const renderMessage = (message: ChatMessage) => {
     if (message.type === 'bot' && message.options) {
       return (
-        <div key={message.id} data-message-id={message.id} className="flex justify-start mb-4">
-          <div className="flex flex-wrap gap-2 max-w-xl">
+        <div key={message.id} data-message-id={message.id} className="flex justify-center">
+          <div className="flex flex-wrap gap-3 max-w-full justify-center">
             {message.options.map((option, index) => {
               if (option.type === 'party-type') {
                 const Icon = option.data.icon;
@@ -270,11 +270,11 @@ export const ChatPartyPlanner = () => {
                   <Button
                     key={index}
                     variant="outline"
-                    className="option-button flex items-center gap-2 h-auto p-3 hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                    className="option-button flex items-center gap-2 h-auto p-4 rounded-2xl hover:bg-primary hover:text-primary-foreground transition-all duration-200 text-base font-semibold"
                     onClick={() => handlePartyTypeSelect(option.data)}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-sm">{option.data.label}</span>
+                    <Icon className="w-5 h-5" />
+                    <span>{option.data.label}</span>
                   </Button>
                 );
               }
@@ -285,11 +285,11 @@ export const ChatPartyPlanner = () => {
                   <Button
                     key={index}
                     variant={isSelected ? "default" : "outline"}
-                    className="option-button flex items-center gap-2 h-auto p-3 transition-all duration-200"
+                    className="option-button flex items-center gap-2 h-auto p-4 rounded-2xl transition-all duration-200 text-base font-semibold"
                     onClick={() => handleDrinkTypeSelect(option.data)}
                   >
-                    <span className="text-lg">{option.data.emoji}</span>
-                    <span className="text-sm">{option.data.label}</span>
+                    <span className="text-2xl">{option.data.emoji}</span>
+                    <span>{option.data.label}</span>
                   </Button>
                 );
               }
@@ -299,11 +299,11 @@ export const ChatPartyPlanner = () => {
                   <Button
                     key={index}
                     variant="outline"
-                    className="option-button flex items-center gap-2 h-auto p-3 hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                    className="option-button flex items-center gap-2 h-auto p-4 rounded-2xl hover:bg-primary hover:text-primary-foreground transition-all duration-200 text-base font-semibold"
                     onClick={() => handleDrinkerTypeSelect(option.data)}
                   >
-                    <span className="text-lg">{option.data.emoji}</span>
-                    <span className="text-sm">{option.data.label}</span>
+                    <span className="text-2xl">{option.data.emoji}</span>
+                    <span>{option.data.label}</span>
                   </Button>
                 );
               }
@@ -312,7 +312,7 @@ export const ChatPartyPlanner = () => {
             {message.options[0]?.type === 'drink-type' && state.drinkTypes.length > 0 && (
               <Button
                 variant="default"
-                className="option-button flex items-center gap-2 h-auto p-3 bg-primary text-primary-foreground"
+                className="option-button flex items-center gap-2 h-auto p-4 rounded-2xl bg-primary text-primary-foreground text-base font-semibold"
                 onClick={() => {
                   addUserMessage(`Selected: ${state.drinkTypes.map(dt => drinkTypeOptions.find(d => d.id === dt)?.label).join(', ')}`);
                   setTimeout(() => {
@@ -322,8 +322,8 @@ export const ChatPartyPlanner = () => {
                   }, 1000);
                 }}
               >
-                <ArrowRight className="w-4 h-4" />
-                <span className="text-sm">Continue</span>
+                <ArrowRight className="w-5 h-5" />
+                <span>Continue</span>
               </Button>
             )}
           </div>
@@ -332,17 +332,17 @@ export const ChatPartyPlanner = () => {
     }
 
     return (
-      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
         <div
-          className={`max-w-xl px-4 py-2 rounded-lg ${
+          className={`max-w-full px-6 py-4 rounded-2xl ${
             message.type === 'user'
               ? 'bg-primary text-primary-foreground ml-auto'
-              : 'bg-muted text-muted-foreground'
+              : 'bg-muted/50'
           }`}
         >
-          <p className="text-sm">
+          <p className={`${message.type === 'user' ? 'text-lg' : 'text-4xl font-bold text-primary font-mono tracking-wide'}`}>
             {message.content}
-            {message.showCursor && <span className="inline-block w-0.5 h-4 bg-current ml-1 animate-pulse" />}
+            {message.showCursor && <span className="inline-block w-1 h-10 bg-primary ml-2 animate-pulse" />}
           </p>
         </div>
       </div>
@@ -451,16 +451,17 @@ export const ChatPartyPlanner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-        <div className="container flex items-center justify-between h-16 px-4">
-          <h1 className="text-lg font-semibold">Party Planner Chat</h1>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      {/* Main Chat Window */}
+      <div className="w-3/4 h-[66vh] border-4 border-primary rounded-3xl bg-background shadow-2xl flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-border/20">
+          <h1 className="text-2xl font-bold text-primary">Party Planner Chat</h1>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowCart(true)}
-            className="relative"
+            className="relative rounded-full"
           >
             <ShoppingCart className="w-4 h-4" />
             {getTotalItems() > 0 && (
@@ -470,20 +471,18 @@ export const ChatPartyPlanner = () => {
             )}
           </Button>
         </div>
-      </div>
 
-      {/* Chat Messages */}
-      <div className="container max-w-4xl mx-auto p-4 pb-20">
-        <div className="space-y-4">
+        {/* Chat Messages - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.map(renderMessage)}
           
-          {/* Current typing */}
+          {/* Current typing with giant letters */}
           {currentTyping && (
-            <div className="flex justify-start mb-4">
-              <div className="max-w-xl px-4 py-2 rounded-lg bg-muted text-muted-foreground">
-                <p className="text-sm">
+            <div className="flex justify-start">
+              <div className="max-w-full px-6 py-4 rounded-2xl bg-muted/50">
+                <p className="text-4xl font-bold text-primary font-mono tracking-wide">
                   {currentTyping}
-                  <span className="inline-block w-0.5 h-4 bg-current ml-1 animate-pulse" />
+                  <span className="inline-block w-1 h-10 bg-primary ml-2 animate-pulse" />
                 </p>
               </div>
             </div>
