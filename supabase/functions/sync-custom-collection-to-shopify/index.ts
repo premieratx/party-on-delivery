@@ -23,40 +23,50 @@ serve(async (req) => {
       throw new Error('Missing Shopify configuration');
     }
 
-    // First, get the actual Shopify product IDs from our product IDs
+    // First, get the actual Shopify product IDs from our product IDs  
     // We need to map our internal product IDs to Shopify product IDs
-    const productIdsQuery = product_ids.map((id: string) => `id:${id}`).join(' OR ');
+    if (!product_ids || product_ids.length === 0) {
+      console.log('No products to add to collection');
+    }
     
-    const productsResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Access-Token': shopifyAccessToken
-      },
-      body: JSON.stringify({
-        query: `
-          query getProducts($query: String!) {
-            products(first: 100, query: $query) {
-              edges {
-                node {
-                  id
-                  handle
+    const productIdsQuery = product_ids && product_ids.length > 0 
+      ? product_ids.map((id: string) => `id:${id}`).join(' OR ')
+      : '';
+    
+    let shopifyProductIds: string[] = [];
+    
+    if (productIdsQuery) {
+      const productsResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/graphql.json`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': shopifyAccessToken
+        },
+        body: JSON.stringify({
+          query: `
+            query getProducts($query: String!) {
+              products(first: 100, query: $query) {
+                edges {
+                  node {
+                    id
+                    handle
+                  }
                 }
               }
             }
+          `,
+          variables: {
+            query: productIdsQuery
           }
-        `,
-        variables: {
-          query: productIdsQuery
-        }
-      })
-    });
+        })
+      });
 
-    const productsData = await productsResponse.json();
-    console.log('Found products for collection:', productsData.data?.products?.edges?.length || 0);
+      const productsData = await productsResponse.json();
+      console.log('Found products for collection:', productsData.data?.products?.edges?.length || 0);
 
-    // Extract Shopify product IDs
-    const shopifyProductIds = productsData.data?.products?.edges?.map((edge: any) => edge.node.id) || [];
+      // Extract Shopify product IDs
+      shopifyProductIds = productsData.data?.products?.edges?.map((edge: any) => edge.node.id) || [];
+    }
 
     // Create the collection in Shopify
     const createCollectionResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json`, {
@@ -86,37 +96,46 @@ serve(async (req) => {
     console.log('Created Shopify collection:', shopifyCollectionId);
 
     // Add products to the collection (using REST API for collects)
-    const collectPromises = shopifyProductIds.map(async (productId: string) => {
-      const collectResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/collects.json`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Shopify-Access-Token': shopifyAccessToken
-        },
-        body: JSON.stringify({
-          collect: {
-            collection_id: shopifyCollectionId,
-            product_id: productId.replace('gid://shopify/Product/', '') // Extract numeric ID
+    let addedProducts = 0;
+    if (shopifyProductIds.length > 0) {
+      const collectPromises = shopifyProductIds.map(async (productId: string) => {
+        try {
+          const collectResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/collects.json`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Shopify-Access-Token': shopifyAccessToken
+            },
+            body: JSON.stringify({
+              collect: {
+                collection_id: shopifyCollectionId,
+                product_id: productId.replace('gid://shopify/Product/', '') // Extract numeric ID
+              }
+            })
+          });
+
+          if (collectResponse.ok) {
+            addedProducts++;
+          } else {
+            const error = await collectResponse.json();
+            console.warn('Failed to add product to collection:', error);
           }
-        })
+        } catch (error) {
+          console.warn('Error adding product to collection:', error);
+        }
       });
 
-      if (!collectResponse.ok) {
-        const error = await collectResponse.json();
-        console.warn('Failed to add product to collection:', error);
-      }
-    });
+      // Wait for all products to be added
+      await Promise.allSettled(collectPromises);
+    }
 
-    // Wait for all products to be added
-    await Promise.allSettled(collectPromises);
-
-    console.log(`Successfully created collection "${title}" in Shopify with ${shopifyProductIds.length} products`);
+    console.log(`Successfully created collection "${title}" in Shopify with ${addedProducts} products`);
 
     return new Response(
       JSON.stringify({
         success: true,
         shopify_collection_id: shopifyCollectionId,
-        products_added: shopifyProductIds.length
+        products_added: addedProducts
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

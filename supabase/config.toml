@@ -87,3 +87,6 @@ verify_jwt = false
 
 [functions.admin-login]
 verify_jwt = false
+
+[functions.sync-custom-collection-to-shopify]
+verify_jwt = false
