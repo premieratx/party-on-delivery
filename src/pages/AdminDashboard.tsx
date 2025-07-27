@@ -53,12 +53,23 @@ export default function AdminDashboard() {
         throw new Error(dashboardData.error);
       }
 
-      // Set dashboard data
+      // Set dashboard data with full order details
       setTotalRevenue(dashboardData.data.totalRevenue || 0);
       setTotalOrders(dashboardData.data.totalOrders || 0);
-      setTotalCustomers(dashboardData.data.totalCustomers || 0);
+      setTotalCustomers(dashboardData.data.customers?.length || 0);
       setTotalProducts(dashboardData.data.totalProducts || 0);
-      setRecentOrders(dashboardData.data.recentOrders || []);
+      
+      // Map orders with full customer details for admin view
+      const ordersWithDetails = (dashboardData.data.orders || []).map((order: any) => ({
+        ...order,
+        customer_name: order.customers ? 
+          `${order.customers.first_name || ''} ${order.customers.last_name || ''}`.trim() : 
+          'Unknown Customer',
+        customer_email: order.customers?.email || 'No email',
+        customer_phone: order.customers?.phone || 'No phone'
+      }));
+      
+      setRecentOrders(ordersWithDetails);
 
       // Load affiliates data with custom sites
       const { data: affiliatesData, error: affiliatesError } = await supabase

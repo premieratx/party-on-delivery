@@ -13,39 +13,42 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let isMounted = true;
-    let hasNavigated = false;
+    let cleanup = false;
+    let authStateProcessed = false;
 
-    // Set up auth state listener first to catch all events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted || hasNavigated) return;
+    const processAuth = async (email: string, source: string) => {
+      if (cleanup || authStateProcessed) return;
       
-      // Handle successful sign in
-      if (event === 'SIGNED_IN' && session?.user?.email) {
-        setGoogleLoading(false);
-        try {
-          const { data } = await supabase.functions.invoke('verify-admin-google', {
-            body: { email: session.user.email }
+      console.log(`Processing auth from ${source} for ${email}`);
+      
+      try {
+        const { data } = await supabase.functions.invoke('verify-admin-google', {
+          body: { email }
+        });
+        
+        if (data?.isAdmin && !cleanup) {
+          authStateProcessed = true;
+          setGoogleLoading(false);
+          console.log('Admin verified, navigating to dashboard');
+          toast({
+            title: "Welcome!",
+            description: "Successfully logged in as admin.",
           });
-          
-          if (data?.isAdmin && !hasNavigated) {
-            hasNavigated = true;
-            toast({
-              title: "Welcome!",
-              description: "Successfully logged in as admin.",
-            });
-            navigate('/affiliate/admin', { replace: true });
-          } else {
-            // Sign out non-admin users
-            await supabase.auth.signOut();
-            toast({
-              title: "Access Denied",
-              description: "You don't have admin access.",
-              variant: "destructive"
-            });
-          }
-        } catch (error) {
-          console.error('Admin verification error:', error);
+          // Use window.location instead of navigate to prevent auth loops
+          window.location.href = '/affiliate/admin';
+        } else if (!cleanup) {
+          console.log('User is not admin, signing out');
+          await supabase.auth.signOut();
+          setGoogleLoading(false);
+          toast({
+            title: "Access Denied",
+            description: "You don't have admin access.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Admin verification error:', error);
+        if (!cleanup) {
           setGoogleLoading(false);
           toast({
             title: "Error",
@@ -54,38 +57,36 @@ export const AdminLogin: React.FC = () => {
           });
         }
       }
-      
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        setGoogleLoading(false);
+    };
+
+    // Check existing session first
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email && !cleanup) {
+        processAuth(session.user.email, 'existing session');
       }
     });
 
-    // Check existing session after setting up listener
-    const checkExistingSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email && !hasNavigated && isMounted) {
-          const { data } = await supabase.functions.invoke('verify-admin-google', {
-            body: { email: session.user.email }
-          });
-          if (data?.isAdmin) {
-            hasNavigated = true;
-            navigate('/affiliate/admin', { replace: true });
-          }
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cleanup) return;
+      
+      console.log('Auth state change:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_IN' && session?.user?.email && !authStateProcessed) {
+        processAuth(session.user.email, 'auth state change');
       }
-    };
-
-    checkExistingSession();
+      
+      if (event === 'SIGNED_OUT') {
+        setGoogleLoading(false);
+        authStateProcessed = false;
+      }
+    });
 
     return () => {
-      isMounted = false;
+      cleanup = true;
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [toast]);
 
 
   const handleGoogleLogin = async () => {
