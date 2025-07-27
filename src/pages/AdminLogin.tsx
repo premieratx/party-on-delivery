@@ -34,7 +34,7 @@ export const AdminLogin: React.FC = () => {
             title: "Welcome!",
             description: "Successfully logged in as admin.",
           });
-          window.location.replace('/affiliate/admin');
+          navigate('/affiliate/admin');
         } else if (mounted) {
           console.log('User is not admin, signing out');
           await supabase.auth.signOut();

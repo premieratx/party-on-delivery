@@ -444,7 +444,7 @@ export default function CustomSiteManagement() {
                        <SelectTrigger className="bg-card border z-10">
                          <SelectValue placeholder="Select affiliate to link this site" />
                        </SelectTrigger>
-                       <SelectContent className="bg-card border shadow-lg max-h-60 overflow-y-auto z-50">
+                       <SelectContent className="bg-popover border shadow-lg max-h-60 overflow-y-auto z-[100]">
                          <SelectItem value="none">No affiliate (standalone site)</SelectItem>
                          {affiliates.map((affiliate) => (
                            <SelectItem key={affiliate.id} value={affiliate.id}>
@@ -676,19 +676,30 @@ export default function CustomSiteManagement() {
                     </div>
                   </div>
                   {formData.selected_collections.length > 0 && (
-                    <div className="mt-4 p-3 bg-muted/50 rounded-md">
-                      <h4 className="font-medium mb-2">Selected Collections:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {formData.selected_collections.map((handle) => {
-                          const collection = collections.find(c => c.handle === handle);
-                          return (
-                            <Badge key={handle} variant="secondary">
-                              {collection?.title || handle}
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    </div>
+                     <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                       <h4 className="font-medium mb-2">Selected Collections (click to remove):</h4>
+                       <div className="flex flex-wrap gap-2">
+                         {formData.selected_collections.map((handle) => {
+                           const collection = collections.find(c => c.handle === handle);
+                           return (
+                             <Badge 
+                               key={handle} 
+                               variant="secondary" 
+                               className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                               onClick={() => {
+                                 setFormData({
+                                   ...formData,
+                                   selected_collections: formData.selected_collections.filter(h => h !== handle)
+                                 });
+                               }}
+                               title="Click to remove"
+                             >
+                               {collection?.title || handle} ×
+                             </Badge>
+                           );
+                         })}
+                       </div>
+                     </div>
                   )}
                 </div>
               </TabsContent>
