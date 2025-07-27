@@ -59,13 +59,22 @@ export const CustomCollectionCreator: React.FC = () => {
 
   // Available categories from collections
   const [categories, setCategories] = useState<{ id: string; label: string }[]>([]);
+  const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
+  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    loadProducts();
+    loadCategories();
     if (draftId) {
       loadDraft(draftId);
     }
   }, [draftId]);
+
+  useEffect(() => {
+    // Load products for selected category if not already loaded
+    if (selectedCategory !== 'all' && !loadedCategories.has(selectedCategory) && categories.length > 0) {
+      loadCategoryProducts(selectedCategory);
+    }
+  }, [selectedCategory, categories, loadedCategories]);
 
   useEffect(() => {
     if (collectionTitle && !collectionHandle) {
@@ -79,9 +88,9 @@ export const CustomCollectionCreator: React.FC = () => {
     }
   }, [collectionTitle]);
 
-  const loadProducts = async () => {
+  const loadCategories = async () => {
     try {
-      console.log('Loading all products for collection creator...');
+      console.log('Loading categories...');
       
       const { data: collections, error } = await supabase.functions.invoke('get-all-collections');
       
@@ -90,54 +99,101 @@ export const CustomCollectionCreator: React.FC = () => {
         throw error;
       }
 
-      const allLoadedProducts: Product[] = [];
       const availableCategories = new Set<string>();
+
+      if (collections?.collections) {
+        collections.collections.forEach((collection: any) => {
+          if (collection.products && collection.products.length > 0) {
+            const category = mapCollectionToCategory(collection.handle);
+            availableCategories.add(category);
+          }
+        });
+      }
+
+      // Create categories array with "All Categories" at the end
+      const categoriesArray = [
+        ...Array.from(availableCategories).sort().map(cat => ({
+          id: cat,
+          label: cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+        })),
+        { id: 'all', label: 'All Categories' }
+      ];
+
+      setCategories(categoriesArray);
+      
+      // Set default to first specific category to avoid loading all products
+      if (categoriesArray.length > 0 && categoriesArray[0].id !== 'all') {
+        setSelectedCategory(categoriesArray[0].id);
+      }
+      
+      console.log(`Found ${availableCategories.size} categories`);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load categories. Please try again.",
+        variant: "destructive"
+      });
+      setLoading(false);
+    }
+  };
+
+  const loadCategoryProducts = async (category: string) => {
+    if (loadedCategories.has(category)) return;
+    
+    try {
+      console.log(`Loading products for category: ${category}`);
+      
+      const { data: collections, error } = await supabase.functions.invoke('get-all-collections');
+      
+      if (error) throw error;
+
+      const categoryProductsList: Product[] = [];
 
       if (collections?.collections) {
         collections.collections.forEach((collection: any) => {
           if (collection.products) {
             collection.products.forEach((product: any) => {
-              // Map collection handle to category
-              const category = mapCollectionToCategory(collection.handle);
-              availableCategories.add(category);
+              const productCategory = mapCollectionToCategory(collection.handle);
               
-              allLoadedProducts.push({
-                id: product.id,
-                title: product.title,
-                price: parseFloat(product.variants?.[0]?.price || '0'),
-                image: product.featuredImage?.url || product.images?.[0]?.url || '',
-                description: product.description || '',
-                handle: product.handle,
-                category: category,
-                variants: product.variants,
-                images: product.images
-              });
+              if (category === 'all' || productCategory === category) {
+                categoryProductsList.push({
+                  id: product.id,
+                  title: product.title,
+                  price: parseFloat(product.variants?.[0]?.price || '0'),
+                  image: product.featuredImage?.url || product.images?.[0]?.url || '',
+                  description: product.description || '',
+                  handle: product.handle,
+                  category: productCategory,
+                  variants: product.variants,
+                  images: product.images
+                });
+              }
             });
           }
         });
       }
 
-      // Create categories array
-      const categoriesArray = [
-        { id: 'all', label: 'All Categories' },
-        ...Array.from(availableCategories).sort().map(cat => ({
-          id: cat,
-          label: cat.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-        }))
-      ];
+      setCategoryProducts(prev => ({
+        ...prev,
+        [category]: categoryProductsList
+      }));
 
-      setCategories(categoriesArray);
-      setAllProducts(allLoadedProducts);
-      console.log(`Loaded ${allLoadedProducts.length} products across ${availableCategories.size} categories`);
+      setLoadedCategories(prev => new Set(prev).add(category));
+      
+      if (category === 'all') {
+        setAllProducts(categoryProductsList);
+      }
+      
+      console.log(`Loaded ${categoryProductsList.length} products for ${category}`);
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('Error loading category products:', error);
       toast({
         title: "Error",
-        description: "Failed to load products. Please try again.",
+        description: `Failed to load ${category} products. Please try again.`,
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -329,16 +385,32 @@ export const CustomCollectionCreator: React.FC = () => {
     setSelectedProducts(newSelected);
   };
 
+  // Get products for current category
+  const currentProducts = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return allProducts;
+    }
+    return categoryProducts[selectedCategory] || [];
+  }, [selectedCategory, allProducts, categoryProducts]);
+
   // Filter products based on search and category
-  const filteredProducts = allProducts.filter(product => {
-    const matchesSearch = !searchTerm || 
-      product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = useMemo(() => {
+    return currentProducts.filter(product => {
+      const matchesSearch = !searchTerm || 
+        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      return matchesSearch;
+    });
+  }, [currentProducts, searchTerm]);
+
+  // Handle category change and load products if needed
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    if (category === 'all' && !loadedCategories.has('all')) {
+      loadCategoryProducts('all');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -445,7 +517,7 @@ export const CustomCollectionCreator: React.FC = () => {
             <span className="text-sm font-medium text-foreground mt-2">Categories:</span>
             <RadioGroup 
               value={selectedCategory} 
-              onValueChange={setSelectedCategory}
+              onValueChange={handleCategoryChange}
               className="flex flex-wrap gap-4"
             >
               {categories.map((category) => (
@@ -462,7 +534,9 @@ export const CustomCollectionCreator: React.FC = () => {
           {/* Results Summary */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              {loading ? "Loading..." : `${filteredProducts.length} products available`}
+              {loading ? "Loading..." : 
+               !loadedCategories.has(selectedCategory) ? "Loading products..." : 
+               `${filteredProducts.length} products available`}
               {searchTerm && ` matching "${searchTerm}"`}
               {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
             </span>
@@ -470,7 +544,7 @@ export const CustomCollectionCreator: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSelectedCategory("all")}
+                onClick={() => handleCategoryChange("all")}
                 className="text-xs"
               >
                 Clear filter
@@ -482,7 +556,7 @@ export const CustomCollectionCreator: React.FC = () => {
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-6">
-        {loading ? (
+        {(loading || !loadedCategories.has(selectedCategory)) ? (
           <div className="grid grid-cols-3 md:grid-cols-8 gap-4">
             {Array.from({ length: 24 }).map((_, i) => (
               <ProductSkeleton key={i} />
