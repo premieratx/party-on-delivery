@@ -121,25 +121,33 @@ const TelegramBotSetup: React.FC = () => {
     }
 
     try {
-      // This would typically be done via the Telegram Bot API
-      // For demo purposes, we'll simulate success
-      setWebhookSet(true);
-      toast({
-        title: "Webhook Instructions Copied!",
-        description: "Follow the copied instructions to set your webhook",
+      // Set webhook using Telegram Bot API
+      const response = await fetch(`https://api.telegram.org/bot${botToken}/setWebhook`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: webhookUrl
+        })
       });
-      
-      const webhookInstructions = `To set your webhook, send this to your bot or use curl:
 
-curl -X POST "https://api.telegram.org/bot${botToken}/setWebhook" \\
-     -H "Content-Type: application/json" \\
-     -d '{"url": "${webhookUrl}"}'`;
-     
-      copyToClipboard(webhookInstructions, 'Webhook setup instructions');
+      const result = await response.json();
+      
+      if (result.ok) {
+        setWebhookSet(true);
+        setCurrentStep(2);
+        toast({
+          title: "Webhook Set Successfully!",
+          description: "Your bot is now configured to receive messages",
+        });
+      } else {
+        throw new Error(result.description || 'Failed to set webhook');
+      }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to set webhook",
+        title: "Webhook Setup Failed",
+        description: error instanceof Error ? error.message : "Please check your bot token",
         variant: "destructive"
       });
     }
