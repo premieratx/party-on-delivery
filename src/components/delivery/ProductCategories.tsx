@@ -83,7 +83,31 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // Dynamic step mapping based on available collections
   const getStepMapping = () => {
     if (isCustomSite) {
-      // For custom sites, create tabs based on available collections
+      // For custom sites, create tabs based on allowed collections from custom site data
+      const customSiteData = localStorage.getItem('customSiteData');
+      if (customSiteData) {
+        const data = JSON.parse(customSiteData);
+        const allowedCollections = data.allowedCollections || [];
+        
+        // Only create tabs for collections that are both allowed AND available in collections
+        const filteredCollections = collections.filter(collection => 
+          allowedCollections.includes(collection.handle)
+        );
+        
+        console.log('Custom site tabs: filtering to allowed collections only:', allowedCollections);
+        console.log('Available collections:', collections.map(c => c.handle));
+        console.log('Filtered collections for tabs:', filteredCollections.map(c => c.handle));
+        
+        return filteredCollections.map((collection, index) => ({
+          step: index + 1,
+          title: collection.title,
+          handle: collection.handle,
+          backgroundImage: getBackgroundForHandle(collection.handle),
+          pageTitle: `Choose Your ${collection.title}`
+        }));
+      }
+      
+      // Fallback: use all collections if no custom site data
       return collections.map((collection, index) => ({
         step: index + 1,
         title: collection.title,
