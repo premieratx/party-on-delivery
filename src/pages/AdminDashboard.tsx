@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import SimpleProductManager from '@/components/admin/SimpleProductManager';
+import VoucherManagement from '@/components/admin/VoucherManagement';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -201,6 +202,7 @@ export default function AdminDashboard() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
+            <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
           </TabsList>
@@ -389,6 +391,10 @@ export default function AdminDashboard() {
                 </Card>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="vouchers" className="space-y-4">
+            <VoucherManagement />
           </TabsContent>
 
           <TabsContent value="products" className="space-y-4">

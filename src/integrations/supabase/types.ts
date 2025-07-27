@@ -1222,6 +1222,109 @@ export type Database = {
           },
         ]
       }
+      voucher_usage: {
+        Row: {
+          amount_used: number
+          customer_email: string | null
+          id: string
+          order_id: string | null
+          remaining_balance: number | null
+          used_at: string
+          voucher_id: string
+        }
+        Insert: {
+          amount_used: number
+          customer_email?: string | null
+          id?: string
+          order_id?: string | null
+          remaining_balance?: number | null
+          used_at?: string
+          voucher_id: string
+        }
+        Update: {
+          amount_used?: number
+          customer_email?: string | null
+          id?: string
+          order_id?: string | null
+          remaining_balance?: number | null
+          used_at?: string
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_usage_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          affiliate_id: string | null
+          commission_rate: number | null
+          created_at: string
+          created_by_admin_id: string | null
+          current_uses: number | null
+          discount_value: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          minimum_spend: number | null
+          prepaid_amount: number | null
+          updated_at: string
+          voucher_code: string
+          voucher_name: string
+          voucher_type: string
+        }
+        Insert: {
+          affiliate_id?: string | null
+          commission_rate?: number | null
+          created_at?: string
+          created_by_admin_id?: string | null
+          current_uses?: number | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          minimum_spend?: number | null
+          prepaid_amount?: number | null
+          updated_at?: string
+          voucher_code: string
+          voucher_name: string
+          voucher_type: string
+        }
+        Update: {
+          affiliate_id?: string | null
+          commission_rate?: number | null
+          created_at?: string
+          created_by_admin_id?: string | null
+          current_uses?: number | null
+          discount_value?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          minimum_spend?: number | null
+          prepaid_amount?: number | null
+          updated_at?: string
+          voucher_code?: string
+          voucher_name?: string
+          voucher_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
