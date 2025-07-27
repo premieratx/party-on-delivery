@@ -37,76 +37,89 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state change listener for OAuth redirects
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user?.email) {
-        console.log('OAuth redirect detected, user signed in:', session.user.email);
-        
+    let mounted = true;
+    
+    // Prevent multiple processing with session storage flag
+    const authProcessingKey = 'affiliate-auth-processing';
+    const isProcessing = sessionStorage.getItem(authProcessingKey);
+    
+    if (isProcessing) {
+      console.log('Affiliate auth already processing, skipping...');
+      return;
+    }
+
+    const processAuth = async (session: any) => {
+      if (!mounted) return;
+      
+      sessionStorage.setItem(authProcessingKey, 'true');
+      console.log('Processing affiliate auth for:', session.user.email);
+      
+      try {
         // Check if affiliate already exists
-        const { data: existingAffiliate, error: checkError } = await supabase
+        const { data: existingAffiliate } = await supabase
           .from('affiliates')
-          .select('id')
+          .select('*')
           .eq('email', session.user.email)
           .maybeSingle();
-        
-        if (checkError) {
-          console.error('Error checking affiliate:', checkError);
-          return;
-        }
-        
+
         if (existingAffiliate) {
           console.log('Existing affiliate found, redirecting to dashboard');
-          navigate('/affiliate/dashboard');
+          sessionStorage.removeItem(authProcessingKey);
+          window.location.replace('/affiliate/dashboard');
           return;
         }
-        
-        // If no affiliate exists, proceed to details step
-        console.log('New user, showing details form');
+
+        // Set form data from Google user metadata
+        if (session.user.user_metadata) {
+          setFormData(prev => ({
+            ...prev,
+            name: session.user.user_metadata.full_name || session.user.user_metadata.name || '',
+          }));
+        }
+
+        // Move to details step
+        setLoading(false);
         setStep('details');
-        setFormData(prev => ({
-          ...prev,
-          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''
-        }));
+        sessionStorage.removeItem(authProcessingKey);
+      } catch (error) {
+        console.error('Affiliate auth processing error:', error);
+        sessionStorage.removeItem(authProcessingKey);
+        setLoading(false);
+      }
+    };
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      
+      console.log('Affiliate auth state change:', event);
+      
+      if (event === 'SIGNED_IN' && session?.user?.email) {
+        await processAuth(session);
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        sessionStorage.removeItem(authProcessingKey);
+        setLoading(false);
+        setStep('google');
       }
     });
 
-    // Also check initial session state for users who already completed OAuth
-    const checkInitialSession = async () => {
+    // Check existing session
+    const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email && !initialData) {
-        console.log('Found existing session on load:', session.user.email);
-        
-        // Check if affiliate already exists
-        const { data: existingAffiliate, error: checkError } = await supabase
-          .from('affiliates')
-          .select('id')
-          .eq('email', session.user.email)
-          .maybeSingle();
-        
-        if (checkError) {
-          console.error('Error checking affiliate:', checkError);
-          return;
-        }
-        
-        if (existingAffiliate) {
-          console.log('Existing affiliate found on load, redirecting to dashboard');
-          navigate('/affiliate/dashboard');
-          return;
-        }
-        
-        // If no affiliate exists, proceed to details step
-        setStep('details');
-        setFormData(prev => ({
-          ...prev,
-          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''
-        }));
+      if (session?.user?.email && mounted) {
+        await processAuth(session);
       }
     };
-    
-    checkInitialSession();
-    
-    return () => subscription.unsubscribe();
-  }, [navigate, initialData]);
+
+    checkSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate, onSuccess]);
 
   const handleGoogleAuth = async () => {
     if (loading) return; // Prevent double clicks

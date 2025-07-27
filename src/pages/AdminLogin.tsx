@@ -13,42 +13,55 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let cleanup = false;
-    let authStateProcessed = false;
+    let mounted = true;
+    
+    // Prevent multiple processing with session storage flag
+    const authProcessingKey = 'admin-auth-processing';
+    const isProcessing = sessionStorage.getItem(authProcessingKey);
+    
+    if (isProcessing) {
+      console.log('Auth already processing, skipping...');
+      return;
+    }
 
-    const processAuth = async (email: string, source: string) => {
-      if (cleanup || authStateProcessed) return;
+    const processAuth = async (email: string) => {
+      if (!mounted) return;
       
-      console.log(`Processing auth from ${source} for ${email}`);
+      // Set processing flag
+      sessionStorage.setItem(authProcessingKey, 'true');
+      
+      console.log(`Processing admin auth for ${email}`);
       
       try {
         const { data } = await supabase.functions.invoke('verify-admin-google', {
           body: { email }
         });
         
-        if (data?.isAdmin && !cleanup) {
-          authStateProcessed = true;
+        if (data?.isAdmin && mounted) {
+          console.log('Admin verified, redirecting to dashboard');
           setGoogleLoading(false);
-          console.log('Admin verified, navigating to dashboard');
           toast({
             title: "Welcome!",
             description: "Successfully logged in as admin.",
           });
-          // Use window.location instead of navigate to prevent auth loops
-          window.location.href = '/affiliate/admin';
-        } else if (!cleanup) {
+          // Clear processing flag before redirect
+          sessionStorage.removeItem(authProcessingKey);
+          window.location.replace('/affiliate/admin');
+        } else if (mounted) {
           console.log('User is not admin, signing out');
           await supabase.auth.signOut();
+          sessionStorage.removeItem(authProcessingKey);
           setGoogleLoading(false);
           toast({
-            title: "Access Denied",
+            title: "Access Denied", 
             description: "You don't have admin access.",
             variant: "destructive"
           });
         }
       } catch (error) {
         console.error('Admin verification error:', error);
-        if (!cleanup) {
+        sessionStorage.removeItem(authProcessingKey);
+        if (mounted) {
           setGoogleLoading(false);
           toast({
             title: "Error",
@@ -59,31 +72,35 @@ export const AdminLogin: React.FC = () => {
       }
     };
 
-    // Check existing session first
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.email && !cleanup) {
-        processAuth(session.user.email, 'existing session');
+    // Check for existing session first
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email && mounted) {
+        await processAuth(session.user.email);
       }
-    });
+    };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (cleanup) return;
+    // Set up auth listener for OAuth callback
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
       
-      console.log('Auth state change:', event, session?.user?.email);
+      console.log('Admin auth state change:', event);
       
-      if (event === 'SIGNED_IN' && session?.user?.email && !authStateProcessed) {
-        processAuth(session.user.email, 'auth state change');
+      if (event === 'SIGNED_IN' && session?.user?.email) {
+        await processAuth(session.user.email);
       }
       
       if (event === 'SIGNED_OUT') {
+        sessionStorage.removeItem(authProcessingKey);
         setGoogleLoading(false);
-        authStateProcessed = false;
       }
     });
 
+    // Check session on mount
+    checkSession();
+
     return () => {
-      cleanup = true;
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [toast]);

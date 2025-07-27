@@ -18,47 +18,67 @@ const CustomerLogin = () => {
   const redirectParam = searchParams.get('redirect');
 
   useEffect(() => {
-    let isMounted = true;
-    let hasNavigated = false;
+    let mounted = true;
+    
+    // Prevent multiple processing with session storage flag
+    const authProcessingKey = 'customer-auth-processing';
+    const isProcessing = sessionStorage.getItem(authProcessingKey);
+    
+    if (isProcessing) {
+      console.log('Customer auth already processing, skipping...');
+      return;
+    }
 
-    // Set up auth state listener first
+    const processAuth = async (session: any) => {
+      if (!mounted) return;
+      
+      // Set processing flag
+      sessionStorage.setItem(authProcessingKey, 'true');
+      
+      console.log('Processing customer auth');
+      setIsLoading(false);
+      
+      try {
+        // Link any stored session IDs to this user
+        if (session.user.email) {
+          await linkSessionToUser(session.user.email);
+        }
+        
+        // Clear redirect intent and navigate to dashboard
+        localStorage.removeItem('loginRedirectIntent');
+        sessionStorage.removeItem(authProcessingKey);
+        window.location.replace('/customer/dashboard');
+      } catch (error) {
+        console.error('Customer auth processing error:', error);
+        sessionStorage.removeItem(authProcessingKey);
+        setIsLoading(false);
+      }
+    };
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted || hasNavigated) return;
+        if (!mounted) return;
+        
+        console.log('Customer auth state change:', event);
         
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-          hasNavigated = true;
-          setIsLoading(false);
-          
-          // Link any stored session IDs to this user
-          if (session.user.email) {
-            await linkSessionToUser(session.user.email);
-          }
-          
-          // Clear redirect intent and always go to dashboard
-          localStorage.removeItem('loginRedirectIntent');
-          navigate('/customer/dashboard', { replace: true });
+          await processAuth(session);
         }
         
         if (event === 'SIGNED_OUT') {
+          sessionStorage.removeItem(authProcessingKey);
           setIsLoading(false);
         }
       }
     );
 
-    // Check existing session after setting up listener
+    // Check existing session
     const checkExistingSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session && !hasNavigated && isMounted) {
-          hasNavigated = true;
-          // Link any stored session IDs to this user
-          if (session.user.email) {
-            await linkSessionToUser(session.user.email);
-          }
-          
-          localStorage.removeItem('loginRedirectIntent');
-          navigate('/customer/dashboard', { replace: true });
+        if (session && mounted) {
+          await processAuth(session);
         }
       } catch (error) {
         console.error('Session check error:', error);
@@ -68,7 +88,7 @@ const CustomerLogin = () => {
     checkExistingSession();
 
     return () => {
-      isMounted = false;
+      mounted = false;
       subscription.unsubscribe();
     };
   }, [navigate, linkSessionToUser]);
