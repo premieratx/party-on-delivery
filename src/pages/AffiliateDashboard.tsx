@@ -31,7 +31,8 @@ import {
   ChevronDown,
   FileText,
   Mail,
-  Globe
+  Globe,
+  Edit
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -671,32 +672,60 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
           </CardContent>
         </Card>
 
-        {/* Personal Concierge Website Section */}
+        {/* Custom Site Section */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-bold">🎉 Your Personal Concierge Website</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Your Custom Branded Site
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={affiliateUrl}
-                readOnly
-                className="flex-1 px-3 py-2 border rounded-md bg-muted text-sm"
-              />
-              <Button onClick={copyAffiliateLink} disabled={copying} size="sm">
-                <Copy className="h-4 w-4" />
-              </Button>
+            <div className="p-4 bg-gradient-to-r from-primary/10 to-primary-glow/10 rounded-lg border">
+              <h4 className="font-bold text-lg mb-2">{affiliate.company_name}</h4>
+              <p className="text-sm text-muted-foreground mb-3">
+                Your professional branded delivery site with custom collections and free shipping for your customers.
+              </p>
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="text-sm font-mono bg-background border rounded px-2 py-1 flex-1">
+                  {window.location.origin}/sites/{affiliate.affiliate_code.toLowerCase()}
+                </div>
+                <Button 
+                  onClick={() => {
+                    const customSiteUrl = `${window.location.origin}/sites/${affiliate.affiliate_code.toLowerCase()}`;
+                    navigator.clipboard.writeText(customSiteUrl);
+                    toast({
+                      title: "Copied!",
+                      description: "Your custom site link has been copied to clipboard.",
+                    });
+                  }}
+                  size="sm"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => window.open(`/sites/${affiliate.affiliate_code.toLowerCase()}`, '_blank')}
+                  className="flex-1"
+                  variant="default"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Site
+                </Button>
+                <Button
+                  onClick={() => navigate(`/admin/custom-sites?affiliate=${affiliate.id}`)}
+                  variant="outline"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Site
+                </Button>
+              </div>
             </div>
             
-            <div className="mb-4">
-              <Button
-                onClick={() => window.open(affiliateUrl, '_blank')}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Your Custom Page
-              </Button>
+            <div className="text-xs text-muted-foreground">
+              <p>✨ Features: Custom branding, your company name prominently displayed, curated product collections, automatic free shipping, and commission tracking.</p>
             </div>
             
             <div className="flex flex-wrap gap-2">

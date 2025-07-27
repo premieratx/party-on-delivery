@@ -87,21 +87,18 @@ export function CustomDeliveryWidget({ siteConfig }: CustomDeliveryWidgetProps) 
   return (
     <div className="custom-site-wrapper">
       {/* Custom site header */}
-      <div className="bg-gradient-to-r from-primary to-primary-glow text-white py-4 px-6">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold">{siteConfig.site_name}</h1>
-              <p className="text-sm opacity-90">Powered by {siteConfig.business_name}</p>
+      <div className="bg-gradient-to-r from-primary to-primary-glow text-white py-6 px-6">
+        <div className="container mx-auto text-center">
+          <h1 className="text-3xl font-bold mb-2">{siteConfig.business_name}</h1>
+          <p className="text-lg opacity-90 mb-1">{siteConfig.site_name}</p>
+          <p className="text-sm opacity-75">Premium Delivery & Party Planning</p>
+          {siteConfig.custom_promo_code && (
+            <div className="mt-3">
+              <div className="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-medium">
+                FREE SHIPPING CODE: {siteConfig.custom_promo_code}
+              </div>
             </div>
-            <div className="text-right text-sm opacity-90">
-              {siteConfig.custom_promo_code && (
-                <div className="bg-white/20 px-3 py-1 rounded-full">
-                  Code: {siteConfig.custom_promo_code}
-                </div>
-              )}
-            </div>
-          </div>
+          )}
         </div>
       </div>
 

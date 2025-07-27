@@ -38,7 +38,7 @@ serve(async (req) => {
     logStep('User authenticated', { email: user.email });
 
     // Parse request body
-    const { name, phone, companyName, venmoHandle, email } = await req.json();
+    const { name, phone, companyName, venmoHandle, email, deliveryAddress, isAdminCreated } = await req.json();
 
     if (!name || !companyName || !email) {
       throw new Error("Missing required fields: name, companyName, email");
@@ -154,6 +154,61 @@ serve(async (req) => {
 
     logStep('Affiliate created successfully', { id: newAffiliate.id, code: affiliateCode });
 
+    // Auto-create custom site for the affiliate
+    try {
+      const siteSlug = affiliateCode.toLowerCase();
+      const siteName = `${companyName} - Custom Delivery Site`;
+      
+      const { data: customSite, error: siteError } = await supabaseService
+        .from('custom_affiliate_sites')
+        .insert({
+          site_slug: siteSlug,
+          site_name: siteName,
+          business_name: companyName,
+          delivery_address: deliveryAddress || {
+            street: '',
+            city: 'Austin',
+            state: 'TX',
+            zip_code: '',
+            instructions: 'Default delivery area - please update in your affiliate dashboard'
+          },
+          custom_promo_code: null, // They can add this later if needed
+          site_type: 'affiliate',
+          affiliate_id: newAffiliate.id,
+          is_active: true
+        })
+        .select('id')
+        .single();
+
+      if (siteError) {
+        logStep('Error creating custom site (non-critical)', siteError);
+      } else {
+        logStep('Custom site created successfully', { siteId: customSite.id, slug: siteSlug });
+        
+        // Add default collections (liquor, beer, seltzers, cocktails, mixers-and-na)
+        const defaultCollections = ['liquor', 'beer', 'seltzers', 'cocktails', 'mixers-and-na'];
+        const collectionsData = defaultCollections.map((handle, index) => ({
+          site_id: customSite.id,
+          shopify_collection_handle: handle,
+          display_order: index,
+          is_enabled: true
+        }));
+
+        const { error: collectionsError } = await supabaseService
+          .from('site_product_collections')
+          .insert(collectionsData);
+
+        if (collectionsError) {
+          logStep('Error adding default collections (non-critical)', collectionsError);
+        } else {
+          logStep('Default collections added to custom site');
+        }
+      }
+    } catch (siteCreationError: any) {
+      logStep('Error in custom site creation (non-critical)', siteCreationError);
+      // Don't fail the affiliate creation if site creation fails
+    }
+
     // TODO: Add Google Sheets integration here when needed
     // This would log the affiliate signup to a Google Sheet
 
@@ -165,7 +220,8 @@ serve(async (req) => {
           name: newAffiliate.name,
           companyName: newAffiliate.company_name,
           affiliateCode: newAffiliate.affiliate_code,
-          commissionRate: newAffiliate.commission_rate
+          commissionRate: newAffiliate.commission_rate,
+          customSiteUrl: `${Deno.env.get("SUPABASE_URL")?.replace('supabase.co', 'lovable.app') || 'https://custom-domain.com'}/sites/${affiliateCode.toLowerCase()}`
         }
       }),
       {

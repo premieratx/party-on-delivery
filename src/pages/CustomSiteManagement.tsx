@@ -51,13 +51,6 @@ export default function CustomSiteManagement() {
     site_slug: '',
     site_name: '',
     business_name: '',
-    business_address: {
-      street: '',
-      city: '',
-      state: '',
-      zip_code: '',
-      instructions: ''
-    },
     delivery_address: {
       street: '',
       city: '',
@@ -68,8 +61,12 @@ export default function CustomSiteManagement() {
     custom_promo_code: '',
     site_type: 'custom',
     affiliate_id: '',
-    selected_collections: [] as string[],
-    same_address: false
+    selected_collections: ['liquor', 'beer', 'seltzers', 'cocktails', 'mixers-and-na'] as string[], // Default collections
+    same_address: false,
+    // Add fields for affiliate creation
+    affiliate_email: '',
+    affiliate_phone: '',
+    affiliate_venmo: ''
   });
 
   useEffect(() => {
@@ -155,15 +152,42 @@ export default function CustomSiteManagement() {
   const handleSaveSite = async () => {
     console.log('handleSaveSite called with formData:', formData);
     try {
+      let finalAffiliateId = formData.affiliate_id;
+
+      // If no affiliate is selected but we have affiliate info, create a new affiliate
+      if (!finalAffiliateId && formData.affiliate_email) {
+        try {
+          const { data: createAffiliateData, error: createAffiliateError } = await supabase.functions.invoke('create-affiliate', {
+            body: {
+              name: formData.business_name, // Use business name as the name
+              phone: formData.affiliate_phone,
+              companyName: formData.business_name,
+              venmoHandle: formData.affiliate_venmo,
+              email: formData.affiliate_email,
+              isAdminCreated: true // Flag that this was created by admin
+            }
+          });
+
+          if (createAffiliateError) throw createAffiliateError;
+          
+          if (createAffiliateData?.affiliate?.id) {
+            finalAffiliateId = createAffiliateData.affiliate.id;
+            toast.success('New affiliate created and linked to site');
+          }
+        } catch (affiliateError) {
+          console.warn('Could not auto-create affiliate:', affiliateError);
+          // Continue with site creation even if affiliate creation fails
+        }
+      }
+
       const siteData = {
         site_slug: formData.site_slug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
         site_name: formData.site_name,
         business_name: formData.business_name,
-        business_address: formData.business_address,
         delivery_address: formData.delivery_address,
         custom_promo_code: formData.custom_promo_code || null,
         site_type: formData.site_type,
-        affiliate_id: formData.affiliate_id || null,
+        affiliate_id: finalAffiliateId || null,
         is_active: true
       };
 
@@ -253,13 +277,6 @@ export default function CustomSiteManagement() {
       site_slug: site.site_slug,
       site_name: site.site_name,
       business_name: site.business_name,
-      business_address: site.business_address || {
-        street: '',
-        city: '',
-        state: '',
-        zip_code: '',
-        instructions: ''
-      },
       delivery_address: (site as any).delivery_address || site.business_address || {
         street: '',
         city: '',
@@ -271,7 +288,10 @@ export default function CustomSiteManagement() {
       site_type: site.site_type,
       affiliate_id: site.affiliate_id || '',
       selected_collections: siteCollections?.map(c => c.shopify_collection_handle) || [],
-      same_address: false
+      same_address: false,
+      affiliate_email: site.affiliates?.email || '',
+      affiliate_phone: '',
+      affiliate_venmo: ''
     });
 
     setEditingSite(site.id);
@@ -283,13 +303,6 @@ export default function CustomSiteManagement() {
       site_slug: '',
       site_name: '',
       business_name: '',
-      business_address: {
-        street: '',
-        city: '',
-        state: '',
-        zip_code: '',
-        instructions: ''
-      },
       delivery_address: {
         street: '',
         city: '',
@@ -300,8 +313,12 @@ export default function CustomSiteManagement() {
       custom_promo_code: '',
       site_type: 'custom',
       affiliate_id: '',
-      selected_collections: [],
-      same_address: false
+      selected_collections: ['liquor', 'beer', 'seltzers', 'cocktails', 'mixers-and-na'], // Default collections
+      same_address: false,
+      // Add fields for affiliate creation
+      affiliate_email: '',
+      affiliate_phone: '',
+      affiliate_venmo: ''
     });
   };
 
@@ -327,6 +344,26 @@ export default function CustomSiteManagement() {
           setShowCreateForm(true);
           setEditingSite(null);
           resetForm();
+          
+          // Check if we're coming from an affiliate context and prefill data
+          const urlParams = new URLSearchParams(window.location.search);
+          const affiliateId = urlParams.get('affiliate');
+          if (affiliateId) {
+            const affiliate = affiliates.find(a => a.id === affiliateId);
+            if (affiliate) {
+              setFormData(prev => ({
+                ...prev,
+                business_name: affiliate.company_name || affiliate.name,
+                site_name: `${affiliate.company_name || affiliate.name} - Custom Site`,
+                site_slug: (affiliate.company_name || affiliate.name).toLowerCase().replace(/[^a-z0-9-]/g, '-'),
+                affiliate_id: affiliate.id,
+                affiliate_email: affiliate.email,
+                affiliate_phone: affiliate.phone || '',
+                affiliate_venmo: affiliate.venmo_handle || ''
+              }));
+            }
+          }
+          
           console.log('After setting showCreateForm to true');
         }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -342,9 +379,10 @@ export default function CustomSiteManagement() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
                 <TabsTrigger value="delivery">Delivery Address</TabsTrigger>
+                <TabsTrigger value="affiliate">Affiliate Info</TabsTrigger>
                 <TabsTrigger value="collections">Collections</TabsTrigger>
               </TabsList>
 
@@ -441,100 +479,10 @@ export default function CustomSiteManagement() {
 
               <TabsContent value="delivery" className="space-y-4">
                 <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="same_address"
-                      checked={formData.same_address}
-                      onCheckedChange={(checked) => {
-                        const newFormData = {
-                          ...formData,
-                          same_address: checked as boolean
-                        };
-                        
-                        if (checked) {
-                          newFormData.delivery_address = { ...formData.business_address };
-                        }
-                        
-                        setFormData(newFormData);
-                      }}
-                    />
-                    <Label htmlFor="same_address">Business address is the same as delivery address</Label>
-                  </div>
-
-                  {!formData.same_address && (
-                    <>
-                      <h3 className="text-lg font-semibold">Business Address</h3>
-                      <div>
-                        <Label htmlFor="business_street">Street Address</Label>
-                        <Input
-                          id="business_street"
-                          value={formData.business_address.street}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            business_address: { ...formData.business_address, street: e.target.value }
-                          })}
-                          className="bg-card border"
-                          placeholder="123 Main St"
-                        />
-                      </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <Label htmlFor="business_city">City</Label>
-                          <Input
-                            id="business_city"
-                            value={formData.business_address.city}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              business_address: { ...formData.business_address, city: e.target.value }
-                            })}
-                            className="bg-card border"
-                            placeholder="Austin"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="business_state">State</Label>
-                          <Input
-                            id="business_state"
-                            value={formData.business_address.state}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              business_address: { ...formData.business_address, state: e.target.value }
-                            })}
-                            className="bg-card border"
-                            placeholder="TX"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="business_zip">ZIP Code</Label>
-                          <Input
-                            id="business_zip"
-                            value={formData.business_address.zip_code}
-                            onChange={(e) => setFormData({
-                              ...formData,
-                              business_address: { ...formData.business_address, zip_code: e.target.value }
-                            })}
-                            className="bg-card border"
-                            placeholder="78701"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="business_instructions">Business Special Instructions</Label>
-                        <Textarea
-                          id="business_instructions"
-                          value={formData.business_address.instructions}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            business_address: { ...formData.business_address, instructions: e.target.value }
-                          })}
-                          className="bg-card border"
-                          placeholder="Building entrance, parking instructions, etc."
-                        />
-                      </div>
-                    </>
-                  )}
-
                   <h3 className="text-lg font-semibold">Delivery Address</h3>
+                  <p className="text-sm text-muted-foreground">
+                    This is where orders will be delivered. For most sites, this should be the main service area or event location.
+                  </p>
                   <div>
                     <Label htmlFor="delivery_street">Street Address</Label>
                     <Input
@@ -546,7 +494,6 @@ export default function CustomSiteManagement() {
                       })}
                       className="bg-card border"
                       placeholder="123 Event Venue Street"
-                      disabled={formData.same_address}
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-4">
@@ -561,7 +508,6 @@ export default function CustomSiteManagement() {
                         })}
                         className="bg-card border"
                         placeholder="Austin"
-                        disabled={formData.same_address}
                       />
                     </div>
                     <div>
@@ -575,7 +521,6 @@ export default function CustomSiteManagement() {
                         })}
                         className="bg-card border"
                         placeholder="TX"
-                        disabled={formData.same_address}
                       />
                     </div>
                     <div>
@@ -589,7 +534,6 @@ export default function CustomSiteManagement() {
                         })}
                         className="bg-card border"
                         placeholder="78701"
-                        disabled={formData.same_address}
                       />
                     </div>
                   </div>
@@ -604,9 +548,76 @@ export default function CustomSiteManagement() {
                       })}
                       className="bg-card border"
                       placeholder="Building entrance, parking instructions, etc."
-                      disabled={formData.same_address}
                     />
                   </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="affiliate" className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Affiliate Information</h3>
+                    <p className="text-sm text-muted-foreground">
+                      If this person isn't already an affiliate, we'll create their account automatically when you save the site.
+                    </p>
+                  </div>
+                  
+                  {!formData.affiliate_id && (
+                    <>
+                      <div>
+                        <Label htmlFor="affiliate_email">Email Address *</Label>
+                        <Input
+                          id="affiliate_email"
+                          type="email"
+                          value={formData.affiliate_email}
+                          onChange={(e) => setFormData({...formData, affiliate_email: e.target.value})}
+                          placeholder="partner@company.com"
+                          className="bg-card border"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Required to create affiliate account if they don't have one
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="affiliate_phone">Phone Number *</Label>
+                        <Input
+                          id="affiliate_phone"
+                          type="tel"
+                          value={formData.affiliate_phone}
+                          onChange={(e) => setFormData({...formData, affiliate_phone: e.target.value})}
+                          placeholder="(555) 123-4567"
+                          className="bg-card border"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Required for affiliate account
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="affiliate_venmo">Venmo Handle (Optional)</Label>
+                        <Input
+                          id="affiliate_venmo"
+                          value={formData.affiliate_venmo}
+                          onChange={(e) => setFormData({...formData, affiliate_venmo: e.target.value})}
+                          placeholder="@venmo-username"
+                          className="bg-card border"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          For faster commission payouts
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  
+                  {formData.affiliate_id && (
+                    <div className="p-4 bg-muted/50 rounded-md">
+                      <p className="font-medium">Linked to existing affiliate</p>
+                      <p className="text-sm text-muted-foreground">
+                        This site is linked to an existing affiliate account. Their commissions will be tracked automatically.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 

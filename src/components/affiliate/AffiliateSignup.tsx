@@ -23,7 +23,15 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
     name: initialData?.name || '',
     phone: '',
     companyName: '',
-    venmoHandle: ''
+    venmoHandle: '',
+    // Add delivery address fields to match custom site creation
+    deliveryAddress: {
+      street: '',
+      city: 'Austin',
+      state: 'TX',
+      zip_code: '',
+      instructions: ''
+    }
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -154,14 +162,15 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('User not authenticated');
 
-      // Generate affiliate code and create affiliate profile
+      // Generate affiliate code and create affiliate profile with delivery address
       const { data, error } = await supabase.functions.invoke('create-affiliate', {
         body: {
           name: formData.name,
           phone: formData.phone,
           companyName: formData.companyName,
           venmoHandle: formData.venmoHandle,
-          email: user.email
+          email: user.email,
+          deliveryAddress: formData.deliveryAddress
         }
       });
 
@@ -169,7 +178,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
 
       toast({
         title: "Success!",
-        description: "Your affiliate account has been created successfully.",
+        description: "Your affiliate account and custom site have been created successfully.",
       });
 
       onSuccess();
@@ -279,6 +288,55 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
               <p className="text-xs text-muted-foreground">
                 For faster commission payouts
               </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-sm">Default Delivery Area</h4>
+                <p className="text-xs text-muted-foreground mb-3">
+                  This will be the default delivery area for your custom site. You can edit this later.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="delivery_street">Street Address</Label>
+                <Input
+                  id="delivery_street"
+                  value={formData.deliveryAddress.street}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    deliveryAddress: { ...prev.deliveryAddress, street: e.target.value }
+                  }))}
+                  placeholder="123 Main Street"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label htmlFor="delivery_city">City</Label>
+                  <Input
+                    id="delivery_city"
+                    value={formData.deliveryAddress.city}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      deliveryAddress: { ...prev.deliveryAddress, city: e.target.value }
+                    }))}
+                    placeholder="Austin"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="delivery_zip">ZIP Code</Label>
+                  <Input
+                    id="delivery_zip"
+                    value={formData.deliveryAddress.zip_code}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      deliveryAddress: { ...prev.deliveryAddress, zip_code: e.target.value }
+                    }))}
+                    placeholder="78701"
+                  />
+                </div>
+              </div>
             </div>
 
             <Button 
