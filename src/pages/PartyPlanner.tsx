@@ -396,23 +396,32 @@ export const PartyPlanner = () => {
                           </div>
                         )}
                         
-                        <PartyTabs
-                          eventName={eventName}
-                          eventDetails={eventDetails || {
-                            numberOfPeople: 10,
-                            drinkerType: 'medium',
-                            budget: 200,
-                            drinkTypes: [],
-                            eventDuration: 4
-                          }}
-                          onUpdateEventDetails={(details) => updateEventDetails(eventName, details)}
-                          onAddToCart={(eventName, category, items) => handleAddToCart(eventName, category, items)}
-                          categorySelections={categorySelections}
-                          totalPartyBudget={getTotalPartyBudget()}
-                          runningTotal={getRunningTotal()}
-                          onComplete={() => handleEventComplete(eventName)}
-                          onBackToPartyType={() => setCurrentStep(0)} // Add back callback
-                        />
+                         <PartyTabs
+                           eventName={eventName}
+                           eventDetails={eventDetails || {
+                             numberOfPeople: 10,
+                             drinkerType: 'medium',
+                             budget: 200,
+                             drinkTypes: [],
+                             eventDuration: 4
+                           }}
+                           onUpdateEventDetails={(details) => updateEventDetails(eventName, details)}
+                           onAddToCart={(eventName, category, items) => handleAddToCart(eventName, category, items)}
+                           categorySelections={categorySelections}
+                           totalPartyBudget={getTotalPartyBudget()}
+                           runningTotal={getRunningTotal()}
+                           onComplete={() => handleEventComplete(eventName)}
+                           onBackToPartyType={() => setCurrentStep(0)}
+                            cart={cartItems.map(item => ({
+                              productId: item.productId || item.id,
+                              title: item.title,
+                              price: item.price,
+                              quantity: item.quantity,
+                              image: item.image,
+                              eventName: item.eventName || '',
+                              category: item.category || ''
+                            }))} // Convert UnifiedCartItem to CartItem format
+                         />
                       </CardContent>
                     </Card>
                   )}

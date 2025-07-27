@@ -38,7 +38,8 @@ interface PartyTabsProps {
   totalPartyBudget: number;
   runningTotal: number;
   onComplete: () => void;
-  onBackToPartyType?: () => void; // Add callback for back button
+  onBackToPartyType?: () => void;
+  cart?: CartItem[]; // Add cart prop for unified cart integration
 }
 
 export const PartyTabs = ({
@@ -50,7 +51,8 @@ export const PartyTabs = ({
   totalPartyBudget,
   runningTotal,
   onComplete,
-  onBackToPartyType
+  onBackToPartyType,
+  cart = [] // Default to empty array if not provided
 }: PartyTabsProps) => {
   const [activeTab, setActiveTab] = useState("details");
   const [completedTabs, setCompletedTabs] = useState<Set<string>>(new Set());
@@ -200,11 +202,26 @@ export const PartyTabs = ({
   const renderSummary = () => {
     console.log('Rendering summary with categorySelections:', categorySelections);
     console.log('Event details drink types:', eventDetails.drinkTypes);
+    console.log('Unified cart items:', cart);
     
-    const totalSpent = Object.values(categorySelections).flat().reduce((sum, item) => 
+    // Get items from both party planner selections and unified cart
+    const partyPlannerItems = Object.values(categorySelections).flat();
+    const unifiedCartItems = cart || [];
+    
+    // Calculate totals for party planner items
+    const partyPlannerTotal = partyPlannerItems.reduce((sum, item) => 
       sum + (item.price * item.quantity), 0
     );
-    const remainingBudget = eventDetails.budget - totalSpent;
+    
+    // Calculate total for all cart items (including those added outside party planner)
+    const totalCartValue = unifiedCartItems.reduce((sum, item) => 
+      sum + (item.price * item.quantity), 0
+    );
+    
+    const totalCartItems = unifiedCartItems.reduce((sum, item) => sum + item.quantity, 0);
+    const partyPlannerItemCount = partyPlannerItems.reduce((sum, item) => sum + item.quantity, 0);
+    
+    const remainingBudget = eventDetails.budget - totalCartValue;
 
     return (
       <div className="space-y-6">
@@ -222,30 +239,31 @@ export const PartyTabs = ({
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
               <div>
                 <div className="text-lg font-bold">
-                  {Object.values(categorySelections).flat().reduce((sum, item) => sum + item.quantity, 0)}
+                  {partyPlannerItemCount}
                 </div>
-                <div className="text-xs text-muted-foreground">Planner Cart</div>
+                <div className="text-xs text-muted-foreground">Planner Items</div>
               </div>
               <div>
                 <div className="text-lg font-bold">
-                  {/* This will be updated to show unified cart total */}
-                  {Object.values(categorySelections).flat().reduce((sum, item) => sum + item.quantity, 0)}
+                  {totalCartItems}
                 </div>
-                <div className="text-xs text-muted-foreground">Total Cart</div>
+                <div className="text-xs text-muted-foreground">Total Cart Items</div>
               </div>
               <div>
                 <div className="text-lg font-bold">${eventDetails.budget.toFixed(2)}</div>
                 <div className="text-xs text-muted-foreground">Total Budget</div>
               </div>
               <div>
-                <div className="text-lg font-bold">${totalSpent.toFixed(2)}</div>
-                <div className="text-xs text-muted-foreground">Total Spent</div>
+                <div className="text-lg font-bold">${totalCartValue.toFixed(2)}</div>
+                <div className="text-xs text-muted-foreground">Total Cart Value</div>
               </div>
               <div>
                 <div className={`text-lg font-bold ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ${remainingBudget.toFixed(2)}
+                  {remainingBudget >= 0 ? '+' : ''}${remainingBudget.toFixed(2)}
                 </div>
-                <div className="text-xs text-muted-foreground">Remaining Budget</div>
+                <div className="text-xs text-muted-foreground">
+                  {remainingBudget >= 0 ? 'Under Budget' : 'Over Budget'}
+                </div>
               </div>
             </div>
           </CardContent>

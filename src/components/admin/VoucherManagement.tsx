@@ -131,29 +131,74 @@ export default function VoucherManagement() {
 
   const handleCreate = async () => {
     try {
+      // Validate required fields
+      if (!form.voucher_name.trim()) {
+        toast({
+          title: "Error",
+          description: "Voucher name is required",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (form.voucher_type === 'percentage' && (!form.discount_value || parseFloat(form.discount_value) <= 0)) {
+        toast({
+          title: "Error", 
+          description: "Discount percentage must be greater than 0",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (form.voucher_type === 'fixed_amount' && (!form.discount_value || parseFloat(form.discount_value) <= 0)) {
+        toast({
+          title: "Error",
+          description: "Discount amount must be greater than 0", 
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (form.voucher_type === 'prepaid_credit' && (!form.prepaid_amount || parseFloat(form.prepaid_amount) <= 0)) {
+        toast({
+          title: "Error",
+          description: "Prepaid amount must be greater than 0",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const voucherCode = generateVoucherCode();
       
       const voucherData = {
         voucher_code: voucherCode,
-        voucher_name: form.voucher_name,
+        voucher_name: form.voucher_name.trim(),
         voucher_type: form.voucher_type,
-        discount_value: form.voucher_type === 'percentage' || form.voucher_type === 'fixed_amount' 
+        discount_value: (form.voucher_type === 'percentage' || form.voucher_type === 'fixed_amount') 
           ? parseFloat(form.discount_value) || null : null,
         prepaid_amount: form.voucher_type === 'prepaid_credit' 
           ? parseFloat(form.prepaid_amount) || null : null,
         minimum_spend: parseFloat(form.minimum_spend) || 0,
         max_uses: parseInt(form.max_uses) || 1,
-        expires_at: form.expires_at || null,
+        expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
         affiliate_id: form.affiliate_id || null,
         commission_rate: parseFloat(form.commission_rate) || 0,
         is_active: true
       };
 
-      const { error } = await supabase
-        .from('vouchers')
-        .insert([voucherData]);
+      console.log('Creating voucher with data:', voucherData);
 
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from('vouchers')
+        .insert([voucherData])
+        .select();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Voucher created successfully:', data);
 
       toast({
         title: "Success",
@@ -173,11 +218,11 @@ export default function VoucherManagement() {
         commission_rate: '0'
       });
       loadData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating voucher:', error);
       toast({
         title: "Error",
-        description: "Failed to create voucher",
+        description: error.message || "Failed to create voucher",
         variant: "destructive"
       });
     }
