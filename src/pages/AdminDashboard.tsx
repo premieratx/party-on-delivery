@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { formatCurrency } from '@/utils/currency';
+import SimpleProductManager from '@/components/admin/SimpleProductManager';
 import { 
   Users, 
   DollarSign, 
@@ -472,6 +473,17 @@ export const AdminDashboard: React.FC = () => {
             refreshInterval={15000}
           />
         </div>
+
+        {/* Product Category Manager */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Product Category Manager</CardTitle>
+            <CardDescription>Create custom categories and organize products for custom sites</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SimpleProductManager />
+          </CardContent>
+        </Card>
 
         {/* Google Sheets Sync */}
         <div className="flex justify-center">

@@ -3,10 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Save, Trash2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,10 +16,9 @@ interface Product {
   description: string;
   price: number;
   image_url: string;
-  data: any;
 }
 
-interface CustomCategory {
+interface Category {
   id: string;
   name: string;
   handle: string;
@@ -29,9 +26,9 @@ interface CustomCategory {
   created_at: string;
 }
 
-export default function ProductCategoryManager() {
+export default function SimpleProductManager() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<CustomCategory[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,14 +53,13 @@ export default function ProductCategoryManager() {
       if (productsError) throw productsError;
       setProducts(productsData || []);
 
-      // Load custom categories (we'll create this table)
+      // Load custom categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('custom_product_categories')
         .select('*')
         .order('name');
 
       if (categoriesError) {
-        // Table might not exist yet, that's okay
         console.log('Custom categories table not found:', categoriesError);
         setCategories([]);
       } else {
@@ -134,30 +130,6 @@ export default function ProductCategoryManager() {
     }
   };
 
-  const deleteCategory = async (categoryId: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('custom_product_categories')
-        .delete()
-        .eq('id', categoryId);
-
-      if (error) throw error;
-
-      setCategories(prev => prev.filter(cat => cat.id !== categoryId));
-      if (selectedCategory === categoryId) {
-        setSelectedCategory('');
-        setSelectedProducts([]);
-      }
-      toast.success('Category deleted successfully');
-
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      toast.error('Failed to delete category');
-    }
-  };
-
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
     const category = categories.find(cat => cat.id === categoryId);
@@ -165,8 +137,7 @@ export default function ProductCategoryManager() {
   };
 
   const filteredProducts = products.filter(product =>
-    product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.handle.toLowerCase().includes(searchTerm.toLowerCase())
+    product.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -174,20 +145,20 @@ export default function ProductCategoryManager() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Product Category Manager</h1>
+          <h2 className="text-2xl font-bold">Product Categories</h2>
           <p className="text-muted-foreground">Create custom categories and organize products</p>
         </div>
         <Button onClick={() => setShowCreateCategory(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Create Category
+          New Category
         </Button>
       </div>
 
       {showCreateCategory && (
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
             <CardTitle>Create New Category</CardTitle>
           </CardHeader>
@@ -216,35 +187,26 @@ export default function ProductCategoryManager() {
         <Card>
           <CardHeader>
             <CardTitle>Categories</CardTitle>
-            <CardDescription>Select a category to manage its products</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {categories.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">
-                  No custom categories yet. Create one to get started.
+                  No custom categories yet.
                 </p>
               ) : (
                 categories.map((category) => (
-                  <div key={category.id} className="flex items-center justify-between p-2 border rounded-md">
-                    <div 
-                      className="flex-1 cursor-pointer"
-                      onClick={() => handleCategorySelect(category.id)}
-                    >
-                      <p className={`font-medium ${selectedCategory === category.id ? 'text-primary' : ''}`}>
-                        {category.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {category.products.length} products
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteCategory(category.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div 
+                    key={category.id} 
+                    className={`p-2 border rounded-md cursor-pointer ${
+                      selectedCategory === category.id ? 'bg-primary/10 border-primary' : ''
+                    }`}
+                    onClick={() => handleCategorySelect(category.id)}
+                  >
+                    <p className="font-medium">{category.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {category.products.length} products
+                    </p>
                   </div>
                 ))
               )}
@@ -256,16 +218,9 @@ export default function ProductCategoryManager() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>
-                  {selectedCategory ? 'Manage Products' : 'Select a Category'}
-                </CardTitle>
-                {selectedCategory && (
-                  <CardDescription>
-                    Selected: {selectedProducts.length} products
-                  </CardDescription>
-                )}
-              </div>
+              <CardTitle>
+                {selectedCategory ? 'Manage Products' : 'Select a Category'}
+              </CardTitle>
               {selectedCategory && (
                 <Button onClick={saveCategory} className="flex items-center gap-2">
                   <Save className="h-4 w-4" />
@@ -277,11 +232,10 @@ export default function ProductCategoryManager() {
           <CardContent>
             {!selectedCategory ? (
               <p className="text-muted-foreground text-center py-8">
-                Select a category from the left panel to manage its products.
+                Select a category to manage its products.
               </p>
             ) : (
               <div className="space-y-4">
-                {/* Search */}
                 <div className="relative">
                   <Search className="h-4 w-4 absolute left-3 top-3 text-muted-foreground" />
                   <Input
@@ -292,41 +246,24 @@ export default function ProductCategoryManager() {
                   />
                 </div>
 
-                {/* Selected Products Summary */}
-                {selectedProducts.length > 0 && (
-                  <div className="p-3 bg-muted/50 rounded-md">
-                    <h4 className="font-medium mb-2">Selected Products ({selectedProducts.length})</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedProducts.slice(0, 10).map((productId) => {
-                        const product = products.find(p => p.id === productId);
-                        return (
-                          <Badge key={productId} variant="secondary">
-                            {product?.title || 'Unknown Product'}
-                          </Badge>
-                        );
-                      })}
-                      {selectedProducts.length > 10 && (
-                        <Badge variant="outline">+{selectedProducts.length - 10} more</Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Product Grid */}
                 <div className="max-h-96 overflow-y-auto border rounded-md p-4">
                   <div className="grid grid-cols-1 gap-3">
                     {filteredProducts.map((product) => (
-                      <div key={product.id} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted/50">
-                        <Checkbox
-                          checked={selectedProducts.includes(product.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedProducts(prev => [...prev, product.id]);
-                            } else {
-                              setSelectedProducts(prev => prev.filter(id => id !== product.id));
-                            }
-                          }}
-                        />
+                      <div 
+                        key={product.id} 
+                        className={`flex items-center space-x-3 p-2 rounded-md cursor-pointer transition-colors ${
+                          selectedProducts.includes(product.id) 
+                            ? 'bg-primary/10 border border-primary' 
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => {
+                          if (selectedProducts.includes(product.id)) {
+                            setSelectedProducts(prev => prev.filter(id => id !== product.id));
+                          } else {
+                            setSelectedProducts(prev => [...prev, product.id]);
+                          }
+                        }}
+                      >
                         <img 
                           src={product.image_url} 
                           alt={product.title}
@@ -335,27 +272,26 @@ export default function ProductCategoryManager() {
                         <div className="flex-1">
                           <p className="font-medium text-sm">{product.title}</p>
                           <p className="text-sm text-muted-foreground">
-                            ${product.price} • {product.handle}
+                            ${product.price}
                           </p>
                         </div>
+                        {selectedProducts.includes(product.id) && (
+                          <Badge variant="default">Selected</Badge>
+                        )}
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setSelectedProducts(filteredProducts.map(p => p.id))}
-                  >
-                    Select All Visible
-                  </Button>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-muted-foreground">
+                    {selectedProducts.length} products selected
+                  </p>
                   <Button 
                     variant="outline" 
                     onClick={() => setSelectedProducts([])}
                   >
-                    Clear Selection
+                    Clear All
                   </Button>
                 </div>
               </div>

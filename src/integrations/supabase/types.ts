@@ -402,6 +402,33 @@ export type Database = {
           },
         ]
       }
+      custom_product_categories: {
+        Row: {
+          created_at: string
+          handle: string
+          id: string
+          name: string
+          products: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          handle: string
+          id?: string
+          name: string
+          products?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          handle?: string
+          id?: string
+          name?: string
+          products?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_addresses: {
         Row: {
           address_line_1: string

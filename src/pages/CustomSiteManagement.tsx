@@ -384,24 +384,24 @@ export default function CustomSiteManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="affiliate">Linked Affiliate</Label>
-                    <Select value={formData.affiliate_id} onValueChange={(value) => setFormData({...formData, affiliate_id: value})}>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select affiliate to link this site" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border max-h-60 overflow-y-auto z-50">
-                        <SelectItem value="">No affiliate (standalone site)</SelectItem>
-                        {affiliates.map((affiliate) => (
-                          <SelectItem key={affiliate.id} value={affiliate.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{affiliate.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {affiliate.affiliate_code} • {affiliate.email}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                     <Select value={formData.affiliate_id || ""} onValueChange={(value) => setFormData({...formData, affiliate_id: value || ""})}>
+                       <SelectTrigger className="bg-card border z-10">
+                         <SelectValue placeholder="Select affiliate to link this site" />
+                       </SelectTrigger>
+                       <SelectContent className="bg-card border shadow-lg max-h-60 overflow-y-auto z-50">
+                         <SelectItem value="">No affiliate (standalone site)</SelectItem>
+                         {affiliates.map((affiliate) => (
+                           <SelectItem key={affiliate.id} value={affiliate.id}>
+                             <div className="flex flex-col">
+                               <span className="font-medium">{affiliate.name}</span>
+                               <span className="text-sm text-muted-foreground">
+                                 {affiliate.affiliate_code} • {affiliate.email}
+                               </span>
+                             </div>
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
                     <p className="text-sm text-muted-foreground mt-1">
                       Linking to an affiliate will credit them for all sales through this site.
                     </p>
