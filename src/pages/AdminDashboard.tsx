@@ -25,6 +25,7 @@ import {
   Edit
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
+import AITestingControl from '@/components/AITestingControl';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -210,13 +211,14 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
-            <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-          </TabsList>
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
+              <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
+              <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="orders">Orders</TabsTrigger>
+              <TabsTrigger value="ai-testing">🤖 AI Testing</TabsTrigger>
+            </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -425,6 +427,10 @@ export default function AdminDashboard() {
               title="Recent Orders"
               onRefresh={loadDashboardData}
             />
+          </TabsContent>
+
+          <TabsContent value="ai-testing" className="space-y-4">
+            <AITestingControl />
           </TabsContent>
         </Tabs>
       </div>

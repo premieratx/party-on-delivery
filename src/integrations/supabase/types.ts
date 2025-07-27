@@ -248,6 +248,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_fix_requests: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          flow: string
+          generated_fix: string | null
+          id: string
+          issues: string
+          priority: string
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          flow: string
+          generated_fix?: string | null
+          id?: string
+          issues: string
+          priority?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          flow?: string
+          generated_fix?: string | null
+          id?: string
+          issues?: string
+          priority?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       cache: {
         Row: {
           created_at: string
@@ -831,6 +867,33 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_metrics: {
+        Row: {
+          active_users: number | null
+          api_response_time: number | null
+          average_load_time: number | null
+          error_rate: number | null
+          id: string
+          timestamp: string
+        }
+        Insert: {
+          active_users?: number | null
+          api_response_time?: number | null
+          average_load_time?: number | null
+          error_rate?: number | null
+          id?: string
+          timestamp?: string
+        }
+        Update: {
+          active_users?: number | null
+          api_response_time?: number | null
+          average_load_time?: number | null
+          error_rate?: number | null
+          id?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           assigned_category: string
@@ -1221,6 +1284,143 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_health: {
+        Row: {
+          active_sessions: number | null
+          critical_issues: number | null
+          id: string
+          issues_24h: number | null
+          timestamp: string
+        }
+        Insert: {
+          active_sessions?: number | null
+          critical_issues?: number | null
+          id?: string
+          issues_24h?: number | null
+          timestamp?: string
+        }
+        Update: {
+          active_sessions?: number | null
+          critical_issues?: number | null
+          id?: string
+          issues_24h?: number | null
+          timestamp?: string
+        }
+        Relationships: []
+      }
+      telegram_users: {
+        Row: {
+          chat_id: number
+          created_at: string
+          first_name: string | null
+          id: string
+          is_admin: boolean | null
+          last_active: string
+          last_name: string | null
+          username: string | null
+        }
+        Insert: {
+          chat_id: number
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+          last_active?: string
+          last_name?: string | null
+          username?: string | null
+        }
+        Update: {
+          chat_id?: number
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          is_admin?: boolean | null
+          last_active?: string
+          last_name?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      testing_issues: {
+        Row: {
+          created_at: string
+          description: string
+          flow: string
+          id: string
+          location: string | null
+          screenshot_url: string | null
+          session_id: string | null
+          severity: string
+          status: string
+          suggested_fix: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          flow: string
+          id?: string
+          location?: string | null
+          screenshot_url?: string | null
+          session_id?: string | null
+          severity: string
+          status?: string
+          suggested_fix?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          flow?: string
+          id?: string
+          location?: string | null
+          screenshot_url?: string | null
+          session_id?: string | null
+          severity?: string
+          status?: string
+          suggested_fix?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "testing_issues_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "testing_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      testing_sessions: {
+        Row: {
+          app_url: string | null
+          chat_id: number | null
+          created_at: string
+          current_flow: string | null
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          app_url?: string | null
+          chat_id?: number | null
+          created_at?: string
+          current_flow?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          app_url?: string | null
+          chat_id?: number | null
+          created_at?: string
+          current_flow?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       voucher_usage: {
         Row: {
