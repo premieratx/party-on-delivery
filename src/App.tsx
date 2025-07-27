@@ -12,7 +12,7 @@ import { AffiliateIntro } from "./pages/AffiliateIntro";
 import { AffiliateDashboard } from "./pages/AffiliateDashboard";
 import { AffiliateLanding } from "./pages/AffiliateLanding";
 import { AdminLogin } from "./pages/AdminLogin";
-import { AdminDashboard } from "./pages/AdminDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import { ProductManagement } from "./pages/ProductManagement";
 import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
 import CustomerLogin from "./pages/CustomerLogin";
@@ -86,6 +86,7 @@ const App = () => {
                 
                 {/* Custom Site Routes */}
                 <Route path="/custom-sites" element={<CustomSiteManagement />} />
+                <Route path="/admin/custom-sites" element={<CustomSiteManagement />} />
                 <Route path="/sites/:siteSlug" element={<CustomSiteView />} />
                 
                 {/* Test Routes */}
