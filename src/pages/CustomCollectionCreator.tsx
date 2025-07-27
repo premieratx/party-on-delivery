@@ -73,6 +73,8 @@ export const CustomCollectionCreator: React.FC = () => {
     // Load products for selected category if not already loaded
     if (selectedCategory !== 'all' && !loadedCategories.has(selectedCategory) && categories.length > 0) {
       loadCategoryProducts(selectedCategory);
+    } else if (selectedCategory === 'all' && !loadedCategories.has('all') && categories.length > 0) {
+      loadCategoryProducts('all');
     }
   }, [selectedCategory, categories, loadedCategories]);
 
@@ -407,8 +409,9 @@ export const CustomCollectionCreator: React.FC = () => {
   // Handle category change and load products if needed
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    if (category === 'all' && !loadedCategories.has('all')) {
-      loadCategoryProducts('all');
+    // Load products if needed
+    if (!loadedCategories.has(category)) {
+      loadCategoryProducts(category);
     }
   };
 
@@ -424,7 +427,7 @@ export const CustomCollectionCreator: React.FC = () => {
               className="text-muted-foreground hover:text-foreground flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Admin
+              Back to Admin Dashboard
             </Button>
             
             <div className="flex items-center gap-2">

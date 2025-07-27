@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Eye, Trash2, Copy } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, Copy, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -335,9 +335,19 @@ export default function CustomSiteManagement() {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Custom Affiliate Sites</h1>
-          <p className="text-muted-foreground">Manage custom branded delivery sites for your affiliates</p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/admin')}
+            className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Admin Dashboard
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Custom Affiliate Sites</h1>
+            <p className="text-muted-foreground">Manage custom branded delivery sites for your affiliates</p>
+          </div>
         </div>
         <Button onClick={() => {
           console.log('Create New Site button clicked, current showCreateForm:', showCreateForm);
