@@ -73,6 +73,7 @@ export default function CustomSiteManagement() {
 
   useEffect(() => {
     console.log('CustomSiteManagement mounted');
+    console.log('Initial showCreateForm state:', showCreateForm);
     loadData();
   }, []);
 
@@ -312,15 +313,18 @@ export default function CustomSiteManagement() {
           <p className="text-muted-foreground">Manage custom branded delivery sites for your affiliates</p>
         </div>
         <Button onClick={() => {
-          console.log('Create New Site button clicked');
+          console.log('Create New Site button clicked, current showCreateForm:', showCreateForm);
           setShowCreateForm(true);
+          setEditingSite(null);
+          resetForm();
+          console.log('After setting showCreateForm to true');
         }} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Create New Site
         </Button>
       </div>
 
-      {showCreateForm && (
+      {showCreateForm ? (
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>{editingSite ? 'Edit Site' : 'Create New Custom Site'}</CardTitle>
@@ -655,7 +659,7 @@ export default function CustomSiteManagement() {
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       <div className="grid gap-4">
         {sites.map((site) => (
