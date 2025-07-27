@@ -68,7 +68,8 @@ export default function CustomSiteManagement() {
     custom_promo_code: '',
     site_type: 'custom',
     affiliate_id: '',
-    selected_collections: [] as string[]
+    selected_collections: [] as string[],
+    same_address: false
   });
 
   useEffect(() => {
@@ -78,67 +79,74 @@ export default function CustomSiteManagement() {
   }, []);
 
   const loadData = async () => {
+    console.log('Loading data...');
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      
-      // Load sites and affiliates in parallel for faster loading
-      const [sitesResponse, affiliatesResponse] = await Promise.all([
-        supabase
-          .from('custom_affiliate_sites')
-          .select(`
-            *,
-            affiliates:affiliate_id (
-              name,
-              email,
-              affiliate_code
-            )
-          `)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('affiliates')
-          .select('id, name, email, affiliate_code')
-          .eq('status', 'active')
-          .order('name')
-      ]);
+      // Load sites
+      const { data: sitesData, error: sitesError } = await supabase
+        .from('custom_affiliate_sites')
+        .select(`
+          *,
+          affiliates:affiliate_id(name, email, affiliate_code)
+        `)
+        .order('created_at', { ascending: false });
 
-      const { data: sitesData, error: sitesError } = sitesResponse;
-      const { data: affiliatesData, error: affiliatesError } = affiliatesResponse;
-
-      if (sitesError) throw sitesError;
-      if (affiliatesError) throw affiliatesError;
-
-      setSites(sitesData || []);
-      setAffiliates(affiliatesData || []);
-
-      // Load collections from cache first for faster loading, then refresh if needed
-      const { data: cachedCollections } = await supabase
-        .from('shopify_collections_cache')
-        .select('handle, title, products_count')
-        .order('title');
-
-      if (cachedCollections && cachedCollections.length > 0) {
-        setCollections(cachedCollections);
+      if (sitesError) {
+        console.error('Error loading sites:', sitesError);
+      } else {
+        setSites(sitesData || []);
       }
 
-      // Try to get fresh collections from Shopify in background
+      // Load affiliates
+      const { data: affiliatesData, error: affiliatesError } = await supabase
+        .from('affiliates')
+        .select('id, name, email, affiliate_code')
+        .eq('status', 'active')
+        .order('name', { ascending: true });
+
+      if (affiliatesError) {
+        console.error('Error loading affiliates:', affiliatesError);
+      } else {
+        setAffiliates(affiliatesData || []);
+      }
+
+      // Load collections with better error handling
+      console.log('Loading collections...');
       try {
-        const { data: freshCollections, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
-        
-        if (!collectionsError && freshCollections) {
-          const formattedCollections = freshCollections.map((collection: any) => ({
-            handle: collection.handle,
-            title: collection.title,
-            products_count: collection.products?.length || 0
-          }));
-          setCollections(formattedCollections);
+        // Try cached collections first for better reliability
+        const { data: cachedCollections, error: cacheError } = await supabase
+          .from('shopify_collections_cache')
+          .select('handle, title, products_count')
+          .order('title', { ascending: true });
+
+        if (!cacheError && cachedCollections && cachedCollections.length > 0) {
+          setCollections(cachedCollections);
+          console.log('Using cached collections:', cachedCollections.length);
+        } else {
+          // Fallback to fresh collections if cache is empty
+          console.log('Cache empty, fetching fresh collections...');
+          const collectionsResponse = await supabase.functions.invoke('get-all-collections');
+          
+          if (collectionsResponse.data?.collections && Array.isArray(collectionsResponse.data.collections)) {
+            const collectionsData = collectionsResponse.data.collections.map((collection: any) => ({
+              handle: collection.handle,
+              title: collection.title || collection.handle,
+              products_count: collection.products?.length || 0
+            }));
+            setCollections(collectionsData);
+            console.log('Fresh collections loaded successfully:', collectionsData.length);
+          } else {
+            console.error('Invalid collections response format');
+            setCollections([]);
+          }
         }
-      } catch (error) {
-        console.warn('Fresh collections loading failed, using cache:', error);
+      } catch (collectionsError) {
+        console.error('Error loading collections:', collectionsError);
+        setCollections([]);
       }
 
     } catch (error) {
       console.error('Error loading data:', error);
-      toast.error('Failed to load data');
     } finally {
       setIsLoading(false);
     }
@@ -262,7 +270,8 @@ export default function CustomSiteManagement() {
       custom_promo_code: site.custom_promo_code || '',
       site_type: site.site_type,
       affiliate_id: site.affiliate_id || '',
-      selected_collections: siteCollections?.map(c => c.shopify_collection_handle) || []
+      selected_collections: siteCollections?.map(c => c.shopify_collection_handle) || [],
+      same_address: false
     });
 
     setEditingSite(site.id);
@@ -291,7 +300,8 @@ export default function CustomSiteManagement() {
       custom_promo_code: '',
       site_type: 'custom',
       affiliate_id: '',
-      selected_collections: []
+      selected_collections: [],
+      same_address: false
     });
   };
 
@@ -332,11 +342,10 @@ export default function CustomSiteManagement() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="business">Business Address</TabsTrigger>
                 <TabsTrigger value="delivery">Delivery Address</TabsTrigger>
-                <TabsTrigger value="products">Product Collections</TabsTrigger>
+                <TabsTrigger value="collections">Collections</TabsTrigger>
               </TabsList>
 
               <TabsContent value="basic" className="space-y-4">
@@ -430,149 +439,178 @@ export default function CustomSiteManagement() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="business" className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Business Mailing Address</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    This address is used for billing and administrative purposes.
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="street">Street Address</Label>
-                  <Input
-                    id="street"
-                    value={formData.business_address.street}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      business_address: {...formData.business_address, street: e.target.value}
-                    })}
-                    placeholder="123 Main Street"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={formData.business_address.city}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        business_address: {...formData.business_address, city: e.target.value}
-                      })}
-                      placeholder="Austin"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={formData.business_address.state}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        business_address: {...formData.business_address, state: e.target.value}
-                      })}
-                      placeholder="TX"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="zip">ZIP Code</Label>
-                    <Input
-                      id="zip"
-                      value={formData.business_address.zip_code}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        business_address: {...formData.business_address, zip_code: e.target.value}
-                      })}
-                      placeholder="78701"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="instructions">Delivery Instructions</Label>
-                  <Textarea
-                    id="instructions"
-                    value={formData.business_address.instructions}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      business_address: {...formData.business_address, instructions: e.target.value}
-                    })}
-                    placeholder="Special delivery instructions for this location"
-                  />
-                </div>
-              </TabsContent>
-
               <TabsContent value="delivery" className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Default Delivery Address</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    This address will be prefilled at checkout for customers using this custom site.
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="delivery_street">Street Address</Label>
-                  <Input
-                    id="delivery_street"
-                    value={formData.delivery_address.street}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      delivery_address: {...formData.delivery_address, street: e.target.value}
-                    })}
-                    placeholder="123 Event Venue Street"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="same_address"
+                      checked={formData.same_address}
+                      onCheckedChange={(checked) => {
+                        const newFormData = {
+                          ...formData,
+                          same_address: checked as boolean
+                        };
+                        
+                        if (checked) {
+                          newFormData.delivery_address = { ...formData.business_address };
+                        }
+                        
+                        setFormData(newFormData);
+                      }}
+                    />
+                    <Label htmlFor="same_address">Business address is the same as delivery address</Label>
+                  </div>
+
+                  {!formData.same_address && (
+                    <>
+                      <h3 className="text-lg font-semibold">Business Address</h3>
+                      <div>
+                        <Label htmlFor="business_street">Street Address</Label>
+                        <Input
+                          id="business_street"
+                          value={formData.business_address.street}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            business_address: { ...formData.business_address, street: e.target.value }
+                          })}
+                          className="bg-card border"
+                          placeholder="123 Main St"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="business_city">City</Label>
+                          <Input
+                            id="business_city"
+                            value={formData.business_address.city}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              business_address: { ...formData.business_address, city: e.target.value }
+                            })}
+                            className="bg-card border"
+                            placeholder="Austin"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="business_state">State</Label>
+                          <Input
+                            id="business_state"
+                            value={formData.business_address.state}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              business_address: { ...formData.business_address, state: e.target.value }
+                            })}
+                            className="bg-card border"
+                            placeholder="TX"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="business_zip">ZIP Code</Label>
+                          <Input
+                            id="business_zip"
+                            value={formData.business_address.zip_code}
+                            onChange={(e) => setFormData({
+                              ...formData,
+                              business_address: { ...formData.business_address, zip_code: e.target.value }
+                            })}
+                            className="bg-card border"
+                            placeholder="78701"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="business_instructions">Business Special Instructions</Label>
+                        <Textarea
+                          id="business_instructions"
+                          value={formData.business_address.instructions}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            business_address: { ...formData.business_address, instructions: e.target.value }
+                          })}
+                          className="bg-card border"
+                          placeholder="Building entrance, parking instructions, etc."
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <h3 className="text-lg font-semibold">Delivery Address</h3>
                   <div>
-                    <Label htmlFor="delivery_city">City</Label>
+                    <Label htmlFor="delivery_street">Street Address</Label>
                     <Input
-                      id="delivery_city"
-                      value={formData.delivery_address.city}
+                      id="delivery_street"
+                      value={formData.delivery_address.street}
                       onChange={(e) => setFormData({
                         ...formData,
-                        delivery_address: {...formData.delivery_address, city: e.target.value}
+                        delivery_address: { ...formData.delivery_address, street: e.target.value }
                       })}
-                      placeholder="Austin"
+                      className="bg-card border"
+                      placeholder="123 Event Venue Street"
+                      disabled={formData.same_address}
                     />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="delivery_city">City</Label>
+                      <Input
+                        id="delivery_city"
+                        value={formData.delivery_address.city}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          delivery_address: { ...formData.delivery_address, city: e.target.value }
+                        })}
+                        className="bg-card border"
+                        placeholder="Austin"
+                        disabled={formData.same_address}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="delivery_state">State</Label>
+                      <Input
+                        id="delivery_state"
+                        value={formData.delivery_address.state}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          delivery_address: { ...formData.delivery_address, state: e.target.value }
+                        })}
+                        className="bg-card border"
+                        placeholder="TX"
+                        disabled={formData.same_address}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="delivery_zip">ZIP Code</Label>
+                      <Input
+                        id="delivery_zip"
+                        value={formData.delivery_address.zip_code}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          delivery_address: { ...formData.delivery_address, zip_code: e.target.value }
+                        })}
+                        className="bg-card border"
+                        placeholder="78701"
+                        disabled={formData.same_address}
+                      />
+                    </div>
                   </div>
                   <div>
-                    <Label htmlFor="delivery_state">State</Label>
-                    <Input
-                      id="delivery_state"
-                      value={formData.delivery_address.state}
+                    <Label htmlFor="delivery_instructions">Delivery Special Instructions</Label>
+                    <Textarea
+                      id="delivery_instructions"
+                      value={formData.delivery_address.instructions}
                       onChange={(e) => setFormData({
                         ...formData,
-                        delivery_address: {...formData.delivery_address, state: e.target.value}
+                        delivery_address: { ...formData.delivery_address, instructions: e.target.value }
                       })}
-                      placeholder="TX"
+                      className="bg-card border"
+                      placeholder="Building entrance, parking instructions, etc."
+                      disabled={formData.same_address}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="delivery_zip">ZIP Code</Label>
-                    <Input
-                      id="delivery_zip"
-                      value={formData.delivery_address.zip_code}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        delivery_address: {...formData.delivery_address, zip_code: e.target.value}
-                      })}
-                      placeholder="78701"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="delivery_instructions">Delivery Instructions</Label>
-                  <Textarea
-                    id="delivery_instructions"
-                    value={formData.delivery_address.instructions}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      delivery_address: {...formData.delivery_address, instructions: e.target.value}
-                    })}
-                    placeholder="Special delivery instructions for this location"
-                  />
                 </div>
               </TabsContent>
 
-              <TabsContent value="products" className="space-y-4">
+              <TabsContent value="collections" className="space-y-4">
                 <div>
                   <Label>Select Product Collections (Maximum 5)</Label>
                   <p className="text-sm text-muted-foreground mb-4">
