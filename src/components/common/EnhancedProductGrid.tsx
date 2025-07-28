@@ -176,18 +176,18 @@ function ProductCard({
 
             {/* Quantity Controls - Fixed mobile layout */}
             {quantity > 0 ? (
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-1 w-full">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(-1)}
-                  className={`h-8 w-8 p-0 flex-shrink-0 ${
+                  className={`p-0 flex-shrink-0 ${
                     isMobile ? 'h-7 w-7' : 'h-8 w-8'
                   }`}
                 >
                   <Minus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </Button>
-                <span className={`font-medium min-w-[20px] text-center ${
+                <span className={`font-medium min-w-[24px] text-center flex-1 ${
                   isMobile ? 'text-sm' : 'text-base'
                 }`}>
                   {quantity}
@@ -196,7 +196,7 @@ function ProductCard({
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(1)}
-                  className={`h-8 w-8 p-0 flex-shrink-0 ${
+                  className={`p-0 flex-shrink-0 ${
                     isMobile ? 'h-7 w-7' : 'h-8 w-8'
                   }`}
                 >
