@@ -95,6 +95,8 @@ const PerformanceOptimization = () => {
   const [lastUserActivity, setLastUserActivity] = useState(Date.now());
   const [automationPaused, setAutomationPaused] = useState(false);
   const [pendingApproval, setPendingApproval] = useState<any>(null);
+  const [failedTasks, setFailedTasks] = useState<OptimizationTask[]>([]);
+  const [showErrorPrompt, setShowErrorPrompt] = useState(false);
 
   // Load data from Supabase and setup real-time updates
   useEffect(() => {
@@ -186,15 +188,36 @@ const PerformanceOptimization = () => {
       
       if (isUserActive && isAutomationRunning && !automationPaused) {
         setAutomationPaused(true);
-        setPendingApproval({
-          message: "Automation paused - you're actively using the app. Ready for manual approval?",
-          timestamp: new Date().toISOString()
-        });
         
-        toast({
-          title: "⏸️ Automation Paused",
-          description: "Detected user activity. Automation will wait for your approval.",
-        });
+        // Check if there are failed tasks that need user help
+        const hasFailedTasks = failedTasks.length > 0;
+        
+        if (hasFailedTasks) {
+          setShowErrorPrompt(true);
+          setPendingApproval({
+            message: `Found ${failedTasks.length} failed task(s) that need your help to fix!`,
+            timestamp: new Date().toISOString(),
+            hasErrors: true,
+            failedTasks: failedTasks
+          });
+          
+          toast({
+            title: "🔧 Help Needed!",
+            description: `${failedTasks.length} tasks failed and need your input to continue.`,
+            variant: "destructive"
+          });
+        } else {
+          setPendingApproval({
+            message: "Automation paused - you're actively using the app. Ready for manual approval?",
+            timestamp: new Date().toISOString(),
+            hasErrors: false
+          });
+          
+          toast({
+            title: "⏸️ Automation Paused",
+            description: "Detected user activity. Automation will wait for your approval.",
+          });
+        }
       }
     };
 
@@ -221,11 +244,70 @@ const PerformanceOptimization = () => {
     
     setPendingApproval(null);
     setAutomationPaused(false);
+    setShowErrorPrompt(false);
     
     toast({
       title: "✅ Approved",
       description: "Automation will continue in autonomous mode.",
     });
+  };
+
+  const retryFailedTask = async (taskId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('optimization-automation', {
+        body: {
+          action: 'retry_failed_task',
+          task_id: taskId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: data.success ? "✅ Task Retrying" : "❌ Retry Failed",
+        description: data.message,
+        variant: data.success ? "default" : "destructive",
+      });
+
+      await loadOptimizationData();
+
+    } catch (error) {
+      console.error('Error retrying failed task:', error);
+      toast({
+        title: "Retry Error",
+        description: "Failed to retry the task.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fixTaskManually = async (taskId: string, userFix: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('optimization-automation', {
+        body: {
+          action: 'apply_manual_fix',
+          task_id: taskId,
+          fix_description: userFix
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "🔧 Fix Applied",
+        description: "Manual fix applied. Task will be retested.",
+      });
+
+      await loadOptimizationData();
+
+    } catch (error) {
+      console.error('Error applying manual fix:', error);
+      toast({
+        title: "Fix Error",
+        description: "Failed to apply manual fix.",
+        variant: "destructive",
+      });
+    }
   };
 
   const loadOptimizationData = async () => {
@@ -240,6 +322,10 @@ const PerformanceOptimization = () => {
 
       if (tasksError) throw tasksError;
       setOptimizationTasks(tasks || []);
+      
+      // Update failed tasks for error prompting
+      const failed = (tasks || []).filter(task => task.status === 'failed');
+      setFailedTasks(failed);
 
       // Load active session
       const { data: session, error: sessionError } = await supabase
@@ -588,6 +674,86 @@ const PerformanceOptimization = () => {
                   >
                     <span className="hidden sm:inline">Keep Paused</span>
                     <span className="sm:hidden">Pause</span>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Error Correction Prompt - Mobile Optimized */}
+        {showErrorPrompt && failedTasks.length > 0 && (
+          <Card className="border-red-200 bg-red-50 mb-4 sm:mb-6">
+            <CardContent className="p-3 sm:p-4">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-red-800 text-sm sm:text-base">
+                      🔧 Help Needed: {failedTasks.length} Failed Task{failedTasks.length > 1 ? 's' : ''}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-red-700">
+                      These tasks need your input to continue automation:
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  {failedTasks.map((task) => (
+                    <div key={task.id} className="bg-white p-3 rounded-lg border border-red-200">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-red-900 text-sm">{task.title}</h4>
+                          <p className="text-xs text-red-700">{task.description}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {getCategoryIcon(task.category)}
+                            <span className="text-xs text-red-600">Category: {task.category}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                          <Button
+                            onClick={() => retryFailedTask(task.task_id)}
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 sm:flex-none"
+                          >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            <span className="hidden sm:inline">Retry</span>
+                            <span className="sm:hidden">Retry</span>
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              const userFix = prompt(`How would you like to fix "${task.title}"?`);
+                              if (userFix) fixTaskManually(task.task_id, userFix);
+                            }}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                          >
+                            <span className="hidden sm:inline">Manual Fix</span>
+                            <span className="sm:hidden">Fix</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    onClick={approveNextStep}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 flex-1"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Continue Despite Errors
+                  </Button>
+                  <Button
+                    onClick={() => setShowErrorPrompt(false)}
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Keep Debugging
                   </Button>
                 </div>
               </div>
