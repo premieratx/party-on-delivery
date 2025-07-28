@@ -270,67 +270,70 @@ export const ProductSearch = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4">
+          {/* Mobile Header Layout */}
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
             <Button
               variant="ghost"
               onClick={() => navigate('/')}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-2"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              <span className="hidden sm:inline">Back</span>
             </Button>
             
             {getTotalItems() > 0 && (
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-muted-foreground">
-                  {getTotalItems()} items • ${getTotalPrice().toFixed(2)}
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  <span className="hidden sm:inline">{getTotalItems()} items • </span>
+                  ${getTotalPrice().toFixed(2)}
                 </div>
                 <Button 
                   size="sm"
                   onClick={() => setShowCart(true)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  Cart
+                  <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Cart</span>
+                  <span className="sm:hidden">{getTotalItems()}</span>
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Search Bar */}
-          <div className="flex gap-2 mb-4">
+          {/* Search Bar - Mobile Optimized */}
+          <div className="flex gap-1 sm:gap-2 mb-2 sm:mb-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-3 h-3 sm:w-4 sm:h-4" />
               <Input
                 type="text"
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-8 sm:pl-10 h-8 sm:h-9 text-sm"
               />
               {searchTerm && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 h-auto"
+                  className="absolute right-1 sm:right-2 top-1/2 transform -translate-y-1/2 p-1 h-6 w-6 sm:h-auto sm:w-auto"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3 sm:w-4 sm:h-4" />
                 </Button>
               )}
             </div>
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="shrink-0 md:hidden"
+              className="shrink-0 md:hidden h-8 px-2 sm:px-3 text-xs sm:text-sm"
             >
-              <Filter className="w-4 h-4 mr-2" />
-              Filters
+              <Filter className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+              <span className="hidden sm:inline">Filters</span>
               {showFilters ? (
-                <ChevronUp className="w-4 h-4 ml-2" />
+                <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
               ) : (
-                <ChevronDown className="w-4 h-4 ml-2" />
+                <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
               )}
             </Button>
           </div>
@@ -398,15 +401,15 @@ export const ProductSearch = () => {
         </div>
       </div>
 
-      {/* Products Grid */}
-      <div className="container mx-auto px-4 py-6">
+      {/* Products Grid - Mobile Optimized */}
+      <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
         {loadingCategories.has(selectedCategory) ? (
-          <div className="grid grid-cols-3 md:grid-cols-8 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
             {Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[3/2] bg-muted rounded-lg mb-2" />
-                <div className="h-4 bg-muted rounded mb-1" />
-                <div className="h-3 bg-muted rounded w-2/3" />
+                <div className="h-3 sm:h-4 bg-muted rounded mb-1" />
+                <div className="h-2 sm:h-3 bg-muted rounded w-2/3" />
               </div>
             ))}
           </div>
@@ -419,7 +422,7 @@ export const ProductSearch = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 md:grid-cols-8 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
             {filteredProducts.map((product, index) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
@@ -468,36 +471,37 @@ export const ProductSearch = () => {
                           {product.category}
                         </Badge>
                         
-                        {/* Add to Cart Controls */}
-                        <div className="w-full">
+                        {/* Add to Cart Controls - Mobile Optimized */}
+                        <div className="w-full mt-2">
                           {quantity === 0 ? (
                             <Button
                               onClick={() => handleAddToCart(product)}
                               size="sm"
-                              className="w-8 h-8 p-0 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                              className="w-full h-7 sm:h-8 text-xs sm:text-sm p-1 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground"
                             >
-                              <Plus className="w-4 h-4" />
+                              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                              <span className="hidden sm:inline">Add</span>
                             </Button>
                           ) : (
-                            <div className="flex items-center gap-1 justify-center">
+                            <div className="flex items-center gap-1 justify-between w-full">
                               <Button
                                 onClick={() => handleQuantityChange(product, -1)}
                                 size="sm"
                                 variant="outline"
-                                className="w-6 h-6 p-0 rounded-full"
+                                className="w-6 h-6 sm:w-7 sm:h-7 p-0 rounded-full flex-shrink-0"
                               >
-                                <Minus className="w-3 h-3" />
+                                <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
                               </Button>
-                              <span className="text-sm font-medium w-6 text-center">
+                              <span className="text-xs sm:text-sm font-medium min-w-[16px] sm:min-w-[20px] text-center flex-1">
                                 {quantity}
                               </span>
                               <Button
                                 onClick={() => handleQuantityChange(product, 1)}
                                 size="sm"
                                 variant="outline"
-                                className="w-6 h-6 p-0 rounded-full"
+                                className="w-6 h-6 sm:w-7 sm:h-7 p-0 rounded-full flex-shrink-0"
                               >
-                                <Plus className="w-3 h-3" />
+                                <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
                               </Button>
                             </div>
                           )}

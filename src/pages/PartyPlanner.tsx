@@ -176,14 +176,14 @@ export const PartyPlanner = () => {
   const events = getEventsToProcess();
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <div className="container mx-auto px-2 py-2">
-        {/* Compact Header - Single Row */}
-        <div className="text-center mb-2">
-          <h1 className="text-xl md:text-3xl font-bold text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-20"> {/* Add bottom padding for nav */}
+      <div className="container mx-auto px-2 sm:px-4 py-2">
+        {/* Compact Header - Mobile Optimized */}
+        <div className="text-center mb-2 sm:mb-4">
+          <h1 className="text-lg sm:text-xl md:text-3xl font-bold text-foreground">
             Let's Get This Party Started! 🎉
           </h1>
-          {/* Reset Button */}
+          {/* Reset Button - Mobile Optimized */}
           <Button 
             variant="outline" 
             size="sm" 
@@ -194,43 +194,44 @@ export const PartyPlanner = () => {
               setMinimizedEvents(new Set());
               navigate('/', { replace: true });
             }}
-            className="mt-2 text-xs"
+            className="mt-2 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
           >
             Reset & Start Over
           </Button>
         </div>
 
-        {/* Compact Sticky Header */}
+        {/* Compact Sticky Header - Mobile Optimized */}
         <div className="sticky top-0 z-50 bg-background border-b mb-2">
-          <div className="flex justify-between items-center px-3 py-1">
-            {/* Mobile Layout: Search Icon - Cart Icon - Centered Text - Checkout Button */}
+          <div className="flex justify-between items-center px-2 sm:px-3 py-1 sm:py-2">
+            {/* Mobile Layout: Simplified */}
             <div className="md:hidden flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <SearchIcon size="sm" variant="mobile" />
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="p-1 h-8 relative" 
+                  className="p-1 h-7 sm:h-8 relative" 
                   onClick={() => setShowCart(true)}
                   data-cart-trigger
                 >
-                  <ShoppingCart className="w-4 h-4" />
+                  <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
                   {getTotalItems() > 0 && (
-                    <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
-                      {getTotalItems()}
+                    <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-3 w-3 sm:h-4 sm:w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
+                      <span className="text-[8px] sm:text-xs">{getTotalItems()}</span>
                     </span>
                   )}
                 </Button>
                 {getTotalItems() > 0 && (
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
                     ${getTotalPrice().toFixed(2)}
                   </span>
                 )}
               </div>
               
-              <div className="text-center flex-1 px-2">
+              <div className="text-center flex-1 px-1 sm:px-2">
                 <p className="text-xs text-muted-foreground leading-tight">
-                  Plan your perfect party
+                  <span className="hidden sm:inline">Plan your perfect party</span>
+                  <span className="sm:hidden">Party Plan</span>
                 </p>
               </div>
 
@@ -239,9 +240,10 @@ export const PartyPlanner = () => {
                 size="sm"
                 onClick={() => setShowCart(true)}
                 disabled={getTotalItems() === 0}
-                className="px-2 h-8 text-xs"
+                className="px-1 sm:px-2 h-7 sm:h-8 text-xs"
               >
-                Cart
+                <span className="hidden sm:inline">Cart</span>
+                <span className="sm:hidden">{getTotalItems()}</span>
               </Button>
             </div>
 
@@ -451,18 +453,18 @@ export const PartyPlanner = () => {
                   <p className="text-lg text-green-600 mb-6">
                     Your party planning is complete. Ready to proceed to checkout?
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
                     <Button 
                       variant="outline" 
                       size="lg"
-                      onClick={() => window.location.href = '/product-search'}
+                      onClick={() => navigate('/search')}
                       className="flex-1 sm:flex-none"
                     >
                       Add More Items
                     </Button>
                     <Button 
                       size="lg"
-                      onClick={() => window.location.href = '/checkout'}
+                      onClick={() => navigate('/checkout')}
                       className="flex-1 sm:flex-none"
                     >
                       Proceed to Checkout
