@@ -123,7 +123,7 @@ function ProductCard({
 
   return (
     <Card ref={ref as any} className="h-full flex flex-col hover:shadow-lg transition-shadow">
-      <CardContent className="p-3 md:p-4 flex flex-col h-full">
+      <CardContent className={`flex flex-col h-full ${isMobile ? 'p-2' : 'p-3 md:p-4'}`}>
         {/* Product Image */}
         <div className="aspect-square mb-3 relative overflow-hidden rounded-lg">
           {isIntersecting ? (
@@ -174,31 +174,39 @@ function ProductCard({
               )}
             </div>
 
-            {/* Quantity Controls */}
+            {/* Quantity Controls - Fixed mobile layout */}
             {quantity > 0 ? (
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(-1)}
-                  className="h-8 w-8 p-0"
+                  className={`h-8 w-8 p-0 flex-shrink-0 ${
+                    isMobile ? 'h-7 w-7' : 'h-8 w-8'
+                  }`}
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </Button>
-                <span className="mx-3 font-medium">{quantity}</span>
+                <span className={`font-medium min-w-[20px] text-center ${
+                  isMobile ? 'text-sm' : 'text-base'
+                }`}>
+                  {quantity}
+                </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(1)}
-                  className="h-8 w-8 p-0"
+                  className={`h-8 w-8 p-0 flex-shrink-0 ${
+                    isMobile ? 'h-7 w-7' : 'h-8 w-8'
+                  }`}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </Button>
               </div>
             ) : (
               <Button
                 onClick={onAddToCart}
-                className="w-full"
+                className={`w-full ${isMobile ? 'h-8 text-xs' : 'h-9 text-sm'}`}
                 size={isMobile ? "sm" : "default"}
               >
                 Add to Cart

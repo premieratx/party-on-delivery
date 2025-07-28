@@ -51,6 +51,8 @@ export const ProductSearch = () => {
   // Progressive loading: load favorites first, then other categories
   useEffect(() => {
     if (!loading && allProducts.length > 0) {
+      console.log(`✅ Loaded ${allProducts.length} products from cache`);
+      
       // Load favorites immediately
       const favs = getFavoritesProducts(allProducts);
       setProductsLoaded(prev => ({ ...prev, favorites: favs }));
@@ -64,15 +66,20 @@ export const ProductSearch = () => {
       const otherCategories = availableCategories.filter(cat => cat !== 'favorites');
       otherCategories.forEach((category, index) => {
         setTimeout(() => {
-          const categoryProducts = allProducts.filter(product => product.category === category);
+          const categoryProducts = allProducts.filter(product => 
+            product.category && product.category.toLowerCase() === category.toLowerCase()
+          );
+          console.log(`📦 Loaded ${categoryProducts.length} products for category: ${category}`);
           setProductsLoaded(prev => ({ ...prev, [category]: categoryProducts }));
           setLoadingCategories(prev => {
             const newSet = new Set(prev);
             newSet.delete(category);
             return newSet;
           });
-        }, (index + 1) * 200); // Stagger loading by 200ms
+        }, (index + 1) * 100); // Faster loading
       });
+    } else if (!loading && allProducts.length === 0) {
+      console.warn('⚠️ No products loaded from cache');
     }
   }, [loading, allProducts, availableCategories]);
   

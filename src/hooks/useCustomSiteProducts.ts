@@ -144,23 +144,33 @@ export function useCustomSiteProducts() {
   // Helper function to map collection handles to categories
   const mapCollectionToCategory = (collectionHandle: string): string => {
     const categoryMappings: Record<string, string> = {
-      'beer': 'Beer',
-      'wine': 'Wine',
-      'spirits': 'Spirits',
-      'cocktails': 'Cocktails',
-      'seltzers': 'Seltzers',
-      'mixers': 'Mixers',
-      'party-supplies': 'Party Supplies',
-      'rentals': 'Rentals',
-      'event-rentals': 'Event Rentals',
-      'wedding-packages': 'Wedding Packages',
-      'boat-packages': 'Boat Packages',
-      'concierge-packages': 'Concierge Packages'
+      'tailgate-beer': 'beer',
+      'all-beer': 'beer', 
+      'seltzer-collection': 'seltzers',
+      'cocktail-kits': 'cocktails',
+      'party-supplies': 'party-supplies',
+      'newest-products': 'new',
+      'customizable-items': 'party-supplies',
+      'costumes': 'party-supplies',
+      'champagne': 'wine',
+      'texas-beer-collection': 'beer',
+      'disco-collection': 'party-supplies',
+      'liqueurs-cordials-cocktail-ingredients': 'spirits',
+      'mixers-non-alcoholic': 'mixers',
+      'ready-to-drink-cocktails': 'cocktails',
+      'hats-sunglasses': 'party-supplies',
+      'tequila-mezcal': 'spirits',
+      'gin-rum': 'spirits',
+      'decorations': 'party-supplies',
+      'spirits': 'spirits',
+      'wine': 'wine',
+      'beer': 'beer',
+      'seltzers': 'seltzers',
+      'cocktails': 'cocktails'
     };
-
-    return categoryMappings[collectionHandle] || 'Other';
+    
+    return categoryMappings[collectionHandle] || 'other';
   };
-
   const getAvailableCategories = () => {
     if (!customSiteData?.allowedCollections) {
       // Return all categories if not a custom site
