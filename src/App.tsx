@@ -30,6 +30,7 @@ import CustomSiteManagement from "./pages/CustomSiteManagement";
 import CustomSiteView from "./pages/CustomSiteView";
 import { CustomCollectionCreator } from "./pages/CustomCollectionCreator";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
+import ConciergeService from "./pages/ConciergeService";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,6 +86,9 @@ const App = () => {
                 
                 {/* Search Route */}
                 <Route path="/search" element={<ProductSearch />} />
+                
+                {/* Concierge Service Route */}
+                <Route path="/concierge" element={<ConciergeService />} />
                 
                 {/* Custom Site Routes */}
                 <Route path="/custom-sites" element={<CustomSiteManagement />} />
