@@ -90,45 +90,57 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
     return (
       <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-900">
+          <CardTitle className="flex items-center gap-2 text-blue-900 text-lg">
             <RefreshCw className="w-5 h-5 animate-spin" />
-            Automation Running Autonomously
+            <span className="hidden sm:inline">Automation Running Autonomously</span>
+            <span className="sm:hidden">Running</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span>Progress: {session.completed_tasks}/{session.total_tasks} tasks</span>
+                <span className="hidden sm:inline">Progress: {session.completed_tasks}/{session.total_tasks} tasks</span>
+                <span className="sm:hidden">{session.completed_tasks}/{session.total_tasks}</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="text-center">
-                <div className="font-semibold text-green-600">{session.completed_tasks}</div>
-                <div className="text-muted-foreground">Completed</div>
+                <div className="font-semibold text-green-600 text-lg sm:text-xl">{session.completed_tasks}</div>
+                <div className="text-muted-foreground text-xs">Completed</div>
               </div>
               <div className="text-center">
-                <div className="font-semibold text-red-600">{session.failed_tasks}</div>
-                <div className="text-muted-foreground">Failed</div>
+                <div className="font-semibold text-red-600 text-lg sm:text-xl">{session.failed_tasks}</div>
+                <div className="text-muted-foreground text-xs">Failed</div>
               </div>
             </div>
 
             {session.next_task_id && (
               <div className="p-3 bg-white rounded border">
-                <div className="text-sm font-medium mb-1">Next Task:</div>
-                <div className="text-sm text-muted-foreground">{session.next_task_id}</div>
+                <div className="text-sm font-medium mb-1">
+                  <span className="hidden sm:inline">Next Task:</span>
+                  <span className="sm:hidden">Next:</span>
+                </div>
+                <div className="text-xs sm:text-sm text-muted-foreground overflow-hidden text-ellipsis">
+                  {session.next_task_id.length > 30 ? `${session.next_task_id.slice(0, 30)}...` : session.next_task_id}
+                </div>
               </div>
             )}
 
             <div className="text-center p-3 bg-green-50 rounded border border-green-200">
               <div className="text-sm font-medium text-green-800 mb-1">
-                🤖 Working Autonomously
+                🤖 <span className="hidden sm:inline">Working Autonomously</span><span className="sm:hidden">Auto Mode</span>
               </div>
               <div className="text-xs text-green-600">
-                The system is running all tasks automatically. It will fix problems and continue working without your input.
+                <span className="hidden sm:inline">
+                  The system is running all tasks automatically. It will fix problems and continue working without your input.
+                </span>
+                <span className="sm:hidden">
+                  Running automatically with error recovery
+                </span>
               </div>
             </div>
 
@@ -136,17 +148,19 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
               onClick={handleRestart}
               disabled={isRestarting}
               variant="outline"
-              className="w-full"
+              className="w-full h-10 sm:h-9"
             >
               {isRestarting ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Restarting...
+                  <span className="hidden sm:inline">Restarting...</span>
+                  <span className="sm:hidden">Restarting</span>
                 </>
               ) : (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Restart If Stuck
+                  <span className="hidden sm:inline">Restart If Stuck</span>
+                  <span className="sm:hidden">Restart</span>
                 </>
               )}
             </Button>
@@ -159,33 +173,41 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 text-lg">
           <Zap className="w-5 h-5 text-primary" />
-          Autonomous Automation
+          <span className="hidden sm:inline">Autonomous Automation</span>
+          <span className="sm:hidden">Automation</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            The automation will work through ALL tasks autonomously, fixing problems and continuing without your input.
+            <span className="hidden sm:inline">
+              The automation will work through ALL tasks autonomously, fixing problems and continuing without your input.
+            </span>
+            <span className="sm:hidden">
+              Works through all tasks autonomously with error recovery.
+            </span>
           </p>
 
           <div className="space-y-3">
             <Button
               onClick={handleGo}
               disabled={isStarting}
-              className="w-full h-12 text-lg font-semibold"
+              className="w-full h-12 text-base sm:text-lg font-semibold"
               size="lg"
             >
               {isStarting ? (
                 <>
                   <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Starting Complete Automation...
+                  <span className="hidden sm:inline">Starting Complete Automation...</span>
+                  <span className="sm:hidden">Starting...</span>
                 </>
               ) : (
                 <>
                   <Play className="w-5 h-5 mr-2" />
-                  GO - Start Everything
+                  <span className="hidden sm:inline">GO - Start Everything</span>
+                  <span className="sm:hidden">GO</span>
                 </>
               )}
             </Button>
@@ -194,18 +216,20 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
               onClick={handleRestart}
               disabled={isRestarting}
               variant="outline"
-              className="w-full h-12 text-lg"
+              className="w-full h-12 text-base sm:text-lg"
               size="lg"
             >
               {isRestarting ? (
                 <>
                   <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Restarting...
+                  <span className="hidden sm:inline">Restarting...</span>
+                  <span className="sm:hidden">Restarting</span>
                 </>
               ) : (
                 <>
                   <RefreshCw className="w-5 h-5 mr-2" />
-                  RESTART - Resume If Stuck
+                  <span className="hidden sm:inline">RESTART - Resume If Stuck</span>
+                  <span className="sm:hidden">RESTART</span>
                 </>
               )}
             </Button>
@@ -213,11 +237,13 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
 
           <div className="p-3 bg-blue-50 rounded border border-blue-200">
             <div className="text-xs text-blue-800 space-y-1">
-              <div className="font-medium">✅ Fully Autonomous Operation</div>
-              <div>• Works through all 33+ optimization tasks</div>
-              <div>• Handles errors and continues automatically</div>
-              <div>• Logs all progress with timestamps</div>
-              <div>• No manual input required</div>
+              <div className="font-medium">✅ <span className="hidden sm:inline">Fully Autonomous Operation</span><span className="sm:hidden">Autonomous</span></div>
+              <div className="space-y-1">
+                <div>• <span className="hidden sm:inline">Works through all 33+ optimization tasks</span><span className="sm:hidden">33+ optimization tasks</span></div>
+                <div>• <span className="hidden sm:inline">Handles errors and continues automatically</span><span className="sm:hidden">Auto error handling</span></div>
+                <div>• <span className="hidden sm:inline">Logs all progress with timestamps</span><span className="sm:hidden">Detailed logging</span></div>
+                <div>• <span className="hidden sm:inline">No manual input required</span><span className="sm:hidden">No input needed</span></div>
+              </div>
             </div>
           </div>
         </div>

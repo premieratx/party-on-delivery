@@ -410,49 +410,70 @@ const PerformanceOptimization = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate('/')}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Home
+              <span className="hidden sm:inline">Back to Home</span>
+              <span className="sm:hidden">Back</span>
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                <Zap className="w-8 h-8 text-primary" />
-                Performance Optimization Dashboard
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2 sm:gap-3">
+                <Zap className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+                <span className="hidden sm:inline">Performance Optimization Dashboard</span>
+                <span className="sm:hidden">Optimization</span>
               </h1>
-              <p className="text-muted-foreground mt-1">
-                Optimize your app for speed, reliability, and native deployment
+              <p className="text-muted-foreground mt-1 text-sm">
+                <span className="hidden sm:inline">Optimize your app for speed, reliability, and native deployment</span>
+                <span className="sm:hidden">App optimization & automation</span>
               </p>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-2 w-full sm:w-auto">
             {!isAutomationRunning ? (
-              <Button onClick={startAutomation} variant="outline">
+              <Button 
+                onClick={startAutomation} 
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-none h-10 sm:h-9"
+              >
                 <Play className="w-4 h-4 mr-2" />
-                Start Automation
+                <span className="hidden sm:inline">Start Automation</span>
+                <span className="sm:hidden">Start</span>
               </Button>
             ) : (
-              <Button variant="outline" disabled>
+              <Button 
+                variant="outline" 
+                disabled
+                size="sm"
+                className="flex-1 sm:flex-none h-10 sm:h-9"
+              >
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Running...
+                <span className="hidden sm:inline">Running...</span>
+                <span className="sm:hidden">Running</span>
               </Button>
             )}
-            <Button onClick={() => navigate('/admin')} variant="ghost">
-              Admin Dashboard
+            <Button 
+              onClick={() => navigate('/admin')} 
+              variant="ghost"
+              size="sm"
+              className="flex-1 sm:flex-none h-10 sm:h-9"
+            >
+              <span className="hidden sm:inline">Admin Dashboard</span>
+              <span className="sm:hidden">Admin</span>
             </Button>
           </div>
         </div>
 
-        {/* Automation Controls Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Automation Controls Section - Mobile Optimized */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="lg:col-span-1">
             <AutomationControls
               onStartAutomation={startAutomation}
@@ -464,40 +485,45 @@ const PerformanceOptimization = () => {
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex items-center justify-between text-lg">
                   <span>System Status</span>
                   <div className="flex items-center gap-2">
                     {isAutomationRunning ? (
-                      <Badge variant="default" className="animate-pulse">
+                      <Badge variant="default" className="animate-pulse text-xs">
                         🤖 Active
                       </Badge>
                     ) : (
-                      <Badge variant="outline">Idle</Badge>
+                      <Badge variant="outline" className="text-xs">Idle</Badge>
                     )}
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-muted/50 rounded">
-                      <div className="text-2xl font-bold text-primary">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="text-center p-3 sm:p-4 bg-muted/50 rounded">
+                      <div className="text-xl sm:text-2xl font-bold text-primary">
                         {optimizationTasks.filter(t => t.status === 'completed').length}
                       </div>
-                      <div className="text-sm text-muted-foreground">Tasks Completed</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">Tasks Completed</div>
                     </div>
-                    <div className="text-center p-4 bg-muted/50 rounded">
-                      <div className="text-2xl font-bold text-muted-foreground">
+                    <div className="text-center p-3 sm:p-4 bg-muted/50 rounded">
+                      <div className="text-xl sm:text-2xl font-bold text-muted-foreground">
                         {optimizationTasks.filter(t => t.status === 'pending').length}
                       </div>
-                      <div className="text-sm text-muted-foreground">Tasks Remaining</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">Tasks Remaining</div>
                     </div>
                   </div>
                   
-                  <div className="text-sm text-muted-foreground">
-                    The automation engine analyzes your codebase and provides detailed 
-                    recommendations for performance improvements. Each task includes 
-                    specific implementation guidance and impact estimates.
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    <span className="hidden sm:inline">
+                      The automation engine analyzes your codebase and provides detailed 
+                      recommendations for performance improvements. Each task includes 
+                      specific implementation guidance and impact estimates.
+                    </span>
+                    <span className="sm:hidden">
+                      Automated optimization with detailed recommendations and impact analysis.
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -505,33 +531,36 @@ const PerformanceOptimization = () => {
           </div>
         </div>
 
-        {/* Pending Approval Banner */}
+        {/* Pending Approval Banner - Mobile Optimized */}
         {pendingApproval && (
-          <Card className="border-orange-200 bg-orange-50 mb-6">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+          <Card className="border-orange-200 bg-orange-50 mb-4 sm:mb-6">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Pause className="w-5 h-5 text-orange-600" />
+                  <Pause className="w-5 h-5 text-orange-600 shrink-0" />
                   <div>
-                    <h3 className="font-semibold text-orange-800">Automation Paused</h3>
-                    <p className="text-sm text-orange-700">{pendingApproval.message}</p>
+                    <h3 className="font-semibold text-orange-800 text-sm sm:text-base">Automation Paused</h3>
+                    <p className="text-xs sm:text-sm text-orange-700">{pendingApproval.message}</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto">
                   <Button
                     onClick={approveNextStep}
                     size="sm"
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-none h-10 sm:h-9"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve & Continue
+                    <span className="hidden sm:inline">Approve & Continue</span>
+                    <span className="sm:hidden">Approve</span>
                   </Button>
                   <Button
                     onClick={() => setPendingApproval(null)}
                     size="sm"
                     variant="outline"
+                    className="flex-1 sm:flex-none h-10 sm:h-9"
                   >
-                    Keep Paused
+                    <span className="hidden sm:inline">Keep Paused</span>
+                    <span className="sm:hidden">Pause</span>
                   </Button>
                 </div>
               </div>
@@ -539,34 +568,42 @@ const PerformanceOptimization = () => {
           </Card>
         )}
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="progress" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="progress" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Progress
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger value="logs" className="flex items-center gap-2">
-              <Code className="w-4 h-4" />
-              System Logs
-            </TabsTrigger>
-            <TabsTrigger value="conversation" className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Conversation
-            </TabsTrigger>
-            <TabsTrigger value="metrics" className="flex items-center gap-2">
-              <Monitor className="w-4 h-4" />
-              Metrics
-            </TabsTrigger>
-            <TabsTrigger value="mobile" className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4" />
-              Mobile
-            </TabsTrigger>
-          </TabsList>
+        {/* Main Content Tabs - Mobile Optimized */}
+        <Tabs defaultValue="progress" className="space-y-4 sm:space-y-6">
+          <div className="overflow-x-auto">
+            <TabsList className="grid grid-cols-6 w-max sm:w-full min-w-full gap-1">
+              <TabsTrigger value="progress" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
+                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Progress</span>
+                <span className="sm:hidden">Progress</span>
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Tasks</span>
+                <span className="sm:hidden">Tasks</span>
+              </TabsTrigger>
+              <TabsTrigger value="logs" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
+                <Code className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">System Logs</span>
+                <span className="sm:hidden">Logs</span>
+              </TabsTrigger>
+              <TabsTrigger value="conversation" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
+                <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Conversation</span>
+                <span className="sm:hidden">Chat</span>
+              </TabsTrigger>
+              <TabsTrigger value="metrics" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
+                <Monitor className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Metrics</span>
+                <span className="sm:hidden">Metrics</span>
+              </TabsTrigger>
+              <TabsTrigger value="mobile" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
+                <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Mobile</span>
+                <span className="sm:hidden">Mobile</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Real-time Progress Tab */}
           <TabsContent value="progress">
