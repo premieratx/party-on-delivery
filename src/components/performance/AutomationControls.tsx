@@ -34,24 +34,44 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
   const handleGo = async () => {
     setIsStarting(true);
     try {
+      console.log('🚀 Starting full automation...');
+      
       const { data, error } = await supabase.functions.invoke('optimization-automation', {
-        body: { action: 'go' }
+        body: { 
+          action: 'go',
+          session_name: 'Complete App Launch Automation'
+        }
       });
 
-      if (error) throw error;
+      console.log('Automation response:', { data, error });
+
+      if (error) {
+        console.error('Automation error:', error);
+        throw error;
+      }
 
       toast({
         title: "🚀 Full Automation Started!",
-        description: `Starting ${data.total_tasks} tasks across ${data.total_phases} phases. Working autonomously without your input.`,
+        description: `Starting ${data.total_tasks || 'all'} tasks across ${data.total_phases || 6} phases. Working autonomously without your input.`,
       });
+
+      // Also trigger the parent callback
+      await onStartAutomation();
 
     } catch (error) {
       console.error('Error starting automation:', error);
       toast({
         title: "Start Error",
-        description: "Failed to start automation. Will try to fix and continue.",
+        description: "Failed to start automation. Starting fallback automation...",
         variant: "destructive",
       });
+      
+      // Try fallback
+      try {
+        await onStartAutomation();
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+      }
     } finally {
       setIsStarting(false);
     }

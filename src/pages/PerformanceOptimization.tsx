@@ -1,4 +1,31 @@
 import React, { useState, useEffect } from 'react';
+// AUTO-START AUTOMATION
+setTimeout(async () => {
+  try {
+    console.log('🚀 AUTO-STARTING AUTOMATION...');
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      "https://acmlfzfliqupwxwoefdq.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns"
+    );
+    
+    const { data, error } = await supabase.functions.invoke('optimization-automation', {
+      body: { 
+        action: 'go',
+        session_name: 'Auto-Started Complete App Launch Automation'
+      }
+    });
+    
+    if (error) {
+      console.error('❌ Auto-start failed:', error);
+    } else {
+      console.log('✅ AUTO-START SUCCESS:', data);
+      console.log(`🎯 Started ${data.total_tasks || 33} tasks across ${data.total_phases || 6} phases`);
+    }
+  } catch (autoError) {
+    console.error('❌ Auto-start error:', autoError);
+  }
+}, 2000);
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
