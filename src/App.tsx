@@ -89,6 +89,7 @@ const App = () => {
                   
                   {/* Search Route */}
                   <Route path="/search" element={<ProductSearch />} />
+                  <Route path="/product-search" element={<ProductSearch />} />
                   
                   {/* Concierge Service Route */}
                   <Route path="/concierge" element={<ConciergeService />} />

@@ -237,21 +237,33 @@ export const ProductSearch = () => {
   }, [products, selectedCategory, searchTerm]);
 
   const handleAddToCart = (product: Product) => {
-    addToCart({
-      id: product.id,
-      title: product.title,
-      name: product.title,
-      price: product.price,
-      image: product.image,
-      variant: product.variants?.[0]?.id,
-      category: product.category
-    });
+    console.log('Adding product to cart:', product);
+    try {
+      addToCart({
+        id: product.id,
+        title: product.title,
+        name: product.title,
+        price: product.price,
+        image: product.image,
+        variant: product.variants?.[0]?.id,
+        category: product.category
+      });
+      console.log('Product added to cart successfully');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
   };
 
   const handleQuantityChange = (product: Product, change: number) => {
-    const currentQty = getCartItemQuantity(product.id, product.variants?.[0]?.id);
-    const newQty = Math.max(0, currentQty + change);
-    updateQuantity(product.id, product.variants?.[0]?.id, newQty);
+    console.log('Changing quantity for product:', product.id, 'change:', change);
+    try {
+      const currentQty = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+      const newQty = Math.max(0, currentQty + change);
+      updateQuantity(product.id, product.variants?.[0]?.id, newQty);
+      console.log('Quantity updated:', newQty);
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
   };
 
   return (

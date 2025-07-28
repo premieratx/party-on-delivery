@@ -53,12 +53,16 @@ export const useUnifiedCart = () => {
   }, [cartItems]);
 
   const addToCart = (item: Omit<UnifiedCartItem, 'quantity'> | UnifiedCartItem[]) => {
+    console.log('useUnifiedCart: addToCart called with:', item);
+    
     if (Array.isArray(item)) {
       // Handle multiple items (from party planner)
+      console.log('Adding multiple items to cart:', item.length);
       setCartItems(prev => {
         let newCart = [...prev];
         
         item.forEach(newItem => {
+          console.log('Processing item:', newItem);
           const existingIndex = newCart.findIndex(cartItem => 
             (cartItem.id === newItem.id || cartItem.productId === newItem.productId) && 
             cartItem.variant === newItem.variant
@@ -67,8 +71,10 @@ export const useUnifiedCart = () => {
           if (existingIndex >= 0) {
             if (newItem.quantity === 0) {
               newCart.splice(existingIndex, 1);
+              console.log('Removed item from cart');
             } else {
               newCart[existingIndex] = { ...newItem };
+              console.log('Updated existing item in cart');
             }
           } else if (newItem.quantity > 0) {
             newCart.push({ 
@@ -77,13 +83,16 @@ export const useUnifiedCart = () => {
               productId: newItem.productId || newItem.id,
               name: newItem.name || newItem.title || ''
             });
+            console.log('Added new item to cart');
           }
         });
         
+        console.log('New cart state:', newCart);
         return newCart;
       });
     } else {
       // Handle single item (from delivery widget)
+      console.log('Adding single item to cart:', item);
       const itemToAdd: UnifiedCartItem = {
         ...item,
         quantity: 1,
@@ -103,8 +112,10 @@ export const useUnifiedCart = () => {
             ...newCart[existingIndex],
             quantity: newCart[existingIndex].quantity + 1
           };
+          console.log('Updated existing item quantity');
           return newCart;
         } else {
+          console.log('Added new single item to cart');
           return [...prev, itemToAdd];
         }
       });
@@ -116,8 +127,10 @@ export const useUnifiedCart = () => {
   };
 
   const updateQuantity = (id: string, variant: string | undefined, quantity: number) => {
+    console.log('useUnifiedCart: updateQuantity called', { id, variant, quantity });
     setCartItems(prev => {
       if (quantity <= 0) {
+        console.log('Removing item from cart');
         return prev.filter(item => 
           !((item.id === id || item.productId === id) && item.variant === variant)
         );
@@ -130,9 +143,11 @@ export const useUnifiedCart = () => {
       if (existingIndex >= 0) {
         const newCart = [...prev];
         newCart[existingIndex] = { ...newCart[existingIndex], quantity };
+        console.log('Updated item quantity in cart');
         return newCart;
       }
       
+      console.log('Item not found for quantity update');
       return prev;
     });
   };
