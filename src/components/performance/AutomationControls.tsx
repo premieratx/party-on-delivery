@@ -29,36 +29,57 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
 }) => {
   const { toast } = useToast();
   const [isStarting, setIsStarting] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
 
-  const handleStart = async () => {
+  const handleGo = async () => {
     setIsStarting(true);
     try {
-      await onStartAutomation();
-    } finally {
-      setIsStarting(false);
-    }
-  };
-
-  const runSingleTask = async () => {
-    try {
       const { data, error } = await supabase.functions.invoke('optimization-automation', {
-        body: { action: 'run_next_task' }
+        body: { action: 'go' }
       });
 
       if (error) throw error;
 
       toast({
-        title: data.session_completed ? "🎉 Session Complete!" : "✅ Task Completed",
+        title: "🚀 Full Automation Started!",
+        description: `Starting ${data.total_tasks} tasks across ${data.total_phases} phases. Working autonomously without your input.`,
+      });
+
+    } catch (error) {
+      console.error('Error starting automation:', error);
+      toast({
+        title: "Start Error",
+        description: "Failed to start automation. Will try to fix and continue.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleRestart = async () => {
+    setIsRestarting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('optimization-automation', {
+        body: { action: 'restart' }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "🔄 Automation Restarted!",
         description: data.message,
       });
 
     } catch (error) {
-      console.error('Error running single task:', error);
+      console.error('Error restarting automation:', error);
       toast({
-        title: "Task Error",
-        description: "Failed to run optimization task.",
+        title: "Restart Error",
+        description: "Failed to restart automation.",
         variant: "destructive",
       });
+    } finally {
+      setIsRestarting(false);
     }
   };
 
@@ -71,7 +92,7 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-blue-900">
             <RefreshCw className="w-5 h-5 animate-spin" />
-            Automation Running
+            Automation Running Autonomously
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -102,43 +123,33 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
               </div>
             )}
 
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={runSingleTask}
-                className="flex-1"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Run Next Task
-              </Button>
-              
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const { data, error } = await supabase.functions.invoke('optimization-automation', {
-                      body: { action: 'start_full_automation' }
-                    });
-                    if (error) throw error;
-                    toast({
-                      title: "🚀 Full Automation Started!",
-                      description: `Running ${data.total_tasks} tasks across ${data.total_phases} phases`,
-                    });
-                  } catch (error) {
-                    toast({
-                      title: "Error",
-                      description: "Failed to start full automation",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                className="flex-1"
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                Run All Phases
-              </Button>
+            <div className="text-center p-3 bg-green-50 rounded border border-green-200">
+              <div className="text-sm font-medium text-green-800 mb-1">
+                🤖 Working Autonomously
+              </div>
+              <div className="text-xs text-green-600">
+                The system is running all tasks automatically. It will fix problems and continue working without your input.
+              </div>
             </div>
+
+            <Button
+              onClick={handleRestart}
+              disabled={isRestarting}
+              variant="outline"
+              className="w-full"
+            >
+              {isRestarting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Restarting...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Restart If Stuck
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -150,47 +161,64 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="w-5 h-5 text-primary" />
-          Automation Controls
+          Autonomous Automation
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Start the automated optimization engine to systematically improve your app's performance.
+            The automation will work through ALL tasks autonomously, fixing problems and continuing without your input.
           </p>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Button
-              onClick={handleStart}
+              onClick={handleGo}
               disabled={isStarting}
-              className="w-full"
+              className="w-full h-12 text-lg font-semibold"
+              size="lg"
             >
               {isStarting ? (
                 <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Starting...
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                  Starting Complete Automation...
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Full Automation
+                  <Play className="w-5 h-5 mr-2" />
+                  GO - Start Everything
                 </>
               )}
             </Button>
 
             <Button
+              onClick={handleRestart}
+              disabled={isRestarting}
               variant="outline"
-              onClick={runSingleTask}
-              className="w-full"
+              className="w-full h-12 text-lg"
+              size="lg"
             >
-              <Clock className="w-4 h-4 mr-2" />
-              Run Single Task
+              {isRestarting ? (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                  Restarting...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2" />
+                  RESTART - Resume If Stuck
+                </>
+              )}
             </Button>
           </div>
 
-          <div className="text-xs text-muted-foreground">
-            The automation will systematically work through each optimization task, 
-            logging progress and results in real-time.
+          <div className="p-3 bg-blue-50 rounded border border-blue-200">
+            <div className="text-xs text-blue-800 space-y-1">
+              <div className="font-medium">✅ Fully Autonomous Operation</div>
+              <div>• Works through all 33+ optimization tasks</div>
+              <div>• Handles errors and continues automatically</div>
+              <div>• Logs all progress with timestamps</div>
+              <div>• No manual input required</div>
+            </div>
           </div>
         </div>
       </CardContent>

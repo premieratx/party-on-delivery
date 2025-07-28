@@ -42,8 +42,13 @@ Deno.serve(async (req) => {
     console.log(`🤖 Automation Engine: ${action} requested`, { task_id, session_name });
 
     switch (action) {
+      case 'go':
       case 'start_full_automation':
         return await startFullAutomation(supabase, session_name || 'Complete App Launch Automation');
+      
+      case 'restart':
+      case 'restart_automation':
+        return await restartAutomation(supabase);
       
       case 'start_automation_session':
         return await startAutomationSession(supabase, session_name || 'Performance Optimization');
@@ -59,6 +64,9 @@ Deno.serve(async (req) => {
       
       case 'get_session_status':
         return await getSessionStatus(supabase);
+      
+      case 'get_conversation_logs':
+        return await getConversationLogs(supabase);
       
       case 'run_phase':
         const { phase_name } = await req.json();
@@ -360,44 +368,91 @@ async function runSpecificTask(supabase: any, taskId: string) {
 }
 
 async function runAutonomousLoop(supabase: any, masterSessionId: string) {
-  console.log('🤖 Starting autonomous execution loop for master session:', masterSessionId);
+  console.log('🤖 Starting ENHANCED autonomous execution loop for master session:', masterSessionId);
   
   // Use EdgeRuntime.waitUntil to run this in the background if available
   const executeLoop = async () => {
+    let consecutiveErrors = 0;
+    const maxConsecutiveErrors = 5;
+    
     try {
+      await logConversation(masterSessionId, 'system', 'Enhanced autonomous execution loop started with full error recovery');
+      
       let iterations = 0;
-      const maxIterations = 50; // Prevent infinite loops
+      const maxIterations = 100; // Increased for more thorough execution
       
       while (iterations < maxIterations) {
-        const { data: masterSession } = await supabase
-          .from('master_automation_sessions')
-          .select('*')
-          .eq('id', masterSessionId)
-          .single();
+        try {
+          const { data: masterSession } = await supabase
+            .from('master_automation_sessions')
+            .select('*')
+            .eq('id', masterSessionId)
+            .single();
 
-        if (!masterSession || masterSession.status !== 'running') {
-          console.log('🏁 Autonomous loop ended - session completed or stopped');
-          break;
+          if (!masterSession || masterSession.status !== 'running') {
+            await logConversation(masterSessionId, 'system', 'Autonomous loop ended - session completed or stopped');
+            console.log('🏁 Autonomous loop ended - session completed or stopped');
+            break;
+          }
+
+          await logConversation(masterSessionId, 'system', `Running automation iteration ${iterations + 1}, current phase: ${masterSession.current_phase}`);
+
+          // Run tasks for current phase with enhanced error handling
+          try {
+            await runParallelTasks(supabase);
+            consecutiveErrors = 0; // Reset on success
+          } catch (taskError) {
+            consecutiveErrors++;
+            await logConversation(masterSessionId, 'error', `Task execution error (${consecutiveErrors}/${maxConsecutiveErrors}): ${taskError.message}. Continuing with next tasks.`);
+            
+            if (consecutiveErrors >= maxConsecutiveErrors) {
+              await logConversation(masterSessionId, 'error', 'Too many consecutive errors. Pausing for manual restart.');
+              await supabase
+                .from('master_automation_sessions')
+                .update({ status: 'paused' })
+                .eq('id', masterSessionId);
+              break;
+            }
+          }
+          
+          // Check if phase is complete
+          const phaseComplete = await checkPhaseCompletion(supabase, masterSession.current_phase);
+          
+          if (phaseComplete) {
+            await logConversation(masterSessionId, 'success', `Phase "${masterSession.current_phase}" completed! Advancing to next phase.`);
+            await advanceToNextPhase(supabase, masterSessionId);
+          }
+
+          // Adaptive delay - shorter when things are working well
+          const delay = consecutiveErrors > 0 ? 8000 : 3000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          iterations++;
+          
+        } catch (iterationError) {
+          consecutiveErrors++;
+          console.error(`❌ Error in iteration ${iterations}:`, iterationError);
+          await logConversation(masterSessionId, 'error', `Iteration error: ${iterationError.message}. Continuing...`);
+          
+          if (consecutiveErrors >= maxConsecutiveErrors) {
+            await logConversation(masterSessionId, 'system', 'Maximum errors reached. Ready for restart when needed.');
+            break;
+          }
+          
+          // Wait longer after errors
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          iterations++;
         }
-
-        // Run parallel tasks for current phase
-        await runParallelTasks(supabase);
-        
-        // Check if phase is complete
-        const phaseComplete = await checkPhaseCompletion(supabase, masterSession.current_phase);
-        
-        if (phaseComplete) {
-          await advanceToNextPhase(supabase, masterSessionId);
-        }
-
-        // Wait before next iteration (autonomous delay)
-        await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-        iterations++;
       }
+      
+      if (iterations >= maxIterations) {
+        await logConversation(masterSessionId, 'system', 'Maximum iterations reached. Automation completed successfully.');
+      }
+      
     } catch (error) {
-      console.error('❌ Error in autonomous loop:', error);
+      console.error('❌ Fatal error in autonomous loop:', error);
+      await logConversation(masterSessionId, 'error', `Fatal error in autonomous loop: ${error.message}. Ready for restart.`);
       await logProgress(supabase, 'autonomous-loop', 'error', 
-        `Autonomous execution error: ${error.message}`, { error: error.toString() });
+        `Fatal autonomous execution error: ${error.message}`, { error: error.toString() });
     }
   };
 
@@ -1239,6 +1294,107 @@ async function getSessionStatus(supabase: any) {
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   );
+}
+
+async function restartAutomation(supabase: any) {
+  console.log('🔄 Restarting automation from last checkpoint');
+  
+  // Find the most recent session that was paused or failed
+  const { data: lastSession } = await supabase
+    .from('automation_sessions')
+    .select('*')
+    .in('status', ['paused', 'failed'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!lastSession) {
+    // No session to restart, start a new one
+    return await startFullAutomation(supabase, 'Restarted App Launch Automation');
+  }
+
+  // Reset failed tasks back to pending
+  await supabase
+    .from('optimization_tasks')
+    .update({ status: 'pending' })
+    .eq('status', 'failed');
+
+  // Resume the session
+  await supabase
+    .from('automation_sessions')
+    .update({ 
+      status: 'running',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', lastSession.id);
+
+  await logConversation(lastSession.id, 'system', 'Automation restarted - resuming from last checkpoint');
+
+  // Start the autonomous loop again
+  const { data: masterSession } = await supabase
+    .from('master_automation_sessions')
+    .select('*')
+    .eq('status', 'running')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (masterSession) {
+    runAutonomousLoop(supabase, masterSession.id);
+  }
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      restarted: true,
+      session_id: lastSession.id,
+      message: 'Automation restarted successfully'
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function getConversationLogs(supabase: any) {
+  const { data: logs } = await supabase
+    .from('optimization_logs')
+    .select('*')
+    .eq('task_id', 'CONVERSATION')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      logs: logs || [],
+      message: `Retrieved ${logs?.length || 0} conversation entries`
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+// Add conversation logging function
+async function logConversation(sessionId: string, type: string, message: string) {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    await supabase
+      .from('optimization_logs')
+      .insert({
+        task_id: 'CONVERSATION',
+        log_level: type,
+        message: message,
+        details: { 
+          session_id: sessionId,
+          timestamp: new Date().toISOString(),
+          type: 'conversation_log'
+        }
+      });
+  } catch (error) {
+    console.error('Failed to log conversation:', error);
+  }
 }
 
 async function logProgress(supabase: any, taskId: string, level: string, message: string, details: any = {}) {
