@@ -111,6 +111,33 @@ export const AutomationControls: React.FC<AutomationControlsProps> = ({
                 <Play className="w-4 h-4 mr-2" />
                 Run Next Task
               </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const { data, error } = await supabase.functions.invoke('optimization-automation', {
+                      body: { action: 'start_full_automation' }
+                    });
+                    if (error) throw error;
+                    toast({
+                      title: "🚀 Full Automation Started!",
+                      description: `Running ${data.total_tasks} tasks across ${data.total_phases} phases`,
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Error",
+                      description: "Failed to start full automation",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                className="flex-1"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Run All Phases
+              </Button>
             </div>
           </div>
         </CardContent>

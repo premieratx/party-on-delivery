@@ -1073,6 +1073,54 @@ export type Database = {
         }
         Relationships: []
       }
+      master_automation_sessions: {
+        Row: {
+          autonomous_mode: boolean
+          completed_at: string | null
+          completed_phases: number
+          created_at: string
+          current_phase: string | null
+          id: string
+          parallel_execution_enabled: boolean
+          phases_included: string[]
+          session_name: string
+          started_at: string
+          status: string
+          total_phases: number
+          updated_at: string
+        }
+        Insert: {
+          autonomous_mode?: boolean
+          completed_at?: string | null
+          completed_phases?: number
+          created_at?: string
+          current_phase?: string | null
+          id?: string
+          parallel_execution_enabled?: boolean
+          phases_included: string[]
+          session_name: string
+          started_at?: string
+          status?: string
+          total_phases: number
+          updated_at?: string
+        }
+        Update: {
+          autonomous_mode?: boolean
+          completed_at?: string | null
+          completed_phases?: number
+          created_at?: string
+          current_phase?: string | null
+          id?: string
+          parallel_execution_enabled?: boolean
+          phases_included?: string[]
+          session_name?: string
+          started_at?: string
+          status?: string
+          total_phases?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       optimization_logs: {
         Row: {
           created_at: string
@@ -1111,12 +1159,15 @@ export type Database = {
           actual_time_minutes: number | null
           automation_capable: boolean
           automation_function: string | null
+          autonomous_capable: boolean | null
           category: string
           completed_at: string | null
           created_at: string
           description: string
           estimated_time: string
           id: string
+          parallel_execution: boolean | null
+          phase_name: string | null
           prerequisites: string[] | null
           priority: string
           started_at: string | null
@@ -1129,12 +1180,15 @@ export type Database = {
           actual_time_minutes?: number | null
           automation_capable?: boolean
           automation_function?: string | null
+          autonomous_capable?: boolean | null
           category: string
           completed_at?: string | null
           created_at?: string
           description: string
           estimated_time: string
           id?: string
+          parallel_execution?: boolean | null
+          phase_name?: string | null
           prerequisites?: string[] | null
           priority: string
           started_at?: string | null
@@ -1147,12 +1201,15 @@ export type Database = {
           actual_time_minutes?: number | null
           automation_capable?: boolean
           automation_function?: string | null
+          autonomous_capable?: boolean | null
           category?: string
           completed_at?: string | null
           created_at?: string
           description?: string
           estimated_time?: string
           id?: string
+          parallel_execution?: boolean | null
+          phase_name?: string | null
           prerequisites?: string[] | null
           priority?: string
           started_at?: string | null
