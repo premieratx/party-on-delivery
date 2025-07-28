@@ -207,7 +207,13 @@ export const PartyPlanner = () => {
             <div className="md:hidden flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <SearchIcon size="sm" variant="mobile" />
-                <Button variant="outline" size="sm" className="p-1 h-8 relative" onClick={() => setShowCart(true)}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="p-1 h-8 relative" 
+                  onClick={() => setShowCart(true)}
+                  data-cart-trigger
+                >
                   <ShoppingCart className="w-4 h-4" />
                   {getTotalItems() > 0 && (
                     <span className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center transition-transform duration-300 ${cartFlash ? 'scale-125' : 'scale-100'}`}>
@@ -243,7 +249,13 @@ export const PartyPlanner = () => {
             <div className="hidden md:flex justify-between items-center w-full">
               <div className="flex items-center gap-3">
                 <SearchIcon size="md" variant="desktop" />
-                <Button variant="outline" size="sm" className="relative" onClick={() => setShowCart(true)}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="relative" 
+                  onClick={() => setShowCart(true)}
+                  data-cart-trigger
+                >
                   <ShoppingCart className="w-4 h-4 mr-1" />
                   Cart ({getTotalItems()})
                   {getTotalItems() > 0 && cartFlash && (
@@ -285,7 +297,7 @@ export const PartyPlanner = () => {
                 onSelect={(type) => updatePartyDetails({ partyType: type })}
               />
               
-              <div className="flex justify-between mt-4 md:mt-8">
+              <div className="flex justify-between mt-4 md:mt-8 mb-16">
                 <Button
                   variant="outline"
                   onClick={handleBack}
@@ -316,7 +328,7 @@ export const PartyPlanner = () => {
                 onSelect={(events) => updatePartyDetails({ weddingEvents: events })}
               />
               
-              <div className="flex justify-between mt-4 md:mt-8">
+              <div className="flex justify-between mt-4 md:mt-8 mb-16">
                 <Button
                   variant="outline"
                   onClick={handleBack}

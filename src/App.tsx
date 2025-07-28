@@ -52,60 +52,62 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/success" element={<Success />} />
-                <Route path="/order-complete" element={<OrderComplete />} />
-                
-                {/* Affiliate Routes */}
-                <Route path="/affiliate" element={<AffiliateIntro />} />
-                <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
-                <Route path="/affiliate/admin-login" element={<AdminLogin />} />
-                <Route path="/affiliate/admin" element={<AdminDashboard />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/product-management" element={<ProductManagement />} />
-                <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
-                <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
-                <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
-                
-                {/* Custom Affiliate Landing Pages */}
-                <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
-                
-                {/* Customer Routes */}
-                <Route path="/customer/login" element={<CustomerLogin />} />
-                <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-                <Route path="/order-continuation" element={<OrderContinuation />} />
-                <Route path="/manage-order" element={<CustomerLogin />} />
-                
-                {/* Shared Order Routes */}
-                <Route path="/order/:shareToken" element={<GroupOrderView />} />
-                <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
-                
-                {/* Party Planning Routes */}
-                <Route path="/plan-my-party" element={<PartyPlanner />} />
-                <Route path="/chat-party-planner" element={<ChatPartyPlanner />} />
-                <Route path="/checkout" element={<Checkout />} />
-                
-                {/* Search Route */}
-                <Route path="/search" element={<ProductSearch />} />
-                
-                {/* Concierge Service Route */}
-                <Route path="/concierge" element={<ConciergeService />} />
-                
-                {/* Performance Optimization Route */}
-                <Route path="/performance-optimization" element={<PerformanceOptimization />} />
-                
-                {/* Custom Site Routes */}
-                <Route path="/custom-sites" element={<CustomSiteManagement />} />
-                <Route path="/admin/custom-sites" element={<CustomSiteManagement />} />
-                <Route path="/sites/:siteSlug" element={<CustomSiteView />} />
-                
-                {/* Test Routes */}
-                <Route path="/test-sms" element={<TestSMS />} />
-                
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <div className="pb-14"> {/* Add padding bottom for navigation bar */}
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/success" element={<Success />} />
+                  <Route path="/order-complete" element={<OrderComplete />} />
+                  
+                  {/* Affiliate Routes */}
+                  <Route path="/affiliate" element={<AffiliateIntro />} />
+                  <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+                  <Route path="/affiliate/admin-login" element={<AdminLogin />} />
+                  <Route path="/affiliate/admin" element={<AdminDashboard />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/product-management" element={<ProductManagement />} />
+                  <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
+                  <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
+                  <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
+                  
+                  {/* Custom Affiliate Landing Pages */}
+                  <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
+                  
+                  {/* Customer Routes */}
+                  <Route path="/customer/login" element={<CustomerLogin />} />
+                  <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+                  <Route path="/order-continuation" element={<OrderContinuation />} />
+                  <Route path="/manage-order" element={<CustomerLogin />} />
+                  
+                  {/* Shared Order Routes */}
+                  <Route path="/order/:shareToken" element={<GroupOrderView />} />
+                  <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
+                  
+                  {/* Party Planning Routes */}
+                  <Route path="/plan-my-party" element={<PartyPlanner />} />
+                  <Route path="/chat-party-planner" element={<ChatPartyPlanner />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  
+                  {/* Search Route */}
+                  <Route path="/search" element={<ProductSearch />} />
+                  
+                  {/* Concierge Service Route */}
+                  <Route path="/concierge" element={<ConciergeService />} />
+                  
+                  {/* Performance Optimization Route */}
+                  <Route path="/performance-optimization" element={<PerformanceOptimization />} />
+                  
+                  {/* Custom Site Routes */}
+                  <Route path="/custom-sites" element={<CustomSiteManagement />} />
+                  <Route path="/admin/custom-sites" element={<CustomSiteManagement />} />
+                  <Route path="/sites/:siteSlug" element={<CustomSiteView />} />
+                  
+                  {/* Test Routes */}
+                  <Route path="/test-sms" element={<TestSMS />} />
+                  
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
               <GlobalNavigation />
             </BrowserRouter>
           </TooltipProvider>

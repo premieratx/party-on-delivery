@@ -1,8 +1,9 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 
 interface NavigationState {
   path: string;
@@ -12,6 +13,7 @@ interface NavigationState {
 export const GlobalNavigation = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { getTotalItems, getTotalPrice } = useUnifiedCart();
 
   // Get navigation history from sessionStorage
   const getNavigationHistory = (): NavigationState[] => {
@@ -35,8 +37,8 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
     const filteredHistory = history.filter(entry => entry.path !== path);
     const updatedHistory = [...filteredHistory, newEntry];
     
-    // Keep only last 10 entries
-    const trimmedHistory = updatedHistory.slice(-10);
+    // Keep only last 20 entries
+    const trimmedHistory = updatedHistory.slice(-20);
     
     sessionStorage.setItem('navigation-history', JSON.stringify(trimmedHistory));
   };
@@ -66,35 +68,89 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
     }
   };
 
+  const handleHome = () => {
+    navigate('/');
+  };
+
+  const handleCart = () => {
+    if (location.pathname === '/plan-my-party') {
+      // On party planner, trigger cart modal
+      const cartButton = document.querySelector('[data-cart-trigger]') as HTMLButtonElement;
+      if (cartButton) {
+        cartButton.click();
+      }
+    } else {
+      // On other pages, navigate to checkout
+      navigate('/checkout');
+    }
+  };
+
   return (
     <div className={cn(
-      "fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50",
-      "flex items-center gap-2 bg-background/95 backdrop-blur border rounded-lg px-3 py-2 shadow-lg",
+      "fixed bottom-0 left-0 right-0 z-50",
+      "bg-background/95 backdrop-blur border-t shadow-lg",
+      "flex items-center justify-between px-4 py-2",
       className
     )}>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleBack}
-        disabled={!canGoBack}
-        className="h-8 w-8 p-0"
-      >
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
-      
-      <div className="text-xs text-muted-foreground px-2">
+      {/* Left: Back/Forward Navigation */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBack}
+          disabled={!canGoBack}
+          className="h-9 px-3"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Back</span>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleForward}
+          disabled={!canGoForward}
+          className="h-9 px-3"
+        >
+          <span className="hidden sm:inline">Next</span>
+          <ArrowRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+
+      {/* Center: Page indicator */}
+      <div className="text-xs text-muted-foreground hidden sm:block">
         {currentIndex + 1} / {history.length}
       </div>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleForward}
-        disabled={!canGoForward}
-        className="h-8 w-8 p-0"
-      >
-        <ArrowRight className="h-4 w-4" />
-      </Button>
+
+      {/* Right: Home and Cart */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleHome}
+          className="h-9 px-3"
+        >
+          <Home className="h-4 w-4 mr-1" />
+          <span className="hidden sm:inline">Home</span>
+        </Button>
+
+        {getTotalItems() > 0 && (
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleCart}
+            className="h-9 px-3 relative"
+          >
+            <ShoppingCart className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">
+              Cart ({getTotalItems()}) ${getTotalPrice().toFixed(2)}
+            </span>
+            <span className="sm:hidden">
+              {getTotalItems()}
+            </span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
