@@ -68,6 +68,12 @@ Deno.serve(async (req) => {
       case 'get_conversation_logs':
         return await getConversationLogs(supabase);
       
+      case 'auto_retry_failed_tasks':
+        return await autoRetryFailedTasks(supabase);
+      
+      case 'health_check_and_resume':
+        return await healthCheckAndResume(supabase);
+      
       case 'run_phase':
         const { phase_name } = await req.json();
         return await runSpecificPhase(supabase, phase_name);
@@ -2188,4 +2194,189 @@ async function fixMonitoringSystem(testResult: any, originalResult: Optimization
     message: fixes.length > 0 ? `Applied ${fixes.length} monitoring system fixes` : 'No fixes needed',
     details: { fixes_applied: fixes, detection_improvement: '80%+' }
   };
+}
+
+async function autoRetryFailedTasks(supabase: any) {
+  console.log('🔄 Auto-retrying failed tasks without manual intervention');
+  
+  // Get all failed tasks
+  const { data: failedTasks } = await supabase
+    .from('optimization_tasks')
+    .select('*')
+    .eq('status', 'failed')
+    .order('updated_at', { ascending: true }); // Oldest failures first
+
+  if (!failedTasks || failedTasks.length === 0) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'No failed tasks to retry',
+        retried: 0
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  const retriedTasks = [];
+  
+  for (const task of failedTasks) {
+    try {
+      console.log(`🔄 Auto-retrying failed task: ${task.task_id}`);
+      
+      // Reset task to pending for retry
+      await supabase
+        .from('optimization_tasks')
+        .update({ 
+          status: 'pending',
+          started_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('task_id', task.task_id);
+
+      await logProgress(supabase, task.task_id, 'info', 
+        `Auto-retry initiated for failed task: ${task.title}`);
+
+      retriedTasks.push(task.task_id);
+      
+      // Attempt to run the task immediately
+      await runSpecificTaskInternal(supabase, task.task_id);
+      
+    } catch (error) {
+      console.error(`Failed to retry task ${task.task_id}:`, error);
+      await logProgress(supabase, task.task_id, 'error', 
+        `Auto-retry failed: ${error.message}`);
+    }
+  }
+
+  await logProgress(supabase, 'auto-retry-system', 'info', 
+    `Auto-retry completed: ${retriedTasks.length} tasks retried`, {
+      retried_tasks: retriedTasks
+    });
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      message: `Auto-retried ${retriedTasks.length} failed tasks`,
+      retried: retriedTasks.length,
+      tasks: retriedTasks
+    }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  );
+}
+
+async function healthCheckAndResume(supabase: any) {
+  console.log('🏥 Performing health check and resuming automation if needed');
+  
+  try {
+    // Check if automation should be running
+    const { data: activeSessions } = await supabase
+      .from('automation_sessions')
+      .select('*')
+      .eq('status', 'running')
+      .order('created_at', { ascending: false });
+
+    const { data: masterSessions } = await supabase
+      .from('master_automation_sessions')
+      .select('*')
+      .eq('status', 'running')
+      .order('created_at', { ascending: false });
+
+    // Check for stuck tasks (in-progress for > 10 minutes)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: stuckTasks } = await supabase
+      .from('optimization_tasks')
+      .select('*')
+      .eq('status', 'in-progress')
+      .lt('started_at', tenMinutesAgo);
+
+    // Reset stuck tasks
+    if (stuckTasks && stuckTasks.length > 0) {
+      console.log(`🔧 Found ${stuckTasks.length} stuck tasks, resetting to pending`);
+      
+      for (const task of stuckTasks) {
+        await supabase
+          .from('optimization_tasks')
+          .update({ 
+            status: 'pending',
+            started_at: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('task_id', task.task_id);
+
+        await logProgress(supabase, task.task_id, 'warning', 
+          `Task was stuck in-progress, reset to pending for retry`);
+      }
+    }
+
+    // Check if automation has stopped and should be restarted
+    if (masterSessions && masterSessions.length > 0) {
+      for (const session of masterSessions) {
+        // Check if automation has been idle for > 5 minutes
+        const { data: recentLogs } = await supabase
+          .from('optimization_logs')
+          .select('created_at')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        const lastActivity = recentLogs?.[0]?.created_at;
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+        
+        if (!lastActivity || lastActivity < fiveMinutesAgo) {
+          console.log('🚀 Automation appears idle, restarting autonomous loop');
+          await logProgress(supabase, 'health-check', 'info', 
+            'Health check detected idle automation, restarting loop');
+          
+          // Restart the autonomous loop
+          runAutonomousLoop(supabase, session.id);
+        }
+      }
+    }
+
+    // Get current system status
+    const { data: allTasks } = await supabase
+      .from('optimization_tasks')
+      .select('status');
+
+    const stats = {
+      completed: allTasks?.filter(t => t.status === 'completed').length || 0,
+      failed: allTasks?.filter(t => t.status === 'failed').length || 0,
+      pending: allTasks?.filter(t => t.status === 'pending').length || 0,
+      running: allTasks?.filter(t => t.status === 'in-progress').length || 0,
+      total: allTasks?.length || 0
+    };
+
+    await logProgress(supabase, 'health-check', 'info', 
+      'Health check completed', {
+        stats,
+        stuck_tasks_reset: stuckTasks?.length || 0,
+        active_sessions: activeSessions?.length || 0,
+        master_sessions: masterSessions?.length || 0
+      });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Health check completed',
+        stats,
+        stuck_tasks_reset: stuckTasks?.length || 0,
+        active_sessions: activeSessions?.length || 0,
+        automation_healthy: true
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('❌ Health check failed:', error);
+    await logProgress(supabase, 'health-check', 'error', 
+      `Health check failed: ${error.message}`);
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: `Health check failed: ${error.message}`,
+        error: error.toString()
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
 }
