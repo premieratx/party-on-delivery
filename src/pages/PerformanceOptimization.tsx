@@ -1,33 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// AUTO-START FULLY AUTONOMOUS AUTOMATION
-setTimeout(async () => {
-  try {
-    console.log('🚀 AUTO-STARTING FULLY AUTONOMOUS AUTOMATION...');
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(
-      "https://acmlfzfliqupwxwoefdq.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns"
-    );
-    
-    // Execute the saved automation template
-    const { data, error } = await supabase.functions.invoke('optimization-automation', {
-      body: { 
-        action: 'execute_template',
-        template_name: 'Complete App Launch Automation'
-      }
-    });
-    
-    if (error) {
-      console.error('❌ Template execution failed:', error);
-    } else {
-      console.log('✅ AUTONOMOUS AUTOMATION STARTED:', data);
-      console.log(`🤖 Fully autonomous mode activated - ${data.total_tasks} tasks`);
-      console.log('🔧 Self-healing enabled - no user interaction required');
-    }
-  } catch (autoError) {
-    console.error('❌ Autonomous automation error:', autoError);
-  }
-}, 1000);
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
