@@ -75,8 +75,8 @@ Deno.serve(async (req) => {
         return await healthCheckAndResume(supabase);
       
       case 'execute_template':
-        const { template_name } = await req.json();
-        return await executeAutomationTemplate(supabase, template_name || 'Complete App Launch Automation');
+        const { data } = await req.json();
+        return await executeAutomationTemplate(supabase, data?.template_name || 'Complete App Launch Automation');
       
       case 'run_phase':
         const { phase_name } = await req.json();
