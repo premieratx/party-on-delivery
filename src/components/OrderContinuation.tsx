@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PartyPlanningButton } from '@/components/PartyPlanningButton';
-import { ShoppingBag, Plus, ArrowRight, Users, Crown } from 'lucide-react';
+import { ShoppingBag, Plus, ArrowRight, Users, Crown, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/party-on-delivery-logo.png';
 
@@ -87,8 +87,20 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             Login to Manage Order
           </Button>
           
-          {/* Concierge Service button */}
+          {/* Performance Optimization button */}
           <div className="pt-2 border-t border-border">
+            <Button 
+              onClick={() => navigate('/performance-optimization')}
+              className="w-full h-10 text-sm"
+              variant="ghost"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Performance Dashboard
+            </Button>
+          </div>
+          
+          {/* Concierge Service button */}
+          <div className="pt-2">
             <Button 
               onClick={() => navigate('/concierge')}
               className="w-full h-10 text-sm"

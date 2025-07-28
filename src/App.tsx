@@ -31,6 +31,7 @@ import CustomSiteView from "./pages/CustomSiteView";
 import { CustomCollectionCreator } from "./pages/CustomCollectionCreator";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
+import PerformanceOptimization from "./pages/PerformanceOptimization";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +90,9 @@ const App = () => {
                 
                 {/* Concierge Service Route */}
                 <Route path="/concierge" element={<ConciergeService />} />
+                
+                {/* Performance Optimization Route */}
+                <Route path="/performance-optimization" element={<PerformanceOptimization />} />
                 
                 {/* Custom Site Routes */}
                 <Route path="/custom-sites" element={<CustomSiteManagement />} />
