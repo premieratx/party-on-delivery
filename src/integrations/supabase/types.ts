@@ -454,6 +454,48 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_templates: {
+        Row: {
+          automation_config: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          execution_settings: Json
+          id: string
+          is_active: boolean
+          tasks_config: Json
+          template_name: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          automation_config?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          execution_settings?: Json
+          id?: string
+          is_active?: boolean
+          tasks_config?: Json
+          template_name: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          automation_config?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          execution_settings?: Json
+          id?: string
+          is_active?: boolean
+          tasks_config?: Json
+          template_name?: string
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
       autonomous_execution_logs: {
         Row: {
           action: string
@@ -1965,6 +2007,10 @@ export type Database = {
       cleanup_expired_orders: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      execute_automation_template: {
+        Args: { template_name_param: string }
+        Returns: Json
       }
       generate_affiliate_code: {
         Args: { company_name: string }

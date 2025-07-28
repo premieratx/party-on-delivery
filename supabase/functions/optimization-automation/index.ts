@@ -74,6 +74,10 @@ Deno.serve(async (req) => {
       case 'health_check_and_resume':
         return await healthCheckAndResume(supabase);
       
+      case 'execute_template':
+        const { template_name } = await req.json();
+        return await executeAutomationTemplate(supabase, template_name || 'Complete App Launch Automation');
+      
       case 'run_phase':
         const { phase_name } = await req.json();
         return await runSpecificPhase(supabase, phase_name);
@@ -2328,7 +2332,120 @@ async function healthCheckAndResume(supabase: any) {
           
           // Restart the autonomous loop
           runAutonomousLoop(supabase, session.id);
+}
+
+async function executeAutomationTemplate(supabase: any, templateName: string) {
+  console.log('🎯 Executing automation template:', templateName);
+  
+  try {
+    // Get the template from database
+    const { data: template, error: templateError } = await supabase
+      .from('automation_templates')
+      .select('*')
+      .eq('template_name', templateName)
+      .eq('is_active', true)
+      .single();
+
+    if (templateError || !template) {
+      throw new Error(`Template not found: ${templateName}`);
+    }
+
+    console.log('✅ Found template:', template.template_name);
+
+    // Parse configuration
+    const config = template.automation_config;
+    const tasks = template.tasks_config;
+    const settings = template.execution_settings;
+
+    // Create master automation session based on template
+    const { data: masterSession, error: masterError } = await supabase
+      .from('master_automation_sessions')
+      .insert({
+        session_name: `${templateName} - Template Execution`,
+        phases_included: config.phases || [],
+        total_phases: config.phases?.length || 0,
+        current_phase: config.phases?.[0] || 'Setup & Configuration',
+        parallel_execution_enabled: config.parallel_execution || true,
+        autonomous_mode: config.autonomous_mode || true
+      })
+      .select()
+      .single();
+
+    if (masterError) {
+      throw new Error(`Failed to create master session: ${masterError.message}`);
+    }
+
+    // Update all tasks to be autonomous based on template
+    for (const taskConfig of tasks) {
+      await supabase
+        .from('optimization_tasks')
+        .update({
+          status: 'pending',
+          autonomous_capable: taskConfig.autonomous !== false,
+          automation_capable: true,
+          started_at: null,
+          completed_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('task_id', taskConfig.task_id);
+    }
+
+    // Log template execution
+    await logProgress(supabase, 'template-execution', 'info', 
+      `Executing automation template: ${templateName}`, {
+        template_id: template.id,
+        master_session_id: masterSession.id,
+        autonomous_mode: config.autonomous_mode,
+        self_healing: config.self_healing,
+        total_tasks: tasks.length
+      });
+
+    // Start completely autonomous execution
+    if (config.autonomous_mode) {
+      console.log('🤖 Starting fully autonomous execution mode');
+      
+      // Remove all user interaction requirements
+      await logProgress(supabase, 'autonomous-mode', 'info', 
+        'Autonomous mode activated - no user interaction required');
+      
+      // Start the enhanced autonomous loop
+      runAutonomousLoop(supabase, masterSession.id);
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        template_id: template.id,
+        master_session_id: masterSession.id,
+        message: `Template "${templateName}" loaded and autonomous execution started`,
+        autonomous_mode: config.autonomous_mode,
+        self_healing: config.self_healing,
+        total_tasks: tasks.length,
+        config: {
+          user_interaction_required: false,
+          auto_retry_failed_tasks: config.auto_retry_failed_tasks,
+          continue_on_errors: settings.continue_on_errors,
+          fully_autonomous: true
         }
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('❌ Template execution failed:', error);
+    await logProgress(supabase, 'template-execution', 'error', 
+      `Template execution failed: ${error.message}`);
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: `Template execution failed: ${error.message}`,
+        error: error.toString()
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
       }
     }
 
