@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AutomationControls } from '@/components/performance/AutomationControls';
 
 interface OptimizationTask {
   id: string;
@@ -319,44 +320,59 @@ const PerformanceOptimization = () => {
           </div>
         </div>
 
-        {/* Overall Progress */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Optimization Progress</span>
-              <Badge variant="outline">{overallProgress}% Complete</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress value={overallProgress} className="mb-4" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div className="text-center">
-                <div className="font-semibold text-green-600">
-                  {optimizationTasks.filter(t => t.status === 'completed').length}
+        {/* Automation Controls Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-1">
+            <AutomationControls
+              onStartAutomation={startAutomation}
+              isRunning={isAutomationRunning}
+              session={automationSession}
+            />
+          </div>
+          
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>System Status</span>
+                  <div className="flex items-center gap-2">
+                    {isAutomationRunning ? (
+                      <Badge variant="default" className="animate-pulse">
+                        🤖 Active
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Idle</Badge>
+                    )}
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-muted/50 rounded">
+                      <div className="text-2xl font-bold text-primary">
+                        {optimizationTasks.filter(t => t.status === 'completed').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Tasks Completed</div>
+                    </div>
+                    <div className="text-center p-4 bg-muted/50 rounded">
+                      <div className="text-2xl font-bold text-muted-foreground">
+                        {optimizationTasks.filter(t => t.status === 'pending').length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">Tasks Remaining</div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    The automation engine analyzes your codebase and provides detailed 
+                    recommendations for performance improvements. Each task includes 
+                    specific implementation guidance and impact estimates.
+                  </div>
                 </div>
-                <div className="text-muted-foreground">Completed</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-blue-600">
-                  {optimizationTasks.filter(t => t.status === 'in-progress').length}
-                </div>
-                <div className="text-muted-foreground">In Progress</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-gray-600">
-                  {optimizationTasks.filter(t => t.status === 'pending').length}
-                </div>
-                <div className="text-muted-foreground">Pending</div>
-              </div>
-              <div className="text-center">
-                <div className="font-semibold text-primary">
-                  {optimizationTasks.filter(t => t.priority === 'high').length}
-                </div>
-                <div className="text-muted-foreground">High Priority</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="tasks" className="space-y-6">
