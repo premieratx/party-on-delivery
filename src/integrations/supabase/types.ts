@@ -412,6 +412,48 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_sessions: {
+        Row: {
+          completed_at: string | null
+          completed_tasks: number
+          created_at: string
+          failed_tasks: number
+          id: string
+          next_task_id: string | null
+          session_name: string
+          started_at: string
+          status: string
+          total_tasks: number
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_tasks?: number
+          created_at?: string
+          failed_tasks?: number
+          id?: string
+          next_task_id?: string | null
+          session_name: string
+          started_at?: string
+          status?: string
+          total_tasks?: number
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_tasks?: number
+          created_at?: string
+          failed_tasks?: number
+          id?: string
+          next_task_id?: string | null
+          session_name?: string
+          started_at?: string
+          status?: string
+          total_tasks?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       autonomous_execution_logs: {
         Row: {
           action: string
@@ -1031,6 +1073,96 @@ export type Database = {
         }
         Relationships: []
       }
+      optimization_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          file_path: string | null
+          id: string
+          line_number: number | null
+          log_level: string
+          message: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          file_path?: string | null
+          id?: string
+          line_number?: number | null
+          log_level: string
+          message: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          file_path?: string | null
+          id?: string
+          line_number?: number | null
+          log_level?: string
+          message?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
+      optimization_tasks: {
+        Row: {
+          actual_time_minutes: number | null
+          automation_capable: boolean
+          automation_function: string | null
+          category: string
+          completed_at: string | null
+          created_at: string
+          description: string
+          estimated_time: string
+          id: string
+          prerequisites: string[] | null
+          priority: string
+          started_at: string | null
+          status: string
+          task_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_time_minutes?: number | null
+          automation_capable?: boolean
+          automation_function?: string | null
+          category: string
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          estimated_time: string
+          id?: string
+          prerequisites?: string[] | null
+          priority: string
+          started_at?: string | null
+          status?: string
+          task_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_time_minutes?: number | null
+          automation_capable?: boolean
+          automation_function?: string | null
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          estimated_time?: string
+          id?: string
+          prerequisites?: string[] | null
+          priority?: string
+          started_at?: string | null
+          status?: string
+          task_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_groups: {
         Row: {
           created_at: string
@@ -1100,6 +1232,36 @@ export type Database = {
           error_rate?: number | null
           id?: string
           timestamp?: string
+        }
+        Relationships: []
+      }
+      performance_metrics_history: {
+        Row: {
+          id: string
+          measured_at: string
+          measurement_context: Json | null
+          metric_name: string
+          target_value: number
+          unit: string
+          value: number
+        }
+        Insert: {
+          id?: string
+          measured_at?: string
+          measurement_context?: Json | null
+          metric_name: string
+          target_value: number
+          unit: string
+          value: number
+        }
+        Update: {
+          id?: string
+          measured_at?: string
+          measurement_context?: Json | null
+          metric_name?: string
+          target_value?: number
+          unit?: string
+          value?: number
         }
         Relationships: []
       }

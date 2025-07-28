@@ -19,100 +19,213 @@ import {
   Database,
   Image as ImageIcon,
   Code,
-  Wifi
+  Wifi,
+  Play,
+  Pause,
+  RefreshCw
 } from 'lucide-react';
-
-interface PerformanceMetric {
-  name: string;
-  current: number;
-  target: number;
-  unit: string;
-  status: 'good' | 'warning' | 'poor';
-}
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface OptimizationTask {
   id: string;
+  task_id: string;
   title: string;
   description: string;
-  category: 'bundle' | 'images' | 'components' | 'mobile' | 'caching' | 'database';
-  status: 'pending' | 'in-progress' | 'completed';
-  impact: 'high' | 'medium' | 'low';
-  estimatedTime: string;
+  category: string;
+  priority: string;
+  status: string;
+  estimated_time: string;
+  automation_capable: boolean;
+  prerequisites: string[];
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+interface AutomationSession {
+  id: string;
+  session_name: string;
+  status: string;
+  total_tasks: number;
+  completed_tasks: number;
+  failed_tasks: number;
+  next_task_id?: string;
+  started_at: string;
+  completed_at?: string;
 }
 
 const PerformanceOptimization = () => {
   const navigate = useNavigate();
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([
-    { name: 'First Contentful Paint', current: 2.1, target: 1.5, unit: 's', status: 'warning' },
-    { name: 'Largest Contentful Paint', current: 3.2, target: 2.5, unit: 's', status: 'warning' },
-    { name: 'Time to Interactive', current: 4.1, target: 3.0, unit: 's', status: 'poor' },
-    { name: 'Bundle Size', current: 1.2, target: 0.8, unit: 'MB', status: 'warning' },
-    { name: 'Mobile Performance Score', current: 78, target: 90, unit: '/100', status: 'warning' },
-    { name: 'Desktop Performance Score', current: 85, target: 95, unit: '/100', status: 'warning' }
-  ]);
+  const { toast } = useToast();
+  const [optimizationTasks, setOptimizationTasks] = useState<OptimizationTask[]>([]);
+  const [automationSession, setAutomationSession] = useState<AutomationSession | null>(null);
+  const [isAutomationRunning, setIsAutomationRunning] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [optimizationTasks, setOptimizationTasks] = useState<OptimizationTask[]>([
-    {
-      id: '1',
-      title: 'Implement Code Splitting',
-      description: 'Split routes and components to reduce initial bundle size',
-      category: 'bundle',
-      status: 'pending',
-      impact: 'high',
-      estimatedTime: '2-3 hours'
-    },
-    {
-      id: '2', 
-      title: 'Optimize Image Loading',
-      description: 'Add lazy loading and WebP format for images',
-      category: 'images',
-      status: 'pending',
-      impact: 'high',
-      estimatedTime: '1-2 hours'
-    },
-    {
-      id: '3',
-      title: 'Add React.memo to Components',
-      description: 'Prevent unnecessary re-renders in heavy components',
-      category: 'components',
-      status: 'pending',
-      impact: 'medium',
-      estimatedTime: '2-3 hours'
-    },
-    {
-      id: '4',
-      title: 'Optimize Touch Interactions',
-      description: 'Improve button sizes and touch targets for mobile',
-      category: 'mobile',
-      status: 'pending',
-      impact: 'medium',
-      estimatedTime: '1-2 hours'
-    },
-    {
-      id: '5',
-      title: 'Implement Service Worker',
-      description: 'Add caching strategy for offline functionality',
-      category: 'caching',
-      status: 'pending',
-      impact: 'medium',
-      estimatedTime: '3-4 hours'
-    },
-    {
-      id: '6',
-      title: 'Database Query Optimization',
-      description: 'Optimize Supabase queries and add proper indexing',
-      category: 'database',
-      status: 'pending',
-      impact: 'high',
-      estimatedTime: '2-3 hours'
+  // Load data from Supabase
+  useEffect(() => {
+    loadOptimizationData();
+  }, []);
+
+  const loadOptimizationData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load tasks
+      const { data: tasks, error: tasksError } = await supabase
+        .from('optimization_tasks')
+        .select('*')
+        .order('priority', { ascending: true });
+
+      if (tasksError) throw tasksError;
+      setOptimizationTasks(tasks || []);
+
+      // Load active session
+      const { data: session, error: sessionError } = await supabase
+        .from('automation_sessions')
+        .select('*')
+        .eq('status', 'running')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!sessionError && session) {
+        setAutomationSession(session);
+        setIsAutomationRunning(true);
+      }
+
+      // Load recent logs
+      const { data: recentLogs, error: logsError } = await supabase
+        .from('optimization_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!logsError) {
+        setLogs(recentLogs || []);
+      }
+
+    } catch (error) {
+      console.error('Error loading optimization data:', error);
+      toast({
+        title: "Error loading data",
+        description: "Failed to load optimization data from database.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  const startAutomation = async () => {
+    try {
+      setIsAutomationRunning(true);
+      
+      const { data, error } = await supabase.functions.invoke('optimization-automation', {
+        body: {
+          action: 'start_automation_session',
+          session_name: 'Performance Optimization Automation'
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "🤖 Automation Started",
+        description: `Started optimization session with ${data.total_tasks} tasks`,
+      });
+
+      // Refresh data
+      await loadOptimizationData();
+      
+      // Start continuous monitoring
+      runAutomationLoop();
+      
+    } catch (error) {
+      console.error('Error starting automation:', error);
+      setIsAutomationRunning(false);
+      toast({
+        title: "Automation Error",
+        description: "Failed to start automation session.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const runAutomationLoop = async () => {
+    const runNextTask = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('optimization-automation', {
+          body: { action: 'run_next_task' }
+        });
+
+        if (error) throw error;
+
+        await loadOptimizationData();
+
+        if (data.session_completed) {
+          setIsAutomationRunning(false);
+          toast({
+            title: "🎉 Automation Complete!",
+            description: "All optimization tasks have been completed.",
+          });
+        } else {
+          // Continue to next task after a delay
+          setTimeout(runNextTask, 3000);
+        }
+
+      } catch (error) {
+        console.error('Error running automation task:', error);
+        setIsAutomationRunning(false);
+        toast({
+          title: "Automation Error", 
+          description: "An error occurred during automation.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    // Start the loop
+    setTimeout(runNextTask, 1000);
+  };
+
+  const runSpecificTask = async (taskId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('optimization-automation', {
+        body: {
+          action: 'run_specific_task',
+          task_id: taskId
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: data.success ? "✅ Task Completed" : "❌ Task Failed",
+        description: data.message,
+        variant: data.success ? "default" : "destructive",
+      });
+
+      await loadOptimizationData();
+
+    } catch (error) {
+      console.error('Error running specific task:', error);
+      toast({
+        title: "Task Error",
+        description: "Failed to run the optimization task.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'good': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'poor': return 'text-red-600';
+      case 'completed': return 'text-green-600';
+      case 'in-progress': return 'text-blue-600';
+      case 'failed': return 'text-red-600';
+      case 'blocked': return 'text-yellow-600';
       default: return 'text-gray-600';
     }
   };
@@ -120,8 +233,9 @@ const PerformanceOptimization = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed': return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'in-progress': return <Clock className="w-4 h-4 text-blue-600" />;
-      default: return <AlertCircle className="w-4 h-4 text-gray-400" />;
+      case 'in-progress': return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />;
+      case 'failed': return <AlertCircle className="w-4 h-4 text-red-600" />;
+      default: return <Clock className="w-4 h-4 text-gray-400" />;
     }
   };
 
@@ -137,8 +251,8 @@ const PerformanceOptimization = () => {
     }
   };
 
-  const getImpactColor = (impact: string) => {
-    switch (impact) {
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
       case 'high': return 'destructive';
       case 'medium': return 'secondary';
       case 'low': return 'outline';
@@ -146,30 +260,20 @@ const PerformanceOptimization = () => {
     }
   };
 
-  const overallProgress = Math.round(
-    (optimizationTasks.filter(task => task.status === 'completed').length / optimizationTasks.length) * 100
-  );
+  const overallProgress = optimizationTasks.length > 0 
+    ? Math.round((optimizationTasks.filter(task => task.status === 'completed').length / optimizationTasks.length) * 100)
+    : 0;
 
-  const startOptimization = (taskId: string) => {
-    setOptimizationTasks(prev => 
-      prev.map(task => 
-        task.id === taskId 
-          ? { ...task, status: 'in-progress' }
-          : task
-      )
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Loading optimization dashboard...</p>
+        </div>
+      </div>
     );
-    // Here we would implement the actual optimization logic
-  };
-
-  const runPerformanceAudit = () => {
-    // Simulate running a performance audit
-    console.log('Running performance audit...');
-    // In a real implementation, this would:
-    // 1. Analyze bundle size
-    // 2. Check image optimization
-    // 3. Measure loading times
-    // 4. Test mobile responsiveness
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
@@ -198,10 +302,17 @@ const PerformanceOptimization = () => {
           </div>
 
           <div className="flex gap-3">
-            <Button onClick={runPerformanceAudit} variant="outline">
-              <Gauge className="w-4 h-4 mr-2" />
-              Run Audit
-            </Button>
+            {!isAutomationRunning ? (
+              <Button onClick={startAutomation} variant="outline">
+                <Play className="w-4 h-4 mr-2" />
+                Start Automation
+              </Button>
+            ) : (
+              <Button variant="outline" disabled>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Running...
+              </Button>
+            )}
             <Button onClick={() => navigate('/admin')} variant="ghost">
               Admin Dashboard
             </Button>
@@ -239,24 +350,28 @@ const PerformanceOptimization = () => {
               </div>
               <div className="text-center">
                 <div className="font-semibold text-primary">
-                  {optimizationTasks.filter(t => t.impact === 'high').length}
+                  {optimizationTasks.filter(t => t.priority === 'high').length}
                 </div>
-                <div className="text-muted-foreground">High Impact</div>
+                <div className="text-muted-foreground">High Priority</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="metrics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="metrics" className="flex items-center gap-2">
-              <Monitor className="w-4 h-4" />
-              Metrics
-            </TabsTrigger>
+        <Tabs defaultValue="tasks" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="tasks" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Tasks
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="flex items-center gap-2">
+              <Code className="w-4 h-4" />
+              Logs
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="flex items-center gap-2">
+              <Monitor className="w-4 h-4" />
+              Metrics
             </TabsTrigger>
             <TabsTrigger value="mobile" className="flex items-center gap-2">
               <Smartphone className="w-4 h-4" />
@@ -270,28 +385,12 @@ const PerformanceOptimization = () => {
 
           {/* Performance Metrics Tab */}
           <TabsContent value="metrics">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {performanceMetrics.map((metric, index) => (
-                <Card key={index}>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">{metric.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-end justify-between mb-2">
-                      <div className={`text-2xl font-bold ${getStatusColor(metric.status)}`}>
-                        {metric.current}{metric.unit}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Target: {metric.target}{metric.unit}
-                      </div>
-                    </div>
-                    <Progress 
-                      value={Math.min((metric.target / metric.current) * 100, 100)} 
-                      className="h-2"
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="text-center py-12">
+              <Monitor className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">Performance Metrics</h3>
+              <p className="text-muted-foreground">
+                Real-time performance metrics will be available after automation runs.
+              </p>
             </div>
           </TabsContent>
 
@@ -307,8 +406,8 @@ const PerformanceOptimization = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="font-semibold">{task.title}</h3>
-                            <Badge variant={getImpactColor(task.impact)}>
-                              {task.impact} impact
+                            <Badge variant={getPriorityColor(task.priority)}>
+                              {task.priority} priority
                             </Badge>
                             {getStatusIcon(task.status)}
                           </div>
@@ -316,7 +415,7 @@ const PerformanceOptimization = () => {
                             {task.description}
                           </p>
                           <div className="text-sm text-muted-foreground">
-                            Estimated time: {task.estimatedTime}
+                            Estimated time: {task.estimated_time}
                           </div>
                         </div>
                       </div>
@@ -324,7 +423,7 @@ const PerformanceOptimization = () => {
                         {task.status === 'pending' && (
                           <Button
                             size="sm"
-                            onClick={() => startOptimization(task.id)}
+                            onClick={() => runSpecificTask(task.task_id)}
                           >
                             Start
                           </Button>
@@ -341,6 +440,73 @@ const PerformanceOptimization = () => {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          {/* Real-time Logs Tab */}
+          <TabsContent value="logs">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Real-time Optimization Logs
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={loadOptimizationData}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Refresh
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {logs.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No logs available yet. Start automation to see progress logs.
+                    </div>
+                  ) : (
+                    logs.map((log, index) => (
+                      <div 
+                        key={log.id || index} 
+                        className={`p-3 rounded border-l-4 ${
+                          log.log_level === 'error' ? 'border-red-500 bg-red-50' :
+                          log.log_level === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                          log.log_level === 'success' ? 'border-green-500 bg-green-50' :
+                          'border-blue-500 bg-blue-50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-xs">
+                                {log.task_id || 'system'}
+                              </Badge>
+                              <span className={`text-xs font-medium ${
+                                log.log_level === 'error' ? 'text-red-600' :
+                                log.log_level === 'warning' ? 'text-yellow-600' :
+                                log.log_level === 'success' ? 'text-green-600' :
+                                'text-blue-600'
+                              }`}>
+                                {log.log_level?.toUpperCase()}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground">{log.message}</p>
+                            {log.details && Object.keys(log.details).length > 0 && (
+                              <pre className="text-xs text-muted-foreground mt-2 bg-muted p-2 rounded overflow-x-auto">
+                                {JSON.stringify(log.details, null, 2)}
+                              </pre>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(log.created_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Mobile Optimization Tab */}
