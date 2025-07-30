@@ -754,29 +754,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                            <p className="text-xs text-muted-foreground">
                              Same-day delivery available with 1-hour advance notice. We're closed Sundays.
                            </p>
-                           <Select 
-                             value={deliveryInfo.timeSlot} 
-                             onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
-                           >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select a time slot" />
-                            </SelectTrigger>
-                              <SelectContent className="z-[100] bg-background border shadow-lg max-h-[300px] overflow-y-auto">
-                                {getAvailableTimeSlots().map((slot) => (
-                                  <SelectItem key={slot} value={slot} className="cursor-pointer hover:bg-muted">
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="w-4 h-4" />
-                                      {slot}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                                {getAvailableTimeSlots().length === 0 && (
-                                  <div className="p-2 text-sm text-muted-foreground text-center">
-                                    No time slots available today. Please select a future date.
-                                  </div>
-                                )}
-                              </SelectContent>
-                          </Select>
+                            <Select 
+                              value={deliveryInfo.timeSlot} 
+                              onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
+                            >
+                             <SelectTrigger className="w-full">
+                               <SelectValue placeholder="Select a time slot" />
+                             </SelectTrigger>
+                               <SelectContent className="max-h-[300px]">
+                                 {getAvailableTimeSlots().map((slot) => (
+                                   <SelectItem key={slot} value={slot}>
+                                     <div className="flex items-center gap-2">
+                                       <Clock className="w-4 h-4" />
+                                       {slot}
+                                     </div>
+                                   </SelectItem>
+                                 ))}
+                                 {getAvailableTimeSlots().length === 0 && (
+                                   <div className="p-2 text-sm text-muted-foreground text-center">
+                                     No time slots available today. Please select a future date.
+                                   </div>
+                                 )}
+                               </SelectContent>
+                           </Select>
                         </div>
                         
                         {/* Customer Information in same step */}

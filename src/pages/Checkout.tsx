@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { CheckoutFlow } from "@/components/delivery/CheckoutFlow";
 import { DeliveryInfo } from "@/components/DeliveryWidget";
+import { CheckoutIsolation } from "@/components/checkout/CheckoutIsolation";
 
 interface CartItem {
   productId: string;
@@ -80,7 +81,8 @@ export const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-20">
+    <CheckoutIsolation>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-20">
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Header - Mobile Optimized */}
         <div className="flex items-center justify-between mb-4 sm:mb-6">
@@ -153,13 +155,19 @@ export const Checkout = () => {
           onBack={() => navigate('/plan-my-party')}
           onDeliveryInfoChange={setDeliveryInfo}
           onUpdateQuantity={(id, variant, quantity) => {
-            setCartItems(prev => prev.map(item => 
-              item.productId === id ? { ...item, quantity } : item
-            ));
+            setCartItems(prev => {
+              const updatedItems = prev.map(item => 
+                item.productId === id ? { ...item, quantity } : item
+              );
+              // Save to localStorage immediately
+              localStorage.setItem('party-cart', JSON.stringify(updatedItems));
+              return updatedItems;
+            });
           }}
         />
       </div>
     </div>
+    </CheckoutIsolation>
   );
 };
 

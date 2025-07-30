@@ -195,18 +195,26 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                 <Clock className="w-4 h-4" />
                 Delivery Time
               </Label>
-              <Select value={timeSlot} onValueChange={setTimeSlot}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a time slot" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getAvailableTimeSlots().map((slot) => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+               <Select value={timeSlot} onValueChange={setTimeSlot}>
+                 <SelectTrigger>
+                   <SelectValue placeholder="Select a time slot" />
+                 </SelectTrigger>
+                 <SelectContent className="max-h-[300px]">
+                   {getAvailableTimeSlots().map((slot) => (
+                     <SelectItem key={slot} value={slot}>
+                       <div className="flex items-center gap-2">
+                         <Clock className="w-4 h-4" />
+                         {slot}
+                       </div>
+                     </SelectItem>
+                   ))}
+                   {getAvailableTimeSlots().length === 0 && (
+                     <div className="p-2 text-sm text-muted-foreground text-center">
+                       No time slots available today. Please select a future date.
+                     </div>
+                   )}
+                 </SelectContent>
+               </Select>
             </div>
 
             {/* Continue Button */}

@@ -159,4 +159,16 @@ All colors MUST be HSL.
     min-height: 100vh;
     min-height: -webkit-fill-available;
   }
+
+  /* Checkout mode optimizations */
+  body.checkout-mode {
+    /* Reduce animations and distractions during checkout */
+    animation-duration: 0.1s !important;
+    transition-duration: 0.1s !important;
+  }
+  
+  body.checkout-mode * {
+    /* Ensure checkout elements are properly interactive */
+    pointer-events: auto;
+  }
 }

@@ -55,27 +55,29 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
   const canGoForward = currentIndex < history.length - 1 && currentIndex !== -1;
 
   const handleBack = () => {
-    console.log('Back button clicked, can go back:', canGoBack);
-    console.log('Current index:', currentIndex, 'History:', history);
     if (canGoBack) {
       const previousPath = history[currentIndex - 1].path;
-      console.log('Navigating to previous path:', previousPath);
       navigate(previousPath);
+    } else {
+      // If no history, go to appropriate fallback page
+      if (location.pathname.includes('checkout')) {
+        navigate('/plan-my-party');
+      } else if (location.pathname.includes('search') || location.pathname.includes('product-search')) {
+        navigate('/plan-my-party');
+      } else {
+        navigate('/');
+      }
     }
   };
 
   const handleForward = () => {
-    console.log('Forward button clicked, can go forward:', canGoForward);
-    console.log('Current index:', currentIndex, 'History:', history);
     if (canGoForward) {
       const nextPath = history[currentIndex + 1].path;
-      console.log('Navigating to next path:', nextPath);
       navigate(nextPath);
     }
   };
 
   const handleHome = () => {
-    console.log('Home button clicked');
     navigate('/');
   };
 
