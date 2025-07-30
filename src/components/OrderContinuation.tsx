@@ -59,7 +59,11 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
         <CardContent className="space-y-3 pb-4">
           {/* Start New Order button */}
           <Button 
-            onClick={onStartNewOrder}
+            onClick={() => {
+              onStartNewOrder();
+              // Ensure we navigate to delivery app
+              navigate('/?start=delivery');
+            }}
             className="w-full h-12 text-base"
             variant="default"
           >
@@ -69,7 +73,11 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           
           {/* Resume Order button - always show */}
           <Button 
-            onClick={onResumeOrder}
+            onClick={() => {
+              onResumeOrder();
+              // Ensure we navigate to delivery app
+              navigate('/?start=delivery');
+            }}
             className="w-full h-12 text-base"
             variant="outline"
           >
