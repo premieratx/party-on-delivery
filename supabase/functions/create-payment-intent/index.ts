@@ -163,17 +163,7 @@ serve(async (req) => {
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
         discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
         group_order_number: (groupOrderNumber || '').substring(0, 50),
-        group_order_token: (groupOrderToken || '').substring(0, 50),
-        // Store full cart data separately for create-shopify-order function
-        full_cart_data: JSON.stringify({
-          cartItems,
-          customerInfo,
-          deliveryInfo,
-          appliedDiscount,
-          tipAmount,
-          groupOrderNumber,
-          groupOrderToken
-        }).substring(0, 500) // Emergency backup truncation
+        group_order_token: (groupOrderToken || '').substring(0, 50)
       }
     });
 

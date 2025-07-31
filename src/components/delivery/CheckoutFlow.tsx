@@ -302,14 +302,19 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         // Check if we have group order token to get original buyer info
         const groupOrderToken = localStorage.getItem('groupOrderToken');
         if (groupOrderToken && isAddingToOrder) {
+          console.log('🔗 Group order token found:', groupOrderToken);
           // Fetch original order info to get buyer's last name
           supabase.functions.invoke('get-group-order', {
             body: { shareToken: groupOrderToken }
           }).then(({ data, error }) => {
+            console.log('📊 Group order response:', { data, error });
+            
             if (data?.success && data.originalOrder) {
               const customerName = data.originalOrder.customer_name || '';
               const lastName = customerName.split(' ').pop()?.toUpperCase() || 'ORDER';
               const groupDiscountCode = `GROUP-SHIPPING-${lastName}`;
+              
+              console.log('✅ Generated group discount code:', groupDiscountCode);
               
               setAppliedDiscount({ code: groupDiscountCode, type: 'free_shipping', value: 0 });
               setDiscountCode(groupDiscountCode);
@@ -317,12 +322,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 onDiscountChange({ code: groupDiscountCode, type: 'free_shipping', value: 0 });
               }
             } else {
+              console.log('❌ Could not get original order info, using fallback. Error:', error);
               // Fallback to PREMIER2025 if we can't get original order info
               setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
               setDiscountCode('PREMIER2025');
               if (onDiscountChange) {
                 onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
               }
+            }
+          }).catch(err => {
+            console.error('❌ Error invoking get-group-order function:', err);
+            // Fallback to PREMIER2025 on error
+            setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+            setDiscountCode('PREMIER2025');
+            if (onDiscountChange) {
+              onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
             }
           });
         } else {
