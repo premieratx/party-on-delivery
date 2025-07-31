@@ -69,6 +69,21 @@ export const DeliveryWidget: React.FC = () => {
     const customerParam = urlParams.get('customer');
     const discountParam = urlParams.get('discount');
     const shareParam = urlParams.get('share');
+    const checkoutParam = urlParams.get('checkout');
+    
+    // Handle checkout parameter - scroll to checkout section
+    if (checkoutParam === 'true') {
+      console.log('Checkout parameter detected, scrolling to checkout');
+      setTimeout(() => {
+        const checkoutElement = document.querySelector('[data-checkout-section]');
+        if (checkoutElement) {
+          checkoutElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 500);
+      // Clear the URL params to clean up the URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
     
     // Handle share parameter for group orders
     if (shareParam) {

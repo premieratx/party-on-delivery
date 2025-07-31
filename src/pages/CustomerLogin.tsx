@@ -34,11 +34,26 @@ const CustomerLogin = () => {
           await linkSessionToUser(session.user.email);
         }
         
-        // Clear redirect intent and navigate to dashboard
-        localStorage.removeItem('loginRedirectIntent');
-        window.location.replace('/customer/dashboard');
+        // Redirect to intended destination
+        const redirectTo = redirectParam === 'dashboard' ? '/customer/dashboard' : (returnUrl || '/customer/dashboard');
+        console.log('Redirecting to:', redirectTo);
+        window.location.replace(redirectTo);
       } catch (error) {
         console.error('Customer auth processing error:', error);
+        setIsLoading(false);
+      }
+    };
+
+    // Check for existing session first
+    const checkExistingSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && mounted) {
+          console.log('Found existing customer session, processing...');
+          await processAuth(session);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
         setIsLoading(false);
       }
     };
@@ -61,42 +76,29 @@ const CustomerLogin = () => {
       }
     );
 
-    // Check existing session
-    const checkExistingSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && mounted) {
-          await processAuth(session);
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-      }
-    };
-
+    // Check existing session after setting up listener
     checkExistingSession();
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, linkSessionToUser]);
+  }, [navigate, linkSessionToUser, redirectParam, returnUrl]);
 
   const handleGoogleLogin = async () => {
     if (isLoading) return; // Prevent double clicks
     
     setIsLoading(true);
+    console.log('Initiating Google login...');
+    
     try {
-      // Clear any existing redirect intents and sessions
-      localStorage.removeItem('loginRedirectIntent');
-      await supabase.auth.signOut();
-      
-      // Use current origin for redirect
-      const redirectUrl = `${window.location.origin}/customer/login`;
+      // Use current URL for redirect to preserve params
+      const currentUrl = window.location.href;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: currentUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',

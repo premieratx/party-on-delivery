@@ -26,7 +26,9 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
   const finalTotal = subtotal + deliveryFee + salesTax;
 
   const handleCheckout = () => {
-    navigate('/checkout');
+    console.log('Navigating to checkout from unified cart');
+    // Navigate to the main checkout flow
+    navigate('/?checkout=true');
     onClose();
   };
 

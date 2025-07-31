@@ -1020,9 +1020,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
               {/* Customer Information moved inside Date/Time section */}
 
-             {/* Embedded Payment */}
              {currentStep === 'payment' && (
-               <EmbeddedPaymentForm
+               <div data-checkout-section>
+                <EmbeddedPaymentForm
                  cartItems={cartItems}
                  subtotal={discountedSubtotal}
                  deliveryFee={finalDeliveryFee}
@@ -1048,8 +1048,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 setDiscountCode={setDiscountCode}
                 handleApplyDiscount={handleApplyDiscount}
                 handleRemoveDiscount={handleRemoveDiscount}
-              />
-            )}
+               />
+               </div>
+             )}
           </div>
 
           {/* Order Summary */}

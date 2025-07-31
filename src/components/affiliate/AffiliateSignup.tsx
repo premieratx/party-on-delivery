@@ -116,23 +116,21 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
     console.log('Google auth clicked');
     setLoading(true);
     try {
-      // Use Supabase SDK with redirect URL pointing to dashboard for direct login
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/affiliate/dashboard`,
+          redirectTo: `${window.location.origin}/affiliate/intro`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
-          }
+          },
+          skipBrowserRedirect: false,
         }
       });
       
       if (error) {
         throw error;
       }
-      
-      // The redirect will happen automatically, no need to handle it here
       
     } catch (error: any) {
       console.error('Google auth error:', error);

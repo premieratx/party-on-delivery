@@ -96,10 +96,9 @@ export const AdminLogin: React.FC = () => {
     if (googleLoading) return; // Prevent double clicks
     
     setGoogleLoading(true);
+    console.log('Initiating admin Google login...');
+    
     try {
-      // Clear any existing session to ensure clean login
-      await supabase.auth.signOut();
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
