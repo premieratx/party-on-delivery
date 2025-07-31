@@ -39,6 +39,7 @@ interface Order {
   share_token?: string;
   customer_id?: string;
   session_id?: string;
+  shopify_order_id?: string;
 }
 
 const CustomerDashboard = () => {
@@ -204,7 +205,20 @@ const CustomerDashboard = () => {
           .order('created_at', { ascending: false });
 
         if (ordersError) throw ordersError;
-        setOrders(ordersData || []);
+        
+        // Remove duplicates based on shopify_order_id and id
+        const uniqueOrders = ordersData?.reduce((acc, order) => {
+          const existingOrder = acc.find(o => 
+            (o.shopify_order_id && o.shopify_order_id === order.shopify_order_id) ||
+            o.id === order.id
+          );
+          if (!existingOrder) {
+            acc.push(order);
+          }
+          return acc;
+        }, [] as any[]);
+        
+        setOrders(uniqueOrders || []);
       } else if (dashboardData.error) {
         throw new Error(dashboardData.error);
       } else {
@@ -242,8 +256,12 @@ const CustomerDashboard = () => {
             if (belongsToCustomer) {
               if (payload.eventType === 'INSERT') {
                 setOrders(prevOrders => {
-                  // Avoid duplicates
-                  if (prevOrders.some(o => o.id === order.id)) return prevOrders;
+                  // Avoid duplicates based on both id and shopify_order_id
+                  const isDuplicate = prevOrders.some(o => 
+                    o.id === order.id || 
+                    (o.shopify_order_id && order.shopify_order_id && o.shopify_order_id === order.shopify_order_id)
+                  );
+                  if (isDuplicate) return prevOrders;
                   return [order, ...prevOrders];
                 });
                 toast({
