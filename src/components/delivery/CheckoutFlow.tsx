@@ -758,12 +758,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                               value={deliveryInfo.timeSlot} 
                               onValueChange={(value) => updateDeliveryInfo('timeSlot', value)}
                             >
-                             <SelectTrigger className="w-full">
+                             <SelectTrigger className="w-full relative z-[100]">
                                <SelectValue placeholder="Select a time slot" />
                              </SelectTrigger>
-                               <SelectContent className="max-h-[300px]">
+                               <SelectContent 
+                                 className="max-h-[300px] z-[999] bg-popover border shadow-lg pointer-events-auto"
+                                 onPointerDownOutside={(e) => {
+                                   // Only close if clicking outside the select content
+                                   const target = e.target as HTMLElement;
+                                   if (!target.closest('[data-radix-select-content]')) {
+                                     // Allow closing
+                                     return;
+                                   }
+                                   e.preventDefault();
+                                 }}
+                               >
                                  {getAvailableTimeSlots().map((slot) => (
-                                   <SelectItem key={slot} value={slot}>
+                                   <SelectItem 
+                                     key={slot} 
+                                     value={slot}
+                                     className="cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                                   >
                                      <div className="flex items-center gap-2">
                                        <Clock className="w-4 h-4" />
                                        {slot}

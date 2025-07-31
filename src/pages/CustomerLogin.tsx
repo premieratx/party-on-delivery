@@ -86,11 +86,12 @@ const CustomerLogin = () => {
     
     setIsLoading(true);
     try {
-      // Clear any existing redirect intents
+      // Clear any existing redirect intents and sessions
       localStorage.removeItem('loginRedirectIntent');
+      await supabase.auth.signOut();
       
-      // Use current origin for redirect with proper mobile detection
-      const redirectUrl = `${window.location.origin}/customer/dashboard`;
+      // Use current origin for redirect
+      const redirectUrl = `${window.location.origin}/customer/login`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -105,19 +106,16 @@ const CustomerLogin = () => {
       });
 
       if (error) {
-        console.error('OAuth error:', error);
-        toast({
-          title: "Login Error",
-          description: error.message,
-          variant: "destructive",
-        });
-        setIsLoading(false);
+        console.error('OAuth initiation error:', error);
+        throw error;
       }
-    } catch (error) {
+      
+      // Loading state will be cleared by auth state listener
+    } catch (error: any) {
       console.error('Login error:', error);
       toast({
         title: "Login Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
       setIsLoading(false);

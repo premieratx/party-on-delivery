@@ -97,23 +97,32 @@ export const AdminLogin: React.FC = () => {
     
     setGoogleLoading(true);
     try {
+      // Clear any existing session to ensure clean login
+      await supabase.auth.signOut();
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/affiliate/admin-login`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'select_account', // Changed from 'consent' to prevent forcing account selection every time
-          }
+            prompt: 'select_account',
+          },
+          skipBrowserRedirect: false,
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('OAuth initiation error:', error);
+        throw error;
+      }
+      
+      // Loading state will be cleared by auth state listener
     } catch (error: any) {
       console.error('Google login error:', error);
       toast({
-        title: "Error",
-        description: "Failed to sign in with Google. Please try again.",
+        title: "Login Error",
+        description: error.message || "Failed to sign in with Google. Please try again.",
         variant: "destructive"
       });
       setGoogleLoading(false);

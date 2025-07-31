@@ -196,12 +196,27 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                 Delivery Time
               </Label>
                <Select value={timeSlot} onValueChange={setTimeSlot}>
-                 <SelectTrigger>
+                 <SelectTrigger className="relative z-[100]">
                    <SelectValue placeholder="Select a time slot" />
                  </SelectTrigger>
-                 <SelectContent className="max-h-[300px]">
+                 <SelectContent 
+                   className="max-h-[300px] z-[999] bg-popover border shadow-lg pointer-events-auto"
+                   onPointerDownOutside={(e) => {
+                     // Only close if clicking outside the select content
+                     const target = e.target as HTMLElement;
+                     if (!target.closest('[data-radix-select-content]')) {
+                       // Allow closing
+                       return;
+                     }
+                     e.preventDefault();
+                   }}
+                 >
                    {getAvailableTimeSlots().map((slot) => (
-                     <SelectItem key={slot} value={slot}>
+                     <SelectItem 
+                       key={slot} 
+                       value={slot}
+                       className="cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                     >
                        <div className="flex items-center gap-2">
                          <Clock className="w-4 h-4" />
                          {slot}
