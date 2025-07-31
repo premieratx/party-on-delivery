@@ -199,7 +199,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                  <SelectTrigger className="w-full">
                    <SelectValue placeholder="Select a time slot" />
                  </SelectTrigger>
-                 <SelectContent className="max-h-[300px] bg-popover border shadow-lg">
+                 <SelectContent className="max-h-[300px] bg-popover border shadow-lg z-[100]">
                    {getAvailableTimeSlots().map((slot) => (
                      <SelectItem 
                        key={slot} 

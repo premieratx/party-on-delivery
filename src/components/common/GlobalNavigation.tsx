@@ -158,6 +158,8 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
             <span className="sm:hidden">
               {getTotalItems()}
             </span>
+            {/* Debug: track cart updates in console */}
+            {(() => { console.log('🛒 Cart Debug - Items:', getTotalItems(), 'Total:', getTotalPrice()); return null; })()}
           </Button>
         )}
       </div>

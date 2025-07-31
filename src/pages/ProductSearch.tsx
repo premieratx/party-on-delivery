@@ -45,13 +45,20 @@ export const ProductSearch = () => {
     isLoading: loading, 
     isCustomSite, 
     customSiteData, 
-    availableCategories 
+    availableCategories,
+    reload: reloadProducts
   } = useCustomSiteProducts();
   
   // Progressive loading: load favorites first, then other categories
   useEffect(() => {
+    // Force reload of products to ensure we have latest from Shopify
+    console.log('🔄 Reloading products to sync with Shopify...');
+    reloadProducts();
+  }, []);
+
+  useEffect(() => {
     if (!loading && allProducts.length > 0) {
-      console.log(`✅ Loaded ${allProducts.length} products from cache`);
+      console.log(`✅ Loaded ${allProducts.length} products from Shopify`);
       
       // Load favorites immediately
       const favs = getFavoritesProducts(allProducts);
@@ -79,9 +86,10 @@ export const ProductSearch = () => {
         }, (index + 1) * 100); // Faster loading
       });
     } else if (!loading && allProducts.length === 0) {
-      console.warn('⚠️ No products loaded from cache');
+      console.warn('⚠️ No products loaded - attempting reload...');
+      reloadProducts();
     }
-  }, [loading, allProducts, availableCategories]);
+  }, [loading, allProducts, availableCategories, reloadProducts]);
   
   // Get products for current category
   const products = useMemo(() => {
