@@ -21,6 +21,7 @@ import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
+import { useProgressSaver } from '@/hooks/useProgressSaver';
 import { useDeliveryFee } from '@/hooks/useDeliveryFee';
 import { validateEmail, validatePhoneNumber, formatPhoneNumber, getEmailErrorMessage, getPhoneErrorMessage } from '@/utils/validation';
 
@@ -92,6 +93,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Use custom hooks for cleaner state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo, saveCompletedOrder } = useCustomerInfo();
   const checkoutFlow = useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange, affiliateCode });
+  const { saveOrderDraft, saveProgress } = useProgressSaver();
   
   // Ensure checkout flow state is accessible
   const { 
@@ -511,6 +513,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           
           saveCompletedOrder(orderInfo);
           localStorage.setItem('partyondelivery_last_order', JSON.stringify(orderInfo));
+          
+          // Save completed order data to progress tracking
+          await saveProgress({
+            progressType: 'completed_order',
+            data: {
+              paymentIntentId,
+              orderDetails: response.data,
+              customerInfo,
+              addressInfo,
+              cartItems,
+              deliveryInfo,
+              appliedDiscount,
+              completedAt: new Date().toISOString()
+            },
+            pageContext: 'order-completion'
+          });
         }
       } catch (error) {
         console.error('Failed to create Shopify order:', error);

@@ -412,6 +412,33 @@ export type Database = {
         }
         Relationships: []
       }
+      app_state_snapshots: {
+        Row: {
+          app_state: Json
+          created_at: string
+          id: string
+          session_id: string | null
+          snapshot_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_state?: Json
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          snapshot_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_state?: Json
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          snapshot_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       automation_sessions: {
         Row: {
           completed_at: string | null
@@ -1262,6 +1289,48 @@ export type Database = {
         }
         Relationships: []
       }
+      order_drafts: {
+        Row: {
+          checkout_step: string | null
+          created_at: string
+          customer_email: string | null
+          draft_data: Json
+          expires_at: string | null
+          id: string
+          session_id: string | null
+          stripe_session_id: string | null
+          total_amount: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          checkout_step?: string | null
+          created_at?: string
+          customer_email?: string | null
+          draft_data?: Json
+          expires_at?: string | null
+          id?: string
+          session_id?: string | null
+          stripe_session_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          checkout_step?: string | null
+          created_at?: string
+          customer_email?: string | null
+          draft_data?: Json
+          expires_at?: string | null
+          id?: string
+          session_id?: string | null
+          stripe_session_id?: string | null
+          total_amount?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       order_groups: {
         Row: {
           created_at: string
@@ -1489,6 +1558,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_carts: {
+        Row: {
+          affiliate_code: string | null
+          applied_discounts: Json | null
+          cart_items: Json
+          cart_value: number | null
+          created_at: string
+          customer_email: string | null
+          customer_info: Json | null
+          delivery_info: Json | null
+          expires_at: string | null
+          group_order_token: string | null
+          id: string
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          affiliate_code?: string | null
+          applied_discounts?: Json | null
+          cart_items?: Json
+          cart_value?: number | null
+          created_at?: string
+          customer_email?: string | null
+          customer_info?: Json | null
+          delivery_info?: Json | null
+          expires_at?: string | null
+          group_order_token?: string | null
+          id?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          affiliate_code?: string | null
+          applied_discounts?: Json | null
+          cart_items?: Json
+          cart_value?: number | null
+          created_at?: string
+          customer_email?: string | null
+          customer_info?: Json | null
+          delivery_info?: Json | null
+          expires_at?: string | null
+          group_order_token?: string | null
+          id?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       security_audit_log: {
         Row: {
@@ -1892,6 +2012,81 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          delivery_preferences: Json | null
+          id: string
+          notification_settings: Json | null
+          payment_preferences: Json | null
+          preferences: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          delivery_preferences?: Json | null
+          id?: string
+          notification_settings?: Json | null
+          payment_preferences?: Json | null
+          preferences?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          delivery_preferences?: Json | null
+          id?: string
+          notification_settings?: Json | null
+          payment_preferences?: Json | null
+          preferences?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_session_progress: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          expires_at: string | null
+          id: string
+          page_context: string | null
+          progress_data: Json
+          progress_type: string
+          session_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          expires_at?: string | null
+          id?: string
+          page_context?: string | null
+          progress_data?: Json
+          progress_type: string
+          session_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          expires_at?: string | null
+          id?: string
+          page_context?: string | null
+          progress_data?: Json
+          progress_type?: string
+          session_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       voucher_usage: {
         Row: {
           amount_used: number
@@ -2005,6 +2200,10 @@ export type Database = {
         Returns: undefined
       }
       cleanup_expired_orders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_progress: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
