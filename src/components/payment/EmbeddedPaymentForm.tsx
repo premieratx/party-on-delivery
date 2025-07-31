@@ -196,6 +196,38 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         }
       });
       
+      // Validate all required fields before payment
+      if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !customerInfo.phone) {
+        throw new Error('All customer information fields (name, email, phone) are required');
+      }
+      
+      if (!deliveryInfo.address || !deliveryInfo.date || !deliveryInfo.time) {
+        throw new Error('All delivery information fields (address, date, time) are required');
+      }
+      
+      if (!cartItems || cartItems.length === 0) {
+        throw new Error('Cart cannot be empty');
+      }
+      
+      // Log the data being sent for debugging
+      console.log('💡 Sending payment data:', {
+        customerInfo: {
+          firstName: customerInfo.firstName,
+          lastName: customerInfo.lastName,  
+          email: customerInfo.email,
+          phone: customerInfo.phone
+        },
+        deliveryInfo: {
+          address: deliveryInfo.address,
+          date: deliveryInfo.date,
+          time: deliveryInfo.time,
+          timeSlot: deliveryInfo.timeSlot,
+          instructions: deliveryInfo.instructions
+        },
+        cartItems: cartItems.length,
+        groupOrderToken: localStorage.getItem('groupOrderToken')
+      });
+
       // Create payment intent with all pricing details
       const {
         data,

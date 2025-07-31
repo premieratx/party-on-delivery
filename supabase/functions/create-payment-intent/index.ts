@@ -20,7 +20,27 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken } = await req.json();
+    const body = await req.json();
+    logStep("Raw request body received", { bodyKeys: Object.keys(body) });
+    
+    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken } = body;
+    
+    // Validate required fields
+    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      throw new Error("Cart items are required and must be a non-empty array");
+    }
+    
+    if (!customerInfo || !customerInfo.email) {
+      throw new Error("Customer information with email is required");
+    }
+    
+    if (!deliveryInfo || !deliveryInfo.address) {
+      throw new Error("Delivery information with address is required");
+    }
+    
+    if (typeof amount !== 'number' || amount <= 0) {
+      throw new Error(`Invalid amount: ${amount}. Must be a positive number in cents.`);
+    }
     
     logStep("Request data received", { 
       amount, 
@@ -97,18 +117,34 @@ serve(async (req) => {
     const cartItemsJson = JSON.stringify(cartItems);
     logStep("Cart items being stored in metadata", { cartItemsLength: cartItemsJson.length, itemCount });
     
+    // Safely handle metadata to prevent errors
+    const customerName = `${customerInfo.firstName || ''} ${customerInfo.lastName || ''}`.trim();
+    const customerPhone = customerInfo.phone || '';
+    const deliveryDate = deliveryInfo.date || '';
+    const deliveryTime = deliveryInfo.timeSlot || '';
+    const deliveryAddress = deliveryInfo.address || '';
+    const deliveryInstructions = deliveryInfo.instructions || '';
+    
+    logStep("Preparing metadata for payment intent", { 
+      customerName, 
+      customerPhone, 
+      deliveryDate, 
+      deliveryTime,
+      cartItemsLength: cartItemsJson.length
+    });
+
     // Create payment intent with essential metadata (including full cart items)
     const paymentIntent = await stripe.paymentIntents.create({
       amount: validAmount,
       currency,
       metadata: {
-        customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`.substring(0, 100),
+        customer_name: customerName.substring(0, 100),
         customer_email: customerInfo.email.substring(0, 100),
-        customer_phone: customerInfo.phone.substring(0, 50),
-        delivery_date: deliveryInfo.date.substring(0, 50),
-        delivery_time: deliveryInfo.timeSlot.substring(0, 50),
-        delivery_address: deliveryInfo.address.substring(0, 200),
-        delivery_instructions: (deliveryInfo.instructions || '').substring(0, 200),
+        customer_phone: customerPhone.substring(0, 50),
+        delivery_date: deliveryDate.substring(0, 50),
+        delivery_time: deliveryTime.substring(0, 50),
+        delivery_address: deliveryAddress.substring(0, 200),
+        delivery_instructions: deliveryInstructions.substring(0, 200),
         cart_summary: cartSummary,
         cart_items: cartItemsJson, // CRITICAL: Full cart items for Shopify order creation
         item_count: itemCount.toString(),
