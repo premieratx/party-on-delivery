@@ -78,7 +78,8 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
   };
 
   const handleHome = () => {
-    navigate('/');
+    // Always go to the main starting screen (order continuation)
+    navigate('/order/continuation');
   };
 
   const handleCart = () => {
@@ -149,7 +150,8 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
             variant="default"
             size="sm"
             onClick={handleCart}
-            className="h-8 sm:h-9 px-2 sm:px-3 relative text-xs sm:text-sm"
+            className="h-8 sm:h-9 px-2 sm:px-3 relative text-xs sm:text-sm bg-green-600 hover:bg-green-700"
+            key={`cart-${getTotalItems()}-${getTotalPrice()}`} // Force re-render on changes
           >
             <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
             <span className="hidden sm:inline">

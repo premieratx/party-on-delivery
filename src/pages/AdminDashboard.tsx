@@ -22,7 +22,9 @@ import {
   Building,
   MapPin,
   ExternalLink,
-  Edit
+  Edit,
+  Zap,
+  Crown
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import AITestingControl from '@/components/AITestingControl';
@@ -240,6 +242,14 @@ export default function AdminDashboard() {
                   <Button onClick={() => navigate('/admin/product-management')} variant="outline" className="w-full justify-start">
                     <Package className="h-4 w-4 mr-2" />
                     Manage Products
+                  </Button>
+                  <Button onClick={() => navigate('/performance-optimization')} variant="outline" className="w-full justify-start">
+                    <Zap className="h-4 w-4 mr-2" />
+                    Performance Dashboard
+                  </Button>
+                  <Button onClick={() => navigate('/concierge')} variant="outline" className="w-full justify-start">
+                    <Crown className="h-4 w-4 mr-2" />
+                    Concierge Service
                   </Button>
                 </CardContent>
               </Card>
