@@ -103,75 +103,6 @@ export const ProductSearch = () => {
     }
   }, [selectedCategory, allProducts, productsLoaded]);
 
-  // Generate categories based on REAL Shopify collections
-  const categories = useMemo(() => {
-    const baseCategories = [
-      { id: "favorites", label: "⭐ Favorites" },
-      { id: "all", label: "All Categories" }
-    ];
-
-    // Extract unique categories from actual products and map to real Shopify collection titles
-    const realCollectionCategories = new Map<string, string>();
-    
-    // Get unique collection categories from products with proper mapping
-    allProducts.forEach(product => {
-      const categoryId = product.category;
-      if (categoryId && !realCollectionCategories.has(categoryId)) {
-        // Map category IDs to human-readable labels matching delivery app
-        let label = '';
-        const emoji = getEmojiForCategory(categoryId);
-        
-        switch (categoryId) {
-          case 'spirits':
-            label = `${emoji} Spirits`;
-            break;
-          case 'beer':
-            label = `${emoji} Beer`;
-            break;
-          case 'seltzers':
-            label = `${emoji} Seltzers`;
-            break;
-          case 'cocktails':
-            label = `${emoji} Cocktails`;
-            break;
-          case 'wine':
-            label = `${emoji} Wine`;
-            break;
-          case 'mixers':
-            label = `${emoji} Mixers & N/A`;
-            break;
-          case 'party-supplies':
-            label = `${emoji} Party Supplies`;
-            break;
-          default:
-            // For any other categories, create readable labels
-            label = `${emoji} ${categoryId.split('-').map(word => 
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')}`;
-        }
-        
-        realCollectionCategories.set(categoryId, label);
-      }
-    });
-
-    // Convert to category objects in a logical order
-    const sortedCategories = Array.from(realCollectionCategories.entries())
-      .sort(([a], [b]) => {
-        const order = ['spirits', 'beer', 'seltzers', 'cocktails', 'wine', 'mixers', 'party-supplies'];
-        const aIndex = order.indexOf(a);
-        const bIndex = order.indexOf(b);
-        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
-        if (aIndex !== -1) return -1;
-        if (bIndex !== -1) return 1;
-        return a.localeCompare(b);
-      })
-      .map(([id, label]) => ({ id, label }));
-
-    console.log('🏷️ Real categories from Shopify products:', realCollectionCategories);
-    
-    return [...baseCategories, ...sortedCategories];
-  }, [allProducts]);
-
   // Helper function to get emoji for category
   const getEmojiForCategory = (categoryId: string): string => {
     switch (categoryId) {
@@ -185,6 +116,28 @@ export const ProductSearch = () => {
       default: return '📦';
     }
   };
+
+  // Generate categories matching main delivery app
+  const categories = useMemo(() => {
+    const baseCategories = [
+      { id: "favorites", label: "⭐ Favorites" }
+    ];
+
+    // Fixed categories matching delivery app tabs
+    const deliveryAppCategories = [
+      { id: "spirits", label: "🥃 Spirits" },
+      { id: "beer", label: "🍺 Beer" }, 
+      { id: "seltzers", label: "🥤 Seltzers" },
+      { id: "cocktails", label: "🍹 Cocktails" },
+      { id: "mixers", label: "🧊 Mixers & N/A" },
+      { id: "party-supplies", label: "🎉 Party Supplies" },
+      { id: "other", label: "📦 Other" }
+    ];
+
+    console.log('🏷️ Search categories matching delivery app tabs');
+    
+    return [...baseCategories, ...deliveryAppCategories];
+  }, []);
 
   // Products are now loaded via useCustomSiteProducts hook
 
