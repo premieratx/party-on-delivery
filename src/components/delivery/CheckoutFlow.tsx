@@ -294,15 +294,44 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
     deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
 
-  // Auto-apply PREMIER2025 for group orders and when details match (but don't override user-applied discounts)
+  // Auto-apply group discount for group orders and when details match (but don't override user-applied discounts)
   useEffect(() => {
     if (isAddingToOrder || affiliateCode) {
-      // For group orders or affiliate referrals, always apply PREMIER2025 for free shipping unless user has a different discount
+      // For group orders or affiliate referrals, generate custom discount code based on original buyer's last name
       if (!appliedDiscount || appliedDiscount.code === 'SAME_ORDER') {
-        setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
-        setDiscountCode('PREMIER2025');
-        if (onDiscountChange) {
-          onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+        // Check if we have group order token to get original buyer info
+        const groupOrderToken = localStorage.getItem('groupOrderToken');
+        if (groupOrderToken && isAddingToOrder) {
+          // Fetch original order info to get buyer's last name
+          supabase.functions.invoke('get-group-order', {
+            body: { shareToken: groupOrderToken }
+          }).then(({ data, error }) => {
+            if (data?.success && data.originalOrder) {
+              const customerName = data.originalOrder.customer_name || '';
+              const lastName = customerName.split(' ').pop()?.toUpperCase() || 'ORDER';
+              const groupDiscountCode = `GROUP-SHIPPING-${lastName}`;
+              
+              setAppliedDiscount({ code: groupDiscountCode, type: 'free_shipping', value: 0 });
+              setDiscountCode(groupDiscountCode);
+              if (onDiscountChange) {
+                onDiscountChange({ code: groupDiscountCode, type: 'free_shipping', value: 0 });
+              }
+            } else {
+              // Fallback to PREMIER2025 if we can't get original order info
+              setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+              setDiscountCode('PREMIER2025');
+              if (onDiscountChange) {
+                onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+              }
+            }
+          });
+        } else {
+          // Non-group orders or affiliate referrals use PREMIER2025
+          setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+          setDiscountCode('PREMIER2025');
+          if (onDiscountChange) {
+            onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+          }
         }
       }
     } else if (deliveryDetailsMatch && (!appliedDiscount || appliedDiscount.code === 'SAME_ORDER')) {
@@ -344,6 +373,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       case 'PARTYON10':
         return { code: upperCode, type: 'percentage' as const, value: 10 };
       default:
+        // Check if it's a group shipping code (GROUP-SHIPPING-*)
+        if (upperCode.startsWith('GROUP-SHIPPING-')) {
+          return { code: upperCode, type: 'free_shipping' as const, value: 0 };
+        }
         return null;
     }
   };

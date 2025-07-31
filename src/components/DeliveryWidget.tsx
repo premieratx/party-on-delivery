@@ -86,9 +86,9 @@ export const DeliveryWidget: React.FC = () => {
       localStorage.setItem('partyondelivery_add_to_order', 'true');
       
       // Auto-apply discount if provided
-      if (discountParam && discountParam.toUpperCase() === 'PREMIER2025') {
-        setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
-        console.log('Auto-applied PREMIER2025 discount for group order');
+      if (discountParam && (discountParam.toUpperCase() === 'PREMIER2025' || discountParam.startsWith('GROUP-SHIPPING-'))) {
+        setAppliedDiscount({ code: discountParam.toUpperCase(), type: 'free_shipping', value: 0 });
+        console.log('Auto-applied group discount for group order:', discountParam.toUpperCase());
       }
     }
     

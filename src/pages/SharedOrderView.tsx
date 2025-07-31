@@ -130,7 +130,7 @@ const SharedOrderView = () => {
       if (existingParticipant) {
         // Store group order token and navigate to add items to order with auto-applied discount
         localStorage.setItem('groupOrderToken', shareToken);
-        navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
+        navigate(`/?share=${shareToken}&customer=true`);
         return;
       }
 
@@ -154,7 +154,7 @@ const SharedOrderView = () => {
 
       // Store group order token and navigate to shopping with share token and auto-apply discount
       localStorage.setItem('groupOrderToken', shareToken);
-      navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
+      navigate(`/?share=${shareToken}&customer=true`);
 
     } catch (error) {
       console.error('Error joining order:', error);
@@ -401,7 +401,7 @@ const SharedOrderView = () => {
                   </p>
                   <div className="mt-2">
                     <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Free Delivery with code: PREMIER2025
+                      Free Delivery with group order!
                     </Badge>
                   </div>
                 </div>

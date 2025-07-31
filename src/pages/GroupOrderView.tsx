@@ -94,7 +94,8 @@ const GroupOrderView = () => {
   const handleJoinOrder = () => {
     // Store the share token and redirect to shopping with share parameter
     localStorage.setItem('groupOrderToken', shareToken || '');
-    navigate(`/?share=${shareToken}&customer=true&discount=PREMIER2025`);
+    // Navigate without pre-set discount - let CheckoutFlow generate the custom group discount
+    navigate(`/?share=${shareToken}&customer=true`);
   };
 
   const handleLogin = () => {
