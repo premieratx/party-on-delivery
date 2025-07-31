@@ -80,51 +80,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
 
-  // Dynamic step mapping based on available collections
+  // Always use the default main delivery app collections
   const getStepMapping = () => {
-    if (isCustomSite) {
-      // For custom sites, create tabs based on allowed collections from custom site data
-      const customSiteData = localStorage.getItem('customSiteData');
-      if (customSiteData) {
-        const data = JSON.parse(customSiteData);
-        const allowedCollections = data.allowedCollections || [];
-        
-        // Only create tabs for collections that are both allowed AND available in collections
-        const filteredCollections = collections.filter(collection => 
-          allowedCollections.includes(collection.handle)
-        );
-        
-        console.log('Custom site tabs: filtering to allowed collections only:', allowedCollections);
-        console.log('Available collections:', collections.map(c => c.handle));
-        console.log('Filtered collections for tabs:', filteredCollections.map(c => c.handle));
-        
-        return filteredCollections.map((collection, index) => ({
-          step: index + 1,
-          title: collection.title,
-          handle: collection.handle,
-          backgroundImage: getBackgroundForHandle(collection.handle),
-          pageTitle: `Choose Your ${collection.title}`
-        }));
-      }
-      
-      // Fallback: use all collections if no custom site data
-      return collections.map((collection, index) => ({
-        step: index + 1,
-        title: collection.title,
-        handle: collection.handle,
-        backgroundImage: getBackgroundForHandle(collection.handle),
-        pageTitle: `Choose Your ${collection.title}`
-      }));
-    } else {
-      // Default step mapping for main site
-      return [
-        { step: 1, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
-        { step: 2, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
-        { step: 3, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
-        { step: 4, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
-        { step: 5, title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Mixers & Non-Alcoholic Drinks' }
-      ];
-    }
+    return [
+      { step: 1, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
+      { step: 2, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
+      { step: 3, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
+      { step: 4, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
+      { step: 5, title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Mixers & Non-Alcoholic Drinks' }
+    ];
   };
 
   // Helper function to get appropriate background image for collection handle
@@ -139,20 +103,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const stepMapping = getStepMapping();
 
   useEffect(() => {
-    // Check if we're on a custom site first
-    const customSiteData = localStorage.getItem('customSiteData');
-    if (customSiteData) {
-      try {
-        const data = JSON.parse(customSiteData);
-        if (data.isCustomSite && data.allowedCollections) {
-          setIsCustomSite(true);
-          setCustomSiteCollections(data.allowedCollections);
-          console.log('Custom site detected with collections:', data.allowedCollections);
-        }
-      } catch (error) {
-        console.error('Error parsing custom site data:', error);
-      }
-    }
+    // Always load all collections for main delivery app
+    // Custom sites should be separate pages/URLs
+    setIsCustomSite(false);
+    setCustomSiteCollections([]);
     
     fetchCollections();
   }, []);
