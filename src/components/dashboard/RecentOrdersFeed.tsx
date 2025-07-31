@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronDown, ChevronUp, Package, Clock, MapPin, User } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 interface OrderItem {
   id: string;
@@ -206,7 +207,7 @@ export const RecentOrdersFeed: React.FC<RecentOrdersFeedProps> = ({
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span>
-                              {format(new Date(order.delivery_date), 'EEE, MMM d')}
+                              {format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEE, MMM d')}
                               {order.delivery_time && ` at ${order.delivery_time}`}
                             </span>
                           </div>

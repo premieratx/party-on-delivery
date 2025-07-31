@@ -14,6 +14,7 @@ import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { formatCurrency } from '@/utils/currency';
 import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown, RefreshCw, ChevronUp } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 interface Customer {
   id: string;
@@ -433,8 +434,9 @@ const CustomerDashboard = () => {
   };
 
   const handleShareOrder = (order: Order) => {
-    const shareUrl = `${window.location.origin}/?addToOrder=${order.share_token || order.id}&customer=true&discount=FREESHIPPING`;
-    const message = `Hey! I ordered drinks for delivery on ${order.delivery_date} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. You can add to my order here: ${shareUrl}`;
+    // Create a link to share this specific order using its share_token
+    const shareUrl = `${window.location.origin}/order/${order.share_token}`;
+    const message = `Hey! I ordered drinks for delivery on ${format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do')} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. Join my order here: ${shareUrl}`;
     
     if (navigator.share) {
       navigator.share({
@@ -463,8 +465,8 @@ const CustomerDashboard = () => {
   };
 
   const getDaysUntilDelivery = (deliveryDate: string) => {
-    const today = new Date();
-    const delivery = new Date(deliveryDate);
+    const today = toZonedTime(new Date(), 'America/Chicago');
+    const delivery = toZonedTime(new Date(deliveryDate), 'America/Chicago');
     return differenceInDays(delivery, today);
   };
 
@@ -619,10 +621,10 @@ const CustomerDashboard = () => {
                                   <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/20 rounded text-sm">
                                     <div className="flex-1">
                                       <span className="font-medium">{item.quantity}x {item.title}</span>
-                                      <div className="text-xs text-muted-foreground mt-1">
-                                        Order #{item.order_number} • {format(new Date(item.order_created_at), 'MMM d, yyyy')} • 
-                                        Ordered by <span className="font-medium">{item.customer_name}</span>
-                                      </div>
+                                       <div className="text-xs text-muted-foreground mt-1">
+                                         Order #{item.order_number} • {format(toZonedTime(new Date(item.order_created_at), 'America/Chicago'), 'MMM d, yyyy')} • 
+                                         Ordered by <span className="font-medium">{item.customer_name}</span>
+                                       </div>
                                     </div>
                                     <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
                                   </div>
@@ -665,11 +667,11 @@ const CustomerDashboard = () => {
                         <CardDescription>
                           {order.delivery_date && (
                             <span className="flex items-center gap-2 mt-2">
-                              <CalendarDays className="h-4 w-4" />
-                              {format(new Date(order.delivery_date), 'EEEE, MMMM do, yyyy')} 
-                              {order.delivery_time && ` at ${order.delivery_time}`}
-                              <Badge variant="secondary">
-                                {getDaysUntilDelivery(order.delivery_date)} days to go
+                               <CalendarDays className="h-4 w-4" />
+                               {format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do, yyyy')} 
+                               {order.delivery_time && ` at ${order.delivery_time}`}
+                               <Badge variant="secondary">
+                                 {getDaysUntilDelivery(order.delivery_date)} days to go
                               </Badge>
                             </span>
                           )}
@@ -828,9 +830,9 @@ const CustomerDashboard = () => {
                         <div className="bg-muted/50 p-4 rounded-lg">
                           <div className="flex items-center gap-2 mb-2">
                             <CalendarDays className="h-4 w-4" />
-                            <span className="font-medium">
-                              Delivery: {format(new Date(firstOrder.delivery_date), 'EEEE, MMMM do, yyyy')}
-                              {firstOrder.delivery_time && ` at ${firstOrder.delivery_time}`}
+                             <span className="font-medium">
+                               Delivery: {format(toZonedTime(new Date(firstOrder.delivery_date), 'America/Chicago'), 'EEEE, MMMM do, yyyy')}
+                               {firstOrder.delivery_time && ` at ${firstOrder.delivery_time}`}
                             </span>
                           </div>
                           <div className="flex items-start gap-2">
@@ -939,9 +941,9 @@ const CustomerDashboard = () => {
                            </div>
                            {order.delivery_date && (
                              <span className="flex items-center gap-2">
-                               <CalendarDays className="h-4 w-4" />
-                               Delivery: {format(new Date(order.delivery_date), 'EEEE, MMMM do')} 
-                               {order.delivery_time && ` at ${order.delivery_time}`}
+                                <CalendarDays className="h-4 w-4" />
+                                Delivery: {format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do')} 
+                                {order.delivery_time && ` at ${order.delivery_time}`}
                              </span>
                            )}
                          </CardDescription>

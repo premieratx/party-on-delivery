@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { CalendarDays, MapPin, Package, Users, ShoppingCart, Copy } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 interface SharedOrder {
   id: string;
@@ -251,7 +252,7 @@ const SharedOrderView = () => {
               <div>
                 <p className="font-medium">Date & Time</p>
                 <p className="text-muted-foreground">
-                  {order.delivery_date && format(new Date(order.delivery_date), 'EEEE, MMMM do, yyyy')}
+                  {order.delivery_date && format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do, yyyy')}
                   {order.delivery_time && ` at ${order.delivery_time}`}
                 </p>
                 {daysUntilDelivery !== null && (
