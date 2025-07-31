@@ -757,8 +757,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             <Select 
                               value={deliveryInfo.timeSlot || ""} 
                               onValueChange={(value) => {
-                                console.log('Time slot selected:', value);
+                                console.log('✅ Select onValueChange triggered with value:', value);
+                                console.log('Current deliveryInfo before update:', deliveryInfo);
                                 updateDeliveryInfo('timeSlot', value);
+                                console.log('UpdateDeliveryInfo called with timeSlot:', value);
+                              }}
+                              onOpenChange={(open) => {
+                                console.log('Select dropdown opened/closed:', open);
+                                if (open) {
+                                  console.log('Available time slots:', getAvailableTimeSlots());
+                                }
                               }}
                             >
                              <SelectTrigger className="w-full">
@@ -771,12 +779,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                    <SelectItem 
                                      key={slot} 
                                      value={slot}
-                                     className="cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                                     onSelect={() => {
+                                       console.log('Direct onSelect triggered for:', slot);
+                                       updateDeliveryInfo('timeSlot', slot);
+                                     }}
                                    >
-                                     <div className="flex items-center gap-2">
-                                       <Clock className="w-4 h-4" />
-                                       {slot}
-                                     </div>
+                                     {slot}
                                    </SelectItem>
                                  ))}
                                  {getAvailableTimeSlots().length === 0 && (

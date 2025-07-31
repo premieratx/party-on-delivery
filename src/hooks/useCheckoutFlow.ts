@@ -25,8 +25,12 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
   const [changedFields, setChangedFields] = useState<string[]>([]);
 
   const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
+    console.log('🔄 updateDeliveryInfo called with:', { field, value });
+    console.log('Current deliveryInfo:', deliveryInfo);
     const newInfo = { ...deliveryInfo, [field]: value };
+    console.log('New deliveryInfo will be:', newInfo);
     onDeliveryInfoChange(newInfo);
+    console.log('onDeliveryInfoChange called with newInfo');
   };
 
   // Pre-fill with data - but ONLY if the current storage is empty
