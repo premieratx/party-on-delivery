@@ -13,7 +13,7 @@ interface NavigationState {
 export const GlobalNavigation = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { getTotalItems, getTotalPrice } = useUnifiedCart();
+  const { getTotalItems, getTotalPrice, cartItems } = useUnifiedCart();
 
   // Get navigation history from sessionStorage
   const getNavigationHistory = (): NavigationState[] => {
@@ -152,14 +152,17 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
             key={`cart-${getTotalItems()}-${getTotalPrice()}`} // Force re-render on changes
           >
             <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-            <span className="hidden sm:inline">
+            <span className="hidden sm:inline" key={`desktop-${cartItems.length}-${getTotalItems()}-${getTotalPrice()}`}>
               Cart ({getTotalItems()}) ${getTotalPrice().toFixed(2)}
             </span>
-            <span className="sm:hidden">
+            <span className="sm:hidden" key={`mobile-${cartItems.length}-${getTotalItems()}`}>
               {getTotalItems()}
             </span>
-            {/* Debug: track cart updates in console */}
-            {(() => { console.log('🛒 Cart Debug - Items:', getTotalItems(), 'Total:', getTotalPrice()); return null; })()}
+            {/* Force re-render when cart changes */}
+            {(() => { 
+              console.log('🛒 Cart Debug - Items:', getTotalItems(), 'Total:', getTotalPrice(), 'Raw items:', cartItems.length); 
+              return null; 
+            })()}
           </Button>
         )}
       </div>

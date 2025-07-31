@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PartyPlanningButton } from '@/components/PartyPlanningButton';
-import { ShoppingBag, Plus, ArrowRight, Users } from 'lucide-react';
+import { ShoppingBag, Plus, ArrowRight, Users, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/party-on-delivery-logo.png';
 
@@ -69,6 +69,16 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           >
             <ArrowRight className="w-4 h-4 mr-2" />
             Start New Order
+          </Button>
+
+          {/* Search Products button */}
+          <Button 
+            onClick={() => navigate('/search')}
+            className="w-full h-12 text-base"
+            variant="secondary"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Search Products
           </Button>
           
           {/* Resume Order button - always show */}

@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle, Wine } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle, Wine, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,6 +66,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   onBack,
   onBackToStart
 }) => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +85,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // Always use the default main delivery app collections
   const getStepMapping = () => {
     return [
+      { step: 0, title: 'Search', handle: 'search', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Search Products', isSearch: true },
       { step: 1, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
       { step: 2, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
       { step: 3, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
@@ -348,8 +351,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Handle product click for cocktails (step 4 now)
   const handleProductClick = (product: ShopifyProduct) => {
-    // Only enable lightbox for cocktails (step 4, index 3)
-    if (selectedCategory === 3) { // Cocktails is now index 3
+    // Only enable lightbox for cocktails (step 4, index 4)
+    if (selectedCategory === 4) { // Cocktails is now index 4
       setLightboxProduct(product);
       setIsLightboxOpen(true);
     }
@@ -452,7 +455,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <div className="flex gap-1 h-16 sm:h-20">
             {stepMapping.map((step, index) => {
               const isActive = selectedCategory === index;
-              const IconComponent = step.step === 1 ? Wine : step.step === 2 ? Beer : step.step === 3 ? Martini : step.step === 4 ? Martini : Package;
+              const IconComponent = step.step === 0 ? Search : step.step === 1 ? Wine : step.step === 2 ? Beer : step.step === 3 ? Martini : step.step === 4 ? Martini : Package;
               const stepNumber = step.step;
               const stepTitle = step.title;
               
@@ -460,29 +463,41 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 <button
                   key={step.handle}
                   onClick={() => {
-                    setSelectedCategory(index);
-                    const targetCollection = collections.find(c => c.handle === step.handle);
-                    if (targetCollection) {
-                      // No need to fetch, collection already loaded
+                    if (step.isSearch) {
+                      navigate('/search');
+                    } else {
+                      setSelectedCategory(index);
+                      const targetCollection = collections.find(c => c.handle === step.handle);
+                      if (targetCollection) {
+                        // No need to fetch, collection already loaded
+                      }
                     }
                   }}
                   className={`relative overflow-hidden rounded-lg transition-all duration-300 group flex-1 ${
-                    isActive 
-                      ? 'bg-primary/10 border-2 border-primary shadow-lg' 
-                      : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
+                    step.isSearch 
+                      ? 'bg-accent/10 border-2 border-accent hover:bg-accent/20' 
+                      : isActive 
+                        ? 'bg-primary/10 border-2 border-primary shadow-lg' 
+                        : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
                   }`}
                 >
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title, no number */}
                     <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
-                      <div className={`text-xs font-bold leading-tight text-center ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                      {step.isSearch && <IconComponent className="w-3 h-3 mb-1" />}
+                      <div className={`text-xs font-bold leading-tight text-center ${
+                        step.isSearch ? 'text-accent' : isActive ? 'text-primary' : 'text-foreground'
+                      }`}>{stepTitle}</div>
                     </div>
                     
                     {/* Desktop layout: large title centered, no numbers */}
                     <div className="hidden sm:block relative w-full h-full">
                       {/* Large title centered */}
-                      <div className="flex items-center justify-center h-full">
-                        <div className={`font-bold text-xl text-center ${isActive ? 'text-primary' : 'text-foreground'}`}>{stepTitle}</div>
+                      <div className="flex items-center justify-center h-full gap-2">
+                        {step.isSearch && <IconComponent className="w-5 h-5" />}
+                        <div className={`font-bold text-xl text-center ${
+                          step.isSearch ? 'text-accent' : isActive ? 'text-primary' : 'text-foreground'
+                        }`}>{stepTitle}</div>
                       </div>
                     </div>
                   </div>
