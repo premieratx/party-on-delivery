@@ -94,8 +94,21 @@ const GroupOrderView = () => {
   const handleJoinOrder = () => {
     // Store the share token and redirect to shopping with share parameter
     localStorage.setItem('groupOrderToken', shareToken || '');
-    // Navigate without pre-set discount - let CheckoutFlow generate the custom group discount
-    navigate(`/?share=${shareToken}&customer=true`);
+    localStorage.setItem('partyondelivery_add_to_order', 'true');
+    
+    // Generate and store group discount code based on original buyer's last name
+    if (order?.customers?.last_name) {
+      const groupDiscountCode = `GROUP-SHIPPING-${order.customers.last_name.toUpperCase()}`;
+      localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
+        code: groupDiscountCode,
+        type: 'free_shipping',
+        value: 0
+      }));
+      console.log('Auto-applied group discount:', groupDiscountCode);
+    }
+    
+    // Navigate to checkout directly
+    navigate(`/?checkout=true&share=${shareToken}&customer=true`);
   };
 
   const handleLogin = () => {

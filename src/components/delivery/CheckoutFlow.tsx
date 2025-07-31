@@ -231,6 +231,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       updateDeliveryInfo('date', today);
       console.log('Pre-selected today for delivery date:', today);
     }
+    
+    // Reset form confirmations on mount for new users
+    if (!confirmedDateTime || !confirmedAddress || !confirmedCustomer) {
+      console.log('Resetting form confirmations for new checkout session');
+    }
   }, [confirmedDateTime, confirmedAddress, confirmedCustomer, isDateTimeComplete, isAddressComplete, isCustomerComplete]);
 
   // Get available time slots based on selected date (same logic as DeliveryScheduler)
@@ -294,16 +299,36 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
     deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
 
-  // Auto-apply group discount for group orders and when details match (but don't override user-applied discounts)
+  // Auto-apply group discount for group orders - check localStorage first, then fetch if needed
   useEffect(() => {
     if (isAddingToOrder || affiliateCode) {
-      // For group orders or affiliate referrals, generate custom discount code based on original buyer's last name
+      // Check if discount is already applied from localStorage (from GroupOrderView)
       if (!appliedDiscount || appliedDiscount.code === 'SAME_ORDER') {
-        // Check if we have group order token to get original buyer info
+        console.log('🔗 Applying group discount for add to order flow');
+        
+        // First check if discount was already set in localStorage from GroupOrderView
+        const storedDiscount = localStorage.getItem('partyondelivery_applied_discount');
+        if (storedDiscount && isAddingToOrder) {
+          try {
+            const parsedDiscount = JSON.parse(storedDiscount);
+            if (parsedDiscount.code && parsedDiscount.code.startsWith('GROUP-SHIPPING-')) {
+              console.log('✅ Using pre-stored group discount:', parsedDiscount);
+              setAppliedDiscount(parsedDiscount);
+              setDiscountCode(parsedDiscount.code);
+              if (onDiscountChange) {
+                onDiscountChange(parsedDiscount);
+              }
+              return; // Exit early since we found the discount
+            }
+          } catch (error) {
+            console.log('Error parsing stored discount, will fetch:', error);
+          }
+        }
+        
+        // If no stored discount, fetch from group order
         const groupOrderToken = localStorage.getItem('groupOrderToken');
         if (groupOrderToken && isAddingToOrder) {
-          console.log('🔗 Group order token found:', groupOrderToken);
-          // Fetch original order info to get buyer's last name
+          console.log('🔗 Group order token found, fetching buyer info:', groupOrderToken);
           supabase.functions.invoke('get-group-order', {
             body: { shareToken: groupOrderToken }
           }).then(({ data, error }) => {
@@ -316,35 +341,42 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               
               console.log('✅ Generated group discount code:', groupDiscountCode);
               
-              setAppliedDiscount({ code: groupDiscountCode, type: 'free_shipping', value: 0 });
+              const discount = { code: groupDiscountCode, type: 'free_shipping' as const, value: 0 };
+              setAppliedDiscount(discount);
               setDiscountCode(groupDiscountCode);
               if (onDiscountChange) {
-                onDiscountChange({ code: groupDiscountCode, type: 'free_shipping', value: 0 });
+                onDiscountChange(discount);
               }
+              
+              // Store for future use
+              localStorage.setItem('partyondelivery_applied_discount', JSON.stringify(discount));
             } else {
               console.log('❌ Could not get original order info, using fallback. Error:', error);
-              // Fallback to PREMIER2025 if we can't get original order info
-              setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+              // Fallback to PREMIER2025
+              const fallbackDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
+              setAppliedDiscount(fallbackDiscount);
               setDiscountCode('PREMIER2025');
               if (onDiscountChange) {
-                onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+                onDiscountChange(fallbackDiscount);
               }
             }
           }).catch(err => {
             console.error('❌ Error invoking get-group-order function:', err);
             // Fallback to PREMIER2025 on error
-            setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+            const fallbackDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
+            setAppliedDiscount(fallbackDiscount);
             setDiscountCode('PREMIER2025');
             if (onDiscountChange) {
-              onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+              onDiscountChange(fallbackDiscount);
             }
           });
         } else {
           // Non-group orders or affiliate referrals use PREMIER2025
-          setAppliedDiscount({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+          const defaultDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
+          setAppliedDiscount(defaultDiscount);
           setDiscountCode('PREMIER2025');
           if (onDiscountChange) {
-            onDiscountChange({ code: 'PREMIER2025', type: 'free_shipping', value: 0 });
+            onDiscountChange(defaultDiscount);
           }
         }
       }
