@@ -436,7 +436,8 @@ const CustomerDashboard = () => {
   const handleShareOrder = (order: Order) => {
     // Create a link to share this specific order using its share_token
     const shareUrl = `${window.location.origin}/order/${order.share_token}`;
-    const message = `Hey! I ordered drinks for delivery on ${format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do')} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. Join my order here: ${shareUrl}`;
+    const deliveryDateFormatted = format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do');
+    const message = `Hey! I ordered drinks for delivery on ${deliveryDateFormatted} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. Join my order here: ${shareUrl}`;
     
     if (navigator.share) {
       navigator.share({
@@ -448,7 +449,7 @@ const CustomerDashboard = () => {
       navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Group Link Copied",
-        description: "Share this link with friends to add to your order with free shipping!",
+        description: "Share this link for others to join your delivery order!",
       });
     }
   };

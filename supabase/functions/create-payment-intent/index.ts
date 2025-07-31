@@ -144,7 +144,7 @@ serve(async (req) => {
       currency,
       metadata: {
         customer_name: customerName.substring(0, 100),
-        customer_email: customerInfo.email.substring(0, 100),
+        customer_email: (customerInfo?.email || '').substring(0, 100),
         customer_phone: customerPhone.substring(0, 50),
         delivery_date: deliveryDate.substring(0, 50),
         delivery_time: deliveryTime.substring(0, 50),
