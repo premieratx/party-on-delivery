@@ -59,14 +59,8 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
       const previousPath = history[currentIndex - 1].path;
       navigate(previousPath);
     } else {
-      // If no history, go to appropriate fallback page
-      if (location.pathname.includes('checkout')) {
-        navigate('/plan-my-party');
-      } else if (location.pathname.includes('search') || location.pathname.includes('product-search')) {
-        navigate('/plan-my-party');
-      } else {
-        navigate('/');
-      }
+      // If no history, go to main delivery app
+      navigate('/');
     }
   };
 
@@ -83,15 +77,19 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
   };
 
   const handleCart = () => {
-    if (location.pathname === '/plan-my-party') {
-      // On party planner, trigger cart modal
-      const cartButton = document.querySelector('[data-cart-trigger]') as HTMLButtonElement;
-      if (cartButton) {
-        cartButton.click();
-      }
+    // Always trigger cart modal from delivery app
+    const cartButton = document.querySelector('[data-cart-trigger]') as HTMLButtonElement;
+    if (cartButton) {
+      cartButton.click();
     } else {
-      // On other pages, navigate to checkout
-      navigate('/checkout');
+      // If not on delivery app, navigate there first then show cart
+      navigate('/');
+      setTimeout(() => {
+        const cartButtonRetry = document.querySelector('[data-cart-trigger]') as HTMLButtonElement;
+        if (cartButtonRetry) {
+          cartButtonRetry.click();
+        }
+      }, 100);
     }
   };
 

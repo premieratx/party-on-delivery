@@ -61,8 +61,8 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           <Button 
             onClick={() => {
               onStartNewOrder();
-              // Ensure we navigate to delivery app
-              navigate('/?start=delivery');
+              // Navigate to main delivery app
+              navigate('/');
             }}
             className="w-full h-12 text-base"
             variant="default"
@@ -75,8 +75,8 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           <Button 
             onClick={() => {
               onResumeOrder();
-              // Ensure we navigate to delivery app
-              navigate('/?start=delivery');
+              // Navigate to main delivery app
+              navigate('/');
             }}
             className="w-full h-12 text-base"
             variant="outline"
@@ -96,10 +96,6 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           </Button>
           
           
-          {/* Plan My Party button */}
-          <div className="pt-2">
-            <PartyPlanningButton />
-          </div>
           
           {/* Affiliate Dashboard Login button */}
           <div className="pt-2">

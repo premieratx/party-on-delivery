@@ -575,6 +575,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 {/* Cart Button */}
                 <button
                   onClick={onOpenCart}
+                  data-cart-trigger
                   className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-2"
                 >
                   <ShoppingCart className="w-4 h-4 mb-1 text-foreground" />

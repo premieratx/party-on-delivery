@@ -69,9 +69,9 @@ export const Checkout = () => {
               <p className="text-muted-foreground mb-6">
                 Looks like you haven't added any items to your cart yet.
               </p>
-              <Button onClick={() => navigate('/plan-my-party')} className="w-full sm:w-auto">
+              <Button onClick={() => navigate('/')} className="w-full sm:w-auto">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Party Planner
+                Back to Shopping
               </Button>
             </CardContent>
           </Card>
@@ -89,11 +89,11 @@ export const Checkout = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="outline"
-              onClick={() => navigate('/plan-my-party')}
+              onClick={() => navigate('/')}
               className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back to Party Planner</span>
+              <span className="hidden sm:inline">Back to Shopping</span>
               <span className="sm:hidden">Back</span>
             </Button>
             <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">Checkout</h1>
@@ -152,7 +152,7 @@ export const Checkout = () => {
           }))}
           deliveryInfo={deliveryInfo}
           totalPrice={totalAmount}
-          onBack={() => navigate('/plan-my-party')}
+          onBack={() => navigate('/')}
           onDeliveryInfoChange={setDeliveryInfo}
           onUpdateQuantity={(id, variant, quantity) => {
             setCartItems(prev => {
