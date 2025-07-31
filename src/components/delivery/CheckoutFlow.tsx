@@ -764,21 +764,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               <option value="" disabled>Select a time slot</option>
-                             <SelectTrigger className="w-full">
-                               <SelectValue placeholder="Select a time slot" />
-                             </SelectTrigger>
                                {getAvailableTimeSlots().map((slot) => ( 
                                 <option key={slot} value={slot}>
                                   {slot}
                                 </option>
                               ))}
+                            </select>
                                  {getAvailableTimeSlots().length === 0 && (
-                                   <div className="p-2 text-sm text-muted-foreground text-center">
+                                   <div className="p-2 text-sm text-muted-foreground text-center bg-yellow-50 border border-yellow-200 rounded">
                                      No time slots available today. Please select a future date.
                                    </div>
                                  )}
-                               </SelectContent>
-                           </Select>
                         </div>
                         
                         {/* Customer Information in same step */}
