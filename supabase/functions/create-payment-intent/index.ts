@@ -112,10 +112,10 @@ serve(async (req) => {
       tipFromMetadata: validTipAmount.toFixed(2)
     });
     
-    // CRITICAL FIX: Store the full cart items as JSON string in metadata
-    // This is essential for create-shopify-order to access the complete cart data
+    // CRITICAL FIX: Create a compact cart summary for metadata (Stripe limit: 500 chars per field)
+    // Store full cart data in a separate field that we'll pass to create-shopify-order
     const cartItemsJson = JSON.stringify(cartItems);
-    logStep("Cart items being stored in metadata", { cartItemsLength: cartItemsJson.length, itemCount });
+    logStep("Cart items data prepared", { cartItemsLength: cartItemsJson.length, itemCount });
     
     // Safely handle metadata to prevent errors
     const customerName = `${customerInfo.firstName || ''} ${customerInfo.lastName || ''}`.trim();
@@ -125,15 +125,20 @@ serve(async (req) => {
     const deliveryAddress = deliveryInfo.address || '';
     const deliveryInstructions = deliveryInfo.instructions || '';
     
+    // Create a very compact cart items string that fits in 500 chars
+    const compactCartItems = cartItems.map((item: any) => 
+      `${item.quantity}x${item.title.substring(0, 15)}`
+    ).join(',').substring(0, 450); // Keep well under 500 char limit
+    
     logStep("Preparing metadata for payment intent", { 
       customerName, 
       customerPhone, 
       deliveryDate, 
       deliveryTime,
-      cartItemsLength: cartItemsJson.length
+      compactCartItemsLength: compactCartItems.length
     });
 
-    // Create payment intent with essential metadata (including full cart items)
+    // Create payment intent with essential metadata (compact cart items only)
     const paymentIntent = await stripe.paymentIntents.create({
       amount: validAmount,
       currency,
@@ -146,7 +151,7 @@ serve(async (req) => {
         delivery_address: deliveryAddress.substring(0, 200),
         delivery_instructions: deliveryInstructions.substring(0, 200),
         cart_summary: cartSummary,
-        cart_items: cartItemsJson, // CRITICAL: Full cart items for Shopify order creation
+        cart_items_compact: compactCartItems, // Compact version for metadata
         item_count: itemCount.toString(),
         subtotal: validSubtotal.toFixed(2),
         shipping_fee: validDeliveryFee.toFixed(2),
@@ -158,7 +163,17 @@ serve(async (req) => {
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
         discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
         group_order_number: (groupOrderNumber || '').substring(0, 50),
-        group_order_token: (groupOrderToken || '').substring(0, 50)
+        group_order_token: (groupOrderToken || '').substring(0, 50),
+        // Store full cart data separately for create-shopify-order function
+        full_cart_data: JSON.stringify({
+          cartItems,
+          customerInfo,
+          deliveryInfo,
+          appliedDiscount,
+          tipAmount,
+          groupOrderNumber,
+          groupOrderToken
+        }).substring(0, 500) // Emergency backup truncation
       }
     });
 

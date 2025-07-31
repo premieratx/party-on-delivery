@@ -613,25 +613,74 @@ const CustomerDashboard = () => {
                             <p className="text-xl font-bold">{formatCurrency(Number(totalValue) || 0)}</p>
                           </div>
                           
-                          {Object.entries(groupedItems).map(([category, items]) => (
-                            <div key={category} className="space-y-2">
-                              <h4 className="font-semibold text-primary text-lg border-b pb-2">{category}</h4>
-                              <div className="space-y-1 pl-4">
-                                {(items as any[]).map((item, index) => (
-                                  <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/20 rounded text-sm">
-                                    <div className="flex-1">
-                                      <span className="font-medium">{item.quantity}x {item.title}</span>
-                                       <div className="text-xs text-muted-foreground mt-1">
-                                         Order #{item.order_number} • {format(toZonedTime(new Date(item.order_created_at), 'America/Chicago'), 'MMM d, yyyy')} • 
-                                         Ordered by <span className="font-medium">{item.customer_name}</span>
+                           {/* Show individual orders with their items */}
+                           {orders.map((order) => (
+                             <div key={order.id} className="space-y-4 border rounded-lg p-4 mb-4">
+                               <div className="flex justify-between items-start">
+                                 <div>
+                                   <h4 className="font-semibold text-primary text-lg">Order #{order.order_number}</h4>
+                                   <div className="text-sm text-muted-foreground space-y-1">
+                                     <p>Ordered by: <span className="font-medium">{`${customer?.first_name || ''} ${customer?.last_name || ''}`.trim() || customer?.email}</span></p>
+                                     <p>Date: <span className="font-medium">{format(toZonedTime(new Date(order.created_at), 'America/Chicago'), 'EEEE, MMMM do, yyyy')}</span></p>
+                                     {order.delivery_date && order.delivery_time && (
+                                       <p>Delivery: <span className="font-medium">{format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do')} at {order.delivery_time}</span></p>
+                                     )}
+                                   </div>
+                                 </div>
+                                 <div className="text-right">
+                                   <p className="font-bold text-lg">{formatCurrency(order.total_amount)}</p>
+                                   <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
+                                     {order.status}
+                                   </Badge>
+                                 </div>
+                               </div>
+                               
+                               {/* Group items by category for this specific order */}
+                               <div className="space-y-3">
+                                 {(() => {
+                                   const orderItems = order.line_items || [];
+                                   const categorizedItems = orderItems.reduce((groups: any, item: any) => {
+                                     let category = 'Other';
+                                     const title = item.title.toLowerCase();
+                                     
+                                     if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
+                                         title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
+                                       category = 'Beer';
+                                     } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
+                                                title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
+                                       category = 'Liquor';
+                                     } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
+                                                title.includes('truly') || title.includes('high noon')) {
+                                       category = 'Seltzers';
+                                     } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
+                                       category = 'Wine & Champagne';
+                                     } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
+                                                title.includes('cosmopolitan') || title.includes('mojito')) {
+                                       category = 'Cocktails';
+                                     }
+                                     
+                                     if (!groups[category]) groups[category] = [];
+                                     groups[category].push(item);
+                                     return groups;
+                                   }, {});
+                                   
+                                   return Object.entries(categorizedItems).map(([category, items]) => (
+                                     <div key={category} className="space-y-1">
+                                       <h5 className="font-medium text-sm text-primary border-b pb-1">{category}</h5>
+                                       <div className="space-y-1 pl-3">
+                                         {(items as any[]).map((item, index) => (
+                                           <div key={`${order.id}-${index}`} className="flex justify-between items-center py-1 text-sm">
+                                             <span className="font-medium">{item.quantity}x {item.title}</span>
+                                             <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                                           </div>
+                                         ))}
                                        </div>
-                                    </div>
-                                    <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
+                                     </div>
+                                   ));
+                                 })()}
+                               </div>
+                             </div>
+                           ))}
                         </div>
                       );
                     })()}
