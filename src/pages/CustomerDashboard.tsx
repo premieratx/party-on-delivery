@@ -338,6 +338,7 @@ const CustomerDashboard = () => {
   const getCombinedOrderSummary = () => {
     const allItems: any[] = [];
     const orderMap = new Map();
+    const itemDedupeMap = new Map(); // For removing duplicates
     
     orders.forEach(order => {
       orderMap.set(order.id, {
@@ -350,13 +351,20 @@ const CustomerDashboard = () => {
       });
       
       order.line_items.forEach((item: any) => {
-        allItems.push({
-          ...item,
-          order_id: order.id,
-          order_number: order.order_number,
-          customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
-          order_created_at: order.created_at
-        });
+        // Create a unique key for deduplication based on product details
+        const itemKey = `${item.title}-${item.price}-${order.id}-${item.variant_id || ''}`;
+        
+        // Only add if we haven't seen this exact item from this order before
+        if (!itemDedupeMap.has(itemKey)) {
+          itemDedupeMap.set(itemKey, true);
+          allItems.push({
+            ...item,
+            order_id: order.id,
+            order_number: order.order_number,
+            customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
+            order_created_at: order.created_at
+          });
+        }
       });
     });
     
@@ -388,8 +396,27 @@ const CustomerDashboard = () => {
       return groups;
     }, {} as Record<string, any[]>);
     
+    // Further consolidate identical products across different orders by combining quantities
     Object.keys(groupedItems).forEach(category => {
-      groupedItems[category].sort((a, b) => a.title.localeCompare(b.title));
+      const consolidatedItems = new Map();
+      
+      groupedItems[category].forEach(item => {
+        const productKey = `${item.title}-${item.price}`;
+        
+        if (consolidatedItems.has(productKey)) {
+          const existingItem = consolidatedItems.get(productKey);
+          existingItem.quantity += item.quantity;
+          // Keep track of which orders this item came from
+          if (!existingItem.order_numbers) existingItem.order_numbers = [existingItem.order_number];
+          if (!existingItem.order_numbers.includes(item.order_number)) {
+            existingItem.order_numbers.push(item.order_number);
+          }
+        } else {
+          consolidatedItems.set(productKey, { ...item });
+        }
+      });
+      
+      groupedItems[category] = Array.from(consolidatedItems.values()).sort((a, b) => a.title.localeCompare(b.title));
     });
     
     return { groupedItems, orderMap };
@@ -828,7 +855,10 @@ const CustomerDashboard = () => {
                                     <div className="flex-1">
                                       <span className="font-medium">{item.quantity}x {item.title}</span>
                                       <span className="text-xs text-muted-foreground ml-2">
-                                        (Order #{item.order_number} - {item.customer_name})
+                                        {item.order_numbers ? 
+                                          `(Orders #${item.order_numbers.join(', #')} - ${item.customer_name})` :
+                                          `(Order #${item.order_number} - ${item.customer_name})`
+                                        }
                                       </span>
                                     </div>
                                     <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
