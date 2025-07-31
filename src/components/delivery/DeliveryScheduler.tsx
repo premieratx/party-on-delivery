@@ -195,30 +195,27 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                 <Clock className="w-4 h-4" />
                 Delivery Time
               </Label>
-               <Select value={timeSlot} onValueChange={setTimeSlot}>
-                 <SelectTrigger className="w-full">
-                   <SelectValue placeholder="Select a time slot" />
-                 </SelectTrigger>
-                 <SelectContent className="max-h-[300px] bg-popover border shadow-lg z-[100]">
-                   {getAvailableTimeSlots().map((slot) => (
-                     <SelectItem 
-                       key={slot} 
-                       value={slot}
-                       className="cursor-pointer focus:bg-accent focus:text-accent-foreground"
-                     >
-                       <div className="flex items-center gap-2">
-                         <Clock className="w-4 h-4" />
-                         {slot}
-                       </div>
-                     </SelectItem>
-                   ))}
-                   {getAvailableTimeSlots().length === 0 && (
-                     <div className="p-2 text-sm text-muted-foreground text-center">
-                       No time slots available today. Please select a future date.
-                     </div>
-                   )}
-                 </SelectContent>
-               </Select>
+               {/* Use native HTML select for 100% reliability */}
+               <select
+                 value={timeSlot || ""}
+                 onChange={(e) => {
+                   console.log('✅ DeliveryScheduler: Time slot selected:', e.target.value);
+                   setTimeSlot(e.target.value);
+                 }}
+                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+               >
+                 <option value="" disabled>Select a time slot</option>
+                 {getAvailableTimeSlots().map((slot) => (
+                   <option key={slot} value={slot}>
+                     ⏰ {slot}
+                   </option>
+                 ))}
+               </select>
+               {getAvailableTimeSlots().length === 0 && (
+                 <div className="p-2 text-sm text-muted-foreground text-center bg-yellow-50 border border-yellow-200 rounded">
+                   No time slots available today. Please select a future date.
+                 </div>
+               )}
             </div>
 
             {/* Continue Button */}

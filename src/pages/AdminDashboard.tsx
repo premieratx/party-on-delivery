@@ -36,6 +36,7 @@ export default function AdminDashboard() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [totalProducts, setTotalProducts] = useState(0);
   const [recentOrders, setRecentOrders] = useState([]);
+  const [abandonedOrders, setAbandonedOrders] = useState([]);
   const [affiliates, setAffiliates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -95,6 +96,22 @@ export default function AdminDashboard() {
         console.error('Error loading affiliates:', affiliatesError);
       } else {
         setAffiliates(affiliatesData || []);
+      }
+
+      // Load abandoned orders from past 7 days
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const { data: abandonedData, error: abandonedError } = await supabase
+        .from('abandoned_orders')
+        .select('*')
+        .gte('abandoned_at', sevenDaysAgo.toISOString())
+        .order('abandoned_at', { ascending: false });
+
+      if (abandonedError) {
+        console.error('Error loading abandoned orders:', abandonedError);
+      } else {
+        setAbandonedOrders(abandonedData || []);
       }
 
     } catch (error: any) {
@@ -217,9 +234,10 @@ export default function AdminDashboard() {
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
+              <TabsTrigger value="orders">Orders</TabsTrigger>
+              <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
               <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="ai-testing">🤖 AI Testing</TabsTrigger>
               <TabsTrigger value="bot-setup">🤖 Bot Setup</TabsTrigger>
             </TabsList>
@@ -439,6 +457,68 @@ export default function AdminDashboard() {
               title="Recent Orders"
               onRefresh={loadDashboardData}
             />
+          </TabsContent>
+
+          <TabsContent value="abandoned" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-orange-600">⏰ Abandoned Orders (Past 7 Days)</CardTitle>
+                <p className="text-sm text-muted-foreground">Customers who started checkout but didn't complete - reach out to them!</p>
+              </CardHeader>
+              <CardContent>
+                {abandonedOrders.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">
+                    No abandoned orders in the past 7 days. Your customers are completing their purchases! 🎉
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {abandonedOrders.map((order: any) => (
+                      <div key={order.id} className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium">{order.customer_name || 'Unknown Customer'}</h4>
+                              <Badge variant="outline" className="text-orange-600 border-orange-300">
+                                ${order.subtotal}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <p>📧 {order.customer_email}</p>
+                              {order.customer_phone && <p>📱 {order.customer_phone}</p>}
+                              {order.delivery_address && <p>📍 {order.delivery_address}</p>}
+                              <p>🛒 {order.cart_items?.length || 0} items in cart</p>
+                              <p className="text-orange-600 font-medium">
+                                ⏰ Abandoned: {new Date(order.abandoned_at).toLocaleDateString()} at {new Date(order.abandoned_at).toLocaleTimeString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {order.customer_email && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(`mailto:${order.customer_email}?subject=Complete Your Order&body=Hi! We noticed you left some items in your cart. Would you like to complete your order?`, '_blank')}
+                              >
+                                📧 Email
+                              </Button>
+                            )}
+                            {order.customer_phone && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(`sms:${order.customer_phone}?body=Hi! We noticed you left some items in your cart. Would you like to complete your order?`, '_blank')}
+                              >
+                                📱 SMS
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="ai-testing" className="space-y-4">

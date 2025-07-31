@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
+import { TimeSelector } from './TimeSelector';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -754,39 +754,24 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                            <p className="text-xs text-muted-foreground">
                              Same-day delivery available with 1-hour advance notice. We're closed Sundays.
                            </p>
-                            <Select 
-                              value={deliveryInfo.timeSlot || ""} 
-                              onValueChange={(value) => {
-                                console.log('✅ Select onValueChange triggered with value:', value);
-                                console.log('Current deliveryInfo before update:', deliveryInfo);
-                                updateDeliveryInfo('timeSlot', value);
-                                console.log('UpdateDeliveryInfo called with timeSlot:', value);
+                            {/* Use native select for maximum reliability across all user types */}
+                            <select
+                              value={deliveryInfo.timeSlot || ""}
+                              onChange={(e) => {
+                                console.log('✅ Native select change triggered with value:', e.target.value);
+                                updateDeliveryInfo('timeSlot', e.target.value);
                               }}
-                              onOpenChange={(open) => {
-                                console.log('Select dropdown opened/closed:', open);
-                                if (open) {
-                                  console.log('Available time slots:', getAvailableTimeSlots());
-                                }
-                              }}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                             >
+                              <option value="" disabled>Select a time slot</option>
                              <SelectTrigger className="w-full">
                                <SelectValue placeholder="Select a time slot" />
                              </SelectTrigger>
-                               <SelectContent 
-                                 className="max-h-[300px] bg-popover border shadow-lg"
-                               >
-                                 {getAvailableTimeSlots().map((slot) => (
-                                   <SelectItem 
-                                     key={slot} 
-                                     value={slot}
-                                     onSelect={() => {
-                                       console.log('Direct onSelect triggered for:', slot);
-                                       updateDeliveryInfo('timeSlot', slot);
-                                     }}
-                                   >
-                                     {slot}
-                                   </SelectItem>
-                                 ))}
+                               {getAvailableTimeSlots().map((slot) => ( 
+                                <option key={slot} value={slot}>
+                                  {slot}
+                                </option>
+                              ))}
                                  {getAvailableTimeSlots().length === 0 && (
                                    <div className="p-2 text-sm text-muted-foreground text-center">
                                      No time slots available today. Please select a future date.
