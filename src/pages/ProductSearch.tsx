@@ -157,6 +157,8 @@ export const ProductSearch = () => {
     if (handle === 'champagne' || handle.includes('wine')) return 'wine';
     // Party Supplies
     if (handle === 'party-supplies' || handle === 'decorations' || handle === 'hats-sunglasses' || handle === 'costumes') return 'party-supplies';
+    // Other category - includes newest-products and customizable-items collections
+    if (handle === 'newest-products' || handle === 'customizable-items' || handle === 'annie-s-store') return 'other';
     // Everything else
     return 'other';
   };
