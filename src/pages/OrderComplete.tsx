@@ -47,74 +47,68 @@ const OrderComplete = () => {
         return;
       }
 
-      // Add retry logic for timing issues - database might need a moment to sync
-      const maxRetries = 5;
+      // Extended retry logic with longer waits for database sync
+      const maxRetries = 8; // Increased retries
       let retryCount = 0;
       let order = null;
 
       while (retryCount < maxRetries && !order) {
         try {
-          // Use fetch instead of Supabase client to avoid type recursion
           const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
           const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns';
           
-          console.log(`[OrderComplete] Attempt ${retryCount + 1}/${maxRetries} - Looking for order with sessionId: ${sessionId}, orderNumber: ${orderNumber}`);
+          console.log(`🔥 [OrderComplete] Attempt ${retryCount + 1}/${maxRetries} - Looking for order with sessionId: ${sessionId}, orderNumber: ${orderNumber}`);
+          
+          // Try multiple search strategies
+          const searchQueries = [];
           
           if (sessionId) {
-            // First try with session_id (correct column name)
-            const sessionUrl = `${supabaseUrl}/rest/v1/customer_orders?session_id=eq.${sessionId}&select=*`;
-            const sessionResponse = await fetch(sessionUrl, {
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json',
-              },
-            });
-            const sessionOrders = await sessionResponse.json();
-            order = sessionOrders[0];
-            console.log(`[OrderComplete] Search by session_id result:`, order ? 'Found' : 'Not found');
+            searchQueries.push(`session_id=eq.${sessionId}`);
+          }
+          if (orderNumber) {
+            searchQueries.push(`order_number=eq.${orderNumber}`);
+          }
+          
+          for (const query of searchQueries) {
+            const url = `${supabaseUrl}/rest/v1/customer_orders?${query}&select=*&order=created_at.desc&limit=1`;
+            console.log(`🔥 [OrderComplete] Searching with: ${query}`);
             
-            // If not found, try with order_number from URL params
-            if (!order && orderNumber) {
-              const orderUrl = `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
-              const orderResponse = await fetch(orderUrl, {
-                headers: {
-                  'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
-                  'Content-Type': 'application/json',
-                },
-              });
-              const orders = await orderResponse.json();
-              order = orders[0];
-              console.log(`[OrderComplete] Search by order_number result:`, order ? 'Found' : 'Not found');
-            }
-          } else if (orderNumber) {
-            // Try with order_number
-            const orderUrl = `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
-            const orderResponse = await fetch(orderUrl, {
+            const response = await fetch(url, {
               headers: {
                 'apikey': supabaseKey,
                 'Authorization': `Bearer ${supabaseKey}`,
                 'Content-Type': 'application/json',
               },
             });
-            const orders = await orderResponse.json();
-            order = orders[0];
-            console.log(`[OrderComplete] Search by order_number only result:`, order ? 'Found' : 'Not found');
+            
+            if (!response.ok) {
+              console.error(`🔥 [OrderComplete] API Error: ${response.status} ${response.statusText}`);
+              continue;
+            }
+            
+            const orders = await response.json();
+            console.log(`🔥 [OrderComplete] Query ${query} returned:`, orders.length > 0 ? 'Found order' : 'No orders', orders.length > 0 ? { id: orders[0].id, order_number: orders[0].order_number } : '');
+            
+            if (orders && orders.length > 0) {
+              order = orders[0];
+              break;
+            }
           }
 
           if (!order) {
             retryCount++;
+            // Longer wait times for later retries
+            const waitTime = retryCount < 3 ? 1000 : retryCount < 6 ? 2000 : 3000;
             if (retryCount < maxRetries) {
-              console.log(`[OrderComplete] Order not found, waiting 1 second before retry ${retryCount + 1}/${maxRetries}`);
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+              console.log(`🔥 [OrderComplete] Order not found, waiting ${waitTime}ms before retry ${retryCount + 1}/${maxRetries}`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
             }
           }
         } catch (fetchError) {
-          console.error(`[OrderComplete] Error on attempt ${retryCount + 1}:`, fetchError);
+          console.error(`🔥 [OrderComplete] Error on attempt ${retryCount + 1}:`, fetchError);
           retryCount++;
           if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
       }
