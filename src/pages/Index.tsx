@@ -36,6 +36,12 @@ const Index = () => {
       setIsLoading(true);
       
       console.log('🔗 Making Supabase query...');
+      console.log('🔗 Query details:', {
+        table: 'customer_orders',
+        shareToken,
+        includeCustomer: true
+      });
+      
       const { data: orderData, error } = await supabase
         .from('customer_orders')
         .select(`
@@ -44,6 +50,8 @@ const Index = () => {
         `)
         .eq('share_token', shareToken)
         .maybeSingle();
+
+      console.log('🔗 Raw query response:', { orderData, error, shareToken });
 
       console.log('🔗 Group order query result:', { orderData, error });
       console.log('🔗 orderData exists?', !!orderData);
