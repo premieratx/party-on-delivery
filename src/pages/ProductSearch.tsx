@@ -447,7 +447,7 @@ export const ProductSearch = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
+          <div className="space-y-2">{/* Changed from grid to vertical stack for horizontal product cards */}
             {filteredProducts.map((product, index) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
@@ -457,81 +457,81 @@ export const ProductSearch = () => {
                   className={`group transition-all duration-200 ${quantity > 0 ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-lg'}`}
                 >
                   <CardContent className="p-2">
-                    <div className="flex flex-col items-center text-center h-full gap-1">
-                      {/* Product Image with priority for first few products */}
-                      <div className="w-full aspect-[3/2] rounded overflow-hidden flex-shrink-0">
+                    {/* Horizontal Layout: Image, Title/Package, Price, Add to Cart */}
+                    <div className="flex items-center gap-2 h-16 sm:h-20">
+                      {/* Product Image - Fixed size */}
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded overflow-hidden flex-shrink-0">
                         <OptimizedImage 
                           src={product.image} 
                           alt={product.title}
-                          className="w-full h-full"
+                          className="w-full h-full object-cover"
                           priority={index < 24}
                         />
                       </div>
                       
-                       {/* Product Info */}
-                        <div className="flex-1 flex flex-col justify-between min-h-0 w-full">
-                          <div>
-                            {(() => {
-                              const { cleanTitle, packageSize } = parseProductTitle(product.title);
-                              return (
-                                <>
-                                  <h4 className="font-medium text-xs leading-tight line-clamp-2 mb-1">
-                                    {cleanTitle}
-                                  </h4>
-                                  {packageSize && (
-                                    <p className="text-xs text-muted-foreground mb-1">
-                                      {packageSize}
-                                    </p>
-                                  )}
-                                </>
-                              );
-                            })()}
-                            <p className="text-lg font-bold text-primary mb-2">
-                              ${product.price.toFixed(2)}
-                            </p>
-                          </div>
-                        
-                        {/* Category Badge */}
-                        <Badge variant="secondary" className="text-xs mb-2 capitalize">
-                          {product.category}
-                        </Badge>
-                        
-                        {/* Add to Cart Controls - Mobile Optimized */}
-                        <div className="w-full mt-2">
-                          {quantity === 0 ? (
-                            <Button
-                              onClick={() => handleAddToCart(product)}
-                              size="sm"
-                              className="w-full h-7 sm:h-8 text-xs sm:text-sm p-1 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground"
-                            >
-                              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                              <span className="hidden sm:inline">Add</span>
-                            </Button>
-                          ) : (
-                            <div className="flex items-center gap-1 justify-between w-full">
-                              <Button
-                                onClick={() => handleQuantityChange(product, -1)}
-                                size="sm"
-                                variant="outline"
-                                className="w-6 h-6 sm:w-7 sm:h-7 p-0 rounded-full flex-shrink-0"
-                              >
-                                <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
-                              </Button>
-                              <span className="text-xs sm:text-sm font-medium min-w-[16px] sm:min-w-[20px] text-center flex-1">
-                                {quantity}
-                              </span>
-                              <Button
-                                onClick={() => handleQuantityChange(product, 1)}
-                                size="sm"
-                                variant="outline"
-                                className="w-6 h-6 sm:w-7 sm:h-7 p-0 rounded-full flex-shrink-0"
-                              >
-                                <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
+                      {/* Product Info - Takes available space */}
+                      <div className="flex-1 min-w-0">
+                        {(() => {
+                          const { cleanTitle, packageSize } = parseProductTitle(product.title);
+                          return (
+                            <>
+                              <h4 className="font-medium text-xs sm:text-sm leading-tight line-clamp-1 mb-0.5">
+                                {cleanTitle}
+                              </h4>
+                              {packageSize && (
+                                <p className="text-xs text-muted-foreground line-clamp-1">
+                                  {packageSize}
+                                </p>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
+                      
+                      {/* Price - Fixed width */}
+                      <div className="flex-shrink-0 text-right">
+                        <p className="text-sm sm:text-base font-bold text-primary">
+                          ${product.price.toFixed(2)}
+                        </p>
+                      </div>
+                      
+                      {/* Add to Cart Controls - Fixed width */}
+                      <div className="flex-shrink-0 w-16 sm:w-20">
+                        {quantity === 0 ? (
+                          <Button
+                            onClick={() => handleAddToCart(product)}
+                            size="sm"
+                            className="w-full h-7 sm:h-8 text-xs p-1 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground"
+                          >
+                            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                          </Button>
+                        ) : (
+                          <div className="flex items-center gap-0.5 justify-between w-full">
+                            <Button
+                              onClick={() => handleQuantityChange(product, -1)}
+                              size="sm"
+                              variant="outline"
+                              className="w-5 h-5 sm:w-6 sm:h-6 p-0 rounded-full flex-shrink-0"
+                            >
+                              <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
+                            </Button>
+                            <span className="text-xs sm:text-sm font-medium min-w-[12px] sm:min-w-[16px] text-center">
+                              {quantity}
+                            </span>
+                            <Button
+                              onClick={() => handleQuantityChange(product, 1)}
+                              size="sm"
+                              variant="outline"
+                              className="w-5 h-5 sm:w-6 sm:h-6 p-0 rounded-full flex-shrink-0"
+                            >
+                              <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Hidden category for backend reference only */}
+                      <div className="hidden" data-category={product.category}></div>
                     </div>
                   </CardContent>
                 </Card>
