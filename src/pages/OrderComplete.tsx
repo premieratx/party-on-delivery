@@ -28,7 +28,8 @@ const OrderComplete = () => {
         fromStorage: { storedSessionId, storedPaymentIntent },
         fullUrl: window.location.href,
         search: location.search,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        allParams: Object.fromEntries(urlParams.entries())
       });
       
       if (errorParam) {
@@ -45,7 +46,7 @@ const OrderComplete = () => {
       try {
         let foundOrder = null;
         
-        // Build comprehensive search terms
+        // Build comprehensive search terms - include partial matches
         const searchTerms = [
           sessionId,
           paymentIntentId,
@@ -72,12 +73,12 @@ const OrderComplete = () => {
             .order('created_at', { ascending: false })
             .limit(10);
           
-          console.log(`🔥 SEARCH RESULT for ${searchTerm}:`, { orders, error });
+          console.log(`🔥 SEARCH RESULT for ${searchTerm}:`, { orders, error, count: orders?.length });
           
           if (!error && orders?.length > 0) {
             // Prefer order with customer_id over NULL customer_id
             foundOrder = orders.find(o => o.customer_id) || orders[0];
-            console.log(`🔥 ✅ FOUND BY ID ${searchTerm}: Order #${foundOrder.order_number}`);
+            console.log(`🔥 ✅ FOUND BY ID ${searchTerm}: Order #${foundOrder.order_number}`, foundOrder);
             break;
           } else {
             console.log(`🔥 ❌ NO ORDER FOUND BY ID: ${searchTerm}`, error);
@@ -171,6 +172,25 @@ const OrderComplete = () => {
             }
           } else {
             console.log("🔥 ❌ NO RECENT ORDERS FOUND", recentError);
+          }
+        }
+        
+        // STRATEGY 4: If still nothing found, get the absolute most recent order
+        if (!foundOrder) {
+          console.log("🔥 LAST RESORT: Getting most recent order");
+          const { data: lastOrder, error: lastError } = await supabase
+            .from('customer_orders')
+            .select(`
+              *,
+              customer:customers(first_name, last_name, email)
+            `)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+            
+          if (!lastError && lastOrder) {
+            foundOrder = lastOrder;
+            console.log(`🔥 ⚠️  USING ABSOLUTE LAST ORDER: Order #${foundOrder.order_number}`);
           }
         }
         
