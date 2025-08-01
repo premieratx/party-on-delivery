@@ -4,6 +4,7 @@
  */
 
 import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 export interface DeliveryInfo {
   date: Date | null;
@@ -43,10 +44,12 @@ export const parseDeliveryDate = (dateString: string): Date => {
   return new Date(dateString + 'T12:00:00');
 };
 
-// Format delivery date consistently across the app
+// Format delivery date consistently across the app with timezone handling
 export const formatDeliveryDate = (dateString: string, formatString: string = 'EEEE, MMMM do, yyyy'): string => {
   const date = parseDeliveryDate(dateString);
-  return format(date, formatString);
+  // Always use America/Chicago timezone for consistent date display
+  const zonedDate = toZonedTime(date, 'America/Chicago');
+  return format(zonedDate, formatString);
 };
 
 // Storage keys for delivery information
