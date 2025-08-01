@@ -570,8 +570,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         });
         
         if (response.data?.order) {
+          const orderNumber = response.data.order.order_number || response.data.order.id;
           const orderInfo = {
-            orderNumber: response.data.order.order_number || response.data.order.id,
+            orderNumber,
             total: finalTotal,
             date: new Date().toLocaleDateString(),
             orderId: response.data.order.id,
@@ -612,6 +613,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             },
             pageContext: 'order-completion'
           });
+          
+          // Navigate with order details for proper loading
+          navigate(`/order-complete?order_number=${orderNumber}&session_id=${paymentIntentId}`);
+          return; // Early return to prevent the default navigation
         }
       } catch (error) {
         console.error('Failed to create Shopify order:', error);
@@ -625,6 +630,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     localStorage.removeItem('partyondelivery_cart');
     localStorage.removeItem('partyondelivery_applied_discount'); // Clear discount after transaction
+    
+    // Only navigate here if we didn't already navigate with order details above
     navigate('/order-complete');
   };
 

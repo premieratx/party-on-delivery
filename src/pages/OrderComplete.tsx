@@ -31,20 +31,48 @@ const OrderComplete = () => {
         const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns';
         
-        const orderUrl = sessionId 
-          ? `${supabaseUrl}/rest/v1/customer_orders?stripe_session_id=eq.${sessionId}&select=*`
-          : `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
-
-        const orderResponse = await fetch(orderUrl, {
-          headers: {
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const orders = await orderResponse.json();
-        const order = orders[0];
+        // Try multiple ways to find the order
+        let order = null;
+        
+        if (sessionId) {
+          // First try with stripe_session_id
+          const sessionUrl = `${supabaseUrl}/rest/v1/customer_orders?stripe_session_id=eq.${sessionId}&select=*`;
+          const sessionResponse = await fetch(sessionUrl, {
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          const sessionOrders = await sessionResponse.json();
+          order = sessionOrders[0];
+          
+          // If not found, try with order_number from URL params
+          if (!order && orderNumber) {
+            const orderUrl = `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
+            const orderResponse = await fetch(orderUrl, {
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            const orders = await orderResponse.json();
+            order = orders[0];
+          }
+        } else if (orderNumber) {
+          // Try with order_number
+          const orderUrl = `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
+          const orderResponse = await fetch(orderUrl, {
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          const orders = await orderResponse.json();
+          order = orders[0];
+        }
 
         if (!order) {
           toast({
