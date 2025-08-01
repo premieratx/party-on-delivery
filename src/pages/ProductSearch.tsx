@@ -15,6 +15,7 @@ import { useCustomSiteProducts } from "@/hooks/useCustomSiteProducts";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
+import { generateDuplicateReport } from '@/utils/duplicateAnalyzer';
 
 interface Product {
   id: string;
@@ -61,6 +62,10 @@ export const ProductSearch = () => {
   useEffect(() => {
     if (!loading && allProducts.length > 0) {
       console.log(`✅ Loaded ${allProducts.length} products from Shopify`);
+      
+      // Generate and log duplicate analysis
+      const duplicateReport = generateDuplicateReport(allProducts);
+      console.log('\n🔍 DUPLICATE PRODUCTS ANALYSIS:\n', duplicateReport);
       
       // Load favorites immediately
       const favs = getFavoritesProducts(allProducts);
