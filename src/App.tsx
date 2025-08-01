@@ -33,6 +33,7 @@ import { CustomCollectionCreator } from "./pages/CustomCollectionCreator";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
+import TestGroupOrders from "./pages/TestGroupOrders";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -90,6 +91,9 @@ const App = () => {
                   {/* Search Route */}
                   <Route path="/search" element={<ProductSearch />} />
                   <Route path="/product-search" element={<ProductSearch />} />
+                  
+                  {/* Test Routes */}
+                  <Route path="/test-group-orders" element={<TestGroupOrders />} />
                   
                   {/* Concierge Service Route */}
                   <Route path="/concierge" element={<ConciergeService />} />
