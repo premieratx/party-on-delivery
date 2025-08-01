@@ -17,7 +17,7 @@ import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, Exte
 import { useNavigate } from 'react-router-dom';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format, addHours, isToday } from 'date-fns';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { getActiveDeliveryInfo, formatDeliveryDate, parseDeliveryDate } from '@/utils/deliveryInfoManager';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
@@ -242,12 +242,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const getAvailableTimeSlots = () => {
     if (!deliveryInfo.date) return timeSlots;
     
-    // Get current time in CST
-    const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
+    // Get current time in CST (simplified - use local time for now)
+    const nowCST = new Date();
     const minDeliveryDateCST = addHours(nowCST, 1);
     
-    // Convert selected date to CST for comparison
-    const selectedDateCST = toZonedTime(deliveryInfo.date, CST_TIMEZONE);
+    // Convert selected date for comparison
+    const selectedDateCST = deliveryInfo.date;
     
     // If today is selected, filter out time slots that are within 1 hour from current CST time
     if (isToday(selectedDateCST)) {
@@ -261,13 +261,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         if (period === 'PM' && hours !== 12) slotHours += 12;
         if (period === 'AM' && hours === 12) slotHours = 0;
         
-        // Create a date object for the slot time in CST
+        // Create a date object for the slot time
         const slotDateTime = new Date(selectedDateCST);
         slotDateTime.setHours(slotHours, minutes, 0, 0);
-        const slotDateTimeCST = toZonedTime(slotDateTime, CST_TIMEZONE);
         
-        // Check if slot is at least 1 hour from current CST time
-        return slotDateTimeCST >= minDeliveryDateCST;
+        // Check if slot is at least 1 hour from current time
+        return slotDateTime >= minDeliveryDateCST;
       });
     }
     
@@ -299,25 +298,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     new Date(deliveryInfo.date + 'T12:00:00').toDateString() === new Date(originalOrderInfo.deliveryDate + 'T12:00:00').toDateString() &&
     deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
 
-  // Enhanced group order matching - check if this matches group order details
-  const groupOrderInfo = localStorage.getItem('groupOrderDeliveryInfo');
-  const isGroupOrderMatch = groupOrderInfo && (() => {
-    try {
-      const groupData = JSON.parse(groupOrderInfo);
-      if (groupData.priority === 'group_order') {
-        const dateMatch = deliveryInfo.date && groupData.date &&
-          new Date(deliveryInfo.date + 'T12:00:00').toDateString() === new Date(groupData.date + 'T12:00:00').toDateString();
-        const timeMatch = deliveryInfo.timeSlot === groupData.timeSlot;
-        const addressMatch = groupData.address && (
-          (typeof groupData.address === 'string' && addressInfo.street === groupData.address.split(',')[0]?.trim()) ||
-          (typeof groupData.address === 'object' && addressInfo.street === groupData.address.street)
-        );
-        console.log('🎯 Group order match check:', { dateMatch, timeMatch, addressMatch });
-        return dateMatch && timeMatch && addressMatch;
-      }
-    } catch (error) {
-      console.error('Error checking group order match:', error);
+  // Enhanced group order matching using single source of truth
+  const activeDeliveryInfo = getActiveDeliveryInfo();
+  const isGroupOrderMatch = activeDeliveryInfo.source === 'group_order' && (() => {
+    const groupData = activeDeliveryInfo.data;
+    const groupAddress = activeDeliveryInfo.addressInfo;
+    
+    if (groupData) {
+      const dateMatch = deliveryInfo.date && groupData.date &&
+        parseDeliveryDate(deliveryInfo.date.toISOString().split('T')[0]).toDateString() === parseDeliveryDate(groupData.date.toISOString().split('T')[0]).toDateString();
+      const timeMatch = deliveryInfo.timeSlot === groupData.timeSlot;
+      const addressMatch = groupAddress ? addressInfo.street === groupAddress.street : addressInfo.street === groupData.address;
+      
+      console.log('🎯 Group order match check:', { dateMatch, timeMatch, addressMatch });
+      return dateMatch && timeMatch && addressMatch;
     }
+    return false;
     return false;
   })();
 
@@ -809,10 +805,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         <div>
                           <span className="text-xs font-medium text-green-800">Delivery Time: </span>
                           <span className="text-xs text-green-700">
-                            {format(
-                              toZonedTime(new Date(deliveryInfo.date!), 'America/Chicago'), 
-                              'EEEE, MMM d'
-                            )} at {deliveryInfo.timeSlot}
+                            {formatDeliveryDate(deliveryInfo.date!.toISOString().split('T')[0], 'EEEE, MMM d')} at {deliveryInfo.timeSlot}
                           </span>
                         </div>
                       </div>
@@ -920,10 +913,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                  )}
                                >
                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                 {deliveryInfo.date ? format(
-                                   toZonedTime(deliveryInfo.date, 'America/Chicago'), 
-                                   "EEEE, PPP"
-                                 ) : "Pick a date"}
+                                  {deliveryInfo.date ? formatDeliveryDate(deliveryInfo.date.toISOString().split('T')[0], "EEEE, PPP") : "Pick a date"}
                                </Button>
                              </PopoverTrigger>
                              <PopoverContent className="w-auto p-0 z-50 bg-popover border" align="start">

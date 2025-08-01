@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Share2, Users, Calendar, MapPin, Package, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import { formatDeliveryDate } from '@/utils/deliveryInfoManager';
 
 interface GroupOrderParticipant {
   email: string;
@@ -196,10 +197,7 @@ const GroupOrderDashboard = () => {
     );
   }
 
-  const deliveryDate = format(
-    new Date(groupOrder.delivery_date + 'T12:00:00'), 
-    'EEEE, MMMM do, yyyy'
-  );
+  const deliveryDate = formatDeliveryDate(groupOrder.delivery_date, 'EEEE, MMMM do, yyyy');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/20 to-secondary/20 p-4">

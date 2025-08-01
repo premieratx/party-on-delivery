@@ -6,8 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ShareIcon, CopyIcon, MessageCircle, Facebook, Instagram, CheckCircle, Clock, Package, MapPin, Calendar, ExternalLink, Copy, Mail, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { formatDeliveryDate } from '@/utils/deliveryInfoManager';
 
 interface OrderCompleteViewProps {
   orderNumber: string;
@@ -159,10 +158,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
                     Delivery Date:
                   </span>
                   <span>
-                    {format(
-                      new Date(deliveryDate + 'T12:00:00'), 
-                      'EEEE, MMMM do, yyyy'
-                    )}
+                    {formatDeliveryDate(deliveryDate, 'EEEE, MMMM do, yyyy')}
                   </span>
                 </div>
               )}

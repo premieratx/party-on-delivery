@@ -12,6 +12,8 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useReliableStorage } from '@/hooks/useReliableStorage';
 import { useUnifiedCart, UnifiedCartItem } from '@/hooks/useUnifiedCart';
 import { useGroupOrderHandler } from '@/hooks/useGroupOrderHandler';
+import GroupOrderJoinFlow from './GroupOrderJoinFlow';
+import { getActiveDeliveryInfo, formatDeliveryDate, isDeliveryExpired } from '@/utils/deliveryInfoManager';
 
 export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'products' | 'cart' | 'checkout';
 
@@ -44,7 +46,7 @@ export const DeliveryWidget: React.FC = () => {
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
   // Use clean group order handler
-  const { groupOrderData, isJoiningGroup, clearGroupOrder } = useGroupOrderHandler();
+  const { groupOrderData, isJoiningGroup, showJoinFlow, clearGroupOrder, handleJoinConfirmed, handleJoinDeclined } = useGroupOrderHandler();
   
   // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
@@ -72,32 +74,9 @@ export const DeliveryWidget: React.FC = () => {
   // Calculate subtotal for consistent delivery fee calculation
   const subtotal = getTotalPrice();
 
-  // Check if last order has expired (delivery date/time has passed)
-  const isLastOrderExpired = () => {
-    if (!lastOrderInfo?.deliveryDate || !lastOrderInfo?.deliveryTime) return true;
-    
-    try {
-      const deliveryDate = new Date(lastOrderInfo.deliveryDate + 'T12:00:00');
-      const [timeSlot] = lastOrderInfo.deliveryTime.split(' - '); // Get start time from "10:00 AM - 11:00 AM"
-      const [time, period] = timeSlot.split(' ');
-      const [hours, minutes] = time.split(':').map(Number);
-      
-      // Convert to 24-hour format
-      let deliveryHours = hours;
-      if (period === 'PM' && hours !== 12) deliveryHours += 12;
-      if (period === 'AM' && hours === 12) deliveryHours = 0;
-      
-      deliveryDate.setHours(deliveryHours, minutes, 0, 0);
-      
-      return new Date() > deliveryDate;
-    } catch (error) {
-      console.error('Error parsing delivery date/time:', error);
-      return true; // If we can't parse, assume expired
-    }
-  };
-
-  // Filter out expired orders
-  const validLastOrderInfo = lastOrderInfo && !isLastOrderExpired() ? lastOrderInfo : null;
+  // Use single source of truth for delivery info with proper expiry checking
+  const validLastOrderInfo = lastOrderInfo && lastOrderInfo.deliveryDate && lastOrderInfo.deliveryTime && 
+    !isDeliveryExpired(lastOrderInfo.deliveryDate, lastOrderInfo.deliveryTime) ? lastOrderInfo : null;
 
   // Handle add to order flow when flag is set
   useEffect(() => {
@@ -249,6 +228,20 @@ export const DeliveryWidget: React.FC = () => {
       alert('Error in checkout: ' + error.message);
     }
   };
+
+  // Show group order join flow if needed
+  if (showJoinFlow) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareToken = urlParams.get('share') || localStorage.getItem('groupOrderToken') || '';
+    
+    return (
+      <GroupOrderJoinFlow
+        shareToken={shareToken}
+        onJoinConfirmed={handleJoinConfirmed}
+        onJoinDeclined={handleJoinDeclined}
+      />
+    );
+  }
 
   if (currentStep === 'order-continuation') {
     return (

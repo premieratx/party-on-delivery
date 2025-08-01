@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { getActiveDeliveryInfo, isJoiningGroupOrder, clearGroupOrderData, STORAGE_KEYS } from '@/utils/deliveryInfoManager';
 
 export interface GroupOrderData {
   shareToken: string;
@@ -17,6 +18,7 @@ export const useGroupOrderHandler = () => {
   
   const [groupOrderData, setGroupOrderData] = useState<GroupOrderData | null>(null);
   const [isJoiningGroup, setIsJoiningGroup] = useState(false);
+  const [showJoinFlow, setShowJoinFlow] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -26,52 +28,58 @@ export const useGroupOrderHandler = () => {
     
     console.log('🔗 Group Order Handler: share =', shareToken, 'customer =', isCustomerJoining, 'checkout =', checkoutParam);
     
-    // Handle group order invitation flow
+    // ONLY process group order parameters when all three are present
+    // This prevents the error from appearing on regular app loads
     if (shareToken && isCustomerJoining && checkoutParam) {
-      console.log('🔗 Processing group order join...');
+      console.log('🔗 Valid group order invitation detected');
       
-      // Check if group order data is already stored
-      const storedGroupData = localStorage.getItem('groupOrderDeliveryInfo');
-      if (storedGroupData) {
-        try {
-          const groupData = JSON.parse(storedGroupData);
-          console.log('🔗 Found stored group order data:', groupData);
-          
-          setGroupOrderData({
-            shareToken,
-            deliveryDate: groupData.date,
-            deliveryTime: groupData.timeSlot,
-            deliveryAddress: groupData.address,
-          });
-          
-          setIsJoiningGroup(true);
-          
-          // Apply group order discount
-          localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
-            code: 'GROUP-SHIPPING-FREE',
-            type: 'free_shipping',
-            value: 0
-          }));
-          
-          // Set flags for checkout flow
-          localStorage.setItem('groupOrderToken', shareToken);
-          localStorage.setItem('partyondelivery_add_to_order', 'true');
-          localStorage.setItem('groupOrderJoinDecision', 'yes');
-          
-          console.log('🔗 Group order setup complete');
-          
-        } catch (error) {
-          console.error('🔗 Error parsing group order data:', error);
-        }
+      // Check if we already have confirmed group order data
+      const activeDeliveryInfo = getActiveDeliveryInfo();
+      
+      if (activeDeliveryInfo.source === 'group_order' && activeDeliveryInfo.data) {
+        console.log('🔗 Using existing group order data');
+        
+        setGroupOrderData({
+          shareToken,
+          deliveryDate: activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
+          deliveryTime: activeDeliveryInfo.data.timeSlot || '',
+          deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
+        });
+        
+        setIsJoiningGroup(true);
+      } else {
+        console.log('🔗 Need to show join flow for token:', shareToken);
+        setShowJoinFlow(true);
       }
       
-      // Clean up URL
+      // Clean up URL after processing
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
+    } else if (shareToken && !isCustomerJoining && !checkoutParam) {
+      // This is just a regular share link visit - redirect to proper join page
+      console.log('🔗 Redirecting to join page for share token:', shareToken);
+      window.location.href = `/join/${shareToken}`;
+      return;
+    } else {
+      // Regular app load - check if we have existing group order state
+      const isCurrentlyJoining = isJoiningGroupOrder();
+      if (isCurrentlyJoining) {
+        const activeDeliveryInfo = getActiveDeliveryInfo();
+        if (activeDeliveryInfo.source === 'group_order' && activeDeliveryInfo.data) {
+          const groupToken = localStorage.getItem(STORAGE_KEYS.GROUP_ORDER_TOKEN);
+          setGroupOrderData({
+            shareToken: groupToken || '',
+            deliveryDate: activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
+            deliveryTime: activeDeliveryInfo.data.timeSlot || '',
+            deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
+          });
+          setIsJoiningGroup(true);
+        }
+      }
     }
     
     // Handle scroll to checkout if needed
-    if (checkoutParam) {
+    if (checkoutParam && !showJoinFlow) {
       setTimeout(() => {
         const checkoutElement = document.querySelector('[data-checkout-section]');
         if (checkoutElement) {
@@ -84,15 +92,38 @@ export const useGroupOrderHandler = () => {
   const clearGroupOrder = () => {
     setGroupOrderData(null);
     setIsJoiningGroup(false);
-    localStorage.removeItem('groupOrderToken');
-    localStorage.removeItem('partyondelivery_add_to_order');
-    localStorage.removeItem('groupOrderJoinDecision');
-    localStorage.removeItem('groupOrderDeliveryInfo');
+    setShowJoinFlow(false);
+    clearGroupOrderData();
+  };
+
+  const handleJoinConfirmed = () => {
+    setShowJoinFlow(false);
+    setIsJoiningGroup(true);
+    
+    // Update group order data from stored info
+    const activeDeliveryInfo = getActiveDeliveryInfo();
+    if (activeDeliveryInfo.source === 'group_order' && activeDeliveryInfo.data) {
+      const groupToken = localStorage.getItem(STORAGE_KEYS.GROUP_ORDER_TOKEN);
+      setGroupOrderData({
+        shareToken: groupToken || '',
+        deliveryDate: activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
+        deliveryTime: activeDeliveryInfo.data.timeSlot || '',
+        deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
+      });
+    }
+  };
+
+  const handleJoinDeclined = () => {
+    setShowJoinFlow(false);
+    clearGroupOrder();
   };
 
   return {
     groupOrderData,
     isJoiningGroup,
-    clearGroupOrder
+    showJoinFlow,
+    clearGroupOrder,
+    handleJoinConfirmed,
+    handleJoinDeclined
   };
 };

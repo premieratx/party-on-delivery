@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Check, X, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDeliveryDate } from '@/utils/deliveryInfoManager';
 
 interface AddressConfirmationProps {
   onConfirmSameAddress: () => void;
@@ -53,7 +53,7 @@ export const AddressConfirmation: React.FC<AddressConfirmationProps> = ({
                 )}
                 {lastOrderInfo.deliveryDate && lastOrderInfo.deliveryTime && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Last delivery: {format(new Date(lastOrderInfo.deliveryDate + 'T12:00:00'), 'MMM d, yyyy')} at {lastOrderInfo.deliveryTime}
+                    Last delivery: {formatDeliveryDate(lastOrderInfo.deliveryDate, 'MMM d, yyyy')} at {lastOrderInfo.deliveryTime}
                   </p>
                 )}
               </div>
