@@ -27,7 +27,24 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
   const updateDeliveryInfo = (field: keyof DeliveryInfo, value: any) => {
     console.log('🔄 updateDeliveryInfo called with:', { field, value });
     console.log('Current deliveryInfo:', deliveryInfo);
-    const newInfo = { ...deliveryInfo, [field]: value };
+    
+    // Special handling for date field to extract actual date value
+    let processedValue = value;
+    if (field === 'date' && value) {
+      if (typeof value === 'object' && value._type === "Date" && value.value) {
+        // Handle complex date object from react-day-picker
+        processedValue = value.value.iso || new Date(value.value.value).toISOString();
+        console.log('🔄 Extracted date from complex object:', processedValue);
+      } else if (value instanceof Date) {
+        processedValue = value.toISOString();
+        console.log('🔄 Converted Date to ISO string:', processedValue);
+      } else if (typeof value === 'string') {
+        processedValue = value;
+        console.log('🔄 Using string date as-is:', processedValue);
+      }
+    }
+    
+    const newInfo = { ...deliveryInfo, [field]: processedValue };
     console.log('New deliveryInfo will be:', newInfo);
     console.log('🔄 About to call onDeliveryInfoChange...');
     onDeliveryInfoChange(newInfo);

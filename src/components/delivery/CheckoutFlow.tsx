@@ -422,7 +422,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           onDiscountChange(null);
         }
       }
-    }
   }, [deliveryDetailsMatch, appliedDiscount?.code, onDiscountChange, isAddingToOrder, affiliateCode, appliedDiscount]);
 
   // Calculate discounted subtotal for sales tax calculation
@@ -937,17 +936,29 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                   <Calendar
                                     mode="single"
                                     selected={deliveryInfo.date || undefined}
-                                    onSelect={(date) => {
-                                      console.log('📅 Calendar date selected:', date);
-                                      if (date) {
-                                        // Convert to proper Date object if needed
-                                        const selectedDate = date instanceof Date ? date : new Date(date);
-                                        console.log('📅 Converted date:', selectedDate);
-                                        updateDeliveryInfo('date', selectedDate);
-                                        updateDeliveryInfo('timeSlot', '');
-                                        setIsCalendarOpen(false);
-                                        console.log('📅 Date selection completed successfully');
-                                      }
+                                     onSelect={(date) => {
+                                       console.log('📅 Calendar date selected:', date);
+                                       if (date) {
+                                         // Handle the complex date object structure from react-day-picker
+                                         let actualDate: Date;
+                                         if ((date as any)._type === "Date" && (date as any).value) {
+                                           // Extract from complex structure
+                                           const complexDate = date as any;
+                                           actualDate = new Date(complexDate.value.iso || complexDate.value.value);
+                                         } else if (date instanceof Date) {
+                                           actualDate = date;
+                                         } else {
+                                           actualDate = new Date(date as any);
+                                         }
+                                         
+                                         console.log('📅 Extracted actual date:', actualDate);
+                                         const dateString = actualDate.toISOString();
+                                         console.log('📅 Storing as ISO string:', dateString);
+                                         updateDeliveryInfo('date', dateString);
+                                         updateDeliveryInfo('timeSlot', '');
+                                         setIsCalendarOpen(false);
+                                         console.log('📅 Date selection completed successfully');
+                                     }
                                     }}
                                     disabled={(date) => {
                                       const today = new Date();
