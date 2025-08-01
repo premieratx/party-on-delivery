@@ -160,7 +160,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
                   </span>
                   <span>
                     {format(
-                      toZonedTime(new Date(deliveryDate), 'America/Chicago'), 
+                      new Date(deliveryDate + 'T12:00:00'), 
                       'EEEE, MMMM do, yyyy'
                     )}
                   </span>

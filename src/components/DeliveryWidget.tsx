@@ -77,7 +77,7 @@ export const DeliveryWidget: React.FC = () => {
     if (!lastOrderInfo?.deliveryDate || !lastOrderInfo?.deliveryTime) return true;
     
     try {
-      const deliveryDate = new Date(lastOrderInfo.deliveryDate);
+      const deliveryDate = new Date(lastOrderInfo.deliveryDate + 'T12:00:00');
       const [timeSlot] = lastOrderInfo.deliveryTime.split(' - '); // Get start time from "10:00 AM - 11:00 AM"
       const [time, period] = timeSlot.split(' ');
       const [hours, minutes] = time.split(':').map(Number);

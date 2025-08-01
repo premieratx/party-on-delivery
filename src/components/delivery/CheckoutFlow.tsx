@@ -296,7 +296,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     originalOrderInfo &&
     addressInfo.street === originalOrderInfo.address?.split(',')[0]?.trim() &&
     deliveryInfo.date && originalOrderInfo.deliveryDate &&
-    new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
+    new Date(deliveryInfo.date + 'T12:00:00').toDateString() === new Date(originalOrderInfo.deliveryDate + 'T12:00:00').toDateString() &&
     deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
 
   // Enhanced group order matching - check if this matches group order details
@@ -306,7 +306,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       const groupData = JSON.parse(groupOrderInfo);
       if (groupData.priority === 'group_order') {
         const dateMatch = deliveryInfo.date && groupData.date &&
-          new Date(deliveryInfo.date).toDateString() === new Date(groupData.date).toDateString();
+          new Date(deliveryInfo.date + 'T12:00:00').toDateString() === new Date(groupData.date + 'T12:00:00').toDateString();
         const timeMatch = deliveryInfo.timeSlot === groupData.timeSlot;
         const addressMatch = groupData.address && (
           (typeof groupData.address === 'string' && addressInfo.street === groupData.address.split(',')[0]?.trim()) ||
@@ -780,7 +780,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       )}
                       {originalOrderInfo?.deliveryDate && (
                         <div>• Date: {format(
-                          toZonedTime(new Date(originalOrderInfo.deliveryDate), 'America/Chicago'), 
+                          new Date(originalOrderInfo.deliveryDate + 'T12:00:00'), 
                           "EEEE, MMMM do, yyyy"
                         )}</div>
                       )}

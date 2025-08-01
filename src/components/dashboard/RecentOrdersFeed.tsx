@@ -207,7 +207,7 @@ export const RecentOrdersFeed: React.FC<RecentOrdersFeedProps> = ({
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span>
-                              {format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEE, MMM d')}
+                              {format(new Date(order.delivery_date + 'T12:00:00'), 'EEE, MMM d')}
                               {order.delivery_time && ` at ${order.delivery_time}`}
                             </span>
                           </div>
