@@ -211,20 +211,22 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
             )}
           </div>
 
-          {/* Sticky Checkout Button */}
+          {/* Fixed Bottom Checkout Bar */}
           {items.length > 0 && (
-            <div className="border-t p-4 bg-background">
-              <Button 
-                variant="delivery" 
-                size="xl" 
-                className="w-full"
-                onClick={() => {
-                  onCheckout();
-                  onClose(); // Always close cart when proceeding to checkout
-                }}
-              >
-                Proceed to Checkout
-              </Button>
+            <div className="fixed bottom-0 left-0 right-0 z-50 border-t p-4 bg-background shadow-lg">
+              <div className="max-w-4xl mx-auto">
+                <Button 
+                  variant="delivery" 
+                  size="xl" 
+                  className="w-full"
+                  onClick={() => {
+                    onCheckout();
+                    onClose(); // Always close cart when proceeding to checkout
+                  }}
+                >
+                  Proceed to Checkout
+                </Button>
+              </div>
             </div>
           )}
         </div>

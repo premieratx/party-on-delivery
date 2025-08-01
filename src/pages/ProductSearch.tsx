@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { OptimizedImage } from "@/components/common/OptimizedImage";
+import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
@@ -316,15 +317,11 @@ export const ProductSearch = () => {
                   <span className="hidden sm:inline">{getTotalItems()} items • </span>
                   ${getTotalPrice().toFixed(2)}
                 </div>
-                <Button 
-                  size="sm"
-                  onClick={() => setShowCart(true)}
-                  className="flex items-center gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
-                >
-                  <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Cart</span>
-                  <span className="sm:hidden">{getTotalItems()}</span>
-                </Button>
+                {/* Cart button removed - now using bottom cart bar */}
+                <div className="text-xs sm:text-sm text-muted-foreground">
+                  <span className="hidden sm:inline">{getTotalItems()} items • </span>
+                  ${getTotalPrice().toFixed(2)}
+                </div>
               </div>
             )}
           </div>
@@ -546,6 +543,14 @@ export const ProductSearch = () => {
 
       {/* Unified Cart */}
       <UnifiedCart isOpen={showCart} onClose={() => setShowCart(false)} />
+      
+      <BottomCartBar
+        items={cartItems}
+        totalPrice={getTotalPrice()}
+        isVisible={cartItems.length > 0}
+        onOpenCart={() => setShowCart(true)}
+        onCheckout={() => navigate('/checkout')}
+      />
     </div>
   );
 };

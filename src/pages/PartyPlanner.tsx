@@ -235,37 +235,14 @@ export const PartyPlanner = () => {
                 </p>
               </div>
 
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => setShowCart(true)}
-                disabled={getTotalItems() === 0}
-                className="px-1 sm:px-2 h-7 sm:h-8 text-xs"
-              >
-                <span className="hidden sm:inline">Cart</span>
-                <span className="sm:hidden">{getTotalItems()}</span>
-              </Button>
+              {/* Cart button removed - now using bottom cart bar */}
             </div>
 
-            {/* Desktop Layout: Search Icon - Cart - Centered Text - Checkout Button */}
+            {/* Desktop Layout: Search Icon - Centered Text - Checkout Button */}
             <div className="hidden md:flex justify-between items-center w-full">
               <div className="flex items-center gap-3">
                 <SearchIcon size="md" variant="desktop" />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="relative" 
-                  onClick={() => setShowCart(true)}
-                  data-cart-trigger
-                >
-                  <ShoppingCart className="w-4 h-4 mr-1" />
-                  Cart ({getTotalItems()})
-                  {getTotalItems() > 0 && cartFlash && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-ping">
-                      {getTotalItems()}
-                    </span>
-                  )}
-                </Button>
+                {/* Cart button removed - now using bottom cart bar */}
                 {getTotalItems() > 0 && (
                   <span className="text-sm font-medium text-muted-foreground border rounded px-2 py-1 bg-muted/50">
                     Running Total: ${getTotalPrice().toFixed(2)}
@@ -279,14 +256,7 @@ export const PartyPlanner = () => {
                 </p>
               </div>
 
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => setShowCart(true)}
-                disabled={getTotalItems() === 0}
-              >
-                Cart
-              </Button>
+              {/* Cart button removed - now using bottom cart bar */}
             </div>
           </div>
         </div>

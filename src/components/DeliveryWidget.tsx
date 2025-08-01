@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import { ProductCategories } from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
@@ -395,6 +396,13 @@ export const DeliveryWidget: React.FC = () => {
         appliedDiscount={appliedDiscount}
         tipAmount={tipAmount}
         onEmptyCart={handleEmptyCart}
+      />
+      <BottomCartBar
+        items={cartItems}
+        totalPrice={getTotalPrice()}
+        isVisible={cartItems.length > 0}
+        onOpenCart={() => setIsCartOpen(true)}
+        onCheckout={handleCheckout}
       />
     </div>
   );

@@ -146,35 +146,7 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
           <span className="hidden sm:inline">Home</span>
         </Button>
 
-{!isSearchPage && getTotalItems() > 0 && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleCart}
-            className="h-8 sm:h-9 px-2 sm:px-3 relative text-xs sm:text-sm bg-green-600 hover:bg-green-700"
-            key={`cart-${getTotalItems()}-${getTotalPrice()}`}
-          >
-            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-            <span className="hidden sm:inline" key={`desktop-${cartItems.length}-${getTotalItems()}-${getTotalPrice()}`}>
-              Cart ({getTotalItems()}) ${getTotalPrice().toFixed(2)}
-            </span>
-            <span className="sm:hidden" key={`mobile-${cartItems.length}-${getTotalItems()}`}>
-              {getTotalItems()}
-            </span>
-          </Button>
-        )}
-        
-        {isSearchPage && getTotalItems() > 0 && (
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => navigate('/checkout')}
-            className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm bg-green-600 hover:bg-green-700"
-          >
-            <span className="hidden sm:inline">Proceed to Checkout</span>
-            <span className="sm:hidden">Checkout</span>
-          </Button>
-        )}
+        {/* Cart buttons removed - now using bottom cart bar */}
       </div>
     </div>
   );
