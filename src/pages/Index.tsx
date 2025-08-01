@@ -16,6 +16,8 @@ const Index = () => {
     const urlParams = new URLSearchParams(location.search);
     const shareToken = urlParams.get('share');
     
+    console.log('🔗 Index.tsx: URL search params:', location.search);
+    console.log('🔗 Index.tsx: Full URL:', window.location.href);
     console.log('🔗 Index.tsx: Checking for share token:', shareToken);
     console.log('🔗 Group order token in localStorage:', localStorage.getItem('groupOrderToken'));
     
@@ -23,13 +25,17 @@ const Index = () => {
     if (shareToken) {
       console.log('🔗 Loading group order details for token:', shareToken);
       loadGroupOrderDetails(shareToken);
+    } else {
+      console.log('🔗 No share token found in URL');
     }
   }, [location.search]);
 
   const loadGroupOrderDetails = async (shareToken: string) => {
     try {
+      console.log('🔗 loadGroupOrderDetails START - token:', shareToken);
       setIsLoading(true);
       
+      console.log('🔗 Making Supabase query...');
       const { data: orderData, error } = await supabase
         .from('customer_orders')
         .select(`
@@ -40,13 +46,21 @@ const Index = () => {
         .maybeSingle();
 
       console.log('🔗 Group order query result:', { orderData, error });
+      console.log('🔗 orderData exists?', !!orderData);
+      console.log('🔗 About to set modal state...');
 
-      if (error) throw error;
+      if (error) {
+        console.log('🔗 Error in query:', error);
+        throw error;
+      }
       
       if (orderData) {
+        console.log('🔗 Setting group order details and showing modal');
         setGroupOrderDetails(orderData);
         setShowGroupModal(true);
+        console.log('🔗 Modal should now be visible');
       } else {
+        console.log('🔗 No order data found, showing toast');
         toast({
           title: "Order Not Found",
           description: "This shared order link is no longer valid.",
@@ -54,13 +68,14 @@ const Index = () => {
         });
       }
     } catch (error) {
-      console.error('Error loading group order:', error);
+      console.error('🔗 Error loading group order:', error);
       toast({
         title: "Error",
         description: "Failed to load shared order details.",
         variant: "destructive",
       });
     } finally {
+      console.log('🔗 loadGroupOrderDetails END');
       setIsLoading(false);
     }
   };
