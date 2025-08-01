@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { deduplicateProducts } from '@/utils/duplicateAnalyzer';
 
 interface Product {
   id: string;
@@ -82,7 +83,11 @@ export function useCustomSiteProducts() {
       });
 
       console.log(`Filtered to ${allFilteredProducts.length} products for custom site`);
-      setProducts(allFilteredProducts);
+      
+      // Apply deduplication and grouping
+      const deduplicatedProducts = deduplicateProducts(allFilteredProducts);
+      console.log(`Deduplicated to ${deduplicatedProducts.length} unique products`);
+      setProducts(deduplicatedProducts as any);
       
     } catch (error) {
       console.error('Error loading filtered products:', error);
@@ -131,7 +136,11 @@ export function useCustomSiteProducts() {
       });
 
       console.log(`Loaded ${allProducts.length} total products`);
-      setProducts(allProducts);
+      
+      // Apply deduplication and grouping
+      const deduplicatedProducts = deduplicateProducts(allProducts);
+      console.log(`Deduplicated to ${deduplicatedProducts.length} unique products`);
+      setProducts(deduplicatedProducts as any);
       
     } catch (error) {
       console.error('Error loading products:', error);

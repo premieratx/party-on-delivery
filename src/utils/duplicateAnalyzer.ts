@@ -10,11 +10,149 @@ interface Product {
   images?: string[];
 }
 
+interface ProductVariant {
+  id: string;
+  title: string;
+  price: number;
+  size: string;
+  sizeValue: number;
+  image: string;
+  handle: string;
+  variants?: any[];
+  images?: string[];
+}
+
+interface GroupedProduct {
+  id: string;
+  title: string;
+  baseTitle: string;
+  price: number;
+  image: string;
+  description: string;
+  handle: string;
+  category: string;
+  variants: ProductVariant[];
+  images?: string[];
+}
+
 interface DuplicateGroup {
   baseName: string;
   products: Product[];
   sizes: string[];
   categories: string[];
+}
+
+export function deduplicateProducts(products: Product[]): GroupedProduct[] {
+  // Group products by base name
+  const productGroups = new Map<string, Product[]>();
+  
+  products.forEach(product => {
+    const baseName = extractBaseName(product.title);
+    if (!productGroups.has(baseName)) {
+      productGroups.set(baseName, []);
+    }
+    productGroups.get(baseName)!.push(product);
+  });
+  
+  const deduplicatedProducts: GroupedProduct[] = [];
+  
+  productGroups.forEach((productList, baseName) => {
+    if (productList.length === 1) {
+      // Single product, convert to grouped format
+      const product = productList[0];
+      const sizeInfo = extractSizeInfo(product.title);
+      
+      deduplicatedProducts.push({
+        id: product.id,
+        title: product.title,
+        baseTitle: baseName,
+        price: product.price,
+        image: product.image,
+        description: product.description,
+        handle: product.handle,
+        category: product.category,
+        variants: [{
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          size: sizeInfo.size,
+          sizeValue: sizeInfo.value,
+          image: product.image,
+          handle: product.handle,
+          variants: product.variants,
+          images: product.images
+        }],
+        images: product.images
+      });
+    } else {
+      // Multiple products, group them
+      const sortedProducts = productList
+        .map(product => ({
+          product,
+          sizeInfo: extractSizeInfo(product.title)
+        }))
+        .sort((a, b) => b.sizeInfo.value - a.sizeInfo.value); // Largest to smallest
+      
+      const primaryProduct = sortedProducts[0].product;
+      const variants: ProductVariant[] = sortedProducts.map(({ product, sizeInfo }) => ({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        size: sizeInfo.size,
+        sizeValue: sizeInfo.value,
+        image: product.image,
+        handle: product.handle,
+        variants: product.variants,
+        images: product.images
+      }));
+      
+      deduplicatedProducts.push({
+        id: primaryProduct.id,
+        title: `${baseName} (${variants.length} sizes)`,
+        baseTitle: baseName,
+        price: primaryProduct.price,
+        image: primaryProduct.image,
+        description: primaryProduct.description,
+        handle: primaryProduct.handle,
+        category: primaryProduct.category,
+        variants,
+        images: primaryProduct.images
+      });
+    }
+  });
+  
+  return deduplicatedProducts;
+}
+
+function extractSizeInfo(title: string): { size: string; value: number } {
+  // Extract size patterns and convert to comparable values
+  const mlMatch = title.match(/(\d+(?:\.\d+)?)\s*ml/i);
+  const lMatch = title.match(/(\d+(?:\.\d+)?)\s*l(?:iter|itre)?(?!\w)/i);
+  const ozMatch = title.match(/(\d+(?:\.\d+)?)\s*oz(?:unce)?/i);
+  const packMatch = title.match(/(\d+)\s*(?:pack|pk)/i);
+  
+  if (lMatch) {
+    const liters = parseFloat(lMatch[1]);
+    return { size: `${liters}L`, value: liters * 1000 }; // Convert to ml for comparison
+  }
+  
+  if (mlMatch) {
+    const ml = parseFloat(mlMatch[1]);
+    return { size: `${ml}ml`, value: ml };
+  }
+  
+  if (ozMatch) {
+    const oz = parseFloat(ozMatch[1]);
+    return { size: `${oz}oz`, value: oz * 29.5735 }; // Convert to ml for comparison
+  }
+  
+  if (packMatch) {
+    const pack = parseInt(packMatch[1]);
+    return { size: `${pack} pack`, value: pack * 355 }; // Assume 355ml per can/bottle
+  }
+  
+  // Default case - use price as a rough size indicator
+  return { size: 'Standard', value: 750 }; // Default to 750ml equivalent
 }
 
 export function analyzeDuplicates(products: Product[]): DuplicateGroup[] {

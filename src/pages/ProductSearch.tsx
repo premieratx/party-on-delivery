@@ -17,6 +17,18 @@ import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
 import { generateDuplicateReport } from '@/utils/duplicateAnalyzer';
 
+interface ProductVariant {
+  id: string;
+  title: string;
+  price: number;
+  size: string;
+  sizeValue: number;
+  image: string;
+  handle: string;
+  variants?: any[];
+  images?: string[];
+}
+
 interface Product {
   id: string;
   title: string;
@@ -25,7 +37,7 @@ interface Product {
   description: string;
   handle: string;
   category: string;
-  variants?: any[];
+  variants?: ProductVariant[];
   images?: string[];
 }
 
@@ -35,6 +47,7 @@ export const ProductSearch = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [selectedVariants, setSelectedVariants] = useState<{ [productId: string]: ProductVariant }>({});
   const cartHook = useUnifiedCart();
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = cartHook;
   const { toast } = useToast();
@@ -270,30 +283,59 @@ export const ProductSearch = () => {
     return filtered;
   }, [products, selectedCategory, searchTerm]);
 
-  const handleAddToCart = (product: Product) => {
-    console.log('Adding product to cart:', product);
-    try {
-      addToCart({
+  // Get the current selected variant for a product, or default to first/only variant
+  const getCurrentVariant = (product: Product): ProductVariant => {
+    if (!product.variants || product.variants.length === 0) {
+      // Fallback for products without proper variant structure
+      return {
         id: product.id,
         title: product.title,
-        name: product.title,
         price: product.price,
+        size: 'Standard',
+        sizeValue: 750,
         image: product.image,
-        variant: product.variants?.[0]?.id,
+        handle: product.handle,
+        variants: [],
+        images: product.images
+      };
+    }
+    
+    return selectedVariants[product.id] || product.variants[0];
+  };
+
+  const handleVariantChange = (product: Product, variant: ProductVariant) => {
+    setSelectedVariants(prev => ({
+      ...prev,
+      [product.id]: variant
+    }));
+  };
+
+  const handleAddToCart = (product: Product) => {
+    const currentVariant = getCurrentVariant(product);
+    console.log('Adding product variant to cart:', currentVariant);
+    try {
+      addToCart({
+        id: currentVariant.id,
+        title: currentVariant.title,
+        name: currentVariant.title,
+        price: currentVariant.price,
+        image: currentVariant.image,
+        variant: currentVariant.variants?.[0]?.id || currentVariant.id,
         category: product.category
       });
-      console.log('Product added to cart successfully');
+      console.log('Product variant added to cart successfully');
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
   };
 
   const handleQuantityChange = (product: Product, change: number) => {
-    console.log('Changing quantity for product:', product.id, 'change:', change);
+    const currentVariant = getCurrentVariant(product);
+    console.log('Changing quantity for product variant:', currentVariant.id, 'change:', change);
     try {
-      const currentQty = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+      const currentQty = getCartItemQuantity(currentVariant.id, currentVariant.variants?.[0]?.id || currentVariant.id);
       const newQty = Math.max(0, currentQty + change);
-      updateQuantity(product.id, product.variants?.[0]?.id, newQty);
+      updateQuantity(currentVariant.id, currentVariant.variants?.[0]?.id || currentVariant.id, newQty);
       console.log('Quantity updated:', newQty);
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -454,8 +496,9 @@ export const ProductSearch = () => {
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
             {filteredProducts.map((product, index) => {
-              const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
-              const { cleanTitle, packageSize } = parseProductTitle(product.title);
+              const currentVariant = getCurrentVariant(product);
+              const quantity = getCartItemQuantity(currentVariant.id, currentVariant.variants?.[0]?.id || currentVariant.id);
+              const { cleanTitle } = parseProductTitle(currentVariant.title);
               
               return (
                 <Card 
@@ -473,8 +516,8 @@ export const ProductSearch = () => {
                     {/* Product Image */}
                     <div className="relative mb-2 sm:mb-3 flex-shrink-0">
                       <OptimizedImage
-                        src={product.image}
-                        alt={product.title}
+                        src={currentVariant.image}
+                        alt={currentVariant.title}
                         className="w-full h-32 sm:h-40 object-cover rounded-lg"
                       />
                     </div>
@@ -485,9 +528,37 @@ export const ProductSearch = () => {
                         <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1">
                           {cleanTitle}
                         </h3>
+                        
+                        {/* Size Selector for multi-variant products */}
+                        {product.variants && product.variants.length > 1 && (
+                          <div className="mb-2">
+                            <select 
+                              value={currentVariant.id}
+                              onChange={(e) => {
+                                const variant = product.variants!.find(v => v.id === e.target.value);
+                                if (variant) handleVariantChange(product, variant);
+                              }}
+                              className="w-full text-xs bg-background border border-border rounded px-2 py-1"
+                            >
+                              {product.variants.map(variant => (
+                                <option key={variant.id} value={variant.id}>
+                                  {variant.size} - ${variant.price.toFixed(2)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        
                         <p className="text-lg sm:text-xl font-bold text-primary">
-                          ${product.price.toFixed(2)}
+                          ${currentVariant.price.toFixed(2)}
                         </p>
+                        
+                        {/* Show size for single variant products */}
+                        {product.variants && product.variants.length === 1 && currentVariant.size !== 'Standard' && (
+                          <p className="text-xs text-muted-foreground">
+                            {currentVariant.size}
+                          </p>
+                        )}
                       </div>
                       
                       {/* Add to Cart Button */}
