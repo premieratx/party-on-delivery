@@ -1053,6 +1053,45 @@ export type Database = {
           },
         ]
       }
+      daily_analytics: {
+        Row: {
+          avg_session_duration: number | null
+          bounce_rate: number | null
+          created_at: string
+          date: string
+          id: string
+          new_visitors: number | null
+          returning_visitors: number | null
+          total_page_views: number | null
+          unique_visitors: number | null
+          updated_at: string
+        }
+        Insert: {
+          avg_session_duration?: number | null
+          bounce_rate?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          new_visitors?: number | null
+          returning_visitors?: number | null
+          total_page_views?: number | null
+          unique_visitors?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avg_session_duration?: number | null
+          bounce_rate?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          new_visitors?: number | null
+          returning_visitors?: number | null
+          total_page_views?: number | null
+          unique_visitors?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       delivery_addresses: {
         Row: {
           city: string
@@ -1376,6 +1415,48 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      page_views: {
+        Row: {
+          city: string | null
+          country: string | null
+          id: string
+          is_unique_visitor: boolean | null
+          page_path: string
+          referrer: string | null
+          session_id: string
+          timestamp: string
+          user_agent: string | null
+          user_email: string | null
+          user_ip: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          id?: string
+          is_unique_visitor?: boolean | null
+          page_path: string
+          referrer?: string | null
+          session_id: string
+          timestamp?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_ip?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          id?: string
+          is_unique_visitor?: boolean | null
+          page_path?: string
+          referrer?: string | null
+          session_id?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_ip?: string | null
         }
         Relationships: []
       }
@@ -2015,6 +2096,48 @@ export type Database = {
         }
         Relationships: []
       }
+      unique_visitors: {
+        Row: {
+          city: string | null
+          country: string | null
+          first_visit: string
+          id: string
+          last_visit: string
+          referrer: string | null
+          session_id: string
+          total_page_views: number | null
+          user_agent: string | null
+          user_email: string | null
+          user_ip: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          first_visit?: string
+          id?: string
+          last_visit?: string
+          referrer?: string | null
+          session_id: string
+          total_page_views?: number | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_ip?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          first_visit?: string
+          id?: string
+          last_visit?: string
+          referrer?: string | null
+          session_id?: string
+          total_page_views?: number | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_ip?: string | null
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           created_at: string
@@ -2239,6 +2362,10 @@ export type Database = {
       safe_cache_upsert: {
         Args: { cache_key: string; cache_data: Json; expires_timestamp: number }
         Returns: string
+      }
+      update_daily_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       verify_admin_password: {
         Args: { input_email: string; input_password: string }
