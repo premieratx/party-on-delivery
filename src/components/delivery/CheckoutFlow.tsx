@@ -1,3 +1,4 @@
+// CRITICAL: DO NOT MODIFY IMPORTS WITHOUT TESTING CHECKOUT FLOW END-TO-END
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
