@@ -976,10 +976,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <CardContent className="space-y-4">
                       <div className="space-y-4">
                           <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label>Delivery Date *</Label>
-                              <span className="text-xs text-green-600 font-medium">Click to change date</span>
-                            </div>
+                            <Label>Delivery Date *</Label>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
@@ -988,20 +985,19 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     "w-full justify-start text-left font-normal",
                                     !deliveryInfo.date && "text-muted-foreground"
                                   )}
-                                  onClick={() => console.log('📅 Date picker button clicked')}
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   {deliveryInfo.date ? (
-                                    format(deliveryInfo.date, "EEEE, PPP")
+                                    format(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), "EEEE, PPP")
                                   ) : (
                                     <span>Pick a delivery date</span>
                                   )}
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 z-50 pointer-events-auto" align="start">
+                              <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                   mode="single"
-                                  selected={deliveryInfo.date || undefined}
+                                  selected={deliveryInfo.date instanceof Date ? deliveryInfo.date : deliveryInfo.date ? new Date(deliveryInfo.date) : undefined}
                                   onSelect={(selectedDate) => {
                                     console.log('📅 Date selected:', selectedDate);
                                     if (selectedDate) {
@@ -1017,7 +1013,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     return checkDay.getTime() < today.getTime();
                                   }}
                                   initialFocus
-                                  className="p-3 pointer-events-auto"
+                                  className={cn("p-3 pointer-events-auto")}
                                 />
                               </PopoverContent>
                             </Popover>
