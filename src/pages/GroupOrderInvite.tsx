@@ -14,15 +14,25 @@ const GroupOrderInvite = () => {
   console.log('🎯 GroupOrderInvite - Simple page loaded with token:', shareToken);
 
   const handleJoinGroupOrder = async () => {
-    console.log('🎯 User chose to JOIN group order');
+    console.log('🎯 User chose to JOIN group order with token:', shareToken);
     
     try {
+      console.log('🎯 About to call get-group-order function...');
+      
       // First fetch the group order details to get delivery info
       const { data, error } = await supabase.functions.invoke('get-group-order', {
         body: { shareToken }
       });
       
+      console.log('🎯 Function response:', { data, error });
+      
+      if (error) {
+        console.error('🎯 Function call error:', error);
+        throw new Error(`Function error: ${error.message}`);
+      }
+      
       if (data?.success && data.originalOrder) {
+        console.log('🎯 Successfully got group order data:', data.originalOrder);
         // Store group order data with delivery details
         localStorage.setItem('groupOrderToken', shareToken || '');
         localStorage.setItem('partyondelivery_add_to_order', 'true');
