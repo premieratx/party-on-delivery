@@ -929,16 +929,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                </Button>
                              </PopoverTrigger>
                              <PopoverContent className="w-auto p-0 z-50 bg-popover border" align="start">
-                               <Calendar
-                                 mode="single"
-                                 selected={deliveryInfo.date || undefined}
-                                 onSelect={(date) => {
-                                   console.log('📅 Calendar date selected:', date);
-                                   updateDeliveryInfo('date', date);
-                                   // Clear time slot when date changes to force re-selection
-                                   updateDeliveryInfo('timeSlot', '');
-                                   setIsCalendarOpen(false);
-                                 }}
+                                <Calendar
+                                  mode="single"
+                                  selected={deliveryInfo.date || undefined}
+                                  onSelect={(date) => {
+                                    console.log('📅 Calendar date selected:', date);
+                                    console.log('📅 Current deliveryInfo before update:', deliveryInfo);
+                                    if (date) {
+                                      updateDeliveryInfo('date', date);
+                                      // Clear time slot when date changes to force re-selection
+                                      updateDeliveryInfo('timeSlot', '');
+                                      setIsCalendarOpen(false);
+                                      console.log('📅 Date selection completed successfully');
+                                    } else {
+                                      console.warn('📅 No date selected or date is null');
+                                    }
+                                  }}
                                   disabled={(date) => {
                                     // Enable ALL days including Sunday - only disable past dates
                                     const today = new Date();
@@ -961,7 +967,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     return isBeforeToday;
                                   }}
                                  initialFocus
-                                 className="p-3 pointer-events-auto"
+                                 className={cn("p-3 pointer-events-auto")}
                                />
                              </PopoverContent>
                            </Popover>
