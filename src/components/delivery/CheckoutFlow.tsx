@@ -618,9 +618,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       console.log('Customer validation passed, confirming...');
       setConfirmedCustomer(true);
       
-      // Only proceed to payment if all sections confirmed
+      // Auto-proceed to payment if all sections are confirmed
       if (confirmedDateTime && confirmedAddress) {
-        setCurrentStep('payment');
+        console.log('All sections confirmed, proceeding to payment automatically...');
+        setTimeout(() => setCurrentStep('payment'), 100);
       }
       
       // Smooth scroll to top after state update
@@ -864,23 +865,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
            )}
           </Card>
 
-          {/* Confirmed sections displayed compactly at top */}
+          {/* Confirmed sections displayed as full-width condensed bars */}
           {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {confirmedDateTime && (
                 <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-                  <CardContent className="py-2 px-4">
+                  <CardContent className="py-3 px-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                        <div>
-                          <span className="text-xs font-medium text-green-800">Delivery Time: </span>
-                          <span className="text-xs text-green-700">
-                            {deliveryInfo.date && formatDeliveryDate(
-                              deliveryInfo.date instanceof Date ? deliveryInfo.date.toISOString().split('T')[0] : deliveryInfo.date, 
-                              'EEEE, MMM d'
-                            )} at {deliveryInfo.timeSlot}
-                          </span>
+                      <div className="flex-1">
+                        <div className="flex items-center mb-1">
+                          <CheckCircle className="h-4 w-4 mr-2 text-green-600 flex-shrink-0" />
+                          <span className="text-sm font-medium text-green-800">Date & Time</span>
+                        </div>
+                        <div className="text-sm text-green-700 ml-6">
+                          {deliveryInfo.date && format(
+                            toZonedTime(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), 'America/Chicago'), 
+                            'EEEE, MMMM do, yyyy'
+                          )} at {deliveryInfo.timeSlot}
+                        </div>
+                        <div className="text-sm text-green-700 ml-6 mt-1">
+                          Contact: {customerInfo.firstName} {customerInfo.lastName} • {customerInfo.email} • {customerInfo.phone}
                         </div>
                       </div>
                       <Button
@@ -890,9 +894,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           setConfirmedDateTime(false);
                           setCurrentStep('datetime');
                         }}
-                        className="text-green-600 hover:text-green-800 h-6 px-2"
+                        className="text-green-600 hover:text-green-800 h-8 px-3 ml-4 flex-shrink-0"
                       >
-                        <Edit2 className="h-3 w-3" />
+                        <Edit2 className="h-3 w-3 mr-1" />
+                        Edit
                       </Button>
                     </div>
                   </CardContent>
@@ -901,16 +906,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
 
               {confirmedAddress && (
                 <Card className="bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200">
-                  <CardContent className="py-2 px-4">
+                  <CardContent className="py-3 px-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 mr-2 text-blue-600" />
-                        <div>
-                          <span className="text-xs font-medium text-blue-800">Address: </span>
-                          <span className="text-xs text-blue-700">
-                            {addressInfo.street}, {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}
-                          </span>
+                      <div className="flex-1">
+                        <div className="flex items-center mb-1">
+                          <CheckCircle className="h-4 w-4 mr-2 text-blue-600 flex-shrink-0" />
+                          <span className="text-sm font-medium text-blue-800">Delivery Address</span>
                         </div>
+                        <div className="text-sm text-blue-700 ml-6">
+                          {addressInfo.street}, {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}
+                        </div>
+                        {addressInfo.instructions && (
+                          <div className="text-sm text-blue-600 ml-6 mt-1">
+                            Instructions: {addressInfo.instructions}
+                          </div>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
@@ -919,38 +929,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           setConfirmedAddress(false);
                           setCurrentStep('address');
                         }}
-                        className="text-blue-600 hover:text-blue-800 h-6 px-2"
+                        className="text-blue-600 hover:text-blue-800 h-8 px-3 ml-4 flex-shrink-0"
                       >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {confirmedCustomer && (
-                <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200">
-                  <CardContent className="py-2 px-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 mr-2 text-purple-600" />
-                        <div>
-                          <span className="text-xs font-medium text-purple-800">Contact: </span>
-                          <span className="text-xs text-purple-700">
-                            {customerInfo.firstName} {customerInfo.lastName} • {customerInfo.email}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setConfirmedCustomer(false);
-                          setCurrentStep('datetime');
-                        }}
-                        className="text-purple-600 hover:text-purple-800 h-6 px-2"
-                      >
-                        <Edit2 className="h-3 w-3" />
+                        <Edit2 className="h-3 w-3 mr-1" />
+                        Edit
                       </Button>
                     </div>
                   </CardContent>
@@ -1255,53 +1237,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               </Card>
             )}
 
-            {/* Step 3: Payment Section */}
+            {/* Step 3: Payment Section - No redundant summary needed */}
             {currentStep === 'payment' && (
               <div className="space-y-4">
-                {/* Summary Card */}
-                <Card className="shadow-card border-2 border-green-500">
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <CreditCard className="w-5 h-5" />
-                      Step 3: Review & Payment
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Order Summary */}
-                    <div className="space-y-2">
-                      <h4 className="font-medium">Order Summary</h4>
-                      <div className="text-sm space-y-1">
-                        <p><strong>Delivery Date:</strong> {deliveryInfo.date ? format(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), "EEEE, PPP") : 'Not selected'}</p>
-                        <p><strong>Delivery Time:</strong> {deliveryInfo.timeSlot || 'Not selected'}</p>
-                        <p><strong>Contact:</strong> {customerInfo.firstName} {customerInfo.lastName}</p>
-                        <p><strong>Phone:</strong> {customerInfo.phone}</p>
-                        <p><strong>Email:</strong> {customerInfo.email}</p>
-                        <p><strong>Address:</strong> {`${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`}</p>
-                        {addressInfo.instructions && <p><strong>Instructions:</strong> {addressInfo.instructions}</p>}
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-4">
-                      <Button 
-                        variant="outline"
-                        onClick={() => setCurrentStep('address')}
-                        className="flex-1"
-                      >
-                        Back to Address
-                      </Button>
-                      <Button 
-                        onClick={() => {
-                          // Payment processing logic here
-                          console.log('Proceeding to payment...');
-                        }}
-                        className="flex-1"
-                      >
-                        Proceed to Payment
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
                 <EmbeddedPaymentForm
                   cartItems={cartItems}
                   subtotal={discountedSubtotal}
