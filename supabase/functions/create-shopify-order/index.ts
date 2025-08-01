@@ -345,6 +345,18 @@ serve(async (req) => {
       }
     }
 
+    // Add tip as a line item for better visibility in Shopify admin
+    if (tipAmount > 0) {
+      lineItems.push({
+        title: "Driver Tip (Gratuity)",
+        price: tipAmount.toString(),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false,
+        grams: 0
+      });
+    }
+
     // Create order in Shopify with proper totals structure
     const orderData = {
       order: {
@@ -412,11 +424,11 @@ serve(async (req) => {
           }
         },
         
-        // Handle tip properly - Shopify has native tip support
+        // Handle tip properly - Use Shopify's native tip support AND add as line item for visibility
         ...(tipAmount > 0 && {
           total_tips_set: {
             shop_money: {
-              amount: tipAmount.toString(),
+              amount: (tipAmount * 100).toString(), // Convert to cents for Shopify
               currency_code: "USD"
             }
           }

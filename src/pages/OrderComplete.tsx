@@ -35,21 +35,24 @@ const OrderComplete = () => {
         return;
       }
       
+      // IMMEDIATE LOAD: Show confirmation page right away with processing state
+      setIsLoading(false);
+      
       try {
         let foundOrder = null;
         let attempts = 0;
         const searchTerms = [sessionId, paymentIntentId].filter(Boolean);
         console.log("🔥 SEARCH TERMS:", searchTerms);
         
-        // AGGRESSIVE POLLING: .5 seconds for first 10 attempts (5 seconds), then 5 seconds
-        while (!foundOrder && attempts < 25) { // Up to 2 minutes total
+        // FAST POLLING: .2 seconds for first 15 attempts (3 seconds), then 1 second
+        while (!foundOrder && attempts < 30) { // Up to 30 seconds total
           attempts++;
-          const isEarlyAttempt = attempts <= 10;
-          const waitTime = isEarlyAttempt ? 500 : 5000;
+          const isEarlyAttempt = attempts <= 15;
+          const waitTime = isEarlyAttempt ? 200 : 1000;
           
-          console.log(`🔥 ATTEMPT ${attempts}/25 (${isEarlyAttempt ? 'fast' : 'slow'} polling)`);
+          console.log(`🔥 ATTEMPT ${attempts}/30 (${isEarlyAttempt ? 'fast' : 'slow'} polling)`);
           
-          // Search by session/payment ID
+          // Search by session/payment ID with expanded query
           for (const searchTerm of searchTerms) {
             if (foundOrder) break;
             
@@ -59,9 +62,9 @@ const OrderComplete = () => {
                 *,
                 customer:customers(first_name, last_name, email)
               `)
-              .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm}`)
+              .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm},payment_intent_id.eq.${searchTerm}`)
               .order('created_at', { ascending: false })
-              .limit(5);
+              .limit(10);
             
             if (!error && orders?.length > 0) {
               foundOrder = orders.find(o => o.customer_id) || orders[0];
@@ -71,7 +74,7 @@ const OrderComplete = () => {
           }
           
           // If not found and haven't hit max attempts, wait and retry
-          if (!foundOrder && attempts < 25) {
+          if (!foundOrder && attempts < 30) {
             console.log(`🔥 Waiting ${waitTime}ms before retry...`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
           }
@@ -156,26 +159,7 @@ const OrderComplete = () => {
     loadOrderData();
   }, [location.search, toast]);
 
-  // Always show the order complete view, with loading state for order details
-  const isOrderDataLoading = isLoading;
-
-  if (!orderData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-6">
-          <h1 className="text-2xl font-bold mb-4">Order Not Found</h1>
-          <p className="text-muted-foreground mb-6">
-            We couldn't locate your order details. If you just placed an order, 
-            your payment was likely processed successfully.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Please contact support with your payment confirmation for assistance.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  // Show confirmation page immediately, order details will load in background
   return (
     <OrderCompleteView 
       orderNumber={orderData?.order_number || "Processing..."}
@@ -187,7 +171,7 @@ const OrderComplete = () => {
       deliveryAddress={orderData?.delivery_address}
       shareToken={orderData?.share_token}
       groupOrderName={orderData?.group_order_name}
-      isLoading={isOrderDataLoading}
+      isLoading={!orderData}
     />
   );
 };
