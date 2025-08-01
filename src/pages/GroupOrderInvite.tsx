@@ -24,7 +24,14 @@ const GroupOrderInvite = () => {
       
       const { data: orderData, error } = await supabase
         .from('customer_orders')
-        .select('*')
+        .select(`
+          *,
+          customers (
+            first_name,
+            last_name,
+            email
+          )
+        `)
         .eq('share_token', shareToken)
         .maybeSingle();
       
@@ -69,6 +76,20 @@ const GroupOrderInvite = () => {
         priority: 'group_order' // Highest priority flag
       }));
       
+      // Also store original order details for dashboard access
+      const customerName = orderData.customers 
+        ? `${orderData.customers.first_name || ''} ${orderData.customers.last_name || ''}`.trim()
+        : 'Unknown Customer';
+        
+      localStorage.setItem('originalGroupOrderData', JSON.stringify({
+        deliveryDate: orderData.delivery_date,
+        deliveryTime: orderData.delivery_time,
+        deliveryAddress: orderData.delivery_address,
+        customerName: customerName,
+        orderNumber: orderData.order_number,
+        shareToken: shareToken
+      }));
+      
       // Generate group discount
       localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
         code: 'GROUP-SHIPPING-FREE',
@@ -81,8 +102,8 @@ const GroupOrderInvite = () => {
         description: "You'll get FREE DELIVERY with the group order.",
       });
       
-      // Navigate to main page to start shopping
-      navigate(`/?checkout=true&share=${shareToken}&customer=true`);
+      // Navigate to group dashboard first, then to shopping
+      navigate(`/order/${shareToken}`);
       
     } catch (error) {
       console.error('🎯 Error in handleJoinGroupOrder:', error);

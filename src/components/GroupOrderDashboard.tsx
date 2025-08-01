@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Share2, Users, Calendar, MapPin, Package, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 
 interface GroupOrderParticipant {
   email: string;
@@ -198,7 +197,7 @@ const GroupOrderDashboard = () => {
   }
 
   const deliveryDate = format(
-    toZonedTime(new Date(groupOrder.delivery_date), 'America/Chicago'), 
+    new Date(groupOrder.delivery_date + 'T12:00:00'), 
     'EEEE, MMMM do, yyyy'
   );
 

@@ -7,7 +7,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ShoppingBag, Users, Calendar, MapPin, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 
 interface GroupOrder {
   id: string;
@@ -173,7 +172,7 @@ const GroupOrderView = () => {
   }
 
   const deliveryDate = format(
-    toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 
+    new Date(order.delivery_date + 'T12:00:00'), 
     'EEEE, MMMM do, yyyy'
   );
 
