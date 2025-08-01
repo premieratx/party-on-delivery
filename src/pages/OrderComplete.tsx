@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { OrderCompleteView } from '@/components/OrderCompleteView';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const OrderComplete = () => {
   const location = useLocation();
@@ -47,148 +48,140 @@ const OrderComplete = () => {
         return;
       }
 
-      // Extended retry logic with longer waits for database sync
-      const maxRetries = 8; // Increased retries
-      let retryCount = 0;
-      let order = null;
+      // Function to process found order
+      const processOrder = async (foundOrder: any) => {
+        try {
+          console.log(`🔥 [OrderComplete] Processing order:`, foundOrder.order_number);
+          
+          // Get customer data using Supabase client
+          const { data: customer, error: customerError } = await supabase
+            .from('customers')
+            .select('*')
+            .eq('id', foundOrder.customer_id)
+            .maybeSingle();
 
+          if (customerError) {
+            console.error('🔥 [OrderComplete] Customer fetch error:', customerError);
+          }
+
+          // Generate group order name if not exists
+          if (!foundOrder.group_order_name && customer) {
+            const groupName = `${customer.first_name || 'Customer'}'s ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} Order`;
+            
+            const { error: updateError } = await supabase
+              .from('customer_orders')
+              .update({ group_order_name: groupName })
+              .eq('id', foundOrder.id);
+            
+            if (!updateError) {
+              foundOrder.group_order_name = groupName;
+            }
+          }
+
+          // Set order data
+          setOrderData({ ...foundOrder, customer });
+          setIsLoading(false);
+
+          // Send confirmation email in background
+          try {
+            await supabase.functions.invoke('send-order-confirmation-email', {
+              body: {
+                orderNumber: foundOrder.order_number,
+                stripeSessionId: sessionId,
+                customerEmail: customer?.email,
+              }
+            });
+          } catch (emailError) {
+            console.error('🔥 Failed to send confirmation email:', emailError);
+            // Don't block the order completion for email failures
+          }
+
+        } catch (error: any) {
+          console.error('🔥 [OrderComplete] Error processing order:', error);
+          setIsLoading(false);
+          toast({
+            title: "Error",
+            description: "Failed to load order details.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      // Immediate search with aggressive retry logic
+      let order = null;
+      let retryCount = 0;
+      const maxRetries = 15; // Increased retries
+      
       while (retryCount < maxRetries && !order) {
         try {
-          const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
-          const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns';
+          console.log(`🔥 [OrderComplete] Attempt ${retryCount + 1}/${maxRetries} - Searching for order`);
           
-          console.log(`🔥 [OrderComplete] Attempt ${retryCount + 1}/${maxRetries} - Looking for order with sessionId: ${sessionId}, orderNumber: ${orderNumber}`);
-          
-          // Try multiple search strategies
-          const searchQueries = [];
-          
+          // Try session_id first if available
           if (sessionId) {
-            searchQueries.push(`session_id=eq.${sessionId}`);
-          }
-          if (orderNumber) {
-            searchQueries.push(`order_number=eq.${orderNumber}`);
+            const { data: sessionOrders, error: sessionError } = await supabase
+              .from('customer_orders')
+              .select('*')
+              .eq('session_id', sessionId)
+              .order('created_at', { ascending: false })
+              .limit(1);
+            
+            if (!sessionError && sessionOrders && sessionOrders.length > 0) {
+              console.log(`🔥 [OrderComplete] Found order by session_id:`, sessionOrders[0].order_number);
+              order = sessionOrders[0];
+              await processOrder(order);
+              return;
+            }
           }
           
-          for (const query of searchQueries) {
-            const url = `${supabaseUrl}/rest/v1/customer_orders?${query}&select=*&order=created_at.desc&limit=1`;
-            console.log(`🔥 [OrderComplete] Searching with: ${query}`);
+          // Try order_number if available
+          if (orderNumber) {
+            const { data: numberOrders, error: numberError } = await supabase
+              .from('customer_orders')
+              .select('*')
+              .eq('order_number', orderNumber)
+              .order('created_at', { ascending: false })
+              .limit(1);
             
-            const response = await fetch(url, {
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (!response.ok) {
-              console.error(`🔥 [OrderComplete] API Error: ${response.status} ${response.statusText}`);
-              continue;
-            }
-            
-            const orders = await response.json();
-            console.log(`🔥 [OrderComplete] Query ${query} returned:`, orders.length > 0 ? 'Found order' : 'No orders', orders.length > 0 ? { id: orders[0].id, order_number: orders[0].order_number } : '');
-            
-            if (orders && orders.length > 0) {
-              order = orders[0];
-              break;
+            if (!numberError && numberOrders && numberOrders.length > 0) {
+              console.log(`🔥 [OrderComplete] Found order by order_number:`, numberOrders[0].order_number);
+              order = numberOrders[0];
+              await processOrder(order);
+              return;
             }
           }
 
-          if (!order) {
-            retryCount++;
-            // Longer wait times for later retries
-            const waitTime = retryCount < 3 ? 1000 : retryCount < 6 ? 2000 : 3000;
-            if (retryCount < maxRetries) {
-              console.log(`🔥 [OrderComplete] Order not found, waiting ${waitTime}ms before retry ${retryCount + 1}/${maxRetries}`);
-              await new Promise(resolve => setTimeout(resolve, waitTime));
-            }
+          retryCount++;
+          
+          // Progressive wait times
+          let waitTime;
+          if (retryCount <= 3) waitTime = 1000;      // First 3 tries: 1 second
+          else if (retryCount <= 6) waitTime = 2000; // Next 3 tries: 2 seconds  
+          else if (retryCount <= 10) waitTime = 3000; // Next 4 tries: 3 seconds
+          else waitTime = 5000;                       // Final tries: 5 seconds
+          
+          if (retryCount < maxRetries) {
+            console.log(`🔥 [OrderComplete] Order not found, waiting ${waitTime}ms before retry ${retryCount + 1}/${maxRetries}`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
           }
-        } catch (fetchError) {
-          console.error(`🔥 [OrderComplete] Error on attempt ${retryCount + 1}:`, fetchError);
+          
+        } catch (searchError) {
+          console.error(`🔥 [OrderComplete] Search error on attempt ${retryCount + 1}:`, searchError);
           retryCount++;
           if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 3000));
           }
         }
       }
 
+      // If still no order found after all retries
       if (!order) {
-        console.error(`[OrderComplete] Failed to find order after ${maxRetries} attempts`);
+        console.error(`🔥 [OrderComplete] Failed to find order after ${maxRetries} attempts`);
+        setIsLoading(false);
         toast({
           title: "Order Not Found",
           description: "Could not find order details. Please check your order number or contact support.",
           variant: "destructive",
         });
-        return;
-      }
-
-      console.log(`[OrderComplete] Order found successfully:`, order.order_number);
-
-      try {
-        // Get customer data
-        const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns';
-        
-        const customerResponse = await fetch(`${supabaseUrl}/rest/v1/customers?id=eq.${order.customer_id}&select=*`, {
-          headers: {
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const customers = await customerResponse.json();
-        const customer = customers[0];
-
-        // Generate group order name if not exists
-        if (!order.group_order_name && customer) {
-          const groupName = `${customer.first_name || 'Customer'}'s ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} Order`;
-          
-          await fetch(`${supabaseUrl}/rest/v1/customer_orders?id=eq.${order.id}`, {
-            method: 'PATCH',
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ group_order_name: groupName }),
-          });
-          
-          order.group_order_name = groupName;
-        }
-
-        // Combine data
-        setOrderData({ ...order, customer });
-
-        // Send confirmation email
-        try {
-          await fetch(`${supabaseUrl}/functions/v1/send-order-confirmation-email`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              orderNumber: order.order_number,
-              stripeSessionId: sessionId,
-              customerEmail: customer?.email,
-            }),
-          });
-        } catch (emailError) {
-          console.error('Failed to send confirmation email:', emailError);
-          // Don't block the order completion for email failures
-        }
-
-      } catch (error: any) {
-        console.error('Error fetching order:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load order details.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
       }
     };
     
