@@ -445,59 +445,53 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
-        {/* Search Icon - Top Left */}
-        <div className="absolute top-4 left-4 z-10">
+        {/* Search Icon - Top Left on Desktop only */}
+        <div className="hidden sm:block absolute top-4 left-4 z-10">
           <SearchIcon size="md" variant="desktop" />
         </div>
         
-        {/* Category Tabs - 5 product tabs + 1 checkout tab */}
+        {/* Mobile Search Icon - Top Left */}
+        <div className="sm:hidden absolute top-2 left-2 z-10">
+          <SearchIcon size="sm" variant="mobile" />
+        </div>
+        
+        {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-1 h-16 sm:h-20">
-            {stepMapping.map((step, index) => {
+            {stepMapping.slice(0, 5).map((step, index) => {
               const isActive = selectedCategory === index;
-              const IconComponent = step.step === 0 ? Search : step.step === 1 ? Wine : step.step === 2 ? Beer : step.step === 3 ? Martini : step.step === 4 ? Martini : Package;
-              const stepNumber = step.step;
-              const stepTitle = step.title;
+              const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
               
               return (
                 <button
                   key={step.handle}
                   onClick={() => {
-                    if (step.isSearch) {
-                      navigate('/search');
-                    } else {
-                      setSelectedCategory(index);
-                      const targetCollection = collections.find(c => c.handle === step.handle);
-                      if (targetCollection) {
-                        // No need to fetch, collection already loaded
-                      }
+                    setSelectedCategory(index);
+                    const targetCollection = collections.find(c => c.handle === step.handle);
+                    if (targetCollection) {
+                      // No need to fetch, collection already loaded
                     }
                   }}
                   className={`relative overflow-hidden rounded-lg transition-all duration-300 group flex-1 ${
-                    step.isSearch 
-                      ? 'bg-accent/10 border-2 border-accent hover:bg-accent/20' 
-                      : isActive 
-                        ? 'bg-primary/10 border-2 border-primary shadow-lg' 
-                        : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
+                    isActive 
+                      ? 'bg-primary/10 border-2 border-primary shadow-lg' 
+                      : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
                   }`}
                 >
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
-                    {/* Mobile layout: just title, no number */}
+                    {/* Mobile layout: just title */}
                     <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
-                      {step.isSearch && <IconComponent className="w-3 h-3 mb-1" />}
                       <div className={`text-xs font-bold leading-tight text-center ${
-                        step.isSearch ? 'text-accent' : isActive ? 'text-primary' : 'text-foreground'
-                      }`}>{stepTitle}</div>
+                        isActive ? 'text-primary' : 'text-foreground'
+                      }`}>{step.title}</div>
                     </div>
                     
-                    {/* Desktop layout: large title centered, no numbers */}
+                    {/* Desktop layout: large title centered */}
                     <div className="hidden sm:block relative w-full h-full">
-                      {/* Large title centered */}
                       <div className="flex items-center justify-center h-full gap-2">
-                        {step.isSearch && <IconComponent className="w-5 h-5" />}
                         <div className={`font-bold text-xl text-center ${
-                          step.isSearch ? 'text-accent' : isActive ? 'text-primary' : 'text-foreground'
-                        }`}>{stepTitle}</div>
+                          isActive ? 'text-primary' : 'text-foreground'
+                        }`}>{step.title}</div>
                       </div>
                     </div>
                   </div>
@@ -586,11 +580,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 </button>
               </div>
             </div>
-          </div>
-          
-          {/* Mobile Search Icon - positioned below tabs */}
-          <div className="sm:hidden flex justify-center pt-2">
-            <SearchIcon size="sm" variant="tabs" />
           </div>
         </div>
 
