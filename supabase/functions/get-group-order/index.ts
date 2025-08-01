@@ -12,7 +12,23 @@ serve(async (req) => {
   }
 
   try {
-    const { shareToken } = await req.json();
+    console.log('get-group-order function called');
+    
+    const body = await req.json();
+    console.log('Request body:', body);
+    
+    const { shareToken } = body;
+    
+    if (!shareToken) {
+      console.error('No shareToken provided');
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Share token is required' 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -20,29 +36,73 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Find the original group order by share token
+    console.log('Looking for order with share token:', shareToken);
+
+    // Find the original group order by share token - use maybeSingle to avoid errors
     const { data: originalOrder, error: orderError } = await supabase
       .from('customer_orders')
       .select('*')
       .eq('share_token', shareToken)
-      .single();
+      .maybeSingle();
 
-    if (orderError || !originalOrder) {
-      throw new Error('Group order not found');
+    console.log('Order query result:', { originalOrder: !!originalOrder, orderError });
+
+    if (orderError) {
+      console.error('Database error finding order:', orderError);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Database error: ' + orderError.message 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
     }
 
-    // Get the customer who created the original order
+    if (!originalOrder) {
+      console.log('No order found with share token:', shareToken);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Group order not found' 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
+    }
+
+    console.log('Found order, getting customer for ID:', originalOrder.customer_id);
+
+    // Get the customer who created the original order - use maybeSingle to avoid errors
     const { data: originalCustomer, error: customerError } = await supabase
       .from('customers')
       .select('*')
       .eq('id', originalOrder.customer_id)
-      .single();
+      .maybeSingle();
 
-    if (customerError || !originalCustomer) {
-      throw new Error('Original customer not found');
+    console.log('Customer query result:', { originalCustomer: !!originalCustomer, customerError });
+
+    if (customerError) {
+      console.error('Database error finding customer:', customerError);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Database error: ' + customerError.message 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
     }
 
-    return new Response(JSON.stringify({
+    if (!originalCustomer) {
+      console.log('No customer found with ID:', originalOrder.customer_id);
+      return new Response(JSON.stringify({ 
+        success: false,
+        error: 'Original customer not found' 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
+    }
+
+    const response = {
       success: true,
       originalOrder: {
         id: originalOrder.id,
@@ -51,20 +111,24 @@ serve(async (req) => {
         delivery_time: originalOrder.delivery_time,
         delivery_address: originalOrder.delivery_address,
         share_token: originalOrder.share_token,
-        customer_name: `${originalCustomer.first_name} ${originalCustomer.last_name}`,
+        customer_name: `${originalCustomer.first_name || ''} ${originalCustomer.last_name || ''}`.trim(),
         customer_email: originalCustomer.email,
         total_amount: originalOrder.total_amount,
         subtotal: originalOrder.subtotal,
         line_items: originalOrder.line_items
       }
-    }), {
+    };
+
+    console.log('Returning successful response');
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
 
   } catch (error) {
-    console.error('Error in get-group-order:', error);
+    console.error('Unexpected error in get-group-order:', error);
     return new Response(JSON.stringify({ 
+      success: false,
       error: error.message || 'Failed to get group order' 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
