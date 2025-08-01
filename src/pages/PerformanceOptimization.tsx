@@ -27,6 +27,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AutomationControls } from '@/components/performance/AutomationControls';
+import { PerformanceBenchmarkTest } from '@/components/PerformanceBenchmarkTest';
 
 interface OptimizationTask {
   id: string;
@@ -763,6 +764,11 @@ const PerformanceOptimization = () => {
                 <span className="hidden sm:inline">Metrics</span>
                 <span className="sm:hidden">Metrics</span>
               </TabsTrigger>
+              <TabsTrigger value="benchmark" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
+                <Gauge className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Benchmark</span>
+                <span className="sm:hidden">Test</span>
+              </TabsTrigger>
               <TabsTrigger value="mobile" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 text-xs sm:text-sm">
                 <Smartphone className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Mobile</span>
@@ -1040,6 +1046,11 @@ const PerformanceOptimization = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Industry Benchmark Test Tab */}
+          <TabsContent value="benchmark">
+            <PerformanceBenchmarkTest />
           </TabsContent>
 
           {/* Mobile Optimization Tab */}
