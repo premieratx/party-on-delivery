@@ -963,8 +963,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             {/* Step-by-Step Forms - Mobile optimized */}
             <div className="space-y-3 md:space-y-6">
                
-                {/* Date/Time Section - Always show when not confirmed OR when it's the current step */}
-                {(!confirmedDateTime || currentStep === 'datetime') && (
+                {/* Date/Time Section - Always show and always editable */}
+                {true && (
                   <Card className={`shadow-card ${currentStep === 'datetime' ? 'border-2 border-green-500' : 'border'}`}>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -976,7 +976,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <CardContent className="space-y-4">
                       <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label>Delivery Date *</Label>
+                            <div className="flex items-center justify-between">
+                              <Label>Delivery Date *</Label>
+                              <span className="text-xs text-green-600 font-medium">Click to change date</span>
+                            </div>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
