@@ -428,6 +428,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         >
           <div className="absolute inset-0 bg-black/40" />
         </div>
+        
+        {/* Search Icon - Top Left Corner of Hero */}
+        <div className="absolute top-4 left-4 z-20">
+          <button
+            onClick={() => navigate("/search")}
+            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
+            aria-label="Search products"
+          >
+            <Search className="w-5 h-5 text-white" />
+          </button>
+        </div>
+        
         <div className="relative z-10 max-w-7xl mx-auto h-full flex flex-col justify-center items-center text-center px-4">
           <img 
             src={partyOnDeliveryLogo}
@@ -445,16 +457,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       {/* Sticky Header Section */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
-        {/* Search Icon - Top Left on Desktop only */}
-        <div className="hidden sm:block absolute top-4 left-4 z-10">
-          <SearchIcon size="md" variant="desktop" />
-        </div>
-        
-        {/* Mobile Search Icon - Top Left */}
-        <div className="sm:hidden absolute top-2 left-2 z-10">
-          <SearchIcon size="sm" variant="mobile" />
-        </div>
-        
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-1 h-16 sm:h-20">
@@ -665,14 +667,23 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       // For other categories, use the utility function to parse title and package size
                       const { cleanTitle, packageSize } = parseProductTitle(product.title);
                       
+                      // Special handling for ice product
+                      let displayTitle = cleanTitle;
+                      let displayPackage = packageSize;
+                      
+                      if (product.title.toLowerCase().includes('bag of ice')) {
+                        displayTitle = product.title.replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*bs\s*$/gi, '').replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '').trim();
+                        displayPackage = '20 Lbs';
+                      }
+                      
                       return (
                         <>
                           <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'} line-clamp-2`}>
-                            {cleanTitle}
+                            {displayTitle}
                           </h4>
-                          {packageSize && (
+                          {displayPackage && (
                             <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
-                              {packageSize}
+                              {displayPackage}
                             </p>
                           )}
                         </>
