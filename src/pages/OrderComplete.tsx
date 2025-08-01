@@ -38,15 +38,16 @@ const OrderComplete = () => {
       try {
         let foundOrder = null;
         let attempts = 0;
-        const maxAttempts = 12; // Try for up to 60 seconds
-        
         const searchTerms = [sessionId, paymentIntentId].filter(Boolean);
         console.log("🔥 SEARCH TERMS:", searchTerms);
         
-        // RETRY MECHANISM: Wait for order sync to complete
-        while (!foundOrder && attempts < maxAttempts) {
+        // AGGRESSIVE POLLING: .5 seconds for first 10 attempts (5 seconds), then 5 seconds
+        while (!foundOrder && attempts < 25) { // Up to 2 minutes total
           attempts++;
-          console.log(`🔥 ATTEMPT ${attempts}/${maxAttempts}`);
+          const isEarlyAttempt = attempts <= 10;
+          const waitTime = isEarlyAttempt ? 500 : 5000;
+          
+          console.log(`🔥 ATTEMPT ${attempts}/25 (${isEarlyAttempt ? 'fast' : 'slow'} polling)`);
           
           // Search by session/payment ID
           for (const searchTerm of searchTerms) {
@@ -70,9 +71,9 @@ const OrderComplete = () => {
           }
           
           // If not found and haven't hit max attempts, wait and retry
-          if (!foundOrder && attempts < maxAttempts) {
-            console.log(`🔥 Waiting 5 seconds before retry...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+          if (!foundOrder && attempts < 25) {
+            console.log(`🔥 Waiting ${waitTime}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
           }
         }
         
@@ -155,17 +156,8 @@ const OrderComplete = () => {
     loadOrderData();
   }, [location.search, toast]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner />
-          <p className="mt-4 text-muted-foreground">Loading your order details...</p>
-          <p className="text-sm text-muted-foreground mt-2">This may take up to 60 seconds...</p>
-        </div>
-      </div>
-    );
-  }
+  // Always show the order complete view, with loading state for order details
+  const isOrderDataLoading = isLoading;
 
   if (!orderData) {
     return (
@@ -186,15 +178,16 @@ const OrderComplete = () => {
 
   return (
     <OrderCompleteView 
-      orderNumber={orderData.order_number}
-      customerName={orderData.customer?.first_name || 'Customer'}
-      orderItems={orderData.line_items || []}
-      totalAmount={parseFloat(orderData.total_amount) || 0}
-      deliveryDate={orderData.delivery_date}
-      deliveryTime={orderData.delivery_time}
-      deliveryAddress={orderData.delivery_address}
-      shareToken={orderData.share_token}
-      groupOrderName={orderData.group_order_name}
+      orderNumber={orderData?.order_number || "Processing..."}
+      customerName={orderData?.customer?.first_name || 'Customer'}
+      orderItems={orderData?.line_items || []}
+      totalAmount={parseFloat(orderData?.total_amount || '0') || 0}
+      deliveryDate={orderData?.delivery_date}
+      deliveryTime={orderData?.delivery_time}
+      deliveryAddress={orderData?.delivery_address}
+      shareToken={orderData?.share_token}
+      groupOrderName={orderData?.group_order_name}
+      isLoading={isOrderDataLoading}
     />
   );
 };

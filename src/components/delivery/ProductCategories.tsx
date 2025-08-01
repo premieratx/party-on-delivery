@@ -67,7 +67,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   onBackToStart
 }) => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState(4); // Start with cocktails (index 4)
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,12 +85,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // Always use the default main delivery app collections
   const getStepMapping = () => {
     return [
-      { step: 0, title: 'Search', handle: 'search', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Search Products', isSearch: true },
-      { step: 1, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
-      { step: 2, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
-      { step: 3, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
+      { step: 0, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
+      { step: 1, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
+      { step: 2, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
+      { step: 3, title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Mixers & Non-Alcoholic Drinks' },
       { step: 4, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
-      { step: 5, title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Mixers & Non-Alcoholic Drinks' }
+      { step: 5, title: 'Search', handle: 'search', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Search Products', isSearch: true }
     ];
   };
 
