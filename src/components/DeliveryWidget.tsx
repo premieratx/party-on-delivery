@@ -189,6 +189,7 @@ export const DeliveryWidget: React.FC = () => {
     // Clear all persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
+    localStorage.removeItem('groupOrderToken'); // Clear group order token for fresh start
     setCurrentStep('products');
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -207,6 +208,7 @@ export const DeliveryWidget: React.FC = () => {
     // Clear persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
+    localStorage.removeItem('groupOrderToken'); // Clear group order token for fresh start
     
     setCurrentStep('products');
     // Scroll to top

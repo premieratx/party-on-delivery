@@ -328,7 +328,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         }
       }
       
-      // If no stored discount, fetch from group order or apply default
+      // Only fetch group order if we're actually adding to an order AND have a valid token
       const groupOrderToken = localStorage.getItem('groupOrderToken');
       if (groupOrderToken && isAddingToOrder && !appliedDiscount) {
         console.log('🔗 Group order token found, fetching buyer info:', groupOrderToken);
@@ -354,8 +354,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             // Store for future use
             localStorage.setItem('partyondelivery_applied_discount', JSON.stringify(discount));
           } else {
-            console.log('❌ Could not get original order info, using fallback. Error:', error);
-            // Fallback to PREMIER2025
+            console.log('❌ Could not get original order info or token is invalid, clearing group token. Error:', error);
+            // Clear invalid group token and use fallback
+            localStorage.removeItem('groupOrderToken');
             const fallbackDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
             setAppliedDiscount(fallbackDiscount);
             setDiscountCode('PREMIER2025');
@@ -365,7 +366,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           }
         }).catch(err => {
           console.error('❌ Error invoking get-group-order function:', err);
-          // Fallback to PREMIER2025 on error
+          // Clear invalid group token and use fallback on error
+          localStorage.removeItem('groupOrderToken');
           const fallbackDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
           setAppliedDiscount(fallbackDiscount);
           setDiscountCode('PREMIER2025');
