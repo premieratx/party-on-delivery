@@ -33,7 +33,8 @@ export const ProductSearch = () => {
   const [selectedCategory, setSelectedCategory] = useState("favorites");
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
-  const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = useUnifiedCart();
+  const cartHook = useUnifiedCart();
+  const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = cartHook;
   const { toast } = useToast();
   
   // Load favorites first, then other tabs progressively

@@ -307,12 +307,17 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
             </Button>
             
             {shareToken && (
-              <Button 
-                onClick={copyShareLink}
-                className="bg-primary hover:bg-primary/90"
-              >
-                Share Group Order Again
-              </Button>
+              <>
+                <Button 
+                  onClick={copyShareLink}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Share Group Order Link
+                </Button>
+                <p className="text-xs text-muted-foreground text-center max-w-sm">
+                  Friends can use this link to add items to your delivery and split costs!
+                </p>
+              </>
             )}
           </div>
           
