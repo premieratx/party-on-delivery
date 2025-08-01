@@ -23,11 +23,12 @@ const OrderComplete = () => {
       const storedSessionId = localStorage.getItem('lastOrderSessionId');
       const storedPaymentIntent = localStorage.getItem('lastPaymentIntent');
       
-      console.log("🔥 ORDER COMPLETE - STARTING COMPREHENSIVE SEARCH:", {
+      console.log("🔥 ORDER COMPLETE - COMPREHENSIVE DEBUG:", {
         fromUrl: { sessionId, paymentIntentId, orderNumber, errorParam },
         fromStorage: { storedSessionId, storedPaymentIntent },
         fullUrl: window.location.href,
-        search: location.search
+        search: location.search,
+        timestamp: new Date().toISOString()
       });
       
       if (errorParam) {
@@ -43,6 +44,8 @@ const OrderComplete = () => {
       
       try {
         let foundOrder = null;
+        
+        // Build comprehensive search terms
         const searchTerms = [
           sessionId,
           paymentIntentId,
@@ -52,11 +55,13 @@ const OrderComplete = () => {
         
         console.log("🔥 SEARCH TERMS:", searchTerms);
         
-        // STRATEGY 1: Search by all possible session/payment IDs
+        // STRATEGY 1: Direct search by session/payment ID with broader matching
         for (const searchTerm of searchTerms) {
           if (foundOrder) break;
           
           console.log(`🔥 SEARCHING BY ID: ${searchTerm}`);
+          
+          // Search in both session_id and shopify_order_id fields
           const { data: orders, error } = await supabase
             .from('customer_orders')
             .select(`
@@ -65,14 +70,17 @@ const OrderComplete = () => {
             `)
             .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm}`)
             .order('created_at', { ascending: false })
-            .limit(5);
+            .limit(10);
+          
+          console.log(`🔥 SEARCH RESULT for ${searchTerm}:`, { orders, error });
           
           if (!error && orders?.length > 0) {
-            foundOrder = orders[0];
+            // Prefer order with customer_id over NULL customer_id
+            foundOrder = orders.find(o => o.customer_id) || orders[0];
             console.log(`🔥 ✅ FOUND BY ID ${searchTerm}: Order #${foundOrder.order_number}`);
             break;
           } else {
-            console.log(`🔥 ❌ NO ORDER FOUND BY ID: ${searchTerm}`);
+            console.log(`🔥 ❌ NO ORDER FOUND BY ID: ${searchTerm}`, error);
           }
         }
         
@@ -97,10 +105,10 @@ const OrderComplete = () => {
           }
         }
         
-        // STRATEGY 3: Recent orders search with browser fingerprinting
+        // STRATEGY 3: Recent orders search with improved matching
         if (!foundOrder) {
-          console.log("🔥 SEARCHING RECENT ORDERS (last 15 minutes)");
-          const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+          console.log("🔥 SEARCHING RECENT ORDERS (last 30 minutes)");
+          const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
           
           const { data: recentOrders, error: recentError } = await supabase
             .from('customer_orders')
@@ -108,18 +116,22 @@ const OrderComplete = () => {
               *,
               customer:customers(first_name, last_name, email)
             `)
-            .gte('created_at', fifteenMinutesAgo)
+            .gte('created_at', thirtyMinutesAgo)
             .order('created_at', { ascending: false })
-            .limit(20);
+            .limit(50);
+          
+          console.log(`🔥 RECENT ORDERS FOUND:`, recentOrders?.length || 0);
           
           if (!recentError && recentOrders?.length > 0) {
-            console.log(`🔥 FOUND ${recentOrders.length} RECENT ORDERS`);
+            // Prefer orders with customer_id over NULL customer_id
+            const ordersWithCustomer = recentOrders.filter(o => o.customer_id);
+            const ordersToSearch = ordersWithCustomer.length > 0 ? ordersWithCustomer : recentOrders;
             
-            // Try to match by stored cart data or similar total amounts
+            // Try to match by stored cart data
             const cartTotal = localStorage.getItem('lastCartTotal');
-            if (cartTotal) {
+            if (cartTotal && !foundOrder) {
               const targetAmount = parseFloat(cartTotal);
-              const matchingOrder = recentOrders.find(order => 
+              const matchingOrder = ordersToSearch.find(order => 
                 Math.abs(order.total_amount - targetAmount) < 0.01
               );
               
@@ -129,7 +141,7 @@ const OrderComplete = () => {
               }
             }
             
-            // Try to match with localStorage order data if available
+            // Try to match with localStorage order data
             if (!foundOrder) {
               const storedOrder = localStorage.getItem('partyondelivery_last_order');
               if (storedOrder) {
@@ -138,9 +150,8 @@ const OrderComplete = () => {
                   console.log("🔥 COMPARING WITH STORED ORDER:", parsed);
                   
                   // Match by total amount or customer email
-                  const matchedOrder = recentOrders.find(order => 
-                    Math.abs(parseFloat(order.total_amount.toString()) - parseFloat(parsed.totalAmount || 0)) < 0.01 ||
-                    order.customer?.email === parsed.customerEmail
+                  const matchedOrder = ordersToSearch.find(order => 
+                    Math.abs(parseFloat(order.total_amount.toString()) - parseFloat(parsed.totalAmount || 0)) < 0.01
                   );
                   
                   if (matchedOrder) {
@@ -154,12 +165,12 @@ const OrderComplete = () => {
             }
             
             // If still no match, take the most recent order as fallback
-            if (!foundOrder && recentOrders.length > 0) {
-              foundOrder = recentOrders[0];
+            if (!foundOrder && ordersToSearch.length > 0) {
+              foundOrder = ordersToSearch[0];
               console.log(`🔥 ⚠️  USING MOST RECENT ORDER AS FALLBACK: Order #${foundOrder.order_number}`);
             }
           } else {
-            console.log("🔥 ❌ NO RECENT ORDERS FOUND");
+            console.log("🔥 ❌ NO RECENT ORDERS FOUND", recentError);
           }
         }
         
