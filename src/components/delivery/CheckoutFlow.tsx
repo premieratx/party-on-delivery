@@ -10,7 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';  
+import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 
 
@@ -24,6 +26,7 @@ import { toZonedTime } from 'date-fns-tz';
 import { getActiveDeliveryInfo, formatDeliveryDate, parseDeliveryDate } from '@/utils/deliveryInfoManager';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
+import { useToast } from '@/hooks/use-toast';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 import { useProgressSaver } from '@/hooks/useProgressSaver';
 import { useDeliveryFee } from '@/hooks/useDeliveryFee';
@@ -974,16 +977,46 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <div className="space-y-4">
                           <div className="space-y-2">
                             <Label>Delivery Date *</Label>
-                            <input
-                              type="date"
-                              value={typeof deliveryInfo.date === 'string' ? deliveryInfo.date : ''}
-                              min={new Date().toISOString().split('T')[0]}
-                              onChange={(e) => {
-                                updateDeliveryInfo('date', e.target.value);
-                                updateDeliveryInfo('timeSlot', ''); // Reset time when date changes
-                              }}
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !deliveryInfo.date && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {deliveryInfo.date ? (
+                                    format(new Date(deliveryInfo.date + 'T12:00:00'), "EEEE, PPP")
+                                  ) : (
+                                    <span>Pick a delivery date</span>
+                                  )}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={deliveryInfo.date ? new Date(deliveryInfo.date + 'T12:00:00') : undefined}
+                                  onSelect={(selectedDate) => {
+                                    if (selectedDate) {
+                                      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+                                      updateDeliveryInfo('date', dateStr);
+                                      updateDeliveryInfo('timeSlot', ''); // Reset time when date changes
+                                    }
+                                  }}
+                                  disabled={(date) => {
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0);
+                                    const checkDay = new Date(date);
+                                    checkDay.setHours(0, 0, 0, 0);
+                                    return checkDay.getTime() < today.getTime();
+                                  }}
+                                  initialFocus
+                                  className="pointer-events-auto"
+                                />
+                              </PopoverContent>
+                            </Popover>
                           </div>
 
                          <div className="space-y-2">
