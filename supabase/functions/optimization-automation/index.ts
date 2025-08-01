@@ -1361,9 +1361,6 @@ async function integrateUserFeedback(): Promise<OptimizationResult> {
       issue_resolution_time: '45% faster',
       feature_adoption_rate: '+28%',
       user_retention_improvement: '+15%'
-    }
-  };
-}
     },
     performance_impact: {
       issue_detection_time: '95% faster',
