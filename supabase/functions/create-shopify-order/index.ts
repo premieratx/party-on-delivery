@@ -348,7 +348,6 @@ serve(async (req) => {
     // Create order in Shopify with proper totals structure
     const orderData = {
       order: {
-        line_items: lineItems,
         customer: shopifyCustomer ? { id: shopifyCustomer.id } : undefined,
         billing_address: {
           first_name: customerName?.split(' ')[0] || '',
@@ -374,29 +373,26 @@ serve(async (req) => {
         phone: customerPhone || '',
         financial_status: 'paid',
         fulfillment_status: 'unfulfilled',
+        
+        // Set line items (NO tip here - it goes in native tip field)
+        line_items: lineItems,
+        
         // Proper Shopify shipping lines structure
         shipping_lines: shippingFee > 0 ? [{
-          title: "Scheduled Delivery Service",
+          title: `Local Delivery (0.0 lb: Items 0.0 lb, Package 0.0 lb)`,
           price: shippingFee.toString(),
-          code: "DELIVERY"
+          code: "LOCAL_DELIVERY",
+          carrier_identifier: "custom",
+          requested_fulfillment_service_id: null
         }] : [],
+        
         // Proper Shopify tax lines structure  
         tax_lines: salesTax > 0 ? [{
-          title: "Sales Tax",
+          title: "Sales Tax 8.25%",
           price: salesTax.toString(),
           rate: 0.0825
         }] : [],
-        // Add tip as a line item if present
-        line_items: tipAmount > 0 ? [
-          ...lineItems,
-          {
-            title: "Driver Tip (Gratuity)",
-            price: tipAmount.toString(),
-            quantity: 1,
-            requires_shipping: false,
-            custom: true
-          }
-        ] : lineItems,
+        
         // Apply discount codes properly
         ...(discountCode && discountAmount && {
           discount_codes: [{
@@ -405,6 +401,7 @@ serve(async (req) => {
             type: discountType === 'percentage_discount' ? 'percentage' : 'fixed_amount'
           }]
         }),
+        
         // Set totals to match Stripe charge exactly
         subtotal_price: subtotal.toString(),
         total_tax: salesTax.toString(),
@@ -414,13 +411,17 @@ serve(async (req) => {
             currency_code: "USD"
           }
         },
-        // Include tip in order totals
-        total_tips_set: {
-          shop_money: {
-            amount: tipAmount.toString(),
-            currency_code: "USD"
+        
+        // Handle tip properly - Shopify has native tip support
+        ...(tipAmount > 0 && {
+          total_tips_set: {
+            shop_money: {
+              amount: tipAmount.toString(),
+              currency_code: "USD"
+            }
           }
-        },
+        }),
+        
         current_total_price: totalAmount.toString(),
         total_price: totalAmount.toString(),
         note: `🚚 DELIVERY ORDER 🚚
