@@ -221,6 +221,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   } = checkoutFlow;
 
   // Local UI state
+  const [previousStep, setPreviousStep] = useState<'datetime' | 'address' | 'payment'>('payment'); // Track step to return to after editing
   
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -590,8 +591,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     setConfirmedAddress(true);
     
-    // Navigate directly to payment since datetime/customer already confirmed
-    setCurrentStep('payment');
+    // Return to previous step if editing, otherwise auto-proceed to payment if all sections are confirmed  
+    if (previousStep !== currentStep) {
+      console.log('Returning to previous step after editing:', previousStep);
+      setTimeout(() => setCurrentStep(previousStep), 100);
+    } else if (confirmedDateTime) {
+      console.log('All sections confirmed, proceeding to payment automatically...');
+      setTimeout(() => setCurrentStep('payment'), 100);
+    }
     
     // Smooth scroll to top after state update
     requestAnimationFrame(() => {
@@ -616,10 +623,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim()) {
       console.log('Customer validation passed, confirming...');
-      setConfirmedCustomer(true);
+      setConfirmedDateTime(true);
       
-      // Auto-proceed to payment if all sections are confirmed
-      if (confirmedDateTime && confirmedAddress) {
+      // Return to previous step if editing, otherwise auto-proceed to payment if all sections are confirmed
+      if (previousStep !== currentStep) {
+        console.log('Returning to previous step after editing:', previousStep);
+        setTimeout(() => setCurrentStep(previousStep), 100);
+      } else if (confirmedAddress) {
         console.log('All sections confirmed, proceeding to payment automatically...');
         setTimeout(() => setCurrentStep('payment'), 100);
       }
@@ -865,81 +875,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
            )}
           </Card>
 
-          {/* Confirmed sections displayed as full-width condensed bars */}
-          {(confirmedDateTime || confirmedAddress || confirmedCustomer) && (
-            <div className="space-y-3">
-              {confirmedDateTime && (
-                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-                  <CardContent className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-1">
-                          <CheckCircle className="h-4 w-4 mr-2 text-green-600 flex-shrink-0" />
-                          <span className="text-sm font-medium text-green-800">Date & Time</span>
-                        </div>
-                        <div className="text-sm text-green-700 ml-6">
-                          {deliveryInfo.date && format(
-                            toZonedTime(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), 'America/Chicago'), 
-                            'EEEE, MMMM do, yyyy'
-                          )} at {deliveryInfo.timeSlot}
-                        </div>
-                        <div className="text-sm text-green-700 ml-6 mt-1">
-                          Contact: {customerInfo.firstName} {customerInfo.lastName} • {customerInfo.email} • {customerInfo.phone}
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setConfirmedDateTime(false);
-                          setCurrentStep('datetime');
-                        }}
-                        className="text-green-600 hover:text-green-800 h-8 px-3 ml-4 flex-shrink-0"
-                      >
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {confirmedAddress && (
-                <Card className="bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200">
-                  <CardContent className="py-3 px-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center mb-1">
-                          <CheckCircle className="h-4 w-4 mr-2 text-blue-600 flex-shrink-0" />
-                          <span className="text-sm font-medium text-blue-800">Delivery Address</span>
-                        </div>
-                        <div className="text-sm text-blue-700 ml-6">
-                          {addressInfo.street}, {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}
-                        </div>
-                        {addressInfo.instructions && (
-                          <div className="text-sm text-blue-600 ml-6 mt-1">
-                            Instructions: {addressInfo.instructions}
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setConfirmedAddress(false);
-                          setCurrentStep('address');
-                        }}
-                        className="text-blue-600 hover:text-blue-800 h-8 px-3 ml-4 flex-shrink-0"
-                      >
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
 
           <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
             {/* Step 1: Date/Time + Contact Information */}
@@ -1269,6 +1204,88 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 />
               </div>
             )}
+
+          {/* Saved Information Display - between Complete Order and Payment/Order Summary */}
+          {(confirmedDateTime || confirmedAddress) && (
+            <div className="space-y-3 mt-6">
+              <h3 className="text-lg font-semibold text-center mb-4">Your Saved Information</h3>
+              
+              {confirmedDateTime && (
+                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-1">
+                          <CheckCircle className="h-4 w-4 mr-2 text-green-600 flex-shrink-0" />
+                          <span className="text-sm font-medium text-green-800">Date, Time & Contact</span>
+                        </div>
+                        <div className="text-sm text-green-700 ml-6">
+                          {deliveryInfo.date && format(
+                            toZonedTime(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), 'America/Chicago'), 
+                            'EEEE, MMMM do, yyyy'
+                          )} at {deliveryInfo.timeSlot}
+                        </div>
+                        <div className="text-sm text-green-700 ml-6 mt-1">
+                          Contact: {customerInfo.firstName} {customerInfo.lastName} • {customerInfo.email} • {customerInfo.phone}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setPreviousStep(currentStep);
+                          setConfirmedDateTime(false);
+                          setCurrentStep('datetime');
+                        }}
+                        className="text-green-600 hover:text-green-800 h-8 px-3 ml-4 flex-shrink-0"
+                      >
+                        <Edit2 className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {confirmedAddress && (
+                <Card className="bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center mb-1">
+                          <CheckCircle className="h-4 w-4 mr-2 text-blue-600 flex-shrink-0" />
+                          <span className="text-sm font-medium text-blue-800">Delivery Address</span>
+                        </div>
+                        <div className="text-sm text-blue-700 ml-6">
+                          {addressInfo.street}, {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}
+                        </div>
+                        {addressInfo.instructions && (
+                          <div className="text-sm text-blue-600 ml-6 mt-1">
+                            Instructions: {addressInfo.instructions}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setPreviousStep(currentStep);
+                          setConfirmedAddress(false);
+                          setCurrentStep('address');
+                        }}
+                        className="text-blue-600 hover:text-blue-800 h-8 px-3 ml-4 flex-shrink-0"
+                      >
+                        <Edit2 className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {/* Order Summary */}
 
           {/* Order Summary */}
           <div className="space-y-2 md:space-y-6">
