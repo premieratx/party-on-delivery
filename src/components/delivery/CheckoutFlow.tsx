@@ -960,331 +960,315 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           )}
 
           <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
-            {/* Step-by-Step Forms - Mobile optimized */}
-            <div className="space-y-3 md:space-y-6">
-               
-                {/* Combined Date/Time + Contact Information Section */}
-                {(!confirmedDateTime || currentStep === 'datetime') && (
-                  <Card className={`shadow-card ${currentStep === 'datetime' ? 'border-2 border-green-500' : 'border'}`}>
-                    <CardHeader>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <CalendarIcon className="w-5 h-5" />
-                        Schedule Your Delivery
-                      </CardTitle>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-4">
-                      <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Delivery Date *</Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full justify-start text-left font-normal bg-background",
-                                    !deliveryInfo.date && "text-muted-foreground"
-                                  )}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {deliveryInfo.date ? (
-                                    format(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), "EEEE, PPP")
-                                  ) : (
-                                    <span>Pick a delivery date</span>
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background border shadow-md z-50" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={deliveryInfo.date instanceof Date ? deliveryInfo.date : deliveryInfo.date ? new Date(deliveryInfo.date) : undefined}
-                                  onSelect={(selectedDate) => {
-                                    console.log('📅 Date selected:', selectedDate);
-                                    if (selectedDate) {
-                                      // Simple, direct state update - no hooks confusion
-                                      const updatedDeliveryInfo = { 
-                                        ...deliveryInfo, 
-                                        date: selectedDate, 
-                                        timeSlot: '' // Reset time when date changes
-                                      };
-                                      onDeliveryInfoChange(updatedDeliveryInfo);
-                                      console.log('📅 Updated delivery info:', updatedDeliveryInfo);
-                                    }
-                                  }}
-                                  disabled={(date) => {
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0);
-                                    const checkDay = new Date(date);
-                                    checkDay.setHours(0, 0, 0, 0);
-                                    return checkDay.getTime() < today.getTime();
-                                  }}
-                                  initialFocus
-                                  className="p-3 pointer-events-auto"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
+            {/* Section 1: Date/Time + Contact Information */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <CalendarIcon className="w-5 h-5" />
+                  Schedule Delivery & Contact Info
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                {/* Date Picker */}
+                <div className="space-y-2">
+                  <Label>Delivery Date *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal bg-background",
+                          !deliveryInfo.date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {deliveryInfo.date ? (
+                          format(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), "EEEE, PPP")
+                        ) : (
+                          <span>Pick a delivery date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-background border shadow-md z-50" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={deliveryInfo.date instanceof Date ? deliveryInfo.date : deliveryInfo.date ? new Date(deliveryInfo.date) : undefined}
+                        onSelect={(selectedDate) => {
+                          console.log('📅 Date selected:', selectedDate);
+                          if (selectedDate) {
+                            const updatedDeliveryInfo = { 
+                              ...deliveryInfo, 
+                              date: selectedDate, 
+                              timeSlot: '' // Reset time when date changes
+                            };
+                            onDeliveryInfoChange(updatedDeliveryInfo);
+                            console.log('📅 Updated delivery info:', updatedDeliveryInfo);
+                          }
+                        }}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const checkDay = new Date(date);
+                          checkDay.setHours(0, 0, 0, 0);
+                          return checkDay.getTime() < today.getTime();
+                        }}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-                         <div className="space-y-2">
-                           <Label>Delivery Time *</Label>
-                           <p className="text-xs text-muted-foreground">
-                             Same-day delivery available with 1-hour advance notice.
-                           </p>
-                           {/* Use native select for maximum reliability across all user types */}
-                           <select
-                             value={deliveryInfo.timeSlot || ""}
-                             onChange={(e) => {
-                               console.log('✅ Native select change triggered with value:', e.target.value);
-                               updateDeliveryInfo('timeSlot', e.target.value);
-                             }}
-                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                           >
-                             <option value="" disabled>Select a time slot</option>
-                             {getAvailableTimeSlots().map((slot) => (
-                               <option key={slot} value={slot}>
-                                 {slot}
-                               </option>
-                             ))}
-                           </select>
-                           {getAvailableTimeSlots().length === 0 && (
-                             <div className="p-2 text-sm text-muted-foreground text-center bg-yellow-50 border border-yellow-200 rounded">
-                               No time slots available today. Please select a future date.
-                             </div>
-                           )}
-                         </div>
-                        
-                        {/* Customer Information in same step */}
-                        <Separator />
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4" />
-                            <Label className="text-base font-medium">Contact Information</Label>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="firstName">First Name *</Label>
-                              <Input
-                                id="firstName"
-                                name="given-name"
-                                autoComplete="given-name"
-                                placeholder="John"
-                                value={customerInfo.firstName}
-                                onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
-                                className="text-sm"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="lastName">Last Name *</Label>
-                              <Input
-                                id="lastName"
-                                name="family-name"
-                                autoComplete="family-name"
-                                placeholder="Doe"
-                                value={customerInfo.lastName}
-                                onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
-                                className="text-sm"
-                              />
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="phone">Phone Number *</Label>
-                            <Input
-                              id="phone"
-                              name="tel"
-                              type="tel"
-                              autoComplete="tel"
-                              placeholder="(555) 123-4567"
-                              value={customerInfo.phone}
-                              onChange={(e) => {
-                                const formatted = formatPhoneNumber(e.target.value);
-                                setCustomerInfo(prev => ({ ...prev, phone: formatted }));
-                                if (phoneError) setPhoneError(null);
-                              }}
-                              className={`text-sm ${phoneError ? 'border-red-500' : ''}`}
-                            />
-                            {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="email">Email Address *</Label>
-                            <Input
-                              id="email"
-                              name="email"
-                              type="email"
-                              autoComplete="email"
-                              placeholder="john.doe@example.com"
-                              value={customerInfo.email}
-                              onChange={(e) => {
-                                setCustomerInfo(prev => ({ ...prev, email: e.target.value }));
-                                if (emailError) setEmailError(null);
-                              }}
-                              className={`text-sm ${emailError ? 'border-red-500' : ''}`}
-                            />
-                            {emailError && <p className="text-sm text-red-600">{emailError}</p>}
-                          </div>
-                        </div>
-                        
-                         <Button 
-                           onClick={() => {
-                             // Validate customer info first
-                             const emailErr = getEmailErrorMessage(customerInfo.email || '');
-                             const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
-                             
-                             setEmailError(emailErr);
-                             setPhoneError(phoneErr);
-                             
-                             if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim() && isDateTimeComplete) {
-                               setConfirmedDateTime(true);
-                               setCurrentStep('address');
-                             }
-                           }}
-                           disabled={!isDateTimeComplete || !customerInfo.firstName?.trim() || !customerInfo.lastName?.trim() || !customerInfo.email?.trim() || !customerInfo.phone?.trim()}
-                           className="w-full"
-                         >
-                           Continue to Address
-                         </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-               {/* Address Section - Always show when not confirmed OR when it's the current step */}
-               {(!confirmedAddress || currentStep === 'address') && (
-                <Card className={`shadow-card ${currentStep === 'address' ? 'border-2 border-green-500' : 'border'}`}>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <MapPin className="w-5 h-5" />
-                      Delivery Address
-                    </CardTitle>
-                  </CardHeader>
+                {/* Time Slot */}
+                <div className="space-y-2">
+                  <Label>Delivery Time *</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Same-day delivery available with 1-hour advance notice.
+                  </p>
+                  <select
+                    value={deliveryInfo.timeSlot || ""}
+                    onChange={(e) => {
+                      console.log('✅ Time slot selected:', e.target.value);
+                      const updatedDeliveryInfo = { ...deliveryInfo, timeSlot: e.target.value };
+                      onDeliveryInfoChange(updatedDeliveryInfo);
+                    }}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="" disabled>Select a time slot</option>
+                    {getAvailableTimeSlots().map((slot) => (
+                      <option key={slot} value={slot}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
+                  {getAvailableTimeSlots().length === 0 && (
+                    <div className="p-2 text-sm text-muted-foreground text-center bg-yellow-50 border border-yellow-200 rounded">
+                      No time slots available today. Please select a future date.
+                    </div>
+                  )}
+                </div>
+                
+                <Separator />
+                
+                {/* Contact Information */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    <Label className="text-base font-medium">Contact Information</Label>
+                  </div>
                   
-                    <CardContent className="space-y-2 md:space-y-4">
-                       <div className="space-y-2 md:space-y-4">
-                         <div className="space-y-1 md:space-y-2">
-                           <Label htmlFor="street">Street Address *</Label>
-                            <GooglePlacesAutocomplete
-                              value={addressInfo.street}
-                              onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
-                              onPlaceSelect={(place) => {
-                                const components = place.address_components || [];
-                                const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
-                                const route = components.find(c => c.types.includes('route'))?.long_name || '';
-                                const city = components.find(c => c.types.includes('locality'))?.long_name || 
-                                            components.find(c => c.types.includes('sublocality'))?.long_name || '';
-                                const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
-                                const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
-                                
-                                setAddressInfo(prev => ({
-                                  ...prev,
-                                  street: `${streetNumber} ${route}`.trim(),
-                                  city: city,
-                                  state: state, 
-                                  zipCode: zipCode
-                                }));
-                              }}
-                             placeholder="Start typing your address..."
-                           />
-                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 md:gap-4">
-                          <div className="space-y-1 md:space-y-2">
-                            <Label htmlFor="city">City *</Label>
-                            <Input
-                              id="city"
-                              name="address-level2"
-                              autoComplete={isAddingToOrder ? "address-level2" : "off"}
-                              placeholder="Austin"
-                              value={addressInfo.city}
-                              onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
-                            />
-                          </div>
-                          <div className="space-y-1 md:space-y-2">
-                            <Label htmlFor="state">State *</Label>
-                            <Input
-                              id="state"
-                              name="address-level1"
-                              autoComplete={isAddingToOrder ? "address-level1" : "off"}
-                              placeholder="TX"
-                              value={addressInfo.state}
-                              onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-1 md:space-y-2">
-                          <Label htmlFor="zipCode">Zip Code *</Label>
-                          <Input
-                            id="zipCode"
-                            name="postal-code"
-                            autoComplete={isAddingToOrder ? "postal-code" : "off"}
-                            placeholder="78701"
-                            value={addressInfo.zipCode}
-                            onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
-                          />
-                        </div>
-                        
-                        <div className="space-y-1 md:space-y-2">
-                          <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
-                          <Textarea
-                            id="instructions"
-                            placeholder="Apartment number, gate code, delivery preferences..."
-                            value={addressInfo.instructions}
-                            onChange={(e) => setAddressInfo(prev => ({ ...prev, instructions: e.target.value }))}
-                            className="min-h-[50px] md:min-h-[80px]"
-                          />
-                        </div>
-                        
-                         <Button 
-                           onClick={() => {
-                             setConfirmedAddress(true);
-                             setCurrentStep('payment');
-                           }}
-                           disabled={!isAddressComplete}
-                           className="w-full"
-                         >
-                           Continue to Payment
-                         </Button>
-                        </div>
-                     </CardContent>
-                   </Card>
-                )}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <Input
+                        id="firstName"
+                        name="given-name"
+                        autoComplete="given-name"
+                        placeholder="John"
+                        value={customerInfo.firstName}
+                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, firstName: e.target.value }))}
+                        className="text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <Input
+                        id="lastName"
+                        name="family-name"
+                        autoComplete="family-name"
+                        placeholder="Doe"
+                        value={customerInfo.lastName}
+                        onChange={(e) => setCustomerInfo(prev => ({ ...prev, lastName: e.target.value }))}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Input
+                      id="phone"
+                      name="tel"
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder="(555) 123-4567"
+                      value={customerInfo.phone}
+                      onChange={(e) => {
+                        const formatted = formatPhoneNumber(e.target.value);
+                        setCustomerInfo(prev => ({ ...prev, phone: formatted }));
+                        if (phoneError) setPhoneError(null);
+                      }}
+                      className={`text-sm ${phoneError ? 'border-red-500' : ''}`}
+                    />
+                    {phoneError && <p className="text-sm text-red-600">{phoneError}</p>}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="john.doe@example.com"
+                      value={customerInfo.email}
+                      onChange={(e) => {
+                        setCustomerInfo(prev => ({ ...prev, email: e.target.value }));
+                        if (emailError) setEmailError(null);
+                      }}
+                      className={`text-sm ${emailError ? 'border-red-500' : ''}`}
+                    />
+                    {emailError && <p className="text-sm text-red-600">{emailError}</p>}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Customer Information moved inside Date/Time section */}
+            {/* Section 2: Address */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MapPin className="w-5 h-5" />
+                  Delivery Address
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="space-y-2 md:space-y-4">
+                <div className="space-y-2 md:space-y-4">
+                  <div className="space-y-1 md:space-y-2">
+                    <Label htmlFor="street">Street Address *</Label>
+                    <GooglePlacesAutocomplete
+                      value={addressInfo.street}
+                      onChange={(value) => setAddressInfo(prev => ({ ...prev, street: value }))}
+                      onPlaceSelect={(place) => {
+                        const components = place.address_components || [];
+                        const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name || '';
+                        const route = components.find(c => c.types.includes('route'))?.long_name || '';
+                        const city = components.find(c => c.types.includes('locality'))?.long_name || 
+                                    components.find(c => c.types.includes('sublocality'))?.long_name || '';
+                        const state = components.find(c => c.types.includes('administrative_area_level_1'))?.short_name || '';
+                        const zipCode = components.find(c => c.types.includes('postal_code'))?.long_name || '';
+                        
+                        setAddressInfo(prev => ({
+                          ...prev,
+                          street: `${streetNumber} ${route}`.trim(),
+                          city: city,
+                          state: state, 
+                          zipCode: zipCode
+                        }));
+                      }}
+                      placeholder="Start typing your address..."
+                    />
+                  </div>
+                 
+                  <div className="grid grid-cols-2 gap-2 md:gap-4">
+                    <div className="space-y-1 md:space-y-2">
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        name="address-level2"
+                        autoComplete={isAddingToOrder ? "address-level2" : "off"}
+                        placeholder="Austin"
+                        value={addressInfo.city}
+                        onChange={(e) => setAddressInfo(prev => ({ ...prev, city: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1 md:space-y-2">
+                      <Label htmlFor="state">State *</Label>
+                      <Input
+                        id="state"
+                        name="address-level1"
+                        autoComplete={isAddingToOrder ? "address-level1" : "off"}
+                        placeholder="TX"
+                        value={addressInfo.state}
+                        onChange={(e) => setAddressInfo(prev => ({ ...prev, state: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-1 md:space-y-2">
+                    <Label htmlFor="zipCode">Zip Code *</Label>
+                    <Input
+                      id="zipCode"
+                      name="postal-code"
+                      autoComplete={isAddingToOrder ? "postal-code" : "off"}
+                      placeholder="78701"
+                      value={addressInfo.zipCode}
+                      onChange={(e) => setAddressInfo(prev => ({ ...prev, zipCode: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="space-y-1 md:space-y-2">
+                    <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+                    <Textarea
+                      id="instructions"
+                      placeholder="Apartment number, gate code, delivery preferences..."
+                      value={addressInfo.instructions}
+                      onChange={(e) => setAddressInfo(prev => ({ ...prev, instructions: e.target.value }))}
+                      className="min-h-[50px] md:min-h-[80px]"
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={() => {
+                      // Validate everything and proceed to payment
+                      const emailErr = getEmailErrorMessage(customerInfo.email || '');
+                      const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
+                      
+                      setEmailError(emailErr);
+                      setPhoneError(phoneErr);
+                      
+                      if (!emailErr && !phoneErr && 
+                          customerInfo.firstName?.trim() && 
+                          customerInfo.lastName?.trim() && 
+                          deliveryInfo.date && 
+                          deliveryInfo.timeSlot &&
+                          isAddressComplete) {
+                        setCurrentStep('payment');
+                      }
+                    }}
+                    disabled={!deliveryInfo.date || !deliveryInfo.timeSlot || !customerInfo.firstName?.trim() || !customerInfo.lastName?.trim() || !customerInfo.email?.trim() || !customerInfo.phone?.trim() || !isAddressComplete}
+                    className="w-full"
+                  >
+                    Continue to Payment
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-             {currentStep === 'payment' && (
-               <div data-checkout-section>
+            {/* Payment Section */}
+            {currentStep === 'payment' && (
+              <div data-checkout-section>
                 <EmbeddedPaymentForm
-                 cartItems={cartItems}
-                 subtotal={discountedSubtotal}
-                 deliveryFee={finalDeliveryFee}
-                 salesTax={salesTax}
-                customerInfo={customerInfo}
-                deliveryInfo={{
-                  ...deliveryInfo,
-                  address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
-                  date: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
-                  time: deliveryInfo.timeSlot || ''
-                }}
-                appliedDiscount={appliedDiscount}
-                onPaymentSuccess={handlePaymentSuccess}
-                 tipAmount={tipAmount}
-                 setTipAmount={handleTipChange}
-                 tipType={tipType}
-                 tipPercentage={tipPercentage}
-                deliveryPricing={{ fee: baseDeliveryFee, minimumOrder: 0, isDistanceBased: false }}
-                isAddingToOrder={isAddingToOrder}
-                useSameAddress={useSameAddress}
-                hasChanges={hasChanges}
-                discountCode={discountCode}
-                setDiscountCode={setDiscountCode}
-                handleApplyDiscount={handleApplyDiscount}
-                handleRemoveDiscount={handleRemoveDiscount}
-               />
-               </div>
-             )}
-          </div>
+                  cartItems={cartItems}
+                  subtotal={discountedSubtotal}
+                  deliveryFee={finalDeliveryFee}
+                  salesTax={salesTax}
+                  customerInfo={customerInfo}
+                  deliveryInfo={{
+                    ...deliveryInfo,
+                    address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+                    date: deliveryInfo.date ? format(deliveryInfo.date, "yyyy-MM-dd") : '',
+                    time: deliveryInfo.timeSlot || ''
+                  }}
+                  appliedDiscount={appliedDiscount}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  tipAmount={tipAmount}
+                  setTipAmount={handleTipChange}
+                  tipType={tipType}
+                  tipPercentage={tipPercentage}
+                  deliveryPricing={{ fee: baseDeliveryFee, minimumOrder: 0, isDistanceBased: false }}
+                  isAddingToOrder={isAddingToOrder}
+                  useSameAddress={useSameAddress}
+                  hasChanges={hasChanges}
+                  discountCode={discountCode}
+                  setDiscountCode={setDiscountCode}
+                  handleApplyDiscount={handleApplyDiscount}
+                  handleRemoveDiscount={handleRemoveDiscount}
+                />
+              </div>
+            )}
 
           {/* Order Summary */}
           <div className="space-y-2 md:space-y-6">
