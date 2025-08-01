@@ -988,7 +988,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   {deliveryInfo.date ? (
-                                    format(new Date(deliveryInfo.date + 'T12:00:00'), "EEEE, PPP")
+                                    format(deliveryInfo.date, "EEEE, PPP")
                                   ) : (
                                     <span>Pick a delivery date</span>
                                   )}
@@ -997,11 +997,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                               <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                   mode="single"
-                                  selected={deliveryInfo.date ? new Date(deliveryInfo.date + 'T12:00:00') : undefined}
+                                  selected={deliveryInfo.date || undefined}
                                   onSelect={(selectedDate) => {
                                     if (selectedDate) {
-                                      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-                                      updateDeliveryInfo('date', dateStr);
+                                      updateDeliveryInfo('date', selectedDate);
                                       updateDeliveryInfo('timeSlot', ''); // Reset time when date changes
                                     }
                                   }}
