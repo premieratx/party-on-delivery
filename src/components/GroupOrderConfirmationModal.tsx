@@ -101,7 +101,10 @@ export const GroupOrderConfirmationModal: React.FC<GroupOrderConfirmationModalPr
         
         <div className="space-y-3">
           <Button 
-            onClick={onJoinGroup} 
+            onClick={() => {
+              localStorage.setItem('groupOrderJoinDecision', 'yes');
+              onJoinGroup();
+            }} 
             className="w-full" 
             size="lg"
             disabled={isLoading}
@@ -110,7 +113,10 @@ export const GroupOrderConfirmationModal: React.FC<GroupOrderConfirmationModalPr
           </Button>
           
           <Button 
-            onClick={onStartNew} 
+            onClick={() => {
+              localStorage.setItem('groupOrderJoinDecision', 'no');
+              onStartNew();
+            }} 
             variant="outline" 
             className="w-full"
             disabled={isLoading}

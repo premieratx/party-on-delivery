@@ -301,6 +301,27 @@ const CustomerDashboard = () => {
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
+      
+      // Check if user should be redirected to group order dashboard
+      const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
+      const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
+      
+      if (groupOrderJoinDecision === 'yes' && originalGroupOrderData && customer) {
+        try {
+          const groupData = JSON.parse(originalGroupOrderData);
+          if (groupData.shareToken) {
+            // Clean up localStorage
+            localStorage.removeItem('groupOrderJoinDecision');
+            localStorage.removeItem('originalGroupOrderData');
+            
+            // Redirect to group order dashboard
+            navigate(`/order/${groupData.shareToken}`);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing group order data:', error);
+        }
+      }
     }
   };
 

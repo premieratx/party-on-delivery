@@ -72,9 +72,20 @@ const PostCheckoutSharedOrder: React.FC<PostCheckoutSharedOrderProps> = ({
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button onClick={onGoToDashboard} className="w-full">
+          <Button 
+            onClick={() => {
+              // Check if user joined a group order to determine the right dashboard
+              const joinDecision = localStorage.getItem('groupOrderJoinDecision');
+              if (joinDecision === 'yes' && shareToken) {
+                navigate(`/order/${shareToken}`);
+              } else {
+                onGoToDashboard();
+              }
+            }} 
+            className="w-full"
+          >
             <Users className="h-4 w-4 mr-2" />
-            View Shared Dashboard
+            {shareToken ? 'View Group Dashboard' : 'View Dashboard'}
           </Button>
           
           <div className="flex flex-col sm:flex-row gap-3">

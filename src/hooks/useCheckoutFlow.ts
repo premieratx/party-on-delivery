@@ -39,6 +39,10 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     console.log('Current customerInfo:', customerInfo);
     console.log('Current addressInfo:', addressInfo);
     
+    // Check for group order data
+    const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
+    const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
+    
     // For add-to-order flow, save the original info for change tracking
     if (isAddingToOrder && lastOrderInfo) {
       setOriginalOrderInfo(lastOrderInfo);
@@ -47,21 +51,53 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     
     // Pre-fill delivery date and time for new users or when empty
     if (!deliveryInfo.date || !deliveryInfo.timeSlot) {
-      // Get draft order data from localStorage for delivery info only
-      const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-      console.log('draftOrder for delivery info:', draftOrder);
+      let sourceData = null;
       
-      // Pre-fill delivery date and time ONLY (address/customer managed by useCustomerInfo)
-      const sourceData = (isAddingToOrder && lastOrderInfo?.recentpurchase) ? lastOrderInfo : draftOrder;
+      // If joining a group order, use the original group order data for EXACT matching
+      if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {
+        try {
+          const groupData = JSON.parse(originalGroupOrderData);
+          console.log('Using original group order data for exact matching:', groupData);
+          sourceData = {
+            deliveryDate: groupData.deliveryDate,
+            deliveryTime: groupData.deliveryTime,
+            deliveryAddress: groupData.deliveryAddress
+          };
+          
+          // Pre-fill address info for group orders
+          if (groupData.deliveryAddress) {
+            const addr = groupData.deliveryAddress;
+            setAddressInfo({
+              street: addr.street || '',
+              city: addr.city || '',
+              state: addr.state || '',
+              zipCode: addr.zipCode || '',
+              instructions: addr.instructions || ''
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing group order data:', error);
+        }
+      }
+      
+      // Fallback to regular order data
+      if (!sourceData) {
+        const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
+        console.log('draftOrder for delivery info:', draftOrder);
+        sourceData = (isAddingToOrder && lastOrderInfo?.recentpurchase) ? lastOrderInfo : draftOrder;
+      }
       
       if (sourceData?.deliveryDate && sourceData?.deliveryTime) {
         try {
           const savedDate = new Date(sourceData.deliveryDate);
           const now = new Date();
           
-          // Only prefill if the saved date/time is in the future
-          // Compare full date and time, not just date
-          if (!isNaN(savedDate.getTime()) && savedDate > now) {
+          // For group orders, always use the exact date/time (don't check if future)
+          // For regular orders, only prefill if in the future
+          const shouldPrefill = groupOrderJoinDecision === 'yes' || 
+            (!isNaN(savedDate.getTime()) && savedDate > now);
+          
+          if (shouldPrefill) {
             console.log('Pre-filling delivery date:', savedDate);
             updateDeliveryInfo('date', savedDate);
             
@@ -71,14 +107,11 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
             }
           } else {
             console.log('Saved date/time is in the past, forcing user to select new date/time');
-            // Don't prefill anything - force user to select fresh date/time
           }
         } catch (error) {
           console.error('Error parsing delivery date:', error);
-          // Don't prefill on error - force user to select
         }
       } else {
-        // For new users, don't prefill - let them choose
         console.log('No saved delivery data, user must select date/time');
       }
     }

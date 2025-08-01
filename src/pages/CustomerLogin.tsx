@@ -32,8 +32,25 @@ const CustomerLogin = () => {
         // Link any stored session IDs to this user
         await linkSessionToUser(session.user.email);
         
-        // Redirect to intended destination
-        const redirectTo = redirectParam === 'dashboard' ? '/customer/dashboard' : (returnUrl || '/customer/dashboard');
+        // Check for group order join decision to determine redirect
+        const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
+        const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
+        
+        let redirectTo = redirectParam === 'dashboard' ? '/customer/dashboard' : (returnUrl || '/customer/dashboard');
+        
+        // If user chose to join group order, redirect to group order dashboard
+        if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {
+          try {
+            const groupData = JSON.parse(originalGroupOrderData);
+            if (groupData.shareToken) {
+              redirectTo = `/order/${groupData.shareToken}`;
+              console.log('Redirecting to group order dashboard:', redirectTo);
+            }
+          } catch (error) {
+            console.error('Error parsing group order data for redirect:', error);
+          }
+        }
+        
         console.log('Redirecting to:', redirectTo);
         
         // Use replace to avoid back button issues

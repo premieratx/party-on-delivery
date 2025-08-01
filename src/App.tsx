@@ -21,6 +21,7 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import OrderContinuation from "./pages/OrderContinuation";
 import SharedOrderView from "./pages/SharedOrderView";
 import GroupOrderView from "./pages/GroupOrderView";
+import GroupOrderDashboard from "./components/GroupOrderDashboard";
 import NotFound from "./pages/NotFound";
 import TestSMS from "./components/TestSMS";
 import { PartyPlanner } from "./pages/PartyPlanner";
@@ -80,7 +81,8 @@ const App = () => {
                   <Route path="/manage-order" element={<CustomerLogin />} />
                   
                   {/* Shared Order Routes */}
-                  <Route path="/order/:shareToken" element={<GroupOrderView />} />
+                  <Route path="/order/:shareToken" element={<GroupOrderDashboard />} />
+                  <Route path="/group/:shareToken" element={<GroupOrderView />} />
                   <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
                   
                   {/* Party Planning Routes */}

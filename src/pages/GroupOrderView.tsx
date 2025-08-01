@@ -92,9 +92,21 @@ const GroupOrderView = () => {
   };
 
   const handleJoinOrder = () => {
-    // Store the share token and redirect to shopping with share parameter
+    // Store detailed group order information
     localStorage.setItem('groupOrderToken', shareToken || '');
     localStorage.setItem('partyondelivery_add_to_order', 'true');
+    localStorage.setItem('groupOrderJoinDecision', 'yes');
+    
+    // Store original order details for exact matching
+    const originalOrderData = {
+      deliveryDate: order?.delivery_date,
+      deliveryTime: order?.delivery_time,
+      deliveryAddress: order?.delivery_address,
+      customerName: `${order?.customers?.first_name || ''} ${order?.customers?.last_name || ''}`.trim(),
+      orderNumber: order?.order_number,
+      shareToken: shareToken
+    };
+    localStorage.setItem('originalGroupOrderData', JSON.stringify(originalOrderData));
     
     // Generate and store group discount code based on original buyer's last name
     if (order?.customers?.last_name) {
