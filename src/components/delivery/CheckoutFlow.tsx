@@ -1000,9 +1000,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                   selected={deliveryInfo.date instanceof Date ? deliveryInfo.date : deliveryInfo.date ? new Date(deliveryInfo.date) : undefined}
                                   onSelect={(selectedDate) => {
                                     console.log('📅 Date selected:', selectedDate);
+                                    console.log('📅 Current deliveryInfo.date before update:', deliveryInfo.date);
                                     if (selectedDate) {
+                                      console.log('📅 Calling updateDeliveryInfo with:', selectedDate);
                                       updateDeliveryInfo('date', selectedDate);
                                       updateDeliveryInfo('timeSlot', ''); // Reset time when date changes
+                                      console.log('📅 Called updateDeliveryInfo');
+                                      // Force re-render by updating parent directly too
+                                      const newInfo = { ...deliveryInfo, date: selectedDate, timeSlot: '' };
+                                      onDeliveryInfoChange(newInfo);
+                                      console.log('📅 Updated parent deliveryInfo:', newInfo);
                                     }
                                   }}
                                   disabled={(date) => {
