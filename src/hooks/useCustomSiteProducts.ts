@@ -84,6 +84,11 @@ export function useCustomSiteProducts() {
 
       console.log(`Filtered to ${allFilteredProducts.length} products for custom site`);
       
+      // Log duplicate analysis BEFORE deduplication
+      const { generateDuplicateReport } = await import('@/utils/duplicateAnalyzer');
+      const duplicateReport = generateDuplicateReport(allFilteredProducts);
+      console.log('\n🔍 DUPLICATE PRODUCTS ANALYSIS (BEFORE DEDUPLICATION):\n', duplicateReport);
+      
       // Apply deduplication and grouping
       const deduplicatedProducts = deduplicateProducts(allFilteredProducts);
       console.log(`Deduplicated to ${deduplicatedProducts.length} unique products`);
@@ -136,6 +141,11 @@ export function useCustomSiteProducts() {
       });
 
       console.log(`Loaded ${allProducts.length} total products`);
+      
+      // Log duplicate analysis BEFORE deduplication
+      const { generateDuplicateReport } = await import('@/utils/duplicateAnalyzer');
+      const duplicateReport = generateDuplicateReport(allProducts);
+      console.log('\n🔍 DUPLICATE PRODUCTS ANALYSIS (BEFORE DEDUPLICATION):\n', duplicateReport);
       
       // Apply deduplication and grouping
       const deduplicatedProducts = deduplicateProducts(allProducts);

@@ -15,7 +15,6 @@ import { useCustomSiteProducts } from "@/hooks/useCustomSiteProducts";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
-import { generateDuplicateReport } from '@/utils/duplicateAnalyzer';
 
 interface ProductVariant {
   id: string;
@@ -74,11 +73,7 @@ export const ProductSearch = () => {
 
   useEffect(() => {
     if (!loading && allProducts.length > 0) {
-      console.log(`✅ Loaded ${allProducts.length} products from Shopify`);
-      
-      // Generate and log duplicate analysis
-      const duplicateReport = generateDuplicateReport(allProducts);
-      console.log('\n🔍 DUPLICATE PRODUCTS ANALYSIS:\n', duplicateReport);
+      console.log(`✅ Loaded ${allProducts.length} deduplicated products from Shopify`);
       
       // Load favorites immediately
       const favs = getFavoritesProducts(allProducts);
@@ -360,11 +355,6 @@ export const ProductSearch = () => {
             
             {getTotalItems() > 0 && (
               <div className="flex items-center gap-2 sm:gap-4">
-                <div className="text-xs sm:text-sm text-muted-foreground">
-                  <span className="hidden sm:inline">{getTotalItems()} items • </span>
-                  ${getTotalPrice().toFixed(2)}
-                </div>
-                {/* Cart button removed - now using bottom cart bar */}
                 <div className="text-xs sm:text-sm text-muted-foreground">
                   <span className="hidden sm:inline">{getTotalItems()} items • </span>
                   ${getTotalPrice().toFixed(2)}
