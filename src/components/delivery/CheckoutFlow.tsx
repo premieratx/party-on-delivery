@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 
-import { SimpleDatePicker } from './SimpleDatePicker';
+// Removed SimpleDatePicker import - using native date input
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -972,11 +972,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     
                     <CardContent className="space-y-4">
                       <div className="space-y-4">
-                          <SimpleDatePicker
-                            value={deliveryInfo.date}
-                            onChange={(date) => updateDeliveryInfo('date', date)}
-                            onTimeSlotReset={() => updateDeliveryInfo('timeSlot', '')}
-                          />
+                          <div className="space-y-2">
+                            <Label>Delivery Date *</Label>
+                            <input
+                              type="date"
+                              value={deliveryInfo.date ? format(new Date(deliveryInfo.date), 'yyyy-MM-dd') : ''}
+                              min={format(new Date(), 'yyyy-MM-dd')}
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  const selectedDate = new Date(e.target.value + 'T00:00:00');
+                                  updateDeliveryInfo('date', selectedDate.toISOString());
+                                  updateDeliveryInfo('timeSlot', ''); // Reset time when date changes
+                                }
+                              }}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                          </div>
 
                          <div className="space-y-2">
                            <Label>Delivery Time *</Label>

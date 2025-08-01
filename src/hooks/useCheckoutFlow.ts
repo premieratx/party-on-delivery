@@ -57,42 +57,13 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
   };
 
   // Pre-fill with group order data
+  // Simplified prefill - only run once on mount
   useEffect(() => {
-    console.log('=== useCheckoutFlow pre-fill effect ===');
-    
-    // Check for group order prefill data
-    const prefillData = localStorage.getItem('prefill_delivery_data');
-    if (prefillData) {
-      try {
-        const parsed = JSON.parse(prefillData);
-        console.log('🔗 PREFILLING delivery info from group order:', parsed);
-        
-        // Update delivery date and time
-        if (parsed.date) {
-          updateDeliveryInfo('date', new Date(parsed.date));
-        }
-        if (parsed.timeSlot) {
-          updateDeliveryInfo('timeSlot', parsed.timeSlot);
-        }
-        
-        // Mark datetime as confirmed if we have both
-        if (parsed.date && parsed.timeSlot) {
-          setConfirmedDateTime(true);
-        }
-        
-        // Clear prefill data after using it
-        localStorage.removeItem('prefill_delivery_data');
-      } catch (error) {
-        console.error('Error parsing prefill delivery data:', error);
-      }
-    }
-    
     // For add-to-order flow, save the original info for change tracking
     if (isAddingToOrder && lastOrderInfo) {
       setOriginalOrderInfo(lastOrderInfo);
-      console.log('Set original order info for add-to-order flow:', lastOrderInfo);
     }
-  }, []); // Remove dependency to prevent infinite loops - run once on mount
+  }, []);
 
   // Update delivery info when address changes
   useEffect(() => {
