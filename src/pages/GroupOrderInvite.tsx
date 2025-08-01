@@ -14,29 +14,47 @@ const GroupOrderInvite = () => {
   console.log('🎯 GroupOrderInvite - Simple page loaded with token:', shareToken);
 
   const handleJoinGroupOrder = async () => {
-    console.log('🎯 User clicked JOIN GROUP ORDER with token:', shareToken);
+    console.log('🎯 DEBUGGING: User clicked JOIN GROUP ORDER with token:', shareToken);
+    console.log('🎯 DEBUGGING: Token type:', typeof shareToken);
+    console.log('🎯 DEBUGGING: Token length:', shareToken?.length);
     
     try {
-      // For now, we'll fetch directly from the database instead of using the edge function
+      // Add detailed debugging for the database query
+      console.log('🎯 DEBUGGING: About to query database...');
+      
       const { data: orderData, error } = await supabase
         .from('customer_orders')
         .select('*')
         .eq('share_token', shareToken)
         .maybeSingle();
       
-      console.log('🎯 Order query result:', { orderData, error });
+      console.log('🎯 DEBUGGING: Raw database response:');
+      console.log('🎯 DEBUGGING: orderData =', orderData);
+      console.log('🎯 DEBUGGING: error =', error);
+      console.log('🎯 DEBUGGING: orderData exists?', !!orderData);
       
       if (error) {
-        console.error('🎯 Database error:', error);
+        console.error('🎯 DEBUGGING: Database error details:', error);
         throw new Error(`Database error: ${error.message}`);
       }
       
       if (!orderData) {
-        console.log('🎯 No order found with token:', shareToken);
+        console.log('🎯 DEBUGGING: No order found - checking if token exists in DB...');
+        
+        // Let's see what tokens actually exist
+        const { data: allTokens } = await supabase
+          .from('customer_orders')
+          .select('share_token, order_number')
+          .not('share_token', 'is', null)
+          .limit(10);
+        
+        console.log('🎯 DEBUGGING: Found these tokens in DB:', allTokens?.map(t => t.share_token));
+        console.log('🎯 DEBUGGING: Looking for token:', shareToken);
+        
         throw new Error('Group order not found or expired');
       }
       
-      console.log('🎯 Successfully found group order:', orderData);
+      console.log('🎯 DEBUGGING: SUCCESS! Found order:', orderData.order_number);
       
       // Store group order data with delivery details
       localStorage.setItem('groupOrderToken', shareToken || '');
