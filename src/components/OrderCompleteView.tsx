@@ -322,7 +322,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
                 }
                 
                 // Default to individual customer dashboard
-                window.location.href = '/customer-login';
+                window.location.href = '/customer/login';
               }}
               variant="outline"
             >

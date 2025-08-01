@@ -42,16 +42,33 @@ const Index = () => {
         includeCustomer: true
       });
       
+      // First, try without the customer join to isolate the issue
       const { data: orderData, error } = await supabase
         .from('customer_orders')
-        .select(`
-          *,
-          customer:customers(first_name, last_name, email)
-        `)
+        .select('*')
         .eq('share_token', shareToken)
         .maybeSingle();
 
       console.log('🔗 Raw query response:', { orderData, error, shareToken });
+      
+      // If order found, get customer data separately
+      let customerData = null;
+      if (orderData && orderData.customer_id) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('first_name, last_name, email')
+          .eq('id', orderData.customer_id)
+          .maybeSingle();
+        customerData = customer;
+      }
+      
+      // Combine the data
+      const finalOrderData = orderData ? {
+        ...orderData,
+        customer: customerData
+      } : null;
+
+      console.log('🔗 Final combined data:', { finalOrderData, customerData });
 
       console.log('🔗 Group order query result:', { orderData, error });
       console.log('🔗 orderData exists?', !!orderData);
@@ -62,9 +79,9 @@ const Index = () => {
         throw error;
       }
       
-      if (orderData) {
+      if (finalOrderData) {
         console.log('🔗 Setting group order details and showing modal');
-        setGroupOrderDetails(orderData);
+        setGroupOrderDetails(finalOrderData);
         setShowGroupModal(true);
         console.log('🔗 Modal should now be visible');
       } else {
