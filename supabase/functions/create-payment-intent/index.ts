@@ -25,20 +25,37 @@ serve(async (req) => {
     
     const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken } = body;
     
-    // Validate required fields
+    logStep("Extracted data", {
+      amount,
+      currency,
+      cartItemsLength: cartItems?.length,
+      customerInfoKeys: customerInfo ? Object.keys(customerInfo) : null,
+      deliveryInfoKeys: deliveryInfo ? Object.keys(deliveryInfo) : null,
+      subtotal,
+      deliveryFee,
+      salesTax,
+      tipAmount,
+      groupOrderToken
+    });
+    
+    // Validate required fields with detailed error messages
     if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+      logStep("ERROR: Cart items validation failed", { cartItems });
       throw new Error("Cart items are required and must be a non-empty array");
     }
     
     if (!customerInfo || !customerInfo.email) {
+      logStep("ERROR: Customer info validation failed", { customerInfo });
       throw new Error("Customer information with email is required");
     }
     
     if (!deliveryInfo || !deliveryInfo.address) {
+      logStep("ERROR: Delivery info validation failed", { deliveryInfo });
       throw new Error("Delivery information with address is required");
     }
     
     if (typeof amount !== 'number' || amount <= 0) {
+      logStep("ERROR: Amount validation failed", { amount, type: typeof amount });
       throw new Error(`Invalid amount: ${amount}. Must be a positive number in cents.`);
     }
     
@@ -181,9 +198,15 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-payment-intent", { message: errorMessage });
+    logStep("ERROR in create-payment-intent", { 
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined
+    });
     
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: "Check edge function logs for more information"
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
