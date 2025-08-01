@@ -14,60 +14,63 @@ const GroupOrderInvite = () => {
   console.log('🎯 GroupOrderInvite - Simple page loaded with token:', shareToken);
 
   const handleJoinGroupOrder = async () => {
-    console.log('🎯 User chose to JOIN group order with token:', shareToken);
+    console.log('🎯 User clicked JOIN GROUP ORDER with token:', shareToken);
     
     try {
-      console.log('🎯 About to call get-group-order function...');
+      // For now, we'll fetch directly from the database instead of using the edge function
+      const { data: orderData, error } = await supabase
+        .from('customer_orders')
+        .select('*')
+        .eq('share_token', shareToken)
+        .maybeSingle();
       
-      // First fetch the group order details to get delivery info
-      const { data, error } = await supabase.functions.invoke('get-group-order', {
-        body: { shareToken }
-      });
-      
-      console.log('🎯 Function response:', { data, error });
+      console.log('🎯 Order query result:', { orderData, error });
       
       if (error) {
-        console.error('🎯 Function call error:', error);
-        throw new Error(`Function error: ${error.message}`);
+        console.error('🎯 Database error:', error);
+        throw new Error(`Database error: ${error.message}`);
       }
       
-      if (data?.success && data.originalOrder) {
-        console.log('🎯 Successfully got group order data:', data.originalOrder);
-        // Store group order data with delivery details
-        localStorage.setItem('groupOrderToken', shareToken || '');
-        localStorage.setItem('partyondelivery_add_to_order', 'true');
-        localStorage.setItem('groupOrderJoinDecision', 'yes');
-        
-        // CRITICAL: Store group order delivery details with highest priority
-        localStorage.setItem('groupOrderDeliveryInfo', JSON.stringify({
-          date: data.originalOrder.delivery_date,
-          timeSlot: data.originalOrder.delivery_time,
-          address: data.originalOrder.delivery_address,
-          priority: 'group_order' // Highest priority flag
-        }));
-        
-        // Generate group discount
-        localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
-          code: 'GROUP-SHIPPING-FREE',
-          type: 'free_shipping',
-          value: 0
-        }));
-        
-        toast({
-          title: "Joining Group Order!",
-          description: "You'll get FREE DELIVERY with the group order.",
-        });
-        
-        // Navigate to main page to start shopping
-        navigate(`/?checkout=true&share=${shareToken}&customer=true`);
-      } else {
-        throw new Error('Failed to load group order details');
+      if (!orderData) {
+        console.log('🎯 No order found with token:', shareToken);
+        throw new Error('Group order not found or expired');
       }
-    } catch (error) {
-      console.error('Error joining group order:', error);
+      
+      console.log('🎯 Successfully found group order:', orderData);
+      
+      // Store group order data with delivery details
+      localStorage.setItem('groupOrderToken', shareToken || '');
+      localStorage.setItem('partyondelivery_add_to_order', 'true');
+      localStorage.setItem('groupOrderJoinDecision', 'yes');
+      
+      // CRITICAL: Store group order delivery details with highest priority
+      localStorage.setItem('groupOrderDeliveryInfo', JSON.stringify({
+        date: orderData.delivery_date,
+        timeSlot: orderData.delivery_time,
+        address: orderData.delivery_address,
+        priority: 'group_order' // Highest priority flag
+      }));
+      
+      // Generate group discount
+      localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
+        code: 'GROUP-SHIPPING-FREE',
+        type: 'free_shipping',
+        value: 0
+      }));
+      
       toast({
-        title: "Error",
-        description: "Failed to join group order. Please try again.",
+        title: "Joining Group Order!",
+        description: "You'll get FREE DELIVERY with the group order.",
+      });
+      
+      // Navigate to main page to start shopping
+      navigate(`/?checkout=true&share=${shareToken}&customer=true`);
+      
+    } catch (error) {
+      console.error('🎯 Error in handleJoinGroupOrder:', error);
+      toast({
+        title: "Failed to join group order",
+        description: error.message || "Please try again.",
         variant: "destructive",
       });
     }
@@ -80,6 +83,7 @@ const GroupOrderInvite = () => {
     localStorage.removeItem('groupOrderToken');
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('groupOrderJoinDecision');
+    localStorage.removeItem('groupOrderDeliveryInfo');
     localStorage.setItem('groupOrderJoinDecision', 'no');
     
     toast({
