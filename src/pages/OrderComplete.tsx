@@ -48,6 +48,42 @@ const OrderComplete = () => {
         return;
       }
 
+      // First try to find order in localStorage with proper key
+      const recentOrderData = localStorage.getItem('partyondelivery_last_order');
+      if (recentOrderData) {
+        try {
+          const orderData = JSON.parse(recentOrderData);
+          console.log("🔥 Found order in localStorage:", orderData);
+          
+          // Check if this matches our search criteria
+          if ((sessionId && orderData.sessionId === sessionId) || 
+              (orderNumber && orderData.orderNumber === orderNumber)) {
+            console.log("🔥 Using localStorage order data:", orderData.orderNumber);
+            
+            // Store this for OrderCompleteView with proper structure
+            localStorage.setItem('lastCompletedOrder', JSON.stringify({
+              ...orderData,
+              customer: { 
+                first_name: orderData.customerName?.split(' ')[0] || 'Customer',
+                email: orderData.customerEmail 
+              }
+            }));
+            
+            setOrderData({
+              ...orderData,
+              customer: { 
+                first_name: orderData.customerName?.split(' ')[0] || 'Customer',
+                email: orderData.customerEmail 
+              }
+            });
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.log("🔥 Error parsing localStorage order data:", e);
+        }
+      }
+
       // Function to process found order
       const processOrder = async (foundOrder: any) => {
         try {
@@ -78,9 +114,25 @@ const OrderComplete = () => {
             }
           }
 
-          // Set order data
-          setOrderData({ ...foundOrder, customer });
+          // Set order data and cache it
+          const orderDataWithCustomer = { ...foundOrder, customer };
+          setOrderData(orderDataWithCustomer);
           setIsLoading(false);
+
+          // Cache the order data for future reference
+          localStorage.setItem('lastCompletedOrder', JSON.stringify({
+            orderNumber: foundOrder.order_number,
+            sessionId: foundOrder.session_id,
+            customerName: customer?.first_name || 'Customer',
+            customerEmail: customer?.email,
+            line_items: foundOrder.line_items,
+            total_amount: foundOrder.total_amount,
+            delivery_date: foundOrder.delivery_date,
+            delivery_time: foundOrder.delivery_time,
+            delivery_address: foundOrder.delivery_address,
+            share_token: foundOrder.share_token,
+            group_order_name: foundOrder.group_order_name
+          }));
 
           // Send confirmation email in background
           try {
@@ -107,59 +159,70 @@ const OrderComplete = () => {
         }
       };
 
-      // Immediate search with aggressive retry logic
+      // Search for order with broader criteria and immediate response
       let order = null;
       let retryCount = 0;
-      const maxRetries = 15; // Increased retries
+      const maxRetries = 10;
       
       while (retryCount < maxRetries && !order) {
         try {
           console.log(`🔥 [OrderComplete] Attempt ${retryCount + 1}/${maxRetries} - Searching for order`);
           
-          // Try session_id first if available
-          if (sessionId) {
-            const { data: sessionOrders, error: sessionError } = await supabase
-              .from('customer_orders')
-              .select('*')
-              .eq('session_id', sessionId)
-              .order('created_at', { ascending: false })
-              .limit(1);
-            
-            if (!sessionError && sessionOrders && sessionOrders.length > 0) {
-              console.log(`🔥 [OrderComplete] Found order by session_id:`, sessionOrders[0].order_number);
-              order = sessionOrders[0];
-              await processOrder(order);
-              return;
-            }
+          // Search by multiple criteria at once
+          let query = supabase.from('customer_orders').select('*');
+          
+          if (sessionId && orderNumber) {
+            // Search by both session_id OR order_number
+            query = query.or(`session_id.eq.${sessionId},order_number.eq.${orderNumber}`);
+          } else if (sessionId) {
+            query = query.eq('session_id', sessionId);
+          } else if (orderNumber) {
+            query = query.eq('order_number', orderNumber);
           }
           
-          // Try order_number if available
-          if (orderNumber) {
-            const { data: numberOrders, error: numberError } = await supabase
+          const { data: orders, error } = await query
+            .order('created_at', { ascending: false })
+            .limit(5); // Get multiple orders in case of duplicates
+          
+          if (!error && orders && orders.length > 0) {
+            console.log(`🔥 [OrderComplete] Found ${orders.length} matching orders`);
+            // Take the most recent order
+            order = orders[0];
+            console.log(`🔥 [OrderComplete] Using order:`, order.order_number);
+            await processOrder(order);
+            return;
+          }
+          
+          // If first few attempts fail, also try recent orders without filters
+          if (retryCount >= 3) {
+            console.log(`🔥 [OrderComplete] Trying recent orders search...`);
+            const { data: recentOrders, error: recentError } = await supabase
               .from('customer_orders')
               .select('*')
-              .eq('order_number', orderNumber)
               .order('created_at', { ascending: false })
-              .limit(1);
+              .limit(10);
             
-            if (!numberError && numberOrders && numberOrders.length > 0) {
-              console.log(`🔥 [OrderComplete] Found order by order_number:`, numberOrders[0].order_number);
-              order = numberOrders[0];
-              await processOrder(order);
-              return;
+            if (!recentError && recentOrders) {
+              console.log(`🔥 [OrderComplete] Found ${recentOrders.length} recent orders`);
+              // Try to match by partial session_id or order_number
+              const matchedOrder = recentOrders.find(o => 
+                (sessionId && o.session_id && o.session_id.includes(sessionId.slice(-8))) ||
+                (orderNumber && o.order_number === orderNumber)
+              );
+              
+              if (matchedOrder) {
+                console.log(`🔥 [OrderComplete] Found matching recent order:`, matchedOrder.order_number);
+                order = matchedOrder;
+                await processOrder(order);
+                return;
+              }
             }
           }
 
           retryCount++;
           
-          // Progressive wait times
-          let waitTime;
-          if (retryCount <= 3) waitTime = 1000;      // First 3 tries: 1 second
-          else if (retryCount <= 6) waitTime = 2000; // Next 3 tries: 2 seconds  
-          else if (retryCount <= 10) waitTime = 3000; // Next 4 tries: 3 seconds
-          else waitTime = 5000;                       // Final tries: 5 seconds
-          
           if (retryCount < maxRetries) {
+            const waitTime = Math.min(1000 + (retryCount * 500), 3000); // Progressive wait up to 3 seconds
             console.log(`🔥 [OrderComplete] Order not found, waiting ${waitTime}ms before retry ${retryCount + 1}/${maxRetries}`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
           }
@@ -168,7 +231,7 @@ const OrderComplete = () => {
           console.error(`🔥 [OrderComplete] Search error on attempt ${retryCount + 1}:`, searchError);
           retryCount++;
           if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
       }
