@@ -126,11 +126,24 @@ export function deduplicateProducts(products: Product[]): GroupedProduct[] {
 
 function extractSizeInfo(title: string): { size: string; value: number } {
   // Extract size patterns and convert to comparable values
-  const mlMatch = title.match(/(\d+(?:\.\d+)?)\s*ml/i);
-  const lMatch = title.match(/(\d+(?:\.\d+)?)\s*l(?:iter|itre)?(?!\w)/i);
-  const ozMatch = title.match(/(\d+(?:\.\d+)?)\s*oz(?:unce)?/i);
   const packMatch = title.match(/(\d+)\s*(?:pack|pk)/i);
+  const lMatch = title.match(/(\d+(?:\.\d+)?)\s*l(?:iter|itre)?(?!\w)/i);
+  const mlMatch = title.match(/(\d+(?:\.\d+)?)\s*ml/i);
+  const ozMatch = title.match(/(\d+(?:\.\d+)?)\s*oz(?:unce)?/i);
   
+  // For beer/seltzers, prioritize pack size over oz
+  if (packMatch) {
+    const pack = parseInt(packMatch[1]);
+    // Also check if there's an oz size to include
+    const ozInPack = title.match(/(\d+(?:\.\d+)?)\s*oz/i);
+    if (ozInPack) {
+      const oz = parseFloat(ozInPack[1]);
+      return { size: `${pack} Pack (${oz}oz)`, value: pack * oz * 29.5735 };
+    }
+    return { size: `${pack} Pack`, value: pack * 355 }; // Assume 355ml per can/bottle
+  }
+  
+  // For spirits, prioritize bottle volume
   if (lMatch) {
     const liters = parseFloat(lMatch[1]);
     return { size: `${liters}L`, value: liters * 1000 }; // Convert to ml for comparison
@@ -138,17 +151,12 @@ function extractSizeInfo(title: string): { size: string; value: number } {
   
   if (mlMatch) {
     const ml = parseFloat(mlMatch[1]);
-    return { size: `${ml}ml`, value: ml };
+    return { size: `${ml}mL`, value: ml };
   }
   
   if (ozMatch) {
     const oz = parseFloat(ozMatch[1]);
     return { size: `${oz}oz`, value: oz * 29.5735 }; // Convert to ml for comparison
-  }
-  
-  if (packMatch) {
-    const pack = parseInt(packMatch[1]);
-    return { size: `${pack} pack`, value: pack * 355 }; // Assume 355ml per can/bottle
   }
   
   // Default case - use price as a rough size indicator
@@ -192,13 +200,20 @@ function extractBaseName(title: string): string {
   // Remove common size indicators and normalize
   const normalized = title
     .toLowerCase()
-    .replace(/\s*\d+(\.\d+)?\s*(ml|l|liter|litre|oz|ounce)s?\s*/gi, ' ')
+    // Remove size patterns more comprehensively
+    .replace(/\s*\d+(\.\d+)?\s*(ml|l|liter|litre)\s*/gi, ' ')
+    .replace(/\s*\d+(\.\d+)?\s*(oz|ounce)s?\s*/gi, ' ')
     .replace(/\s*\d+\s*(pack|pk)\s*/gi, ' ')
     .replace(/\s*(\d+x\d+|\d+\s*x\s*\d+)\s*/gi, ' ')
     .replace(/\s*single\s*/gi, ' ')
     .replace(/\s*bottle\s*/gi, ' ')
     .replace(/\s*can\s*/gi, ' ')
     .replace(/\s*case\s*/gi, ' ')
+    .replace(/\s*hard seltzer\s*/gi, ' ')
+    .replace(/\s*beer\s*/gi, ' ')
+    .replace(/\s*light\s*beer\s*/gi, ' light ')
+    .replace(/\s*premium\s*/gi, ' ')
+    .replace(/\s*craft\s*/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
     
