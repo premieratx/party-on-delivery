@@ -17,6 +17,7 @@ import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, Exte
 import { useNavigate } from 'react-router-dom';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { format, addHours, isToday } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 import { getActiveDeliveryInfo, formatDeliveryDate, parseDeliveryDate } from '@/utils/deliveryInfoManager';
 import { cn } from '@/lib/utils';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
@@ -242,12 +243,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const getAvailableTimeSlots = () => {
     if (!deliveryInfo.date) return timeSlots;
     
-    // Get current time in CST (simplified - use local time for now)
-    const nowCST = new Date();
+    // Get current time in CST
+    const CST_TIMEZONE = 'America/Chicago';
+    const nowCST = toZonedTime(new Date(), CST_TIMEZONE);
     const minDeliveryDateCST = addHours(nowCST, 1);
     
-    // Convert selected date for comparison
-    const selectedDateCST = deliveryInfo.date;
+    // Convert selected date to CST for comparison
+    const selectedDateCST = toZonedTime(deliveryInfo.date, CST_TIMEZONE);
     
     // If today is selected, filter out time slots that are within 1 hour from current CST time
     if (isToday(selectedDateCST)) {
