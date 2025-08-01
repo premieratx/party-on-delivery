@@ -912,63 +912,53 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       <div className="space-y-4">
                          <div className="space-y-2">
                            <Label>Delivery Date *</Label>
-                           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                             <PopoverTrigger asChild>
-                               <Button
-                                 variant="outline"
-                                 className={cn(
-                                   "w-full justify-start text-left font-normal",
-                                   !deliveryInfo.date && "text-muted-foreground"
-                                 )}
-                               >
-                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {deliveryInfo.date ? formatDeliveryDate(
-                                    deliveryInfo.date instanceof Date ? deliveryInfo.date.toISOString().split('T')[0] : deliveryInfo.date, 
-                                    "EEEE, PPP"
-                                  ) : "Pick a date"}
-                               </Button>
-                             </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 z-50 bg-popover border pointer-events-auto" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={deliveryInfo.date || undefined}
-                                  onSelect={(date) => {
-                                    console.log('📅 Calendar date selected:', date);
-                                    console.log('📅 Current deliveryInfo before update:', deliveryInfo);
-                                    if (date) {
-                                      updateDeliveryInfo('date', date);
-                                      // Clear time slot when date changes to force re-selection
-                                      updateDeliveryInfo('timeSlot', '');
-                                      setIsCalendarOpen(false);
-                                      console.log('📅 Date selection completed successfully');
-                                    } else {
-                                      console.warn('📅 No date selected or date is null');
-                                    }
+                            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !deliveryInfo.date && "text-muted-foreground"
+                                  )}
+                                  onClick={() => {
+                                    console.log('📅 Calendar button clicked, opening calendar');
+                                    setIsCalendarOpen(true);
                                   }}
-                                  disabled={(date) => {
-                                    // Enable ALL days including Sunday - only disable past dates
-                                    const today = new Date();
-                                    today.setHours(0, 0, 0, 0); // Reset time to start of day
-                                    
-                                    const checkDay = new Date(date);
-                                    checkDay.setHours(0, 0, 0, 0); // Reset time to start of day
-                                    
-                                    // Only check if the date is before today (not including today)
-                                    const isBeforeToday = checkDay.getTime() < today.getTime();
-                                    
-                                    console.log('📅 Calendar validation:', {
-                                      date: date.toDateString(),
-                                      today: today.toDateString(),
-                                      dayOfWeek: date.getDay(), // 0=Sunday, 6=Saturday
-                                      isBeforeToday,
-                                      disabled: isBeforeToday
-                                    });
-                                    
-                                    return isBeforeToday;
-                                  }}
-                                  initialFocus
-                                  fromDate={new Date()}
-                                />
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                   {deliveryInfo.date ? formatDeliveryDate(
+                                     deliveryInfo.date instanceof Date ? deliveryInfo.date.toISOString().split('T')[0] : deliveryInfo.date, 
+                                     "EEEE, PPP"
+                                   ) : "Pick a date"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-50" align="start" style={{ pointerEvents: 'auto' }}>
+                                <div style={{ pointerEvents: 'auto' }}>
+                                  <Calendar
+                                    mode="single"
+                                    selected={deliveryInfo.date || undefined}
+                                    onSelect={(date) => {
+                                      console.log('📅 Calendar date selected:', date);
+                                      console.log('📅 Current deliveryInfo before update:', deliveryInfo);
+                                      if (date) {
+                                        console.log('📅 About to call updateDeliveryInfo with date:', date);
+                                        updateDeliveryInfo('date', date);
+                                        updateDeliveryInfo('timeSlot', '');
+                                        setIsCalendarOpen(false);
+                                        console.log('📅 Date selection completed successfully');
+                                      }
+                                    }}
+                                    disabled={(date) => {
+                                      const today = new Date();
+                                      today.setHours(0, 0, 0, 0);
+                                      const checkDay = new Date(date);
+                                      checkDay.setHours(0, 0, 0, 0);
+                                      return checkDay.getTime() < today.getTime();
+                                    }}
+                                    initialFocus
+                                    fromDate={new Date()}
+                                  />
+                                </div>
                               </PopoverContent>
                             </Popover>
                          </div>
