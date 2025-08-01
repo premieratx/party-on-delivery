@@ -908,63 +908,90 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     
                     <CardContent className="space-y-4">
                       <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Delivery Date *</Label>
-                          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !deliveryInfo.date && "text-muted-foreground"
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {deliveryInfo.date ? format(
-                                  toZonedTime(deliveryInfo.date, 'America/Chicago'), 
-                                  "EEEE, PPP"
-                                ) : "Pick a date"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={deliveryInfo.date || undefined}
-                                onSelect={(date) => {
-                                  updateDeliveryInfo('date', date);
-                                  setIsCalendarOpen(false);
-                                }}
-                                 disabled={(date) => {
-                                   // Allow same-day delivery but prevent past dates and Sundays
-                                   const today = new Date();
-                                   today.setHours(0, 0, 0, 0); // Reset time to start of day
-                                   
-                                   const checkDay = new Date(date);
-                                   checkDay.setHours(0, 0, 0, 0); // Reset time to start of day
-                                   
-                                   // Check if it's Sunday (0 = Sunday)
-                                   const isSunday = date.getDay() === 0;
-                                   
-                                   // Check if the date is before today (not including today)
-                                   const isBeforeToday = checkDay.getTime() < today.getTime();
-                                   
-                                   return isBeforeToday || isSunday;
+                         <div className="space-y-2">
+                           <Label>Delivery Date *</Label>
+                           <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                             <PopoverTrigger asChild>
+                               <Button
+                                 variant="outline"
+                                 className={cn(
+                                   "w-full justify-start text-left font-normal",
+                                   !deliveryInfo.date && "text-muted-foreground"
+                                 )}
+                               >
+                                 <CalendarIcon className="mr-2 h-4 w-4" />
+                                 {deliveryInfo.date ? format(
+                                   toZonedTime(deliveryInfo.date, 'America/Chicago'), 
+                                   "EEEE, PPP"
+                                 ) : "Pick a date"}
+                               </Button>
+                             </PopoverTrigger>
+                             <PopoverContent className="w-auto p-0 z-50 bg-popover border" align="start">
+                               <Calendar
+                                 mode="single"
+                                 selected={deliveryInfo.date || undefined}
+                                 onSelect={(date) => {
+                                   console.log('📅 Calendar date selected:', date);
+                                   updateDeliveryInfo('date', date);
+                                   // Clear time slot when date changes to force re-selection
+                                   updateDeliveryInfo('timeSlot', '');
+                                   setIsCalendarOpen(false);
                                  }}
-                                initialFocus
-                                className="p-3 pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </div>
+                                  disabled={(date) => {
+                                    // Enable ALL days including Sunday - only disable past dates
+                                    const today = new Date();
+                                    today.setHours(0, 0, 0, 0); // Reset time to start of day
+                                    
+                                    const checkDay = new Date(date);
+                                    checkDay.setHours(0, 0, 0, 0); // Reset time to start of day
+                                    
+                                    // Only check if the date is before today (not including today)
+                                    const isBeforeToday = checkDay.getTime() < today.getTime();
+                                    
+                                    console.log('📅 Calendar validation:', {
+                                      date: date.toDateString(),
+                                      today: today.toDateString(),
+                                      dayOfWeek: date.getDay(), // 0=Sunday, 6=Saturday
+                                      isBeforeToday,
+                                      disabled: isBeforeToday
+                                    });
+                                    
+                                    return isBeforeToday;
+                                  }}
+                                 initialFocus
+                                 className="p-3 pointer-events-auto"
+                               />
+                             </PopoverContent>
+                           </Popover>
+                         </div>
 
-                         <TimeSelector
-                           value={deliveryInfo.timeSlot || ""}
-                           onChange={(value) => {
-                             console.log('✅ TimeSelector change triggered with value:', value);
-                             updateDeliveryInfo('timeSlot', value);
-                           }}
-                           timeSlots={getAvailableTimeSlots()}
-                         />
+                         <div className="space-y-2">
+                           <Label>Delivery Time *</Label>
+                           <p className="text-xs text-muted-foreground">
+                             Same-day delivery available with 1-hour advance notice.
+                           </p>
+                           {/* Use native select for maximum reliability across all user types */}
+                           <select
+                             value={deliveryInfo.timeSlot || ""}
+                             onChange={(e) => {
+                               console.log('✅ Native select change triggered with value:', e.target.value);
+                               updateDeliveryInfo('timeSlot', e.target.value);
+                             }}
+                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                           >
+                             <option value="" disabled>Select a time slot</option>
+                             {getAvailableTimeSlots().map((slot) => (
+                               <option key={slot} value={slot}>
+                                 {slot}
+                               </option>
+                             ))}
+                           </select>
+                           {getAvailableTimeSlots().length === 0 && (
+                             <div className="p-2 text-sm text-muted-foreground text-center bg-yellow-50 border border-yellow-200 rounded">
+                               No time slots available today. Please select a future date.
+                             </div>
+                           )}
+                         </div>
                         
                         {/* Customer Information in same step */}
                         <Separator />

@@ -502,29 +502,41 @@ export function useCustomerInfo() {
   // Simple setters that just update state and localStorage
   const setCustomerInfo = (info: CustomerInfo | ((prev: CustomerInfo) => CustomerInfo)) => {
     const newInfo = typeof info === 'function' ? info(customerInfo) : info;
-    console.log('Setting customer info:', newInfo);
+    console.log('💾 Setting and saving customer info:', newInfo);
     
     setCustomerInfoState(newInfo);
     
-    // Simple localStorage save
+    // Enhanced localStorage save with immediate persistence
     try {
       localStorage.setItem('partyondelivery_customer', JSON.stringify(newInfo));
+      cacheManager.set('customer_checkout', newInfo, 60); // 1 hour cache for checkout session
+      
+      // Save persistent data with 30-day expiration if data is complete enough
+      if (newInfo.firstName && newInfo.email && addressInfo.street) {
+        customerDataManager.saveCustomerData(newInfo, addressInfo);
+      }
     } catch (error) {
-      console.warn('Failed to save customer info:', error);
+      console.error('Failed to save customer info:', error);
     }
   };
 
   const setAddressInfo = (info: AddressInfo | ((prev: AddressInfo) => AddressInfo)) => {
     const newInfo = typeof info === 'function' ? info(addressInfo) : info;
-    console.log('Setting address info:', newInfo);
+    console.log('💾 Setting and saving address info:', newInfo);
     
     setAddressInfoState(newInfo);
     
-    // Simple localStorage save
+    // Enhanced localStorage save with immediate persistence
     try {
       localStorage.setItem('partyondelivery_address', JSON.stringify(newInfo));
+      cacheManager.set('address_checkout', newInfo, 60); // 1 hour cache for checkout session
+      
+      // Save persistent data with 30-day expiration if customer data is complete enough
+      if (customerInfo.firstName && customerInfo.email && newInfo.street) {
+        customerDataManager.saveCustomerData(customerInfo, newInfo);
+      }
     } catch (error) {
-      console.warn('Failed to save address info:', error);
+      console.error('Failed to save address info:', error);
     }
   };
 
