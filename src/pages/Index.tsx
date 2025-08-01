@@ -85,12 +85,12 @@ const Index = () => {
         setShowGroupModal(true);
         console.log('🔗 Modal should now be visible');
       } else {
-        console.log('🔗 No order data found, showing toast');
-        toast({
-          title: "Order Not Found",
-          description: "This shared order link is no longer valid.",
-          variant: "destructive",
-        });
+      console.log('🔗 No order data found, showing toast');
+      toast({
+        title: "Order Not Found",
+        description: `This shared order link is no longer valid. Token: ${shareToken}`,
+        variant: "destructive",
+      });
       }
     } catch (error) {
       console.error('🔗 Error loading group order:', error);
