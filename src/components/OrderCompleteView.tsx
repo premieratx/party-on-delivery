@@ -33,7 +33,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
   const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
-    const url = `${window.location.origin}/shared-order/${shareToken}`;
+    const url = `${window.location.origin}/join/${shareToken}`;
     setShareUrl(url);
   }, [shareToken]);
 
@@ -204,16 +204,25 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
           </CardContent>
         </Card>
 
-        {/* Dashboard Button */}
+        {/* Action Buttons */}
         <Card>
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-6 space-y-3">
             <Button 
               onClick={() => window.location.href = '/customer/dashboard'}
-              variant="outline" 
               size="lg"
               className="w-full"
             >
-              View My Orders Dashboard
+              Manage My Order
+            </Button>
+            
+            <Button 
+              onClick={copyShareLink}
+              variant="outline"
+              size="lg"
+              className="w-full"
+            >
+              <ShareIcon className="h-4 w-4 mr-2" />
+              Share Group Order Link
             </Button>
           </CardContent>
         </Card>
