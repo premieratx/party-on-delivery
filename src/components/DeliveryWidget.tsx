@@ -316,7 +316,7 @@ export const DeliveryWidget: React.FC = () => {
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}
-        isVisible={cartItems.length > 0}
+        isVisible={currentStep === 'products' || currentStep === 'cart' || currentStep === 'checkout' || currentStep === 'address-confirmation'}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
       />
