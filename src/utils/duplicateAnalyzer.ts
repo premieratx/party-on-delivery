@@ -57,9 +57,24 @@ export function deduplicateProducts(products: Product[]): GroupedProduct[] {
   const deduplicatedProducts: GroupedProduct[] = [];
   
   productGroups.forEach((productList, baseName) => {
-    if (productList.length === 1) {
-      // Single product, convert to grouped format
-      const product = productList[0];
+    // Further deduplicate within each group by size and price
+    const uniqueVariants = new Map<string, Product>();
+    
+    productList.forEach(product => {
+      const sizeInfo = extractSizeInfo(product.title);
+      const uniqueKey = `${sizeInfo.size}-${product.price}`;
+      
+      // Only keep one product per unique size-price combination
+      if (!uniqueVariants.has(uniqueKey)) {
+        uniqueVariants.set(uniqueKey, product);
+      }
+    });
+    
+    const uniqueProductList = Array.from(uniqueVariants.values());
+    
+    if (uniqueProductList.length === 1) {
+      // Single unique product, convert to grouped format
+      const product = uniqueProductList[0];
       const sizeInfo = extractSizeInfo(product.title);
       
       deduplicatedProducts.push({
@@ -85,8 +100,8 @@ export function deduplicateProducts(products: Product[]): GroupedProduct[] {
         images: product.images
       });
     } else {
-      // Multiple products, group them
-      const sortedProducts = productList
+      // Multiple unique products, group them
+      const sortedProducts = uniqueProductList
         .map(product => ({
           product,
           sizeInfo: extractSizeInfo(product.title)
