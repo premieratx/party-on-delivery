@@ -429,7 +429,7 @@ export const ProductSearch = () => {
       {/* Products Grid - Mobile Optimized */}
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
         {loadingCategories.has(selectedCategory) ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
             {Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[3/2] bg-muted rounded-lg mb-2" />
@@ -447,92 +447,74 @@ export const ProductSearch = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">{/* Changed from grid to vertical stack for horizontal product cards */}
+          <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
             {filteredProducts.map((product, index) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+              const { cleanTitle, packageSize } = parseProductTitle(product.title);
               
               return (
                 <Card 
                   key={`${product.id}-${index}`} 
-                  className={`group transition-all duration-200 ${quantity > 0 ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-lg'}`}
+                  className="group hover:shadow-lg transition-shadow duration-200"
                 >
-                  <CardContent className="p-2">
-                    {/* Horizontal Layout: Image, Title/Package, Price, Add to Cart */}
-                    <div className="flex items-center gap-2 h-16 sm:h-20">
-                      {/* Product Image - Fixed size */}
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded overflow-hidden flex-shrink-0">
-                        <OptimizedImage 
-                          src={product.image} 
-                          alt={product.title}
-                          className="w-full h-full object-cover"
-                          priority={index < 24}
-                        />
-                      </div>
-                      
-                      {/* Product Info - Takes available space */}
-                      <div className="flex-1 min-w-0">
-                        {(() => {
-                          const { cleanTitle, packageSize } = parseProductTitle(product.title);
-                          return (
-                            <>
-                              <h4 className="font-medium text-xs sm:text-sm leading-tight line-clamp-1 mb-0.5">
-                                {cleanTitle}
-                              </h4>
-                              {packageSize && (
-                                <p className="text-xs text-muted-foreground line-clamp-1">
-                                  {packageSize}
-                                </p>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                      
-                      {/* Price - Fixed width */}
-                      <div className="flex-shrink-0 text-right">
-                        <p className="text-sm sm:text-base font-bold text-primary">
+                  <CardContent className="p-2 sm:p-4 h-full flex flex-col">
+                    {/* Product Image */}
+                    <div className="relative mb-2 sm:mb-3 flex-shrink-0">
+                      <OptimizedImage
+                        src={product.image}
+                        alt={product.title}
+                        className="w-full h-32 sm:h-40 object-cover rounded-lg"
+                      />
+                    </div>
+                    
+                    {/* Product Info */}
+                    <div className="flex-grow flex flex-col justify-between">
+                      <div className="mb-2">
+                        <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1">
+                          {cleanTitle}
+                        </h3>
+                        <p className="text-lg sm:text-xl font-bold text-primary">
                           ${product.price.toFixed(2)}
                         </p>
                       </div>
                       
-                      {/* Add to Cart Controls - Fixed width */}
-                      <div className="flex-shrink-0 w-16 sm:w-20">
-                        {quantity === 0 ? (
-                          <Button
-                            onClick={() => handleAddToCart(product)}
-                            size="sm"
-                            className="w-full h-7 sm:h-8 text-xs p-1 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground"
-                          >
-                            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                          </Button>
-                        ) : (
-                          <div className="flex items-center gap-0.5 justify-between w-full">
+                      {/* Add to Cart Button */}
+                      <div className="mt-auto">
+                        {quantity > 0 ? (
+                          <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-1 sm:p-2">
                             <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => handleQuantityChange(product, -1)}
-                              size="sm"
-                              variant="outline"
-                              className="w-5 h-5 sm:w-6 sm:h-6 p-0 rounded-full flex-shrink-0"
+                              className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-primary-foreground/20"
                             >
-                              <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
+                              <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Button>
-                            <span className="text-xs sm:text-sm font-medium min-w-[12px] sm:min-w-[16px] text-center">
-                              {quantity}
-                            </span>
+                            <span className="text-xs sm:text-sm font-medium mx-2">{quantity}</span>
                             <Button
-                              onClick={() => handleQuantityChange(product, 1)}
+                              variant="ghost"
                               size="sm"
-                              variant="outline"
-                              className="w-5 h-5 sm:w-6 sm:h-6 p-0 rounded-full flex-shrink-0"
+                              onClick={() => handleQuantityChange(product, 1)}
+                              className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-primary-foreground/20"
                             >
-                              <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
+                              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Button>
                           </div>
+                        ) : (
+                          <Button
+                            onClick={() => handleAddToCart(product)}
+                            className="w-full h-8 sm:h-10 text-xs sm:text-sm"
+                            size="sm"
+                          >
+                            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                            Add to Cart
+                          </Button>
                         )}
                       </div>
-                      
-                      {/* Hidden category for backend reference only */}
-                      <div className="hidden" data-category={product.category}></div>
                     </div>
+                    
+                    {/* Hidden category for backend reference only */}
+                    <div className="hidden" data-category={product.category}></div>
                   </CardContent>
                 </Card>
               );
