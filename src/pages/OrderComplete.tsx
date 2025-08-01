@@ -40,8 +40,8 @@ const OrderComplete = () => {
           const parsedData = JSON.parse(checkoutData);
           console.log("🔥 ✅ USING SESSION DATA:", parsedData);
           
-          // Create mock order data from checkout session
-          const mockOrderData = {
+          // Create order data from checkout session - INSTANT DISPLAY
+          const instantOrderData = {
             order_number: orderNumber || "Processing...",
             line_items: parsedData.cartItems || [],
             total_amount: parsedData.totalAmount || 0,
@@ -55,66 +55,83 @@ const OrderComplete = () => {
               first_name: parsedData.customerName?.split(' ')[0] || 'Customer',
               last_name: parsedData.customerName?.split(' ').slice(1).join(' ') || '',
               email: parsedData.customerEmail
-            }
+            },
+            payment_intent_id: parsedData.paymentIntentId,
+            sales_tax: parsedData.salesTax,
+            delivery_fee: parsedData.deliveryFee,
+            tip_amount: parsedData.tipAmount,
+            applied_discount: parsedData.appliedDiscount
           };
           
-          setOrderData(mockOrderData);
+          setOrderData(instantOrderData);
           setIsLoading(false);
           
           toast({
             title: "🎉 Order Complete!",
-            description: `Payment processed successfully. Order details loading...`,
+            description: "Payment processed successfully!",
           });
           
-          // Clear the session data
+          // Clear the session data so it doesn't persist
           sessionStorage.removeItem('checkout-completion-data');
+          
+          // Background sync to get real order data with share token (optional)
+          setTimeout(async () => {
+            let foundOrder = null;
+            let attempts = 0;
+            const searchTerms = [sessionId, paymentIntentId].filter(Boolean);
+            
+            while (!foundOrder && attempts < 5) { // Quick background check
+              attempts++;
+              
+              for (const searchTerm of searchTerms) {
+                if (foundOrder) break;
+                
+                const { data: orders, error } = await supabase
+                  .from('customer_orders')
+                  .select(`*, customer:customers(first_name, last_name, email)`)
+                  .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm},payment_intent_id.eq.${searchTerm}`)
+                  .order('created_at', { ascending: false })
+                  .limit(3);
+                
+                if (!error && orders?.length > 0) {
+                  foundOrder = orders.find(o => o.customer_id) || orders[0];
+                  break;
+                }
+              }
+              
+              if (!foundOrder && attempts < 5) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            }
+            
+            // Update with real order data if found (for share token, etc.)
+            if (foundOrder) {
+              console.log("🔥 ✅ BACKGROUND SYNC COMPLETE:", foundOrder.order_number);
+              setOrderData(prev => ({
+                ...prev,
+                ...foundOrder,
+                order_number: foundOrder.order_number || prev.order_number
+              }));
+            }
+          }, 1000); // Start background sync after 1 second
+          
         } else {
-          // No session data, show immediate confirmation
+          // No session data available - show basic confirmation
+          console.log("🔥 NO SESSION DATA - SHOWING BASIC CONFIRMATION");
           setOrderData({
             order_number: orderNumber || "Processing...",
             line_items: [],
             total_amount: 0,
-            customer: { first_name: 'Customer' }
+            customer: { first_name: 'Customer' },
+            payment_intent_id: paymentIntentId
           });
           setIsLoading(false);
+          
+          toast({
+            title: "🎉 Order Complete!",
+            description: "Your payment was processed successfully.",
+          });
         }
-        
-        // Background sync to get real order data with share token
-        setTimeout(async () => {
-          let foundOrder = null;
-          let attempts = 0;
-          const searchTerms = [sessionId, paymentIntentId].filter(Boolean);
-          
-          while (!foundOrder && attempts < 10) { // Quick background check
-            attempts++;
-            
-            for (const searchTerm of searchTerms) {
-              if (foundOrder) break;
-              
-              const { data: orders, error } = await supabase
-                .from('customer_orders')
-                .select(`*, customer:customers(first_name, last_name, email)`)
-                .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm},payment_intent_id.eq.${searchTerm}`)
-                .order('created_at', { ascending: false })
-                .limit(5);
-              
-              if (!error && orders?.length > 0) {
-                foundOrder = orders.find(o => o.customer_id) || orders[0];
-                break;
-              }
-            }
-            
-            if (!foundOrder && attempts < 10) {
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
-          
-          // Update with real order data if found
-          if (foundOrder) {
-            console.log("🔥 ✅ BACKGROUND SYNC COMPLETE:", foundOrder.order_number);
-            setOrderData(foundOrder);
-          }
-        }, 500); // Start background sync after 500ms
         
       } catch (error: any) {
         console.error('🔥 ERROR LOADING ORDER:', error);

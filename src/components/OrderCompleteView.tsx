@@ -250,22 +250,60 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-center">
-          <Button 
-            onClick={() => window.location.href = '/customer-dashboard'}
-            variant="outline"
-          >
-            Manage Order
-          </Button>
-          
-          {shareToken && (
+        <div className="space-y-4">
+          <div className="flex gap-4 justify-center">
             <Button 
-              onClick={copyShareLink}
-              className="bg-primary hover:bg-primary/90"
+              onClick={() => window.location.href = '/customer-dashboard'}
+              variant="outline"
             >
-              Share Group Order Again
+              Manage Order
             </Button>
-          )}
+            
+            {shareToken && (
+              <Button 
+                onClick={copyShareLink}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Share Group Order Again
+              </Button>
+            )}
+          </div>
+          
+          {/* Support Contact Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3 max-w-md mx-auto">
+            <div className="text-center">
+              <p className="text-sm text-blue-800 font-medium">
+                Notice something wrong with your order?
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                We're here to help! Contact us immediately if any details look incorrect.
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => {
+                const subject = encodeURIComponent('My Order Details Are Wrong');
+                const body = encodeURIComponent(
+                  `Hi Party on Delivery Team,\n\n` +
+                  `I just placed order #${orderNumber} and noticed something incorrect with my order details.\n\n` +
+                  `Please help me resolve this issue.\n\n` +
+                  `Customer: ${customerName}\n` +
+                  `Order Total: $${totalAmount.toFixed(2)}\n` +
+                  `Delivery Date: ${deliveryDate || 'Not set'}\n` +
+                  `Delivery Time: ${deliveryTime || 'Not set'}\n\n` +
+                  `Issue Description:\n` +
+                  `[Please describe what looks wrong]\n\n` +
+                  `Thank you!`
+                );
+                window.location.href = `mailto:info@partyondelivery.com?subject=${subject}&body=${body}`;
+              }}
+              variant="outline"
+              size="sm"
+              className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
+              📧 Email Support About Order Issues
+            </Button>
+          </div>
         </div>
       </div>
     </div>

@@ -546,7 +546,28 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const handlePaymentSuccess = async (paymentIntentId?: string) => {
     console.log("🔥 PAYMENT SUCCESS - Starting order creation", { paymentIntentId });
     
-    // Create Shopify order after successful payment
+    // Store checkout completion data IMMEDIATELY for instant order confirmation
+    const checkoutCompletionData = {
+      cartItems,
+      totalAmount: finalTotal,
+      subtotal: discountedSubtotal,
+      salesTax,
+      deliveryFee: finalDeliveryFee,
+      tipAmount,
+      customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+      customerEmail: customerInfo.email,
+      deliveryAddress: addressInfo.street ? 
+        `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}` : 
+        deliveryInfo.address,
+      deliveryDate: deliveryInfo.date ? format(deliveryInfo.date, 'yyyy-MM-dd') : null,
+      deliveryTime: deliveryInfo.timeSlot,
+      appliedDiscount,
+      paymentIntentId,
+      timestamp: new Date().toISOString()
+    };
+    
+    sessionStorage.setItem('checkout-completion-data', JSON.stringify(checkoutCompletionData));
+    console.log("🔥 ✅ STORED CHECKOUT DATA FOR INSTANT DISPLAY:", checkoutCompletionData);
     if (paymentIntentId) {
       try {
         console.log("🔥 CALLING create-shopify-order with:", {
