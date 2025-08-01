@@ -939,10 +939,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     selected={deliveryInfo.date || undefined}
                                     onSelect={(date) => {
                                       console.log('📅 Calendar date selected:', date);
-                                      console.log('📅 Current deliveryInfo before update:', deliveryInfo);
                                       if (date) {
-                                        console.log('📅 About to call updateDeliveryInfo with date:', date);
-                                        updateDeliveryInfo('date', date);
+                                        // Convert to proper Date object if needed
+                                        const selectedDate = date instanceof Date ? date : new Date(date);
+                                        console.log('📅 Converted date:', selectedDate);
+                                        updateDeliveryInfo('date', selectedDate);
                                         updateDeliveryInfo('timeSlot', '');
                                         setIsCalendarOpen(false);
                                         console.log('📅 Date selection completed successfully');
