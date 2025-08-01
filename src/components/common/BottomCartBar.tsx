@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, X } from 'lucide-react';
-import { CartItem } from '../DeliveryWidget';
+import { UnifiedCartItem } from '@/hooks/useUnifiedCart';
 
 interface BottomCartBarProps {
-  items: CartItem[];
+  items: UnifiedCartItem[];
   totalPrice: number;
   isVisible: boolean;
   onOpenCart: () => void;
