@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
+import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import SimpleProductManager from '@/components/admin/SimpleProductManager';
 import VoucherManagement from '@/components/admin/VoucherManagement';
 import { supabase } from '@/integrations/supabase/client';
@@ -234,6 +235,7 @@ export default function AdminDashboard() {
         <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="analytics">📊 Analytics</TabsTrigger>
               <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
@@ -296,6 +298,10 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4">
+            <AnalyticsDashboard />
           </TabsContent>
 
           <TabsContent value="affiliates" className="space-y-4">
