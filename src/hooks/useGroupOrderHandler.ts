@@ -41,7 +41,7 @@ export const useGroupOrderHandler = () => {
         
         setGroupOrderData({
           shareToken,
-          deliveryDate: activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
+          deliveryDate: typeof activeDeliveryInfo.data.date === 'string' ? activeDeliveryInfo.data.date : activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
           deliveryTime: activeDeliveryInfo.data.timeSlot || '',
           deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
         });
@@ -69,7 +69,7 @@ export const useGroupOrderHandler = () => {
           const groupToken = localStorage.getItem(STORAGE_KEYS.GROUP_ORDER_TOKEN);
           setGroupOrderData({
             shareToken: groupToken || '',
-            deliveryDate: activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
+            deliveryDate: typeof activeDeliveryInfo.data.date === 'string' ? activeDeliveryInfo.data.date : activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
             deliveryTime: activeDeliveryInfo.data.timeSlot || '',
             deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
           });
@@ -106,7 +106,7 @@ export const useGroupOrderHandler = () => {
       const groupToken = localStorage.getItem(STORAGE_KEYS.GROUP_ORDER_TOKEN);
       setGroupOrderData({
         shareToken: groupToken || '',
-        deliveryDate: activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
+        deliveryDate: typeof activeDeliveryInfo.data.date === 'string' ? activeDeliveryInfo.data.date : activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
         deliveryTime: activeDeliveryInfo.data.timeSlot || '',
         deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
       });

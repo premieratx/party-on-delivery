@@ -308,8 +308,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     const groupAddress = activeDeliveryInfo.addressInfo;
     
     if (groupData) {
-      const dateMatch = deliveryInfo.date && groupData.date &&
-        parseDeliveryDate(deliveryInfo.date.toISOString().split('T')[0]).toDateString() === parseDeliveryDate(groupData.date.toISOString().split('T')[0]).toDateString();
+      const deliveryDateStr = deliveryInfo.date instanceof Date ? deliveryInfo.date.toISOString().split('T')[0] : deliveryInfo.date;
+      const groupDateStr = groupData.date instanceof Date ? groupData.date.toISOString().split('T')[0] : groupData.date;
+      
+      const dateMatch = deliveryDateStr && groupDateStr &&
+        parseDeliveryDate(deliveryDateStr).toDateString() === parseDeliveryDate(groupDateStr).toDateString();
       const timeMatch = deliveryInfo.timeSlot === groupData.timeSlot;
       const addressMatch = groupAddress ? addressInfo.street === groupAddress.street : addressInfo.street === groupData.address;
       
@@ -808,7 +811,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         <div>
                           <span className="text-xs font-medium text-green-800">Delivery Time: </span>
                           <span className="text-xs text-green-700">
-                            {formatDeliveryDate(deliveryInfo.date!.toISOString().split('T')[0], 'EEEE, MMM d')} at {deliveryInfo.timeSlot}
+                            {deliveryInfo.date && formatDeliveryDate(
+                              deliveryInfo.date instanceof Date ? deliveryInfo.date.toISOString().split('T')[0] : deliveryInfo.date, 
+                              'EEEE, MMM d'
+                            )} at {deliveryInfo.timeSlot}
                           </span>
                         </div>
                       </div>
@@ -916,7 +922,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                  )}
                                >
                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {deliveryInfo.date ? formatDeliveryDate(deliveryInfo.date.toISOString().split('T')[0], "EEEE, PPP") : "Pick a date"}
+                                  {deliveryInfo.date ? formatDeliveryDate(
+                                    deliveryInfo.date instanceof Date ? deliveryInfo.date.toISOString().split('T')[0] : deliveryInfo.date, 
+                                    "EEEE, PPP"
+                                  ) : "Pick a date"}
                                </Button>
                              </PopoverTrigger>
                              <PopoverContent className="w-auto p-0 z-50 bg-popover border" align="start">
