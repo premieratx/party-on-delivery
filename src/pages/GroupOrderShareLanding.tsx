@@ -133,9 +133,9 @@ const GroupOrderShareLanding = () => {
       shareToken: shareToken
     };
     
-    // Store for prefilling delivery info
+    // Store for prefilling delivery info - use the same date handling as everywhere else
     localStorage.setItem('prefillDeliveryInfo', JSON.stringify({
-      date: new Date(order?.delivery_date + 'T12:00:00'), // Add noon to prevent timezone issues
+      date: toZonedTime(new Date(order?.delivery_date), 'America/Chicago'),
       timeSlot: order?.delivery_time,
       address: order?.delivery_address
     }));
@@ -208,9 +208,9 @@ const GroupOrderShareLanding = () => {
     );
   }
 
-  // Fix date handling to prevent day-earlier display
+  // Use the same date formatting as everywhere else in the app
   const deliveryDate = format(
-    new Date(order.delivery_date + 'T12:00:00'), // Add noon time to prevent timezone shifting
+    toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 
     'EEEE, MMMM do, yyyy'
   );
 
