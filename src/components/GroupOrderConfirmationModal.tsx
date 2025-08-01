@@ -16,7 +16,7 @@ interface GroupOrderDetails {
     first_name?: string;
     last_name?: string;
     email: string;
-  };
+  } | null;
 }
 
 interface GroupOrderConfirmationModalProps {
@@ -61,7 +61,7 @@ export const GroupOrderConfirmationModal: React.FC<GroupOrderConfirmationModalPr
           <CardContent className="p-4 space-y-3">
             <div className="text-center">
               <h3 className="font-semibold text-lg">
-                {orderDetails.customer.first_name}'s Order
+                {orderDetails.customer?.first_name || 'Customer'}'s Order
               </h3>
               <p className="text-sm text-muted-foreground">
                 Order #{orderDetails.order_number}
@@ -128,7 +128,7 @@ export const GroupOrderConfirmationModal: React.FC<GroupOrderConfirmationModalPr
         </div>
         
         <p className="text-xs text-muted-foreground text-center">
-          By joining, your items will be delivered together with {orderDetails.customer.first_name}'s order
+          By joining, your items will be delivered together with {orderDetails.customer?.first_name || 'the group'}'s order
         </p>
       </DialogContent>
     </Dialog>
