@@ -227,14 +227,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   
   
-  // Initialize step logic and ensure proper navigation for incomplete data
+  // Initialize step logic - only run once on mount
   useEffect(() => {
-    // Always start at the first incomplete step
-    if (!confirmedDateTime || !isDateTimeComplete || !confirmedCustomer || !isCustomerComplete) {
-      setCurrentStep('datetime'); // Combined datetime/contact step
-    } else if (!confirmedAddress || !isAddressComplete) {
+    console.log('Initializing checkout step logic - Current confirmations:', {
+      confirmedDateTime,
+      confirmedAddress,
+      isDateTimeComplete,
+      isAddressComplete,
+      isCustomerComplete
+    });
+
+    // Only set initial step if not already confirmed
+    if (!confirmedDateTime && !confirmedAddress) {
+      console.log('Starting fresh checkout - going to datetime step');
+      setCurrentStep('datetime');
+    } else if (confirmedDateTime && !confirmedAddress) {
+      console.log('DateTime confirmed, going to address step');
       setCurrentStep('address');
-    } else if (confirmedDateTime && confirmedAddress && confirmedCustomer) {
+    } else if (confirmedDateTime && confirmedAddress) {
+      console.log('Both sections confirmed, going to payment');
       setCurrentStep('payment');
     }
     
@@ -244,12 +255,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       updateDeliveryInfo('date', today);
       console.log('Pre-selected today for delivery date:', today);
     }
-    
-    // Reset form confirmations on mount for new users
-    if (!confirmedDateTime || !confirmedAddress || !confirmedCustomer) {
-      console.log('Resetting form confirmations for new checkout session');
-    }
-  }, [confirmedDateTime, confirmedAddress, confirmedCustomer, isDateTimeComplete, isAddressComplete, isCustomerComplete]);
+  }, []); // Only run once on mount
 
   // Get available time slots based on selected date (same logic as DeliveryScheduler)
   const getAvailableTimeSlots = () => {
@@ -587,8 +593,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmAddress = async () => {
+    console.log('🔵 CONFIRM ADDRESS CLICKED - Address info:', addressInfo);
     if (!isAddressComplete) return;
     
+    console.log('🟢 Address validation passed, confirming...');
     setConfirmedAddress(true);
     
     // Return to previous step if editing, otherwise auto-proceed to payment if all sections are confirmed  
@@ -607,7 +615,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handleConfirmCustomer = () => {
-    console.log('Confirming customer with info:', customerInfo);
+    console.log('🔵 CONFIRM CUSTOMER CLICKED - Confirming customer with info:', customerInfo);
     
     // Validate email and phone before proceeding
     const emailErr = getEmailErrorMessage(customerInfo.email || '');
@@ -622,14 +630,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     setPhoneError(phoneErr);
     
     if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim()) {
-      console.log('Customer validation passed, confirming...');
+      console.log('🟢 Customer validation passed, confirming DateTime...');
       setConfirmedDateTime(true);
       
-      // Return to previous step if editing, otherwise auto-proceed to payment if all sections are confirmed
+      // Return to previous step if editing, otherwise proceed to address step if not confirmed yet
       if (previousStep !== currentStep) {
         console.log('Returning to previous step after editing:', previousStep);
         setTimeout(() => setCurrentStep(previousStep), 100);
-      } else if (confirmedAddress) {
+      } else if (!confirmedAddress) {
+        console.log('DateTime confirmed, proceeding to address step...');
+        setTimeout(() => setCurrentStep('address'), 100);
+      } else {
         console.log('All sections confirmed, proceeding to payment automatically...');
         setTimeout(() => setCurrentStep('payment'), 100);
       }
@@ -1040,26 +1051,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </div>
                   
                   <Button 
-                    onClick={() => {
-                      // Validate all fields
-                      const emailErr = getEmailErrorMessage(customerInfo.email || '');
-                      const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
-                      
-                      setEmailError(emailErr);
-                      setPhoneError(phoneErr);
-                      
-                      if (!emailErr && !phoneErr && 
-                          customerInfo.firstName?.trim() && 
-                          customerInfo.lastName?.trim() && 
-                          deliveryInfo.date && 
-                          deliveryInfo.timeSlot) {
-                        setCurrentStep('address');
-                      }
-                    }}
+                    onClick={handleConfirmCustomer}
                     disabled={!deliveryInfo.date || !deliveryInfo.timeSlot || !customerInfo.firstName?.trim() || !customerInfo.lastName?.trim() || !customerInfo.email?.trim() || !customerInfo.phone?.trim()}
                     className="w-full"
                   >
-                    Continue to Delivery Address
+                    Save Date, Time & Contact Info
                   </Button>
                 </CardContent>
               </Card>
@@ -1160,11 +1156,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         Back to Date & Contact
                       </Button>
                       <Button 
-                        onClick={() => setCurrentStep('payment')}
+                        onClick={handleConfirmAddress}
                         disabled={!isAddressComplete}
                         className="flex-1"
                       >
-                        Continue to Payment
+                        Save Delivery Address
                       </Button>
                     </div>
                   </div>
