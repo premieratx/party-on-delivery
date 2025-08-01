@@ -19,6 +19,11 @@ interface OrderCompleteViewProps {
   shareToken?: string;
   groupOrderName?: string;
   isLoading?: boolean;
+  subtotal?: number;
+  deliveryFee?: number;
+  tipAmount?: number;
+  salesTax?: number;
+  appliedDiscount?: { code: string; type: string; value: number } | null;
 }
 
 export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
@@ -31,7 +36,12 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
   deliveryAddress,
   shareToken,
   groupOrderName,
-  isLoading = false
+  isLoading = false,
+  subtotal = 0,
+  deliveryFee = 0,
+  tipAmount = 0,
+  salesTax = 0,
+  appliedDiscount = null
 }) => {
   const { toast } = useToast();
   const [shareUrl, setShareUrl] = useState('');
@@ -145,7 +155,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
                     <Calendar className="w-4 h-4" />
                     Delivery Date:
                   </span>
-                  <span>{new Date(deliveryDate).toLocaleDateString()}</span>
+                  <span>{new Date(deliveryDate + 'T00:00:00').toLocaleDateString()}</span>
                 </div>
               )}
               
@@ -191,9 +201,46 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
               
               <Separator />
               
-              <div className="flex justify-between items-center font-bold text-lg">
-                <span>Total:</span>
-                <span className="text-primary">${totalAmount.toFixed(2)}</span>
+              {/* Order Total Breakdown */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span>Subtotal ({orderItems?.length || 0} items):</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                
+                {appliedDiscount && (
+                  <div className="flex justify-between items-center text-sm text-green-600">
+                    <span>Discount ({appliedDiscount.code}):</span>
+                    <span>-${appliedDiscount.value.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {deliveryFee > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Delivery Fee:</span>
+                    <span>${deliveryFee.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {tipAmount > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Driver Tip:</span>
+                    <span>${tipAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {salesTax > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span>Sales Tax:</span>
+                    <span>${salesTax.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                <Separator />
+                <div className="flex justify-between items-center font-bold text-lg">
+                  <span>Total:</span>
+                  <span className="text-primary">${totalAmount.toFixed(2)}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -253,7 +300,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
         <div className="space-y-4">
           <div className="flex gap-4 justify-center">
             <Button 
-              onClick={() => window.location.href = '/customer-dashboard'}
+              onClick={() => window.location.href = '/customer-login'}
               variant="outline"
             >
               Manage Order

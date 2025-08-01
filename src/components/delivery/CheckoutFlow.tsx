@@ -1262,29 +1262,75 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                            <span>${(tipAmount || 0).toFixed(2)}</span>
                          </div>
                        )}
-                       <Separator />
-                       <div className="flex justify-between font-bold text-lg">
-                         <span>Total</span>
-                         <span>${(finalTotal || 0).toFixed(2)}</span>
-                       </div>
-                     </div>
-                   </>
-                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-      </div>
-      
-      {/* Navigation Footer */}
-      <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto flex justify-center">
-          <div className="text-sm text-muted-foreground">
-            Step 4 of 4
-          </div>
-        </div>
-      </div>
+                        <Separator />
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>Total</span>
+                          <span>${(finalTotal || 0).toFixed(2)}</span>
+                        </div>
+                        
+                        {/* Group Order Share Link */}
+                        {confirmedDateTime && confirmedAddress && confirmedCustomer && (
+                          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm font-medium text-blue-800 mb-2">
+                              🎉 Want friends to join this order?
+                            </p>
+                            <Button
+                              onClick={() => {
+                                // Generate a group order token and save it
+                                const groupToken = `group_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                                
+                                // Store group order data for sharing
+                                const groupOrderData = {
+                                  deliveryDate: deliveryInfo.date,
+                                  deliveryTime: deliveryInfo.timeSlot,
+                                  deliveryAddress: addressInfo,
+                                  customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+                                  groupToken,
+                                  cartItems,
+                                  totalAmount: finalTotal
+                                };
+                                
+                                sessionStorage.setItem('pendingGroupOrder', JSON.stringify(groupOrderData));
+                                
+                                // Create share URL
+                                const shareUrl = `${window.location.origin}/?group=${groupToken}`;
+                                
+                                // Copy to clipboard and show modal
+                                navigator.clipboard.writeText(shareUrl).then(() => {
+                                  alert(`Group order link copied! Share this with friends:\n\n${shareUrl}\n\nThey can add their items to your delivery and split the delivery fee!`);
+                                }).catch(() => {
+                                  alert(`Share this link with friends:\n\n${shareUrl}\n\nThey can add their items to your delivery and split the delivery fee!`);
+                                });
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+                            >
+                              📤 Share Group Order Link
+                            </Button>
+                            <p className="text-xs text-blue-600 mt-2 text-center">
+                              Friends can add items and split delivery costs!
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+               </CardContent>
+             </Card>
+           </div>
+         </div>
+       </div>
+       </div>
+       
+       {/* Navigation Footer */}
+       <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
+         <div className="max-w-4xl mx-auto flex justify-center">
+           <div className="text-sm text-muted-foreground">
+             Step 4 of 4
+           </div>
+         </div>
+       </div>
     </div>
   );
 };

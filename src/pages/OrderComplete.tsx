@@ -159,6 +159,11 @@ const OrderComplete = () => {
       shareToken={orderData?.share_token}
       groupOrderName={orderData?.group_order_name}
       isLoading={!orderData}
+      subtotal={parseFloat(orderData?.subtotal || '0') || 0}
+      deliveryFee={parseFloat(orderData?.delivery_fee || '0') || 0}
+      tipAmount={parseFloat(orderData?.tip_amount || '0') || 0}
+      salesTax={parseFloat(orderData?.sales_tax || '0') || 0}
+      appliedDiscount={orderData?.applied_discount}
     />
   );
 };
