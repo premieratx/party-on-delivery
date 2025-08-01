@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, CheckCircle, X, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const GroupOrderInvite = () => {
   const { shareToken } = useParams<{ shareToken: string }>();
@@ -12,28 +13,54 @@ const GroupOrderInvite = () => {
 
   console.log('🎯 GroupOrderInvite - Simple page loaded with token:', shareToken);
 
-  const handleJoinGroupOrder = () => {
+  const handleJoinGroupOrder = async () => {
     console.log('🎯 User chose to JOIN group order');
     
-    // Store the decision and token for the main app to handle
-    localStorage.setItem('groupOrderToken', shareToken || '');
-    localStorage.setItem('partyondelivery_add_to_order', 'true');
-    localStorage.setItem('groupOrderJoinDecision', 'yes');
-    
-    // Generate group discount
-    localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
-      code: 'GROUP-SHIPPING-FREE',
-      type: 'free_shipping',
-      value: 0
-    }));
-    
-    toast({
-      title: "Joining Group Order!",
-      description: "You'll get FREE DELIVERY with the group order.",
-    });
-    
-    // Navigate to main page to start shopping
-    navigate(`/?checkout=true&share=${shareToken}&customer=true`);
+    try {
+      // First fetch the group order details to get delivery info
+      const { data, error } = await supabase.functions.invoke('get-group-order', {
+        body: { shareToken }
+      });
+      
+      if (data?.success && data.originalOrder) {
+        // Store group order data with delivery details
+        localStorage.setItem('groupOrderToken', shareToken || '');
+        localStorage.setItem('partyondelivery_add_to_order', 'true');
+        localStorage.setItem('groupOrderJoinDecision', 'yes');
+        
+        // CRITICAL: Store group order delivery details with highest priority
+        localStorage.setItem('groupOrderDeliveryInfo', JSON.stringify({
+          date: data.originalOrder.delivery_date,
+          timeSlot: data.originalOrder.delivery_time,
+          address: data.originalOrder.delivery_address,
+          priority: 'group_order' // Highest priority flag
+        }));
+        
+        // Generate group discount
+        localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
+          code: 'GROUP-SHIPPING-FREE',
+          type: 'free_shipping',
+          value: 0
+        }));
+        
+        toast({
+          title: "Joining Group Order!",
+          description: "You'll get FREE DELIVERY with the group order.",
+        });
+        
+        // Navigate to main page to start shopping
+        navigate(`/?checkout=true&share=${shareToken}&customer=true`);
+      } else {
+        throw new Error('Failed to load group order details');
+      }
+    } catch (error) {
+      console.error('Error joining group order:', error);
+      toast({
+        title: "Error",
+        description: "Failed to join group order. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCreateNewOrder = () => {

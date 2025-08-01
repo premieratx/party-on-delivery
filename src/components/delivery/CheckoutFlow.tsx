@@ -299,6 +299,28 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     new Date(deliveryInfo.date).toDateString() === new Date(originalOrderInfo.deliveryDate).toDateString() &&
     deliveryInfo.timeSlot === originalOrderInfo.deliveryTime;
 
+  // Enhanced group order matching - check if this matches group order details
+  const groupOrderInfo = localStorage.getItem('groupOrderDeliveryInfo');
+  const isGroupOrderMatch = groupOrderInfo && (() => {
+    try {
+      const groupData = JSON.parse(groupOrderInfo);
+      if (groupData.priority === 'group_order') {
+        const dateMatch = deliveryInfo.date && groupData.date &&
+          new Date(deliveryInfo.date).toDateString() === new Date(groupData.date).toDateString();
+        const timeMatch = deliveryInfo.timeSlot === groupData.timeSlot;
+        const addressMatch = groupData.address && (
+          (typeof groupData.address === 'string' && addressInfo.street === groupData.address.split(',')[0]?.trim()) ||
+          (typeof groupData.address === 'object' && addressInfo.street === groupData.address.street)
+        );
+        console.log('🎯 Group order match check:', { dateMatch, timeMatch, addressMatch });
+        return dateMatch && timeMatch && addressMatch;
+      }
+    } catch (error) {
+      console.error('Error checking group order match:', error);
+    }
+    return false;
+  })();
+
   // Auto-apply group discount for group orders - check localStorage first, then fetch if needed
   useEffect(() => {
     console.log('🔄 Discount effect triggered:', { 

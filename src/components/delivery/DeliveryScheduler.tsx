@@ -44,9 +44,23 @@ const timeSlots = [
 const CST_TIMEZONE = 'America/Chicago';
 
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
-  // Check for prefilled group order delivery info
+  // Check for prefilled group order delivery info (HIGHEST PRIORITY)
   const [date, setDate] = useState<Date | undefined>(() => {
-    // First check for prefilled group order data
+    // HIGHEST PRIORITY: Check for group order delivery info
+    const groupOrderInfo = localStorage.getItem('groupOrderDeliveryInfo');
+    if (groupOrderInfo) {
+      try {
+        const parsedData = JSON.parse(groupOrderInfo);
+        console.log('🎯 PRIORITY: Using group order delivery date:', parsedData);
+        if (parsedData.date && parsedData.priority === 'group_order') {
+          return new Date(parsedData.date);
+        }
+      } catch (error) {
+        console.error('Error parsing group order delivery info:', error);
+      }
+    }
+    
+    // Fall back to other prefilled data
     const prefillData = localStorage.getItem('prefillDeliveryInfo');
     if (prefillData) {
       try {
@@ -78,7 +92,21 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
   });
   
   const [timeSlot, setTimeSlot] = useState(() => {
-    // First check for prefilled group order data
+    // HIGHEST PRIORITY: Check for group order delivery info
+    const groupOrderInfo = localStorage.getItem('groupOrderDeliveryInfo');
+    if (groupOrderInfo) {
+      try {
+        const parsedData = JSON.parse(groupOrderInfo);
+        console.log('🎯 PRIORITY: Using group order time slot:', parsedData);
+        if (parsedData.timeSlot && parsedData.priority === 'group_order') {
+          return parsedData.timeSlot;
+        }
+      } catch (error) {
+        console.error('Error parsing group order delivery info:', error);
+      }
+    }
+    
+    // Fall back to other prefilled data
     const prefillData = localStorage.getItem('prefillDeliveryInfo');
     if (prefillData) {
       try {
@@ -195,7 +223,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                       setIsCalendarOpen(false);
                     }}
                     disabled={(checkDate) => {
-                      // Simple and robust date validation - only disable past dates
+                      // Enable ALL days including Sunday - only disable past dates
                       const today = new Date();
                       today.setHours(0, 0, 0, 0); // Reset time to start of day
                       
@@ -208,6 +236,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                       console.log('📅 Calendar validation:', {
                         date: checkDate.toDateString(),
                         today: today.toDateString(),
+                        dayOfWeek: checkDate.getDay(), // 0=Sunday, 6=Saturday
                         isBeforeToday,
                         disabled: isBeforeToday
                       });

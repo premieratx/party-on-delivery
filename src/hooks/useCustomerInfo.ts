@@ -229,7 +229,40 @@ const customerDataManager = CustomerDataManager.getInstance();
 // Helper to get data from multiple sources with fallback
 function getStoredData<T>(primaryKey: string, backupKey: string, initialValue: T): T {
   try {
-    // Check for prefilled delivery address from custom site first
+    // HIGHEST PRIORITY: Check for group order delivery info
+    if (primaryKey === 'partyondelivery_address') {
+      const groupOrderInfo = localStorage.getItem('groupOrderDeliveryInfo');
+      if (groupOrderInfo) {
+        try {
+          const parsedGroupData = JSON.parse(groupOrderInfo);
+          console.log('🎯 PRIORITY: Found group order delivery info:', parsedGroupData);
+          if (parsedGroupData.priority === 'group_order' && parsedGroupData.address) {
+            // Parse address string into components
+            const addressStr = parsedGroupData.address;
+            if (typeof addressStr === 'string') {
+              const parts = addressStr.split(',').map(s => s.trim());
+              const stateZip = parts[2]?.split(' ') || [];
+              const groupAddress = {
+                street: parts[0] || '',
+                city: parts[1] || '',
+                state: stateZip[0] || '',
+                zipCode: stateZip[1] || '',
+                instructions: ''
+              } as T;
+              console.log('✅ Using GROUP ORDER address:', groupAddress);
+              return groupAddress;
+            } else if (typeof addressStr === 'object') {
+              console.log('✅ Using GROUP ORDER address (object):', addressStr);
+              return addressStr as T;
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing group order address info:', error);
+        }
+      }
+    }
+
+    // Check for prefilled delivery address from custom site (second priority)
     if (primaryKey === 'partyondelivery_address') {
       const prefilledAddress = localStorage.getItem('prefilled_delivery_address');
       if (prefilledAddress) {
@@ -357,7 +390,34 @@ export function useCustomerInfo() {
   });
 
   const [addressInfo, setAddressInfoState] = useState<AddressInfo>(() => {
-    // Check for group order prefill data first
+    // HIGHEST PRIORITY: Check for group order delivery info
+    const groupOrderInfo = localStorage.getItem('groupOrderDeliveryInfo');
+    if (groupOrderInfo) {
+      try {
+        const parsedGroupData = JSON.parse(groupOrderInfo);
+        console.log('🎯 INITIALIZING with group order address:', parsedGroupData);
+        if (parsedGroupData.priority === 'group_order' && parsedGroupData.address) {
+          const addressStr = parsedGroupData.address;
+          if (typeof addressStr === 'string') {
+            const parts = addressStr.split(',').map(s => s.trim());
+            const stateZip = parts[2]?.split(' ') || [];
+            return {
+              street: parts[0] || '',
+              city: parts[1] || '',
+              state: stateZip[0] || '',
+              zipCode: stateZip[1] || '',
+              instructions: ''
+            };
+          } else if (typeof addressStr === 'object') {
+            return addressStr;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing group order address during init:', error);
+      }
+    }
+
+    // Check for group order prefill data (fallback)
     const prefillData = localStorage.getItem('prefill_delivery_data');
     if (prefillData) {
       try {
