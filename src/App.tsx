@@ -35,7 +35,7 @@ import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
 import TestGroupOrderFlow from "./pages/TestGroupOrderFlow";
-import GroupOrderShareLanding from "./pages/GroupOrderShareLanding";
+import GroupOrderInvite from "./pages/GroupOrderInvite";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,7 +85,7 @@ const App = () => {
                   <Route path="/order/:shareToken" element={<GroupOrderDashboard />} />
                   <Route path="/group/:shareToken" element={<GroupOrderView />} />
                   <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
-                  <Route path="/join/:shareToken" element={<GroupOrderShareLanding />} />
+                  <Route path="/join/:shareToken" element={<GroupOrderInvite />} />
                   
                   {/* Party Planning Routes */}
                   <Route path="/plan-my-party" element={<PartyPlanner />} />
