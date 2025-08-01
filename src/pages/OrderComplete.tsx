@@ -40,8 +40,8 @@ const OrderComplete = () => {
           console.log(`[OrderComplete] Attempt ${retryCount + 1}/${maxRetries} - Looking for order with sessionId: ${sessionId}, orderNumber: ${orderNumber}`);
           
           if (sessionId) {
-            // First try with stripe_session_id  
-            const sessionUrl = `${supabaseUrl}/rest/v1/customer_orders?stripe_session_id=eq.${sessionId}&select=*`;
+            // First try with session_id (correct column name)
+            const sessionUrl = `${supabaseUrl}/rest/v1/customer_orders?session_id=eq.${sessionId}&select=*`;
             const sessionResponse = await fetch(sessionUrl, {
               headers: {
                 'apikey': supabaseKey,
