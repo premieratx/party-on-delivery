@@ -614,7 +614,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </div>
             
             {/* Add instruction text for cocktails only */}
-            {selectedCategory === 3 && (
+            {selectedCategory === 4 && (
               <div className="text-center mt-2">
                 <p className="text-sm text-muted-foreground">Click each item to see photos and details</p>
               </div>
@@ -624,8 +624,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       <div className="max-w-7xl mx-auto p-4">
-        {/* Product Grid - smaller tiles for spirits and beer, consistent for others */}
-        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
+        {/* Product Grid - smaller tiles for spirits, beer, and mixers & n/a, consistent for others */}
+        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
           {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
@@ -636,12 +636,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                <div 
                  key={product.id} 
                  className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
-                   selectedCategory === 3 ? 'cursor-pointer hover:border-primary/50' : ''
+                   selectedCategory === 4 ? 'cursor-pointer hover:border-primary/50' : ''
                  }`}
                  onClick={() => handleProductClick(product)}
                >
-                 {/* Product image - smaller for spirits and beer sections */}
-                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${(selectedCategory === 0 || selectedCategory === 1) ? 'mb-2' : 'mb-3'}`}>
+                 {/* Product image - smaller for spirits, beer, and mixers & n/a sections */}
+                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'}`}>
                   <img
                     src={product.image}
                     alt={product.title}
@@ -649,12 +649,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   />
                 </div>
                  
-                 {/* Product info with smaller height for spirits and beer */}
-                 <div className={`flex flex-col flex-1 justify-between ${(selectedCategory === 0 || selectedCategory === 1) ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
+                 {/* Product info with smaller height for spirits, beer, and mixers & n/a */}
+                 <div className={`flex flex-col flex-1 justify-between ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
                    <div className="flex-1 flex flex-col justify-start">
                     {(() => {
-                      // For cocktails (selectedCategory === 3), show full title without truncation
-                      if (selectedCategory === 3) {
+                      // For cocktails (selectedCategory === 4), show full title without truncation
+                      if (selectedCategory === 4) {
                         return (
                           <h4 className="font-bold leading-tight text-center text-sm mb-2">
                             {product.title}
@@ -667,11 +667,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       
                       return (
                         <>
-                          <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-xs mb-1' : 'text-sm mb-1'} line-clamp-2`}>
+                          <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'} line-clamp-2`}>
                             {cleanTitle}
                           </h4>
                           {packageSize && (
-                            <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                            <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
                               {packageSize}
                             </p>
                           )}
@@ -704,7 +704,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     ) : null}
 
                       {/* Cocktail drink count - only show for cocktails */}
-                      {selectedCategory === 3 && (() => {
+                      {selectedCategory === 4 && (() => {
                         const drinkMatch = product.description.match(/(\d+)\s*(?:drinks?|servings?|cocktails?)/i);
                         if (drinkMatch) {
                           return (
@@ -755,7 +755,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </div>
                         ) : (
                          <button
-                            className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors ${(selectedCategory === 0 || selectedCategory === 1) ? 'w-6 h-6' : 'w-8 h-8'}`}
+                            className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'w-6 h-6' : 'w-8 h-8'}`}
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
@@ -772,7 +772,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }
                            }}
                          >
-                           <Plus size={(selectedCategory === 0 || selectedCategory === 1) ? 12 : 16} />
+                           <Plus size={(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 12 : 16} />
                         </button>
                       )}
                     </div>
