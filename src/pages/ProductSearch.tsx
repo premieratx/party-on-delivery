@@ -492,7 +492,7 @@ export const ProductSearch = () => {
               
               return (
                 <Card 
-                  key={`${product.id}-${index}`} 
+                  key={product.id} 
                   className="group hover:shadow-lg transition-shadow duration-200"
                 >
                   <CardContent className="p-2 sm:p-4 h-full flex flex-col">
@@ -519,23 +519,33 @@ export const ProductSearch = () => {
                           {cleanTitle}
                         </h3>
                         
-                        {/* Size Selector for multi-variant products */}
+                        {/* Size variants as radio buttons for multi-variant products */}
                         {product.variants && product.variants.length > 1 && (
-                          <div className="mb-2">
-                            <select 
+                          <div className="mb-2 space-y-1">
+                            <RadioGroup 
                               value={currentVariant.id}
-                              onChange={(e) => {
-                                const variant = product.variants!.find(v => v.id === e.target.value);
+                              onValueChange={(value) => {
+                                const variant = product.variants!.find(v => v.id === value);
                                 if (variant) handleVariantChange(product, variant);
                               }}
-                              className="w-full text-xs bg-background border border-border rounded px-2 py-1"
+                              className="space-y-1"
                             >
                               {product.variants.map(variant => (
-                                <option key={variant.id} value={variant.id}>
-                                  {variant.size} - ${variant.price.toFixed(2)}
-                                </option>
+                                <div key={variant.id} className="flex items-center space-x-2">
+                                  <RadioGroupItem 
+                                    value={variant.id} 
+                                    id={`${product.id}-${variant.id}`}
+                                    className="w-3 h-3"
+                                  />
+                                  <Label 
+                                    htmlFor={`${product.id}-${variant.id}`}
+                                    className="text-xs cursor-pointer flex-1 leading-tight"
+                                  >
+                                    {variant.size} - ${variant.price.toFixed(2)}
+                                  </Label>
+                                </div>
                               ))}
-                            </select>
+                            </RadioGroup>
                           </div>
                         )}
                         

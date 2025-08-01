@@ -197,23 +197,30 @@ export function analyzeDuplicates(products: Product[]): DuplicateGroup[] {
 }
 
 function extractBaseName(title: string): string {
-  // Remove common size indicators and normalize
-  const normalized = title
+  // More aggressive normalization to catch all variations
+  let normalized = title
     .toLowerCase()
     // Remove size patterns more comprehensively
     .replace(/\s*\d+(\.\d+)?\s*(ml|l|liter|litre)\s*/gi, ' ')
     .replace(/\s*\d+(\.\d+)?\s*(oz|ounce)s?\s*/gi, ' ')
-    .replace(/\s*\d+\s*(pack|pk)\s*/gi, ' ')
+    .replace(/\s*\d+\s*(pack|pk|pck)\s*/gi, ' ')
     .replace(/\s*(\d+x\d+|\d+\s*x\s*\d+)\s*/gi, ' ')
+    .replace(/\s*\d+\s*count\s*/gi, ' ')
     .replace(/\s*single\s*/gi, ' ')
     .replace(/\s*bottle\s*/gi, ' ')
     .replace(/\s*can\s*/gi, ' ')
     .replace(/\s*case\s*/gi, ' ')
     .replace(/\s*hard seltzer\s*/gi, ' ')
+    .replace(/\s*seltzer\s*/gi, ' ')
     .replace(/\s*beer\s*/gi, ' ')
     .replace(/\s*light\s*beer\s*/gi, ' light ')
     .replace(/\s*premium\s*/gi, ' ')
     .replace(/\s*craft\s*/gi, ' ')
+    .replace(/\s*domestic\s*/gi, ' ')
+    .replace(/\s*imported\s*/gi, ' ')
+    // Remove parenthetical content that often contains sizes
+    .replace(/\s*\([^)]*\)\s*/gi, ' ')
+    .replace(/\s*\[[^\]]*\]\s*/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
     
