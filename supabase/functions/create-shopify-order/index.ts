@@ -26,7 +26,13 @@ serve(async (req) => {
       throw new Error("Payment Intent ID or Session ID is required");
     }
 
-    logStep("Payment Intent ID received", { paymentIntentId });
+    logStep("Payment Intent ID received", { 
+      paymentIntentId, 
+      isAddingToOrder, 
+      useSameAddress, 
+      sessionId,
+      bodyKeys: Object.keys(body)
+    });
 
     // Initialize Stripe
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -167,7 +173,13 @@ serve(async (req) => {
     let shareToken = null;
     
     if (groupOrderToken) {
-      logStep("Detected group order join attempt", { groupOrderToken });
+      logStep("🔄 GROUP ORDER DETECTED - Processing group order join", { 
+        groupOrderToken,
+        customerEmail,
+        customerName,
+        cartItemsCount: cartItems.length,
+        subtotal
+      });
       
       try {
         const supabaseClient = createClient(

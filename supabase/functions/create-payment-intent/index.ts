@@ -155,7 +155,7 @@ serve(async (req) => {
       compactCartItemsLength: compactCartItems.length
     });
 
-    // Create payment intent with essential metadata (compact cart items only)
+    // Create payment intent with essential metadata + full cart data as JSON
     const paymentIntent = await stripe.paymentIntents.create({
       amount: validAmount,
       currency,
@@ -168,7 +168,7 @@ serve(async (req) => {
         delivery_address: deliveryAddress.substring(0, 200),
         delivery_instructions: deliveryInstructions.substring(0, 200),
         cart_summary: cartSummary,
-        cart_items_compact: compactCartItems, // Compact version for metadata
+        cart_items: JSON.stringify(cartItems), // CRITICAL: Full cart data for order processing
         item_count: itemCount.toString(),
         subtotal: validSubtotal.toFixed(2),
         shipping_fee: validDeliveryFee.toFixed(2),
@@ -180,7 +180,8 @@ serve(async (req) => {
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
         discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
         group_order_number: (groupOrderNumber || '').substring(0, 50),
-        group_order_token: (groupOrderToken || '').substring(0, 50)
+        group_order_token: (groupOrderToken || '').substring(0, 50),
+        is_adding_to_order: groupOrderToken ? 'true' : 'false' // Flag for group order processing
       }
     });
 
