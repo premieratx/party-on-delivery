@@ -29,8 +29,14 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     console.log('Current deliveryInfo:', deliveryInfo);
     const newInfo = { ...deliveryInfo, [field]: value };
     console.log('New deliveryInfo will be:', newInfo);
+    console.log('🔄 About to call onDeliveryInfoChange...');
     onDeliveryInfoChange(newInfo);
-    console.log('onDeliveryInfoChange called with newInfo');
+    console.log('🔄 onDeliveryInfoChange completed');
+    
+    // Add a timeout to check if the state actually updated
+    setTimeout(() => {
+      console.log('🔄 State check after update - deliveryInfo:', deliveryInfo);
+    }, 100);
   };
 
   // Pre-fill with group order data
