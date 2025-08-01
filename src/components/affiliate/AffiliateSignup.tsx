@@ -41,7 +41,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
     let authProcessed = false;
 
     const processAuth = async (session: any) => {
-      if (!mounted || authProcessed) return;
+      if (!mounted || authProcessed || !session?.user?.email) return;
       
       authProcessed = true;
       console.log('Processing affiliate auth for:', session.user.email);
@@ -77,28 +77,32 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       }
     };
 
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
-      console.log('Affiliate auth state change:', event);
+      console.log('Affiliate auth state change:', event, !!session?.user?.email);
       
       if (event === 'SIGNED_IN' && session?.user?.email) {
         await processAuth(session);
-      }
-      
-      if (event === 'SIGNED_OUT') {
+      } else if (event === 'SIGNED_OUT') {
         authProcessed = false;
         setLoading(false);
         setStep('google');
       }
     });
 
-    // Check existing session
+    // Then check existing session
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email && mounted) {
-        await processAuth(session);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email && mounted) {
+          console.log('Found existing affiliate session');
+          await processAuth(session);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        setLoading(false);
       }
     };
 
@@ -108,7 +112,7 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, onSuccess]);
+  }, []);
 
   const handleGoogleAuth = async () => {
     if (loading) return; // Prevent double clicks

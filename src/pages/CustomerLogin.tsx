@@ -22,21 +22,21 @@ const CustomerLogin = () => {
     let authProcessed = false;
 
     const processAuth = async (session: any) => {
-      if (!mounted || authProcessed) return;
+      if (!mounted || authProcessed || !session?.user?.email) return;
       
       authProcessed = true;
-      console.log('Processing customer auth');
+      console.log('Processing customer auth for:', session.user.email);
       setIsLoading(false);
       
       try {
         // Link any stored session IDs to this user
-        if (session.user.email) {
-          await linkSessionToUser(session.user.email);
-        }
+        await linkSessionToUser(session.user.email);
         
         // Redirect to intended destination
         const redirectTo = redirectParam === 'dashboard' ? '/customer/dashboard' : (returnUrl || '/customer/dashboard');
         console.log('Redirecting to:', redirectTo);
+        
+        // Use replace to avoid back button issues
         window.location.replace(redirectTo);
       } catch (error) {
         console.error('Customer auth processing error:', error);
@@ -44,12 +44,28 @@ const CustomerLogin = () => {
       }
     };
 
-    // Check for existing session first
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Customer auth state change:', event, !!session);
+        
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+          await processAuth(session);
+        } else if (event === 'SIGNED_OUT') {
+          authProcessed = false;
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // Then check for existing session
     const checkExistingSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session && mounted) {
-          console.log('Found existing customer session, processing...');
+          console.log('Found existing customer session');
           await processAuth(session);
         }
       } catch (error) {
@@ -58,32 +74,13 @@ const CustomerLogin = () => {
       }
     };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        console.log('Customer auth state change:', event);
-        
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-          await processAuth(session);
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          authProcessed = false;
-          setIsLoading(false);
-        }
-      }
-    );
-
-    // Check existing session after setting up listener
     checkExistingSession();
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, linkSessionToUser, redirectParam, returnUrl]);
+  }, [linkSessionToUser, redirectParam, returnUrl]);
 
   const handleGoogleLogin = async () => {
     if (isLoading) return; // Prevent double clicks

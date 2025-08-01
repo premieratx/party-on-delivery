@@ -17,7 +17,7 @@ export const AdminLogin: React.FC = () => {
     let authProcessed = false;
     
     const processAuth = async (email: string) => {
-      if (!mounted || authProcessed) return;
+      if (!mounted || authProcessed || !email) return;
       
       authProcessed = true;
       console.log(`Processing admin auth for ${email}`);
@@ -34,7 +34,7 @@ export const AdminLogin: React.FC = () => {
             title: "Welcome!",
             description: "Successfully logged in as admin.",
           });
-          navigate('/admin', { replace: true });
+          window.location.replace('/admin');
         } else if (mounted) {
           console.log('User is not admin, signing out');
           await supabase.auth.signOut();
@@ -58,38 +58,41 @@ export const AdminLogin: React.FC = () => {
       }
     };
 
-    // Check for existing session first
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email && mounted) {
-        await processAuth(session.user.email);
-      }
-    };
-
-    // Set up auth listener for OAuth callback
+    // Set up auth listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
-      console.log('Admin auth state change:', event);
+      console.log('Admin auth state change:', event, !!session?.user?.email);
       
       if (event === 'SIGNED_IN' && session?.user?.email) {
         await processAuth(session.user.email);
-      }
-      
-      if (event === 'SIGNED_OUT') {
+      } else if (event === 'SIGNED_OUT') {
         authProcessed = false;
         setGoogleLoading(false);
       }
     });
 
-    // Check session on mount
+    // Then check for existing session
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.email && mounted) {
+          console.log('Found existing admin session');
+          await processAuth(session.user.email);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        setGoogleLoading(false);
+      }
+    };
+
     checkSession();
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, [toast, navigate]);
 
 
   const handleGoogleLogin = async () => {
