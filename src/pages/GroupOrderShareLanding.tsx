@@ -40,6 +40,8 @@ const GroupOrderShareLanding = () => {
 
   const loadGroupOrder = async () => {
     try {
+      console.log('Loading group order with token:', shareToken);
+      
       const { data: orderData, error } = await supabase
         .from('customer_orders')
         .select(`
@@ -51,13 +53,17 @@ const GroupOrderShareLanding = () => {
           )
         `)
         .eq('share_token', shareToken)
-        .single();
+        .maybeSingle();
+
+      console.log('Query result:', { orderData, error });
 
       if (error) {
+        console.error('Database error:', error);
         throw error;
       }
 
       if (!orderData) {
+        console.log('No order found for token:', shareToken);
         toast({
           title: "Order Not Found",
           description: "The shared order link is invalid or expired.",
@@ -67,6 +73,7 @@ const GroupOrderShareLanding = () => {
         return;
       }
 
+      console.log('Successfully loaded order:', orderData);
       setOrder(orderData);
     } catch (error) {
       console.error('Error loading group order:', error);
