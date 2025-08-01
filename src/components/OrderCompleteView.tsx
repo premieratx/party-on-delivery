@@ -253,55 +253,76 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
             </CardContent>
           </Card>
 
-          {/* Group Order Sharing */}
-          {shareToken && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ExternalLink className="w-5 h-5" />
-                  Share Group Order
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Invite friends to add their items to {groupOrderName || 'your order'}
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          {/* Group Order Sharing - Always show for all orders */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ExternalLink className="w-5 h-5" />
+                Share Your Order
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {shareToken ? 
+                  `Invite friends to add their items and get FREE delivery together!` :
+                  'Loading your shareable link...'
+                }
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {shareUrl ? (
+                <>
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-xs text-muted-foreground mb-1">Share this link:</p>
+                    <p className="text-sm font-mono break-all">{shareUrl}</p>
+                  </div>
+                  
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs text-green-700 font-medium mb-1">✨ Friends get FREE delivery!</p>
+                    <p className="text-xs text-green-600">When friends use your link, they'll join your order and get free shipping!</p>
+                  </div>
+                </>
+              ) : (
                 <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Share this link:</p>
-                  <p className="text-sm font-mono break-all">{shareUrl}</p>
+                  <div className="animate-pulse">
+                    <div className="h-4 bg-muted-foreground/20 rounded mb-2"></div>
+                    <div className="h-3 bg-muted-foreground/20 rounded w-3/4"></div>
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" onClick={copyShareLink}>
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy Link
+              )}
+              
+              {shareUrl && (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" onClick={copyShareLink}>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Link
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={shareViaEmail}>
+                      <Mail className="w-4 h-4 mr-2" />
+                      Email
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={shareViaSMS}>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      SMS
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={shareViaFacebook}>
+                      <Facebook className="w-4 h-4 mr-2" />
+                      Facebook
+                    </Button>
+                  </div>
+                  
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={shareViaInstagram}
+                  >
+                    <Instagram className="w-4 h-4 mr-2" />
+                    Copy for Instagram
                   </Button>
-                  <Button variant="outline" size="sm" onClick={shareViaEmail}>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Email
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={shareViaSMS}>
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    SMS
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={shareViaFacebook}>
-                    <Facebook className="w-4 h-4 mr-2" />
-                    Facebook
-                  </Button>
-                </div>
-                
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={shareViaInstagram}
-                >
-                  <Instagram className="w-4 h-4 mr-2" />
-                  Copy for Instagram
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Action Buttons */}
@@ -337,19 +358,16 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
               Manage Order
             </Button>
             
-            {shareToken && (
-              <>
-                <Button 
-                  onClick={copyShareLink}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Share Group Order Link
-                </Button>
-                <p className="text-xs text-muted-foreground text-center max-w-sm">
-                  Friends can use this link to add items to your delivery and split costs!
-                </p>
-              </>
-            )}
+            <Button 
+              onClick={copyShareLink}
+              className="bg-primary hover:bg-primary/90"
+              disabled={!shareUrl}
+            >
+              {shareUrl ? 'Share Order Link' : 'Loading Share Link...'}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center max-w-sm">
+              Friends can use this link to add items to your delivery and get FREE shipping!
+            </p>
           </div>
           
           {/* Support Contact Section */}

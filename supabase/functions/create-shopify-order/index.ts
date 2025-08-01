@@ -178,6 +178,12 @@ serve(async (req) => {
     let originalGroupOrderId = null;
     let shareToken = null;
     
+    // Generate a unique share token for EVERY order (not just group orders)
+    const crypto = globalThis.crypto;
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    const defaultShareToken = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+    
     if (groupOrderToken) {
       logStep("🔄 GROUP ORDER DETECTED - Processing group order join", { 
         groupOrderToken,
@@ -219,6 +225,12 @@ serve(async (req) => {
       } catch (groupError) {
         logStep("Exception in group order handling", groupError);
       }
+    }
+    
+    // If not joining a group order, use the generated default share token
+    if (!shareToken) {
+      shareToken = defaultShareToken;
+      logStep("Using generated share token for new order", { shareToken });
     }
     
     // Enhanced affiliate tracking calculations
@@ -760,8 +772,8 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
           affiliate_id: null, // Will be populated by affiliate tracking
           is_group_order: isJoiningGroupOrder,
           group_order_id: isJoiningGroupOrder ? originalGroupOrderId : null,
-          // For new orders, let database auto-generate share_token. For group orders, use existing token.
-          ...(shareToken && { share_token: shareToken }),
+          // ALWAYS set the share_token for ALL orders (group or individual)
+          share_token: shareToken,
           is_shareable: true, // Always make orders shareable
         };
 
