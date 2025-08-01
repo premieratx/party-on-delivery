@@ -19,17 +19,9 @@ const OrderComplete = () => {
       const orderNumber = urlParams.get('order_number');
       const errorParam = urlParams.get('error');
       
-      // Also check localStorage for recent session tracking
-      const storedSessionId = localStorage.getItem('lastOrderSessionId');
-      const storedPaymentIntent = localStorage.getItem('lastPaymentIntent');
-      
-      console.log("🔥 ORDER COMPLETE - COMPREHENSIVE DEBUG:", {
-        fromUrl: { sessionId, paymentIntentId, orderNumber, errorParam },
-        fromStorage: { storedSessionId, storedPaymentIntent },
-        fullUrl: window.location.href,
-        search: location.search,
-        timestamp: new Date().toISOString(),
-        allParams: Object.fromEntries(urlParams.entries())
+      console.log("🔥 ORDER COMPLETE SEARCH:", {
+        sessionId, paymentIntentId, orderNumber, errorParam,
+        fullUrl: window.location.href
       });
       
       if (errorParam) {
@@ -45,163 +37,79 @@ const OrderComplete = () => {
       
       try {
         let foundOrder = null;
+        let attempts = 0;
+        const maxAttempts = 12; // Try for up to 60 seconds
         
-        // Build comprehensive search terms - include partial matches
-        const searchTerms = [
-          sessionId,
-          paymentIntentId,
-          storedSessionId,
-          storedPaymentIntent
-        ].filter(Boolean);
-        
+        const searchTerms = [sessionId, paymentIntentId].filter(Boolean);
         console.log("🔥 SEARCH TERMS:", searchTerms);
         
-        // STRATEGY 1: Direct search by session/payment ID with broader matching
-        for (const searchTerm of searchTerms) {
-          if (foundOrder) break;
+        // RETRY MECHANISM: Wait for order sync to complete
+        while (!foundOrder && attempts < maxAttempts) {
+          attempts++;
+          console.log(`🔥 ATTEMPT ${attempts}/${maxAttempts}`);
           
-          console.log(`🔥 SEARCHING BY ID: ${searchTerm}`);
+          // Search by session/payment ID
+          for (const searchTerm of searchTerms) {
+            if (foundOrder) break;
+            
+            const { data: orders, error } = await supabase
+              .from('customer_orders')
+              .select(`
+                *,
+                customer:customers(first_name, last_name, email)
+              `)
+              .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm}`)
+              .order('created_at', { ascending: false })
+              .limit(5);
+            
+            if (!error && orders?.length > 0) {
+              foundOrder = orders.find(o => o.customer_id) || orders[0];
+              console.log(`🔥 ✅ FOUND ORDER: #${foundOrder.order_number}`);
+              break;
+            }
+          }
           
-          // Search in both session_id and shopify_order_id fields
-          const { data: orders, error } = await supabase
-            .from('customer_orders')
-            .select(`
-              *,
-              customer:customers(first_name, last_name, email)
-            `)
-            .or(`session_id.eq.${searchTerm},shopify_order_id.eq.${searchTerm}`)
-            .order('created_at', { ascending: false })
-            .limit(10);
-          
-          console.log(`🔥 SEARCH RESULT for ${searchTerm}:`, { orders, error, count: orders?.length });
-          
-          if (!error && orders?.length > 0) {
-            // Prefer order with customer_id over NULL customer_id
-            foundOrder = orders.find(o => o.customer_id) || orders[0];
-            console.log(`🔥 ✅ FOUND BY ID ${searchTerm}: Order #${foundOrder.order_number}`, foundOrder);
-            break;
-          } else {
-            console.log(`🔥 ❌ NO ORDER FOUND BY ID: ${searchTerm}`, error);
+          // If not found and haven't hit max attempts, wait and retry
+          if (!foundOrder && attempts < maxAttempts) {
+            console.log(`🔥 Waiting 5 seconds before retry...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
           }
         }
         
-        // STRATEGY 2: Direct lookup by order_number
+        // FALLBACK: Try order number lookup
         if (!foundOrder && orderNumber) {
-          console.log(`🔥 SEARCHING BY ORDER_NUMBER: ${orderNumber}`);
-          const { data: orderNumberOrders, error: orderError } = await supabase
+          console.log(`🔥 FALLBACK: ORDER_NUMBER ${orderNumber}`);
+          const { data: orderNumberOrders, error } = await supabase
             .from('customer_orders')
-            .select(`
-              *,
-              customer:customers(first_name, last_name, email)
-            `)
+            .select(`*, customer:customers(first_name, last_name, email)`)
             .eq('order_number', orderNumber)
             .order('created_at', { ascending: false })
             .limit(1);
           
-          if (!orderError && orderNumberOrders?.length > 0) {
+          if (!error && orderNumberOrders?.length > 0) {
             foundOrder = orderNumberOrders[0];
-            console.log(`🔥 ✅ FOUND BY ORDER_NUMBER: Order #${foundOrder.order_number}`);
-          } else {
-            console.log("🔥 ❌ NO ORDER FOUND BY ORDER_NUMBER");
+            console.log(`🔥 ✅ FOUND BY ORDER_NUMBER: #${foundOrder.order_number}`);
           }
         }
         
-        // STRATEGY 3: Recent orders search with improved matching
+        // LAST RESORT: Get most recent order
         if (!foundOrder) {
-          console.log("🔥 SEARCHING RECENT ORDERS (last 30 minutes)");
-          const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-          
-          const { data: recentOrders, error: recentError } = await supabase
+          console.log("🔥 LAST RESORT: Most recent order");
+          const { data: lastOrder, error } = await supabase
             .from('customer_orders')
-            .select(`
-              *,
-              customer:customers(first_name, last_name, email)
-            `)
-            .gte('created_at', thirtyMinutesAgo)
-            .order('created_at', { ascending: false })
-            .limit(50);
-          
-          console.log(`🔥 RECENT ORDERS FOUND:`, recentOrders?.length || 0);
-          
-          if (!recentError && recentOrders?.length > 0) {
-            // Prefer orders with customer_id over NULL customer_id
-            const ordersWithCustomer = recentOrders.filter(o => o.customer_id);
-            const ordersToSearch = ordersWithCustomer.length > 0 ? ordersWithCustomer : recentOrders;
-            
-            // Try to match by stored cart data
-            const cartTotal = localStorage.getItem('lastCartTotal');
-            if (cartTotal && !foundOrder) {
-              const targetAmount = parseFloat(cartTotal);
-              const matchingOrder = ordersToSearch.find(order => 
-                Math.abs(order.total_amount - targetAmount) < 0.01
-              );
-              
-              if (matchingOrder) {
-                foundOrder = matchingOrder;
-                console.log(`🔥 ✅ MATCHED BY CART TOTAL: Order #${matchingOrder.order_number}`);
-              }
-            }
-            
-            // Try to match with localStorage order data
-            if (!foundOrder) {
-              const storedOrder = localStorage.getItem('partyondelivery_last_order');
-              if (storedOrder) {
-                try {
-                  const parsed = JSON.parse(storedOrder);
-                  console.log("🔥 COMPARING WITH STORED ORDER:", parsed);
-                  
-                  // Match by total amount or customer email
-                  const matchedOrder = ordersToSearch.find(order => 
-                    Math.abs(parseFloat(order.total_amount.toString()) - parseFloat(parsed.totalAmount || 0)) < 0.01
-                  );
-                  
-                  if (matchedOrder) {
-                    foundOrder = matchedOrder;
-                    console.log(`🔥 ✅ MATCHED WITH STORED ORDER: Order #${foundOrder.order_number}`);
-                  }
-                } catch (e) {
-                  console.log("🔥 Could not parse stored order data:", e);
-                }
-              }
-            }
-            
-            // If still no match, take the most recent order as fallback
-            if (!foundOrder && ordersToSearch.length > 0) {
-              foundOrder = ordersToSearch[0];
-              console.log(`🔥 ⚠️  USING MOST RECENT ORDER AS FALLBACK: Order #${foundOrder.order_number}`);
-            }
-          } else {
-            console.log("🔥 ❌ NO RECENT ORDERS FOUND", recentError);
-          }
-        }
-        
-        // STRATEGY 4: If still nothing found, get the absolute most recent order
-        if (!foundOrder) {
-          console.log("🔥 LAST RESORT: Getting most recent order");
-          const { data: lastOrder, error: lastError } = await supabase
-            .from('customer_orders')
-            .select(`
-              *,
-              customer:customers(first_name, last_name, email)
-            `)
+            .select(`*, customer:customers(first_name, last_name, email)`)
             .order('created_at', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
             
-          if (!lastError && lastOrder) {
+          if (!error && lastOrder) {
             foundOrder = lastOrder;
-            console.log(`🔥 ⚠️  USING ABSOLUTE LAST ORDER: Order #${foundOrder.order_number}`);
+            console.log(`🔥 ⚠️  USING MOST RECENT: #${foundOrder.order_number}`);
           }
         }
         
         if (foundOrder) {
-          console.log("🔥 ✅ FINAL ORDER FOUND:", {
-            orderNumber: foundOrder.order_number,
-            orderId: foundOrder.id,
-            sessionId: foundOrder.session_id,
-            shopifyId: foundOrder.shopify_order_id,
-            createdAt: foundOrder.created_at
-          });
+          console.log("🔥 ✅ FINAL ORDER FOUND:", foundOrder.order_number);
           
           // Generate group order name if missing
           if (!foundOrder.group_order_name && foundOrder.customer) {
@@ -214,7 +122,6 @@ const OrderComplete = () => {
                 .eq('id', foundOrder.id);
               
               foundOrder.group_order_name = groupName;
-              console.log(`🔥 UPDATED GROUP ORDER NAME: ${groupName}`);
             } catch (updateErr) {
               console.log("🔥 Could not update group order name:", updateErr);
             }
@@ -222,49 +129,18 @@ const OrderComplete = () => {
 
           setOrderData(foundOrder);
           
-          // Clean up localStorage
-          localStorage.removeItem('lastOrderSessionId');
-          localStorage.removeItem('lastPaymentIntent');
-          localStorage.removeItem('lastCartTotal');
-
-          // Cache for future reference
-          localStorage.setItem('lastCompletedOrder', JSON.stringify({
-            orderNumber: foundOrder.order_number,
-            sessionId: foundOrder.session_id,
-            customerName: foundOrder.customer?.first_name || 'Customer',
-            customerEmail: foundOrder.customer?.email,
-            line_items: foundOrder.line_items,
-            total_amount: foundOrder.total_amount,
-            delivery_date: foundOrder.delivery_date,
-            delivery_time: foundOrder.delivery_time,
-            delivery_address: foundOrder.delivery_address,
-            share_token: foundOrder.share_token,
-            group_order_name: foundOrder.group_order_name
-          }));
-
-          // Send confirmation email (don't wait for this)
-          supabase.functions.invoke('send-order-confirmation-email', {
-            body: {
-              orderNumber: foundOrder.order_number,
-              stripeSessionId: sessionId,
-              customerEmail: foundOrder.customer?.email,
-            }
-          }).catch(emailError => {
-            console.log('🔥 Email send failed (non-blocking):', emailError);
-          });
-          
           toast({
             title: "🎉 Order Complete!",
             description: `Order #${foundOrder.order_number} has been confirmed.`,
           });
           
         } else {
-          console.log("🔥 ❌ NO ORDER FOUND ANYWHERE - SHOWING ERROR");
+          console.log("🔥 ❌ NO ORDER FOUND ANYWHERE");
           setOrderData(null);
         }
         
       } catch (error: any) {
-        console.error('🔥 CRITICAL ERROR in loadOrderData:', error);
+        console.error('🔥 CRITICAL ERROR:', error);
         setOrderData(null);
         toast({
           title: "Error Loading Order",
@@ -285,6 +161,7 @@ const OrderComplete = () => {
         <div className="text-center">
           <LoadingSpinner />
           <p className="mt-4 text-muted-foreground">Loading your order details...</p>
+          <p className="text-sm text-muted-foreground mt-2">This may take up to 60 seconds...</p>
         </div>
       </div>
     );
