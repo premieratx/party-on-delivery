@@ -985,6 +985,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     "w-full justify-start text-left font-normal",
                                     !deliveryInfo.date && "text-muted-foreground"
                                   )}
+                                  onClick={() => console.log('📅 Date picker button clicked')}
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   {deliveryInfo.date ? (
@@ -994,11 +995,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                   )}
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
+                              <PopoverContent className="w-auto p-0 z-50 pointer-events-auto" align="start">
                                 <Calendar
                                   mode="single"
                                   selected={deliveryInfo.date || undefined}
                                   onSelect={(selectedDate) => {
+                                    console.log('📅 Date selected:', selectedDate);
                                     if (selectedDate) {
                                       updateDeliveryInfo('date', selectedDate);
                                       updateDeliveryInfo('timeSlot', ''); // Reset time when date changes
@@ -1012,7 +1014,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     return checkDay.getTime() < today.getTime();
                                   }}
                                   initialFocus
-                                  className="pointer-events-auto"
+                                  className="p-3 pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
