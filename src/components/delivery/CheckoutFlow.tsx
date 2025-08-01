@@ -421,7 +421,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         if (onDiscountChange) {
           onDiscountChange(null);
         }
-        }
       }
     }
   }, [deliveryDetailsMatch, appliedDiscount?.code, onDiscountChange, isAddingToOrder, affiliateCode, appliedDiscount]);
