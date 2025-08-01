@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -129,59 +130,92 @@ serve(async (req) => {
       tipFromMetadata: validTipAmount.toFixed(2)
     });
     
-    // CRITICAL FIX: Create a compact cart summary for metadata (Stripe limit: 500 chars per field)
-    // Store full cart data in a separate field that we'll pass to create-shopify-order
-    const cartItemsJson = JSON.stringify(cartItems);
-    logStep("Cart items data prepared", { cartItemsLength: cartItemsJson.length, itemCount });
+    logStep("Cart items data prepared", { 
+      cartItemsLength: JSON.stringify(cartItems).length,
+      itemCount 
+    });
+
+    // Extract customer and delivery information safely
+    const customerName = `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim();
+    const customerPhone = customerInfo?.phone || '';
+    const customerEmail = customerInfo?.email || '';
     
-    // Safely handle metadata to prevent errors
-    const customerName = `${customerInfo.firstName || ''} ${customerInfo.lastName || ''}`.trim();
-    const customerPhone = customerInfo.phone || '';
     const deliveryDate = deliveryInfo.date || '';
     const deliveryTime = deliveryInfo.timeSlot || '';
     const deliveryAddress = deliveryInfo.address || '';
     const deliveryInstructions = deliveryInfo.instructions || '';
     
-    // Create a very compact cart items string that fits in 500 chars
-    const compactCartItems = cartItems.map((item: any) => 
-      `${item.quantity}x${item.title.substring(0, 15)}`
-    ).join(',').substring(0, 450); // Keep well under 500 char limit
+    // CRITICAL: Store cart items in a separate database record due to Stripe metadata limits
+    // Then reference it in the payment intent
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+    
+    let cartDataId = null;
+    try {
+      const { data: cartRecord, error } = await supabase
+        .from('order_drafts')
+        .insert({
+          draft_data: {
+            cartItems,
+            customerInfo,
+            deliveryInfo,
+            appliedDiscount,
+            groupOrderToken,
+            groupOrderNumber
+          },
+          total_amount: validSubtotal + validDeliveryFee + validSalesTax + validTipAmount,
+          customer_email: customerEmail,
+          checkout_step: 'payment'
+        })
+        .select('id')
+        .single();
+        
+      if (!error && cartRecord) {
+        cartDataId = cartRecord.id;
+        logStep("Cart data stored in order_drafts", { cartDataId });
+      }
+    } catch (dbError) {
+      logStep("Warning: Could not store cart data", dbError);
+    }
     
     logStep("Preparing metadata for payment intent", { 
       customerName, 
       customerPhone, 
       deliveryDate, 
       deliveryTime,
-      compactCartItemsLength: compactCartItems.length
+      cartDataId
     });
 
-    // Create payment intent with essential metadata + full cart data as JSON
+    // Create payment intent with compact metadata (full data stored in order_drafts)
     const paymentIntent = await stripe.paymentIntents.create({
       amount: validAmount,
       currency,
       metadata: {
         customer_name: customerName.substring(0, 100),
-        customer_email: (customerInfo?.email || '').substring(0, 100),
+        customer_email: customerEmail.substring(0, 100),
         customer_phone: customerPhone.substring(0, 50),
         delivery_date: deliveryDate.substring(0, 50),
         delivery_time: deliveryTime.substring(0, 50),
         delivery_address: deliveryAddress.substring(0, 200),
         delivery_instructions: deliveryInstructions.substring(0, 200),
         cart_summary: cartSummary,
-        cart_items: JSON.stringify(cartItems), // CRITICAL: Full cart data for order processing
+        cart_data_id: cartDataId || '', // Reference to full cart data
         item_count: itemCount.toString(),
         subtotal: validSubtotal.toFixed(2),
         shipping_fee: validDeliveryFee.toFixed(2),
         sales_tax: validSalesTax.toFixed(2),
         tip_amount: validTipAmount.toFixed(2),
         total_amount: (validSubtotal + validDeliveryFee + validSalesTax + validTipAmount).toFixed(2),
-        discount_code: (appliedDiscount?.code || 'none').substring(0, 50),
-        discount_type: (appliedDiscount?.type || 'none').substring(0, 20),
+        discount_code: (appliedDiscount?.code || '').substring(0, 50),
+        discount_type: (appliedDiscount?.type || '').substring(0, 20),
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
         discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
         group_order_number: (groupOrderNumber || '').substring(0, 50),
         group_order_token: (groupOrderToken || '').substring(0, 50),
-        is_adding_to_order: groupOrderToken ? 'true' : 'false' // Flag for group order processing
+        is_adding_to_order: groupOrderToken ? 'true' : 'false'
       }
     });
 

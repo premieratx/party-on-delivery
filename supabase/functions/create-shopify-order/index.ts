@@ -68,37 +68,45 @@ serve(async (req) => {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not configured");
     }
 
-    // Parse cart items from metadata - with enhanced error handling for group orders
-    let cartItems;
-    try {
-      cartItems = JSON.parse(metadata?.cart_items || '[]');
-    } catch (parseError) {
-      logStep("Error parsing cart items JSON", { 
-        rawCartItems: metadata?.cart_items, 
-        parseError: parseError.message 
-      });
-      cartItems = [];
+    // Parse cart items from metadata - with database fallback for large orders
+    let cartItems = [];
+    
+    // First try to get cart data from order_drafts if referenced
+    if (metadata?.cart_data_id) {
+      try {
+        const supabaseClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+        
+        const { data: orderDraft, error } = await supabaseClient
+          .from('order_drafts')
+          .select('draft_data')
+          .eq('id', metadata.cart_data_id)
+          .single();
+          
+        if (!error && orderDraft?.draft_data?.cartItems) {
+          cartItems = orderDraft.draft_data.cartItems;
+          logStep("Cart items loaded from order_drafts", { 
+            cartDataId: metadata.cart_data_id,
+            itemCount: cartItems.length 
+          });
+        }
+      } catch (dbError) {
+        logStep("Failed to load cart data from database", dbError);
+      }
     }
     
-    // Additional metadata sources for cart items (group orders might store differently)
+    // Fallback: try to parse from metadata (for backward compatibility)
     if (!cartItems || cartItems.length === 0) {
-      // Try alternative metadata fields
-      if (metadata?.line_items) {
-        try {
-          cartItems = JSON.parse(metadata.line_items);
-          logStep("Found cart items in line_items metadata", { itemCount: cartItems.length });
-        } catch (e) {
-          logStep("Failed to parse line_items metadata", e);
+      try {
+        if (metadata?.cart_items) {
+          cartItems = JSON.parse(metadata.cart_items);
+          logStep("Cart items parsed from metadata", { itemCount: cartItems.length });
         }
-      }
-      
-      if ((!cartItems || cartItems.length === 0) && metadata?.items) {
-        try {
-          cartItems = JSON.parse(metadata.items);
-          logStep("Found cart items in items metadata", { itemCount: cartItems.length });
-        } catch (e) {
-          logStep("Failed to parse items metadata", e);
-        }
+      } catch (parseError) {
+        logStep("Failed to parse cart_items from metadata", parseError);
       }
     }
     
@@ -106,18 +114,16 @@ serve(async (req) => {
     if (!cartItems || cartItems.length === 0) {
       logStep("CRITICAL: No cart items found anywhere", { 
         availableMetadataKeys: Object.keys(metadata || {}),
-        cartItemsValue: metadata?.cart_items,
-        lineItemsValue: metadata?.line_items,
-        itemsValue: metadata?.items,
+        cartDataId: metadata?.cart_data_id,
         isGroupOrder: !!groupOrderToken,
         groupOrderToken
       });
-      throw new Error("No cart items found in payment metadata. Check metadata structure for group orders.");
+      throw new Error("No cart items found. Check order_drafts table and metadata structure.");
     }
     
-    logStep("Cart items successfully parsed", { 
+    logStep("Cart items successfully loaded", { 
       itemCount: cartItems.length,
-      source: metadata?.cart_items ? 'cart_items' : metadata?.line_items ? 'line_items' : 'items'
+      source: metadata?.cart_data_id ? 'order_drafts' : 'metadata'
     });
     
     const deliveryDate = metadata?.delivery_date;
