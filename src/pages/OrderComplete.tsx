@@ -26,29 +26,49 @@ const OrderComplete = () => {
         return;
       }
 
-      try {
-        // Use fetch instead of Supabase client to avoid type recursion
-        const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns';
-        
-        // Try multiple ways to find the order
-        let order = null;
-        
-        if (sessionId) {
-          // First try with stripe_session_id
-          const sessionUrl = `${supabaseUrl}/rest/v1/customer_orders?stripe_session_id=eq.${sessionId}&select=*`;
-          const sessionResponse = await fetch(sessionUrl, {
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          const sessionOrders = await sessionResponse.json();
-          order = sessionOrders[0];
+      // Add retry logic for timing issues - database might need a moment to sync
+      const maxRetries = 5;
+      let retryCount = 0;
+      let order = null;
+
+      while (retryCount < maxRetries && !order) {
+        try {
+          // Use fetch instead of Supabase client to avoid type recursion
+          const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
+          const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns';
           
-          // If not found, try with order_number from URL params
-          if (!order && orderNumber) {
+          console.log(`[OrderComplete] Attempt ${retryCount + 1}/${maxRetries} - Looking for order with sessionId: ${sessionId}, orderNumber: ${orderNumber}`);
+          
+          if (sessionId) {
+            // First try with stripe_session_id  
+            const sessionUrl = `${supabaseUrl}/rest/v1/customer_orders?stripe_session_id=eq.${sessionId}&select=*`;
+            const sessionResponse = await fetch(sessionUrl, {
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            const sessionOrders = await sessionResponse.json();
+            order = sessionOrders[0];
+            console.log(`[OrderComplete] Search by session_id result:`, order ? 'Found' : 'Not found');
+            
+            // If not found, try with order_number from URL params
+            if (!order && orderNumber) {
+              const orderUrl = `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
+              const orderResponse = await fetch(orderUrl, {
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+              const orders = await orderResponse.json();
+              order = orders[0];
+              console.log(`[OrderComplete] Search by order_number result:`, order ? 'Found' : 'Not found');
+            }
+          } else if (orderNumber) {
+            // Try with order_number
             const orderUrl = `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
             const orderResponse = await fetch(orderUrl, {
               headers: {
@@ -59,31 +79,42 @@ const OrderComplete = () => {
             });
             const orders = await orderResponse.json();
             order = orders[0];
+            console.log(`[OrderComplete] Search by order_number only result:`, order ? 'Found' : 'Not found');
           }
-        } else if (orderNumber) {
-          // Try with order_number
-          const orderUrl = `${supabaseUrl}/rest/v1/customer_orders?order_number=eq.${orderNumber}&select=*`;
-          const orderResponse = await fetch(orderUrl, {
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          const orders = await orderResponse.json();
-          order = orders[0];
-        }
 
-        if (!order) {
-          toast({
-            title: "Order Not Found",
-            description: "Could not find order details.",
-            variant: "destructive",
-          });
-          return;
+          if (!order) {
+            retryCount++;
+            if (retryCount < maxRetries) {
+              console.log(`[OrderComplete] Order not found, waiting 1 second before retry ${retryCount + 1}/${maxRetries}`);
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
+          }
+        } catch (fetchError) {
+          console.error(`[OrderComplete] Error on attempt ${retryCount + 1}:`, fetchError);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
+      }
 
+      if (!order) {
+        console.error(`[OrderComplete] Failed to find order after ${maxRetries} attempts`);
+        toast({
+          title: "Order Not Found",
+          description: "Could not find order details. Please check your order number or contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log(`[OrderComplete] Order found successfully:`, order.order_number);
+
+      try {
         // Get customer data
+        const supabaseUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns';
+        
         const customerResponse = await fetch(`${supabaseUrl}/rest/v1/customers?id=eq.${order.customer_id}&select=*`, {
           headers: {
             'apikey': supabaseKey,
