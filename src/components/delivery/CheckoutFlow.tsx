@@ -544,9 +544,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   };
 
   const handlePaymentSuccess = async (paymentIntentId?: string) => {
+    console.log("🔥 PAYMENT SUCCESS - Starting order creation", { paymentIntentId });
+    
     // Create Shopify order after successful payment
     if (paymentIntentId) {
       try {
+        console.log("🔥 CALLING create-shopify-order with:", {
+          paymentIntentId,
+          customerEmail: customerInfo.email,
+          customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+          deliveryAddress: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
+          cartItemsCount: cartItems.length,
+          finalTotal,
+          affiliateCode
+        });
+
         const response = await supabase.functions.invoke('create-shopify-order', {
           body: { 
             paymentIntentId,
@@ -569,8 +581,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           }
         });
         
+        console.log("🔥 CREATE-SHOPIFY-ORDER RESPONSE:", response);
+        
+        if (response.error) {
+          console.error("🔥 ERROR from create-shopify-order:", response.error);
+          throw new Error(`Order creation failed: ${response.error.message || response.error}`);
+        }
+        
         if (response.data?.order) {
           const orderNumber = response.data.order.order_number || response.data.order.id;
+          console.log("🔥 ORDER CREATED SUCCESSFULLY:", {
+            orderNumber,
+            orderId: response.data.order.id,
+            shopifyOrderId: response.data.shopifyOrderId
+          });
+          
           const orderInfo = {
             orderNumber,
             total: finalTotal,
@@ -614,12 +639,31 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             pageContext: 'order-completion'
           });
           
+          console.log("🔥 NAVIGATING TO ORDER COMPLETE:", {
+            url: `/order-complete?order_number=${orderNumber}&session_id=${paymentIntentId}`,
+            orderNumber,
+            sessionId: paymentIntentId
+          });
+          
           // Navigate with order details for proper loading
           navigate(`/order-complete?order_number=${orderNumber}&session_id=${paymentIntentId}`);
           return; // Early return to prevent the default navigation
+        } else {
+          console.error("🔥 NO ORDER DATA IN RESPONSE:", response.data);
+          throw new Error("No order data received from order creation");
         }
       } catch (error) {
-        console.error('Failed to create Shopify order:', error);
+        console.error('🔥 CRITICAL ERROR in handlePaymentSuccess:', error);
+        console.error('🔥 ERROR DETAILS:', {
+          message: error.message,
+          stack: error.stack,
+          paymentIntentId,
+          customerInfo,
+          cartItems: cartItems.length
+        });
+        
+        // Still navigate to avoid getting stuck, but with error info
+        navigate(`/order-complete?error=creation_failed&session_id=${paymentIntentId}`);
       }
     }
     

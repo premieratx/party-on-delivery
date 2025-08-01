@@ -15,8 +15,29 @@ const OrderComplete = () => {
       const urlParams = new URLSearchParams(location.search);
       const sessionId = urlParams.get('session_id');
       const orderNumber = urlParams.get('order_number');
+      const errorParam = urlParams.get('error');
+      
+      console.log("🔥 ORDER COMPLETE PAGE LOADED:", {
+        currentUrl: window.location.href,
+        sessionId,
+        orderNumber,
+        errorParam,
+        allParams: Object.fromEntries(urlParams.entries())
+      });
+      
+      if (errorParam) {
+        console.log("🔥 ERROR PARAMETER DETECTED:", errorParam);
+        setIsLoading(false);
+        toast({
+          title: "Order Processing Error",
+          description: "There was an issue creating your order. Please contact support.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       if (!sessionId && !orderNumber) {
+        console.log("🔥 NO SESSION ID OR ORDER NUMBER - MISSING PARAMS");
         setIsLoading(false);
         toast({
           title: "Order Not Found",
