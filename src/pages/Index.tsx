@@ -16,8 +16,12 @@ const Index = () => {
     const urlParams = new URLSearchParams(location.search);
     const shareToken = urlParams.get('share');
     
-    // Only show modal for share links if user isn't already in group mode
-    if (shareToken && !localStorage.getItem('groupOrderToken')) {
+    console.log('🔗 Index.tsx: Checking for share token:', shareToken);
+    console.log('🔗 Group order token in localStorage:', localStorage.getItem('groupOrderToken'));
+    
+    // Show modal for share links - always load if share token exists
+    if (shareToken) {
+      console.log('🔗 Loading group order details for token:', shareToken);
       loadGroupOrderDetails(shareToken);
     }
   }, [location.search]);
@@ -33,8 +37,9 @@ const Index = () => {
           customer:customers(first_name, last_name, email)
         `)
         .eq('share_token', shareToken)
-        .eq('is_shareable', true)
         .maybeSingle();
+
+      console.log('🔗 Group order query result:', { orderData, error });
 
       if (error) throw error;
       

@@ -38,8 +38,10 @@ export const GroupOrderConfirmationModal: React.FC<GroupOrderConfirmationModalPr
 }) => {
   if (!orderDetails) return null;
 
+  // Format delivery date properly - ensure we're in Central Time
+  const deliveryDate = new Date(orderDetails.delivery_date);
   const formattedDate = format(
-    toZonedTime(new Date(orderDetails.delivery_date), 'America/Chicago'), 
+    toZonedTime(deliveryDate, 'America/Chicago'), 
     'EEEE, MMMM do, yyyy'
   );
 
