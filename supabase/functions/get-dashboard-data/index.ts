@@ -105,11 +105,11 @@ async function getAdminDashboardData(supabase: any): Promise<DashboardData> {
   logStep("Fetching admin dashboard data");
 
   // Get all orders with customer details
-  const { data: orders, error: ordersError } = await supabase
+  const { data: allOrders, error: ordersError } = await supabase
     .from('customer_orders')
     .select(`
       *,
-      customers!inner(
+      customers(
         id,
         email,
         first_name,
@@ -120,9 +120,27 @@ async function getAdminDashboardData(supabase: any): Promise<DashboardData> {
       )
     `)
     .order('created_at', { ascending: false })
-    .limit(100);
+    .limit(200); // Get more to filter duplicates
 
   if (ordersError) throw ordersError;
+
+  // Remove duplicates by keeping only one record per session_id/shopify_order_id
+  const ordersMap = new Map();
+  allOrders?.forEach(order => {
+    const key = order.session_id || order.shopify_order_id || order.id;
+    const existing = ordersMap.get(key);
+    
+    // Prefer orders with customer_id set, or the most recent one
+    if (!existing || 
+        (order.customer_id && !existing.customer_id) ||
+        (order.customer_id === existing.customer_id && new Date(order.created_at) > new Date(existing.created_at))) {
+      ordersMap.set(key, order);
+    }
+  });
+  
+  const orders = Array.from(ordersMap.values())
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 100); // Take only the first 100 after deduplication
 
   // Get all customers with stats
   const { data: customers, error: customersError } = await supabase
@@ -208,7 +226,7 @@ async function getCustomerDashboardData(supabase: any, customerEmail: string): P
     .select('*')
     .order('created_at', { ascending: false });
 
-  // Build comprehensive filter for all related orders
+  // Build comprehensive filter for all related orders, ensuring we only get unique orders
   const filters = [`customer_id.eq.${customer.id}`];
   
   // Add session tokens if they exist
@@ -251,9 +269,27 @@ async function getCustomerDashboardData(supabase: any, customerEmail: string): P
     });
   }
   
-  const { data: orders, error: ordersError } = await ordersQuery.or(filters.join(','));
+  const { data: allOrders, error: ordersError } = await ordersQuery.or(filters.join(','));
 
   if (ordersError) throw ordersError;
+
+  // Remove duplicates by keeping only one record per session_id/shopify_order_id
+  const ordersMap = new Map();
+  allOrders?.forEach(order => {
+    const key = order.session_id || order.shopify_order_id || order.id;
+    const existing = ordersMap.get(key);
+    
+    // Prefer orders with customer_id set, or the most recent one
+    if (!existing || 
+        (order.customer_id && !existing.customer_id) ||
+        (order.customer_id === existing.customer_id && new Date(order.created_at) > new Date(existing.created_at))) {
+      ordersMap.set(key, order);
+    }
+  });
+  
+  const orders = Array.from(ordersMap.values()).sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   // Get recent addresses
   const { data: addresses, error: addressesError } = await supabase
