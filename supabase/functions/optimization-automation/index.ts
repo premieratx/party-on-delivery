@@ -1143,6 +1143,9 @@ async function initializeMonitoring(): Promise<OptimizationResult> {
         critical_errors: 'Immediate Telegram/email alerts',
         performance_degradation: 'Threshold-based monitoring',
         business_metrics: 'Daily/weekly summary reports'
+      }
+    }
+  };
 }
 
 async function validateCheckoutProcess(): Promise<OptimizationResult> {
