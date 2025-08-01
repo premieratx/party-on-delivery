@@ -547,6 +547,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     console.log("🔥 PAYMENT SUCCESS - Starting order creation", { paymentIntentId });
     
     // Store checkout completion data IMMEDIATELY for instant order confirmation
+    // Generate share token for group orders - every order can be shared
+    const shareToken = crypto.randomUUID();
+    
     const checkoutCompletionData = {
       cartItems,
       totalAmount: finalTotal,
@@ -563,6 +566,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       deliveryTime: deliveryInfo.timeSlot,
       appliedDiscount,
       paymentIntentId,
+      shareToken, // Add share token for group order functionality
       timestamp: new Date().toISOString()
     };
     

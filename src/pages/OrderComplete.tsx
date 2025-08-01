@@ -49,7 +49,7 @@ const OrderComplete = () => {
             delivery_date: parsedData.deliveryDate,
             delivery_time: parsedData.deliveryTime,
             delivery_address: parsedData.deliveryAddress,
-            share_token: null, // Will be updated when real order loads
+            share_token: parsedData.shareToken || null, // Get share token from checkout
             group_order_name: null,
             customer: {
               first_name: parsedData.customerName?.split(' ')[0] || 'Customer',

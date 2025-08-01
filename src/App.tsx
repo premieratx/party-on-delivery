@@ -34,7 +34,7 @@ import { CustomCollectionCreator } from "./pages/CustomCollectionCreator";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
-import TestGroupOrders from "./pages/TestGroupOrders";
+import TestGroupOrderFlow from "./pages/TestGroupOrderFlow";
 import GroupOrderShareLanding from "./pages/GroupOrderShareLanding";
 
 const queryClient = new QueryClient({
@@ -97,7 +97,7 @@ const App = () => {
                   <Route path="/product-search" element={<ProductSearch />} />
                   
                   {/* Test Routes */}
-                  <Route path="/test-group-orders" element={<TestGroupOrders />} />
+              <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />
                   
                   {/* Concierge Service Route */}
                   <Route path="/concierge" element={<ConciergeService />} />
