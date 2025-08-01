@@ -11,8 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';  
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+
+import { SimpleDatePicker } from './SimpleDatePicker';
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -211,7 +212,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   } = checkoutFlow;
 
   // Local UI state
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  
   const [emailError, setEmailError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   
@@ -910,71 +911,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     
                     <CardContent className="space-y-4">
                       <div className="space-y-4">
-                         <div className="space-y-2">
-                           <Label>Delivery Date *</Label>
-                            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !deliveryInfo.date && "text-muted-foreground"
-                                  )}
-                                  onClick={() => {
-                                    console.log('📅 Calendar button clicked, opening calendar');
-                                    setIsCalendarOpen(true);
-                                  }}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                   {deliveryInfo.date ? formatDeliveryDate(
-                                     deliveryInfo.date instanceof Date ? deliveryInfo.date.toISOString().split('T')[0] : deliveryInfo.date, 
-                                     "EEEE, PPP"
-                                   ) : "Pick a date"}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 z-50" align="start" style={{ pointerEvents: 'auto' }}>
-                                <div style={{ pointerEvents: 'auto' }}>
-                                  <Calendar
-                                    mode="single"
-                                    selected={deliveryInfo.date || undefined}
-                                     onSelect={(date) => {
-                                       console.log('📅 Calendar date selected:', date);
-                                       if (date) {
-                                         // Handle the complex date object structure from react-day-picker
-                                         let actualDate: Date;
-                                         if ((date as any)._type === "Date" && (date as any).value) {
-                                           // Extract from complex structure
-                                           const complexDate = date as any;
-                                           actualDate = new Date(complexDate.value.iso || complexDate.value.value);
-                                         } else if (date instanceof Date) {
-                                           actualDate = date;
-                                         } else {
-                                           actualDate = new Date(date as any);
-                                         }
-                                         
-                                         console.log('📅 Extracted actual date:', actualDate);
-                                         const dateString = actualDate.toISOString();
-                                         console.log('📅 Storing as ISO string:', dateString);
-                                         updateDeliveryInfo('date', dateString);
-                                         updateDeliveryInfo('timeSlot', '');
-                                         setIsCalendarOpen(false);
-                                         console.log('📅 Date selection completed successfully');
-                                     }
-                                    }}
-                                    disabled={(date) => {
-                                      const today = new Date();
-                                      today.setHours(0, 0, 0, 0);
-                                      const checkDay = new Date(date);
-                                      checkDay.setHours(0, 0, 0, 0);
-                                      return checkDay.getTime() < today.getTime();
-                                    }}
-                                    initialFocus
-                                    fromDate={new Date()}
-                                  />
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                         </div>
+                          <SimpleDatePicker
+                            value={deliveryInfo.date}
+                            onChange={(date) => updateDeliveryInfo('date', date)}
+                            onTimeSlotReset={() => updateDeliveryInfo('timeSlot', '')}
+                          />
 
                          <div className="space-y-2">
                            <Label>Delivery Time *</Label>
