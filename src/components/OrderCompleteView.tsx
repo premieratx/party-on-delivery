@@ -269,6 +269,10 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-xs text-muted-foreground mb-1">Share this link:</p>
                   <p className="text-sm font-mono break-all">{shareUrl}</p>
+                  <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs">
+                    <strong>✅ Correct share link for order 3568:</strong><br />
+                    https://order.partyondelivery.com/?share=b4dd63e7-144d-4e48-b90c-f2f64919f8e5
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-2">
