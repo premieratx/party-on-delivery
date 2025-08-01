@@ -145,8 +145,11 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                       !date && "text-muted-foreground"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a delivery date</span>}
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(
+                    toZonedTime(date, 'America/Chicago'), 
+                    "EEEE, PPP"
+                  ) : <span>Pick a delivery date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">

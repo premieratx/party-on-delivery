@@ -757,7 +757,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         <div>• Address: {originalOrderInfo.address}</div>
                       )}
                       {originalOrderInfo?.deliveryDate && (
-                        <div>• Date: {format(new Date(originalOrderInfo.deliveryDate), "EEEE, MMMM do")}</div>
+                        <div>• Date: {format(
+                          toZonedTime(new Date(originalOrderInfo.deliveryDate), 'America/Chicago'), 
+                          "EEEE, MMMM do, yyyy"
+                        )}</div>
                       )}
                       {originalOrderInfo?.deliveryTime && (
                         <div>• Time: {originalOrderInfo.deliveryTime}</div>
@@ -784,7 +787,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         <div>
                           <span className="text-xs font-medium text-green-800">Delivery Time: </span>
                           <span className="text-xs text-green-700">
-                            {format(new Date(deliveryInfo.date!), 'MMM d')} at {deliveryInfo.timeSlot}
+                            {format(
+                              toZonedTime(new Date(deliveryInfo.date!), 'America/Chicago'), 
+                              'EEEE, MMM d'
+                            )} at {deliveryInfo.timeSlot}
                           </span>
                         </div>
                       </div>
@@ -892,7 +898,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {deliveryInfo.date ? format(deliveryInfo.date, "PPP") : "Pick a date"}
+                                {deliveryInfo.date ? format(
+                                  toZonedTime(deliveryInfo.date, 'America/Chicago'), 
+                                  "EEEE, PPP"
+                                ) : "Pick a date"}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 z-50 bg-background" align="start">

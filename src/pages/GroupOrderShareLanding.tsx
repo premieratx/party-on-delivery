@@ -6,6 +6,8 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, MapPin, Users, Clock, CheckCircle, X } from 'lucide-react';
+import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 interface GroupOrder {
   id: string;
@@ -163,13 +165,10 @@ const GroupOrderShareLanding = () => {
     );
   }
 
-  const deliveryDate = new Date(order.delivery_date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'America/Chicago' // CST
-  });
+  const deliveryDate = format(
+    toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 
+    'EEEE, MMMM do, yyyy'
+  );
 
   const customerFullName = `${order.customers?.first_name || ''} ${order.customers?.last_name || ''}`.trim();
   const totalParticipants = 1 + (order.group_participants?.length || 0);

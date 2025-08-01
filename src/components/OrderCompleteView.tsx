@@ -7,6 +7,7 @@ import { ShareIcon, CopyIcon, MessageCircle, Facebook, Instagram, CheckCircle, C
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { format } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 interface OrderCompleteViewProps {
   orderNumber: string;
@@ -157,7 +158,12 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
                     <Calendar className="w-4 h-4" />
                     Delivery Date:
                   </span>
-                  <span>{new Date(deliveryDate + 'T00:00:00').toLocaleDateString()}</span>
+                  <span>
+                    {format(
+                      toZonedTime(new Date(deliveryDate), 'America/Chicago'), 
+                      'EEEE, MMMM do, yyyy'
+                    )}
+                  </span>
                 </div>
               )}
               
