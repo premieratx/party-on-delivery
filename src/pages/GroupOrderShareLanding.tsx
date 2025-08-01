@@ -33,15 +33,23 @@ const GroupOrderShareLanding = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Debug logging
-  console.log('GroupOrderShareLanding mounted with shareToken:', shareToken);
-  console.log('Current URL:', window.location.href);
+  console.log('🔥 GroupOrderShareLanding mounted with shareToken:', shareToken);
+  console.log('🔥 Current URL:', window.location.href);
+  console.log('🔥 URL pathname:', window.location.pathname);
+  console.log('🔥 URL search params:', window.location.search);
+  console.log('🔥 useParams result:', useParams());
 
   useEffect(() => {
+    console.log('🔥 useEffect triggered, shareToken:', shareToken);
+    console.log('🔥 shareToken type:', typeof shareToken);
+    console.log('🔥 shareToken length:', shareToken?.length);
+    
     if (shareToken) {
-      console.log('Loading group order for token:', shareToken);
+      console.log('🔥 Loading group order for token:', shareToken);
       loadGroupOrder();
     } else {
-      console.error('No shareToken found in URL params');
+      console.error('🔥 No shareToken found in URL params');
+      console.error('🔥 This means the route parameter extraction failed');
       setIsLoading(false);
     }
   }, [shareToken]);
