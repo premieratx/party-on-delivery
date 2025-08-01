@@ -53,6 +53,9 @@ export function optimizeInputs() {
     input.setAttribute('autocorrect', 'off');
     input.setAttribute('autocapitalize', 'off');
     input.setAttribute('spellcheck', 'false');
+    
+    // Ensure minimum font size to prevent zoom
+    (input as HTMLElement).style.fontSize = Math.max(16, parseInt(getComputedStyle(input).fontSize)) + 'px';
   });
 }
 
@@ -63,19 +66,23 @@ export function enableMobileMemoryOptimization() {
     const images = document.querySelectorAll('img');
     images.forEach(img => {
       const rect = img.getBoundingClientRect();
-      const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+      const isVisible = rect.top < window.innerHeight + 100 && rect.bottom > -100;
       
-      if (!isVisible && img.src) {
+      if (!isVisible && img.src && !img.dataset.originalSrc) {
         // Keep the src in data attribute for later loading
         img.dataset.originalSrc = img.src;
-        img.src = '';
+        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmMGYwZjAiLz48L3N2Zz4=';
+      } else if (isVisible && img.dataset.originalSrc && !img.src.startsWith('http')) {
+        // Restore image when it becomes visible
+        img.src = img.dataset.originalSrc;
+        delete img.dataset.originalSrc;
       }
     });
   };
 
   // Run cleanup periodically on mobile
   if (window.innerWidth < 768) {
-    setInterval(clearUnusedImages, 30000); // Every 30 seconds
+    setInterval(clearUnusedImages, 15000); // Every 15 seconds
   }
 }
 
@@ -98,6 +105,27 @@ export function handleOrientationChange() {
   handleResize();
 }
 
+// Optimize touch interactions
+export function optimizeTouchInteractions() {
+  // Add touch-action CSS to prevent unwanted behaviors
+  document.documentElement.style.touchAction = 'manipulation';
+  
+  // Improve button touch targets
+  const buttons = document.querySelectorAll('button, [role="button"]');
+  buttons.forEach(button => {
+    const element = button as HTMLElement;
+    const computedStyle = getComputedStyle(element);
+    const minSize = 44; // Minimum touch target size in pixels
+    
+    if (parseInt(computedStyle.height) < minSize) {
+      element.style.minHeight = `${minSize}px`;
+    }
+    if (parseInt(computedStyle.width) < minSize) {
+      element.style.minWidth = `${minSize}px`;
+    }
+  });
+}
+
 // Preload critical resources for faster initial load
 export function preloadCriticalResources() {
   // Note: Images should be imported as ES6 modules where used
@@ -114,6 +142,7 @@ export function initializeMobileOptimizations() {
   if (isMobile) {
     preventZoom();
     enableMobileMemoryOptimization();
+    optimizeTouchInteractions();
   }
   
   optimizeScrolling();

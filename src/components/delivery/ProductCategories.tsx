@@ -587,6 +587,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </div>
             </div>
           </div>
+          
+          {/* Mobile Search Icon - positioned below tabs */}
+          <div className="sm:hidden flex justify-center pt-2">
+            <SearchIcon size="sm" variant="tabs" />
+          </div>
         </div>
 
         {/* Section Heading with functional arrows */}
