@@ -356,12 +356,35 @@ export function useCustomerInfo() {
     email: ''
   });
 
-  const [addressInfo, setAddressInfoState] = useState<AddressInfo>({
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    instructions: ''
+  const [addressInfo, setAddressInfoState] = useState<AddressInfo>(() => {
+    // Check for group order prefill data first
+    const prefillData = localStorage.getItem('prefill_delivery_data');
+    if (prefillData) {
+      try {
+        const parsed = JSON.parse(prefillData);
+        if (parsed.address) {
+          console.log('🔗 PREFILLING address from group order:', parsed.address);
+          return {
+            street: parsed.address.street || '',
+            city: parsed.address.city || '',
+            state: parsed.address.state || '',
+            zipCode: parsed.address.zipCode || '',
+            instructions: ''
+          };
+        }
+      } catch (error) {
+        console.error('Error parsing prefill address:', error);
+      }
+    }
+    
+    // Fallback to empty state
+    return {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      instructions: ''
+    };
   });
 
   // Only try to load stored data once if user hasn't started typing

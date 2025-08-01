@@ -68,9 +68,24 @@ const Index = () => {
   const handleJoinGroup = () => {
     if (!groupOrderDetails) return;
     
-    // Store group order token and set up for group ordering
+    // Store group order token for backend processing
     localStorage.setItem('groupOrderToken', groupOrderDetails.share_token);
     localStorage.setItem('partyondelivery_add_to_order', 'true');
+    
+    // PREFILL delivery details from original order
+    const originalOrder = groupOrderDetails;
+    localStorage.setItem('prefill_delivery_data', JSON.stringify({
+      date: originalOrder.delivery_date,
+      timeSlot: originalOrder.delivery_time,
+      address: originalOrder.delivery_address
+    }));
+    
+    // Store original group order data for completion routing
+    localStorage.setItem('originalGroupOrderData', JSON.stringify({
+      shareToken: groupOrderDetails.share_token,
+      orderNumber: groupOrderDetails.order_number,
+      customerName: groupOrderDetails.customer?.first_name || 'Customer'
+    }));
     
     // Apply free shipping for group orders
     localStorage.setItem('partyondelivery_applied_discount', JSON.stringify({
@@ -87,7 +102,7 @@ const Index = () => {
     
     toast({
       title: "Joined Group Order!",
-      description: "Free delivery applied. Your items will be delivered together.",
+      description: `Free delivery applied. Your items will be delivered with ${groupOrderDetails.customer?.first_name || 'the group'}.`,
     });
   };
 

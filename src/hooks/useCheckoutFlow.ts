@@ -33,96 +33,42 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
     console.log('onDeliveryInfoChange called with newInfo');
   };
 
-  // Pre-fill with data - but ONLY if the current storage is empty
+  // Pre-fill with group order data
   useEffect(() => {
     console.log('=== useCheckoutFlow pre-fill effect ===');
-    console.log('Current customerInfo:', customerInfo);
-    console.log('Current addressInfo:', addressInfo);
     
-    // Check for group order data
-    const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
-    const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
+    // Check for group order prefill data
+    const prefillData = localStorage.getItem('prefill_delivery_data');
+    if (prefillData) {
+      try {
+        const parsed = JSON.parse(prefillData);
+        console.log('🔗 PREFILLING delivery info from group order:', parsed);
+        
+        // Update delivery date and time
+        if (parsed.date) {
+          updateDeliveryInfo('date', new Date(parsed.date));
+        }
+        if (parsed.timeSlot) {
+          updateDeliveryInfo('timeSlot', parsed.timeSlot);
+        }
+        
+        // Mark datetime as confirmed if we have both
+        if (parsed.date && parsed.timeSlot) {
+          setConfirmedDateTime(true);
+        }
+        
+        // Clear prefill data after using it
+        localStorage.removeItem('prefill_delivery_data');
+      } catch (error) {
+        console.error('Error parsing prefill delivery data:', error);
+      }
+    }
     
     // For add-to-order flow, save the original info for change tracking
     if (isAddingToOrder && lastOrderInfo) {
       setOriginalOrderInfo(lastOrderInfo);
       console.log('Set original order info for add-to-order flow:', lastOrderInfo);
     }
-    
-    // Pre-fill delivery date and time for new users or when empty
-    if (!deliveryInfo.date || !deliveryInfo.timeSlot) {
-      let sourceData = null;
-      
-      // If joining a group order, use the original group order data for EXACT matching
-      if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {
-        try {
-          const groupData = JSON.parse(originalGroupOrderData);
-          console.log('Using original group order data for exact matching:', groupData);
-          sourceData = {
-            deliveryDate: groupData.deliveryDate,
-            deliveryTime: groupData.deliveryTime,
-            deliveryAddress: groupData.deliveryAddress
-          };
-          
-          // Pre-fill address info for group orders
-          if (groupData.deliveryAddress) {
-            const addr = groupData.deliveryAddress;
-            setAddressInfo({
-              street: addr.street || '',
-              city: addr.city || '',
-              state: addr.state || '',
-              zipCode: addr.zipCode || '',
-              instructions: addr.instructions || ''
-            });
-          }
-        } catch (error) {
-          console.error('Error parsing group order data:', error);
-        }
-      }
-      
-      // Fallback to regular order data
-      if (!sourceData) {
-        const draftOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-        console.log('draftOrder for delivery info:', draftOrder);
-        sourceData = (isAddingToOrder && lastOrderInfo?.recentpurchase) ? lastOrderInfo : draftOrder;
-      }
-      
-      if (sourceData?.deliveryDate && sourceData?.deliveryTime) {
-        try {
-          const savedDate = new Date(sourceData.deliveryDate);
-          const now = new Date();
-          
-          // For group orders, always use the exact date/time (don't check if future)
-          // For regular orders, only prefill if in the future
-          const shouldPrefill = groupOrderJoinDecision === 'yes' || 
-            (!isNaN(savedDate.getTime()) && savedDate > now);
-          
-          if (shouldPrefill) {
-            console.log('Pre-filling delivery date:', savedDate);
-            updateDeliveryInfo('date', savedDate);
-            
-            if (sourceData.deliveryTime) {
-              console.log('Pre-filling delivery time:', sourceData.deliveryTime);
-              updateDeliveryInfo('timeSlot', sourceData.deliveryTime);
-            }
-          } else {
-            console.log('Saved date/time is in the past, forcing user to select new date/time');
-          }
-        } catch (error) {
-          console.error('Error parsing delivery date:', error);
-        }
-      } else {
-        console.log('No saved delivery data, user must select date/time');
-      }
-    }
-    
-    // Always start at datetime step for proper flow
-    setCurrentStep('datetime');
-    setConfirmedDateTime(false);
-    setConfirmedAddress(false);
-    setConfirmedCustomer(false);
-    
-    console.log('=== End useCheckoutFlow pre-fill ===');
   }, []); // Remove dependency to prevent infinite loops - run once on mount
 
   // Update delivery info when address changes

@@ -107,11 +107,24 @@ const OrderComplete = () => {
             // Update with real order data if found (for share token, etc.)
             if (foundOrder) {
               console.log("🔥 ✅ BACKGROUND SYNC COMPLETE:", foundOrder.order_number);
-              setOrderData(prev => ({
-                ...prev,
+              
+              // Check if this was a group order join - route to group dashboard
+              const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
+              const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
+              
+              const updatedOrderData = {
+                ...instantOrderData,
                 ...foundOrder,
-                order_number: foundOrder.order_number || prev.order_number
-              }));
+                order_number: foundOrder.order_number || instantOrderData.order_number
+              };
+              
+              // If user joined a group order, mark it for group dashboard routing
+              if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {
+                updatedOrderData.isGroupOrderJoin = true;
+                updatedOrderData.originalGroupData = JSON.parse(originalGroupOrderData);
+              }
+              
+              setOrderData(updatedOrderData);
             }
           }, 1000); // Start background sync after 1 second
           

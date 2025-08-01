@@ -300,7 +300,30 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
         <div className="space-y-4">
           <div className="flex gap-4 justify-center">
             <Button 
-              onClick={() => window.location.href = '/customer-login'}
+              onClick={() => {
+                // Check if this was a group order join
+                const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
+                const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
+                
+                if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {
+                  // Route to group order dashboard
+                  try {
+                    const groupData = JSON.parse(originalGroupOrderData);
+                    if (groupData.shareToken) {
+                      // Clear localStorage after successful routing
+                      localStorage.removeItem('groupOrderJoinDecision');
+                      localStorage.removeItem('originalGroupOrderData');
+                      window.location.href = `/order/${groupData.shareToken}`;
+                      return;
+                    }
+                  } catch (error) {
+                    console.error('Error parsing group order data:', error);
+                  }
+                }
+                
+                // Default to individual customer dashboard
+                window.location.href = '/customer-login';
+              }}
               variant="outline"
             >
               Manage Order
