@@ -963,8 +963,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             {/* Step-by-Step Forms - Mobile optimized */}
             <div className="space-y-3 md:space-y-6">
                
-                {/* Date/Time Section - Always show and always editable */}
-                {true && (
+                {/* Combined Date/Time + Contact Information Section */}
+                {(!confirmedDateTime || currentStep === 'datetime') && (
                   <Card className={`shadow-card ${currentStep === 'datetime' ? 'border-2 border-green-500' : 'border'}`}>
                     <CardHeader>
                       <CardTitle className="text-lg flex items-center gap-2">
@@ -1126,25 +1126,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           </div>
                         </div>
                         
-                        <Button 
-                          onClick={() => {
-                            // Validate customer info first
-                            const emailErr = getEmailErrorMessage(customerInfo.email || '');
-                            const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
-                            
-                            setEmailError(emailErr);
-                            setPhoneError(phoneErr);
-                            
-                            if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim() && isDateTimeComplete) {
-                              setConfirmedCustomer(true);
-                              handleConfirmDateTime();
-                            }
-                          }}
-                          disabled={!isDateTimeComplete || !customerInfo.firstName?.trim() || !customerInfo.lastName?.trim() || !customerInfo.email?.trim() || !customerInfo.phone?.trim()}
-                          className="w-full"
-                        >
-                          Confirm Date & Contact Info
-                        </Button>
+                         <Button 
+                           onClick={() => {
+                             // Validate customer info first
+                             const emailErr = getEmailErrorMessage(customerInfo.email || '');
+                             const phoneErr = getPhoneErrorMessage(customerInfo.phone || '');
+                             
+                             setEmailError(emailErr);
+                             setPhoneError(phoneErr);
+                             
+                             if (!emailErr && !phoneErr && customerInfo.firstName?.trim() && customerInfo.lastName?.trim() && isDateTimeComplete) {
+                               setConfirmedDateTime(true);
+                               setCurrentStep('address');
+                             }
+                           }}
+                           disabled={!isDateTimeComplete || !customerInfo.firstName?.trim() || !customerInfo.lastName?.trim() || !customerInfo.email?.trim() || !customerInfo.phone?.trim()}
+                           className="w-full"
+                         >
+                           Continue to Address
+                         </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1236,13 +1236,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           />
                         </div>
                         
-                        <Button 
-                          onClick={handleConfirmAddress}
-                          disabled={!isAddressComplete}
-                          className="w-full"
-                        >
-                          Confirm Address
-                        </Button>
+                         <Button 
+                           onClick={() => {
+                             setConfirmedAddress(true);
+                             setCurrentStep('payment');
+                           }}
+                           disabled={!isAddressComplete}
+                           className="w-full"
+                         >
+                           Continue to Payment
+                         </Button>
                         </div>
                      </CardContent>
                    </Card>
