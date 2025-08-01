@@ -324,8 +324,17 @@ serve(async (req) => {
           price: salesTax.toString(),
           rate: 0.0825
         }] : [],
-        // Standard line items only (no tip as separate line item)
-        line_items: lineItems,
+        // Add tip as a line item if present
+        line_items: tipAmount > 0 ? [
+          ...lineItems,
+          {
+            title: "Driver Tip (Gratuity)",
+            price: tipAmount.toString(),
+            quantity: 1,
+            requires_shipping: false,
+            custom: true
+          }
+        ] : lineItems,
         // Apply discount codes properly
         ...(discountCode && discountAmount && {
           discount_codes: [{
