@@ -458,6 +458,13 @@ export const ProductSearch = () => {
                   className="group hover:shadow-lg transition-shadow duration-200"
                 >
                   <CardContent className="p-2 sm:p-4 h-full flex flex-col">
+                    {/* Backend Only: Category Badge */}
+                    {window.location.hostname === 'localhost' && (
+                      <Badge variant="secondary" className="mb-2 text-xs">
+                        {product.category}
+                      </Badge>
+                    )}
+                    
                     {/* Product Image */}
                     <div className="relative mb-2 sm:mb-3 flex-shrink-0">
                       <OptimizedImage
@@ -512,9 +519,6 @@ export const ProductSearch = () => {
                         )}
                       </div>
                     </div>
-                    
-                    {/* Hidden category for backend reference only */}
-                    <div className="hidden" data-category={product.category}></div>
                   </CardContent>
                 </Card>
               );
