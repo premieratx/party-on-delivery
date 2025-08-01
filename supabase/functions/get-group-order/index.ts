@@ -14,10 +14,17 @@ serve(async (req) => {
   try {
     console.log('get-group-order function called');
     
-    const body = await req.json();
-    console.log('Request body:', body);
-    
-    const { shareToken } = body;
+    // Handle both POST and GET requests
+    let shareToken;
+    if (req.method === 'POST') {
+      const body = await req.json();
+      console.log('Request body:', body);
+      shareToken = body.shareToken;
+    } else if (req.method === 'GET') {
+      const url = new URL(req.url);
+      shareToken = url.searchParams.get('shareToken');
+      console.log('Query param shareToken:', shareToken);
+    }
     
     if (!shareToken) {
       console.error('No shareToken provided');

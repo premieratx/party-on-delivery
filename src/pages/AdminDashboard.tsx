@@ -29,6 +29,7 @@ import {
 import { formatCurrency } from '@/utils/currency';
 import AITestingControl from '@/components/AITestingControl';
 import TelegramBotSetup from '@/components/TelegramBotSetup';
+import CleanupUserData from '@/components/CleanupUserData';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -240,6 +241,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="ai-testing">🤖 AI Testing</TabsTrigger>
               <TabsTrigger value="bot-setup">🤖 Bot Setup</TabsTrigger>
+              <TabsTrigger value="cleanup">🗑️ Cleanup</TabsTrigger>
             </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -527,6 +529,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="bot-setup" className="space-y-4">
             <TelegramBotSetup />
+          </TabsContent>
+
+          <TabsContent value="cleanup" className="space-y-4">
+            <CleanupUserData />
           </TabsContent>
         </Tabs>
       </div>
