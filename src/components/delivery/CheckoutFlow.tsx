@@ -928,7 +928,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                   ) : "Pick a date"}
                                </Button>
                              </PopoverTrigger>
-                             <PopoverContent className="w-auto p-0 z-50 bg-popover border" align="start">
+                              <PopoverContent className="w-auto p-0 z-50 bg-popover border pointer-events-auto" align="start">
                                 <Calendar
                                   mode="single"
                                   selected={deliveryInfo.date || undefined}
@@ -966,11 +966,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     
                                     return isBeforeToday;
                                   }}
-                                 initialFocus
-                                 className={cn("p-3 pointer-events-auto")}
-                               />
-                             </PopoverContent>
-                           </Popover>
+                                  initialFocus
+                                  fromDate={new Date()}
+                                />
+                              </PopoverContent>
+                            </Popover>
                          </div>
 
                          <div className="space-y-2">
