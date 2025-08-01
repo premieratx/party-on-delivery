@@ -982,7 +982,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    "w-full justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal bg-background",
                                     !deliveryInfo.date && "text-muted-foreground"
                                   )}
                                 >
@@ -994,22 +994,21 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                   )}
                                 </Button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
+                              <PopoverContent className="w-auto p-0 bg-background border shadow-md z-50" align="start">
                                 <Calendar
                                   mode="single"
                                   selected={deliveryInfo.date instanceof Date ? deliveryInfo.date : deliveryInfo.date ? new Date(deliveryInfo.date) : undefined}
                                   onSelect={(selectedDate) => {
                                     console.log('📅 Date selected:', selectedDate);
-                                    console.log('📅 Current deliveryInfo.date before update:', deliveryInfo.date);
                                     if (selectedDate) {
-                                      console.log('📅 Calling updateDeliveryInfo with:', selectedDate);
-                                      updateDeliveryInfo('date', selectedDate);
-                                      updateDeliveryInfo('timeSlot', ''); // Reset time when date changes
-                                      console.log('📅 Called updateDeliveryInfo');
-                                      // Force re-render by updating parent directly too
-                                      const newInfo = { ...deliveryInfo, date: selectedDate, timeSlot: '' };
-                                      onDeliveryInfoChange(newInfo);
-                                      console.log('📅 Updated parent deliveryInfo:', newInfo);
+                                      // Simple, direct state update - no hooks confusion
+                                      const updatedDeliveryInfo = { 
+                                        ...deliveryInfo, 
+                                        date: selectedDate, 
+                                        timeSlot: '' // Reset time when date changes
+                                      };
+                                      onDeliveryInfoChange(updatedDeliveryInfo);
+                                      console.log('📅 Updated delivery info:', updatedDeliveryInfo);
                                     }
                                   }}
                                   disabled={(date) => {
@@ -1020,7 +1019,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                     return checkDay.getTime() < today.getTime();
                                   }}
                                   initialFocus
-                                  className={cn("p-3 pointer-events-auto")}
+                                  className="p-3 pointer-events-auto"
                                 />
                               </PopoverContent>
                             </Popover>
