@@ -62,7 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (customerError) throw customerError;
 
     // Generate share URL
-    const shareUrl = `${req.headers.get('origin') || 'https://partyondelivery.com'}/shared-order/${order.share_token}`;
+    const shareUrl = `${req.headers.get('origin') || 'https://partyondelivery.com'}/join/${order.share_token}`;
 
     // Render the email template
     const emailHtml = await renderAsync(
