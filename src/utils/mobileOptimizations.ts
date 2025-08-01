@@ -100,18 +100,9 @@ export function handleOrientationChange() {
 
 // Preload critical resources for faster initial load
 export function preloadCriticalResources() {
-  const criticalImages = [
-    '/hero-party-austin.jpg'
-    // Note: party-on-delivery-logo.png should be imported as ES6 module where used
-  ];
-
-  criticalImages.forEach(src => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = src;
-    document.head.appendChild(link);
-  });
+  // Note: Images should be imported as ES6 modules where used
+  // The hero image is imported in ProductCategories.tsx as heroPartyAustin
+  // No longer preloading images from here to avoid 404 errors
 }
 
 // Initialize all mobile optimizations
