@@ -874,6 +874,7 @@ export type Database = {
           delivery_fee: number | null
           delivery_time: string | null
           group_order_id: string | null
+          group_order_name: string | null
           group_participants: Json | null
           id: string
           is_group_order: boolean | null
@@ -901,6 +902,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_time?: string | null
           group_order_id?: string | null
+          group_order_name?: string | null
           group_participants?: Json | null
           id?: string
           is_group_order?: boolean | null
@@ -928,6 +930,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_time?: string | null
           group_order_id?: string | null
+          group_order_name?: string | null
           group_participants?: Json | null
           id?: string
           is_group_order?: boolean | null
