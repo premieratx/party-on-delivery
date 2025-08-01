@@ -50,7 +50,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
   useEffect(() => {
     if (shareToken) {
       const baseUrl = window.location.origin;
-      setShareUrl(`${baseUrl}/shared-order?token=${shareToken}`);
+      setShareUrl(`${baseUrl}/?share=${shareToken}`);
     }
   }, [shareToken]);
 
