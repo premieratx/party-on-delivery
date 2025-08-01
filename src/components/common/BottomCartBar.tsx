@@ -43,7 +43,8 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           </span>
           <Button
             onClick={onCheckout}
-            className="bg-green-600 hover:bg-green-700"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            data-checkout-trigger="true"
           >
             Checkout
           </Button>

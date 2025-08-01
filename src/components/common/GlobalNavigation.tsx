@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ShoppingCart, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 
@@ -96,24 +96,45 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
     }
   };
 
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      // Navigate to home if cart is empty
+      navigate('/');
+      return;
+    }
+    
+    // If we're on the main delivery app, trigger checkout
+    if (location.pathname === '/' || location.pathname === '') {
+      // Try to find and click the checkout button in the current page
+      const checkoutButton = document.querySelector('[data-checkout-trigger]') as HTMLButtonElement;
+      if (checkoutButton) {
+        checkoutButton.click();
+        return;
+      }
+    }
+    
+    // Navigate to checkout page with cart data
+    navigate('/?step=checkout');
+  };
+
   return (
     <div className={cn(
       "fixed bottom-0 left-0 right-0 z-50",
       "bg-background/95 backdrop-blur border-t shadow-lg",
-      "flex items-center justify-between px-2 sm:px-4 py-2",
+      "flex items-center justify-between px-1 sm:px-4 py-2",
       "h-14", // Fixed height for consistency
       className
     )}>
       {/* Left: Back/Forward Navigation */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 sm:gap-1">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
           disabled={!canGoBack}
-          className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
+          className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[60px] sm:min-w-auto"
         >
-          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
           <span className="hidden sm:inline">Back</span>
         </Button>
         
@@ -122,31 +143,44 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
           size="sm"
           onClick={handleForward}
           disabled={!canGoForward}
-          className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
+          className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[60px] sm:min-w-auto"
         >
           <span className="hidden sm:inline">Next</span>
-          <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1" />
+          <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 sm:ml-1" />
         </Button>
       </div>
 
-      {/* Center: Page indicator */}
-      <div className="text-xs text-muted-foreground hidden sm:block">
+      {/* Center: Page indicator (hidden on small screens to save space) */}
+      <div className="text-xs text-muted-foreground hidden md:block">
         {currentIndex + 1} / {history.length}
       </div>
 
-      {/* Right: Home and Cart */}
-      <div className="flex items-center gap-1">
+      {/* Right: Home and Checkout */}
+      <div className="flex items-center gap-0.5 sm:gap-1">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleHome}
-          className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
+          className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[60px] sm:min-w-auto"
         >
-          <Home className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+          <Home className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
           <span className="hidden sm:inline">Home</span>
         </Button>
 
-        {/* Cart buttons removed - now using bottom cart bar */}
+        {/* Checkout Button - Always visible when there are items in cart */}
+        {cartItems.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCheckout}
+            className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[70px] sm:min-w-auto bg-primary/10 hover:bg-primary/20"
+            data-checkout-global="true"
+          >
+            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Checkout</span>
+            <span className="sm:hidden">Pay</span>
+          </Button>
+        )}
       </div>
     </div>
   );

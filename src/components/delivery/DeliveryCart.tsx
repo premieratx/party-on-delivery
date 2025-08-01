@@ -218,11 +218,12 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                 <Button 
                   variant="delivery" 
                   size="xl" 
-                  className="w-full"
+                  className="w-full h-12 text-lg font-semibold"
                   onClick={() => {
                     onCheckout();
                     onClose(); // Always close cart when proceeding to checkout
                   }}
+                  data-checkout-trigger="true"
                 >
                   Proceed to Checkout
                 </Button>
