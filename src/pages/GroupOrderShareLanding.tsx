@@ -124,6 +124,13 @@ const GroupOrderShareLanding = () => {
       orderNumber: order?.order_number,
       shareToken: shareToken
     };
+    
+    // Store for prefilling delivery info
+    localStorage.setItem('prefillDeliveryInfo', JSON.stringify({
+      date: new Date(order?.delivery_date + 'T12:00:00'), // Add noon to prevent timezone issues
+      timeSlot: order?.delivery_time,
+      address: order?.delivery_address
+    }));
     localStorage.setItem('originalGroupOrderData', JSON.stringify(originalOrderData));
     
     // Generate and store group discount code
@@ -193,8 +200,9 @@ const GroupOrderShareLanding = () => {
     );
   }
 
+  // Fix date handling to prevent day-earlier display
   const deliveryDate = format(
-    toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 
+    new Date(order.delivery_date + 'T12:00:00'), // Add noon time to prevent timezone shifting
     'EEEE, MMMM do, yyyy'
   );
 

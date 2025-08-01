@@ -44,8 +44,23 @@ const timeSlots = [
 const CST_TIMEZONE = 'America/Chicago';
 
 export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete, deliveryInfo }) => {
-  // Pre-select date, ensuring it's not in the past
+  // Check for prefilled group order delivery info
   const [date, setDate] = useState<Date | undefined>(() => {
+    // First check for prefilled group order data
+    const prefillData = localStorage.getItem('prefillDeliveryInfo');
+    if (prefillData) {
+      try {
+        const parsedData = JSON.parse(prefillData);
+        console.log('🎯 Found prefilled delivery info:', parsedData);
+        if (parsedData.date) {
+          return new Date(parsedData.date);
+        }
+      } catch (error) {
+        console.error('Error parsing prefilled delivery info:', error);
+      }
+    }
+    
+    // Fall back to saved delivery info
     if (deliveryInfo.date) {
       const savedDate = new Date(deliveryInfo.date);
       const today = new Date();
@@ -61,7 +76,25 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
     // Pre-select today if no date saved
     return new Date();
   });
-  const [timeSlot, setTimeSlot] = useState(deliveryInfo.timeSlot);
+  
+  const [timeSlot, setTimeSlot] = useState(() => {
+    // First check for prefilled group order data
+    const prefillData = localStorage.getItem('prefillDeliveryInfo');
+    if (prefillData) {
+      try {
+        const parsedData = JSON.parse(prefillData);
+        console.log('🎯 Found prefilled time slot:', parsedData.timeSlot);
+        if (parsedData.timeSlot) {
+          return parsedData.timeSlot;
+        }
+      } catch (error) {
+        console.error('Error parsing prefilled delivery info:', error);
+      }
+    }
+    
+    // Fall back to saved delivery info
+    return deliveryInfo.timeSlot;
+  });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Get current time in CST
@@ -125,7 +158,7 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
               Choose your preferred delivery date and time
             </p>
             <p className="text-sm text-amber-600 dark:text-amber-500">
-              Same-day delivery available with 1-hour advance notice. We're closed Sundays.
+              Same-day delivery available with 1-hour advance notice.
             </p>
           </CardHeader>
           
@@ -162,28 +195,24 @@ export const DeliveryScheduler: React.FC<DeliverySchedulerProps> = ({ onComplete
                       setIsCalendarOpen(false);
                     }}
                     disabled={(checkDate) => {
-                      // Simple and robust date validation
+                      // Simple and robust date validation - only disable past dates
                       const today = new Date();
                       today.setHours(0, 0, 0, 0); // Reset time to start of day
                       
                       const checkDay = new Date(checkDate);
                       checkDay.setHours(0, 0, 0, 0); // Reset time to start of day
                       
-                      // Check if it's Sunday (0 = Sunday)
-                      const isSunday = checkDate.getDay() === 0;
-                      
-                      // Check if the date is before today (not including today)
+                      // Only check if the date is before today (not including today)
                       const isBeforeToday = checkDay.getTime() < today.getTime();
                       
                       console.log('📅 Calendar validation:', {
                         date: checkDate.toDateString(),
                         today: today.toDateString(),
-                        isSunday,
                         isBeforeToday,
-                        disabled: isBeforeToday || isSunday
+                        disabled: isBeforeToday
                       });
                       
-                      return isBeforeToday || isSunday;
+                      return isBeforeToday;
                     }}
                     initialFocus
                     className="pointer-events-auto"

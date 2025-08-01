@@ -12,7 +12,7 @@ export const TimeSelector: React.FC<TimeSelectorProps> = ({ value, onChange, tim
     <div className="space-y-2">
       <Label>Delivery Time *</Label>
       <p className="text-xs text-muted-foreground">
-        Same-day delivery available with 1-hour advance notice. We're closed Sundays.
+        Same-day delivery available with 1-hour advance notice.
       </p>
       {/* Use native select for maximum reliability across all user types */}
       <select
