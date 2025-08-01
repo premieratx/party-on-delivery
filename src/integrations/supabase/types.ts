@@ -2337,9 +2337,28 @@ export type Database = {
         Args: { template_name_param: string }
         Returns: Json
       }
+      find_group_order_by_token: {
+        Args: { p_share_token: string }
+        Returns: {
+          order_id: string
+          order_number: string
+          delivery_date: string
+          delivery_time: string
+          delivery_address: Json
+          customer_name: string
+          customer_email: string
+          total_amount: number
+          is_active: boolean
+          group_participants: Json
+        }[]
+      }
       generate_affiliate_code: {
         Args: { company_name: string }
         Returns: string
+      }
+      get_group_order_details: {
+        Args: { p_share_token: string }
+        Returns: Json
       }
       join_group_order: {
         Args: {
