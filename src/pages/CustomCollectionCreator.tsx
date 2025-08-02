@@ -292,16 +292,35 @@ export default function CustomCollectionCreator() {
   // Get product with modifications applied
   const getProductWithModifications = (product: Product): Product => {
     const modification = productModifications.find(m => 
-      m.shopify_product_id === product.id && !m.synced_to_shopify
+      m.shopify_product_id === product.id
     );
     
     if (!modification) return product;
 
-    return {
+    // Create modified product with new values
+    const modifiedProduct = {
       ...product,
       category: modification.category || product.category,
       productType: modification.product_type || product.productType,
     };
+
+    // Handle collections - if there's a new collection, add it to existing ones (max 3)
+    if (modification.collection) {
+      const existingCollections = product.collections || [];
+      const newCollectionExists = existingCollections.some(c => c.title === modification.collection);
+      
+      if (!newCollectionExists) {
+        // Add new collection, limit to 3 total
+        const updatedCollections = [
+          { id: `new-${modification.collection}`, title: modification.collection, handle: modification.collection.toLowerCase().replace(/\s+/g, '-') },
+          ...existingCollections
+        ].slice(0, 3);
+        
+        modifiedProduct.collections = updatedCollections;
+      }
+    }
+
+    return modifiedProduct;
   };
 
   // Helper function to check if product has modifications
