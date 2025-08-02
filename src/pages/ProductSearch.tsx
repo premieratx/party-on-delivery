@@ -552,7 +552,7 @@ export const ProductSearch = () => {
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
+                                    className="w-0.5 h-0.5 sm:w-1 sm:h-1 md:w-1.5 md:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
@@ -585,33 +585,33 @@ export const ProductSearch = () => {
                       {/* Add to Cart Button - Centered */}
                       <div className="mt-auto flex justify-center">
                         {quantity > 0 ? (
-                          <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-1 sm:p-2 min-w-[80px] sm:min-w-[100px]">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleQuantityChange(product, -1)}
-                              className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-primary-foreground/20 rounded-full"
-                            >
-                              <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                            </Button>
-                            <span className="text-xs sm:text-sm font-medium mx-2">{quantity}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleQuantityChange(product, 1)}
-                              className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-primary-foreground/20 rounded-full"
-                            >
-                              <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                            </Button>
-                          </div>
+                           <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-0.5 sm:p-1 md:p-2 min-w-[60px] sm:min-w-[80px] md:min-w-[100px]">
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => handleQuantityChange(product, -1)}
+                               className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 p-0 hover:bg-primary-foreground/20 rounded-full"
+                             >
+                               <Minus className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3" />
+                             </Button>
+                             <span className="text-[10px] sm:text-xs md:text-sm font-medium mx-1 sm:mx-2">{quantity}</span>
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => handleQuantityChange(product, 1)}
+                               className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 p-0 hover:bg-primary-foreground/20 rounded-full"
+                             >
+                               <Plus className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3" />
+                             </Button>
+                           </div>
                         ) : (
-                          <Button
-                            onClick={() => handleAddToCart(product)}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center p-0"
-                            size="sm"
-                          >
-                            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                          </Button>
+                           <Button
+                             onClick={() => handleAddToCart(product)}
+                             className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center p-0"
+                             size="sm"
+                           >
+                             <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4" />
+                           </Button>
                         )}
                       </div>
                     </div>
