@@ -64,6 +64,12 @@ const GroupOrderDashboard = () => {
 
   const loadGroupOrderData = async () => {
     try {
+      // Skip loading if shareToken is not a valid UUID format
+      if (!shareToken || shareToken === 'continuation' || shareToken.length < 30) {
+        console.log('Invalid share token, skipping group order load:', shareToken);
+        return;
+      }
+
       // Load the main group order
       const { data: orderData, error } = await supabase
         .from('customer_orders')
