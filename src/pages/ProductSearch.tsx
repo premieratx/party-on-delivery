@@ -421,7 +421,7 @@ export const ProductSearch = () => {
                   <RadioGroupItem 
                     value={category.id} 
                     id={category.id} 
-                    className="w-4 h-4 flex-shrink-0 border border-muted-foreground [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
+                    className="w-0.5 h-0.5 sm:w-1 sm:h-1 md:w-1.5 md:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
                   />
                   <Label htmlFor={category.id} className="text-sm cursor-pointer whitespace-nowrap">
                     {category.label}
@@ -548,7 +548,7 @@ export const ProductSearch = () => {
                               className="space-y-0.5"
                             >
                               {product.variants.map(variant => (
-                                <div key={variant.id} className="flex items-center space-x-1.5 overflow-hidden">
+                                <div key={variant.id} className="flex items-center justify-start md:justify-center space-x-1.5 overflow-hidden">
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
@@ -556,7 +556,7 @@ export const ProductSearch = () => {
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
-                                    className="text-[13px] sm:text-[15px] cursor-pointer flex-1 leading-tight text-left"
+                                    className="text-[13px] sm:text-[15px] cursor-pointer flex-1 leading-tight text-left md:text-center"
                                   >
                                     <span className="block truncate text-foreground">{variant.size}</span>
                                     <span className="block text-green-600 font-medium">${variant.price.toFixed(2)}</span>
