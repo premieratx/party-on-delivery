@@ -487,63 +487,122 @@ export default function CustomCollectionCreator() {
             <CardHeader>
               <CardTitle>Products ({filteredProducts.length} total)</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p>Loading products...</p>
+                <div className="flex items-center justify-center py-8">
+                  <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                  Loading products...
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No products found matching your criteria.
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Select All */}
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="select-all"
-                      checked={selectedProducts.size === filteredProducts.length && filteredProducts.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                    <Label htmlFor="select-all" className="font-medium">
-                      Select All ({filteredProducts.length} products)
-                    </Label>
-                  </div>
-
-                  {/* Products Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredProducts.map((product) => (
-                      <div key={product.id} className="border rounded-lg p-4 space-y-3">
-                        <div className="flex items-start space-x-2">
-                          <Checkbox
-                            id={`product-${product.id}`}
-                            checked={selectedProducts.has(product.id)}
-                            onCheckedChange={() => toggleProduct(product.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-medium text-sm truncate">{product.title}</h3>
-                              {hasModification(product.id) && (
-                                <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                                  Modified
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="space-y-1 text-xs text-muted-foreground">
-                              <p>Category: {product.category || 'None'}</p>
-                              <p>Type: {product.productType || 'None'}</p>
-                              <p>Vendor: {product.vendor || 'None'}</p>
-                              {product.price && <p>Price: ${product.price}</p>}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {filteredProducts.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No products found matching your filters.
+                <div>
+                  {/* Table Header */}
+                  <div className="flex items-center gap-3 p-4 border-b bg-muted/50 font-medium text-sm">
+                    <div className="w-8">
+                      <Checkbox
+                        checked={selectedProducts.size > 0 && selectedProducts.size === filteredProducts.length}
+                        onCheckedChange={toggleSelectAll}
+                        className="w-5 h-5"
+                      />
                     </div>
-                  )}
+                    <div className="w-16">Image</div>
+                    <div className="flex-1 min-w-[200px]">Product</div>
+                    <div className="w-32">Category</div>
+                    <div className="w-32">Product Type</div>
+                    <div className="w-20">Price</div>
+                    <div className="w-24">Vendor</div>
+                    <div className="w-20">Status</div>
+                  </div>
+
+                  {/* Product Rows */}
+                  {filteredProducts.map((product) => (
+                    <div 
+                      key={product.id}
+                      className={`flex items-center gap-3 p-4 border-b hover:bg-muted/30 transition-colors ${
+                        selectedProducts.has(product.id) ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <div className="w-8">
+                        <Checkbox
+                          checked={selectedProducts.has(product.id)}
+                          onCheckedChange={() => toggleProduct(product.id)}
+                          className="w-5 h-5"
+                        />
+                      </div>
+                      
+                      {/* Image */}
+                      <div className="w-16">
+                        {product.image && (
+                          <img 
+                            src={product.image} 
+                            alt={product.title}
+                            className="w-12 h-12 object-cover rounded border"
+                          />
+                        )}
+                      </div>
+
+                      {/* Product Title */}
+                      <div className="flex-1 min-w-[200px]">
+                        <h3 className="font-medium text-sm mb-1 leading-tight">
+                          {product.title}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          ID: {product.id.split('/').pop()}
+                        </p>
+                      </div>
+
+                      {/* Category */}
+                      <div className="w-32">
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs bg-purple-100 text-purple-800 border-purple-200"
+                        >
+                          {product.category || 'None'}
+                        </Badge>
+                      </div>
+
+                      {/* Product Type */}
+                      <div className="w-32">
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs bg-green-100 text-green-800 border-green-200"
+                        >
+                          {product.productType || 'None'}
+                        </Badge>
+                      </div>
+
+                      {/* Price */}
+                      <div className="w-20">
+                        <span className="font-medium text-sm">${product.price || '0'}</span>
+                      </div>
+
+                      {/* Vendor */}
+                      <div className="w-24">
+                        <Badge 
+                          variant="outline" 
+                          className="text-xs bg-orange-50 text-orange-700 border-orange-200"
+                        >
+                          {product.vendor || 'Unknown'}
+                        </Badge>
+                      </div>
+
+                      {/* Status */}
+                      <div className="w-20">
+                        {hasModification(product.id) && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs bg-blue-100 text-blue-800 border-blue-200"
+                          >
+                            Modified
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
