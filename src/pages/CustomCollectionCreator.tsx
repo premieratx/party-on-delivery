@@ -280,6 +280,13 @@ export default function CustomCollectionCreator() {
     };
   };
 
+  // Helper function to check if product has modifications
+  const hasModification = (productId: string) => {
+    return productModifications.some(m => 
+      m.shopify_product_id === productId && !m.synced_to_shopify
+    );
+  };
+
   // Filter products based on active tab
   const filteredProducts = useMemo(() => {
     let filtered = allProducts.map(getProductWithModifications).filter(product => {
@@ -319,11 +326,6 @@ export default function CustomCollectionCreator() {
     setSelectedProducts(newSelected);
   };
 
-  const hasModification = (productId: string) => {
-    return productModifications.some(m => 
-      m.shopify_product_id === productId && !m.synced_to_shopify
-    );
-  };
 
   return (
     <div className="min-h-screen bg-background">
