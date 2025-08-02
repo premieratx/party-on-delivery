@@ -318,8 +318,11 @@ export default function CustomCollectionCreator() {
 
       toast({
         title: "Success",
-        description: `Successfully synced ${data.syncedCount} products to app! Categories and collections updated.`,
+        description: `Successfully synced ${data.syncedCount} products to app! Categories and collections updated. Refresh delivery app page to see changes.`,
       });
+
+      // Clear cached collections to force delivery app refresh
+      localStorage.removeItem('shopify-collections-cache');
 
       console.log('App sync completed:', data);
 
@@ -655,7 +658,7 @@ export default function CustomCollectionCreator() {
                   }}
                   className="flex items-center gap-2"
                 >
-                  Unsorted ({allProducts.filter(p => !hasModification(p.id)).length})
+                  Unsorted ({allProducts.filter(p => !hasModification(p.id) && !isSynced(p.id) && !isAppSynced(p.id)).length})
                 </Button>
                  <Button
                    variant={activeTab === 'sorted' ? 'default' : 'outline'}
