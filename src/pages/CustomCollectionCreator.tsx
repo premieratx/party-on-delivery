@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Search, ArrowLeft, RefreshCw, Save } from 'lucide-react';
+import { Search, ArrowLeft, RefreshCw, Save, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +35,7 @@ interface ProductModification {
   product_type?: string;
   collection?: string;
   synced_to_shopify: boolean;
+  app_synced: boolean;
 }
 
 export default function CustomCollectionCreator() {
@@ -48,7 +49,8 @@ export default function CustomCollectionCreator() {
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'unsorted' | 'sorted' | 'synced'>('unsorted');
+  const [activeTab, setActiveTab] = useState<'unsorted' | 'sorted' | 'synced' | 'app-synced'>('unsorted');
+  const [appSyncing, setAppSyncing] = useState(false);
   
   // Dropdown states with simple string values
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -289,6 +291,50 @@ export default function CustomCollectionCreator() {
     }
   };
 
+  // Sync products to app
+  const syncToApp = async () => {
+    const shopifySyncedMods = productModifications.filter(m => m.synced_to_shopify && !m.app_synced);
+    if (shopifySyncedMods.length === 0) {
+      toast({
+        title: "Info",
+        description: "No Shopify-synced products to sync to app.",
+      });
+      return;
+    }
+
+    setAppSyncing(true);
+    try {
+      console.log('Starting app sync for products:', shopifySyncedMods);
+      
+      const { data, error } = await supabase.functions.invoke('sync-products-to-app');
+      
+      if (error) throw error;
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to sync products to app');
+      }
+
+      await loadProductModifications();
+
+      toast({
+        title: "Success",
+        description: `Successfully synced ${data.syncedCount} products to app! Categories and collections updated.`,
+      });
+
+      console.log('App sync completed:', data);
+
+    } catch (error) {
+      console.error('Error syncing to app:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sync products to app.",
+        variant: "destructive"
+      });
+    } finally {
+      setAppSyncing(false);
+    }
+  };
+
   // Get product with modifications applied
   const getProductWithModifications = (product: Product): Product => {
     const modification = productModifications.find(m => 
@@ -330,10 +376,17 @@ export default function CustomCollectionCreator() {
     );
   };
 
-  // Helper function to check if product is synced
+  // Helper function to check if product is synced to Shopify
   const isSynced = (productId: string) => {
     return productModifications.some(m => 
-      m.shopify_product_id === productId && m.synced_to_shopify
+      m.shopify_product_id === productId && m.synced_to_shopify && !m.app_synced
+    );
+  };
+
+  // Helper function to check if product is synced to app
+  const isAppSynced = (productId: string) => {
+    return productModifications.some(m => 
+      m.shopify_product_id === productId && m.synced_to_shopify && m.app_synced
     );
   };
 
@@ -349,17 +402,21 @@ export default function CustomCollectionCreator() {
       // Tab filtering based on modification and sync status
       const hasUnsyncedModification = hasModification(product.id);
       const isProductSynced = isSynced(product.id);
+      const isProductAppSynced = isAppSynced(product.id);
       
       let matchesTab = false;
       if (activeTab === 'unsorted') {
         // Show products with no modifications and not synced
-        matchesTab = !hasUnsyncedModification && !isProductSynced;
+        matchesTab = !hasUnsyncedModification && !isProductSynced && !isProductAppSynced;
       } else if (activeTab === 'sorted') {
         // Show products with unsynced modifications
         matchesTab = hasUnsyncedModification;
       } else if (activeTab === 'synced') {
-        // Show synced products
+        // Show products synced to Shopify but not app
         matchesTab = isProductSynced;
+      } else if (activeTab === 'app-synced') {
+        // Show products synced to app
+        matchesTab = isProductAppSynced;
       }
       
       return matchesSearch && matchesCategory && matchesProductType && matchesTab;
@@ -422,6 +479,16 @@ export default function CustomCollectionCreator() {
                 >
                   <Save className="w-4 h-4" />
                   {syncing ? 'Syncing...' : `Sync ${unsyncedCount} to Shopify`}
+                </Button>
+              )}
+              {productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length > 0 && (
+                <Button 
+                  onClick={syncToApp}
+                  disabled={appSyncing}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Smartphone className="w-4 h-4" />
+                  {appSyncing ? 'Syncing...' : `Sync ${productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length} to App`}
                 </Button>
               )}
               <Button 
@@ -600,16 +667,26 @@ export default function CustomCollectionCreator() {
                  >
                    Sorted ({productModifications.filter(m => !m.synced_to_shopify).length})
                  </Button>
-                 <Button
-                   variant={activeTab === 'synced' ? 'default' : 'outline'}
-                   onClick={() => {
-                     setActiveTab('synced');
-                     setSelectedProducts(new Set());
-                   }}
-                   className="flex items-center gap-2"
-                 >
-                   Synced ({productModifications.filter(m => m.synced_to_shopify).length})
-                 </Button>
+                  <Button
+                    variant={activeTab === 'synced' ? 'default' : 'outline'}
+                    onClick={() => {
+                      setActiveTab('synced');
+                      setSelectedProducts(new Set());
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    Synced ({productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length})
+                  </Button>
+                  <Button
+                    variant={activeTab === 'app-synced' ? 'default' : 'outline'}
+                    onClick={() => {
+                      setActiveTab('app-synced');
+                      setSelectedProducts(new Set());
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    App Synced ({productModifications.filter(m => m.app_synced).length})
+                  </Button>
               </div>
             </CardContent>
           </Card>
@@ -618,7 +695,9 @@ export default function CustomCollectionCreator() {
           <Card>
             <CardHeader>
                <CardTitle>
-                 {activeTab === 'unsorted' ? 'Unsorted' : activeTab === 'sorted' ? 'Sorted' : 'Synced'} Products ({filteredProducts.length} total)
+                 {activeTab === 'unsorted' ? 'Unsorted' : 
+                  activeTab === 'sorted' ? 'Sorted' : 
+                  activeTab === 'synced' ? 'Synced' : 'App Synced'} Products ({filteredProducts.length} total)
                </CardTitle>
             </CardHeader>
             <CardContent className="p-0">

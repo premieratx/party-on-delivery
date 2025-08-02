@@ -1585,6 +1585,7 @@ export type Database = {
       }
       product_modifications: {
         Row: {
+          app_synced: boolean | null
           category: string | null
           collection: string | null
           created_at: string
@@ -1597,6 +1598,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          app_synced?: boolean | null
           category?: string | null
           collection?: string | null
           created_at?: string
@@ -1609,6 +1611,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          app_synced?: boolean | null
           category?: string | null
           collection?: string | null
           created_at?: string
