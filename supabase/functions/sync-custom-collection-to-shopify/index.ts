@@ -68,31 +68,77 @@ serve(async (req) => {
       shopifyProductIds = productsData.data?.products?.edges?.map((edge: any) => edge.node.id) || [];
     }
 
-    // Create the collection in Shopify
-    const createCollectionResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json`, {
-      method: 'POST',
+    // First, try to find the existing collection by handle
+    const getCollectionResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json?handle=${handle}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'X-Shopify-Access-Token': shopifyAccessToken
-      },
-      body: JSON.stringify({
-        custom_collection: {
-          title: title,
-          handle: handle,
-          body_html: description || '',
-          published: true
-        }
-      })
+      }
     });
 
-    const collectionData = await createCollectionResponse.json();
-    
-    if (!createCollectionResponse.ok) {
-      console.error('Failed to create Shopify collection:', collectionData);
-      throw new Error(`Shopify API error: ${collectionData.errors || 'Unknown error'}`);
-    }
+    const existingCollectionsData = await getCollectionResponse.json();
+    let shopifyCollectionId;
 
-    const shopifyCollectionId = collectionData.custom_collection.id;
+    if (existingCollectionsData.custom_collections && existingCollectionsData.custom_collections.length > 0) {
+      // Collection exists, use its ID
+      shopifyCollectionId = existingCollectionsData.custom_collections[0].id;
+      console.log('Found existing Shopify collection:', shopifyCollectionId);
+      
+      // Clear existing products from the collection first
+      const collectsResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/collects.json?collection_id=${shopifyCollectionId}&limit=250`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': shopifyAccessToken
+        }
+      });
+      
+      const collectsData = await collectsResponse.json();
+      if (collectsData.collects && collectsData.collects.length > 0) {
+        console.log(`Removing ${collectsData.collects.length} existing products from collection`);
+        const deletePromises = collectsData.collects.map(async (collect: any) => {
+          try {
+            await fetch(`${shopifyStoreUrl}/admin/api/2025-01/collects/${collect.id}.json`, {
+              method: 'DELETE',
+              headers: {
+                'X-Shopify-Access-Token': shopifyAccessToken
+              }
+            });
+          } catch (error) {
+            console.warn('Error removing product from collection:', error);
+          }
+        });
+        await Promise.allSettled(deletePromises);
+      }
+    } else {
+      // Collection doesn't exist, create it
+      const createCollectionResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': shopifyAccessToken
+        },
+        body: JSON.stringify({
+          custom_collection: {
+            title: title,
+            handle: handle,
+            body_html: description || '',
+            published: true
+          }
+        })
+      });
+
+      const collectionData = await createCollectionResponse.json();
+      
+      if (!createCollectionResponse.ok) {
+        console.error('Failed to create Shopify collection:', collectionData);
+        throw new Error(`Shopify API error: ${collectionData.errors || 'Unknown error'}`);
+      }
+
+      shopifyCollectionId = collectionData.custom_collection.id;
+      console.log('Created new Shopify collection:', shopifyCollectionId);
+    }
     console.log('Created Shopify collection:', shopifyCollectionId);
 
     // Add products to the collection (using REST API for collects)
