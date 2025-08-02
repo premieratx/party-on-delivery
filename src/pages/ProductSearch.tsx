@@ -527,9 +527,9 @@ export const ProductSearch = () => {
                           {cleanTitle}
                         </h3>
                         
-                        {/* Size variants as radio buttons for multi-variant products */}
+                        {/* Size variants as radio buttons for multi-variant products - Mobile Optimized */}
                         {product.variants && product.variants.length > 1 && (
-                          <div className="mb-2 space-y-0.5">
+                          <div className="mb-1.5 space-y-0.5">
                             <RadioGroup 
                               value={currentVariant.id}
                               onValueChange={(value) => {
@@ -539,15 +539,15 @@ export const ProductSearch = () => {
                               className="space-y-0.5"
                             >
                               {product.variants.map(variant => (
-                                <div key={variant.id} className="flex items-center space-x-1.5">
+                                <div key={variant.id} className="flex items-center space-x-1 overflow-hidden">
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0"
+                                    className="w-2 h-2 sm:w-2.5 sm:h-2.5 flex-shrink-0 border border-muted-foreground"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
-                                    className="text-xs cursor-pointer flex-1 leading-tight truncate"
+                                    className="text-[10px] sm:text-xs cursor-pointer flex-1 leading-tight truncate max-w-full"
                                   >
                                     {variant.size} - ${variant.price.toFixed(2)}
                                   </Label>
