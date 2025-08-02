@@ -523,13 +523,14 @@ export const ProductSearch = () => {
                     {/* Product Info */}
                     <div className="flex-grow flex flex-col justify-between">
                       <div className="mb-2">
-                        <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1">
+                        {/* Centered Product Title */}
+                        <h3 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1 text-center">
                           {cleanTitle}
                         </h3>
                         
-                        {/* Size variants as radio buttons for multi-variant products - Mobile Optimized */}
+                        {/* Left-aligned Size variants as radio buttons for multi-variant products */}
                         {product.variants && product.variants.length > 1 && (
-                          <div className="mb-1 space-y-0.5">
+                          <div className="mb-1 space-y-0.5 text-left">
                             <RadioGroup 
                               value={currentVariant.id}
                               onValueChange={(value) => {
@@ -543,7 +544,7 @@ export const ProductSearch = () => {
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 mt-1 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full"
+                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 mt-1 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
@@ -558,7 +559,7 @@ export const ProductSearch = () => {
                           </div>
                         )}
                         
-                        {/* Centered Price and Size Info */}
+                        {/* Centered Price and Size Info for single variants */}
                         <div className="text-center">
                           <p className="text-lg sm:text-xl font-bold text-green-600">
                             ${currentVariant.price.toFixed(2)}
