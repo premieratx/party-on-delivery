@@ -421,7 +421,7 @@ export const ProductSearch = () => {
                   <RadioGroupItem 
                     value={category.id} 
                     id={category.id} 
-                    className="w-0.5 h-0.5 sm:w-1 sm:h-1 md:w-1.5 md:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
+                    className="w-1 h-1 sm:w-2 sm:h-2 md:w-3 md:h-3 flex-shrink-0 border border-muted-foreground scale-75 sm:scale-100 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
                   />
                   <Label htmlFor={category.id} className="text-sm cursor-pointer whitespace-nowrap">
                     {category.label}
@@ -538,7 +538,7 @@ export const ProductSearch = () => {
                         
                         {/* Left-aligned Size variants as radio buttons for multi-variant products */}
                         {product.variants && product.variants.length > 1 && (
-                          <div className="mb-1 space-y-0.5 text-left">
+                          <div className="mb-2 mt-4 sm:mt-6 space-y-0.5 text-left">
                             <RadioGroup 
                               value={currentVariant.id}
                               onValueChange={(value) => {
@@ -552,7 +552,7 @@ export const ProductSearch = () => {
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-0.5 h-0.5 sm:w-1 sm:h-1 md:w-1.5 md:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
+                                    className="w-1 h-1 sm:w-2 sm:h-2 md:w-3 md:h-3 flex-shrink-0 border border-muted-foreground scale-75 sm:scale-100 mr-0.5 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
@@ -583,7 +583,7 @@ export const ProductSearch = () => {
                       </div>
                       
                       {/* Add to Cart Button - Centered */}
-                      <div className="mt-auto flex justify-center">
+                      <div className="mt-4 sm:mt-6 flex justify-center">
                         {quantity > 0 ? (
                            <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-0.5 min-w-[55px] sm:min-w-[70px] md:min-w-[90px]">
                              <Button
