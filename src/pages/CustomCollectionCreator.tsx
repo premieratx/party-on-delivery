@@ -388,6 +388,40 @@ export default function CustomCollectionCreator() {
     }
   };
 
+  // Combined sync function - syncs to Shopify then to App
+  const fullSync = async () => {
+    try {
+      // First sync to Shopify if there are unsynced changes
+      if (unsyncedCount > 0) {
+        await syncToShopify();
+      }
+      
+      // Then sync to App if there are shopify-synced but not app-synced items
+      const shopifySyncedItems = productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length;
+      if (shopifySyncedItems > 0) {
+        await syncToApp();
+      }
+      
+      // Finally, force refresh all products to ensure delivery app gets updates
+      await loadAllProducts(true);
+      
+      // Notify delivery app to refresh
+      window.dispatchEvent(new CustomEvent('admin-sync-complete'));
+      
+      toast({
+        title: "Full Sync Complete",
+        description: "Products synced to Shopify and delivery app updated!",
+      });
+    } catch (error) {
+      console.error('Error in full sync:', error);
+      toast({
+        title: "Full Sync Failed",
+        description: "Some steps in the sync process failed. Check logs for details.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Get product with modifications applied
   const getProductWithModifications = (product: Product): Product => {
     const modification = productModifications.find(m => 
@@ -524,24 +558,14 @@ export default function CustomCollectionCreator() {
             
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{selectedProducts.size} selected</Badge>
-              {unsyncedCount > 0 && (
+              {(unsyncedCount > 0 || productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length > 0) && (
                 <Button 
-                  onClick={syncToShopify}
-                  disabled={syncing}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  onClick={fullSync}
+                  disabled={syncing || appSyncing}
+                  className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
                 >
                   <Save className="w-4 h-4" />
-                  {syncing ? 'Syncing...' : `Sync ${unsyncedCount} to Shopify`}
-                </Button>
-              )}
-              {productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length > 0 && (
-                <Button 
-                  onClick={syncToApp}
-                  disabled={appSyncing}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  {appSyncing ? 'Syncing...' : `Sync ${productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length} to App`}
+                  {syncing || appSyncing ? 'Syncing...' : `Full Sync (${unsyncedCount + productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length})`}
                 </Button>
               )}
               <Button 

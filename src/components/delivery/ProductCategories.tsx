@@ -112,6 +112,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     setCustomSiteCollections([]);
     
     fetchCollections();
+
+    // Listen for admin sync events to refresh collections
+    const handleAdminSync = () => {
+      console.log('Admin sync detected - refreshing delivery app collections');
+      clearCacheAndRefresh();
+    };
+
+    window.addEventListener('admin-sync-complete', handleAdminSync);
+    
+    return () => {
+      window.removeEventListener('admin-sync-complete', handleAdminSync);
+    };
   }, []);
 
   // Re-fetch collections when custom site data changes
