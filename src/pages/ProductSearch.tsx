@@ -276,6 +276,13 @@ export const ProductSearch = () => {
       );
     }
 
+    // Sort alphabetically by product title for better organization
+    filtered = filtered.sort((a, b) => {
+      const titleA = a.title.toLowerCase();
+      const titleB = b.title.toLowerCase();
+      return titleA.localeCompare(titleB);
+    });
+
     return filtered;
   }, [products, selectedCategory, searchTerm]);
 

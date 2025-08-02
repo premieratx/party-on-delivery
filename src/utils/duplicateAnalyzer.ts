@@ -233,6 +233,11 @@ function extractBaseName(title: string): string {
     .replace(/\s*craft\s*/gi, ' ')
     .replace(/\s*domestic\s*/gi, ' ')
     .replace(/\s*imported\s*/gi, ' ')
+    // Remove specific descriptors and age statements for proper grouping
+    .replace(/\s*straight\s*(bourbon|rye|whiskey)\s*/gi, ' $1 ')
+    .replace(/\s*(\d+)\s*year\s*(old)?\s*/gi, ' $1yr ')
+    .replace(/\s*95\s*rye\s*/gi, ' rye ')
+    .replace(/\s*frontier\s*whiskey\s*/gi, ' whiskey ')
     // Remove parenthetical content that often contains sizes
     .replace(/\s*\([^)]*\)\s*/gi, ' ')
     .replace(/\s*\[[^\]]*\]\s*/gi, ' ')

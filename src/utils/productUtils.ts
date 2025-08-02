@@ -40,6 +40,9 @@ export function parseProductTitle(title: string): ParsedProduct {
     .replace(/\s*Hard Seltzer\s*/gi, ' ')
     .replace(/\s*\d+\s*oz\s*/gi, ' ') // Remove standalone oz measurements
     .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F\u25CF]+/g, '') // Remove all dots and bullets
+    // Specific bourbon/whiskey title cleanup
+    .replace(/\s*straight\s*(bourbon|rye|whiskey)\s*(\d+\s*year)/gi, '$1 $2') // "Bulleit Straight Bourbon 6 Year" -> "Bulleit Bourbon 6 Year"
+    .replace(/\s*frontier\s*whiskey\s*/gi, ' Whiskey ')
     .replace(/\s+/g, ' ')
     .trim();
 
