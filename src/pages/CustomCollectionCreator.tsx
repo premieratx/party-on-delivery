@@ -300,8 +300,14 @@ export default function CustomCollectionCreator() {
 
   // Sync to Shopify AND App - combined function
   const syncToShopifyAndApp = async () => {
+    console.log('=== STARTING SYNC TO SHOPIFY AND APP ===');
+    console.log('All product modifications:', productModifications.length);
+    
     const unsyncedMods = productModifications.filter(m => !m.synced_to_shopify);
+    console.log('Unsynced modifications:', unsyncedMods.length, unsyncedMods);
+    
     if (unsyncedMods.length === 0) {
+      console.log('No unsynced changes found');
       toast({
         title: "Info",
         description: "No unsynced changes to sync.",
@@ -725,13 +731,25 @@ export default function CustomCollectionCreator() {
                   <div className="flex items-end">
                      <Button 
                       onClick={async () => {
-                        await applyLocalChanges();
-                        // Auto-sync after applying changes
-                        setTimeout(() => {
-                          if (selectedProducts.size > 0) {
-                            syncToShopifyAndApp();
-                          }
-                        }, 500);
+                        console.log('=== SYNC BUTTON CLICKED ===');
+                        console.log('Selected products:', selectedProducts.size);
+                        console.log('Bulk values:', { bulkCategory, bulkProductType, bulkCollection });
+                        
+                        try {
+                          await applyLocalChanges();
+                          console.log('Local changes applied, now syncing...');
+                          
+                          // Sync immediately after applying changes
+                          await syncToShopifyAndApp();
+                          console.log('Sync completed successfully');
+                        } catch (error) {
+                          console.error('Sync process failed:', error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to sync changes.",
+                            variant: "destructive"
+                          });
+                        }
                       }}
                       disabled={!bulkCategory && !bulkProductType && !bulkCollection}
                       className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white w-full"
