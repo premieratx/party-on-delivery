@@ -181,7 +181,7 @@ export function useCustomSiteProducts() {
       'champagne': 'wine',
       'texas-beer-collection': 'beer',
       'disco-collection': 'party-supplies',
-      'liqueurs-cordials-cocktail-ingredients': 'spirits',
+      'liqueurs-cordials-cocktail-ingredients': 'mixers',
       'mixers-non-alcoholic': 'mixers',
       'ready-to-drink-cocktails': 'cocktails',
       'hats-sunglasses': 'party-supplies',

@@ -174,7 +174,7 @@ export const ProductSearch = () => {
   // Map collection handles to our category system - match delivery widget mapping
   const mapCollectionToCategory = (handle: string): string => {
     // Spirits (first in delivery widget)
-    if (handle === 'spirits' || handle === 'gin-rum' || handle === 'tequila-mezcal' || handle === 'liqueurs-cordials-cocktail-ingredients') return 'spirits';
+    if (handle === 'spirits' || handle === 'gin-rum' || handle === 'tequila-mezcal') return 'spirits';
     // Beer (second in delivery widget)
     if (handle === 'tailgate-beer' || handle === 'texas-beer-collection' || handle.includes('beer')) return 'beer';
     // Seltzers (third in delivery widget)  
