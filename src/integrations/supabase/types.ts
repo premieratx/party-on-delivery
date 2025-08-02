@@ -589,6 +589,36 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_flow_backups: {
+        Row: {
+          backup_name: string
+          component_config: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_current: boolean | null
+          notes: string | null
+        }
+        Insert: {
+          backup_name: string
+          component_config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean | null
+          notes?: string | null
+        }
+        Update: {
+          backup_name?: string
+          component_config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean | null
+          notes?: string | null
+        }
+        Relationships: []
+      }
       collection_drafts: {
         Row: {
           created_at: string
