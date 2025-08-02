@@ -63,10 +63,14 @@ serve(async (req) => {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not set");
     }
     
-    // GraphQL query to fetch ALL products with product types and categories
+    // GraphQL query to fetch ALL products with product types, categories, and collections
     const query = `
       query {
         products(first: 250) {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
           edges {
             node {
               id
@@ -76,6 +80,15 @@ serve(async (req) => {
               productType
               vendor
               tags
+              collections(first: 20) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                  }
+                }
+              }
               images(first: 5) {
                 edges {
                   node {
