@@ -543,7 +543,7 @@ export const ProductSearch = () => {
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-2 h-2 sm:w-2.5 sm:h-2.5 flex-shrink-0 border border-muted-foreground"
+                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 flex-shrink-0 border border-muted-foreground scale-75"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
