@@ -494,6 +494,21 @@ export default function CustomCollectionCreator() {
     );
   };
 
+  // Helper function to get sync status for display
+  const getSyncStatus = (productId: string) => {
+    const modification = productModifications.find(m => m.shopify_product_id === productId);
+    if (!modification) return 'unmodified';
+    if (modification.synced_to_shopify && modification.app_synced) return 'synced';
+    if (!modification.synced_to_shopify) return 're-synced';
+    if (modification.synced_to_shopify && !modification.app_synced) return 'shopify-only';
+    return 'pending';
+  };
+
+  // Helper function to check if product has any modification (synced or not)
+  const hasAnyModification = (productId: string) => {
+    return productModifications.some(m => m.shopify_product_id === productId);
+  };
+
   // Filter products based on active tab
   const filteredProducts = useMemo(() => {
     let filtered = allProducts.map(getProductWithModifications).filter(product => {
@@ -507,14 +522,15 @@ export default function CustomCollectionCreator() {
       const hasUnsyncedModification = hasModification(product.id);
       const isProductSynced = isSynced(product.id);
       const isProductAppSynced = isAppSynced(product.id);
+      const hasAnyMod = hasAnyModification(product.id);
       
       let matchesTab = false;
       if (activeTab === 'unsorted') {
-        // Show products that are either unmodified or have unsynced modifications
-        matchesTab = !isProductAppSynced;
+        // Show products that are either unmodified or have no modifications at all
+        matchesTab = !hasAnyMod;
       } else if (activeTab === 'synced') {
-        // Show products that are fully synced (both Shopify and app)
-        matchesTab = isProductAppSynced;
+        // Show products that have any modification (synced, re-synced, or pending)
+        matchesTab = hasAnyMod;
       }
       
       return matchesSearch && matchesCategory && matchesProductType && matchesTab;
@@ -751,7 +767,7 @@ export default function CustomCollectionCreator() {
                   }}
                   className="flex items-center gap-2"
                 >
-                  Sorted & Synced ({productModifications.filter(m => m.synced_to_shopify && m.app_synced).length})
+                  Sorted & Synced ({productModifications.length})
                 </Button>
               </div>
             </CardContent>
@@ -792,7 +808,7 @@ export default function CustomCollectionCreator() {
                     <div className="w-32">Collections</div>
                     <div className="w-20">Price</div>
                     <div className="w-24">Vendor</div>
-                    <div className="w-20">Status</div>
+                    <div className="w-24">Status</div>
                   </div>
 
                   {/* Product Rows */}
@@ -901,29 +917,48 @@ export default function CustomCollectionCreator() {
                       </div>
 
                        {/* Status */}
-                       <div className="w-20">
-                         {isSynced(product.id) ? (
-                           <Badge 
-                             variant="secondary" 
-                             className="text-xs bg-green-100 text-green-800 border-green-200"
-                           >
-                             Synced
-                           </Badge>
-                         ) : hasModification(product.id) ? (
-                           <Badge 
-                             variant="secondary" 
-                             className="text-xs bg-blue-100 text-blue-800 border-blue-200"
-                           >
-                             Modified
-                           </Badge>
-                         ) : (
-                           <Badge 
-                             variant="outline" 
-                             className="text-xs text-muted-foreground"
-                           >
-                             Unsorted
-                           </Badge>
-                         )}
+                       <div className="w-24">
+                         {(() => {
+                           const status = getSyncStatus(product.id);
+                           switch (status) {
+                             case 'synced':
+                               return (
+                                 <Badge 
+                                   variant="secondary" 
+                                   className="text-xs bg-green-100 text-green-800 border-green-200"
+                                 >
+                                   Synced
+                                 </Badge>
+                               );
+                             case 're-synced':
+                               return (
+                                 <Badge 
+                                   variant="secondary" 
+                                   className="text-xs bg-amber-100 text-amber-800 border-amber-200"
+                                 >
+                                   Re-synced
+                                 </Badge>
+                               );
+                             case 'shopify-only':
+                               return (
+                                 <Badge 
+                                   variant="secondary" 
+                                   className="text-xs bg-blue-100 text-blue-800 border-blue-200"
+                                 >
+                                   Pending
+                                 </Badge>
+                               );
+                             default:
+                               return (
+                                 <Badge 
+                                   variant="outline" 
+                                   className="text-xs text-muted-foreground"
+                                 >
+                                   Unsorted
+                                 </Badge>
+                               );
+                           }
+                         })()}
                        </div>
                     </div>
                   ))}
