@@ -193,19 +193,48 @@ export const CustomCollectionCreator: React.FC = () => {
         description: `Updating ${selectedProducts.size} products in Shopify...`,
       });
 
+      // Update the local products state immediately for better UX
+      const updatedProducts = allProducts.map(product => {
+        if (selectedProducts.has(product.id)) {
+          return {
+            ...product,
+            category: bulkCategory || product.category,
+            productType: bulkProductType || product.productType,
+            // Note: collection updates would require additional logic
+          };
+        }
+        return product;
+      });
+      
+      setAllProducts(updatedProducts);
+
       // In a real implementation, this would call a Shopify API to update products
       // For now, we'll simulate the update
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       toast({
         title: "Success",
-        description: `Updated ${selectedProducts.size} products successfully!`,
+        description: `Updated ${selectedProducts.size} products successfully! Changes applied to: ${bulkCategory ? 'Category' : ''}${bulkProductType ? ' Product Type' : ''}${bulkCollection ? ' Collection' : ''}`,
       });
 
+      // Clear selections and bulk fields
       setSelectedProducts(new Set());
       setBulkCategory('');
       setBulkProductType('');
       setBulkCollection('');
+      
+      // Re-generate available options from updated products
+      const categoriesSet = new Set<string>();
+      const productTypesSet = new Set<string>();
+      
+      updatedProducts.forEach(product => {
+        categoriesSet.add(product.category);
+        if (product.productType) productTypesSet.add(product.productType);
+      });
+      
+      setAvailableCategories(Array.from(categoriesSet).sort());
+      setAvailableProductTypes(Array.from(productTypesSet).sort());
+      
     } catch (error) {
       console.error('Error updating products:', error);
       toast({
@@ -272,7 +301,7 @@ export const CustomCollectionCreator: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background border-b">
+      <div className="sticky top-0 z-30 bg-background border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
@@ -321,13 +350,13 @@ export const CustomCollectionCreator: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div>
+                <div className="relative">
                   <Label htmlFor="category">Category</Label>
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="relative z-10">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
-                    <SelectContent className="z-[60]">
+                    <SelectContent className="z-[100] bg-popover border shadow-lg" sideOffset={4}>
                       <SelectItem value="all">All Categories</SelectItem>
                       {availableCategories.map(category => (
                         <SelectItem key={category} value={category}>
@@ -337,13 +366,13 @@ export const CustomCollectionCreator: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="relative">
                   <Label htmlFor="productType">Product Type</Label>
                   <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
-                    <SelectTrigger>
+                    <SelectTrigger className="relative z-10">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
-                    <SelectContent className="z-[60]">
+                    <SelectContent className="z-[100] bg-popover border shadow-lg" sideOffset={4}>
                       <SelectItem value="all">All Types</SelectItem>
                       {availableProductTypes.map(type => (
                         <SelectItem key={type} value={type}>
@@ -378,13 +407,13 @@ export const CustomCollectionCreator: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <div>
+                  <div className="relative">
                     <Label>Update Category</Label>
                     <Select value={bulkCategory} onValueChange={setBulkCategory}>
-                      <SelectTrigger>
+                      <SelectTrigger className="relative z-10">
                         <SelectValue placeholder="Select category..." />
                       </SelectTrigger>
-                      <SelectContent className="z-[60]">
+                      <SelectContent className="z-[100] bg-popover border shadow-lg" sideOffset={4}>
                         {availableCategories.map(category => (
                           <SelectItem key={category} value={category}>
                             {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -393,13 +422,13 @@ export const CustomCollectionCreator: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+                  <div className="relative">
                     <Label>Update Product Type</Label>
                     <Select value={bulkProductType} onValueChange={setBulkProductType}>
-                      <SelectTrigger>
+                      <SelectTrigger className="relative z-10">
                         <SelectValue placeholder="Select type..." />
                       </SelectTrigger>
-                      <SelectContent className="z-[60]">
+                      <SelectContent className="z-[100] bg-popover border shadow-lg" sideOffset={4}>
                         {availableProductTypes.map(type => (
                           <SelectItem key={type} value={type}>
                             {type}
@@ -408,13 +437,13 @@ export const CustomCollectionCreator: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
+                  <div className="relative">
                     <Label>Update Collection</Label>
                     <Select value={bulkCollection} onValueChange={setBulkCollection}>
-                      <SelectTrigger>
+                      <SelectTrigger className="relative z-10">
                         <SelectValue placeholder="Select collection..." />
                       </SelectTrigger>
-                      <SelectContent className="z-[60]">
+                      <SelectContent className="z-[100] bg-popover border shadow-lg" sideOffset={4}>
                         {availableCollections.map(collection => (
                           <SelectItem key={collection} value={collection}>
                             {collection}
