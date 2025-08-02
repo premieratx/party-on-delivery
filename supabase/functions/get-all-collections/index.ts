@@ -177,7 +177,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({ 
           query: getAllCollectionsQuery,
-          variables: { first: 50 }
+          variables: { first: 250 }  // Increased to fetch all collections
         }),
       });
 
@@ -201,7 +201,7 @@ serve(async (req) => {
       console.log(`Found ${collectionsList.length} collections in Shopify`);
 
       // Prioritize our main collections first, then fetch others
-      const priorityCollections = ["spirits", "tailgate-beer", "seltzer-collection", "cocktail-kits", "party-supplies"];
+      const priorityCollections = ["spirits", "tailgate-beer", "boat-page-beer", "seltzer-collection", "cocktail-kits", "party-supplies"];
       const otherCollections = collectionsList
         .map(edge => edge.node.handle)
         .filter(handle => !priorityCollections.includes(handle));
@@ -211,7 +211,7 @@ serve(async (req) => {
 
       // Fetch detailed data for each collection
       let processedCount = 0;
-      const maxCollections = 20; // Limit to prevent timeouts
+      const maxCollections = 100; // Increased to handle all collections
       
       for (const handle of orderedCollections.slice(0, maxCollections)) {
         try {
