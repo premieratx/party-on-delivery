@@ -20,6 +20,11 @@ interface Product {
   image?: string;
   vendor?: string;
   description?: string;
+  collections?: Array<{
+    id: string;
+    title: string;
+    handle: string;
+  }>;
 }
 
 interface ProductModification {
@@ -43,6 +48,7 @@ export default function CustomCollectionCreator() {
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'unsorted' | 'sorted'>('unsorted');
   
   // Dropdown states with simple string values
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -161,15 +167,35 @@ export default function CustomCollectionCreator() {
       for (const update of updates) {
         if (!update) continue;
         
-        // Upsert modification
-        const { error } = await supabase
+        // Check if modification exists
+        const { data: existing } = await supabase
           .from('product_modifications')
-          .upsert(update, { 
-            onConflict: 'shopify_product_id',
-            ignoreDuplicates: false 
-          });
+          .select('id')
+          .eq('shopify_product_id', update.shopify_product_id)
+          .single();
 
-        if (error) throw error;
+        if (existing) {
+          // Update existing record
+          const { error } = await supabase
+            .from('product_modifications')
+            .update({
+              category: update.category,
+              product_type: update.product_type,
+              collection: update.collection,
+              synced_to_shopify: false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('shopify_product_id', update.shopify_product_id);
+          
+          if (error) throw error;
+        } else {
+          // Insert new record
+          const { error } = await supabase
+            .from('product_modifications')
+            .insert(update);
+          
+          if (error) throw error;
+        }
       }
 
       // Reload modifications
@@ -254,7 +280,7 @@ export default function CustomCollectionCreator() {
     };
   };
 
-  // Filter products
+  // Filter products based on active tab
   const filteredProducts = useMemo(() => {
     let filtered = allProducts.map(getProductWithModifications).filter(product => {
       const matchesSearch = !searchTerm || 
@@ -263,11 +289,15 @@ export default function CustomCollectionCreator() {
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
       
-      return matchesSearch && matchesCategory && matchesProductType;
+      // Tab filtering
+      const hasUnsyncedModification = hasModification(product.id);
+      const matchesTab = activeTab === 'unsorted' ? !hasUnsyncedModification : hasUnsyncedModification;
+      
+      return matchesSearch && matchesCategory && matchesProductType && matchesTab;
     });
 
     return filtered;
-  }, [allProducts, productModifications, searchTerm, categoryFilter, productTypeFilter]);
+  }, [allProducts, productModifications, searchTerm, categoryFilter, productTypeFilter, activeTab]);
 
   const unsyncedCount = productModifications.filter(m => !m.synced_to_shopify).length;
 
@@ -482,10 +512,38 @@ export default function CustomCollectionCreator() {
             </Card>
           )}
 
+          {/* Tabs */}
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <div className="flex gap-2">
+                <Button
+                  variant={activeTab === 'unsorted' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setActiveTab('unsorted');
+                    setSelectedProducts(new Set());
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  Unsorted ({allProducts.filter(p => !hasModification(p.id)).length})
+                </Button>
+                <Button
+                  variant={activeTab === 'sorted' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setActiveTab('sorted');
+                    setSelectedProducts(new Set());
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  Sorted ({productModifications.filter(m => !m.synced_to_shopify).length})
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Products Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Products ({filteredProducts.length} total)</CardTitle>
+              <CardTitle>{activeTab === 'unsorted' ? 'Unsorted' : 'Sorted'} Products ({filteredProducts.length} total)</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
@@ -512,6 +570,7 @@ export default function CustomCollectionCreator() {
                     <div className="flex-1 min-w-[200px]">Product</div>
                     <div className="w-32">Category</div>
                     <div className="w-32">Product Type</div>
+                    <div className="w-32">Collections</div>
                     <div className="w-20">Price</div>
                     <div className="w-24">Vendor</div>
                     <div className="w-20">Status</div>
@@ -573,6 +632,38 @@ export default function CustomCollectionCreator() {
                         >
                           {product.productType || 'None'}
                         </Badge>
+                      </div>
+
+                      {/* Collections */}
+                      <div className="w-32">
+                        <div className="flex flex-wrap gap-1">
+                          {product.collections && product.collections.length > 0 ? (
+                            product.collections.slice(0, 2).map((collection, index) => (
+                              <Badge 
+                                key={collection.id}
+                                variant="outline" 
+                                className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200"
+                              >
+                                {collection.title}
+                              </Badge>
+                            ))
+                          ) : (
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs text-muted-foreground"
+                            >
+                              None
+                            </Badge>
+                          )}
+                          {product.collections && product.collections.length > 2 && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs bg-gray-100 text-gray-600"
+                            >
+                              +{product.collections.length - 2}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
 
                       {/* Price */}

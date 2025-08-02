@@ -115,87 +115,162 @@ serve(async (req) => {
 
     console.log("Making GraphQL request to Shopify Admin API...");
     
-    const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
-      },
-      body: JSON.stringify({ query }),
-    });
-
-    console.log("Response status:", response.status);
-    console.log("Response OK:", response.ok);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Shopify API error:", errorText);
-      throw new Error(`Shopify API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log("GraphQL response received:", !!data);
+    let allProducts = [];
+    let hasNextPage = true;
+    let cursor = null;
+    let pageCount = 0;
+    const maxPages = 10; // Safety limit to prevent infinite loops
     
-    if (data.errors) {
-      console.error("GraphQL errors:", data.errors);
-      throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
-    }
+    while (hasNextPage && pageCount < maxPages) {
+      const paginatedQuery = `
+        query ${cursor ? `($cursor: String!)` : ''} {
+          products(first: 250${cursor ? `, after: $cursor` : ''}) {
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+            edges {
+              node {
+                id
+                title
+                handle
+                description
+                productType
+                vendor
+                tags
+                collections(first: 20) {
+                  edges {
+                    node {
+                      id
+                      title
+                      handle
+                    }
+                  }
+                }
+                images(first: 5) {
+                  edges {
+                    node {
+                      url
+                      altText
+                    }
+                  }
+                }
+                variants(first: 10) {
+                  edges {
+                    node {
+                      id
+                      title
+                      price
+                      availableForSale
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `;
 
-    if (!data.data?.products) {
-      console.error("No products data in response");
-      throw new Error("No products data in response");
-    }
+      const variables = cursor ? { cursor } : {};
+      
+      const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/graphql.json`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
+        },
+        body: JSON.stringify({ query: paginatedQuery, variables }),
+      });
 
-    // Transform Shopify data to our format
-    const products = data.data.products.edges.map(({ node: product }: any) => {
-      const variant = product.variants.edges[0]?.node;
-      const image = product.images.edges[0]?.node;
-      
-      // Extract category from tags or use productType
-      let category = product.productType || 'Uncategorized';
-      
-      // Look for category tags (tags that might indicate category)
-      const categoryTags = product.tags.filter((tag: string) => 
-        tag.toLowerCase().includes('spirits') ||
-        tag.toLowerCase().includes('beer') ||
-        tag.toLowerCase().includes('wine') ||
-        tag.toLowerCase().includes('cocktail') ||
-        tag.toLowerCase().includes('party') ||
-        tag.toLowerCase().includes('supplies')
-      );
-      
-      if (categoryTags.length > 0) {
-        category = categoryTags[0];
+      console.log(`Page ${pageCount + 1} response status:`, response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Shopify API error:", errorText);
+        throw new Error(`Shopify API error: ${response.status} - ${errorText}`);
       }
-      
-      return {
-        id: product.id,
-        title: product.title,
-        handle: product.handle,
-        description: product.description || '',
-        price: variant ? variant.price : '0',
-        image: image?.url || '/placeholder.svg',
-        images: product.images.edges.slice(1).map(({ node }: any) => node.url),
-        vendor: product.vendor || '',
-        category: category,
-        productType: product.productType || '',
-        tags: product.tags || [],
-        variants: product.variants.edges.map(({ node: v }: any) => ({
-          id: v.id,
-          title: v.title,
-          price: parseFloat(v.price),
-          available: v.availableForSale
-        }))
-      };
-    });
 
-    console.log(`Processed ${products.length} products`);
+      const data = await response.json();
+      console.log(`Page ${pageCount + 1} GraphQL response received:`, !!data);
+      
+      if (data.errors) {
+        console.error("GraphQL errors:", data.errors);
+        throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
+      }
+
+      if (!data.data?.products) {
+        console.error("No products data in response");
+        break;
+      }
+
+      // Add products from this page
+      const pageProducts = data.data.products.edges.map(({ node: product }: any) => {
+        const variant = product.variants.edges[0]?.node;
+        const image = product.images.edges[0]?.node;
+        
+        // Extract category from tags or use productType
+        let category = product.productType || 'Uncategorized';
+        
+        // Look for category tags
+        const categoryTags = product.tags.filter((tag: string) => 
+          tag.toLowerCase().includes('spirits') ||
+          tag.toLowerCase().includes('beer') ||
+          tag.toLowerCase().includes('wine') ||
+          tag.toLowerCase().includes('cocktail') ||
+          tag.toLowerCase().includes('party') ||
+          tag.toLowerCase().includes('supplies')
+        );
+        
+        if (categoryTags.length > 0) {
+          category = categoryTags[0];
+        }
+
+        // Extract collections
+        const collections = product.collections.edges.map(({ node }: any) => ({
+          id: node.id,
+          title: node.title,
+          handle: node.handle
+        }));
+        
+        return {
+          id: product.id,
+          title: product.title,
+          handle: product.handle,
+          description: product.description || '',
+          price: variant ? variant.price : '0',
+          image: image?.url || '/placeholder.svg',
+          images: product.images.edges.slice(1).map(({ node }: any) => node.url),
+          vendor: product.vendor || '',
+          category: category,
+          productType: product.productType || '',
+          tags: product.tags || [],
+          collections: collections,
+          variants: product.variants.edges.map(({ node: v }: any) => ({
+            id: v.id,
+            title: v.title,
+            price: parseFloat(v.price),
+            available: v.availableForSale
+          }))
+        };
+      });
+
+      allProducts = allProducts.concat(pageProducts);
+      
+      // Check if there's a next page
+      hasNextPage = data.data.products.pageInfo.hasNextPage;
+      cursor = data.data.products.pageInfo.endCursor;
+      pageCount++;
+      
+      console.log(`Page ${pageCount} loaded ${pageProducts.length} products. Total so far: ${allProducts.length}`);
+    }
+
+    console.log(`Processed ${allProducts.length} products across ${pageCount} pages`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        products: products,
-        count: products.length
+        products: allProducts,
+        count: allProducts.length
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
