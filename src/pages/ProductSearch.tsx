@@ -418,7 +418,11 @@ export const ProductSearch = () => {
             >
               {categories.map((category) => (
                 <div key={category.id} className="flex items-center space-x-2">
-                  <RadioGroupItem value={category.id} id={category.id} className="w-4 h-4" />
+                  <RadioGroupItem 
+                    value={category.id} 
+                    id={category.id} 
+                    className="w-1.5 h-1.5 flex-shrink-0 border border-muted-foreground [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
+                  />
                   <Label htmlFor={category.id} className="text-sm cursor-pointer whitespace-nowrap">
                     {category.label}
                   </Label>
@@ -434,11 +438,15 @@ export const ProductSearch = () => {
                 <div className="space-y-4">
                   <h3 className="font-medium">Categories</h3>
                   <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {categories.map((category) => (
-                        <div key={category.id} className="flex items-center space-x-2">
-                          <RadioGroupItem value={category.id} id={category.id} />
-                          <Label htmlFor={category.id} className="text-sm">
+                        <div key={category.id} className="flex items-center space-x-1.5 overflow-hidden">
+                          <RadioGroupItem 
+                            value={category.id} 
+                            id={category.id}
+                            className="w-1 h-1 flex-shrink-0 border border-muted-foreground scale-50 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
+                          />
+                          <Label htmlFor={category.id} className="text-xs cursor-pointer truncate">
                             {category.label}
                           </Label>
                         </div>
