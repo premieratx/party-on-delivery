@@ -4,8 +4,8 @@ export interface ParsedProduct {
 }
 
 export function parseProductTitle(title: string): ParsedProduct {
-  // Remove trailing dots and special characters
-  const cleanedTitle = title.replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '').trim();
+  // Remove trailing dots and special characters including big round dots
+  const cleanedTitle = title.replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F\u25CF]+\s*$/g, '').trim();
   
   // Extract various package size patterns
   const patterns = [
@@ -33,10 +33,13 @@ export function parseProductTitle(title: string): ParsedProduct {
     }
   }
 
-  // Additional cleanup for title
+  // Additional cleanup for title - remove individual can/bottle sizes and big dots
   titleWithoutSize = titleWithoutSize
     .replace(/\s*Can\s*/gi, ' ')
+    .replace(/\s*Bottle\s*/gi, ' ')
     .replace(/\s*Hard Seltzer\s*/gi, ' ')
+    .replace(/\s*\d+\s*oz\s*/gi, ' ') // Remove standalone oz measurements
+    .replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F\u25CF]+/g, '') // Remove all dots and bullets
     .replace(/\s+/g, ' ')
     .trim();
 

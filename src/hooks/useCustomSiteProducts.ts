@@ -67,7 +67,7 @@ export function useCustomSiteProducts() {
       filteredCollections.forEach((collection: any) => {
         if (collection.products && Array.isArray(collection.products)) {
           collection.products.forEach((product: any) => {
-            allFilteredProducts.push({
+            const baseProduct = {
               id: product.id,
               title: product.title,
               price: product.price,
@@ -77,7 +77,10 @@ export function useCustomSiteProducts() {
               category: mapCollectionToCategory(collection.handle),
               variants: product.variants || [],
               images: product.images || []
-            });
+            };
+            
+            // Reclassify if needed
+            allFilteredProducts.push(reclassifyProduct(baseProduct));
           });
         }
       });
@@ -125,7 +128,7 @@ export function useCustomSiteProducts() {
       collectionsData.collections.forEach((collection: any) => {
         if (collection.products && Array.isArray(collection.products)) {
           collection.products.forEach((product: any) => {
-            allProducts.push({
+            const baseProduct = {
               id: product.id,
               title: product.title,
               price: product.price,
@@ -135,7 +138,10 @@ export function useCustomSiteProducts() {
               category: mapCollectionToCategory(collection.handle),
               variants: product.variants || [],
               images: product.images || []
-            });
+            };
+            
+            // Reclassify if needed
+            allProducts.push(reclassifyProduct(baseProduct));
           });
         }
       });
@@ -189,6 +195,35 @@ export function useCustomSiteProducts() {
     };
     
     return categoryMappings[collectionHandle] || 'other';
+  };
+
+  // Additional function to reclassify miscategorized spirits
+  const reclassifyProduct = (product: Product): Product => {
+    const title = product.title.toLowerCase();
+    const description = product.description?.toLowerCase() || '';
+    
+    // Check if product is currently in 'other' but should be in 'spirits'
+    if (product.category === 'other') {
+      const spiritKeywords = [
+        'whiskey', 'whisky', 'bourbon', 'rye', 'scotch',
+        'vodka', 'gin', 'rum', 'tequila', 'brandy', 'cognac',
+        'liqueur', 'schnapps', 'absinthe', 'mezcal',
+        'bulleit', 'jameson', 'jack daniels', 'makers mark',
+        'grey goose', 'absolut', 'smirnoff', 'bombay',
+        'bacardi', 'captain morgan', 'jose cuervo', 'patron',
+        'hennessy', 'remy martin', 'martell', 'espolon'
+      ];
+      
+      const isSpirit = spiritKeywords.some(keyword => 
+        title.includes(keyword) || description.includes(keyword)
+      );
+      
+      if (isSpirit) {
+        return { ...product, category: 'spirits' };
+      }
+    }
+    
+    return product;
   };
   const getAvailableCategories = () => {
     if (!customSiteData?.allowedCollections) {

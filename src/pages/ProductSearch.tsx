@@ -135,6 +135,7 @@ export const ProductSearch = () => {
   // Generate categories matching main delivery app
   const categories = useMemo(() => {
     const baseCategories = [
+      { id: "all", label: "🛒 All" },
       { id: "favorites", label: "⭐ Favorites" }
     ];
 
@@ -466,7 +467,7 @@ export const ProductSearch = () => {
       {/* Products Grid - Mobile Optimized */}
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
         {loadingCategories.has(selectedCategory) ? (
-          <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
             {Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[3/2] bg-muted rounded-lg mb-2" />
@@ -484,7 +485,7 @@ export const ProductSearch = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
             {filteredProducts.map((product, index) => {
               const currentVariant = getCurrentVariant(product);
               const quantity = getCartItemQuantity(currentVariant.id, currentVariant.variants?.[0]?.id || currentVariant.id);
