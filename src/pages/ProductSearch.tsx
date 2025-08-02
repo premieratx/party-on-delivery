@@ -529,28 +529,28 @@ export const ProductSearch = () => {
                         
                         {/* Size variants as radio buttons for multi-variant products - Mobile Optimized */}
                         {product.variants && product.variants.length > 1 && (
-                          <div className="mb-1 space-y-0.5">
+                          <div className="mb-1 space-y-1">
                             <RadioGroup 
                               value={currentVariant.id}
                               onValueChange={(value) => {
                                 const variant = product.variants!.find(v => v.id === value);
                                 if (variant) handleVariantChange(product, variant);
                               }}
-                              className="space-y-0.5"
+                              className="space-y-1"
                             >
                               {product.variants.map(variant => (
-                                <div key={variant.id} className="flex items-center space-x-1 overflow-hidden">
+                                <div key={variant.id} className="flex items-start space-x-1.5 overflow-hidden">
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5"
+                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 mt-0.5 [&>span]:w-3/4 [&>span]:h-3/4 [&>span]:bg-green-600"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
-                                    className="text-[9px] sm:text-[10px] cursor-pointer flex-1 leading-tight truncate max-w-full text-left"
+                                    className="text-[18px] sm:text-[20px] cursor-pointer flex-1 leading-tight text-left"
                                   >
-                                    <span className="block truncate">{variant.size}</span>
-                                    <span className="text-green-600 font-medium">${variant.price.toFixed(2)}</span>
+                                    <span className="block truncate text-foreground">{variant.size}</span>
+                                    <span className="block text-green-600 font-medium">${variant.price.toFixed(2)}</span>
                                   </Label>
                                 </div>
                               ))}
