@@ -421,7 +421,7 @@ export const ProductSearch = () => {
                   <RadioGroupItem 
                     value={category.id} 
                     id={category.id} 
-                    className="w-1 h-1 sm:w-2 sm:h-2 md:w-3 md:h-3 flex-shrink-0 border border-muted-foreground scale-75 sm:scale-100 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
+                    className="w-2 h-2 sm:w-4 sm:h-4 md:w-6 md:h-6 flex-shrink-0 border border-muted-foreground scale-75 sm:scale-100 [&>span]:w-1/2 [&>span]:h-1/2 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto [&>span]:flex [&>span]:items-center [&>span]:justify-center" 
                   />
                   <Label htmlFor={category.id} className="text-sm cursor-pointer whitespace-nowrap">
                     {category.label}
@@ -552,7 +552,7 @@ export const ProductSearch = () => {
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-1 h-1 sm:w-2 sm:h-2 md:w-3 md:h-3 flex-shrink-0 border border-muted-foreground scale-75 sm:scale-100 mr-0.5 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
+                                    className="w-2 h-2 sm:w-4 sm:h-4 md:w-6 md:h-6 flex-shrink-0 border border-muted-foreground scale-75 sm:scale-100 mr-0.5 [&>span]:w-1/2 [&>span]:h-1/2 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto [&>span]:flex [&>span]:items-center [&>span]:justify-center"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
@@ -568,7 +568,7 @@ export const ProductSearch = () => {
                         )}
                         
                         {/* Centered Price and Size Info for single variants */}
-                        <div className="text-center">
+                        <div className="text-center mt-6 sm:mt-8">
                           <p className="text-lg sm:text-xl font-bold text-green-600">
                             ${currentVariant.price.toFixed(2)}
                           </p>
@@ -583,7 +583,7 @@ export const ProductSearch = () => {
                       </div>
                       
                       {/* Add to Cart Button - Centered */}
-                      <div className="mt-4 sm:mt-6 flex justify-center">
+                      <div className="mt-2 sm:mt-3 flex justify-center">
                         {quantity > 0 ? (
                            <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-0.5 min-w-[55px] sm:min-w-[70px] md:min-w-[90px]">
                              <Button
