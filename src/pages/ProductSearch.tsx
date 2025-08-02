@@ -529,7 +529,7 @@ export const ProductSearch = () => {
                         
                         {/* Size variants as radio buttons for multi-variant products - Mobile Optimized */}
                         {product.variants && product.variants.length > 1 && (
-                          <div className="mb-1.5 space-y-0.5">
+                          <div className="mb-1 space-y-0.5">
                             <RadioGroup 
                               value={currentVariant.id}
                               onValueChange={(value) => {
@@ -543,13 +543,14 @@ export const ProductSearch = () => {
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 flex-shrink-0 border border-muted-foreground scale-75"
+                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
-                                    className="text-[10px] sm:text-xs cursor-pointer flex-1 leading-tight truncate max-w-full"
+                                    className="text-[9px] sm:text-[10px] cursor-pointer flex-1 leading-tight truncate max-w-full text-left"
                                   >
-                                    {variant.size} - ${variant.price.toFixed(2)}
+                                    <span className="block truncate">{variant.size}</span>
+                                    <span className="text-green-600 font-medium">${variant.price.toFixed(2)}</span>
                                   </Label>
                                 </div>
                               ))}
