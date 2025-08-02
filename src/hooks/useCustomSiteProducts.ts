@@ -10,6 +10,7 @@ interface Product {
   description: string;
   handle: string;
   category: string;
+  subcategory?: string;
   variants?: any[];
   images?: string[];
 }
@@ -197,29 +198,58 @@ export function useCustomSiteProducts() {
     return categoryMappings[collectionHandle] || 'other';
   };
 
-  // Additional function to reclassify miscategorized spirits
+  // Enhanced function to reclassify and subcategorize spirits
   const reclassifyProduct = (product: Product): Product => {
     const title = product.title.toLowerCase();
     const description = product.description?.toLowerCase() || '';
     
-    // Check if product is currently in 'other' but should be in 'spirits'
-    if (product.category === 'other') {
-      const spiritKeywords = [
-        'whiskey', 'whisky', 'bourbon', 'rye', 'scotch',
-        'vodka', 'gin', 'rum', 'tequila', 'brandy', 'cognac',
-        'liqueur', 'schnapps', 'absinthe', 'mezcal',
-        'bulleit', 'jameson', 'jack daniels', 'makers mark',
-        'grey goose', 'absolut', 'smirnoff', 'bombay',
-        'bacardi', 'captain morgan', 'jose cuervo', 'patron',
-        'hennessy', 'remy martin', 'martell', 'espolon'
-      ];
-      
-      const isSpirit = spiritKeywords.some(keyword => 
+    // Spirit classification keywords and subcategories
+    const spiritCategories = {
+      whiskey: ['whiskey', 'whisky', 'bourbon', 'rye', 'scotch', 'bulleit', 'jameson', 'jack daniels', 'makers mark', 'wild turkey', 'woodford'],
+      vodka: ['vodka', 'grey goose', 'absolut', 'smirnoff', 'belvedere', 'titos'],
+      rum: ['rum', 'bacardi', 'captain morgan', 'mount gay', 'kraken', 'diplomatico'],
+      gin: ['gin', 'bombay', 'tanqueray', 'hendricks', 'botanist'],
+      tequila: ['tequila', 'jose cuervo', 'patron', 'don julio', 'herradura', 'espolon'],
+      mezcal: ['mezcal', 'del maguey', 'montelobos'],
+      liqueurs: ['liqueur', 'schnapps', 'amaretto', 'baileys', 'kahlua', 'cointreau', 'grand marnier', 'sambuca'],
+      brandy: ['brandy', 'cognac', 'hennessy', 'remy martin', 'martell', 'armagnac']
+    };
+    
+    // Check if product should be classified as spirits
+    let matchedSubcategory = null;
+    let isSpirit = false;
+    
+    for (const [subcategory, keywords] of Object.entries(spiritCategories)) {
+      const hasKeyword = keywords.some(keyword => 
         title.includes(keyword) || description.includes(keyword)
       );
       
-      if (isSpirit) {
-        return { ...product, category: 'spirits' };
+      if (hasKeyword) {
+        isSpirit = true;
+        matchedSubcategory = subcategory;
+        break;
+      }
+    }
+    
+    // If it's a spirit, update category and add subcategory
+    if (isSpirit) {
+      return { 
+        ...product, 
+        category: 'spirits',
+        subcategory: matchedSubcategory
+      };
+    }
+    
+    // If already categorized as spirits but no subcategory, try to add one
+    if (product.category === 'spirits' && !product.subcategory) {
+      for (const [subcategory, keywords] of Object.entries(spiritCategories)) {
+        const hasKeyword = keywords.some(keyword => 
+          title.includes(keyword) || description.includes(keyword)
+        );
+        
+        if (hasKeyword) {
+          return { ...product, subcategory };
+        }
       }
     }
     

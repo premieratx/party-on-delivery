@@ -36,6 +36,7 @@ interface Product {
   description: string;
   handle: string;
   category: string;
+  subcategory?: string;
   variants?: ProductVariant[];
   images?: string[];
 }
@@ -44,6 +45,7 @@ export const ProductSearch = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedSpiritType, setSelectedSpiritType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<{ [productId: string]: ProductVariant }>({});
@@ -108,15 +110,27 @@ export const ProductSearch = () => {
   
   // Get products for current category
   const products = useMemo(() => {
+    let filtered = [];
+    
     if (selectedCategory === 'favorites') {
-      return productsLoaded[selectedCategory] || [];
+      filtered = productsLoaded[selectedCategory] || [];
     } else if (selectedCategory === 'all') {
-      return allProducts;
+      filtered = allProducts;
     } else {
       // Filter products by the selected category
-      return allProducts.filter(product => product.category === selectedCategory);
+      filtered = allProducts.filter(product => product.category === selectedCategory);
     }
-  }, [selectedCategory, allProducts, productsLoaded]);
+
+    // If spirits category is selected and a specific spirit type is chosen, filter further
+    if (selectedCategory === 'spirits' && selectedSpiritType !== 'all') {
+      filtered = filtered.filter(product => 
+        product.subcategory === selectedSpiritType ||
+        product.title.toLowerCase().includes(selectedSpiritType.toLowerCase())
+      );
+    }
+
+    return filtered;
+  }, [selectedCategory, selectedSpiritType, allProducts, productsLoaded]);
 
   // Helper function to get emoji for category
   const getEmojiForCategory = (categoryId: string): string => {
@@ -413,7 +427,10 @@ export const ProductSearch = () => {
             <span className="text-sm font-medium text-foreground mt-2">Categories:</span>
             <RadioGroup 
               value={selectedCategory} 
-              onValueChange={setSelectedCategory}
+              onValueChange={(value) => {
+                setSelectedCategory(value);
+                setSelectedSpiritType("all"); // Reset spirit filter when category changes
+              }}
               className="flex flex-wrap gap-4"
             >
               {categories.map((category) => (
@@ -431,13 +448,51 @@ export const ProductSearch = () => {
             </RadioGroup>
           </div>
 
+          {/* Spirit Type Filter - Desktop */}
+          {selectedCategory === 'spirits' && (
+            <div className="hidden md:flex items-start gap-4 mb-4 pl-4 border-l-2 border-muted">
+              <span className="text-sm font-medium text-foreground mt-2">Spirit Types:</span>
+              <RadioGroup 
+                value={selectedSpiritType} 
+                onValueChange={setSelectedSpiritType}
+                className="flex flex-wrap gap-4"
+              >
+                {[
+                  { id: 'all', label: 'All Spirits' },
+                  { id: 'whiskey', label: 'Whiskey' },
+                  { id: 'vodka', label: 'Vodka' },
+                  { id: 'rum', label: 'Rum' },
+                  { id: 'gin', label: 'Gin' },
+                  { id: 'tequila', label: 'Tequila' },
+                  { id: 'mezcal', label: 'Mezcal' },
+                  { id: 'liqueurs', label: 'Liqueurs' },
+                  { id: 'brandy', label: 'Brandy/Cognac' }
+                ].map((type) => (
+                  <div key={type.id} className="flex items-center space-x-2">
+                    <RadioGroupItem 
+                      value={type.id} 
+                      id={`spirit-${type.id}`} 
+                      className="w-4 h-4 flex-shrink-0 border border-muted-foreground [&>span]:w-1/2 [&>span]:h-1/2 [&>span]:bg-amber-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto [&>span]:flex [&>span]:items-center [&>span]:justify-center" 
+                    />
+                    <Label htmlFor={`spirit-${type.id}`} className="text-sm cursor-pointer whitespace-nowrap">
+                      {type.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+
           {/* Mobile Filter Panel */}
           {showFilters && (
             <Card className="mb-4 md:hidden">
               <CardContent className="p-4">
                 <div className="space-y-4">
                   <h3 className="font-medium">Categories</h3>
-                  <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <RadioGroup value={selectedCategory} onValueChange={(value) => {
+                    setSelectedCategory(value);
+                    setSelectedSpiritType("all");
+                  }}>
                     <div className="grid grid-cols-2 gap-2">
                       {categories.map((category) => (
                         <div key={category.id} className="flex items-center space-x-1.5 overflow-hidden">
@@ -453,6 +508,39 @@ export const ProductSearch = () => {
                       ))}
                     </div>
                   </RadioGroup>
+                  
+                  {/* Spirit Type Filter - Mobile */}
+                  {selectedCategory === 'spirits' && (
+                    <div className="space-y-2 border-t pt-4">
+                      <h4 className="font-medium text-sm">Spirit Types</h4>
+                      <RadioGroup value={selectedSpiritType} onValueChange={setSelectedSpiritType}>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { id: 'all', label: 'All' },
+                            { id: 'whiskey', label: 'Whiskey' },
+                            { id: 'vodka', label: 'Vodka' },
+                            { id: 'rum', label: 'Rum' },
+                            { id: 'gin', label: 'Gin' },
+                            { id: 'tequila', label: 'Tequila' },
+                            { id: 'mezcal', label: 'Mezcal' },
+                            { id: 'liqueurs', label: 'Liqueurs' },
+                            { id: 'brandy', label: 'Brandy' }
+                          ].map((type) => (
+                            <div key={type.id} className="flex items-center space-x-1.5 overflow-hidden">
+                              <RadioGroupItem 
+                                value={type.id} 
+                                id={`mobile-spirit-${type.id}`}
+                                className="w-1 h-1 flex-shrink-0 border border-muted-foreground scale-50 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-amber-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
+                              />
+                              <Label htmlFor={`mobile-spirit-${type.id}`} className="text-xs cursor-pointer truncate">
+                                {type.label}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -464,17 +552,33 @@ export const ProductSearch = () => {
               {loadingCategories.has(selectedCategory) ? "Loading..." : `${filteredProducts.length} products found`}
               {searchTerm && ` for "${searchTerm}"`}
               {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
+              {selectedCategory === "spirits" && selectedSpiritType !== "all" && ` - ${selectedSpiritType}`}
             </span>
-            {selectedCategory !== "all" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedCategory("all")}
-                className="text-xs"
-              >
-                Clear filter
-              </Button>
-            )}
+            <div className="flex gap-2">
+              {selectedCategory === "spirits" && selectedSpiritType !== "all" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedSpiritType("all")}
+                  className="text-xs"
+                >
+                  Clear spirit filter
+                </Button>
+              )}
+              {selectedCategory !== "all" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedCategory("all");
+                    setSelectedSpiritType("all");
+                  }}
+                  className="text-xs"
+                >
+                  Clear filter
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
