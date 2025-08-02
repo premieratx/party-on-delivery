@@ -124,7 +124,7 @@ serve(async (req) => {
     while (hasNextPage && pageCount < maxPages) {
       const paginatedQuery = `
         query ${cursor ? `($cursor: String!)` : ''} {
-          products(first: 250${cursor ? `, after: $cursor` : ''}) {
+          products(first: 250${cursor ? `, after: $cursor` : ''}, query: "status:active") {
             pageInfo {
               hasNextPage
               endCursor

@@ -48,7 +48,7 @@ export default function CustomCollectionCreator() {
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'unsorted' | 'sorted'>('unsorted');
+  const [activeTab, setActiveTab] = useState<'unsorted' | 'sorted' | 'synced'>('unsorted');
   
   // Dropdown states with simple string values
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -170,21 +170,35 @@ export default function CustomCollectionCreator() {
         // Check if modification exists
         const { data: existing } = await supabase
           .from('product_modifications')
-          .select('id')
+          .select('*')
           .eq('shopify_product_id', update.shopify_product_id)
           .single();
 
         if (existing) {
-          // Update existing record
+          // For categories and product types: 1-for-1 replacement
+          // For collections: additive (merge with existing)
+          let updateData: any = {
+            synced_to_shopify: false,
+            updated_at: new Date().toISOString()
+          };
+
+          if (update.category) {
+            updateData.category = update.category; // Replace category
+          }
+          
+          if (update.product_type) {
+            updateData.product_type = update.product_type; // Replace product type  
+          }
+
+          if (update.collection) {
+            // For now, just update the collection field directly
+            // TODO: Implement proper multi-collection support later
+            updateData.collection = update.collection;
+          }
+
           const { error } = await supabase
             .from('product_modifications')
-            .update({
-              category: update.category,
-              product_type: update.product_type,
-              collection: update.collection,
-              synced_to_shopify: false,
-              updated_at: new Date().toISOString()
-            })
+            .update(updateData)
             .eq('shopify_product_id', update.shopify_product_id);
           
           if (error) throw error;
@@ -287,6 +301,13 @@ export default function CustomCollectionCreator() {
     );
   };
 
+  // Helper function to check if product is synced
+  const isSynced = (productId: string) => {
+    return productModifications.some(m => 
+      m.shopify_product_id === productId && m.synced_to_shopify
+    );
+  };
+
   // Filter products based on active tab
   const filteredProducts = useMemo(() => {
     let filtered = allProducts.map(getProductWithModifications).filter(product => {
@@ -296,9 +317,22 @@ export default function CustomCollectionCreator() {
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
       
-      // Tab filtering
-      const hasUnsyncedModification = hasModification(product.id);
-      const matchesTab = activeTab === 'unsorted' ? !hasUnsyncedModification : hasUnsyncedModification;
+      // Tab filtering based on modification and sync status
+      const productId = product.id.replace('gid://shopify/Product/', '');
+      const hasUnsyncedModification = hasModification(productId);
+      const isProductSynced = isSynced(productId);
+      
+      let matchesTab = false;
+      if (activeTab === 'unsorted') {
+        // Show products with no modifications and not synced
+        matchesTab = !hasUnsyncedModification && !isProductSynced;
+      } else if (activeTab === 'sorted') {
+        // Show products with unsynced modifications
+        matchesTab = hasUnsyncedModification;
+      } else if (activeTab === 'synced') {
+        // Show synced products
+        matchesTab = isProductSynced;
+      }
       
       return matchesSearch && matchesCategory && matchesProductType && matchesTab;
     });
@@ -528,16 +562,26 @@ export default function CustomCollectionCreator() {
                 >
                   Unsorted ({allProducts.filter(p => !hasModification(p.id)).length})
                 </Button>
-                <Button
-                  variant={activeTab === 'sorted' ? 'default' : 'outline'}
-                  onClick={() => {
-                    setActiveTab('sorted');
-                    setSelectedProducts(new Set());
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  Sorted ({productModifications.filter(m => !m.synced_to_shopify).length})
-                </Button>
+                 <Button
+                   variant={activeTab === 'sorted' ? 'default' : 'outline'}
+                   onClick={() => {
+                     setActiveTab('sorted');
+                     setSelectedProducts(new Set());
+                   }}
+                   className="flex items-center gap-2"
+                 >
+                   Sorted ({productModifications.filter(m => !m.synced_to_shopify).length})
+                 </Button>
+                 <Button
+                   variant={activeTab === 'synced' ? 'default' : 'outline'}
+                   onClick={() => {
+                     setActiveTab('synced');
+                     setSelectedProducts(new Set());
+                   }}
+                   className="flex items-center gap-2"
+                 >
+                   Synced ({productModifications.filter(m => m.synced_to_shopify).length})
+                 </Button>
               </div>
             </CardContent>
           </Card>
@@ -545,7 +589,9 @@ export default function CustomCollectionCreator() {
           {/* Products Table */}
           <Card>
             <CardHeader>
-              <CardTitle>{activeTab === 'unsorted' ? 'Unsorted' : 'Sorted'} Products ({filteredProducts.length} total)</CardTitle>
+               <CardTitle>
+                 {activeTab === 'unsorted' ? 'Unsorted' : activeTab === 'sorted' ? 'Sorted' : 'Synced'} Products ({filteredProducts.length} total)
+               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
@@ -683,17 +729,31 @@ export default function CustomCollectionCreator() {
                         </Badge>
                       </div>
 
-                      {/* Status */}
-                      <div className="w-20">
-                        {hasModification(product.id) && (
-                          <Badge 
-                            variant="secondary" 
-                            className="text-xs bg-blue-100 text-blue-800 border-blue-200"
-                          >
-                            Modified
-                          </Badge>
-                        )}
-                      </div>
+                       {/* Status */}
+                       <div className="w-20">
+                         {isSynced(product.id.replace('gid://shopify/Product/', '')) ? (
+                           <Badge 
+                             variant="secondary" 
+                             className="text-xs bg-green-100 text-green-800 border-green-200"
+                           >
+                             Synced
+                           </Badge>
+                         ) : hasModification(product.id.replace('gid://shopify/Product/', '')) ? (
+                           <Badge 
+                             variant="secondary" 
+                             className="text-xs bg-blue-100 text-blue-800 border-blue-200"
+                           >
+                             Modified
+                           </Badge>
+                         ) : (
+                           <Badge 
+                             variant="outline" 
+                             className="text-xs text-muted-foreground"
+                           >
+                             Unsorted
+                           </Badge>
+                         )}
+                       </div>
                     </div>
                   ))}
                 </div>
