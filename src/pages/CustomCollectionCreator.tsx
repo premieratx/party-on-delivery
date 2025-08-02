@@ -328,9 +328,8 @@ export default function CustomCollectionCreator() {
       const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
       
       // Tab filtering based on modification and sync status
-      const productId = product.id.replace('gid://shopify/Product/', '');
-      const hasUnsyncedModification = hasModification(productId);
-      const isProductSynced = isSynced(productId);
+      const hasUnsyncedModification = hasModification(product.id);
+      const isProductSynced = isSynced(product.id);
       
       let matchesTab = false;
       if (activeTab === 'unsorted') {
@@ -741,14 +740,14 @@ export default function CustomCollectionCreator() {
 
                        {/* Status */}
                        <div className="w-20">
-                         {isSynced(product.id.replace('gid://shopify/Product/', '')) ? (
+                         {isSynced(product.id) ? (
                            <Badge 
                              variant="secondary" 
                              className="text-xs bg-green-100 text-green-800 border-green-200"
                            >
                              Synced
                            </Badge>
-                         ) : hasModification(product.id.replace('gid://shopify/Product/', '')) ? (
+                         ) : hasModification(product.id) ? (
                            <Badge 
                              variant="secondary" 
                              className="text-xs bg-blue-100 text-blue-800 border-blue-200"
