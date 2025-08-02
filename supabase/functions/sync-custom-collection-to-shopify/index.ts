@@ -29,13 +29,22 @@ serve(async (req) => {
       console.log('No products to add to collection');
     }
     
-    const productIdsQuery = product_ids && product_ids.length > 0 
-      ? product_ids.map((id: string) => `id:${id}`).join(' OR ')
-      : '';
-    
     let shopifyProductIds: string[] = [];
     
-    if (productIdsQuery) {
+    if (product_ids && product_ids.length > 0) {
+      // Convert full Shopify GIDs to numeric IDs for the query
+      const numericIds = product_ids.map((id: string) => {
+        if (id.startsWith('gid://shopify/Product/')) {
+          return id.replace('gid://shopify/Product/', '');
+        }
+        return id;
+      });
+      
+      console.log('Converted product IDs:', numericIds);
+      
+      // Create query for Shopify products using numeric IDs
+      const productIdsQuery = numericIds.map((id: string) => `id:${id}`).join(' OR ');
+      
       const productsResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/graphql.json`, {
         method: 'POST',
         headers: {
@@ -50,6 +59,7 @@ serve(async (req) => {
                   node {
                     id
                     handle
+                    title
                   }
                 }
               }
@@ -63,6 +73,7 @@ serve(async (req) => {
 
       const productsData = await productsResponse.json();
       console.log('Found products for collection:', productsData.data?.products?.edges?.length || 0);
+      console.log('Products found:', productsData.data?.products?.edges?.map((edge: any) => edge.node.title) || []);
 
       // Extract Shopify product IDs
       shopifyProductIds = productsData.data?.products?.edges?.map((edge: any) => edge.node.id) || [];
