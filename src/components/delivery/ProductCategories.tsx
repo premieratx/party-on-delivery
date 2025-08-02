@@ -54,6 +54,7 @@ interface ProductCategoriesProps {
   onProceedToCheckout: () => void;
   onBack?: () => void;
   onBackToStart?: () => void;
+  showBackToStart?: boolean;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({

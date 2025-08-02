@@ -266,7 +266,7 @@ export const DeliveryWidget: React.FC = () => {
           onUpdateQuantity={handleUpdateQuantity}
           onProceedToCheckout={handleCheckout}
           onBack={handleBackToOrderContinuation}
-          onBackToStart={handleBackToStart}
+          onBackToStart={() => navigate('/cover')}
         />
       )}
 

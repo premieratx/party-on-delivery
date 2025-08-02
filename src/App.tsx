@@ -7,6 +7,7 @@ import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import Index from "./pages/Index";
+import CoverPage from "./pages/CoverPage";
 import Success from "./pages/Success";
 import OrderComplete from "./pages/OrderComplete";
 import { AffiliateIntro } from "./pages/AffiliateIntro";
@@ -57,8 +58,9 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <div className="pb-14"> {/* Add padding bottom for navigation bar */}
-                <Routes>
-                  <Route path="/" element={<Index />} />
+          <Routes>
+            <Route path="/cover" element={<CoverPage />} />
+            <Route path="/" element={<Index />} />
                   <Route path="/success" element={<Success />} />
                   <Route path="/order-complete" element={<OrderComplete />} />
                   
