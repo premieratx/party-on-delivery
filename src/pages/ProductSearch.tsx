@@ -529,25 +529,25 @@ export const ProductSearch = () => {
                         
                         {/* Size variants as radio buttons for multi-variant products */}
                         {product.variants && product.variants.length > 1 && (
-                          <div className="mb-2 space-y-1">
+                          <div className="mb-2 space-y-0.5">
                             <RadioGroup 
                               value={currentVariant.id}
                               onValueChange={(value) => {
                                 const variant = product.variants!.find(v => v.id === value);
                                 if (variant) handleVariantChange(product, variant);
                               }}
-                              className="space-y-1"
+                              className="space-y-0.5"
                             >
                               {product.variants.map(variant => (
-                                <div key={variant.id} className="flex items-center space-x-2">
+                                <div key={variant.id} className="flex items-center space-x-1.5">
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-3 h-3"
+                                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
-                                    className="text-xs cursor-pointer flex-1 leading-tight"
+                                    className="text-xs cursor-pointer flex-1 leading-tight truncate"
                                   >
                                     {variant.size} - ${variant.price.toFixed(2)}
                                   </Label>
@@ -557,47 +557,50 @@ export const ProductSearch = () => {
                           </div>
                         )}
                         
-                        <p className="text-lg sm:text-xl font-bold text-primary">
-                          ${currentVariant.price.toFixed(2)}
-                        </p>
-                        
-                        {/* Show size for single variant products */}
-                        {product.variants && product.variants.length === 1 && currentVariant.size !== 'Standard' && (
-                          <p className="text-xs text-muted-foreground">
-                            {currentVariant.size}
+                        {/* Centered Price and Size Info */}
+                        <div className="text-center">
+                          <p className="text-lg sm:text-xl font-bold text-green-600">
+                            ${currentVariant.price.toFixed(2)}
                           </p>
-                        )}
+                          
+                          {/* Show size for single variant products */}
+                          {product.variants && product.variants.length === 1 && currentVariant.size !== 'Standard' && (
+                            <p className="text-xs text-muted-foreground">
+                              {currentVariant.size}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       
-                      {/* Add to Cart Button */}
-                      <div className="mt-auto">
+                      {/* Add to Cart Button - Centered */}
+                      <div className="mt-auto flex justify-center">
                         {quantity > 0 ? (
-                          <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-1 sm:p-2">
+                          <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-1 sm:p-2 min-w-[80px] sm:min-w-[100px]">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleQuantityChange(product, -1)}
-                              className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-primary-foreground/20"
+                              className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-primary-foreground/20 rounded-full"
                             >
-                              <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             </Button>
                             <span className="text-xs sm:text-sm font-medium mx-2">{quantity}</span>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleQuantityChange(product, 1)}
-                              className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-primary-foreground/20"
+                              className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-primary-foreground/20 rounded-full"
                             >
-                              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             </Button>
                           </div>
                         ) : (
                           <Button
                             onClick={() => handleAddToCart(product)}
-                            className="w-full h-8 sm:h-10 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center"
+                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center p-0"
                             size="sm"
                           >
-                            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                           </Button>
                         )}
                       </div>
