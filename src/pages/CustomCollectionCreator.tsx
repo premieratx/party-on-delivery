@@ -70,9 +70,26 @@ export default function CustomCollectionCreator() {
     loadProductModifications();
   }, []);
 
-  const loadAllProducts = async () => {
+  const loadAllProducts = async (forceCacheClear = false) => {
     setLoading(true);
     try {
+      // Clear cache if requested
+      if (forceCacheClear) {
+        console.log('Clearing Shopify cache for fresh sync...');
+        // Clear collections cache
+        await supabase.from('cache').delete().eq('key', 'shopify-collections');
+        await supabase.from('cache').delete().eq('key', 'shopify-collections-metadata');
+        
+        // Clear any local storage cache
+        localStorage.removeItem('shopify-collections-cache');
+        localStorage.removeItem('shopify-products-cache');
+        
+        toast({
+          title: "Cache Cleared",
+          description: "Fetching fresh data from Shopify...",
+        });
+      }
+      
       const response = await supabase.functions.invoke('fetch-shopify-products');
       if (response.data && response.data.products) {
         setAllProducts(response.data.products);
@@ -88,6 +105,31 @@ export default function CustomCollectionCreator() {
         
         setAvailableCategories(Array.from(categories).sort());
         setAvailableProductTypes(Array.from(productTypes).sort());
+        
+        // If force cache clear, also refresh collections and sync app
+        if (forceCacheClear) {
+          await loadCollections(true);
+          
+          // Reload modifications first to get current state
+          await loadProductModifications();
+          
+          // Then check for products that need app sync
+          setTimeout(async () => {
+            const currentMods = await supabase.from('product_modifications').select('*');
+            if (currentMods.data) {
+              const shopifySyncedMods = currentMods.data.filter((m: any) => m.synced_to_shopify && !m.app_synced);
+              if (shopifySyncedMods.length > 0) {
+                console.log('Auto-syncing products to app after cache clear...');
+                await syncToApp();
+              }
+            }
+          }, 1000); // Small delay to ensure data is fresh
+          
+          toast({
+            title: "Sync Complete",
+            description: "Fresh data loaded from Shopify! Collections updated.",
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading products:', error);
@@ -119,12 +161,20 @@ export default function CustomCollectionCreator() {
     loadCollections();
   }, []);
 
-  const loadCollections = async () => {
+  const loadCollections = async (forceCacheClear = false) => {
     try {
+      // Clear collections cache if force refresh
+      if (forceCacheClear) {
+        console.log('Clearing collections cache for fresh sync...');
+        await supabase.from('cache').delete().eq('key', 'shopify-collections');
+        await supabase.from('cache').delete().eq('key', 'shopify-collections-metadata');
+      }
+      
       const response = await supabase.functions.invoke('get-all-collections');
       if (response.data && response.data.collections) {
         const collectionNames = response.data.collections.map((c: any) => c.title || c.handle);
         setAvailableCollections(collectionNames.sort());
+        console.log(`Loaded ${collectionNames.length} collections for dropdown`);
       }
     } catch (error) {
       console.error('Error loading collections:', error);
@@ -496,7 +546,7 @@ export default function CustomCollectionCreator() {
               )}
               <Button 
                 variant="outline"
-                onClick={loadAllProducts}
+                onClick={() => loadAllProducts(true)}
                 disabled={loading}
                 className="flex items-center gap-2"
               >
