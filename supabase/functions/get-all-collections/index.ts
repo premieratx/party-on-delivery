@@ -201,7 +201,7 @@ serve(async (req) => {
       console.log(`Found ${collectionsList.length} collections in Shopify`);
 
       // Prioritize our main collections first, then fetch others
-      const priorityCollections = ["spirits", "tailgate-beer", "boat-page-beer", "seltzer-collection", "cocktail-kits", "party-supplies"];
+      const priorityCollections = ["spirits", "tailgate-beer", "seltzer-collection", "cocktail-kits", "party-supplies"];
       const otherCollections = collectionsList
         .map(edge => edge.node.handle)
         .filter(handle => !priorityCollections.includes(handle));
@@ -288,7 +288,7 @@ serve(async (req) => {
       
       console.log(`Successfully processed ${processedCount} collections`);
       
-      // Cache the successful result for 6 hours (shorter refresh interval)
+      // Cache the successful result for 1 hour (force refresh for updates)
       if (allCollections.length > 0) {
         console.log("=== CACHING SUCCESSFUL RESULT ===");
         try {
@@ -299,8 +299,12 @@ serve(async (req) => {
             { auth: { persistSession: false } }
           );
           
+          // Clear existing cache first to force refresh
+          await supabaseClient.from('cache').delete().eq('key', 'shopify-collections');
+          await supabaseClient.from('cache').delete().eq('key', 'shopify-collections-metadata');
+          
           const expiresAt = new Date();
-          expiresAt.setHours(expiresAt.getHours() + 6); // 6 hours from now
+          expiresAt.setHours(expiresAt.getHours() + 1); // 1 hour for faster updates
           
           await supabaseClient.from('cache').upsert({
             key: 'shopify-collections',
@@ -321,7 +325,7 @@ serve(async (req) => {
             created_at: new Date().toISOString()
           });
           
-          console.log("Collections cached to Supabase for 6 hours");
+          console.log("Collections cache cleared and refreshed for 1 hour");
         } catch (cacheError) {
           console.warn("Failed to cache to Supabase:", cacheError);
         }
