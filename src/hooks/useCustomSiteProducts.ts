@@ -186,6 +186,7 @@ export function useCustomSiteProducts() {
       'ready-to-drink-cocktails': 'cocktails',
       'hats-sunglasses': 'party-supplies',
       'tequila-mezcal': 'spirits',
+      'whiskey': 'spirits',
       'gin-rum': 'spirits',
       'decorations': 'party-supplies',
       'spirits': 'spirits',
