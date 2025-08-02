@@ -397,6 +397,96 @@ export default function CustomCollectionCreator() {
     }
   };
 
+  // Force re-sync selected products - regardless of current sync status
+  const forceSyncSelectedProducts = async () => {
+    if (selectedProducts.size === 0) {
+      toast({
+        title: "Info",
+        description: "Please select products to sync.",
+      });
+      return;
+    }
+
+    console.log('=== FORCE SYNCING SELECTED PRODUCTS ===');
+    console.log('Selected products:', Array.from(selectedProducts));
+
+    setSyncing(true);
+    try {
+      const selectedProductIds = Array.from(selectedProducts);
+      
+      // Get all modifications for selected products
+      const selectedModifications = productModifications.filter(mod => 
+        selectedProductIds.includes(mod.shopify_product_id)
+      );
+      
+      console.log('Found modifications for selected products:', selectedModifications.length);
+
+      // If no modifications exist for some selected products, we need to handle this
+      const missingModifications = selectedProductIds.filter(productId => 
+        !productModifications.some(mod => mod.shopify_product_id === productId)
+      );
+
+      console.log('Products without modifications:', missingModifications.length);
+
+      // Create modifications for products that don't have them yet
+      if (missingModifications.length > 0) {
+        const newModifications = missingModifications.map(productId => {
+          const product = allProducts.find(p => p.id === productId);
+          return {
+            shopify_product_id: productId,
+            product_title: product?.title || 'Unknown Product',
+            category: null,
+            product_type: null,
+            collection: null,
+            synced_to_shopify: false,
+            app_synced: false
+          };
+        });
+
+        console.log('Creating new modifications:', newModifications.length);
+        const { error: insertError } = await supabase
+          .from('product_modifications')
+          .insert(newModifications);
+
+        if (insertError) throw insertError;
+      }
+
+      // Force all selected product modifications to be unsynced
+      console.log('Marking selected products as unsynced for re-sync...');
+      const { error: updateError } = await supabase
+        .from('product_modifications')
+        .update({ 
+          synced_to_shopify: false,
+          app_synced: false,
+          updated_at: new Date().toISOString()
+        })
+        .in('shopify_product_id', selectedProductIds);
+
+      if (updateError) throw updateError;
+
+      // Reload modifications to get updated data
+      await loadProductModifications();
+
+      // Now sync using the regular flow
+      await syncToShopifyAndApp();
+
+      toast({
+        title: "Success",
+        description: `Force synced ${selectedProducts.size} selected products to Shopify and app!`,
+      });
+
+    } catch (error) {
+      console.error('Error force syncing selected products:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sync selected products.",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   // Sync products to app
   const syncToApp = async () => {
     const shopifySyncedMods = productModifications.filter(m => m.synced_to_shopify && !m.app_synced);
@@ -758,6 +848,30 @@ export default function CustomCollectionCreator() {
                       Sync to App & Shopify
                     </Button>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Force Sync Selected Products - Always Available */}
+          {selectedProducts.size > 0 && (
+            <Card className="mb-4">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium">Force Sync Selected Products</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Re-sync {selectedProducts.size} selected products to Shopify and app
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={forceSyncSelectedProducts}
+                    disabled={syncing || selectedProducts.size === 0}
+                    className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    <Save className="w-4 h-4" />
+                    {syncing ? 'Syncing...' : 'Force Sync Selected'}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
