@@ -585,7 +585,7 @@ export const ProductSearch = () => {
                       {/* Add to Cart Button - Centered */}
                       <div className="mt-auto flex justify-center">
                         {quantity > 0 ? (
-                           <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-0.5 sm:p-1 md:p-2 min-w-[60px] sm:min-w-[80px] md:min-w-[100px]">
+                           <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-0.5 min-w-[55px] sm:min-w-[70px] md:min-w-[90px]">
                              <Button
                                variant="ghost"
                                size="sm"
@@ -594,7 +594,7 @@ export const ProductSearch = () => {
                              >
                                <Minus className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3" />
                              </Button>
-                             <span className="text-[10px] sm:text-xs md:text-sm font-medium mx-1 sm:mx-2">{quantity}</span>
+                             <span className="text-sm sm:text-xs md:text-sm font-medium mx-0.5">{quantity}</span>
                              <Button
                                variant="ghost"
                                size="sm"
