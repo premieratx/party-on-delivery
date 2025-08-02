@@ -421,7 +421,7 @@ export const ProductSearch = () => {
                   <RadioGroupItem 
                     value={category.id} 
                     id={category.id} 
-                    className="w-1.5 h-1.5 flex-shrink-0 border border-muted-foreground [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
+                    className="w-4 h-4 flex-shrink-0 border border-muted-foreground [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto" 
                   />
                   <Label htmlFor={category.id} className="text-sm cursor-pointer whitespace-nowrap">
                     {category.label}
@@ -438,7 +438,7 @@ export const ProductSearch = () => {
                 <div className="space-y-4">
                   <h3 className="font-medium">Categories</h3>
                   <RadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {categories.map((category) => (
                         <div key={category.id} className="flex items-center space-x-1.5 overflow-hidden">
                           <RadioGroupItem 
@@ -548,11 +548,11 @@ export const ProductSearch = () => {
                               className="space-y-0.5"
                             >
                               {product.variants.map(variant => (
-                                <div key={variant.id} className="flex items-start space-x-1.5 overflow-hidden">
+                                <div key={variant.id} className="flex items-center space-x-1.5 overflow-hidden">
                                   <RadioGroupItem 
                                     value={variant.id} 
                                     id={`${product.id}-${variant.id}`}
-                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 mt-1 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
+                                    className="w-1 h-1 sm:w-1.5 sm:h-1.5 flex-shrink-0 border border-muted-foreground scale-50 sm:scale-75 mr-0.5 [&>span]:w-2/3 [&>span]:h-2/3 [&>span]:bg-green-600 [&>span]:rounded-full [&>span]:mx-auto [&>span]:my-auto"
                                   />
                                   <Label 
                                     htmlFor={`${product.id}-${variant.id}`}
