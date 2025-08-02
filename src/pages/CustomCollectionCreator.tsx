@@ -49,7 +49,7 @@ export default function CustomCollectionCreator() {
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<'unsorted' | 'sorted' | 'synced' | 'app-synced'>('unsorted');
+  const [activeTab, setActiveTab] = useState<'unsorted' | 'synced'>('unsorted');
   const [appSyncing, setAppSyncing] = useState(false);
   
   // Dropdown states with simple string values
@@ -298,42 +298,92 @@ export default function CustomCollectionCreator() {
     }
   };
 
-  // Sync to Shopify
-  const syncToShopify = async () => {
+  // Sync to Shopify AND App - combined function
+  const syncToShopifyAndApp = async () => {
     const unsyncedMods = productModifications.filter(m => !m.synced_to_shopify);
     if (unsyncedMods.length === 0) {
       toast({
         title: "Info",
-        description: "No unsynced changes to sync to Shopify.",
+        description: "No unsynced changes to sync.",
       });
       return;
     }
 
     setSyncing(true);
     try {
-      // Simulate Shopify sync
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Group modifications by collection for Shopify sync
+      const collectionUpdates: { [key: string]: string[] } = {};
+      
+      unsyncedMods.forEach(mod => {
+        if (mod.collection) {
+          if (!collectionUpdates[mod.collection]) {
+            collectionUpdates[mod.collection] = [];
+          }
+          collectionUpdates[mod.collection].push(mod.shopify_product_id);
+        }
+      });
 
-      // Mark as synced
-      const { error } = await supabase
+      // Sync each collection to Shopify
+      for (const [collectionTitle, productIds] of Object.entries(collectionUpdates)) {
+        const handle = collectionTitle.toLowerCase().replace(/\s+/g, '-');
+        
+        const { data, error } = await supabase.functions.invoke('sync-custom-collection-to-shopify', {
+          body: {
+            collection_id: `custom-${handle}`,
+            title: collectionTitle,
+            handle: handle,
+            description: `Custom collection: ${collectionTitle}`,
+            product_ids: productIds
+          }
+        });
+
+        if (error) {
+          console.error('Error syncing collection to Shopify:', error);
+          throw error;
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to sync collection to Shopify');
+        }
+
+        console.log(`Synced collection "${collectionTitle}" to Shopify with ${data.products_added} products`);
+      }
+
+      // Mark modifications as synced to Shopify
+      const { error: updateError } = await supabase
         .from('product_modifications')
         .update({ synced_to_shopify: true })
-        .eq('synced_to_shopify', false);
+        .in('id', unsyncedMods.map(m => m.id));
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
+      // Now sync to app
+      const { data: appSyncData, error: appSyncError } = await supabase.functions.invoke('sync-products-to-app');
+      
+      if (appSyncError) throw appSyncError;
+      
+      if (!appSyncData.success) {
+        throw new Error(appSyncData.message || 'Failed to sync products to app');
+      }
+
+      // Clear cached collections and refresh
+      localStorage.removeItem('shopify-collections-cache');
       await loadProductModifications();
+      await loadAllProducts(true);
+      
+      // Notify delivery app to refresh
+      window.dispatchEvent(new CustomEvent('admin-sync-complete'));
 
       toast({
         title: "Success",
-        description: `Synced ${unsyncedMods.length} product changes to Shopify!`,
+        description: `Synced ${unsyncedMods.length} product changes to Shopify and app!`,
       });
 
     } catch (error) {
-      console.error('Error syncing to Shopify:', error);
+      console.error('Error syncing to Shopify and app:', error);
       toast({
         title: "Error",
-        description: "Failed to sync changes to Shopify.",
+        description: "Failed to sync changes to Shopify and app.",
         variant: "destructive"
       });
     } finally {
@@ -388,39 +438,6 @@ export default function CustomCollectionCreator() {
     }
   };
 
-  // Combined sync function - syncs to Shopify then to App
-  const fullSync = async () => {
-    try {
-      // First sync to Shopify if there are unsynced changes
-      if (unsyncedCount > 0) {
-        await syncToShopify();
-      }
-      
-      // Then sync to App if there are shopify-synced but not app-synced items
-      const shopifySyncedItems = productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length;
-      if (shopifySyncedItems > 0) {
-        await syncToApp();
-      }
-      
-      // Finally, force refresh all products to ensure delivery app gets updates
-      await loadAllProducts(true);
-      
-      // Notify delivery app to refresh
-      window.dispatchEvent(new CustomEvent('admin-sync-complete'));
-      
-      toast({
-        title: "Full Sync Complete",
-        description: "Products synced to Shopify and delivery app updated!",
-      });
-    } catch (error) {
-      console.error('Error in full sync:', error);
-      toast({
-        title: "Full Sync Failed",
-        description: "Some steps in the sync process failed. Check logs for details.",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Get product with modifications applied
   const getProductWithModifications = (product: Product): Product => {
@@ -493,16 +510,10 @@ export default function CustomCollectionCreator() {
       
       let matchesTab = false;
       if (activeTab === 'unsorted') {
-        // Show products with no modifications and not synced
-        matchesTab = !hasUnsyncedModification && !isProductSynced && !isProductAppSynced;
-      } else if (activeTab === 'sorted') {
-        // Show products with unsynced modifications
-        matchesTab = hasUnsyncedModification;
+        // Show products that are either unmodified or have unsynced modifications
+        matchesTab = !isProductAppSynced;
       } else if (activeTab === 'synced') {
-        // Show products synced to Shopify but not app
-        matchesTab = isProductSynced;
-      } else if (activeTab === 'app-synced') {
-        // Show products synced to app
+        // Show products that are fully synced (both Shopify and app)
         matchesTab = isProductAppSynced;
       }
       
@@ -558,16 +569,6 @@ export default function CustomCollectionCreator() {
             
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{selectedProducts.size} selected</Badge>
-              {(unsyncedCount > 0 || productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length > 0) && (
-                <Button 
-                  onClick={fullSync}
-                  disabled={syncing || appSyncing}
-                  className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
-                >
-                  <Save className="w-4 h-4" />
-                  {syncing || appSyncing ? 'Syncing...' : `Full Sync (${unsyncedCount + productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length})`}
-                </Button>
-              )}
               <Button 
                 variant="outline"
                 onClick={() => loadAllProducts(true)}
@@ -706,13 +707,21 @@ export default function CustomCollectionCreator() {
                     </select>
                   </div>
                   <div className="flex items-end">
-                    <Button 
-                      onClick={applyLocalChanges}
+                     <Button 
+                      onClick={async () => {
+                        await applyLocalChanges();
+                        // Auto-sync after applying changes
+                        setTimeout(() => {
+                          if (selectedProducts.size > 0) {
+                            syncToShopifyAndApp();
+                          }
+                        }, 500);
+                      }}
                       disabled={!bulkCategory && !bulkProductType && !bulkCollection}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full"
+                      className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white w-full"
                     >
                       <Save className="w-4 h-4" />
-                      Apply Locally
+                      Sync to App & Shopify
                     </Button>
                   </div>
                 </div>
@@ -734,36 +743,16 @@ export default function CustomCollectionCreator() {
                 >
                   Unsorted ({allProducts.filter(p => !hasModification(p.id) && !isSynced(p.id) && !isAppSynced(p.id)).length})
                 </Button>
-                 <Button
-                   variant={activeTab === 'sorted' ? 'default' : 'outline'}
-                   onClick={() => {
-                     setActiveTab('sorted');
-                     setSelectedProducts(new Set());
-                   }}
-                   className="flex items-center gap-2"
-                 >
-                   Sorted ({productModifications.filter(m => !m.synced_to_shopify).length})
-                 </Button>
-                  <Button
-                    variant={activeTab === 'synced' ? 'default' : 'outline'}
-                    onClick={() => {
-                      setActiveTab('synced');
-                      setSelectedProducts(new Set());
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    Synced ({productModifications.filter(m => m.synced_to_shopify && !m.app_synced).length})
-                  </Button>
-                  <Button
-                    variant={activeTab === 'app-synced' ? 'default' : 'outline'}
-                    onClick={() => {
-                      setActiveTab('app-synced');
-                      setSelectedProducts(new Set());
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    App Synced ({productModifications.filter(m => m.app_synced).length})
-                  </Button>
+                <Button
+                  variant={activeTab === 'synced' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setActiveTab('synced');
+                    setSelectedProducts(new Set());
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  Sorted & Synced ({productModifications.filter(m => m.synced_to_shopify && m.app_synced).length})
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -772,9 +761,7 @@ export default function CustomCollectionCreator() {
           <Card>
             <CardHeader>
                <CardTitle>
-                 {activeTab === 'unsorted' ? 'Unsorted' : 
-                  activeTab === 'sorted' ? 'Sorted' : 
-                  activeTab === 'synced' ? 'Synced' : 'App Synced'} Products ({filteredProducts.length} total)
+                 {activeTab === 'unsorted' ? 'Unsorted' : 'Sorted & Synced'} Products ({filteredProducts.length} total)
                </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
