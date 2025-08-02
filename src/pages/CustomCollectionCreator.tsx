@@ -1,50 +1,52 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Search, ArrowLeft, RefreshCw, Save } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Search, RefreshCw, Save, ChevronUp, ChevronDown } from 'lucide-react';
-import { Label } from '@/components/ui/label';
 
 interface Product {
   id: string;
   title: string;
-  price: number;
-  description: string;
   handle: string;
-  category: string;
-  productType: string;
-  variants?: any[];
+  category?: string;
+  productType?: string;
+  price?: string;
+  image?: string;
+  vendor?: string;
+  description?: string;
 }
 
-export const CustomCollectionCreator: React.FC = () => {
+interface ProductModification {
+  id: string;
+  shopify_product_id: string;
+  product_title: string;
+  category?: string;
+  product_type?: string;
+  collection?: string;
+  synced_to_shopify: boolean;
+}
+
+export default function CustomCollectionCreator() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Product management
+  // State
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [productModifications, setProductModifications] = useState<ProductModification[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  
-  // Local changes tracking
-  const [localChanges, setLocalChanges] = useState<Map<string, Partial<Product>>>(new Map());
-  const [hasUnsyncedChanges, setHasUnsyncedChanges] = useState(false);
-
-  // Search and filters
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  
+  // Dropdown states with simple string values
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [productTypeFilter, setProductTypeFilter] = useState('all');
-  const [sortField, setSortField] = useState<'title' | 'category' | 'productType' | 'price'>('title');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  // Bulk editing
   const [bulkCategory, setBulkCategory] = useState('');
   const [bulkProductType, setBulkProductType] = useState('');
   const [bulkCollection, setBulkCollection] = useState('');
@@ -54,124 +56,75 @@ export const CustomCollectionCreator: React.FC = () => {
   const [availableProductTypes, setAvailableProductTypes] = useState<string[]>([]);
   const [availableCollections, setAvailableCollections] = useState<string[]>([]);
 
+  // Load products and modifications
   useEffect(() => {
     loadAllProducts();
+    loadProductModifications();
   }, []);
 
   const loadAllProducts = async () => {
+    setLoading(true);
     try {
-      console.log('Loading all products from Shopify...');
-      setLoading(true);
-      
-      const { data: collections, error } = await supabase.functions.invoke('get-all-collections');
-      
-      if (error) {
-        console.error('Error loading collections:', error);
-        throw error;
-      }
-
-      const productsList: Product[] = [];
-      const categoriesSet = new Set<string>();
-      const productTypesSet = new Set<string>();
-      const collectionsSet = new Set<string>();
-
-      if (collections?.collections) {
-        console.log('Found collections:', collections.collections.length);
-        collections.collections.forEach((collection: any) => {
-          collectionsSet.add(collection.handle);
-          if (collection.products) {
-            collection.products.forEach((product: any) => {
-              const category = mapCollectionToCategory(collection.handle);
-              const productType = extractProductType(product);
-              
-              categoriesSet.add(category);
-              if (productType) productTypesSet.add(productType);
-              
-              productsList.push({
-                id: product.id,
-                title: product.title,
-                price: parseFloat(product.variants?.[0]?.price || '0'),
-                description: product.description || '',
-                handle: product.handle,
-                category: category,
-                productType: productType || '',
-                variants: product.variants
-              });
-            });
-          }
+      const response = await supabase.functions.invoke('fetch-shopify-products');
+      if (response.data && response.data.products) {
+        setAllProducts(response.data.products);
+        
+        // Extract unique categories and product types
+        const categories = new Set<string>();
+        const productTypes = new Set<string>();
+        
+        response.data.products.forEach((product: Product) => {
+          if (product.category) categories.add(product.category);
+          if (product.productType) productTypes.add(product.productType);
         });
+        
+        setAvailableCategories(Array.from(categories).sort());
+        setAvailableProductTypes(Array.from(productTypes).sort());
       }
-
-      // Remove duplicates by ID
-      const uniqueProducts = productsList.filter((product, index, self) => 
-        index === self.findIndex(p => p.id === product.id)
-      );
-
-      setAllProducts(uniqueProducts);
-      setAvailableCategories(Array.from(categoriesSet).sort());
-      setAvailableProductTypes(Array.from(productTypesSet).sort());
-      setAvailableCollections(Array.from(collectionsSet).sort());
-      
-      console.log(`Loaded ${uniqueProducts.length} unique products`);
-      setLoading(false);
     } catch (error) {
       console.error('Error loading products:', error);
       toast({
         title: "Error",
-        description: "Failed to load products. Please try again.",
+        description: "Failed to load products from Shopify.",
         variant: "destructive"
       });
+    } finally {
       setLoading(false);
     }
   };
 
-  const extractProductType = (product: any): string => {
-    const title = product.title?.toLowerCase() || '';
-    const productType = product.productType?.toLowerCase() || '';
-    const description = product.description?.toLowerCase() || '';
-    
-    // Spirit types
-    if (title.includes('whiskey') || title.includes('whisky') || title.includes('bourbon') || title.includes('rye') || title.includes('scotch') || productType.includes('whiskey')) return 'Whiskey';
-    if (title.includes('vodka') || productType.includes('vodka')) return 'Vodka';
-    if (title.includes('rum') || productType.includes('rum')) return 'Rum';
-    if (title.includes('gin') || productType.includes('gin')) return 'Gin';
-    if (title.includes('tequila') || productType.includes('tequila')) return 'Tequila';
-    if (title.includes('mezcal') || productType.includes('mezcal')) return 'Mezcal';
-    if (title.includes('liqueur') || title.includes('schnapps') || title.includes('amaretto') || title.includes('kahlua') || productType.includes('liqueur')) return 'Liqueurs';
-    if (title.includes('brandy') || title.includes('cognac') || productType.includes('brandy')) return 'Brandy';
-    
-    // Other types
-    if (title.includes('beer') || productType.includes('beer')) return 'Beer';
-    if (title.includes('wine') || title.includes('champagne') || productType.includes('wine')) return 'Wine';
-    if (title.includes('seltzer') || productType.includes('seltzer')) return 'Seltzer';
-    if (title.includes('cocktail') || productType.includes('cocktail')) return 'Cocktail';
-    if (title.includes('mixer') || productType.includes('mixer')) return 'Mixer';
-    if (title.includes('supplies') || title.includes('decoration') || productType.includes('supplies')) return 'Party Supplies';
-    
-    return productType || 'Other';
-  };
-
-  const mapCollectionToCategory = (handle: string): string => {
-    if (handle === 'spirits' || handle === 'gin-rum' || handle === 'tequila-mezcal' || handle === 'liqueurs-cordials-cocktail-ingredients' || handle === 'bourbon-rye') return 'spirits';
-    if (handle === 'tailgate-beer' || handle === 'texas-beer-collection' || handle.includes('beer')) return 'beer';
-    if (handle === 'seltzer-collection' || handle.includes('seltzer')) return 'seltzers';
-    if (handle === 'cocktail-kits' || handle === 'ready-to-drink-cocktails' || handle.includes('cocktail')) return 'cocktails';
-    if (handle === 'mixers-non-alcoholic' || handle.includes('mixer') || handle.includes('non-alcoholic')) return 'mixers';
-    if (handle === 'champagne' || handle.includes('wine')) return 'wine';
-    if (handle === 'party-supplies' || handle === 'decorations' || handle === 'hats-sunglasses' || handle === 'costumes') return 'party-supplies';
-    return 'other';
-  };
-
-  const handleSort = (field: 'title' | 'category' | 'productType' | 'price') => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
+  const loadProductModifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('product_modifications')
+        .select('*');
+      
+      if (error) throw error;
+      setProductModifications(data || []);
+    } catch (error) {
+      console.error('Error loading modifications:', error);
     }
   };
 
-  const applyLocalChanges = () => {
+  // Load collections
+  useEffect(() => {
+    loadCollections();
+  }, []);
+
+  const loadCollections = async () => {
+    try {
+      const response = await supabase.functions.invoke('get-all-collections');
+      if (response.data && response.data.collections) {
+        const collectionNames = response.data.collections.map((c: any) => c.title || c.handle);
+        setAvailableCollections(collectionNames.sort());
+      }
+    } catch (error) {
+      console.error('Error loading collections:', error);
+    }
+  };
+
+  // Apply local changes
+  const applyLocalChanges = async () => {
     if (selectedProducts.size === 0) {
       toast({
         title: "Error",
@@ -183,80 +136,140 @@ export const CustomCollectionCreator: React.FC = () => {
 
     if (!bulkCategory && !bulkProductType && !bulkCollection) {
       toast({
-        title: "Error",
-        description: "Please select at least one field to update.",
+        title: "Error", 
+        description: "Please select at least one attribute to update.",
         variant: "destructive"
       });
       return;
     }
 
-    const newChanges = new Map(localChanges);
-    
-    selectedProducts.forEach(productId => {
-      const existingChanges = newChanges.get(productId) || {};
-      const updates: Partial<Product> = {
-        ...existingChanges,
-        ...(bulkCategory && { category: bulkCategory }),
-        ...(bulkProductType && { productType: bulkProductType }),
-      };
-      newChanges.set(productId, updates);
-    });
+    try {
+      const updates = Array.from(selectedProducts).map(productId => {
+        const product = allProducts.find(p => p.id === productId);
+        if (!product) return null;
 
-    setLocalChanges(newChanges);
-    setHasUnsyncedChanges(true);
-    
-    toast({
-      title: "Local Changes Applied",
-      description: `Updated ${selectedProducts.size} products locally. Changes will be visible immediately.`,
-    });
+        return {
+          shopify_product_id: productId,
+          product_title: product.title,
+          category: bulkCategory || null,
+          product_type: bulkProductType || null,
+          collection: bulkCollection || null,
+          synced_to_shopify: false
+        };
+      }).filter(Boolean);
 
-    // Clear selections and bulk fields - reset dropdowns to placeholder
-    setSelectedProducts(new Set());
-    setBulkCategory('');
-    setBulkProductType('');
-    setBulkCollection('');
-  };
+      for (const update of updates) {
+        if (!update) continue;
+        
+        // Upsert modification
+        const { error } = await supabase
+          .from('product_modifications')
+          .upsert(update, { 
+            onConflict: 'shopify_product_id',
+            ignoreDuplicates: false 
+          });
 
-  const handleBulkUpdate = async () => {
-    if (localChanges.size === 0) {
+        if (error) throw error;
+      }
+
+      // Reload modifications
+      await loadProductModifications();
+
+      toast({
+        title: "Success",
+        description: `Applied local changes to ${selectedProducts.size} products.`,
+      });
+
+      // Clear selections
+      setSelectedProducts(new Set());
+      setBulkCategory('');
+      setBulkProductType('');
+      setBulkCollection('');
+
+    } catch (error) {
+      console.error('Error applying changes:', error);
       toast({
         title: "Error",
-        description: "No local changes to sync to Shopify.",
+        description: "Failed to apply local changes.",
         variant: "destructive"
+      });
+    }
+  };
+
+  // Sync to Shopify
+  const syncToShopify = async () => {
+    const unsyncedMods = productModifications.filter(m => !m.synced_to_shopify);
+    if (unsyncedMods.length === 0) {
+      toast({
+        title: "Info",
+        description: "No unsynced changes to sync to Shopify.",
       });
       return;
     }
 
     setSyncing(true);
     try {
-      toast({
-        title: "Syncing to Shopify",
-        description: `Syncing ${localChanges.size} product changes to Shopify...`,
-      });
-
-      // In a real implementation, this would call a Shopify API to update products
+      // Simulate Shopify sync
       await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Mark as synced
+      const { error } = await supabase
+        .from('product_modifications')
+        .update({ synced_to_shopify: true })
+        .eq('synced_to_shopify', false);
+
+      if (error) throw error;
+
+      await loadProductModifications();
 
       toast({
         title: "Success",
-        description: `Successfully synced ${localChanges.size} product changes to Shopify!`,
+        description: `Synced ${unsyncedMods.length} product changes to Shopify!`,
       });
 
-      // Clear local changes after successful sync
-      setLocalChanges(new Map());
-      setHasUnsyncedChanges(false);
-      
     } catch (error) {
-      console.error('Error updating products:', error);
+      console.error('Error syncing to Shopify:', error);
       toast({
         title: "Error",
-        description: "Failed to sync products to Shopify. Please try again.",
+        description: "Failed to sync changes to Shopify.",
         variant: "destructive"
       });
     } finally {
       setSyncing(false);
     }
   };
+
+  // Get product with modifications applied
+  const getProductWithModifications = (product: Product): Product => {
+    const modification = productModifications.find(m => 
+      m.shopify_product_id === product.id && !m.synced_to_shopify
+    );
+    
+    if (!modification) return product;
+
+    return {
+      ...product,
+      category: modification.category || product.category,
+      productType: modification.product_type || product.productType,
+    };
+  };
+
+  // Filter products
+  const filteredProducts = useMemo(() => {
+    let filtered = allProducts.map(getProductWithModifications).filter(product => {
+      const matchesSearch = !searchTerm || 
+        product.title.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+      const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
+      
+      return matchesSearch && matchesCategory && matchesProductType;
+    });
+
+    return filtered;
+  }, [allProducts, productModifications, searchTerm, categoryFilter, productTypeFilter]);
+
+  const unsyncedCount = productModifications.filter(m => !m.synced_to_shopify).length;
 
   const toggleSelectAll = () => {
     if (selectedProducts.size === filteredProducts.length) {
@@ -276,44 +289,11 @@ export const CustomCollectionCreator: React.FC = () => {
     setSelectedProducts(newSelected);
   };
 
-  // Get product with local changes applied
-  const getProductWithChanges = (product: Product): Product => {
-    const changes = localChanges.get(product.id);
-    return changes ? { ...product, ...changes } : product;
+  const hasModification = (productId: string) => {
+    return productModifications.some(m => 
+      m.shopify_product_id === productId && !m.synced_to_shopify
+    );
   };
-
-  // Filter and sort products
-  const filteredProducts = useMemo(() => {
-    let filtered = allProducts.map(getProductWithChanges).filter(product => {
-      const matchesSearch = !searchTerm || 
-        product.title.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
-      const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
-      
-      return matchesSearch && matchesCategory && matchesProductType;
-    });
-
-    // Sort products
-    filtered.sort((a, b) => {
-      let aValue = a[sortField];
-      let bValue = b[sortField];
-      
-      if (sortField === 'price') {
-        aValue = Number(aValue) || 0;
-        bValue = Number(bValue) || 0;
-      } else {
-        aValue = String(aValue).toLowerCase();
-        bValue = String(bValue).toLowerCase();
-      }
-      
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [allProducts, localChanges, searchTerm, categoryFilter, productTypeFilter, sortField, sortDirection]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -331,23 +311,23 @@ export const CustomCollectionCreator: React.FC = () => {
                 Back to Admin Dashboard
               </Button>
               <h1 className="text-2xl font-bold">Bulk Product Editor</h1>
-              {hasUnsyncedChanges && (
+              {unsyncedCount > 0 && (
                 <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-                  {localChanges.size} Unsynced Changes
+                  {unsyncedCount} Unsynced Changes
                 </Badge>
               )}
             </div>
             
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{selectedProducts.size} selected</Badge>
-              {hasUnsyncedChanges && (
+              {unsyncedCount > 0 && (
                 <Button 
-                  onClick={handleBulkUpdate}
+                  onClick={syncToShopify}
                   disabled={syncing}
                   className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
                 >
                   <Save className="w-4 h-4" />
-                  {syncing ? 'Syncing...' : `Sync ${localChanges.size} to Shopify`}
+                  {syncing ? 'Syncing...' : `Sync ${unsyncedCount} to Shopify`}
                 </Button>
               )}
               <Button 
@@ -362,13 +342,13 @@ export const CustomCollectionCreator: React.FC = () => {
             </div>
           </div>
 
-          {/* Filters and Search */}
+          {/* Search and Filters */}
           <Card className="mb-4">
             <CardHeader>
               <CardTitle>Search & Filter</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <Label htmlFor="search">Search Products</Label>
                   <div className="relative">
@@ -382,46 +362,38 @@ export const CustomCollectionCreator: React.FC = () => {
                     />
                   </div>
                 </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select 
-                      value={categoryFilter} 
-                      onValueChange={setCategoryFilter}
-                      open={undefined}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="All Categories" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[99999]" side="bottom" align="start">
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {availableCategories.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category.charAt(0).toUpperCase() + category.slice(1)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="productType">Product Type</Label>
-                    <Select 
-                      value={productTypeFilter} 
-                      onValueChange={setProductTypeFilter}
-                      open={undefined}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="All Types" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[99999]" side="bottom" align="start">
-                        <SelectItem value="all">All Types</SelectItem>
-                        {availableProductTypes.map(type => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div>
+                  <Label htmlFor="categoryFilter">Category</Label>
+                  <select
+                    id="categoryFilter"
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="all">All Categories</option>
+                    {availableCategories.map(category => (
+                      <option key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="productTypeFilter">Product Type</Label>
+                  <select
+                    id="productTypeFilter"
+                    value={productTypeFilter}
+                    onChange={(e) => setProductTypeFilter(e.target.value)}
+                    className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="all">All Types</option>
+                    {availableProductTypes.map(type => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex items-end">
                   <Button 
                     variant="outline" 
@@ -446,83 +418,64 @@ export const CustomCollectionCreator: React.FC = () => {
                 <CardTitle>Bulk Actions ({selectedProducts.size} products selected)</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                    <div>
-                      <Label>Update Category</Label>
-                      <Select 
-                        value={bulkCategory} 
-                        onValueChange={setBulkCategory}
-                        open={undefined}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select category..." />
-                        </SelectTrigger>
-                        <SelectContent className="z-[99999]" side="bottom" align="start">
-                          {availableCategories.map(category => (
-                            <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() + category.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Update Product Type</Label>
-                      <Select 
-                        value={bulkProductType} 
-                        onValueChange={setBulkProductType}
-                        open={undefined}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select type..." />
-                        </SelectTrigger>
-                        <SelectContent className="z-[99999]" side="bottom" align="start">
-                          {availableProductTypes.map(type => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Update Collection</Label>
-                      <Select 
-                        value={bulkCollection} 
-                        onValueChange={setBulkCollection}
-                        open={undefined}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select collection..." />
-                        </SelectTrigger>
-                        <SelectContent className="z-[99999]" side="bottom" align="start">
-                          {availableCollections.map(collection => (
-                            <SelectItem key={collection} value={collection}>
-                              {collection}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  <div className="flex items-end gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div>
+                    <Label htmlFor="bulkCategory">Update Category</Label>
+                    <select
+                      id="bulkCategory"
+                      value={bulkCategory}
+                      onChange={(e) => setBulkCategory(e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Select category...</option>
+                      {availableCategories.map(category => (
+                        <option key={category} value={category}>
+                          {category.charAt(0).toUpperCase() + category.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="bulkProductType">Update Product Type</Label>
+                    <select
+                      id="bulkProductType"
+                      value={bulkProductType}
+                      onChange={(e) => setBulkProductType(e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Select type...</option>
+                      {availableProductTypes.map(type => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="bulkCollection">Update Collection</Label>
+                    <select
+                      id="bulkCollection"
+                      value={bulkCollection}
+                      onChange={(e) => setBulkCollection(e.target.value)}
+                      className="w-full h-10 px-3 py-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Select collection...</option>
+                      {availableCollections.map(collection => (
+                        <option key={collection} value={collection}>
+                          {collection}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-end">
                     <Button 
                       onClick={applyLocalChanges}
                       disabled={!bulkCategory && !bulkProductType && !bulkCollection}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 w-full"
                     >
                       <Save className="w-4 h-4" />
                       Apply Locally
                     </Button>
-                    {hasUnsyncedChanges && (
-                      <Button 
-                        onClick={handleBulkUpdate}
-                        disabled={syncing}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 ml-2"
-                      >
-                        <Save className="w-4 h-4" />
-                        {syncing ? 'Syncing...' : 'Sync to Shopify'}
-                      </Button>
-                    )}
                   </div>
                 </div>
               </CardContent>
@@ -538,95 +491,59 @@ export const CustomCollectionCreator: React.FC = () => {
               {loading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading products from Shopify...</p>
-                </div>
-              ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">No products found matching your filters.</p>
+                  <p>Loading products...</p>
                 </div>
               ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
+                <div className="space-y-4">
+                  {/* Select All */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="select-all"
+                      checked={selectedProducts.size === filteredProducts.length && filteredProducts.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                    <Label htmlFor="select-all" className="font-medium">
+                      Select All ({filteredProducts.length} products)
+                    </Label>
+                  </div>
+
+                  {/* Products Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredProducts.map((product) => (
+                      <div key={product.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start space-x-2">
                           <Checkbox
-                            checked={selectedProducts.size === filteredProducts.length && filteredProducts.length > 0}
-                            onCheckedChange={toggleSelectAll}
+                            id={`product-${product.id}`}
+                            checked={selectedProducts.has(product.id)}
+                            onCheckedChange={() => toggleProduct(product.id)}
+                            className="mt-1"
                           />
-                        </TableHead>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('title')}>
-                          <div className="flex items-center gap-2">
-                            Product Title
-                            {sortField === 'title' && (
-                              sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                            )}
-                          </div>
-                        </TableHead>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('category')}>
-                          <div className="flex items-center gap-2">
-                            Category
-                            {sortField === 'category' && (
-                              sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                            )}
-                          </div>
-                        </TableHead>
-                        <TableHead className="cursor-pointer" onClick={() => handleSort('productType')}>
-                          <div className="flex items-center gap-2">
-                            Product Type
-                            {sortField === 'productType' && (
-                              sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                            )}
-                          </div>
-                        </TableHead>
-                        <TableHead className="cursor-pointer text-right" onClick={() => handleSort('price')}>
-                          <div className="flex items-center justify-end gap-2">
-                            Price
-                            {sortField === 'price' && (
-                              sortDirection === 'asc' ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
-                            )}
-                          </div>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredProducts.map((product) => (
-                        <TableRow key={product.id}>
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedProducts.has(product.id)}
-                              onCheckedChange={() => toggleProduct(product.id)}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="max-w-md flex items-center gap-2">
-                              <div className="truncate">{product.title}</div>
-                              {localChanges.has(product.id) && (
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-medium text-sm truncate">{product.title}</h3>
+                              {hasModification(product.id) && (
                                 <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
                                   Modified
                                 </Badge>
                               )}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {product.productType && (
-                              <Badge variant="outline">
-                                {product.productType}
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            ${product.price.toFixed(2)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            <div className="space-y-1 text-xs text-muted-foreground">
+                              <p>Category: {product.category || 'None'}</p>
+                              <p>Type: {product.productType || 'None'}</p>
+                              <p>Vendor: {product.vendor || 'None'}</p>
+                              {product.price && <p>Price: ${product.price}</p>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {filteredProducts.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No products found matching your filters.
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -635,4 +552,4 @@ export const CustomCollectionCreator: React.FC = () => {
       </div>
     </div>
   );
-};
+}

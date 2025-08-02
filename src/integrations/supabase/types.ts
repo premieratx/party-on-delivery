@@ -1583,6 +1583,45 @@ export type Database = {
         }
         Relationships: []
       }
+      product_modifications: {
+        Row: {
+          category: string | null
+          collection: string | null
+          created_at: string
+          id: string
+          modified_by_admin_id: string | null
+          product_title: string
+          product_type: string | null
+          shopify_product_id: string
+          synced_to_shopify: boolean
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          collection?: string | null
+          created_at?: string
+          id?: string
+          modified_by_admin_id?: string | null
+          product_title: string
+          product_type?: string | null
+          shopify_product_id: string
+          synced_to_shopify?: boolean
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          collection?: string | null
+          created_at?: string
+          id?: string
+          modified_by_admin_id?: string | null
+          product_title?: string
+          product_type?: string | null
+          shopify_product_id?: string
+          synced_to_shopify?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       project_templates: {
         Row: {
           configuration: Json

@@ -30,7 +30,7 @@ import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 import { ProductSearch } from "./pages/ProductSearch";
 import CustomSiteManagement from "./pages/CustomSiteManagement";
 import CustomSiteView from "./pages/CustomSiteView";
-import { CustomCollectionCreator } from "./pages/CustomCollectionCreator";
+import CustomCollectionCreator from "./pages/CustomCollectionCreator";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
