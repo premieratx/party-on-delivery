@@ -363,34 +363,89 @@ export const CustomCollectionCreator: React.FC = () => {
           </div>
 
           {/* Filters and Search */}
-          <div className="relative z-10">
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Search & Filter</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <Label htmlFor="search">Search Products</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="search"
+                      placeholder="Search by product name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {availableCategories.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category.charAt(0).toUpperCase() + category.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="productType">Product Type</Label>
+                  <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {availableProductTypes.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setCategoryFilter('all');
+                      setProductTypeFilter('all');
+                    }}
+                    className="w-full"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Bulk Actions */}
+          {selectedProducts.size > 0 && (
             <Card className="mb-4">
               <CardHeader>
-                <CardTitle>Search & Filter</CardTitle>
+                <CardTitle>Bulk Actions ({selectedProducts.size} products selected)</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                   <div>
-                    <Label htmlFor="search">Search Products</Label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="search"
-                        placeholder="Search by product name..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <Label>Update Category</Label>
+                    <Select value={bulkCategory} onValueChange={setBulkCategory}>
                       <SelectTrigger>
-                        <SelectValue placeholder="All Categories" />
+                        <SelectValue placeholder="Select category..." />
                       </SelectTrigger>
-                      <SelectContent className="z-[200]">
-                        <SelectItem value="all">All Categories</SelectItem>
+                      <SelectContent>
                         {availableCategories.map(category => (
                           <SelectItem key={category} value={category}>
                             {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -400,13 +455,12 @@ export const CustomCollectionCreator: React.FC = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="productType">Product Type</Label>
-                    <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
+                    <Label>Update Product Type</Label>
+                    <Select value={bulkProductType} onValueChange={setBulkProductType}>
                       <SelectTrigger>
-                        <SelectValue placeholder="All Types" />
+                        <SelectValue placeholder="Select type..." />
                       </SelectTrigger>
-                      <SelectContent className="z-[200]">
-                        <SelectItem value="all">All Types</SelectItem>
+                      <SelectContent>
                         {availableProductTypes.map(type => (
                           <SelectItem key={type} value={type}>
                             {type}
@@ -415,104 +469,44 @@ export const CustomCollectionCreator: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-end">
+                  <div>
+                    <Label>Update Collection</Label>
+                    <Select value={bulkCollection} onValueChange={setBulkCollection}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select collection..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCollections.map(collection => (
+                          <SelectItem key={collection} value={collection}>
+                            {collection}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-end gap-2">
                     <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setSearchTerm('');
-                        setCategoryFilter('all');
-                        setProductTypeFilter('all');
-                      }}
-                      className="w-full"
+                      onClick={applyLocalChanges}
+                      disabled={!bulkCategory && !bulkProductType && !bulkCollection}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
                     >
-                      Clear Filters
+                      <Save className="w-4 h-4" />
+                      Apply Locally
                     </Button>
+                    {hasUnsyncedChanges && (
+                      <Button 
+                        onClick={handleBulkUpdate}
+                        disabled={syncing}
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 ml-2"
+                      >
+                        <Save className="w-4 h-4" />
+                        {syncing ? 'Syncing...' : 'Sync to Shopify'}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Bulk Actions */}
-          {selectedProducts.size > 0 && (
-            <div className="relative z-10">
-              <Card className="mb-4">
-                <CardHeader>
-                  <CardTitle>Bulk Actions ({selectedProducts.size} products selected)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                    <div>
-                      <Label>Update Category</Label>
-                      <Select value={bulkCategory} onValueChange={setBulkCategory}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category..." />
-                        </SelectTrigger>
-                        <SelectContent className="z-[200]">
-                          {availableCategories.map(category => (
-                            <SelectItem key={category} value={category}>
-                              {category.charAt(0).toUpperCase() + category.slice(1)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Update Product Type</Label>
-                      <Select value={bulkProductType} onValueChange={setBulkProductType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type..." />
-                        </SelectTrigger>
-                        <SelectContent className="z-[200]">
-                          {availableProductTypes.map(type => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Update Collection</Label>
-                      <Select value={bulkCollection} onValueChange={setBulkCollection}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select collection..." />
-                        </SelectTrigger>
-                        <SelectContent className="z-[200]">
-                          {availableCollections.map(collection => (
-                            <SelectItem key={collection} value={collection}>
-                              {collection}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <Button 
-                        onClick={applyLocalChanges}
-                        disabled={!bulkCategory && !bulkProductType && !bulkCollection}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Save className="w-4 h-4" />
-                        Apply Locally
-                      </Button>
-                    </div>
-                    {hasUnsyncedChanges && (
-                      <div className="flex items-end gap-2">
-                        <Button 
-                          onClick={handleBulkUpdate}
-                          disabled={syncing}
-                          className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                        >
-                          <Save className="w-4 h-4" />
-                          {syncing ? 'Syncing...' : 'Sync to Shopify'}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           )}
 
           {/* Products Table */}
