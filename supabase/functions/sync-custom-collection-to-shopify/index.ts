@@ -45,7 +45,7 @@ serve(async (req) => {
       // Create query for Shopify products using numeric IDs
       const productIdsQuery = numericIds.map((id: string) => `id:${id}`).join(' OR ');
       
-      const productsResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/graphql.json`, {
+      const productsResponse = await fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/graphql.json`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ serve(async (req) => {
     }
 
     // First, try to find the existing collection by handle
-    const getCollectionResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json?handle=${handle}`, {
+    const getCollectionResponse = await fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json?handle=${handle}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ serve(async (req) => {
       console.log('Found existing Shopify collection:', shopifyCollectionId);
       
       // Clear existing products from the collection first
-      const collectsResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/collects.json?collection_id=${shopifyCollectionId}&limit=250`, {
+      const collectsResponse = await fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects.json?collection_id=${shopifyCollectionId}&limit=250`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ serve(async (req) => {
         console.log(`Removing ${collectsData.collects.length} existing products from collection`);
         const deletePromises = collectsData.collects.map(async (collect: any) => {
           try {
-            await fetch(`${shopifyStoreUrl}/admin/api/2025-01/collects/${collect.id}.json`, {
+            await fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects/${collect.id}.json`, {
               method: 'DELETE',
               headers: {
                 'X-Shopify-Access-Token': shopifyAccessToken
@@ -124,7 +124,7 @@ serve(async (req) => {
       }
     } else {
       // Collection doesn't exist, create it
-      const createCollectionResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json`, {
+      const createCollectionResponse = await fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ serve(async (req) => {
     if (shopifyProductIds.length > 0) {
       const collectPromises = shopifyProductIds.map(async (productId: string) => {
         try {
-          const collectResponse = await fetch(`${shopifyStoreUrl}/admin/api/2025-01/collects.json`, {
+          const collectResponse = await fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects.json`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
