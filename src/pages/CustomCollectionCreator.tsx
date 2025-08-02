@@ -164,15 +164,21 @@ export default function CustomCollectionCreator() {
         };
       }).filter(Boolean);
 
+      console.log('Starting bulk update for products:', updates);
+      
       for (const update of updates) {
         if (!update) continue;
         
+        console.log('Processing update:', update);
+        console.log('Checking for existing modification for product:', update.shopify_product_id);
         // Check if modification exists
-        const { data: existing } = await supabase
+        const { data: existing, error: selectError } = await supabase
           .from('product_modifications')
           .select('*')
           .eq('shopify_product_id', update.shopify_product_id)
-          .single();
+          .maybeSingle();
+
+        console.log('Existing record:', existing, 'Select error:', selectError);
 
         if (existing) {
           // For categories and product types: 1-for-1 replacement
@@ -196,18 +202,22 @@ export default function CustomCollectionCreator() {
             updateData.collection = update.collection;
           }
 
+          console.log('Updating existing record with:', updateData);
           const { error } = await supabase
             .from('product_modifications')
             .update(updateData)
             .eq('shopify_product_id', update.shopify_product_id);
           
+          console.log('Update error:', error);
           if (error) throw error;
         } else {
           // Insert new record
+          console.log('Inserting new record:', update);
           const { error } = await supabase
             .from('product_modifications')
             .insert(update);
           
+          console.log('Insert error:', error);
           if (error) throw error;
         }
       }
