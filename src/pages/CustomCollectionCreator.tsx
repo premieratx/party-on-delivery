@@ -134,6 +134,7 @@ export const CustomCollectionCreator: React.FC = () => {
     if (title.includes('tequila') || productType.includes('tequila')) return 'Tequila';
     if (title.includes('mezcal') || productType.includes('mezcal')) return 'Mezcal';
     if (title.includes('liqueur') || title.includes('schnapps') || title.includes('amaretto') || title.includes('kahlua') || productType.includes('liqueur')) return 'Liqueurs';
+    if (title.includes('brandy') || title.includes('cognac') || productType.includes('brandy')) return 'Brandy';
     
     // Other types
     if (title.includes('beer') || productType.includes('beer')) return 'Beer';
@@ -141,8 +142,9 @@ export const CustomCollectionCreator: React.FC = () => {
     if (title.includes('seltzer') || productType.includes('seltzer')) return 'Seltzer';
     if (title.includes('cocktail') || productType.includes('cocktail')) return 'Cocktail';
     if (title.includes('mixer') || productType.includes('mixer')) return 'Mixer';
+    if (title.includes('supplies') || title.includes('decoration') || productType.includes('supplies')) return 'Party Supplies';
     
-    return productType || '';
+    return productType || 'Other';
   };
 
   const mapCollectionToCategory = (handle: string): string => {
@@ -270,7 +272,7 @@ export const CustomCollectionCreator: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background border-b">
+      <div className="sticky top-0 z-40 bg-background border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
@@ -321,11 +323,11 @@ export const CustomCollectionCreator: React.FC = () => {
                 </div>
                 <div>
                   <Label htmlFor="category">Category</Label>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[60]">
                       <SelectItem value="all">All Categories</SelectItem>
                       {availableCategories.map(category => (
                         <SelectItem key={category} value={category}>
@@ -341,7 +343,7 @@ export const CustomCollectionCreator: React.FC = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[60]">
                       <SelectItem value="all">All Types</SelectItem>
                       {availableProductTypes.map(type => (
                         <SelectItem key={type} value={type}>
@@ -382,7 +384,7 @@ export const CustomCollectionCreator: React.FC = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select category..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[60]">
                         {availableCategories.map(category => (
                           <SelectItem key={category} value={category}>
                             {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -397,7 +399,7 @@ export const CustomCollectionCreator: React.FC = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select type..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[60]">
                         {availableProductTypes.map(type => (
                           <SelectItem key={type} value={type}>
                             {type}
@@ -412,7 +414,7 @@ export const CustomCollectionCreator: React.FC = () => {
                       <SelectTrigger>
                         <SelectValue placeholder="Select collection..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[60]">
                         {availableCollections.map(collection => (
                           <SelectItem key={collection} value={collection}>
                             {collection}
