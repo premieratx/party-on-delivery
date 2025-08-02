@@ -40,35 +40,36 @@ const CoverPage = () => {
       {/* Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center">
         {/* Logo */}
-        <div className="mb-8 md:mb-12">
+        <div className="mb-6 md:mb-8">
           <img 
             src={partyLogo} 
             alt="Party On Delivery" 
-            className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4"
+            className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 mx-auto mb-4"
           />
         </div>
         
         {/* Animated Title */}
-        <div className="mb-16 md:mb-20 max-w-5xl px-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight min-h-[100px] sm:min-h-[120px] md:min-h-[160px]">
+        <div className="mb-12 md:mb-16 max-w-6xl px-4">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-oswald font-bold leading-relaxed tracking-wider min-h-[80px] sm:min-h-[100px] md:min-h-[120px] lg:min-h-[140px]">
             <span 
-              className="bg-gradient-to-r from-sky-300 to-sky-500 bg-clip-text text-transparent drop-shadow-lg"
+              className="text-white drop-shadow-2xl"
               style={{ 
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                textShadow: '0 0 20px rgba(56, 189, 248, 0.3)'
+                textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.3)',
+                letterSpacing: '0.1em',
+                lineHeight: '1.4'
               }}
             >
               {displayedText}
-              <span className="animate-pulse">|</span>
+              <span className="animate-pulse text-sky-400">|</span>
             </span>
           </h1>
         </div>
         
         {/* Start Button */}
-        <div className="mt-8 px-4">
+        <div className="mt-6 px-4 w-full max-w-xs">
           <Button
             onClick={handleStart}
-            className="px-8 sm:px-12 py-4 sm:py-6 text-xl sm:text-2xl md:text-3xl font-bold bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105 min-w-[200px] sm:min-w-[250px]"
+            className="w-full px-6 sm:px-8 py-6 sm:py-8 text-2xl sm:text-3xl md:text-4xl font-oswald font-bold bg-green-500 hover:bg-green-600 text-white rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105"
             style={{
               animation: 'greenLight 3s infinite',
               boxShadow: '0 0 40px rgba(34, 197, 94, 0.6), 0 0 80px rgba(34, 197, 94, 0.3)',
@@ -80,7 +81,7 @@ const CoverPage = () => {
         
         {/* Exclusive Badge */}
         <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 px-4">
-          <div className="px-4 sm:px-6 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-semibold rounded-full text-xs sm:text-sm md:text-base shadow-lg">
+          <div className="px-4 sm:px-6 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-black font-oswald font-semibold rounded-full text-xs sm:text-sm md:text-base shadow-lg tracking-wider">
             EXCLUSIVE MEMBERS ONLY
           </div>
         </div>
