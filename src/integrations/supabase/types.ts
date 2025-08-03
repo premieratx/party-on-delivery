@@ -2514,6 +2514,14 @@ export type Database = {
         }
         Returns: Json
       }
+      join_group_order_enhanced: {
+        Args: {
+          p_share_token: string
+          p_user_email: string
+          p_user_name: string
+        }
+        Returns: Json
+      }
       link_customer_session: {
         Args: { customer_email: string; session_token: string }
         Returns: undefined
