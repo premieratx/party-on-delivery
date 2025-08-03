@@ -228,7 +228,9 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         groupOrderToken: localStorage.getItem('groupOrderToken')
       });
 
-      // Create payment intent with all pricing details
+      // Create payment intent with all pricing details - include current group token
+      const currentGroupToken = localStorage.getItem('currentGroupToken') || localStorage.getItem('groupOrderToken');
+      
       const {
         data,
         error
@@ -244,7 +246,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           subtotal: validSubtotal,
           deliveryFee: validDeliveryFee,
           salesTax: validSalesTax,
-          groupOrderToken: localStorage.getItem('groupOrderToken') // Add group order token
+          groupOrderToken: currentGroupToken // Use consistent group token
         }
       });
       if (error) {
@@ -277,6 +279,21 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         // Store payment intent in localStorage for mobile reliability
         localStorage.setItem('lastPaymentIntent', paymentIntentId);
         localStorage.setItem('lastCartTotal', total.toString());
+        
+        // Process the order through Shopify after successful payment
+        try {
+          await supabase.functions.invoke('create-shopify-order', {
+            body: {
+              paymentIntentId,
+              isAddingToOrder: false,
+              useSameAddress: false
+            }
+          });
+          console.log('✅ Shopify order created successfully');
+        } catch (shopifyError) {
+          console.error('⚠️ Shopify order creation failed:', shopifyError);
+          // Continue to success page even if Shopify fails
+        }
         
         // Navigate to success page with payment intent for mobile compatibility
         if (window.location.pathname.includes('/checkout') || window.innerWidth <= 768) {

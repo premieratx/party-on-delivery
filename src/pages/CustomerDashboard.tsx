@@ -13,8 +13,8 @@ import { useDashboardSync } from '@/hooks/useDashboardSync';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { formatCurrency } from '@/utils/currency';
 import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown, RefreshCw, ChevronUp } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { differenceInDays } from 'date-fns';
+import { formatInAppTimezone, toAppTimezone } from '@/utils/timezoneManager';
 
 interface Customer {
   id: string;
@@ -457,7 +457,7 @@ const CustomerDashboard = () => {
   const handleShareOrder = (order: Order) => {
     // Create a link to share this specific order using its share_token
     const shareUrl = `${window.location.origin}/order/${order.share_token}`;
-    const deliveryDateFormatted = format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do');
+    const deliveryDateFormatted = formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do');
     const message = `Hey! I ordered drinks for delivery on ${deliveryDateFormatted} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. Join my order here: ${shareUrl}`;
     
     if (navigator.share) {
@@ -487,8 +487,8 @@ const CustomerDashboard = () => {
   };
 
   const getDaysUntilDelivery = (deliveryDate: string) => {
-    const today = toZonedTime(new Date(), 'America/Chicago');
-    const delivery = toZonedTime(new Date(deliveryDate), 'America/Chicago');
+    const today = toAppTimezone(new Date());
+    const delivery = toAppTimezone(deliveryDate);
     return differenceInDays(delivery, today);
   };
 
@@ -643,10 +643,10 @@ const CustomerDashboard = () => {
                                    <h4 className="font-semibold text-primary text-lg">Order #{order.order_number}</h4>
                                    <div className="text-sm text-muted-foreground space-y-1">
                                      <p>Ordered by: <span className="font-medium">{`${customer?.first_name || ''} ${customer?.last_name || ''}`.trim() || customer?.email}</span></p>
-                                     <p>Date: <span className="font-medium">{format(toZonedTime(new Date(order.created_at), 'America/Chicago'), 'EEEE, MMMM do, yyyy')}</span></p>
-                                     {order.delivery_date && order.delivery_time && (
-                                       <p>Delivery: <span className="font-medium">{format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do')} at {order.delivery_time}</span></p>
-                                     )}
+                                      <p>Date: <span className="font-medium">{formatInAppTimezone(order.created_at, 'EEEE, MMMM do, yyyy')}</span></p>
+                                      {order.delivery_date && order.delivery_time && (
+                                        <p>Delivery: <span className="font-medium">{formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do')} at {order.delivery_time}</span></p>
+                                      )}
                                    </div>
                                  </div>
                                  <div className="text-right">
@@ -739,7 +739,7 @@ const CustomerDashboard = () => {
                           {order.delivery_date && (
                             <span className="flex items-center gap-2 mt-2">
                                <CalendarDays className="h-4 w-4" />
-                               {format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do, yyyy')} 
+                               {formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do, yyyy')} 
                                {order.delivery_time && ` at ${order.delivery_time}`}
                                <Badge variant="secondary">
                                  {getDaysUntilDelivery(order.delivery_date)} days to go
@@ -771,7 +771,7 @@ const CustomerDashboard = () => {
                         <div className="flex items-center justify-between mb-2">
                           <p className="font-medium">Items ({order.line_items.length})</p>
                           <p className="text-sm text-muted-foreground">
-                            Ordered on {format(new Date(order.created_at), 'MMM d, yyyy \'at\' h:mm a')}
+                            Ordered on {formatInAppTimezone(order.created_at, 'MMM d, yyyy \'at\' h:mm a')}
                           </p>
                         </div>
                         
@@ -902,7 +902,7 @@ const CustomerDashboard = () => {
                           <div className="flex items-center gap-2 mb-2">
                             <CalendarDays className="h-4 w-4" />
                              <span className="font-medium">
-                               Delivery: {format(toZonedTime(new Date(firstOrder.delivery_date), 'America/Chicago'), 'EEEE, MMMM do, yyyy')}
+                               Delivery: {formatInAppTimezone(firstOrder.delivery_date, 'EEEE, MMMM do, yyyy')}
                                {firstOrder.delivery_time && ` at ${firstOrder.delivery_time}`}
                             </span>
                           </div>
@@ -1008,12 +1008,12 @@ const CustomerDashboard = () => {
                          <CardTitle>Order #{order.order_number}</CardTitle>
                          <CardDescription>
                            <div className="flex items-center gap-2 mb-1">
-                             Ordered on {format(new Date(order.created_at), 'MMMM do, yyyy \'at\' h:mm a')}
+                             Ordered on {formatInAppTimezone(order.created_at, 'MMMM do, yyyy \'at\' h:mm a')}
                            </div>
                            {order.delivery_date && (
                              <span className="flex items-center gap-2">
                                 <CalendarDays className="h-4 w-4" />
-                                Delivery: {format(toZonedTime(new Date(order.delivery_date), 'America/Chicago'), 'EEEE, MMMM do')} 
+                                Delivery: {formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do')} 
                                 {order.delivery_time && ` at ${order.delivery_time}`}
                              </span>
                            )}

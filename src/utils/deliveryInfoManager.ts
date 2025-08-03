@@ -3,8 +3,7 @@
  * Handles timezone-safe date parsing and consistent delivery info storage
  */
 
-import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { toAppTimezone, formatInAppTimezone, parseDeliveryDate as parseDeliveryDateTZ } from './timezoneManager';
 
 export interface DeliveryInfo {
   date: Date | null;
@@ -31,25 +30,14 @@ export interface GroupOrderInfo {
   priority: 'group_order';
 }
 
-// Timezone-safe date parsing - always use noon to avoid timezone offset issues
+// Timezone-safe date parsing - always use noon CST to avoid timezone offset issues
 export const parseDeliveryDate = (dateString: string): Date => {
-  if (!dateString) return new Date();
-  
-  // If already has time component, use as-is
-  if (dateString.includes('T')) {
-    return new Date(dateString);
-  }
-  
-  // Add noon time to avoid timezone issues
-  return new Date(dateString + 'T12:00:00');
+  return parseDeliveryDateTZ(dateString);
 };
 
 // Format delivery date consistently across the app with timezone handling
 export const formatDeliveryDate = (dateString: string, formatString: string = 'EEEE, MMMM do, yyyy'): string => {
-  const date = parseDeliveryDate(dateString);
-  // Always use America/Chicago timezone for consistent date display
-  const zonedDate = toZonedTime(date, 'America/Chicago');
-  return format(zonedDate, formatString);
+  return formatInAppTimezone(dateString, formatString);
 };
 
 // Storage keys for delivery information
@@ -79,7 +67,7 @@ export const getActiveDeliveryInfo = (): {
         return {
           source: 'group_order',
           data: {
-            date: parseDeliveryDate(parsed.date),
+            date: toAppTimezone(parsed.date),
             timeSlot: parsed.timeSlot,
             address: typeof parsed.address === 'string' ? parsed.address : parsed.address?.street || '',
             instructions: parsed.address?.instructions || ''
@@ -101,7 +89,7 @@ export const getActiveDeliveryInfo = (): {
         return {
           source: 'last_order',
           data: {
-            date: parseDeliveryDate(parsed.deliveryDate),
+            date: toAppTimezone(parsed.deliveryDate),
             timeSlot: parsed.deliveryTime,
             address: parsed.address || '',
             instructions: parsed.instructions || ''

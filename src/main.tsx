@@ -5,6 +5,7 @@ import { preloadManager } from '@/utils/preloadManager'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { initializePerformanceOptimizations } from '@/utils/performanceOptimizer'
 import { initializeMobileOptimizations } from '@/utils/mobileOptimizations'
+import { initializeTimezone } from './utils/timezoneManager'
 
 // Initialize preloading and cache management
 preloadManager.initialize();
@@ -14,6 +15,9 @@ initializePerformanceOptimizations();
 
 // Initialize mobile-specific optimizations
 initializeMobileOptimizations();
+
+// Initialize CST timezone for the entire app
+initializeTimezone();
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>

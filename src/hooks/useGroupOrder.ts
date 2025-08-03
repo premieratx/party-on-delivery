@@ -29,13 +29,24 @@ export function useGroupOrder(): UseGroupOrderReturn {
     const shareParam = urlParams.get('share');
     
     if (shareParam) {
+      // Store in both possible token keys for consistency
       localStorage.setItem('currentGroupToken', shareParam);
+      localStorage.setItem('groupOrderToken', shareParam);
       setGroupToken(shareParam);
       setIsHost(false);
+      
+      // Clean up URL
+      urlParams.delete('share');
+      const newUrl = `${window.location.pathname}${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+      window.history.replaceState({}, '', newUrl);
     } else {
-      const storedToken = localStorage.getItem('currentGroupToken');
+      // Check both possible token storage locations
+      const storedToken = localStorage.getItem('currentGroupToken') || localStorage.getItem('groupOrderToken');
       if (storedToken) {
         setGroupToken(storedToken);
+        // Ensure both keys are synchronized
+        localStorage.setItem('currentGroupToken', storedToken);
+        localStorage.setItem('groupOrderToken', storedToken);
       }
     }
   }, []);
@@ -118,7 +129,11 @@ export function useGroupOrder(): UseGroupOrderReturn {
   };
 
   const clearGroupToken = () => {
+    // Clear all possible group token storage locations
     localStorage.removeItem('currentGroupToken');
+    localStorage.removeItem('groupOrderToken');
+    localStorage.removeItem('groupOrderDeliveryInfo');
+    localStorage.removeItem('partyondelivery_add_to_order');
     setGroupToken(null);
     setParticipants([]);
     setIsHost(false);
