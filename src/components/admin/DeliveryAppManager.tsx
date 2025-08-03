@@ -63,17 +63,29 @@ export function DeliveryAppManager() {
     try {
       setLoading(true);
 
-      // Load delivery apps - use raw query since table might not be in types yet
-      const { data: appsData, error: appsError } = await (supabase as any)
+      // Load delivery apps
+      const { data: appsData, error: appsError } = await supabase
         .from('delivery_app_variations')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (appsError) {
-        console.log('Delivery apps table not found, will create when needed');
-        setDeliveryApps([]);
+        console.error('Error loading delivery apps:', appsError);
+        throw appsError;
       } else {
-        setDeliveryApps(appsData || []);
+        // Type cast the data to match our interface
+        const typedApps = (appsData || []).map(app => ({
+          ...app,
+          collections_config: app.collections_config as {
+            tab_count: number;
+            tabs: Array<{
+              name: string;
+              collection_handle: string;
+              icon?: string;
+            }>;
+          }
+        }));
+        setDeliveryApps(typedApps);
       }
 
       // Load collections
@@ -138,7 +150,19 @@ export function DeliveryAppManager() {
     try {
       const appSlug = appName.toLowerCase().replace(/[^a-z0-9]/g, '-');
       
-      const { data, error } = await (supabase as any)
+      // Check if slug already exists
+      const { data: existingApp } = await supabase
+        .from('delivery_app_variations')
+        .select('id')
+        .eq('app_slug', appSlug)
+        .maybeSingle();
+
+      if (existingApp) {
+        toast.error('A delivery app with this name already exists');
+        return;
+      }
+      
+      const { data, error } = await supabase
         .from('delivery_app_variations')
         .insert([{
           app_name: appName,
@@ -154,9 +178,21 @@ export function DeliveryAppManager() {
 
       if (error) throw error;
 
-      setDeliveryApps(prev => [data, ...prev]);
+      // Type cast the new app data
+      const typedApp = {
+        ...data,
+        collections_config: data.collections_config as {
+          tab_count: number;
+          tabs: Array<{
+            name: string;
+            collection_handle: string;
+            icon?: string;
+          }>;
+        }
+      };
+      setDeliveryApps(prev => [typedApp, ...prev]);
       setIsCreating(false);
-      toast.success('Delivery app created successfully');
+      toast.success(`Delivery app created! URL: /delivery-app/${appSlug}`);
 
     } catch (error: any) {
       console.error('Error creating delivery app:', error);
@@ -168,7 +204,7 @@ export function DeliveryAppManager() {
     if (!confirm('Are you sure you want to delete this delivery app?')) return;
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('delivery_app_variations')
         .delete()
         .eq('id', appId);

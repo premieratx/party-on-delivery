@@ -106,6 +106,12 @@ export function useGroupOrder(): UseGroupOrderReturn {
     if (!groupToken) return false;
 
     try {
+      // Validate groupToken is a valid UUID
+      if (!groupToken.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.error('Invalid group token format:', groupToken);
+        return false;
+      }
+
       const { data, error } = await supabase.functions.invoke('join_group_order_fixed', {
         body: {
           share_token: groupToken,
@@ -114,7 +120,12 @@ export function useGroupOrder(): UseGroupOrderReturn {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      console.log('Join group order response:', data);
 
       if (data?.success) {
         await fetchGroupOrderDetails();

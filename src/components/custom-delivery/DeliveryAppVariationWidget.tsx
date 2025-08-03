@@ -68,12 +68,12 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
   useEffect(() => {
     const loadAppConfig = async () => {
       try {
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from('delivery_app_variations')
           .select('*')
           .eq('app_slug', appSlug)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error loading app config:', error);
@@ -81,7 +81,21 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
           return;
         }
 
-        setAppConfig(data);
+        if (data) {
+          // Type cast the data to match our interface
+          const typedConfig = {
+            app_name: data.app_name,
+            collections_config: data.collections_config as {
+              tab_count: number;
+              tabs: Array<{
+                name: string;
+                collection_handle: string;
+                icon?: string;
+              }>;
+            }
+          };
+          setAppConfig(typedConfig);
+        }
       } catch (error) {
         console.error('Error loading app config:', error);
         toast.error('Failed to load delivery app');
