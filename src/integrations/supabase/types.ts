@@ -589,6 +589,27 @@ export type Database = {
         }
         Relationships: []
       }
+      category_mappings_simple: {
+        Row: {
+          app_category: string
+          collection_handle: string | null
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          app_category: string
+          collection_handle?: string | null
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          app_category?: string
+          collection_handle?: string | null
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       checkout_flow_backups: {
         Row: {
           backup_name: string
@@ -1520,6 +1541,27 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_log_simple: {
+        Row: {
+          created_at: string | null
+          duration_ms: number | null
+          id: string
+          operation: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          operation: string
+        }
+        Update: {
+          created_at?: string | null
+          duration_ms?: number | null
+          id?: string
+          operation?: string
+        }
+        Relationships: []
+      }
       performance_metrics: {
         Row: {
           active_users: number | null
@@ -1694,6 +1736,24 @@ export type Database = {
           shopify_product_id?: string
           synced_to_shopify?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      products_cache_simple: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          data: Json
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          data: Json
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          data?: Json
         }
         Relationships: []
       }
@@ -2477,6 +2537,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_product_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       execute_automation_template: {
         Args: { template_name_param: string }
         Returns: Json
@@ -2504,6 +2568,10 @@ export type Database = {
         Args: { p_share_token: string }
         Returns: Json
       }
+      get_products_cached: {
+        Args: { p_category?: string; p_limit?: number }
+        Returns: Json
+      }
       join_group_order: {
         Args: {
           p_share_token: string
@@ -2522,12 +2590,24 @@ export type Database = {
         }
         Returns: Json
       }
+      join_group_order_fixed: {
+        Args: {
+          p_share_token: string
+          p_user_email: string
+          p_user_name: string
+        }
+        Returns: Json
+      }
       link_customer_session: {
         Args: { customer_email: string; session_token: string }
         Returns: undefined
       }
       log_security_event: {
         Args: { event_type: string; user_email: string; details?: Json }
+        Returns: undefined
+      }
+      log_slow_operation: {
+        Args: { p_operation: string; p_duration_ms: number }
         Returns: undefined
       }
       safe_cache_upsert: {
