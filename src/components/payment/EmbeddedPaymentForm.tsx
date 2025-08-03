@@ -268,9 +268,24 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         console.error('Payment error:', paymentError);
         setPaymentError(paymentError.message || 'Payment failed');
       } else {
-        // Extract payment intent ID from client_secret
+        // CRITICAL: Ensure successful payment is processed correctly
+        console.log('✅ Payment successful!', data);
+        
+        // Extract payment intent ID from client_secret for reliable order processing
         const paymentIntentId = data.client_secret.split('_secret_')[0];
-        onPaymentSuccess(paymentIntentId);
+        
+        // Store payment intent in localStorage for mobile reliability
+        localStorage.setItem('lastPaymentIntent', paymentIntentId);
+        localStorage.setItem('lastCartTotal', total.toString());
+        
+        // Navigate to success page with payment intent for mobile compatibility
+        if (window.location.pathname.includes('/checkout') || window.innerWidth <= 768) {
+          // Mobile or checkout page - navigate with payment intent
+          window.location.href = `/success?session_id=${paymentIntentId}`;
+        } else {
+          // Desktop widget - use callback
+          onPaymentSuccess(paymentIntentId);
+        }
       }
     } catch (error) {
       setPaymentError(error instanceof Error ? error.message : 'Payment failed');
