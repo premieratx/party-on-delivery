@@ -63,8 +63,8 @@ export function DeliveryAppManager() {
     try {
       setLoading(true);
 
-      // Load delivery apps
-      const { data: appsData, error: appsError } = await supabase
+      // Load delivery apps - use raw query since table might not be in types yet
+      const { data: appsData, error: appsError } = await (supabase as any)
         .from('delivery_app_variations')
         .select('*')
         .order('created_at', { ascending: false });
@@ -138,7 +138,7 @@ export function DeliveryAppManager() {
     try {
       const appSlug = appName.toLowerCase().replace(/[^a-z0-9]/g, '-');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('delivery_app_variations')
         .insert([{
           app_name: appName,
@@ -168,7 +168,7 @@ export function DeliveryAppManager() {
     if (!confirm('Are you sure you want to delete this delivery app?')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('delivery_app_variations')
         .delete()
         .eq('id', appId);

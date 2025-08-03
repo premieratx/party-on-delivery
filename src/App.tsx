@@ -33,6 +33,7 @@ import CustomSiteManagement from "./pages/CustomSiteManagement";
 import CustomSiteView from "./pages/CustomSiteView";
 import CustomCollectionCreator from "./pages/CustomCollectionCreator";
 import CustomDeliveryApp from "./pages/CustomDeliveryApp";
+import DeliveryAppView from "./pages/DeliveryAppView";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
@@ -99,8 +100,11 @@ const App = () => {
                   <Route path="/search" element={<ProductSearch />} />
                   <Route path="/product-search" element={<ProductSearch />} />
                   
-                  {/* Custom Delivery App */}
-                  <Route path="/custom-delivery" element={<CustomDeliveryApp />} />
+                   {/* Custom Delivery App */}
+                   <Route path="/custom-delivery" element={<CustomDeliveryApp />} />
+                   
+                   {/* Delivery App Variations */}
+                   <Route path="/delivery-app/:appSlug" element={<DeliveryAppView />} />
                   
                   {/* Test Routes */}
               <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />

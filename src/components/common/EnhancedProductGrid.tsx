@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useVirtualList } from '@/hooks/useVirtualList';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { OptimizedImage } from './OptimizedImage';
+import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { ViewportOptimizer } from '@/utils/performanceOptimizer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -121,6 +122,8 @@ function ProductCard({
     freezeOnceVisible: true
   });
 
+  const optimizedImage = useImageOptimization(product.image, false);
+
   return (
     <Card ref={ref as any} className="h-full flex flex-col hover:shadow-lg transition-shadow">
       <CardContent className={`flex flex-col h-full ${isMobile ? 'p-2' : 'p-3 md:p-4'}`}>
@@ -128,7 +131,7 @@ function ProductCard({
         <div className="aspect-square mb-3 relative overflow-hidden rounded-lg">
           {isIntersecting ? (
             <OptimizedImage
-              src={product.image}
+              src={optimizedImage.src}
               alt={product.title}
               className="w-full h-full object-cover"
               priority={false}

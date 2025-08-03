@@ -8,6 +8,7 @@ import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import SimpleProductManager from '@/components/admin/SimpleProductManager';
 import VoucherManagement from '@/components/admin/VoucherManagement';
+import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -241,6 +242,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
               <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="ai-testing">🤖 AI Testing</TabsTrigger>
               <TabsTrigger value="bot-setup">🤖 Bot Setup</TabsTrigger>
               <TabsTrigger value="cleanup">🗑️ Cleanup</TabsTrigger>
@@ -457,6 +459,10 @@ export default function AdminDashboard() {
                 Open Product Manager
               </Button>
             </div>
+          </TabsContent>
+
+          <TabsContent value="delivery-apps" className="space-y-4">
+            <DeliveryAppManager />
           </TabsContent>
 
           <TabsContent value="orders" className="space-y-4">

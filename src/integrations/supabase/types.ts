@@ -1172,6 +1172,36 @@ export type Database = {
           },
         ]
       }
+      delivery_app_variations: {
+        Row: {
+          app_name: string
+          app_slug: string
+          collections_config: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          app_name: string
+          app_slug: string
+          collections_config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          app_name?: string
+          app_slug?: string
+          collections_config?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       launch_phases: {
         Row: {
           actual_completion: string | null
@@ -1544,6 +1574,48 @@ export type Database = {
           target_value?: number
           unit?: string
           value?: number
+        }
+        Relationships: []
+      }
+      performance_optimizations: {
+        Row: {
+          applied_at: string | null
+          baseline_value: number | null
+          created_at: string
+          current_value: number | null
+          description: string
+          id: string
+          improvement_percentage: number | null
+          optimization_type: string
+          status: string
+          target_metric: string
+          updated_at: string
+        }
+        Insert: {
+          applied_at?: string | null
+          baseline_value?: number | null
+          created_at?: string
+          current_value?: number | null
+          description: string
+          id?: string
+          improvement_percentage?: number | null
+          optimization_type: string
+          status?: string
+          target_metric: string
+          updated_at?: string
+        }
+        Update: {
+          applied_at?: string | null
+          baseline_value?: number | null
+          created_at?: string
+          current_value?: number | null
+          description?: string
+          id?: string
+          improvement_percentage?: number | null
+          optimization_type?: string
+          status?: string
+          target_metric?: string
+          updated_at?: string
         }
         Relationships: []
       }
