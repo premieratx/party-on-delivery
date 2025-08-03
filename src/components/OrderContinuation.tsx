@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PartyPlanningButton } from '@/components/PartyPlanningButton';
-import { ShoppingBag, Plus, ArrowRight, Users, Search } from 'lucide-react';
+import { ShoppingBag, Plus, ArrowRight, Users, Search, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/party-on-delivery-logo.png';
 
@@ -33,6 +33,10 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
 
   const handleAffiliateLogin = () => {
     navigate('/affiliate');
+  };
+
+  const handleAdminLogin = () => {
+    navigate('/admin/dashboard');
   };
 
   return (
@@ -108,7 +112,7 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
           
           
           {/* Affiliate Dashboard Login button */}
-          <div className="pt-2">
+          <div className="pt-2 space-y-2">
             <Button 
               onClick={handleAffiliateLogin}
               className="w-full h-10 text-sm"
@@ -116,6 +120,16 @@ export const OrderContinuation: React.FC<OrderContinuationProps> = ({
             >
               <Users className="w-4 h-4 mr-2" />
               Affiliate Dashboard
+            </Button>
+            
+            {/* Admin Dashboard Direct Access */}
+            <Button 
+              onClick={handleAdminLogin}
+              className="w-full h-10 text-sm"
+              variant="ghost"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              Admin Dashboard
             </Button>
           </div>
         </CardContent>
