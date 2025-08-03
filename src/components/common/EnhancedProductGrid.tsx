@@ -174,7 +174,7 @@ function ProductCard({
               )}
             </div>
 
-            {/* Quantity Controls - Fixed mobile layout */}
+            {/* Quantity Controls - Smaller mobile buttons */}
             {quantity > 0 ? (
               <div className="flex items-center justify-center gap-1 w-full">
                 <Button
@@ -182,13 +182,13 @@ function ProductCard({
                   size="sm"
                   onClick={() => onUpdateQuantity(-1)}
                   className={`p-0 flex-shrink-0 ${
-                    isMobile ? 'h-7 w-7' : 'h-8 w-8'
+                    isMobile ? 'h-5 w-5' : 'h-8 w-8'
                   }`}
                 >
-                  <Minus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  <Minus className={`${isMobile ? 'h-2 w-2' : 'h-4 w-4'}`} />
                 </Button>
-                <span className={`font-medium min-w-[24px] text-center flex-1 ${
-                  isMobile ? 'text-sm' : 'text-base'
+                <span className={`font-medium min-w-[20px] text-center flex-1 ${
+                  isMobile ? 'text-xs' : 'text-base'
                 }`}>
                   {quantity}
                 </span>
@@ -197,10 +197,10 @@ function ProductCard({
                   size="sm"
                   onClick={() => onUpdateQuantity(1)}
                   className={`p-0 flex-shrink-0 ${
-                    isMobile ? 'h-7 w-7' : 'h-8 w-8'
+                    isMobile ? 'h-5 w-5' : 'h-8 w-8'
                   }`}
                 >
-                  <Plus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  <Plus className={`${isMobile ? 'h-2 w-2' : 'h-4 w-4'}`} />
                 </Button>
               </div>
             ) : (

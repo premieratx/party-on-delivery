@@ -820,18 +820,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       <div className="relative">
         
         {/* Mobile-optimized back button */}
-        <div className="p-3 md:p-4">
+        <div className="p-2 md:p-4">
           <Button 
             variant="outline" 
             onClick={onBack}
-            className="text-xs md:text-sm py-2 px-3 md:py-2 md:px-4"
+            className="text-xs md:text-sm py-1 px-2 md:py-2 md:px-4 h-6 md:h-auto"
           >
             <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
             Back to Products
           </Button>
         </div>
 
-        <div className="max-w-6xl mx-auto px-3 md:px-4 space-y-4 md:space-y-6">
+        <div className="max-w-6xl mx-auto px-2 md:px-4 space-y-2 md:space-y-6">
           {/* Compact Header */}
           <Card className="shadow-floating animate-fade-in">
             <CardHeader className="text-center py-3 md:py-6">
@@ -886,39 +886,39 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
            )}
           </Card>
 
-          {/* Saved Information Display - Full width bar at top of checkout */}
+          {/* Saved Information Display - Compact mobile layout */}
           {(confirmedDateTime || confirmedAddress) && (
             <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-card">
-              <CardContent className="py-4 px-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <CheckCircle className="h-5 w-5 mr-3 text-green-600 flex-shrink-0" />
-                      <span className="text-lg font-semibold text-green-800">Your Saved Information</span>
+              <CardContent className="py-2 px-3 md:py-4 md:px-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center mb-1 md:mb-2">
+                      <CheckCircle className="h-4 w-4 md:h-5 md:w-5 mr-2 md:mr-3 text-green-600 flex-shrink-0" />
+                      <span className="text-sm md:text-lg font-semibold text-green-800">Saved Information</span>
                     </div>
                     
                     {confirmedDateTime && (
-                      <div className="space-y-1 ml-8">
-                        <div className="text-sm text-green-700">
-                          <strong>Date & Time:</strong> {deliveryInfo.date && format(
+                      <div className="space-y-1 ml-4 md:ml-8 grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
+                        <div className="text-xs md:text-sm text-green-700">
+                          <strong>Date:</strong> {deliveryInfo.date && format(
                             toZonedTime(deliveryInfo.date instanceof Date ? deliveryInfo.date : new Date(deliveryInfo.date), 'America/Chicago'), 
-                            'EEEE, MMMM do, yyyy'
+                            'MMM do'
                           )} at {deliveryInfo.timeSlot}
                         </div>
-                        <div className="text-sm text-green-700">
-                          <strong>Contact:</strong> {customerInfo.firstName} {customerInfo.lastName} • {customerInfo.email} • {customerInfo.phone}
+                        <div className="text-xs md:text-sm text-green-700">
+                          <strong>Contact:</strong> {customerInfo.firstName} {customerInfo.lastName}
                         </div>
                       </div>
                     )}
                     
                     {confirmedAddress && (
-                      <div className="space-y-1 ml-8 mt-2">
-                        <div className="text-sm text-green-700">
-                          <strong>Delivery Address:</strong> {addressInfo.street}, {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}
+                      <div className="space-y-1 ml-4 md:ml-8 mt-1 md:mt-2">
+                        <div className="text-xs md:text-sm text-green-700">
+                          <strong>Address:</strong> {addressInfo.street}, {addressInfo.city}, {addressInfo.state} {addressInfo.zipCode}
                         </div>
                         {addressInfo.instructions && (
-                          <div className="text-sm text-green-600">
-                            <strong>Instructions:</strong> {addressInfo.instructions}
+                          <div className="text-xs md:text-sm text-green-600">
+                            <strong>Notes:</strong> {addressInfo.instructions}
                           </div>
                         )}
                       </div>
@@ -926,7 +926,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </div>
                   
                   {/* Edit buttons for each section */}
-                  <div className="flex gap-2 ml-4 flex-shrink-0">
+                  <div className="flex gap-1 md:gap-2 mt-2 md:mt-0 md:ml-4 flex-shrink-0">
                     {confirmedDateTime && (
                       <Button
                         variant="ghost"
@@ -936,10 +936,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           setConfirmedDateTime(false);
                           setCurrentStep('datetime');
                         }}
-                        className="text-green-600 hover:text-green-800 h-8 px-3"
+                        className="text-green-600 hover:text-green-800 h-6 md:h-8 px-2 md:px-3 text-xs md:text-sm"
                       >
-                        <Edit2 className="h-3 w-3 mr-1" />
-                        Edit Contact
+                        <Edit2 className="h-2 w-2 md:h-3 md:w-3 mr-1" />
+                        Edit
                       </Button>
                     )}
                     
@@ -952,9 +952,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           setConfirmedAddress(false);
                           setCurrentStep('address');
                         }}
-                        className="text-green-600 hover:text-green-800 h-8 px-3"
+                        className="text-green-600 hover:text-green-800 h-6 md:h-8 px-2 md:px-3 text-xs md:text-sm"
                       >
-                        <Edit2 className="h-3 w-3 mr-1" />
+                        <Edit2 className="h-2 w-2 md:h-3 md:w-3 mr-1" />
                         Edit Address
                       </Button>
                     )}
@@ -964,23 +964,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             </Card>
           )}
 
-          {/* Prompt for next step */}
-          {confirmedDateTime && !confirmedAddress && currentStep === 'payment' && (
-            <Card className="bg-gradient-to-r from-blue-50 to-sky-50 border-blue-200 shadow-card">
-              <CardContent className="py-4 px-6 text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-                  <span className="text-lg font-semibold text-blue-800">Next: Add Your Delivery Address</span>
-                </div>
-                <Button 
-                  onClick={() => setCurrentStep('address')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Complete Delivery Address
-                </Button>
-              </CardContent>
-            </Card>
-          )}
 
           <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
             {/* Step 1: Date/Time + Contact Information */}
@@ -1325,27 +1308,27 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                      
                      <div className="flex items-center gap-1 sm:gap-3 shrink-0">
                        {/* Quantity Controls */}
-                       <div className="flex items-center gap-1">
-                         <Button
-                           variant="outline"
-                           size="icon"
-                           className="h-6 w-6 sm:h-7 sm:w-7"
-                           onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
-                         >
-                           <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-5 w-5 sm:h-7 sm:w-7"
+                            onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
+                          >
+                            <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
                          </Button>
                          
                          <Badge variant="secondary" className="min-w-[28px] sm:min-w-[35px] justify-center px-1 sm:px-2 text-xs">
                            {item.quantity}
                          </Badge>
                          
-                         <Button
-                           variant="outline"
-                           size="icon"
-                           className="h-6 w-6 sm:h-7 sm:w-7"
-                           onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                         >
-                           <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-5 w-5 sm:h-7 sm:w-7"
+                            onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                          >
+                            <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
                          </Button>
                        </div>
                        
@@ -1468,14 +1451,14 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
        </div>
        </div>
        
-       {/* Navigation Footer */}
-       <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
-         <div className="max-w-4xl mx-auto flex justify-center">
-           <div className="text-sm text-muted-foreground">
-             Step 4 of 4
-           </div>
-         </div>
-       </div>
+        {/* Navigation Footer - Smaller on mobile */}
+        <div className="p-2 md:p-4 border-t bg-background/50 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto flex justify-center">
+            <div className="text-xs md:text-sm text-muted-foreground">
+              Step 4 of 4
+            </div>
+          </div>
+        </div>
     </div>
   );
 };

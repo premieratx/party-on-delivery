@@ -13,11 +13,20 @@ interface UseCheckoutFlowProps {
 export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange, affiliateCode }: UseCheckoutFlowProps) {
   const { customerInfo, addressInfo, setAddressInfo, setCustomerInfo } = useCustomerInfo();
   
-  // Step management
+  // Step management with auto-progression
   const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>('datetime');
   const [confirmedDateTime, setConfirmedDateTime] = useState(false);
   const [confirmedAddress, setConfirmedAddress] = useState(false);
   const [confirmedCustomer, setConfirmedCustomer] = useState(false);
+
+  // Auto-advance to next step when previous step is confirmed
+  useEffect(() => {
+    if (confirmedDateTime && !confirmedAddress && currentStep === 'datetime') {
+      setCurrentStep('address');
+    } else if (confirmedDateTime && confirmedAddress && currentStep === 'address') {
+      setCurrentStep('payment');
+    }
+  }, [confirmedDateTime, confirmedAddress, currentStep]);
   
   // Change tracking for "add to order" flow
   const [originalOrderInfo, setOriginalOrderInfo] = useState<any>(null);
