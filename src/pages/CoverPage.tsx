@@ -40,11 +40,11 @@ const CoverPage = () => {
       {/* Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center">
         {/* Logo */}
-        <div className="mb-6 md:mb-8">
+        <div className="mb-2 md:mb-4">
           <img 
             src={partyLogo} 
             alt="Party On Delivery" 
-            className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 mx-auto mb-4"
+            className="w-72 h-72 sm:w-84 sm:h-84 md:w-96 md:h-96 lg:w-[432px] lg:h-[432px] mx-auto mb-4"
           />
         </div>
         
