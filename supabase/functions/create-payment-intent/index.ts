@@ -24,7 +24,9 @@ serve(async (req) => {
     const body = await req.json();
     logStep("Raw request body received", { bodyKeys: Object.keys(body) });
     
-    const { amount, currency, cartItems, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken } = body;
+    // Support both 'items' and 'cartItems' for backward compatibility
+    const cartItems = body.cartItems || body.items;
+    const { amount, currency, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken } = body;
     
     logStep("Extracted data", {
       amount,

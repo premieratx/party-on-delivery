@@ -33,10 +33,18 @@ serve(async (req) => {
     let dashboardType, userEmail, affiliateCode;
     
     if (req.method === 'POST') {
-      const body = await req.json();
-      dashboardType = body.type || 'admin';
-      userEmail = body.email;
-      affiliateCode = body.affiliateCode;
+      try {
+        const body = await req.json();
+        dashboardType = body.type || 'admin';
+        userEmail = body.email;
+        affiliateCode = body.affiliateCode;
+      } catch (error) {
+        // If no valid JSON body, treat as GET request
+        const url = new URL(req.url);
+        dashboardType = url.searchParams.get('type') || 'admin';
+        userEmail = url.searchParams.get('email');
+        affiliateCode = url.searchParams.get('affiliateCode');
+      }
     } else {
       const url = new URL(req.url);
       dashboardType = url.searchParams.get('type') || 'admin';
