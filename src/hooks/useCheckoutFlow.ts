@@ -21,9 +21,19 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
 
   // Auto-advance to next step when previous step is confirmed
   useEffect(() => {
+    console.log('🔄 Step progression check:', { 
+      confirmedDateTime, 
+      confirmedAddress, 
+      currentStep,
+      shouldGoToAddress: confirmedDateTime && !confirmedAddress && currentStep === 'datetime',
+      shouldGoToPayment: confirmedDateTime && confirmedAddress && currentStep === 'address'
+    });
+    
     if (confirmedDateTime && !confirmedAddress && currentStep === 'datetime') {
+      console.log('✅ Moving to address step');
       setCurrentStep('address');
     } else if (confirmedDateTime && confirmedAddress && currentStep === 'address') {
+      console.log('✅ Moving to payment step');
       setCurrentStep('payment');
     }
   }, [confirmedDateTime, confirmedAddress, currentStep]);
