@@ -75,8 +75,8 @@ export const GlobalNavigation = ({ className }: { className?: string }) => {
   };
 
   const handleHome = () => {
-    // Always go to the main starting screen (order continuation)
-    navigate('/order/continuation');
+    // Always go to the main delivery app home
+    navigate('/');
   };
 
   const handleCart = () => {

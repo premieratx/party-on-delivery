@@ -134,19 +134,26 @@ const GroupOrderDashboard = () => {
   };
 
   const handleShareOrder = () => {
-    const orderUrl = window.location.href;
+    // Create a proper group order join URL that ensures free shipping and proper flow
+    const shareUrl = `${window.location.origin}/?share=${shareToken}&customer=true&checkout=true`;
+    
     if (navigator.share) {
       navigator.share({
-        title: `Join my Party On Delivery group order!`,
-        text: `Join my group order and save on delivery fees!`,
-        url: orderUrl,
+        title: `Join my Party On Delivery group order - FREE SHIPPING!`,
+        text: `Join my group delivery order for ${groupOrder?.delivery_date} at ${groupOrder?.delivery_time}. Get FREE SHIPPING when you add to our order!`,
+        url: shareUrl,
+      }).then(() => {
+        console.log('✅ Group order link shared successfully');
+      }).catch((error) => {
+        console.log('Share dialog was dismissed or failed:', error);
       });
     } else {
-      navigator.clipboard.writeText(orderUrl);
+      navigator.clipboard.writeText(shareUrl);
       toast({
-        title: "Link Copied!",
-        description: "Group order link copied to clipboard",
+        title: "Group Order Link Copied! 🎉",
+        description: "Share this link with friends to join your group order and get FREE SHIPPING!",
       });
+      console.log('✅ Group order link copied to clipboard');
     }
   };
 

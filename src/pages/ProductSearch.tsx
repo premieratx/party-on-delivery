@@ -735,7 +735,7 @@ export const ProductSearch = () => {
         totalPrice={getTotalPrice()}
         isVisible={cartItems.length > 0}
         onOpenCart={() => setShowCart(true)}
-        onCheckout={() => navigate('/checkout')}
+        onCheckout={() => navigate('/?step=checkout')}
       />
     </div>
   );

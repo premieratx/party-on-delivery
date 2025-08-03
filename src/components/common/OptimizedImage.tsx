@@ -9,6 +9,21 @@ interface OptimizedImageProps {
   priority?: boolean;
 }
 
+// Helper function to optimize Shopify image URLs for faster loading
+const optimizeImageUrl = (src: string, width = 300, quality = 75): string => {
+  if (!src) return src;
+  
+  // For Shopify CDN images, use their image transformation API
+  if (src.includes('cdn.shopify.com') || src.includes('shopify.com')) {
+    // Remove existing size/quality parameters
+    const baseUrl = src.split('?')[0];
+    return `${baseUrl}?width=${width}&quality=${quality}&format=webp`;
+  }
+  
+  // For other CDNs or direct URLs, return as-is
+  return src;
+};
+
 export const OptimizedImage = ({ src, alt, className = '', onClick, priority = false }: OptimizedImageProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -16,6 +31,9 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
 
   useEffect(() => {
     if (src) {
+      // Optimize the image URL for faster loading
+      const optimizedSrc = optimizeImageUrl(src, 300, 75);
+      
       // Fast preload with priority handling
       const img = new Image();
       
@@ -30,12 +48,22 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
         setHasError(false);
       };
       img.onerror = () => {
-        setIsLoading(false);
-        setHasError(true);
+        console.warn('Optimized image failed, trying original:', src);
+        // Try original URL if optimized fails
+        const fallbackImg = new Image();
+        fallbackImg.onload = () => {
+          setIsLoading(false);
+          setHasError(false);
+        };
+        fallbackImg.onerror = () => {
+          setIsLoading(false);
+          setHasError(true);
+        };
+        fallbackImg.src = src;
       };
       
-      // Start loading immediately
-      img.src = src;
+      // Start loading optimized image
+      img.src = optimizedSrc;
       
       // Cleanup on unmount
       return () => {
@@ -62,7 +90,7 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
       )}
       <img
         ref={imgRef}
-        src={src}
+        src={optimizeImageUrl(src, 300, 75)}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-200 ${
           isLoading ? 'opacity-0' : 'opacity-100'
@@ -70,6 +98,7 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "auto"}
         decoding="async"
+        sizes="(max-width: 768px) 150px, 300px"
       />
     </div>
   );

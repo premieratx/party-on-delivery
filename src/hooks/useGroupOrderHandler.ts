@@ -61,19 +61,25 @@ export const useGroupOrderHandler = () => {
       window.location.href = `/join/${shareToken}`;
       return;
     } else {
-      // Regular app load - check if we have existing group order state
-      const isCurrentlyJoining = isJoiningGroupOrder();
-      if (isCurrentlyJoining) {
-        const activeDeliveryInfo = getActiveDeliveryInfo();
-        if (activeDeliveryInfo.source === 'group_order' && activeDeliveryInfo.data) {
-          const groupToken = localStorage.getItem(STORAGE_KEYS.GROUP_ORDER_TOKEN);
-          setGroupOrderData({
-            shareToken: groupToken || '',
-            deliveryDate: typeof activeDeliveryInfo.data.date === 'string' ? activeDeliveryInfo.data.date : activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
-            deliveryTime: activeDeliveryInfo.data.timeSlot || '',
-            deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
-          });
-          setIsJoiningGroup(true);
+      // Regular app load - only check for existing group order state if we're actually in the main delivery app
+      // Don't trigger group order logic just from navigating around the app
+      const currentPath = window.location.pathname;
+      const isMainDeliveryApp = currentPath === '/' || currentPath === '';
+      
+      if (isMainDeliveryApp) {
+        const isCurrentlyJoining = isJoiningGroupOrder();
+        if (isCurrentlyJoining) {
+          const activeDeliveryInfo = getActiveDeliveryInfo();
+          if (activeDeliveryInfo.source === 'group_order' && activeDeliveryInfo.data) {
+            const groupToken = localStorage.getItem(STORAGE_KEYS.GROUP_ORDER_TOKEN);
+            setGroupOrderData({
+              shareToken: groupToken || '',
+              deliveryDate: typeof activeDeliveryInfo.data.date === 'string' ? activeDeliveryInfo.data.date : activeDeliveryInfo.data.date?.toISOString().split('T')[0] || '',
+              deliveryTime: activeDeliveryInfo.data.timeSlot || '',
+              deliveryAddress: activeDeliveryInfo.addressInfo || activeDeliveryInfo.data.address,
+            });
+            setIsJoiningGroup(true);
+          }
         }
       }
     }
