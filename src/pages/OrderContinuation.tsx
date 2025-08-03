@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, MapPin, ArrowRight } from 'lucide-react';
+import { CheckCircle, MapPin, ArrowRight, Shield } from 'lucide-react';
 
 const OrderContinuation = () => {
   const navigate = useNavigate();
@@ -12,6 +12,10 @@ const OrderContinuation = () => {
 
   const handleContinueShopping = () => {
     navigate('/?customer=true&discount=PREMIER2025');
+  };
+
+  const handleAdminLogin = () => {
+    navigate('/admin/dashboard');
   };
 
   return (
@@ -63,6 +67,18 @@ const OrderContinuation = () => {
             <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <Button variant="outline" onClick={handleContinueShopping} className="flex-1">
                 Continue Shopping
+              </Button>
+            </div>
+            
+            {/* Admin Dashboard Direct Access */}
+            <div className="pt-4">
+              <Button 
+                onClick={handleAdminLogin}
+                className="w-full"
+                variant="ghost"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin Dashboard
               </Button>
             </div>
           </div>
