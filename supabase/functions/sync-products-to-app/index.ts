@@ -50,7 +50,9 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    console.log('🔄 Starting sync-products-to-app function...');
+    const { incrementalSync = false } = await req.json().catch(() => ({}));
+
+    console.log(`🔄 Starting sync-products-to-app function... (incremental: ${incrementalSync})`);
 
     // Get all synced product modifications that haven't been synced to app yet
     const { data: modifications, error: modificationsError } = await supabase
@@ -142,27 +144,50 @@ serve(async (req) => {
       }
     }
 
-    // Step 5: Clear cache entries to force refresh in app
-    console.log('🗑️ Clearing app cache for fresh sync...');
+    // Step 5: Clear cache entries strategically for incremental sync
+    console.log(`🗑️ Clearing app cache... (incremental: ${incrementalSync})`);
     try {
-      const cacheKeys = [
-        'shopify_collections_%',
-        'shopify_products_%',
-        'delivery_app_%',
-        'collections_%'
-      ];
-
-      for (const keyPattern of cacheKeys) {
-        const { error: cacheError } = await supabase
-          .from('cache')
-          .delete()
-          .like('key', keyPattern);
+      if (incrementalSync) {
+        // For incremental sync, only clear specific cache entries
+        const specificKeys = [
+          'critical_products_v2',
+          'virtualized_products',
+          'delivery_app_collections'
+        ];
         
-        if (cacheError) {
-          console.warn(`⚠️ Error clearing cache pattern ${keyPattern}:`, cacheError.message);
+        for (const key of specificKeys) {
+          await supabase.from('cache').delete().eq('key', key);
+          // Also clear from browser localStorage via cache invalidation
+          await supabase.from('cache').upsert({
+            key: `invalidate_${key}`,
+            data: { timestamp: Date.now() },
+            expires_at: Date.now() + (5 * 60 * 1000)
+          });
         }
+        console.log('✅ Incremental cache clearing completed');
+      } else {
+        // Full cache clear for complete sync
+        const cacheKeys = [
+          'shopify_collections_%',
+          'shopify_products_%',
+          'delivery_app_%',
+          'collections_%',
+          'critical_products_%',
+          'virtualized_%'
+        ];
+
+        for (const keyPattern of cacheKeys) {
+          const { error: cacheError } = await supabase
+            .from('cache')
+            .delete()
+            .like('key', keyPattern);
+          
+          if (cacheError) {
+            console.warn(`⚠️ Error clearing cache pattern ${keyPattern}:`, cacheError.message);
+          }
+        }
+        console.log('✅ Full app cache cleared successfully');
       }
-      console.log('✅ App cache cleared successfully');
     } catch (cacheError) {
       console.warn('⚠️ Cache clear error (non-critical):', cacheError);
     }

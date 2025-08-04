@@ -191,10 +191,12 @@ Deno.serve(async (req) => {
       console.log('ℹ️ No pending modifications to sync');
     }
 
-    // Step 4: Sync to app (this refreshes collections in the delivery app)
-    console.log('📱 Syncing to app...');
+    // Step 4: Sync to app with incremental updates (faster)
+    console.log('📱 Syncing to app with incremental updates...');
     const { data: appSyncData, error: appSyncError } = await withRetry(
-      () => supabase.functions.invoke('sync-products-to-app')
+      () => supabase.functions.invoke('sync-products-to-app', {
+        body: { incrementalSync: true }
+      })
     );
 
     if (appSyncError) {

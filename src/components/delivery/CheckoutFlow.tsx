@@ -172,28 +172,34 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     appliedDiscountProp || null
   );
   
-  // Check for custom site free shipping and auto-apply
+  // Check for custom site free shipping and auto-apply (only for custom sites)
   useEffect(() => {
     const freeShippingEnabled = localStorage.getItem('free_shipping_enabled') === 'true';
     const customSiteData = localStorage.getItem('customSiteData');
+    const isCustomSite = window.location.pathname.includes('/custom-site/') || 
+                        sessionStorage.getItem('affiliate_source') === 'custom_site';
     
-    if (freeShippingEnabled && customSiteData) {
-      const siteData = JSON.parse(customSiteData);
-      if (siteData.promoCode && !appliedDiscount) {
-        const customSiteDiscount = {
-          code: siteData.promoCode,
-          type: 'free_shipping' as const,
-          value: 0
-        };
-        setAppliedDiscount(customSiteDiscount);
-        setDiscountCode(siteData.promoCode);
-        if (onDiscountChange) {
-          onDiscountChange(customSiteDiscount);
+    if (freeShippingEnabled && customSiteData && isCustomSite && !appliedDiscount) {
+      try {
+        const siteData = JSON.parse(customSiteData);
+        if (siteData.promoCode) {
+          const customSiteDiscount = {
+            code: siteData.promoCode,
+            type: 'free_shipping' as const,
+            value: 0
+          };
+          setAppliedDiscount(customSiteDiscount);
+          setDiscountCode(siteData.promoCode);
+          if (onDiscountChange) {
+            onDiscountChange(customSiteDiscount);
+          }
+          console.log('Auto-applied custom site free shipping:', customSiteDiscount);
         }
-        console.log('Auto-applied custom site free shipping:', customSiteDiscount);
+      } catch (error) {
+        console.error('Error applying custom site discount:', error);
       }
     }
-  }, []);
+  }, [appliedDiscount, onDiscountChange]);
   
   // Sync local discount state with parent prop when it changes
   useEffect(() => {
@@ -397,19 +403,25 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     return false;
   })();
 
-  // Auto-apply group discount for group orders - check localStorage first, then fetch if needed
+  // Auto-apply discounts only for valid sources - prevent unwanted auto-application
   useEffect(() => {
+    const affiliateSource = sessionStorage.getItem('affiliate_source');
+    const isValidAffiliateContext = affiliateSource && ['url', 'group_order', 'custom_site'].includes(affiliateSource);
+    
     console.log('🔄 Discount effect triggered:', { 
       isAddingToOrder, 
       affiliateCode, 
+      affiliateSource,
+      isValidAffiliateContext,
       appliedDiscount: appliedDiscount?.code,
       hasStoredDiscount: !!localStorage.getItem('partyondelivery_applied_discount')
     });
     
-    if (isAddingToOrder || affiliateCode) {
+    // Only auto-apply affiliate discounts in valid contexts
+    if ((isAddingToOrder || (affiliateCode && isValidAffiliateContext)) && !appliedDiscount) {
       // First check if discount was already set in localStorage from GroupOrderView
       const storedDiscount = localStorage.getItem('partyondelivery_applied_discount');
-      if (storedDiscount && isAddingToOrder && !appliedDiscount) {
+      if (storedDiscount && isAddingToOrder) {
         try {
           const parsedDiscount = JSON.parse(storedDiscount);
           if (parsedDiscount.code && (parsedDiscount.code.startsWith('GROUP-SHIPPING-') || parsedDiscount.code === 'PREMIER2025')) {
@@ -428,7 +440,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       
       // Only fetch group order if we're actually adding to an order AND have a valid token
       const groupOrderToken = localStorage.getItem('groupOrderToken');
-      if (groupOrderToken && isAddingToOrder && !appliedDiscount) {
+      if (groupOrderToken && isAddingToOrder) {
         console.log('🔗 Group order token found, fetching buyer info:', groupOrderToken);
         supabase.functions.invoke('get-group-order', {
           body: { shareToken: groupOrderToken }
@@ -473,7 +485,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             onDiscountChange(fallbackDiscount);
           }
         });
-      } else if (!appliedDiscount && (isAddingToOrder || affiliateCode)) {
+      } else if (!appliedDiscount && (isAddingToOrder || (affiliateCode && isValidAffiliateContext))) {
         // Non-group orders or affiliate referrals use PREMIER2025
         const defaultDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
         setAppliedDiscount(defaultDiscount);
@@ -490,7 +502,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       }
     } else if (!deliveryDetailsMatch && appliedDiscount?.code === 'SAME_ORDER') {
       // Remove auto-applied discount if details no longer match but not for group orders
-      if (!isAddingToOrder && !affiliateCode) {
+      if (!isAddingToOrder && !(affiliateCode && isValidAffiliateContext)) {
         setAppliedDiscount(null);
         if (onDiscountChange) {
           onDiscountChange(null);

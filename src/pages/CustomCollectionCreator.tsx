@@ -522,12 +522,32 @@ export default function CustomCollectionCreator() {
       // Reload modifications to get updated data
       await loadProductModifications();
 
-      // Now sync using the regular flow
+      // Use fast sync for immediate updates
+      console.log('🚀 Using fast sync for selected products...');
+      const { data: fastSyncResult, error: fastSyncError } = await supabase.functions.invoke('fast-product-sync', {
+        body: {
+          productIds: selectedProductIds,
+          collectionHandle: bulkCollection || 'custom-products',
+          operation: 'add'
+        }
+      });
+      
+      if (fastSyncError) {
+        console.error('Fast sync error:', fastSyncError);
+        throw fastSyncError;
+      }
+      
+      // Clear caches for immediate UI updates
+      localStorage.removeItem('critical_products_v2');
+      localStorage.removeItem('virtualized_products');
+      localStorage.removeItem('shopify_collections_cache');
+      
+      // Now sync using the regular flow for Shopify integration
       await syncToShopifyAndApp();
 
       toast({
         title: "Success",
-        description: `Force synced ${selectedProducts.size} selected products to Shopify and app!`,
+        description: `Fast synced ${selectedProducts.size} selected products! Changes will appear in delivery apps within 30 seconds.`,
       });
 
     } catch (error) {
