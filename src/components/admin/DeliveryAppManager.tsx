@@ -188,6 +188,64 @@ export function DeliveryAppManager() {
     }
   };
 
+  const updateDeliveryApp = async () => {
+    if (!editingApp || !appName.trim()) {
+      toast.error('App name is required');
+      return;
+    }
+
+    const validTabs = tabs.filter(tab => tab.name.trim() && tab.collection_handle);
+    if (validTabs.length === 0) {
+      toast.error('At least one valid tab is required');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('delivery_app_variations')
+        .update({
+          app_name: appName,
+          collections_config: {
+            tab_count: validTabs.length,
+            tabs: validTabs
+          }
+        })
+        .eq('id', editingApp.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update the app in the list
+      setDeliveryApps(prev => prev.map(app => 
+        app.id === editingApp.id 
+          ? {
+              ...data,
+              collections_config: data.collections_config as {
+                tab_count: number;
+                tabs: Array<{
+                  name: string;
+                  collection_handle: string;
+                  icon?: string;
+                }>;
+              }
+            }
+          : app
+      ));
+      
+      setIsCreating(false);
+      setEditingApp(null);
+      setAppName('');
+      setTabs([]);
+      toast.success('Delivery app updated successfully!');
+
+    } catch (error: any) {
+      console.error('Error updating delivery app:', error);
+      toast.error(error.message || 'Failed to update delivery app');
+    }
+
+  };
+
   const deleteApp = async (appId: string) => {
     if (!confirm('Are you sure you want to delete this delivery app?')) return;
 
@@ -235,7 +293,7 @@ export function DeliveryAppManager() {
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create New Delivery App</DialogTitle>
+            <DialogTitle>{editingApp ? 'Edit Delivery App' : 'Create New Delivery App'}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6">
@@ -300,11 +358,16 @@ export function DeliveryAppManager() {
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsCreating(false)}>
+              <Button variant="outline" onClick={() => {
+                setIsCreating(false);
+                setEditingApp(null);
+                setAppName('');
+                setTabs([]);
+              }}>
                 Cancel
               </Button>
-              <Button onClick={createDeliveryApp}>
-                Create App
+              <Button onClick={editingApp ? updateDeliveryApp : createDeliveryApp}>
+                {editingApp ? 'Update App' : 'Create App'}
               </Button>
             </div>
           </div>
@@ -373,7 +436,16 @@ export function DeliveryAppManager() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setEditingApp(app)}
+                      onClick={() => {
+                        setEditingApp(app);
+                        setAppName(app.app_name);
+                        setTabCount(app.collections_config.tab_count);
+                        setTabs(app.collections_config.tabs.map(tab => ({
+                          name: tab.name,
+                          collection_handle: tab.collection_handle
+                        })));
+                        setIsCreating(true);
+                      }}
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit

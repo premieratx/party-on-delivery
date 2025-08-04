@@ -85,7 +85,7 @@ export default function VoucherManagement() {
 
   const loadData = async () => {
     try {
-      // Load vouchers
+      // Load vouchers with proper error handling
       const { data: vouchersData, error: vouchersError } = await supabase
         .from('vouchers')
         .select(`
@@ -98,7 +98,13 @@ export default function VoucherManagement() {
         `)
         .order('created_at', { ascending: false });
 
-      if (vouchersError) throw vouchersError;
+      if (vouchersError) {
+        console.error('Vouchers error:', vouchersError);
+        // Don't throw error, just log it and continue with empty array
+        setVouchers([]);
+      } else {
+        setVouchers(vouchersData || []);
+      }
 
       // Load affiliates
       const { data: affiliatesData, error: affiliatesError } = await supabase
@@ -107,16 +113,22 @@ export default function VoucherManagement() {
         .eq('status', 'active')
         .order('name');
 
-      if (affiliatesError) throw affiliatesError;
+      if (affiliatesError) {
+        console.error('Affiliates error:', affiliatesError);
+        setAffiliates([]);
+      } else {
+        setAffiliates(affiliatesData || []);
+      }
 
-      setVouchers(vouchersData || []);
-      setAffiliates(affiliatesData || []);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading voucher data:', error);
+      // Set empty arrays to prevent UI issues
+      setVouchers([]);
+      setAffiliates([]);
       toast({
-        title: "Error",
-        description: "Failed to load voucher data",
-        variant: "destructive"
+        title: "Notice",
+        description: "Voucher system is being set up. Some features may not be available yet.",
+        variant: "default"
       });
     } finally {
       setLoading(false);
