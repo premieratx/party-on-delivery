@@ -34,7 +34,7 @@ export const AdminLogin: React.FC = () => {
             title: "Welcome!",
             description: "Successfully logged in as admin.",
           });
-          window.location.replace('/admin');
+          navigate('/admin');
         } else if (mounted) {
           console.log('User is not admin, signing out');
           await supabase.auth.signOut();
@@ -105,7 +105,7 @@ export const AdminLogin: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/affiliate/admin-login`,
+          redirectTo: `${window.location.origin}/admin`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',

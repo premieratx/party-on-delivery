@@ -71,6 +71,7 @@ const App = () => {
                   <Route path="/affiliate/admin-login" element={<AdminLogin />} />
                   <Route path="/affiliate/admin" element={<AdminDashboard />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/product-management" element={<ProductManagement />} />
                   <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
                   <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
