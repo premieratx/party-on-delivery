@@ -196,6 +196,40 @@ export const ProductManagement: React.FC = () => {
     }
   };
 
+  const syncCategoriesToShopify = async () => {
+    try {
+      setIsMovingProduct(true);
+      
+      toast({
+        title: "Syncing...",
+        description: "Syncing product categories to Shopify...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('sync-product-categories');
+      
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: `Synced ${data.synced_count} product categories to Shopify`,
+        });
+      } else {
+        throw new Error(data.error || 'Sync failed');
+      }
+      
+    } catch (error: any) {
+      console.error('Error syncing to Shopify:', error);
+      toast({
+        title: "Error",
+        description: `Failed to sync to Shopify: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsMovingProduct(false);
+    }
+  };
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.handle.toLowerCase().includes(searchTerm.toLowerCase());
@@ -254,6 +288,15 @@ export const ProductManagement: React.FC = () => {
             >
               <RefreshCw className="h-4 w-4" />
               Refresh Collections
+            </Button>
+            <Button
+              variant="default"
+              onClick={syncCategoriesToShopify}
+              disabled={isMovingProduct}
+              className="flex items-center gap-2"
+            >
+              <Move className="h-4 w-4" />
+              {isMovingProduct ? 'Syncing...' : 'Sync to Shopify'}
             </Button>
           </div>
         </div>

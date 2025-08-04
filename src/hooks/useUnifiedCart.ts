@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface UnifiedCartItem {
   id: string;
@@ -124,6 +125,9 @@ export const useUnifiedCart = () => {
     // Trigger flash animation
     setCartFlash(true);
     setTimeout(() => setCartFlash(false), 600);
+
+    // Track abandoned cart after cart updates (delayed to avoid spam)
+    setTimeout(() => trackAbandonedCart(), 30000);
   };
 
   const updateQuantity = (id: string, variant: string | undefined, quantity: number) => {
@@ -180,6 +184,34 @@ export const useUnifiedCart = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const trackAbandonedCart = async () => {
+    if (cartItems.length === 0) return;
+
+    try {
+      const sessionId = localStorage.getItem('sessionId') || Math.random().toString(36).substring(7);
+      localStorage.setItem('sessionId', sessionId);
+
+      const customerInfo = JSON.parse(localStorage.getItem('customerInfo') || '{}');
+      const deliveryInfo = JSON.parse(localStorage.getItem('deliveryInfo') || '{}');
+      
+      await supabase.functions.invoke('track-abandoned-cart', {
+        body: {
+          session_id: sessionId,
+          cart_items: cartItems,
+          customer_email: customerInfo.email,
+          customer_name: customerInfo.firstName ? `${customerInfo.firstName} ${customerInfo.lastName}` : null,
+          customer_phone: customerInfo.phone,
+          delivery_address: deliveryInfo.address,
+          subtotal: getTotalPrice(),
+          total_amount: getTotalPrice(),
+          affiliate_code: localStorage.getItem('affiliateCode')
+        }
+      });
+    } catch (error) {
+      console.error('Error tracking abandoned cart:', error);
+    }
+  };
+
   return {
     cartItems,
     cartFlash,
@@ -189,6 +221,7 @@ export const useUnifiedCart = () => {
     emptyCart,
     getCartItemQuantity,
     getTotalPrice,
-    getTotalItems
+    getTotalItems,
+    trackAbandonedCart
   };
 };
