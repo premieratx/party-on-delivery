@@ -1,7 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, User, ShoppingBag } from 'lucide-react';
+import { Clock, MapPin, User, ShoppingBag, Search, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface CustomOrderContinuationProps {
   onStartNewOrder: () => void;
@@ -18,6 +19,7 @@ export function CustomOrderContinuation({
   cartItems,
   appName
 }: CustomOrderContinuationProps) {
+  const navigate = useNavigate();
   const hasExistingOrder = cartItems.length > 0;
   const hasDeliveryInfo = deliveryInfo.selectedDate || deliveryInfo.customerInfo;
 
@@ -78,13 +80,33 @@ export function CustomOrderContinuation({
             <CardHeader>
               <CardTitle>Welcome!</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <p className="text-muted-foreground mb-4">
                 Ready to place an order for delivery?
               </p>
-              <Button onClick={onStartNewOrder} className="w-full">
+              <Button onClick={onStartNewOrder} className="w-full mb-4">
                 Start New Order
               </Button>
+              
+              {/* Shared App Buttons */}
+              <div className="grid grid-cols-2 gap-2 pt-4 border-t">
+                <Button 
+                  onClick={() => navigate('/search')}
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                >
+                  <Search className="h-4 w-4" />
+                  Search
+                </Button>
+                <Button 
+                  onClick={() => navigate('/plan-my-party')}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Users className="h-4 w-4" />
+                  Party Planner
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

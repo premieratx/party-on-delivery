@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShoppingCart, Plus, Minus, Search } from 'lucide-react';
+import { Loader2, ShoppingCart, Plus, Minus, Search, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
@@ -219,6 +219,24 @@ export function CustomProductCategories({
                 {tab.icon} {tab.name}
               </Button>
             ))}
+            
+            {/* Shared App Buttons */}
+            <Button 
+              onClick={() => navigate('/search')}
+              variant="outline" 
+              className="shrink-0 ml-auto flex items-center gap-1"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
+            <Button 
+              onClick={() => navigate('/plan-my-party')}
+              variant="outline"
+              className="shrink-0 flex items-center gap-1"
+            >
+              <Users className="h-4 w-4" />
+              Party
+            </Button>
           </div>
         </div>
       </div>
