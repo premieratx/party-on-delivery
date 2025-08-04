@@ -142,26 +142,89 @@ serve(async (req) => {
       }
     }
 
-    // Clear cache to force refresh of collections in delivery app
-    console.log('🗑️ Clearing cache to trigger app refresh...');
-    
+    // Step 5: Clear cache entries to force refresh in app
+    console.log('🗑️ Clearing app cache for fresh sync...');
     try {
-      // Clear collections cache
-      await supabase.from('cache').delete().eq('key', 'shopify-collections');
-      await supabase.from('cache').delete().like('key', '%products%');
-      console.log('✅ Cache cleared successfully');
-      
-      // Force refresh of collections
-      await withRetry(
-        () => supabase.functions.invoke('get-all-collections', {
-          body: { forceRefresh: true }
-        })
-      );
-      console.log('✅ Collections refreshed successfully');
-      
+      const cacheKeys = [
+        'shopify_collections_%',
+        'shopify_products_%',
+        'delivery_app_%',
+        'collections_%'
+      ];
+
+      for (const keyPattern of cacheKeys) {
+        const { error: cacheError } = await supabase
+          .from('cache')
+          .delete()
+          .like('key', keyPattern);
+        
+        if (cacheError) {
+          console.warn(`⚠️ Error clearing cache pattern ${keyPattern}:`, cacheError.message);
+        }
+      }
+      console.log('✅ App cache cleared successfully');
     } catch (cacheError) {
-      console.warn('⚠️ Cache refresh warning (non-critical):', cacheError);
-      // Don't fail the whole operation for cache issues
+      console.warn('⚠️ Cache clear error (non-critical):', cacheError);
+    }
+
+    // Step 6: Force refresh collections to update delivery app tabs
+    console.log('🔄 Refreshing collections for delivery app...');
+    const { data: collectionsData, error: collectionsError } = await withRetry(
+      () => supabase.functions.invoke('get-all-collections', {
+        body: { forceRefresh: true }
+      })
+    );
+
+    if (collectionsError) {
+      console.warn('⚠️ Collections refresh error:', collectionsError.message);
+    } else {
+      console.log('✅ Collections refreshed successfully:', {
+        collectionsCount: collectionsData?.collections?.length || 0
+      });
+    }
+
+    // Step 7: Update delivery app variations to reflect new collections
+    console.log('📱 Updating delivery app variations...');
+    try {
+      const { data: appVariations, error: variationsError } = await supabase
+        .from('delivery_app_variations')
+        .select('*')
+        .eq('is_active', true);
+
+      if (variationsError) {
+        console.warn('⚠️ Error fetching app variations:', variationsError.message);
+      } else if (appVariations && appVariations.length > 0) {
+        console.log(`📱 Found ${appVariations.length} active delivery app variations to update`);
+        
+        for (const variation of appVariations) {
+          try {
+            // Update the collections config with fresh data
+            const updatedConfig = {
+              ...variation.collections_config,
+              last_synced: new Date().toISOString(),
+              sync_status: 'completed'
+            };
+
+            const { error: updateError } = await supabase
+              .from('delivery_app_variations')
+              .update({
+                collections_config: updatedConfig,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', variation.id);
+
+            if (updateError) {
+              console.error(`❌ Error updating app variation ${variation.app_name}:`, updateError);
+            } else {
+              console.log(`✅ Updated app variation: ${variation.app_name}`);
+            }
+          } catch (error) {
+            console.error(`❌ Error processing app variation ${variation.app_name}:`, error);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Error updating delivery app variations (non-critical):', error);
     }
 
     console.log(`🎉 App sync complete: ${syncedCount} products synced successfully`);
@@ -176,6 +239,8 @@ serve(async (req) => {
         message: `Successfully synced ${syncedCount} products to app`,
         syncedCount,
         totalProcessed: modifications.length,
+        collectionsRefreshed: !!collectionsData,
+        appVariationsUpdated: true,
         errors: errors.length > 0 ? errors : undefined,
         timestamp: new Date().toISOString()
       }),

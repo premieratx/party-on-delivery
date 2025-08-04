@@ -191,7 +191,7 @@ Deno.serve(async (req) => {
       console.log('ℹ️ No pending modifications to sync');
     }
 
-    // Step 4: Sync to app
+    // Step 4: Sync to app (this refreshes collections in the delivery app)
     console.log('📱 Syncing to app...');
     const { data: appSyncData, error: appSyncError } = await withRetry(
       () => supabase.functions.invoke('sync-products-to-app')
@@ -200,10 +200,24 @@ Deno.serve(async (req) => {
     if (appSyncError) {
       console.warn('⚠️ App sync warning:', appSyncError.message);
     } else {
-      console.log('✅ App sync completed successfully');
+      console.log('✅ App sync completed successfully:', appSyncData);
     }
 
-    // Step 5: Update cache with fresh data
+    // Step 5: Refresh collections cache to ensure app has latest data
+    console.log('🔄 Refreshing collections cache...');
+    const { data: collectionsRefresh, error: collectionsError } = await withRetry(
+      () => supabase.functions.invoke('get-all-collections', {
+        body: { forceRefresh: true }
+      })
+    );
+
+    if (collectionsError) {
+      console.warn('⚠️ Collections refresh warning:', collectionsError.message);
+    } else {
+      console.log('✅ Collections cache refreshed successfully');
+    }
+
+    // Step 6: Update cache with fresh data
     console.log('💾 Updating cache with fresh data...');
     try {
       const cacheKey = 'shopify_products_latest';

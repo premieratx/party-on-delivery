@@ -337,16 +337,22 @@ export default function CustomCollectionCreator() {
       await loadProductModifications();
       await loadAllProducts(true);
       
-      // Clear cached data
-      localStorage.removeItem('shopify-collections-cache');
-      localStorage.removeItem('shopify-products-cache');
+      // Clear cached data to force refresh
+      console.log('Clearing Shopify cache for fresh sync...');
+      await supabase.from('cache').delete().like('key', '%shopify%');
+      
+      console.log('Clearing collections cache for fresh sync...');
+      await supabase.from('cache').delete().like('key', '%collections%');
+      
+      // Force refresh collections
+      await loadCollections();
       
       // Notify delivery app to refresh
       window.dispatchEvent(new CustomEvent('admin-sync-complete'));
 
       toast({
-        title: "✅ Sync Successful",
-        description: `Successfully synced ${unsyncedMods.length} changes to Shopify and app! ${syncResult.details?.shopifyProductsCount || 0} products processed.`,
+        title: "✅ Bidirectional Sync Successful",
+        description: `Successfully synced ${unsyncedMods.length} changes to Shopify and updated app collections! ${syncResult.details?.shopifyProductsCount || 0} products processed, ${syncResult.details?.collectionsRefreshed ? 'collections refreshed' : 'cache updated'}.`,
       });
 
     } catch (error) {

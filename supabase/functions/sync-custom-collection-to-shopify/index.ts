@@ -5,35 +5,73 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Rate limiting helper
-async function rateLimitedDelay(ms = 500) {
-  await new Promise(resolve => setTimeout(resolve, ms));
+// Rate limiting with queue management
+class RateLimiter {
+  private queue: Array<() => Promise<any>> = [];
+  private processing = false;
+  private lastRequestTime = 0;
+  private readonly minInterval = 750; // 750ms between requests (well under 2 calls/second)
+
+  async execute<T>(operation: () => Promise<T>): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.queue.push(async () => {
+        try {
+          const result = await operation();
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      
+      this.processQueue();
+    });
+  }
+
+  private async processQueue() {
+    if (this.processing || this.queue.length === 0) return;
+    
+    this.processing = true;
+    
+    while (this.queue.length > 0) {
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.lastRequestTime;
+      
+      if (timeSinceLastRequest < this.minInterval) {
+        const waitTime = this.minInterval - timeSinceLastRequest;
+        console.log(`⏳ Rate limiting: waiting ${waitTime}ms`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+      
+      const operation = this.queue.shift();
+      if (operation) {
+        this.lastRequestTime = Date.now();
+        await operation();
+      }
+    }
+    
+    this.processing = false;
+  }
 }
 
-// Retry wrapper for API calls with better rate limiting
+const rateLimiter = new RateLimiter();
+
+// Enhanced retry wrapper with exponential backoff
 async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 5,
+  maxRetries = 3,
   baseDelay = 2000
 ): Promise<T> {
   let lastError: any;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      // Add rate limiting delay before each attempt
-      if (attempt > 0) {
-        const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff starting from attempt 1
-        console.log(`⏳ Rate limiting delay: ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
-        await rateLimitedDelay(delay);
-      }
-      
-      return await operation();
+      return await rateLimiter.execute(operation);
     } catch (error) {
       lastError = error;
       
       if (attempt === maxRetries) break;
       
-      // Check if error is retryable (5xx, network errors, rate limits)
+      // Check if error is retryable
       const isRetryable = error?.status >= 500 || 
                          error?.status === 429 || 
                          error?.name === 'TypeError' ||
@@ -46,7 +84,9 @@ async function withRetry<T>(
         break;
       }
       
-      console.warn(`Retryable error on attempt ${attempt + 1}:`, error?.message || error);
+      const delay = baseDelay * Math.pow(2, attempt);
+      console.warn(`Attempt ${attempt + 1} failed, retrying in ${delay}ms:`, error?.message || error);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
   
@@ -247,8 +287,7 @@ serve(async (req) => {
         try {
           const numericProductId = productId.replace('gid://shopify/Product/', '');
           
-          // Add rate limiting delay between requests
-          await rateLimitedDelay(600); // 600ms between each request to stay under 2 calls/second
+          // Rate limiting is handled by the RateLimiter class, no additional delay needed
           
           const collectResponse = await withRetry(
             () => fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects.json`, {
