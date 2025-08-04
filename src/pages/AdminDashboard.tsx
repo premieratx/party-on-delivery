@@ -12,6 +12,7 @@ import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
 import { PerformanceTestRunner } from '@/components/admin/PerformanceTestRunner';
 import { PerformanceChecklist } from '@/components/admin/PerformanceChecklist';
 import { PerformanceOptimizationSummary } from '@/components/admin/PerformanceOptimizationSummary';
+import { DatabaseOptimizationTester } from '@/components/admin/DatabaseOptimizationTester';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -470,6 +471,7 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-4">
+            <DatabaseOptimizationTester />
             <PerformanceOptimizationSummary />
             <PerformanceTestRunner />
             <PerformanceChecklist />

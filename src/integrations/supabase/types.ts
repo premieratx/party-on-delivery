@@ -2564,9 +2564,20 @@ export type Database = {
         Args: { company_name: string }
         Returns: string
       }
+      get_categories_with_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          product_count: number
+        }[]
+      }
       get_group_order_details: {
         Args: { p_share_token: string }
         Returns: Json
+      }
+      get_product_category: {
+        Args: { p_collection_handles: string[] }
+        Returns: string
       }
       get_products_cached: {
         Args: { p_category?: string; p_limit?: number }
