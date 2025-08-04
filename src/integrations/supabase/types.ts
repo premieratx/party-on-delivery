@@ -2583,6 +2583,10 @@ export type Database = {
         Args: { p_category?: string; p_limit?: number }
         Returns: Json
       }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       join_group_order: {
         Args: {
           p_share_token: string
