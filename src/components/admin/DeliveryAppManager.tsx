@@ -42,18 +42,7 @@ export function DeliveryAppManager() {
   // Form state
   const [appName, setAppName] = useState('');
   const [tabCount, setTabCount] = useState(5);
-  const [tabs, setTabs] = useState<Array<{ name: string; collection_handle: string; icon: string }>>([]);
-
-  const availableIcons = [
-    { icon: '🥃', label: 'Spirits' },
-    { icon: '🍺', label: 'Beer' },
-    { icon: '🥤', label: 'Seltzers' },
-    { icon: '🍹', label: 'Cocktails' },
-    { icon: '🧊', label: 'Mixers' },
-    { icon: '🍷', label: 'Wine' },
-    { icon: '🎉', label: 'Party Supplies' },
-    { icon: '📦', label: 'Other' }
-  ];
+  const [tabs, setTabs] = useState<Array<{ name: string; collection_handle: string }>>([]);
 
   useEffect(() => {
     loadData();
@@ -115,8 +104,7 @@ export function DeliveryAppManager() {
     setTabCount(5);
     setTabs(Array.from({ length: 5 }, () => ({
       name: '',
-      collection_handle: '',
-      icon: '📦'
+      collection_handle: ''
     })));
     setIsCreating(true);
   };
@@ -124,7 +112,7 @@ export function DeliveryAppManager() {
   const handleTabCountChange = (count: number) => {
     setTabCount(count);
     const newTabs = Array.from({ length: count }, (_, index) => 
-      tabs[index] || { name: '', collection_handle: '', icon: '📦' }
+      tabs[index] || { name: '', collection_handle: '' }
     );
     setTabs(newTabs);
   };
@@ -280,7 +268,7 @@ export function DeliveryAppManager() {
               {tabs.map((tab, index) => (
                 <Card key={index}>
                   <CardContent className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Tab Name</Label>
                         <Input
@@ -300,22 +288,6 @@ export function DeliveryAppManager() {
                             {collections.map(collection => (
                               <SelectItem key={collection.id} value={collection.handle}>
                                 {collection.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label>Icon</Label>
-                        <Select value={tab.icon} onValueChange={(value) => updateTab(index, 'icon', value)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableIcons.map(item => (
-                              <SelectItem key={item.icon} value={item.icon}>
-                                {item.icon} {item.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -375,7 +347,7 @@ export function DeliveryAppManager() {
                     <div className="flex flex-wrap gap-2">
                       {app.collections_config.tabs.map((tab, index) => (
                         <Badge key={index} variant="outline">
-                          {tab.icon} {tab.name}
+                          {tab.name}
                         </Badge>
                       ))}
                     </div>
