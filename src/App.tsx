@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
+import { PerformanceMonitor } from "@/components/common/PerformanceMonitor";
 import Index from "./pages/Index";
 import CoverPage from "./pages/CoverPage";
 import Success from "./pages/Success";
@@ -127,8 +128,9 @@ const App = () => {
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </div>
-              <GlobalNavigation />
+               </div>
+               <PerformanceMonitor />
+               <GlobalNavigation />
             </BrowserRouter>
           </TooltipProvider>
         </StripeProvider>
