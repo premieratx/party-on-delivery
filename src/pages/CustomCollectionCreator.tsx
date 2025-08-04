@@ -298,16 +298,16 @@ export default function CustomCollectionCreator() {
     }
   };
 
-  // Sync to Shopify AND App - combined function
+  // Sync to Shopify AND App - improved function with better error handling
   const syncToShopifyAndApp = async () => {
-    console.log('=== STARTING SYNC TO SHOPIFY AND APP ===');
-    console.log('All product modifications:', productModifications.length);
+    console.log('🔄 Starting enhanced sync to Shopify and app...');
+    console.log('📊 Total product modifications:', productModifications.length);
     
     const unsyncedMods = productModifications.filter(m => !m.synced_to_shopify);
-    console.log('Unsynced modifications:', unsyncedMods.length, unsyncedMods);
+    console.log('📋 Unsynced modifications:', unsyncedMods.length, unsyncedMods);
     
     if (unsyncedMods.length === 0) {
-      console.log('No unsynced changes found');
+      console.log('ℹ️ No unsynced changes found');
       toast({
         title: "Info",
         description: "No unsynced changes to sync.",
@@ -317,84 +317,133 @@ export default function CustomCollectionCreator() {
 
     setSyncing(true);
     try {
-      // Group modifications by collection for Shopify sync
-      const collectionUpdates: { [key: string]: string[] } = {};
+      console.log('🚀 Using immediate sync for better reliability...');
       
-      unsyncedMods.forEach(mod => {
-        if (mod.collection) {
-          if (!collectionUpdates[mod.collection]) {
-            collectionUpdates[mod.collection] = [];
-          }
-          collectionUpdates[mod.collection].push(mod.shopify_product_id);
-        }
-      });
-
-      // Sync each collection to Shopify
-      for (const [collectionTitle, productIds] of Object.entries(collectionUpdates)) {
-        const handle = collectionTitle.toLowerCase().replace(/\s+/g, '-');
-        
-        const { data, error } = await supabase.functions.invoke('sync-custom-collection-to-shopify', {
-          body: {
-            collection_id: `custom-${handle}`,
-            title: collectionTitle,
-            handle: handle,
-            description: `Custom collection: ${collectionTitle}`,
-            product_ids: productIds
-          }
-        });
-
-        if (error) {
-          console.error('Error syncing collection to Shopify:', error);
-          throw error;
-        }
-
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to sync collection to Shopify');
-        }
-
-        console.log(`Synced collection "${collectionTitle}" to Shopify with ${data.products_added} products`);
+      // Use the improved immediate sync function
+      const { data: syncResult, error: syncError } = await supabase.functions.invoke('immediate-shopify-sync');
+      
+      if (syncError) {
+        console.error('❌ Immediate sync error:', syncError);
+        throw new Error(`Sync failed: ${syncError.message}`);
       }
 
-      // Mark modifications as synced to Shopify
-      const { error: updateError } = await supabase
-        .from('product_modifications')
-        .update({ synced_to_shopify: true })
-        .in('id', unsyncedMods.map(m => m.id));
-
-      if (updateError) throw updateError;
-
-      // Now sync to app
-      const { data: appSyncData, error: appSyncError } = await supabase.functions.invoke('sync-products-to-app');
-      
-      if (appSyncError) throw appSyncError;
-      
-      if (!appSyncData.success) {
-        throw new Error(appSyncData.message || 'Failed to sync products to app');
+      if (!syncResult.success) {
+        throw new Error(syncResult.error || 'Failed to complete immediate sync');
       }
 
-      // Clear cached collections and refresh
-      localStorage.removeItem('shopify-collections-cache');
+      console.log('✅ Immediate sync completed successfully:', syncResult);
+
+      // Reload all data to reflect changes
       await loadProductModifications();
       await loadAllProducts(true);
+      
+      // Clear cached data
+      localStorage.removeItem('shopify-collections-cache');
+      localStorage.removeItem('shopify-products-cache');
       
       // Notify delivery app to refresh
       window.dispatchEvent(new CustomEvent('admin-sync-complete'));
 
       toast({
-        title: "Success",
-        description: `Synced ${unsyncedMods.length} product changes to Shopify and app!`,
+        title: "✅ Sync Successful",
+        description: `Successfully synced ${unsyncedMods.length} changes to Shopify and app! ${syncResult.details?.shopifyProductsCount || 0} products processed.`,
       });
 
     } catch (error) {
-      console.error('Error syncing to Shopify and app:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sync changes to Shopify and app.",
-        variant: "destructive"
-      });
+      console.error('❌ Enhanced sync error:', error);
+      
+      // Try fallback to manual sync if immediate sync fails
+      console.log('🔄 Attempting fallback sync method...');
+      try {
+        await legacySyncToShopifyAndApp(unsyncedMods);
+      } catch (fallbackError) {
+        console.error('❌ Fallback sync also failed:', fallbackError);
+        toast({
+          title: "❌ Sync Failed",
+          description: `Failed to sync changes: ${error.message}. Please try again or contact support.`,
+          variant: "destructive"
+        });
+      }
     } finally {
       setSyncing(false);
     }
+  };
+
+  // Legacy sync method as fallback
+  const legacySyncToShopifyAndApp = async (unsyncedMods: ProductModification[]) => {
+    console.log('🔄 Running legacy sync as fallback...');
+    
+    // Group modifications by collection for Shopify sync
+    const collectionUpdates: { [key: string]: string[] } = {};
+    
+    unsyncedMods.forEach(mod => {
+      if (mod.collection) {
+        if (!collectionUpdates[mod.collection]) {
+          collectionUpdates[mod.collection] = [];
+        }
+        collectionUpdates[mod.collection].push(mod.shopify_product_id);
+      }
+    });
+
+    // Sync each collection to Shopify
+    let totalSynced = 0;
+    for (const [collectionTitle, productIds] of Object.entries(collectionUpdates)) {
+      const handle = collectionTitle.toLowerCase().replace(/\s+/g, '-');
+      
+      console.log(`🔄 Syncing collection "${collectionTitle}" with ${productIds.length} products...`);
+      
+      const { data, error } = await supabase.functions.invoke('sync-custom-collection-to-shopify', {
+        body: {
+          collection_id: `custom-${handle}`,
+          title: collectionTitle,
+          handle: handle,
+          description: `Custom collection: ${collectionTitle}`,
+          product_ids: productIds
+        }
+      });
+
+      if (error) {
+        console.error('❌ Error syncing collection to Shopify:', error);
+        throw error;
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || `Failed to sync collection "${collectionTitle}" to Shopify`);
+      }
+
+      totalSynced += data.products_added;
+      console.log(`✅ Synced collection "${collectionTitle}" to Shopify with ${data.products_added} products`);
+    }
+
+    // Mark modifications as synced to Shopify
+    const { error: updateError } = await supabase
+      .from('product_modifications')
+      .update({ synced_to_shopify: true })
+      .in('id', unsyncedMods.map(m => m.id));
+
+    if (updateError) throw updateError;
+
+    // Now sync to app
+    const { data: appSyncData, error: appSyncError } = await supabase.functions.invoke('sync-products-to-app');
+    
+    if (appSyncError) throw appSyncError;
+    
+    if (!appSyncData.success) {
+      throw new Error(appSyncData.message || 'Failed to sync products to app');
+    }
+
+    // Clear cached collections and refresh
+    localStorage.removeItem('shopify-collections-cache');
+    await loadProductModifications();
+    await loadAllProducts(true);
+    
+    // Notify delivery app to refresh
+    window.dispatchEvent(new CustomEvent('admin-sync-complete'));
+
+    toast({
+      title: "✅ Fallback Sync Successful",
+      description: `Synced ${unsyncedMods.length} product changes to Shopify and app using fallback method!`,
+    });
   };
 
   // Force re-sync selected products - regardless of current sync status
@@ -480,6 +529,74 @@ export default function CustomCollectionCreator() {
       toast({
         title: "Error",
         description: "Failed to sync selected products.",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Test sync connection
+  const testSyncConnection = async () => {
+    console.log('🧪 Testing sync connections...');
+    setSyncing(true);
+    
+    try {
+      // Test 1: Test Shopify connection
+      console.log('🔍 Testing Shopify connection...');
+      const { data: shopifyTest, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
+        body: { limit: 1 }
+      });
+      
+      if (shopifyError) {
+        throw new Error(`Shopify connection failed: ${shopifyError.message}`);
+      }
+      
+      console.log('✅ Shopify connection successful');
+      
+      // Test 2: Test immediate sync function
+      console.log('🔄 Testing immediate sync function...');
+      const { data: syncTest, error: syncError } = await supabase.functions.invoke('immediate-shopify-sync');
+      
+      if (syncError) {
+        throw new Error(`Immediate sync failed: ${syncError.message}`);
+      }
+      
+      console.log('✅ Immediate sync test successful');
+      
+      // Test 3: Verify collections are accessible
+      console.log('📦 Testing collections access...');
+      const { data: collectionsTest, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
+      
+      if (collectionsError) {
+        throw new Error(`Collections access failed: ${collectionsError.message}`);
+      }
+      
+      console.log('✅ Collections access successful');
+      
+      // Test 4: Check delivery app variations
+      console.log('📱 Testing delivery app configuration...');
+      const { data: deliveryApps, error: deliveryAppsError } = await supabase
+        .from('delivery_app_variations')
+        .select('*')
+        .eq('is_active', true);
+      
+      if (deliveryAppsError) {
+        throw new Error(`Delivery app config failed: ${deliveryAppsError.message}`);
+      }
+      
+      console.log('✅ Delivery app configuration accessible');
+      
+      toast({
+        title: "✅ Sync Test Successful",
+        description: `All sync connections are working! Shopify: ✅ Sync: ✅ Collections: ✅ Delivery Apps: ✅`,
+      });
+      
+    } catch (error) {
+      console.error('❌ Sync test failed:', error);
+      toast({
+        title: "❌ Sync Test Failed",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -681,6 +798,15 @@ export default function CustomCollectionCreator() {
             
             <div className="flex items-center gap-2">
               <Badge variant="secondary">{selectedProducts.size} selected</Badge>
+              <Button 
+                variant="outline"
+                onClick={testSyncConnection}
+                disabled={syncing}
+                className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+              >
+                <Smartphone className="w-4 h-4" />
+                Test Sync
+              </Button>
               <Button 
                 variant="outline"
                 onClick={() => loadAllProducts(true)}
