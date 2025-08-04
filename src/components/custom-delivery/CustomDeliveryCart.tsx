@@ -184,7 +184,7 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
             </div>
 
             <p className="text-xs text-gray-500 text-center">
-              This is a demo version. Checkout functionality coming soon!
+              Secure checkout powered by Stripe
             </p>
           </div>
         </div>

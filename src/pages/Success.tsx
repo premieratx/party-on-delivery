@@ -35,8 +35,8 @@ const Success = () => {
       localStorage.setItem('lastPaymentIntent', sessionId);
 
       try {
-        const { data, error } = await supabase.functions.invoke('process-order-complete', {
-          body: { session_id: sessionId }
+        const { data, error } = await supabase.functions.invoke('create-shopify-order', {
+          body: { sessionId: sessionId }
         });
 
         if (error) {

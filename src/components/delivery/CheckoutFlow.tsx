@@ -1334,61 +1334,60 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                 
                 <Separator />
                 
-                 {/* Only show pricing summary during payment step or when not on payment step */}
-                 {currentStep !== 'payment' && (
-                   <>
-                     <Separator />
-                     
-                     <div className="space-y-2">
-                       <div className="flex justify-between">
-                         <span>Subtotal</span>
-                         <span>${(subtotal || 0).toFixed(2)}</span>
+                 {/* Show pricing summary on all steps */}
+                 <>
+                   <Separator />
+                   
+                   <div className="space-y-2">
+                     <div className="flex justify-between">
+                       <span>Subtotal</span>
+                       <span>${(subtotal || 0).toFixed(2)}</span>
+                     </div>
+                     {appliedDiscount?.type === 'percentage' && (
+                       <div className="flex justify-between text-green-600">
+                         <span>Discount ({appliedDiscount.value}% off)</span>
+                         <span>-${((subtotal || 0) * (appliedDiscount.value || 0) / 100).toFixed(2)}</span>
                        </div>
-                       {appliedDiscount?.type === 'percentage' && (
-                         <div className="flex justify-between text-green-600">
-                           <span>Discount ({appliedDiscount.value}% off)</span>
-                           <span>-${((subtotal || 0) * (appliedDiscount.value || 0) / 100).toFixed(2)}</span>
-                         </div>
-                       )}
-                          <div className="flex justify-between">
-                            <span>
-                              Delivery Fee 
-                              {subtotal >= 200 ? ' (10%)' : ' ($20 min)'}
-                              {deliveryDistance && ` - ${deliveryDistance.toFixed(1)} miles`}
-                              {isCalculatingDelivery && (
-                                <span className="text-xs text-muted-foreground ml-1">(calculating...)</span>
-                              )}
-                            </span>
-                             <div className="flex items-center gap-2">
-                                 {appliedDiscount?.type === 'free_shipping' && (
-                                   <span className="text-sm text-muted-foreground line-through">${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
+                     )}
+                        <div className="flex justify-between">
+                          <span>
+                            Delivery Fee 
+                            {subtotal >= 200 ? ' (10%)' : ' ($20 min)'}
+                            {deliveryDistance && ` - ${deliveryDistance.toFixed(1)} miles`}
+                            {isCalculatingDelivery && (
+                              <span className="text-xs text-muted-foreground ml-1">(calculating...)</span>
+                            )}
+                          </span>
+                           <div className="flex items-center gap-2">
+                               {appliedDiscount?.type === 'free_shipping' && (
+                                 <span className="text-sm text-muted-foreground line-through">${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
+                               )}
+                               <span className={appliedDiscount?.type === 'free_shipping' ? 'text-green-600' : ''}>
+                                 ${(finalDeliveryFee || 0).toFixed(2)}
+                                 {appliedDiscount?.type === 'free_shipping' && finalDeliveryFee === 0 && (
+                                   <span className="text-xs text-green-600 ml-1">(Free shipping)</span>
                                  )}
-                                 <span className={appliedDiscount?.type === 'free_shipping' ? 'text-green-600' : ''}>
-                                   ${(finalDeliveryFee || 0).toFixed(2)}
-                                   {appliedDiscount?.type === 'free_shipping' && finalDeliveryFee === 0 && (
-                                     <span className="text-xs text-green-600 ml-1">(Free shipping)</span>
-                                   )}
-                                   {(isAddingToOrder && !hasChanges) && finalDeliveryFee === 0 && (
-                                    <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
-                                  )}
-                               </span>
-                             </div>
-                          </div>
-                       <div className="flex justify-between">
-                         <span>Sales Tax (8.25%)</span>
-                         <span>${(salesTax || 0).toFixed(2)}</span>
-                       </div>
-                       {tipAmount > 0 && (
-                         <div className="flex justify-between">
-                           <span>Driver Tip</span>
-                           <span>${(tipAmount || 0).toFixed(2)}</span>
-                         </div>
-                       )}
-                        <Separator />
-                        <div className="flex justify-between font-bold text-lg">
-                          <span>Total</span>
-                          <span>${(finalTotal || 0).toFixed(2)}</span>
+                                 {(isAddingToOrder && !hasChanges) && finalDeliveryFee === 0 && (
+                                  <span className="text-xs text-green-600 ml-1">(Bundled Order)</span>
+                                )}
+                             </span>
+                           </div>
                         </div>
+                     <div className="flex justify-between">
+                       <span>Sales Tax (8.25%)</span>
+                       <span>${(salesTax || 0).toFixed(2)}</span>
+                     </div>
+                     {tipAmount > 0 && (
+                       <div className="flex justify-between">
+                         <span>Driver Tip</span>
+                         <span>${(tipAmount || 0).toFixed(2)}</span>
+                       </div>
+                     )}
+                      <Separator />
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>Total</span>
+                        <span>${(finalTotal || 0).toFixed(2)}</span>
+                      </div>
                         
                         {/* Group Order Share Link */}
                         {confirmedDateTime && confirmedAddress && confirmedCustomer && (
@@ -1435,9 +1434,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             </p>
                           </div>
                         )}
-                      </div>
-                    </>
-                  )}
+                     </div>
+                   </>
                </CardContent>
              </Card>
            </div>

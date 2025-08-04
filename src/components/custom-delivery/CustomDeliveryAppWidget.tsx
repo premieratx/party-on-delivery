@@ -129,14 +129,30 @@ export const CustomDeliveryAppWidget: React.FC = () => {
       console.log('cartItems length:', cartItems.length);
       console.log('currentStep:', currentStep);
       
-      // For now, just show a message since we're not linking to checkout yet
-      import('@/hooks/use-toast').then(({ useToast }) => {
-        const { toast } = useToast();
-        toast({
-          title: "Custom Delivery App",
-          description: "Checkout functionality coming soon! This is a demo version.",
-        });
-      });
+      if (cartItems.length === 0) {
+        return;
+      }
+      
+      // Convert cart items to the format expected by the main checkout flow
+      const standardCartItems = cartItems.map(item => ({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        quantity: Math.max(1, item.quantity), // Ensure quantity is at least 1
+        image: item.image,
+        productId: item.id,
+        variant: item.variant || 'gid://shopify/ProductVariant/default',
+        category: 'delivery-app'
+      }));
+      
+      console.log('Standardized cart items:', standardCartItems);
+      
+      // Store cart items in the unified cart format
+      localStorage.setItem('unified-cart', JSON.stringify(standardCartItems));
+      localStorage.setItem('party-cart', JSON.stringify(standardCartItems));
+      
+      // Navigate to checkout
+      window.location.href = '/checkout';
       
     } catch (error) {
       console.error('Error in custom delivery app checkout:', error);
