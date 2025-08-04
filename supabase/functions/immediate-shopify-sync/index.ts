@@ -5,33 +5,48 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Retry wrapper for API calls
+// Rate limiting helper
+async function rateLimitedDelay(ms = 1000) {
+  await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Retry wrapper for API calls with better rate limiting
 async function withRetry<T>(
   operation: () => Promise<T>,
-  maxRetries = 3,
-  delay = 1000
+  maxRetries = 5,
+  baseDelay = 3000
 ): Promise<T> {
   let lastError: any;
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      // Add rate limiting delay before each attempt
+      if (attempt > 0) {
+        const delay = baseDelay * Math.pow(2, attempt - 1);
+        console.log(`⏳ Rate limiting delay: ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+        await rateLimitedDelay(delay);
+      }
+      
       return await operation();
     } catch (error) {
       lastError = error;
       
       if (attempt === maxRetries) break;
       
-      // Check if error is retryable (5xx, network errors)
+      // Check if error is retryable (5xx, network errors, rate limits)
       const isRetryable = error?.status >= 500 || 
                          error?.status === 429 || 
                          error?.name === 'TypeError' ||
-                         error?.message?.includes('fetch');
+                         error?.message?.includes('fetch') ||
+                         error?.message?.includes('Exceeded') ||
+                         error?.message?.includes('Too Many Requests');
       
-      if (!isRetryable) break;
+      if (!isRetryable) {
+        console.error(`Non-retryable error:`, error);
+        break;
+      }
       
-      console.warn(`Operation failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries + 1})`, error);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      delay *= 2; // Exponential backoff
+      console.warn(`Retryable error on attempt ${attempt + 1}:`, error?.message || error);
     }
   }
   
@@ -119,9 +134,16 @@ Deno.serve(async (req) => {
 
       console.log(`📦 Processing ${collectionGroups.size} collections...`);
 
-      // Sync each collection
+      // Sync each collection sequentially with rate limiting
+      let collectionIndex = 0;
       for (const [collectionTitle, productIds] of collectionGroups.entries()) {
         try {
+          // Add delay between collections to prevent rate limiting
+          if (collectionIndex > 0) {
+            console.log(`⏳ Rate limiting delay before next collection...`);
+            await rateLimitedDelay(2000); // 2 second delay between collections
+          }
+          
           const handle = collectionTitle.toLowerCase().replace(/\s+/g, '-');
           console.log(`🔄 Syncing collection "${collectionTitle}" with ${productIds.length} products...`);
           
@@ -158,6 +180,8 @@ Deno.serve(async (req) => {
               console.log(`✅ Marked ${productIds.length} products as synced to Shopify`);
             }
           }
+          
+          collectionIndex++;
         } catch (error) {
           console.error(`❌ Error processing collection "${collectionTitle}":`, error);
           throw error; // Re-throw to fail the entire sync if any collection fails
