@@ -11,7 +11,7 @@ import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
-import { useCustomSiteProducts } from "@/hooks/useCustomSiteProducts";
+import { useSearchProducts } from "@/hooks/useSearchProducts";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
@@ -53,75 +53,18 @@ export const ProductSearch = () => {
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = cartHook;
   const { toast } = useToast();
   
-  // Load favorites first, then other tabs progressively
-  const [productsLoaded, setProductsLoaded] = useState<{ [key: string]: Product[] }>({});
-  const [loadingCategories, setLoadingCategories] = useState<Set<string>>(new Set(['favorites']));
-  
+  // Use the dedicated search products hook
   const { 
-    products: allProducts, 
-    isLoading: loading, 
-    isCustomSite, 
-    customSiteData, 
-    availableCategories,
+    products: allProducts,
+    isLoading: loading,
+    getProductsByCategory,
+    getAvailableCategories,
     reload: reloadProducts
-  } = useCustomSiteProducts();
+  } = useSearchProducts();
   
-  // Progressive loading: load favorites first, then other categories
-  useEffect(() => {
-    // Force reload of products to ensure we have latest from Shopify
-    console.log('🔄 ProductSearch: Reloading products to sync with Shopify...');
-    // Clear any cache that might be interfering
-    localStorage.removeItem('customSiteData');
-    reloadProducts();
-  }, []);
-
-  useEffect(() => {
-    if (!loading && allProducts.length > 0) {
-      console.log(`✅ Loaded ${allProducts.length} deduplicated products from Shopify`);
-      
-      // Load favorites immediately
-      const favs = getFavoritesProducts(allProducts);
-      setProductsLoaded(prev => ({ ...prev, favorites: favs }));
-      setLoadingCategories(prev => {
-        const newSet = new Set(prev);
-        newSet.delete('favorites');
-        return newSet;
-      });
-      
-      // Load other categories progressively with delay
-      const otherCategories = availableCategories.filter(cat => cat !== 'favorites');
-      otherCategories.forEach((category, index) => {
-        setTimeout(() => {
-          const categoryProducts = allProducts.filter(product => 
-            product.category && product.category.toLowerCase() === category.toLowerCase()
-          );
-          console.log(`📦 Loaded ${categoryProducts.length} products for category: ${category}`);
-          setProductsLoaded(prev => ({ ...prev, [category]: categoryProducts }));
-          setLoadingCategories(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(category);
-            return newSet;
-          });
-        }, (index + 1) * 100); // Faster loading
-      });
-    } else if (!loading && allProducts.length === 0) {
-      console.warn('⚠️ No products loaded - attempting reload...');
-      reloadProducts();
-    }
-  }, [loading, allProducts, availableCategories, reloadProducts]);
-  
-  // Get products for current category
+  // Load products for current category
   const products = useMemo(() => {
-    let filtered = [];
-    
-    if (selectedCategory === 'favorites') {
-      filtered = productsLoaded[selectedCategory] || [];
-    } else if (selectedCategory === 'all') {
-      filtered = allProducts;
-    } else {
-      // Filter products by the selected category
-      filtered = allProducts.filter(product => product.category === selectedCategory);
-    }
+    let filtered = getProductsByCategory(selectedCategory);
 
     // If spirits category is selected and a specific spirit type is chosen, filter further
     if (selectedCategory === 'spirits' && selectedSpiritType !== 'all') {
@@ -132,9 +75,9 @@ export const ProductSearch = () => {
     }
 
     return filtered;
-  }, [selectedCategory, selectedSpiritType, allProducts, productsLoaded]);
+  }, [selectedCategory, selectedSpiritType, getProductsByCategory]);
 
-  // Helper function to get emoji for category
+  // Get emoji for category
   const getEmojiForCategory = (categoryId: string): string => {
     switch (categoryId) {
       case 'spirits': return '🥃';
@@ -155,129 +98,33 @@ export const ProductSearch = () => {
       { id: "favorites", label: "⭐ Favorites" }
     ];
 
-    // Fixed categories matching delivery app tabs
+    // Fixed categories matching delivery app tabs - WITH PROPER COLLECTIONS
     const deliveryAppCategories = [
-      { id: "spirits", label: "🥃 Spirits" },
-      { id: "beer", label: "🍺 Beer" }, 
-      { id: "seltzers", label: "🥤 Seltzers" },
-      { id: "cocktails", label: "🍹 Cocktails" },
-      { id: "mixers", label: "🧊 Mixers & N/A" },
-      { id: "party-supplies", label: "🎉 Party Supplies" },
-      { id: "other", label: "📦 Other" }
+      { id: "spirits", label: "🥃 Spirits" }, // spirits, gin-rum, tequila-mezcal, whiskey collections
+      { id: "beer", label: "🍺 Beer" }, // tailgate-beer, texas-beer-collection 
+      { id: "seltzers", label: "🥤 Seltzers" }, // seltzer-collection
+      { id: "cocktails", label: "🍹 Cocktails" }, // cocktail-kits, ready-to-drink-cocktails
+      { id: "mixers", label: "🧊 Mixers & N/A" }, // mixers-non-alcoholic
+      { id: "wine", label: "🍷 Wine" }, // champagne, wine collections
+      { id: "party-supplies", label: "🎉 Party Supplies" }, // party-supplies, decorations, etc
+      { id: "other", label: "📦 Other" } // newest-products, customizable-items, annie-s-store
     ];
 
-    console.log('🏷️ Search categories matching delivery app tabs');
+    console.log('🏷️ Search categories rebuilt with proper collection mapping');
     
     return [...baseCategories, ...deliveryAppCategories];
   }, []);
 
-  // Products are now loaded via useCustomSiteProducts hook
-
-  // Map collection handles to our category system - match delivery widget mapping
-  const mapCollectionToCategory = (handle: string): string => {
-    // Spirits (first in delivery widget)
-    if (handle === 'spirits' || handle === 'gin-rum' || handle === 'tequila-mezcal' || handle === 'whiskey') return 'spirits';
-    // Beer (second in delivery widget)
-    if (handle === 'tailgate-beer' || handle === 'texas-beer-collection' || handle.includes('beer')) return 'beer';
-    // Seltzers (third in delivery widget)  
-    if (handle === 'seltzer-collection' || handle.includes('seltzer')) return 'seltzers';
-    // Cocktails (fourth in delivery widget)
-    if (handle === 'cocktail-kits' || handle === 'ready-to-drink-cocktails' || handle.includes('cocktail')) return 'cocktails';
-    // Mixers & N/A (fifth in delivery widget)
-    if (handle === 'mixers-non-alcoholic' || handle.includes('mixer') || handle.includes('non-alcoholic')) return 'mixers';
-    // Wine
-    if (handle === 'champagne' || handle.includes('wine')) return 'wine';
-    // Party Supplies
-    if (handle === 'party-supplies' || handle === 'decorations' || handle === 'hats-sunglasses' || handle === 'costumes') return 'party-supplies';
-    // Other category - includes newest-products and customizable-items collections
-    if (handle === 'newest-products' || handle === 'customizable-items' || handle === 'annie-s-store') return 'other';
-    // Everything else
-    return 'other';
-  };
-
-  // Get favorites/best selling products
-  const getFavoritesProducts = (allProducts: Product[]) => {
-    // Create a Map to track unique products by ID to avoid duplicates
-    const uniqueProducts = new Map<string, Product>();
-    
-    // Filter for popular products
-    allProducts.forEach(product => {
-      const title = product.title.toLowerCase();
-      const isPopularItem = title.includes('deep eddy') || 
-                           title.includes('tito') || 
-                           title.includes('casamigos') || 
-                           title.includes('bulleit') ||
-                           title.includes('teremana') ||
-                           title.includes('high noon') ||
-                           title.includes('modelo') ||
-                           title.includes('miller lite') ||
-                           title.includes('coors light') ||
-                           title.includes('coors original') ||
-                           title.includes('lone star') ||
-                           title.includes('cocktail kit') ||
-                           product.category === 'spirits' ||
-                           product.category === 'cocktail-kits' ||
-                           product.category === 'tailgate-beer' ||
-                           product.category === 'texas-beer-collection' ||
-                           product.category === 'seltzer-collection';
-      
-      // Only add if it's a popular item and not already in the map
-      if (isPopularItem && !uniqueProducts.has(product.id)) {
-        uniqueProducts.set(product.id, product);
-      }
-    });
-
-    // Convert back to array and sort by popularity score
-    const favoritesProducts = Array.from(uniqueProducts.values())
-      .sort((a, b) => {
-        const aScore = getPopularityScore(a);
-        const bScore = getPopularityScore(b);
-        return bScore - aScore;
-      })
-      .slice(0, 50); // Limit to 50 favorite items
-
-    return favoritesProducts;
-  };
-
-  // Helper function to calculate popularity score
-  const getPopularityScore = (product: Product) => {
-    const title = product.title.toLowerCase();
-    let score = 0;
-    
-    // Premium spirit brands
-    if (title.includes('tito')) score += 10;
-    if (title.includes('deep eddy')) score += 9;
-    if (title.includes('casamigos')) score += 8;
-    if (title.includes('bulleit')) score += 7;
-    if (title.includes('teremana')) score += 6;
-    
-    // Popular beer brands
-    if (title.includes('modelo')) score += 8;
-    if (title.includes('miller lite')) score += 7;
-    if (title.includes('coors light')) score += 7;
-    if (title.includes('coors original')) score += 6;
-    if (title.includes('lone star')) score += 6;
-    
-    // Seltzer brands
-    if (title.includes('high noon')) score += 8;
-    
-    // Product type popularity
-    if (title.includes('vodka')) score += 5;
-    if (title.includes('tequila')) score += 5;
-    if (title.includes('bourbon')) score += 4;
-    if (title.includes('cocktail')) score += 4;
-    if (title.includes('beer')) score += 4;
-    if (title.includes('seltzer')) score += 4;
-    
-    // Size preference (750ml is standard, 1.75L is value, beer cases/packs)
-    if (title.includes('750ml')) score += 2;
-    if (title.includes('1.75l')) score += 3;
-    if (title.includes('12 pack') || title.includes('12-pack')) score += 3;
-    if (title.includes('24 pack') || title.includes('24-pack')) score += 4;
-    if (title.includes('case')) score += 3;
-    
-    return score;
-  };
+  // Spirit types for filtering within spirits category
+  const spiritTypes = [
+    { id: 'all', label: 'All Spirits' },
+    { id: 'vodka', label: 'Vodka' },
+    { id: 'tequila', label: 'Tequila' },
+    { id: 'whiskey', label: 'Whiskey' },
+    { id: 'gin', label: 'Gin' },
+    { id: 'rum', label: 'Rum' },
+    { id: 'brandy', label: 'Brandy' }
+  ];
 
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
@@ -551,7 +398,7 @@ export const ProductSearch = () => {
           {/* Results Summary */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              {loadingCategories.has(selectedCategory) ? "Loading..." : `${filteredProducts.length} products found`}
+              {loading ? "Loading..." : `${filteredProducts.length} products found`}
               {searchTerm && ` for "${searchTerm}"`}
               {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
               {selectedCategory === "spirits" && selectedSpiritType !== "all" && ` - ${selectedSpiritType}`}
@@ -587,7 +434,7 @@ export const ProductSearch = () => {
 
       {/* Products Grid - Mobile Optimized */}
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
-        {loadingCategories.has(selectedCategory) ? (
+        {loading ? (
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
             {Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="animate-pulse">
