@@ -69,7 +69,9 @@ export const ProductSearch = () => {
   // Progressive loading: load favorites first, then other categories
   useEffect(() => {
     // Force reload of products to ensure we have latest from Shopify
-    console.log('🔄 Reloading products to sync with Shopify...');
+    console.log('🔄 ProductSearch: Reloading products to sync with Shopify...');
+    // Clear any cache that might be interfering
+    localStorage.removeItem('customSiteData');
     reloadProducts();
   }, []);
 
