@@ -117,13 +117,15 @@ Deno.serve(async (req) => {
         }
       });
 
+      console.log(`📦 Processing ${collectionGroups.size} collections...`);
+
       // Sync each collection
       for (const [collectionTitle, productIds] of collectionGroups.entries()) {
         try {
           const handle = collectionTitle.toLowerCase().replace(/\s+/g, '-');
           console.log(`🔄 Syncing collection "${collectionTitle}" with ${productIds.length} products...`);
           
-          const { error: syncError } = await withRetry(
+          const { data: syncResult, error: syncError } = await withRetry(
             () => supabase.functions.invoke('sync-custom-collection-to-shopify', {
               body: {
                 collection_id: `custom-${handle}`,
@@ -137,19 +139,32 @@ Deno.serve(async (req) => {
 
           if (syncError) {
             console.error(`❌ Error syncing collection "${collectionTitle}":`, syncError);
+            throw syncError;
           } else {
-            console.log(`✅ Successfully synced collection "${collectionTitle}"`);
+            console.log(`✅ Successfully synced collection "${collectionTitle}" to Shopify:`, syncResult);
             
-            // Mark products as synced
-            await supabase
+            // Mark products as synced to Shopify
+            const { error: updateError } = await supabase
               .from('product_modifications')
-              .update({ synced_to_shopify: true })
+              .update({ 
+                synced_to_shopify: true,
+                updated_at: new Date().toISOString()
+              })
               .in('shopify_product_id', productIds);
+
+            if (updateError) {
+              console.error(`❌ Error marking products as synced:`, updateError);
+            } else {
+              console.log(`✅ Marked ${productIds.length} products as synced to Shopify`);
+            }
           }
         } catch (error) {
           console.error(`❌ Error processing collection "${collectionTitle}":`, error);
+          throw error; // Re-throw to fail the entire sync if any collection fails
         }
       }
+    } else {
+      console.log('ℹ️ No pending modifications to sync');
     }
 
     // Step 4: Sync to app
