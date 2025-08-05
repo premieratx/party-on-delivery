@@ -232,7 +232,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
             {cleanTitle}
           </h3>
           {packageSize && (
-            <p className="text-muted-foreground mb-2 text-xs">
+            <p className="text-muted-foreground mb-2 text-xs text-center">
               {packageSize}
             </p>
           )}
@@ -251,31 +251,31 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
             {/* Quantity Controls */}
             {quantity > 0 ? (
-              <div className="flex items-center justify-center gap-1 w-full">
+              <div className="flex items-center justify-center gap-1 w-full mx-auto max-w-[80px]">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(-1)}
-                  className="h-6 w-6 p-0 flex-shrink-0"
+                  className="h-5 w-5 p-0 flex-shrink-0 rounded-full"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-2.5 w-2.5" />
                 </Button>
-                <span className="font-medium min-w-[20px] text-center text-sm">
+                <span className="font-medium min-w-[16px] text-center text-xs">
                   {quantity}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(1)}
-                  className="h-6 w-6 p-0 flex-shrink-0"
+                  className="h-5 w-5 p-0 flex-shrink-0 rounded-full"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-2.5 w-2.5" />
                 </Button>
               </div>
             ) : (
               <Button
                 onClick={onAddToCart}
-                className="w-full h-7 text-xs"
+                className="w-full h-6 text-xs rounded-full mx-auto max-w-[80px]"
                 size="sm"
               >
                 Add

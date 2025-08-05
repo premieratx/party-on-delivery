@@ -7,6 +7,18 @@ export function parseProductTitle(title: string): ParsedProduct {
   // Remove trailing dots and special characters including big round dots
   const cleanedTitle = title.replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F\u25CF]+\s*$/g, '').trim();
   
+  // Special handling for cocktail products with "(X drinks)" pattern
+  const cocktailPattern = /\((\d+)\s+drinks?\)/gi;
+  const cocktailMatch = cleanedTitle.match(cocktailPattern);
+  let cocktailSubtitle = '';
+  let titleWithoutCocktail = cleanedTitle;
+  
+  if (cocktailMatch) {
+    const drinkCount = cocktailMatch[0].replace(/[()]/g, '').replace(/drinks?/i, 'Drinks');
+    cocktailSubtitle = drinkCount.charAt(0).toUpperCase() + drinkCount.slice(1);
+    titleWithoutCocktail = cleanedTitle.replace(cocktailPattern, '').trim();
+  }
+  
   // Extract various package size patterns
   const patterns = [
     // Beer/Seltzer patterns: "12 Pack", "24pk", "6-pack"
@@ -17,19 +29,22 @@ export function parseProductTitle(title: string): ParsedProduct {
     /(\d+)\s*oz/gi
   ];
 
-  let packageSize = '';
-  let titleWithoutSize = cleanedTitle;
+  let packageSize = cocktailSubtitle; // Use cocktail subtitle as package size if exists
+  let titleWithoutSize = titleWithoutCocktail;
 
-  // Try each pattern
-  for (const pattern of patterns) {
-    const matches = cleanedTitle.match(pattern);
-    if (matches) {
-      // Take the first match for package size
-      packageSize = matches[0];
-      
-      // Remove all instances of the pattern from title
-      titleWithoutSize = cleanedTitle.replace(pattern, '').trim();
-      break;
+  // Only look for other patterns if no cocktail subtitle was found
+  if (!cocktailSubtitle) {
+    // Try each pattern
+    for (const pattern of patterns) {
+      const matches = cleanedTitle.match(pattern);
+      if (matches) {
+        // Take the first match for package size
+        packageSize = matches[0];
+        
+        // Remove all instances of the pattern from title
+        titleWithoutSize = cleanedTitle.replace(pattern, '').trim();
+        break;
+      }
     }
   }
 
@@ -46,8 +61,8 @@ export function parseProductTitle(title: string): ParsedProduct {
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Format package size for display
-  if (packageSize) {
+  // Format package size for display (only if not cocktail subtitle)
+  if (packageSize && !cocktailSubtitle) {
     // Standardize common formats
     packageSize = packageSize
       .replace(/(\d+)\s*(-|pk|pack)/gi, '$1 Pack')
