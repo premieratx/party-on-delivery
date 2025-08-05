@@ -42,6 +42,7 @@ import PerformanceOptimization from "./pages/PerformanceOptimization";
 import TestGroupOrderFlow from "./pages/TestGroupOrderFlow";
 import GroupOrderInvite from "./pages/GroupOrderInvite";
 import DeliveryAppManagerPage from "./pages/DeliveryAppManager";
+import MainDeliveryApp from "./pages/MainDeliveryApp";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,10 +102,13 @@ const App = () => {
                   <Route path="/chat-party-planner" element={<ChatPartyPlanner />} />
                   <Route path="/checkout" element={<Checkout />} />
                   
-                  {/* Search Route */}
-                  <Route path="/search" element={<ProductSearch />} />
-                  <Route path="/product-search" element={<ProductSearch />} />
-                  
+                   {/* Search Route */}
+                   <Route path="/search" element={<ProductSearch />} />
+                   <Route path="/product-search" element={<ProductSearch />} />
+                   
+                   {/* Main Delivery App */}
+                   <Route path="/main-delivery-app" element={<MainDeliveryApp />} />
+                   
                    {/* Custom Delivery App */}
                    <Route path="/custom-delivery" element={<CustomDeliveryApp />} />
                    <Route path="/app/:appSlug" element={<CustomDeliveryApp />} />

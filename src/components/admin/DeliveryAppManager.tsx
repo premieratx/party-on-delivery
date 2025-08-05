@@ -386,7 +386,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open('/custom-delivery', '_blank')}
+                  onClick={() => window.open('/main-delivery-app', '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Open
@@ -394,7 +394,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.location.href = '/custom-delivery'}
+                  onClick={() => window.location.href = '/main-delivery-app'}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
@@ -409,7 +409,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open('/success', '_blank')}
+                  onClick={() => window.open('/order-complete', '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Open
@@ -417,7 +417,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.location.href = '/success'}
+                  onClick={() => window.location.href = '/order-complete'}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
