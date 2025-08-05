@@ -96,31 +96,47 @@ export const ProductManagement: React.FC = () => {
     try {
       setLoading(true);
       
+      console.log('🔧 DEBUG: Starting loadCollections, forceRefresh:', forceRefresh);
+      
       // Use the fast instant cache with optional force refresh for bulk sorting
       const { data, error } = await supabase.functions.invoke('instant-product-cache', {
         body: { forceRefresh }
       });
       
+      console.log('🔧 DEBUG: Raw response from instant-product-cache:', { data, error });
+      
       if (error) {
+        console.error('🔧 DEBUG: Supabase function error:', error);
         throw error;
       }
       
       if (data?.error) {
+        console.error('🔧 DEBUG: Function returned error:', data.error);
         throw new Error(data.error);
       }
       
       const collectionsData = data.data?.collections || [];
+      console.log('🔧 DEBUG: Collections data extracted:', {
+        length: collectionsData.length,
+        sample: collectionsData.slice(0, 3).map(c => ({ id: c.id, title: c.title, products_count: c.products?.length }))
+      });
       
       // Sort collections alphabetically
       const sortedCollections = collectionsData.sort((a: ShopifyCollection, b: ShopifyCollection) => 
         a.title.localeCompare(b.title)
       );
       
+      console.log('🔧 DEBUG: Sorted collections:', {
+        length: sortedCollections.length,
+        first5: sortedCollections.slice(0, 5).map(c => c.title)
+      });
+      
       setCollections(sortedCollections);
       
       // Set initial products to all products from all collections if none selected
       if (!selectedCollection) {
         const allProducts = sortedCollections.flatMap((c: ShopifyCollection) => c.products || []);
+        console.log('🔧 DEBUG: All products count:', allProducts.length);
         setProducts(allProducts);
       }
       
@@ -130,6 +146,7 @@ export const ProductManagement: React.FC = () => {
       });
       
     } catch (error) {
+      console.error('🔧 DEBUG: Error in loadCollections:', error);
       console.error('Error loading collections:', error);
       toast({
         title: "Error", 
