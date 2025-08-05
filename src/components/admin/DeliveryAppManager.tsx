@@ -371,7 +371,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/')}`, '_blank')}
+                  onClick={() => window.location.href = '/'}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
@@ -394,7 +394,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/custom-delivery')}`, '_blank')}
+                  onClick={() => window.location.href = '/custom-delivery'}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
@@ -417,7 +417,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/success')}`, '_blank')}
+                  onClick={() => window.location.href = '/success'}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
@@ -575,7 +575,7 @@ export function DeliveryAppManager() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/' + app.app_slug)}`, '_blank')}
+                            onClick={() => window.location.href = `/${app.app_slug}`}
                           >
                             <Edit className="h-3 w-3 mr-1" />
                             Edit
@@ -598,7 +598,7 @@ export function DeliveryAppManager() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/app/' + app.app_slug)}`, '_blank')}
+                            onClick={() => window.location.href = `/app/${app.app_slug}`}
                           >
                             <Edit className="h-3 w-3 mr-1" />
                             Edit
@@ -621,7 +621,7 @@ export function DeliveryAppManager() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/' + app.app_slug + '/success')}`, '_blank')}
+                            onClick={() => window.location.href = `/${app.app_slug}/success`}
                           >
                             <Edit className="h-3 w-3 mr-1" />
                             Edit
