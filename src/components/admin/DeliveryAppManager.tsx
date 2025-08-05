@@ -476,10 +476,18 @@ export function DeliveryAppManager() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`/app/${app.app_slug}`, '_blank')}
+                      onClick={() => window.open(`/${app.app_slug}`, '_blank')}
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
-                      Preview
+                      Start Page
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`/${app.app_slug}/success`, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Post-Checkout Page
                     </Button>
                     <Button
                       size="sm"

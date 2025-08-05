@@ -36,6 +36,8 @@ import CustomCollectionCreator from "./pages/CustomCollectionCreator";
 import CustomDeliveryApp from "./pages/CustomDeliveryApp";
 import CustomDeliveryPostCheckout from "./pages/CustomDeliveryPostCheckout";
 import DeliveryAppView from "./pages/DeliveryAppView";
+import CustomAppView from "./pages/CustomAppView";
+import CustomAppPostCheckout from "./pages/CustomAppPostCheckout";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
@@ -110,6 +112,10 @@ const App = () => {
                    
                    {/* Delivery App Variations */}
                    <Route path="/delivery-app/:appSlug" element={<DeliveryAppView />} />
+                   
+                   {/* Individual Custom Delivery Apps - Dynamic Routes */}
+                   <Route path="/:appName" element={<CustomAppView />} />
+                   <Route path="/:appName/success" element={<CustomAppPostCheckout />} />
                   
                   {/* Test Routes */}
               <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />

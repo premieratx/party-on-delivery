@@ -295,10 +295,19 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           // Continue to success page even if Shopify fails
         }
         
+        // Check if we're in a custom delivery app context
+        const customAppContext = sessionStorage.getItem('custom-app-context');
+        
         // Navigate to success page with payment intent for mobile compatibility
         if (window.location.pathname.includes('/checkout') || window.innerWidth <= 768) {
-          // Mobile or checkout page - navigate with payment intent
-          window.location.href = `/success?session_id=${paymentIntentId}`;
+          // Check if we should redirect to custom app success page
+          if (customAppContext) {
+            const appData = JSON.parse(customAppContext);
+            window.location.href = `/${appData.appSlug}/success?session_id=${paymentIntentId}`;
+          } else {
+            // Mobile or checkout page - navigate with payment intent
+            window.location.href = `/success?session_id=${paymentIntentId}`;
+          }
         } else {
           // Desktop widget - use callback
           onPaymentSuccess(paymentIntentId);
