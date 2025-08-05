@@ -288,13 +288,25 @@ class UltraFastLoader {
     console.log('🚀 Starting aggressive preloading...');
     
     try {
-      // Preload main data
-      const loadPromise = this.loadProducts({ priority: 'critical' });
+      // Preload main data with better timeout
+      const loadPromise = this.loadProducts({ priority: 'critical', timeout: 10000 }).catch(err => {
+        console.warn('Main preload failed:', err.message);
+        return null;
+      });
       
-      // Preload categories in parallel
-      const categories = ['spirits', 'beer', 'wine', 'cocktails', 'seltzers', 'party-supplies'];
-      const categoryPromises = categories.map(cat => 
-        this.loadProductsByCategory(cat, { priority: 'high' }).catch(() => null)
+      // Preload categories with staggered timing to avoid rate limits
+      const categories = ['beer', 'wine', 'spirits'];
+      const categoryPromises = categories.map((cat, index) => 
+        new Promise(resolve => {
+          setTimeout(() => {
+            this.loadProductsByCategory(cat, { priority: 'high', timeout: 8000 })
+              .catch(err => {
+                console.warn(`Category ${cat} preload failed:`, err.message);
+                return null;
+              })
+              .then(resolve);
+          }, index * 1000);
+        })
       );
 
       await Promise.allSettled([loadPromise, ...categoryPromises]);
@@ -311,7 +323,12 @@ class UltraFastLoader {
       setTimeout(() => reject(new Error('Timeout')), timeoutMs);
     });
 
-    return Promise.race([promise, timeoutPromise]);
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } catch (error) {
+      console.warn(`Operation timed out after ${timeoutMs}ms:`, error);
+      throw error;
+    }
   }
 
   // Get loader statistics

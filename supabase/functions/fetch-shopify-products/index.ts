@@ -195,6 +195,30 @@ serve(async (req) => {
       
       if (data.errors) {
         console.error("GraphQL errors:", data.errors);
+        
+        // Check for rate limiting
+        const isThrottled = data.errors.some((error: any) => 
+          error.extensions?.code === 'THROTTLED'
+        );
+        
+        if (isThrottled) {
+          console.log('Hit Shopify rate limit, waiting before retry...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Return empty data instead of throwing error to prevent 500s
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'Rate limited - please try again',
+              products: [] 
+            }),
+            { 
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+        
         throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
       }
 
