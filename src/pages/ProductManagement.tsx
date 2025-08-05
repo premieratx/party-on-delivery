@@ -118,6 +118,12 @@ export const ProductManagement: React.FC = () => {
       
       setCollections(sortedCollections);
       
+      // Set initial products to all products from all collections if none selected
+      if (!selectedCollection) {
+        const allProducts = sortedCollections.flatMap((c: ShopifyCollection) => c.products || []);
+        setProducts(allProducts);
+      }
+      
       toast({
         title: "Success",
         description: `Loaded ${sortedCollections.length} collections with products (${data.source} cache)`,
