@@ -51,6 +51,7 @@ export default function CustomCollectionCreator() {
   const [selectedCollection, setSelectedCollection] = useState<string>('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [collectionFilter, setCollectionFilter] = useState<string>('all');
 
   // Load data
   const loadAllProducts = useCallback(async (forceRefresh = false) => {
@@ -297,14 +298,16 @@ export default function CustomCollectionCreator() {
     }
   };
 
-  // Filter products based on search, category, and type
+  // Filter products based on search, category, type, and collection
   const filteredProducts = allProducts.filter(product => {
     const matchesSearch = product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.handle.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
     const matchesType = typeFilter === 'all' || product.type === typeFilter;
+    const matchesCollection = collectionFilter === 'all' || 
+                             product.collections.some(col => col.handle === collectionFilter);
     
-    return matchesSearch && matchesCategory && matchesType;
+    return matchesSearch && matchesCategory && matchesType && matchesCollection;
   });
 
   // Get unique categories and types for filters
@@ -348,7 +351,7 @@ export default function CustomCollectionCreator() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Search and Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
               <Input
@@ -383,11 +386,26 @@ export default function CustomCollectionCreator() {
               </SelectContent>
             </Select>
 
+            <Select value={collectionFilter} onValueChange={setCollectionFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by collection" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Collections</SelectItem>
+                {collections.map(collection => (
+                  <SelectItem key={collection.handle} value={collection.handle}>
+                    {collection.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Button
               onClick={() => {
                 setSearchTerm('');
                 setCategoryFilter('all');
                 setTypeFilter('all');
+                setCollectionFilter('all');
                 setSelectedProducts(new Set());
               }}
               variant="outline"
