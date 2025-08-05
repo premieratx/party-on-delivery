@@ -135,7 +135,7 @@ export default function CustomCollectionCreator() {
     }
   }, []);
 
-  // Sync function - collection-specific sync
+  // Sync function - collection-specific sync with app sync
   const syncAll = async () => {
     setSyncing(true);
     try {
@@ -162,6 +162,8 @@ export default function CustomCollectionCreator() {
 
       // Sync each collection to Shopify
       let totalSynced = 0;
+      const syncedModIds: string[] = [];
+      
       for (const [collectionHandle, mods] of modsByCollection) {
         try {
           console.log(`🔄 Syncing collection: ${collectionHandle} with ${mods.length} products`);
@@ -183,22 +185,46 @@ export default function CustomCollectionCreator() {
             continue;
           }
 
-          // Mark as synced
-          const { error: updateError } = await supabase
-            .from('product_modifications')
-            .update({ synced_to_shopify: true })
-            .in('id', mods.map(mod => mod.id));
-
-          if (updateError) {
-            console.warn('⚠️ Error marking modifications as synced:', updateError);
+          if (data?.success) {
+            // Mark modifications as synced to Shopify
+            syncedModIds.push(...mods.map(mod => mod.id));
+            totalSynced += mods.length;
+            console.log(`✅ Synced collection ${collectionHandle} with ${mods.length} products`);
           }
-
-          totalSynced += mods.length;
-          console.log(`✅ Synced collection ${collectionHandle} with ${mods.length} products`);
           
         } catch (error) {
           console.error(`❌ Error syncing collection ${collectionHandle}:`, error);
         }
+      }
+
+      // Mark all successfully synced modifications as synced_to_shopify
+      if (syncedModIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from('product_modifications')
+          .update({ 
+            synced_to_shopify: true,
+            app_synced: false, // Reset this so it gets picked up by app sync
+            updated_at: new Date().toISOString()
+          })
+          .in('id', syncedModIds);
+
+        if (updateError) {
+          console.warn('⚠️ Error marking modifications as synced:', updateError);
+        } else {
+          console.log(`✅ Marked ${syncedModIds.length} modifications as synced to Shopify`);
+        }
+      }
+
+      // Now sync back to the delivery apps
+      console.log('🔄 Syncing updates back to delivery apps...');
+      const { data: appSyncResult, error: appSyncError } = await supabase.functions.invoke('sync-products-to-app', {
+        body: { incrementalSync: true }
+      });
+
+      if (appSyncError) {
+        console.warn('⚠️ App sync error:', appSyncError);
+      } else {
+        console.log('✅ Successfully synced back to delivery apps:', appSyncResult);
       }
 
       // Reload data
@@ -206,7 +232,7 @@ export default function CustomCollectionCreator() {
       
       toast({
         title: "🎉 Sync Complete",
-        description: `Successfully synced ${totalSynced} products across ${modsByCollection.size} collections to Shopify!`,
+        description: `Successfully synced ${totalSynced} products across ${modsByCollection.size} collections to Shopify and back to delivery apps!`,
       });
       
     } catch (error) {
