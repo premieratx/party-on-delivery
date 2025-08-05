@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CustomPostCheckoutEditor } from './CustomPostCheckoutEditor';
+import { CustomStartScreenEditor } from './CustomStartScreenEditor';
 
 interface DeliveryApp {
   id: string;
@@ -48,6 +49,7 @@ export function DeliveryAppManager() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingApp, setEditingApp] = useState<DeliveryApp | null>(null);
   const [selectedAppForConfig, setSelectedAppForConfig] = useState<DeliveryApp | null>(null);
+  const [selectedAppForStartScreen, setSelectedAppForStartScreen] = useState<DeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Form state
@@ -489,14 +491,22 @@ export function DeliveryAppManager() {
                       <ExternalLink className="h-4 w-4 mr-1" />
                       Post-Checkout Page
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedAppForConfig(app)}
-                    >
-                      <Settings className="h-4 w-4 mr-1" />
-                      Post-Checkout
-                    </Button>
+                     <Button
+                       size="sm"
+                       variant="outline"
+                       onClick={() => setSelectedAppForStartScreen(app)}
+                     >
+                       <Edit className="h-4 w-4 mr-1" />
+                       Start Screen
+                     </Button>
+                     <Button
+                       size="sm"
+                       variant="outline"
+                       onClick={() => setSelectedAppForConfig(app)}
+                     >
+                       <Settings className="h-4 w-4 mr-1" />
+                       Post-Checkout
+                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
@@ -555,6 +565,20 @@ export function DeliveryAppManager() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Start Screen Configuration Dialog */}
+      {selectedAppForStartScreen && (
+        <CustomStartScreenEditor
+          appId={selectedAppForStartScreen.id}
+          appName={selectedAppForStartScreen.app_name}
+          isOpen={!!selectedAppForStartScreen}
+          onClose={() => setSelectedAppForStartScreen(null)}
+          onConfigUpdated={(appId, config) => {
+            console.log('Start screen config updated:', config);
+            setSelectedAppForStartScreen(null);
+          }}
+        />
+      )}
     </div>
   );
 }

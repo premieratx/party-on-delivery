@@ -184,10 +184,6 @@ export default function AdminDashboard() {
             <p className="text-muted-foreground">Manage your affiliate program and platform</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => navigate('/admin/create-collection')} variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Delivery App
-            </Button>
             <Button onClick={handleLogout} variant="outline">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -243,8 +239,8 @@ export default function AdminDashboard() {
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
               <TabsTrigger value="vouchers">Affiliate Discount Codes</TabsTrigger>
-              <TabsTrigger value="products">Sort & Sync Products</TabsTrigger>
-              <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
+              <TabsTrigger value="products" onClick={() => navigate('/admin/product-management')}>Sort & Sync Products</TabsTrigger>
+              <TabsTrigger value="delivery-apps" onClick={() => navigate('/admin/create-collection')}>🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="performance">⚡ Performance</TabsTrigger>
               <TabsTrigger value="system-tests">🧪 System Tests</TabsTrigger>
               <TabsTrigger value="ghl-setup">📱 GHL/SMS Setup</TabsTrigger>
@@ -258,13 +254,9 @@ export default function AdminDashboard() {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button onClick={() => navigate('/admin/create-collection')} variant="outline" className="w-full justify-start">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Delivery App
-                  </Button>
                   <Button onClick={() => navigate('/admin/product-management')} variant="outline" className="w-full justify-start">
                     <Package className="h-4 w-4 mr-2" />
-                    Manage Products
+                    Sort & Sync Products
                   </Button>
                   <Button onClick={() => navigate('/performance-optimization')} variant="outline" className="w-full justify-start">
                     <Zap className="h-4 w-4 mr-2" />

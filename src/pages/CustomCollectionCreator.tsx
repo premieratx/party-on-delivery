@@ -298,8 +298,8 @@ export default function CustomCollectionCreator() {
     }
   };
 
-  // Sync to Shopify AND App - improved function with better error handling and retry logic
-  const syncToShopifyAndApp = async (retryCount = 0) => {
+  // Unified sync function that handles all sync operations
+  const syncToShopifyAndApp = async (forceSync = false) => {
     console.log('🔄 Starting enhanced sync to Shopify and app...');
     
     // Fetch fresh modifications from database with retry logic
@@ -875,7 +875,24 @@ export default function CustomCollectionCreator() {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => loadAllProducts(true)}
+                onClick={async () => {
+                  console.log('🔄 Re-syncing from Shopify...');
+                  try {
+                    await syncToShopifyAndApp(true); // Force sync
+                    await loadAllProducts(); // Reload products
+                    toast({
+                      title: "Success",
+                      description: "Re-synced all data from Shopify!",
+                    });
+                  } catch (error: any) {
+                    console.error('❌ Resync failed:', error);
+                    toast({
+                      title: "Error",
+                      description: error.message || "Failed to resync from Shopify.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
                 disabled={loading}
                 className="flex items-center gap-2"
               >
@@ -1059,14 +1076,17 @@ export default function CustomCollectionCreator() {
                       Re-sync {selectedProducts.size} selected products to Shopify and app
                     </p>
                   </div>
-                  <Button 
-                    onClick={bulkSyncSelectedProducts}
-                    disabled={syncing || selectedProducts.size === 0}
-                    className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white"
-                  >
-                    <Save className="w-4 h-4" />
-                    {syncing ? 'Syncing...' : 'Force Sync Selected'}
-                  </Button>
+                   <Button 
+                     onClick={async () => {
+                       console.log('Force sync button clicked for', selectedProducts.size, 'products');
+                       await syncToShopifyAndApp(true); // Force sync
+                     }}
+                     disabled={syncing || selectedProducts.size === 0}
+                     className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white"
+                   >
+                     <Save className="w-4 h-4" />
+                     {syncing ? 'Syncing...' : 'Force Sync Selected'}
+                   </Button>
                 </div>
               </CardContent>
             </Card>
