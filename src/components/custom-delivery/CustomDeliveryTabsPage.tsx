@@ -122,70 +122,60 @@ export function CustomDeliveryTabsPage({
       setLoading(true);
       setError(null);
       
-      console.log('⚡ Lightning-fast delivery app loading...');
+      console.log('⚡ Loading collections for custom delivery app...');
       const startTime = Date.now();
 
-      try {
-        // Try lightning sync first (fastest possible)
-        const { data: lightningData, error: lightningError } = await supabase.functions.invoke('lightning-sync');
-        
-        if (!lightningError && lightningData?.data?.collections) {
-          console.log(`⚡ Lightning sync loaded in ${Date.now() - startTime}ms`);
-          
-          const relevantCollections = lightningData.data.collections.filter((collection: any) =>
-            collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
-          );
+      // Use get-all-collections function to fetch collections with products
+      const { data: collectionsResponse, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
 
-          const allProducts = relevantCollections.reduce((acc: ShopifyProduct[], collection: any) => {
-            return [...acc, ...collection.products];
-          }, []);
-
-          setCollections(relevantCollections);
-          setAllProducts(allProducts);
-          setLoading(false);
-          return;
-        }
-
-        // Use instant cache for maximum speed
-        const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
-        if (instantData?.success && instantData?.data) {
-          console.log(`✅ Instant cache loaded in ${Date.now() - startTime}ms`);
-          
-          const relevantCollections = instantData.data.collections.filter((collection: any) =>
-            collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
-          );
-
-          const allProducts = relevantCollections.reduce((acc: ShopifyProduct[], collection: any) => {
-            return [...acc, ...collection.products];
-          }, []);
-
-          setCollections(relevantCollections);
-          setAllProducts(allProducts);
-          setLoading(false);
-          return;
-        }
-
-        // No fallback data available
-        console.log('⚠️ No instant cache available, using emergency fallback');
-        throw new Error('No data sources available');
-      } catch (error) {
-        console.error('Lightning-fast loading failed:', error);
-        
-        // Emergency fallback
-        const emergencyData = advancedCacheManager.get('emergency-products') as any;
-        if (emergencyData && Array.isArray(emergencyData.collections)) {
-          const relevantCollections = emergencyData.collections.filter((collection: any) =>
-            collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
-          );
-          setCollections(relevantCollections);
-          setError('Using emergency cache');
-        } else {
-          setError('Failed to load delivery app data');
-        }
+      if (collectionsError) {
+        throw new Error(`Failed to load collections: ${collectionsError.message}`);
       }
+
+      if (!collectionsResponse?.collections || collectionsResponse.collections.length === 0) {
+        throw new Error('No collections found');
+      }
+
+      console.log(`✅ Collections loaded in ${Date.now() - startTime}ms`);
+
+      // Filter to only the collections we need for this app
+      const relevantCollections = collectionsResponse.collections.filter((collection: any) =>
+        collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
+      );
+
+      // Transform the data to match our interface
+      const transformedCollections: ShopifyCollection[] = relevantCollections.map((collection: any) => ({
+        id: collection.id,
+        title: collection.title,
+        handle: collection.handle,
+        description: collection.description || '',
+        products: (collection.products || []).map((product: any) => ({
+          id: product.id,
+          title: product.title,
+          price: parseFloat(product.price) || 0,
+          image: product.image || '',
+          description: product.description || '',
+          handle: product.handle,
+          variants: (product.variants || []).map((variant: any) => ({
+            id: variant.id,
+            title: variant.title,
+            price: parseFloat(variant.price) || 0,
+            available: variant.available !== false
+          }))
+        }))
+      }));
+
+      // Get all products from all collections
+      const allProducts = transformedCollections.reduce((acc: ShopifyProduct[], collection) => {
+        return [...acc, ...collection.products];
+      }, []);
+
+      setCollections(transformedCollections);
+      setAllProducts(allProducts);
+      console.log(`✅ Loaded ${transformedCollections.length} collections with ${allProducts.length} products`);
       
     } catch (error) {
-      console.error('Error in fetchCollections:', error);
+      console.error('Error loading collections:', error);
       setError(`Failed to load collections: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
