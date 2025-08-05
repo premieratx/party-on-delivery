@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProductCache } from './useProductCache';
+import { ultraFastLoader } from '@/utils/ultraFastLoader';
+import { advancedCacheManager } from '@/utils/advancedCacheManager';
 
 interface ShopifyProduct {
   id: string;
@@ -67,66 +69,51 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
       setLoading(true);
       setError(null);
 
-      console.log('⚡ Loading products with instant cache strategy...');
+      console.log('⚡ Ultra-fast product loading initiated...');
+      const startTime = Date.now();
 
-      // First try instant cache for super fast loading
-      if (!forceRefresh) {
-        try {
-          const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
-          
-          if (!instantError && instantData?.collections) {
-            console.log('✅ Using instant cached products data');
-            const processedCollections = processCollections(instantData.collections, initialLimit);
-            setCollections(processedCollections);
-            setCachedData(processedCollections);
-            setLoading(false);
-            return;
-          }
-        } catch (instantError) {
-          console.log('⚠️ Instant cache failed, trying local cache...');
-        }
+      // Use ultra-fast loader with multiple optimization strategies
+      const productData = await ultraFastLoader.loadProducts({
+        useCache: !forceRefresh,
+        priority: 'high',
+        timeout: forceRefresh ? 5000 : 2000,
+        fallbackToStale: true
+      });
 
-        // Fallback to local cache
-        const cachedData = getCachedData();
-        if (cachedData) {
-          console.log('Using local cached products data');
-          setCollections(cachedData);
-          setLoading(false);
-          return;
-        }
-      }
-
-      console.log('Fetching fresh collections from regular endpoint...');
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
-
-      if (error) throw error;
-      if (!data?.collections) throw new Error('No collections data received');
-
-      const processedCollections = processCollections(data.collections, initialLimit);
+      console.log(`✅ Ultra-fast load completed in ${Date.now() - startTime}ms`);
+      
+      // Process collections with initial limit
+      const processedCollections = processCollections(productData.collections, initialLimit);
       
       setCollections(processedCollections);
       setCachedData(processedCollections);
       
       // Check if there are more products to load
-      const hasMoreProducts = data.collections.some((collection: ShopifyCollection) => 
+      const hasMoreProducts = productData.collections.some((collection: ShopifyCollection) => 
         collection.products.length > initialLimit
       );
       setHasMore(hasMoreProducts);
 
+      // Background preload more data
+      if (!forceRefresh) {
+        setTimeout(() => ultraFastLoader.preloadEverything(), 100);
+      }
+
     } catch (err) {
-      console.error('Error fetching collections:', err);
+      console.error('Ultra-fast loader error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load products');
 
-      // Try to use cached data as fallback
-      const cachedData = getCachedData();
-      if (cachedData) {
-        setCollections(cachedData);
-        setError('Using cached data - connection issues detected');
+      // Try emergency fallback to any cached data
+      const emergencyData = advancedCacheManager.get('emergency-products') as any;
+      if (emergencyData && Array.isArray(emergencyData.collections)) {
+        const processedCollections = processCollections(emergencyData.collections, initialLimit);
+        setCollections(processedCollections);
+        setError('Using emergency cache - connection issues detected');
       }
     } finally {
       setLoading(false);
     }
-  }, [getCachedData, setCachedData, processCollections, initialLimit]);
+  }, [processCollections, initialLimit, setCachedData]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;

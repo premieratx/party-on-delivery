@@ -8,6 +8,8 @@ import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { parseProductTitle } from '@/utils/productUtils';
 import { Input } from '@/components/ui/input';
+import { ultraFastLoader } from '@/utils/ultraFastLoader';
+import { advancedCacheManager } from '@/utils/advancedCacheManager';
 
 interface CustomProductCategoriesProps {
   onAddToCart: (item: any) => void;
@@ -116,21 +118,20 @@ export function CustomProductCategories({
       setLoading(true);
       setError(null);
       
-      console.log('⚡ Loading delivery app products with instant cache...');
-      
-      // First try to get instant cached data
+      console.log('⚡ Lightning-fast delivery app loading...');
+      const startTime = Date.now();
+
       try {
-        const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
+        // Try lightning sync first (fastest possible)
+        const { data: lightningData, error: lightningError } = await supabase.functions.invoke('lightning-sync');
         
-        if (!instantError && instantData?.collections) {
-          console.log('✅ Using instant cached data for delivery app');
+        if (!lightningError && lightningData?.data?.collections) {
+          console.log(`⚡ Lightning sync loaded in ${Date.now() - startTime}ms`);
           
-          // Filter collections based on app configuration
-          const relevantCollections = instantData.collections.filter((collection: any) =>
+          const relevantCollections = lightningData.data.collections.filter((collection: any) =>
             collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
           );
 
-          // Collect all products from all collections
           const allProducts = relevantCollections.reduce((acc: ShopifyProduct[], collection: any) => {
             return [...acc, ...collection.products];
           }, []);
@@ -140,39 +141,48 @@ export function CustomProductCategories({
           setLoading(false);
           return;
         }
-      } catch (instantError) {
-        console.log('⚠️ Instant cache failed, falling back to regular fetch');
+
+        // Fallback to ultra-fast loader
+        const productData = await ultraFastLoader.loadProducts({
+          useCache: true,
+          priority: 'critical',
+          timeout: 1500,
+          fallbackToStale: true
+        });
+
+        console.log(`✅ Ultra-fast fallback loaded in ${Date.now() - startTime}ms`);
+
+        if (productData.collections) {
+          const relevantCollections = productData.collections.filter((collection: any) =>
+            collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
+          );
+
+          const allProducts = relevantCollections.reduce((acc: ShopifyProduct[], collection: any) => {
+            return [...acc, ...collection.products];
+          }, []);
+
+          setCollections(relevantCollections);
+          setAllProducts(allProducts);
+        }
+      } catch (error) {
+        console.error('Lightning-fast loading failed:', error);
+        
+        // Emergency fallback
+        const emergencyData = advancedCacheManager.get('emergency-products') as any;
+        if (emergencyData && Array.isArray(emergencyData.collections)) {
+          const relevantCollections = emergencyData.collections.filter((collection: any) =>
+            collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
+          );
+          setCollections(relevantCollections);
+          setError('Using emergency cache');
+        } else {
+          setError('Failed to load delivery app data');
+        }
       }
-
-      // Fallback to regular collection fetch
-      console.log('Fetching collections from regular endpoint...');
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
-      
-      if (error) {
-        console.error('Error fetching collections:', error);
-        throw error;
-      }
-
-      if (!data?.collections) {
-        throw new Error('No collections received from Shopify');
-      }
-
-      // Filter collections based on app configuration
-      const relevantCollections = data.collections.filter((collection: any) =>
-        collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
-      );
-
-      // Collect all products from all collections
-      const allProducts = relevantCollections.reduce((acc: ShopifyProduct[], collection: any) => {
-        return [...acc, ...collection.products];
-      }, []);
-
-      setCollections(relevantCollections);
-      setAllProducts(allProducts);
       
     } catch (error) {
       console.error('Error in fetchCollections:', error);
-      setError(`Failed to load collections: ${error.message}`);
+      setError(`Failed to load collections: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
