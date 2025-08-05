@@ -11,7 +11,7 @@ import { getActiveDeliveryInfo, formatDeliveryDate, isDeliveryExpired } from '@/
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { FastProductLoader } from '@/components/delivery/FastProductLoader';
 
-export type CustomDeliveryStep = 'order-continuation' | 'products' | 'cart';
+export type CustomDeliveryStep = 'order-continuation' | 'products' | 'cart' | 'tabs';
 
 export interface CustomCartItem {
   id: string;
@@ -44,8 +44,8 @@ export const CustomDeliveryAppWidget: React.FC = () => {
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
-  // ALWAYS start on order-continuation
-  const [currentStep, setCurrentStep] = useState<CustomDeliveryStep>('order-continuation');
+  // Start on tabs page to match new template format
+  const [currentStep, setCurrentStep] = useState<CustomDeliveryStep>('tabs');
   const [deliveryInfo, setDeliveryInfo] = useLocalStorage<CustomDeliveryInfo>('customDeliveryApp_delivery_info', {
     date: null,
     timeSlot: '',
@@ -182,6 +182,19 @@ export const CustomDeliveryAppWidget: React.FC = () => {
         onCollectionsLoaded={setCollections}
       />
       
+      {currentStep === 'tabs' && (
+        <CustomProductCategories 
+          onAddToCart={handleAddToCart}
+          cartItemCount={getTotalItems()}
+          onOpenCart={() => setIsCartOpen(true)}
+          cartItems={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onProceedToCheckout={handleCheckout}
+          onBack={handleBackToOrderContinuation}
+          onBackToStart={handleBackToStart}
+        />
+      )}
+      
       {currentStep === 'products' && (
         <CustomProductCategories 
           onAddToCart={handleAddToCart}
@@ -211,7 +224,7 @@ export const CustomDeliveryAppWidget: React.FC = () => {
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}
-        isVisible={currentStep === 'products' || currentStep === 'cart'}
+        isVisible={currentStep === 'products' || currentStep === 'cart' || currentStep === 'tabs'}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
       />
