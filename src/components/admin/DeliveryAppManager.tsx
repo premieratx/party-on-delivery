@@ -248,7 +248,7 @@ export function DeliveryAppManager() {
         }
       }
       
-      // Create the database entry
+      // Create the database entry using the correct Boat Delivery template format
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .insert([{
@@ -260,17 +260,26 @@ export function DeliveryAppManager() {
             tabs: validTabs
           },
           start_screen_config: {
-            title: startScreenTitle,
-            subtitle: startScreenSubtitle,
-            logo_url: uploadedLogoUrl
+            title: startScreenTitle || appName,
+            subtitle: startScreenSubtitle || 'Order your party supplies for delivery'
           },
           main_app_config: {
-            hero_heading: mainAppHeroHeading
+            hero_heading: mainAppHeroHeading || `Order ${appName}`
           },
           post_checkout_config: {
-            heading: postCheckoutHeading,
-            subheading: postCheckoutSubheading,
-            redirect_url: postCheckoutRedirectUrl
+            heading: postCheckoutHeading || 'Thank you for your order!',
+            subheading: postCheckoutSubheading || 'We will contact you shortly to confirm delivery details.',
+            redirect_url: postCheckoutRedirectUrl || ''
+          },
+          // Use the correct format that matches Boat Delivery template
+          custom_post_checkout_config: {
+            enabled: false,
+            title: "",
+            message: "",
+            cta_button_text: "",
+            cta_button_url: "",
+            background_color: "#ffffff",
+            text_color: "#000000"
           },
           is_active: true
         }])

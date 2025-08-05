@@ -187,14 +187,35 @@ export default function CustomAppView() {
   const handleCheckout = () => {
     console.log('Proceeding to checkout');
     setIsCartOpen(false);
+    
     // Store custom app context for checkout redirect
     if (appConfig) {
       sessionStorage.setItem('custom-app-context', JSON.stringify({
         appSlug: appConfig.app_slug,
         appName: appConfig.app_name
       }));
+      localStorage.setItem('custom-app-source', appConfig.app_slug);
     }
-    // Navigate to checkout with unified cart
+    
+    // Convert cart items to proper format
+    const checkoutItems = cartItems.map(item => ({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      quantity: Math.max(1, item.quantity),
+      image: item.image,
+      productId: item.id,
+      variant: item.variant || 'gid://shopify/ProductVariant/default',
+      category: 'delivery-app',
+      eventName: appConfig?.app_name || 'Custom Delivery',
+      name: item.title
+    }));
+    
+    // Store in both formats for compatibility
+    localStorage.setItem('unified-cart', JSON.stringify(checkoutItems));
+    localStorage.setItem('party-cart', JSON.stringify(checkoutItems));
+    
+    // Navigate to checkout
     window.location.href = '/checkout';
   };
 

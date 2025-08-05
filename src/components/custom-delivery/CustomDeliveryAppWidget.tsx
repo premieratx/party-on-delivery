@@ -146,7 +146,9 @@ export const CustomDeliveryAppWidget: React.FC = () => {
         image: item.image,
         productId: item.id,
         variant: item.variant || 'gid://shopify/ProductVariant/default',
-        category: 'delivery-app'
+        category: 'delivery-app',
+        eventName: 'Custom Delivery',
+        name: item.title
       }));
       
       console.log('Standardized cart items:', standardCartItems);
@@ -155,8 +157,11 @@ export const CustomDeliveryAppWidget: React.FC = () => {
       localStorage.setItem('unified-cart', JSON.stringify(standardCartItems));
       localStorage.setItem('party-cart', JSON.stringify(standardCartItems));
       
-      // Navigate to checkout
-      window.location.href = '/checkout';
+      // Store custom app context for proper checkout flow
+      localStorage.setItem('custom-app-source', 'custom-delivery');
+      
+      // Navigate to checkout page
+      navigate('/checkout');
       
     } catch (error) {
       console.error('Error in custom delivery app checkout:', error);
