@@ -253,6 +253,7 @@ export default function CustomCollectionCreator() {
       setSyncing(true);
       console.log(`🗑️ Removing ${productIds.length} products from collection: ${collectionHandle}`);
       
+      // First remove from Shopify
       const { data, error } = await supabase.functions.invoke('sync-custom-collection-to-shopify', {
         body: {
           action: 'remove_products',
@@ -261,34 +262,39 @@ export default function CustomCollectionCreator() {
         }
       });
 
-      if (error || !data.success) {
+      if (error || !data?.success) {
         throw new Error(data?.error || 'Failed to remove products from collection');
       }
 
+      console.log(`✅ Removed ${productIds.length} products from Shopify collection: ${collectionHandle}`);
+      
+      // Remove from local modifications for these products and this collection
+      const { error: deleteError } = await supabase
+        .from('product_modifications')
+        .delete()
+        .in('shopify_product_id', productIds)
+        .eq('collection', collectionHandle);
+
+      if (deleteError) {
+        console.warn('⚠️ Error removing product modifications:', deleteError);
+      }
+
+      // Trigger app sync to update delivery apps
+      const { error: appSyncError } = await supabase.functions.invoke('sync-products-to-app', {
+        body: { incrementalSync: true }
+      });
+
+      if (appSyncError) {
+        console.warn('⚠️ App sync error:', appSyncError);
+      }
+      
       toast({
         title: "✅ Removed from Collection",
         description: `Removed ${productIds.length} product(s) from ${collectionHandle}`,
       });
       
-      // Mark products as modified
-      await Promise.all(productIds.map(async (productId) => {
-        const product = allProducts.find(p => p.id === productId);
-        return supabase
-          .from('product_modifications')
-          .upsert({
-            shopify_product_id: productId,
-            product_title: product?.title || 'Unknown Product',
-            action: 'removed_from_collection',
-            collection: collectionHandle,
-            synced_to_shopify: true,
-            app_synced: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-      }));
-      
+      // Reload data to reflect changes
       await loadProductModifications();
-      await loadAllProducts(true);
       
     } catch (error) {
       console.error('Error removing from collection:', error);
@@ -325,7 +331,6 @@ export default function CustomCollectionCreator() {
           .upsert({
             shopify_product_id: productId,
             product_title: product?.title || 'Unknown Product',
-            action: 'added_to_collection',
             collection: selectedCollection,
             synced_to_shopify: false,
             app_synced: false,
