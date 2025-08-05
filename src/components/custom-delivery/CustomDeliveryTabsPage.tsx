@@ -130,15 +130,43 @@ export function CustomDeliveryTabsPage({
       console.log('⚡ Loading collections for custom delivery app...');
       const startTime = Date.now();
 
-      // Use get-all-collections function to fetch ALL collections with products for search
-      const { data: collectionsResponse, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
-
-      if (collectionsError) {
-        throw new Error(`Failed to load collections: ${collectionsError.message}`);
+      // Try get-all-collections first
+      let collectionsResponse;
+      try {
+        const { data, error } = await supabase.functions.invoke('get-all-collections');
+        
+        if (error) {
+          console.warn('⚠️ get-all-collections failed, trying instant cache fallback:', error);
+          throw error;
+        }
+        
+        collectionsResponse = data;
+      } catch (collectionsError) {
+        console.warn('⚠️ Primary collections fetch failed, trying instant cache fallback...');
+        
+        // Fallback to instant cache
+        const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache');
+        
+        if (cacheError || !cacheData?.success) {
+          throw new Error(`Both primary and fallback methods failed: ${collectionsError.message} | ${cacheError?.message}`);
+        }
+        
+        // Convert instant cache format to collections format
+        collectionsResponse = {
+          collections: [{
+            id: 'fallback-collection',
+            handle: 'all-products',
+            title: 'All Products',
+            description: 'Fallback collection from cache',
+            products: cacheData.data.products || []
+          }]
+        };
+        
+        console.log('✅ Using instant cache fallback with', cacheData.data.products?.length || 0, 'products');
       }
 
       if (!collectionsResponse?.collections || collectionsResponse.collections.length === 0) {
-        throw new Error('No collections found');
+        throw new Error('No collections found in any data source');
       }
 
       console.log(`✅ Collections loaded in ${Date.now() - startTime}ms`);
