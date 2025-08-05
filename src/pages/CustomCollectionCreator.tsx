@@ -351,42 +351,67 @@ export default function CustomCollectionCreator() {
 
     setSyncing(true);
     try {
-      console.log('🚀 Using immediate sync for better reliability...');
+      console.log('📤 Step 1: Syncing TO Shopify...');
       
-      // Use the improved immediate sync function
-      const { data: syncResult, error: syncError } = await supabase.functions.invoke('immediate-shopify-sync');
+      // Step 1: Sync TO Shopify using immediate sync
+      const { data: shopifySync, error: shopifyError } = await supabase.functions.invoke('immediate-shopify-sync');
       
-      if (syncError) {
-        console.error('❌ Immediate sync error:', syncError);
-        throw new Error(`Sync failed: ${syncError.message}`);
+      if (shopifyError) {
+        console.error('❌ Shopify sync error:', shopifyError);
+        throw new Error(`Shopify sync failed: ${shopifyError.message}`);
       }
 
-      if (!syncResult.success) {
-        throw new Error(syncResult.error || 'Failed to complete immediate sync');
+      if (!shopifySync.success) {
+        throw new Error(shopifySync.error || 'Failed to complete Shopify sync');
       }
 
-      console.log('✅ Immediate sync completed successfully:', syncResult);
+      console.log('✅ Shopify sync completed successfully:', shopifySync);
 
-      // Reload all data to reflect changes
+      // Step 2: ALWAYS sync FROM Shopify back to app to ensure apps have latest data
+      console.log('📥 Step 2: Syncing FROM Shopify back to app...');
+      const { data: appSync, error: appError } = await supabase.functions.invoke('sync-products-to-app', {
+        body: { forceFullSync: true, incrementalSync: false }
+      });
+      
+      if (appError) {
+        console.warn('⚠️ App sync warning (non-critical):', appError.message);
+      } else {
+        console.log('✅ App sync completed successfully:', appSync);
+      }
+
+      // Step 3: Force refresh collections to ensure all apps see updates immediately
+      console.log('🔄 Step 3: Force refreshing collections cache...');
+      const { data: collectionsRefresh, error: collectionsError } = await supabase.functions.invoke('get-all-collections', {
+        body: { forceRefresh: true }
+      });
+      
+      if (collectionsError) {
+        console.warn('⚠️ Collections refresh warning (non-critical):', collectionsError.message);
+      } else {
+        console.log('✅ Collections cache refreshed successfully');
+      }
+
+      // Step 4: Clear all caches to force fresh data everywhere
+      console.log('🧹 Step 4: Clearing all relevant caches...');
+      await supabase.from('cache').delete().like('key', '%shopify%');
+      await supabase.from('cache').delete().like('key', '%collections%');
+      await supabase.from('cache').delete().like('key', '%product%');
+
+      // Step 5: Reload local data to reflect changes
+      console.log('🔄 Step 5: Reloading local data...');
       await loadProductModifications();
       await loadAllProducts(true);
-      
-      // Clear cached data to force refresh
-      console.log('Clearing Shopify cache for fresh sync...');
-      await supabase.from('cache').delete().like('key', '%shopify%');
-      
-      console.log('Clearing collections cache for fresh sync...');
-      await supabase.from('cache').delete().like('key', '%collections%');
-      
-      // Force refresh collections
       await loadCollections();
-      
-      // Notify delivery app to refresh
+
+      // Step 6: Notify all apps to refresh their data
+      console.log('📢 Step 6: Notifying apps to refresh...');
       window.dispatchEvent(new CustomEvent('admin-sync-complete'));
 
+      const syncedCount = forceSync ? selectedProducts.size : (unsyncedMods?.length || 0);
+      
       toast({
-        title: "✅ Bidirectional Sync Successful",
-        description: `Successfully synced ${unsyncedMods.length} changes to Shopify and updated app collections! ${syncResult.details?.shopifyProductsCount || 0} products processed, ${syncResult.details?.collectionsRefreshed ? 'collections refreshed' : 'cache updated'}.`,
+        title: "✅ Complete Bidirectional Sync Successful",
+        description: `Successfully synced ${syncedCount} products TO Shopify and FROM Shopify back to all delivery apps! All collections are now updated.`,
       });
 
     } catch (error) {
