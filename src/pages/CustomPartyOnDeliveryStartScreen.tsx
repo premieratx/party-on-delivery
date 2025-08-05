@@ -6,6 +6,7 @@ import { VideoBackground } from "@/components/common/VideoBackground";
 import { PerformanceMonitor } from "@/components/common/PerformanceMonitor";
 import { supabase } from '@/integrations/supabase/client';
 import logo from '@/assets/party-on-delivery-logo.svg';
+import customLogo from '/lovable-uploads/d5d7d4eb-b4e8-4a16-bbf6-2e8551550bd4.png';
 
 interface AppConfig {
   app_name: string;
@@ -13,6 +14,7 @@ interface AppConfig {
   start_screen_config?: {
     title?: string;
     subtitle?: string;
+    logo_url?: string;
   };
 }
 
@@ -44,7 +46,7 @@ const CustomPartyOnDeliveryStartScreen = () => {
         } else {
           setAppConfig({
             ...data,
-            start_screen_config: data.start_screen_config as { title?: string; subtitle?: string } | undefined
+            start_screen_config: data.start_screen_config as { title?: string; subtitle?: string; logo_url?: string } | undefined
           });
         }
       } catch (err) {
@@ -87,11 +89,16 @@ const CustomPartyOnDeliveryStartScreen = () => {
           <div className="p-8 text-center space-y-6">
             {/* Logo */}
             <div className="flex justify-center mb-6">
-              <img 
-                src={logo} 
-                alt="Party On Delivery & Concierge"
-                className="h-20 w-auto"
-              />
+              <div className="relative">
+                <img 
+                  src={appConfig?.start_screen_config?.logo_url || customLogo} 
+                  alt="Party On Delivery & Concierge"
+                  className="h-20 w-auto rounded-full"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm bg-black/50 px-2 py-1 rounded">POD</span>
+                </div>
+              </div>
             </div>
 
             {/* Title */}

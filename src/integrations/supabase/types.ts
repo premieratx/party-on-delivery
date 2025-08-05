@@ -1215,6 +1215,7 @@ export type Database = {
           custom_post_checkout_config: Json | null
           id: string
           is_active: boolean
+          logo_url: string | null
           main_app_config: Json | null
           post_checkout_config: Json | null
           start_screen_config: Json | null
@@ -1228,6 +1229,7 @@ export type Database = {
           custom_post_checkout_config?: Json | null
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
           start_screen_config?: Json | null
@@ -1241,6 +1243,7 @@ export type Database = {
           custom_post_checkout_config?: Json | null
           id?: string
           is_active?: boolean
+          logo_url?: string | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
           start_screen_config?: Json | null

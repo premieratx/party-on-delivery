@@ -58,6 +58,8 @@ export function DeliveryAppManager() {
   // Start screen customization
   const [startScreenTitle, setStartScreenTitle] = useState('');
   const [startScreenSubtitle, setStartScreenSubtitle] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string>('');
   
   // Main app customization  
   const [mainAppHeroHeading, setMainAppHeroHeading] = useState('');
@@ -142,6 +144,8 @@ export function DeliveryAppManager() {
     // Reset customization fields
     setStartScreenTitle('');
     setStartScreenSubtitle('');
+    setLogoFile(null);
+    setLogoUrl('');
     setMainAppHeroHeading('');
     setPostCheckoutHeading('');
     setPostCheckoutSubheading('');
@@ -156,6 +160,32 @@ export function DeliveryAppManager() {
       tabs[index] || { name: '', collection_handle: '' }
     );
     setTabs(newTabs);
+  };
+
+  const uploadLogo = async (file: File, appSlug: string): Promise<string> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${appSlug}-logo.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('delivery-app-logos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('delivery-app-logos')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      throw error;
+    }
   };
 
   const updateTab = (index: number, field: string, value: string) => {
@@ -190,6 +220,12 @@ export function DeliveryAppManager() {
         toast.error('A delivery app with this name already exists');
         return;
       }
+
+      // Upload logo if provided
+      let uploadedLogoUrl = '';
+      if (logoFile) {
+        uploadedLogoUrl = await uploadLogo(logoFile, appSlug);
+      }
       
       // Create the database entry
       const { data, error } = await supabase
@@ -197,13 +233,15 @@ export function DeliveryAppManager() {
         .insert([{
           app_name: appName,
           app_slug: appSlug,
+          logo_url: uploadedLogoUrl,
           collections_config: {
             tab_count: validTabs.length,
             tabs: validTabs
           },
           start_screen_config: {
             title: startScreenTitle,
-            subtitle: startScreenSubtitle
+            subtitle: startScreenSubtitle,
+            logo_url: uploadedLogoUrl
           },
           main_app_config: {
             hero_heading: mainAppHeroHeading
@@ -268,17 +306,25 @@ export function DeliveryAppManager() {
     }
 
     try {
+      // Upload logo if provided
+      let uploadedLogoUrl = logoUrl; // Keep existing URL if no new file
+      if (logoFile) {
+        uploadedLogoUrl = await uploadLogo(logoFile, editingApp.app_slug);
+      }
+
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .update({
           app_name: appName,
+          logo_url: uploadedLogoUrl,
           collections_config: {
             tab_count: validTabs.length,
             tabs: validTabs
           },
           start_screen_config: {
             title: startScreenTitle,
-            subtitle: startScreenSubtitle
+            subtitle: startScreenSubtitle,
+            logo_url: uploadedLogoUrl
           },
           main_app_config: {
             hero_heading: mainAppHeroHeading
@@ -329,6 +375,8 @@ export function DeliveryAppManager() {
       // Reset customization fields
       setStartScreenTitle('');
       setStartScreenSubtitle('');
+      setLogoFile(null);
+      setLogoUrl('');
       setMainAppHeroHeading('');
       setPostCheckoutHeading('');
       setPostCheckoutSubheading('');
@@ -880,6 +928,23 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                       placeholder="Cold drinks delivered to Lake Travis"
                     />
                   </div>
+                </div>
+                <div>
+                  <Label htmlFor="logo-upload">Logo Upload</Label>
+                  <Input
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setLogoFile(file);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload a custom logo for the start screen (PNG, JPG, GIF)
+                  </p>
                 </div>
               </CardContent>
             </Card>
