@@ -266,15 +266,43 @@ serve(async (req) => {
         })
       );
 
-      const collectionData = await createCollectionResponse.json();
-      
       if (!createCollectionResponse.ok) {
+        const collectionData = await createCollectionResponse.json();
         console.error('❌ Failed to create Shopify collection:', collectionData);
-        throw new Error(`Shopify API error creating collection: ${JSON.stringify(collectionData.errors || collectionData)}`);
+        
+        // If handle already exists, try to fetch the existing collection
+        if (collectionData.errors?.handle?.includes('already been taken')) {
+          console.log(`🔄 Handle exists, fetching existing collection...`);
+          const refetchResponse = await withRetry(
+            () => fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json?handle=${handle}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': shopifyAccessToken
+              }
+            })
+          );
+          
+          if (refetchResponse.ok) {
+            const refetchData = await refetchResponse.json();
+            if (refetchData.custom_collections && refetchData.custom_collections.length > 0) {
+              shopifyCollectionId = refetchData.custom_collections[0].id;
+              console.log(`✅ Found existing collection: ${shopifyCollectionId}`);
+            } else {
+              throw new Error(`Collection with handle "${handle}" not found after creation failure`);
+            }
+          } else {
+            throw new Error(`Failed to fetch existing collection after creation failure: ${refetchResponse.status}`);
+          }
+        } else {
+          throw new Error(`Shopify API error creating collection: ${JSON.stringify(collectionData.errors || collectionData)}`);
+        }
+      } else {
+        const collectionData = await createCollectionResponse.json();
+        shopifyCollectionId = collectionData.custom_collection.id;
+        console.log('✅ Created new Shopify collection:', shopifyCollectionId);
       }
 
-      shopifyCollectionId = collectionData.custom_collection.id;
-      console.log('✅ Created new Shopify collection:', shopifyCollectionId);
     }
 
     // Add products to the collection (using REST API for collects)

@@ -125,10 +125,14 @@ Deno.serve(async (req) => {
       const collectionGroups = new Map();
       pendingMods.forEach(mod => {
         if (mod.collection) {
-          if (!collectionGroups.has(mod.collection)) {
-            collectionGroups.set(mod.collection, []);
+          const collectionKey = mod.collection;
+          if (!collectionGroups.has(collectionKey)) {
+            collectionGroups.set(collectionKey, {
+              title: collectionKey,
+              productIds: []
+            });
           }
-          collectionGroups.get(mod.collection).push(mod.shopify_product_id);
+          collectionGroups.get(collectionKey).productIds.push(mod.shopify_product_id);
         }
       });
 
@@ -136,7 +140,8 @@ Deno.serve(async (req) => {
 
       // Sync each collection sequentially with rate limiting
       let collectionIndex = 0;
-      for (const [collectionTitle, productIds] of collectionGroups.entries()) {
+      for (const [collectionKey, collectionData] of collectionGroups.entries()) {
+        const { title, productIds } = collectionData;
         try {
           // Add delay between collections to prevent rate limiting
           if (collectionIndex > 0) {
@@ -144,26 +149,26 @@ Deno.serve(async (req) => {
             await rateLimitedDelay(2000); // 2 second delay between collections
           }
           
-          const handle = collectionTitle.toLowerCase().replace(/\s+/g, '-');
-          console.log(`🔄 Syncing collection "${collectionTitle}" with ${productIds.length} products...`);
+          const handle = title.toLowerCase().replace(/\s+/g, '-');
+          console.log(`🔄 Syncing collection "${title}" with ${productIds.length} products...`);
           
           const { data: syncResult, error: syncError } = await withRetry(
             () => supabase.functions.invoke('sync-custom-collection-to-shopify', {
               body: {
                 collection_id: `custom-${handle}`,
-                title: collectionTitle,
+                title: title,
                 handle: handle,
-                description: `Custom collection: ${collectionTitle}`,
+                description: `Custom collection: ${title}`,
                 product_ids: productIds
               }
             })
           );
 
           if (syncError) {
-            console.error(`❌ Error syncing collection "${collectionTitle}":`, syncError);
+            console.error(`❌ Error syncing collection "${title}":`, syncError);
             throw syncError;
           } else {
-            console.log(`✅ Successfully synced collection "${collectionTitle}" to Shopify:`, syncResult);
+            console.log(`✅ Successfully synced collection "${title}" to Shopify:`, syncResult);
             
             // Mark products as synced to Shopify
             const { error: updateError } = await supabase
@@ -183,8 +188,9 @@ Deno.serve(async (req) => {
           
           collectionIndex++;
         } catch (error) {
-          console.error(`❌ Error processing collection "${collectionTitle}":`, error);
-          throw error; // Re-throw to fail the entire sync if any collection fails
+          console.error(`❌ Error processing collection "${title}":`, error);
+          // Continue with other collections instead of failing the entire sync
+          console.log(`⚠️ Skipping collection "${title}" and continuing...`);
         }
       }
     } else {
