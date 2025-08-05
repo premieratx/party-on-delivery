@@ -34,6 +34,7 @@ import CustomSiteManagement from "./pages/CustomSiteManagement";
 import CustomSiteView from "./pages/CustomSiteView";
 import CustomCollectionCreator from "./pages/CustomCollectionCreator";
 import CustomDeliveryApp from "./pages/CustomDeliveryApp";
+import CustomDeliveryPostCheckout from "./pages/CustomDeliveryPostCheckout";
 import DeliveryAppView from "./pages/DeliveryAppView";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
@@ -104,6 +105,8 @@ const App = () => {
                   
                    {/* Custom Delivery App */}
                    <Route path="/custom-delivery" element={<CustomDeliveryApp />} />
+                   <Route path="/app/:appSlug" element={<CustomDeliveryApp />} />
+                   <Route path="/app/:appSlug/success" element={<CustomDeliveryPostCheckout />} />
                    
                    {/* Delivery App Variations */}
                    <Route path="/delivery-app/:appSlug" element={<DeliveryAppView />} />

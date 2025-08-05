@@ -1212,6 +1212,7 @@ export type Database = {
           app_slug: string
           collections_config: Json
           created_at: string
+          custom_post_checkout_config: Json | null
           id: string
           is_active: boolean
           updated_at: string
@@ -1221,6 +1222,7 @@ export type Database = {
           app_slug: string
           collections_config?: Json
           created_at?: string
+          custom_post_checkout_config?: Json | null
           id?: string
           is_active?: boolean
           updated_at?: string
@@ -1230,6 +1232,7 @@ export type Database = {
           app_slug?: string
           collections_config?: Json
           created_at?: string
+          custom_post_checkout_config?: Json | null
           id?: string
           is_active?: boolean
           updated_at?: string

@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, ExternalLink, Copy, Save } from 'lucide-react';
+import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CustomPostCheckoutEditor } from './CustomPostCheckoutEditor';
 
 interface DeliveryApp {
   id: string;
@@ -21,6 +22,15 @@ interface DeliveryApp {
       collection_handle: string;
       icon?: string;
     }>;
+  };
+  custom_post_checkout_config?: {
+    enabled: boolean;
+    title: string;
+    message: string;
+    cta_button_text: string;
+    cta_button_url: string;
+    background_color: string;
+    text_color: string;
   };
   is_active: boolean;
   created_at: string;
@@ -37,6 +47,7 @@ export function DeliveryAppManager() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingApp, setEditingApp] = useState<DeliveryApp | null>(null);
+  const [selectedAppForConfig, setSelectedAppForConfig] = useState<DeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Form state
@@ -72,7 +83,16 @@ export function DeliveryAppManager() {
               collection_handle: string;
               icon?: string;
             }>;
-          }
+          },
+          custom_post_checkout_config: app.custom_post_checkout_config as {
+            enabled: boolean;
+            title: string;
+            message: string;
+            cta_button_text: string;
+            cta_button_url: string;
+            background_color: string;
+            text_color: string;
+          } | undefined
         }));
         setDeliveryApps(typedApps);
       }
@@ -176,7 +196,16 @@ export function DeliveryAppManager() {
             collection_handle: string;
             icon?: string;
           }>;
-        }
+        },
+        custom_post_checkout_config: data.custom_post_checkout_config as {
+          enabled: boolean;
+          title: string;
+          message: string;
+          cta_button_text: string;
+          cta_button_url: string;
+          background_color: string;
+          text_color: string;
+        } | undefined
       };
       setDeliveryApps(prev => [typedApp, ...prev]);
       setIsCreating(false);
@@ -228,7 +257,16 @@ export function DeliveryAppManager() {
                   collection_handle: string;
                   icon?: string;
                 }>;
-              }
+              },
+              custom_post_checkout_config: data.custom_post_checkout_config as {
+                enabled: boolean;
+                title: string;
+                message: string;
+                cta_button_text: string;
+                cta_button_url: string;
+                background_color: string;
+                text_color: string;
+              } | undefined
             }
           : app
       ));
@@ -267,9 +305,19 @@ export function DeliveryAppManager() {
   };
 
   const copyAppUrl = (appSlug: string) => {
-    const url = `${window.location.origin}/delivery-app/${appSlug}`;
+    const url = `${window.location.origin}/app/${appSlug}`;
     navigator.clipboard.writeText(url);
     toast.success('App URL copied to clipboard');
+  };
+
+  const handleConfigUpdated = (appId: string, newConfig: any) => {
+    setDeliveryApps(prev => 
+      prev.map(app => 
+        app.id === appId 
+          ? { ...app, custom_post_checkout_config: newConfig }
+          : app
+      )
+    );
   };
 
   if (loading) {
@@ -428,10 +476,18 @@ export function DeliveryAppManager() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`/delivery-app/${app.app_slug}`, '_blank')}
+                      onClick={() => window.open(`/app/${app.app_slug}`, '_blank')}
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
                       Preview
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedAppForConfig(app)}
+                    >
+                      <Settings className="h-4 w-4 mr-1" />
+                      Post-Checkout
                     </Button>
                     <Button
                       size="sm"
@@ -465,6 +521,32 @@ export function DeliveryAppManager() {
           ))
         )}
       </div>
+
+      {/* Post-Checkout Configuration Dialog */}
+      <Dialog open={!!selectedAppForConfig} onOpenChange={() => setSelectedAppForConfig(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Configure Post-Checkout for "{selectedAppForConfig?.app_name}"
+            </DialogTitle>
+          </DialogHeader>
+          {selectedAppForConfig && (
+            <CustomPostCheckoutEditor
+              appId={selectedAppForConfig.id}
+              currentConfig={selectedAppForConfig.custom_post_checkout_config || {
+                enabled: false,
+                title: "",
+                message: "",
+                cta_button_text: "",
+                cta_button_url: "",
+                background_color: "#ffffff",
+                text_color: "#000000"
+              }}
+              onConfigUpdated={(newConfig) => handleConfigUpdated(selectedAppForConfig.id, newConfig)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
