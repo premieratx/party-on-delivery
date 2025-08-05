@@ -191,45 +191,53 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+        {/* Consolidated Summary Stats - Single Row */}
+        <Card className="p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <DollarSign className="h-6 w-6 text-primary" />
+              </div>
               <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+              <div className="text-sm text-muted-foreground">Total Revenue</div>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <TrendingUp className="h-6 w-6 text-primary" />
+              </div>
               <div className="text-2xl font-bold">{totalOrders}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+              <div className="text-sm text-muted-foreground">Total Orders</div>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
               <div className="text-2xl font-bold">{totalCustomers}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
+              <div className="text-sm text-muted-foreground">Total Customers</div>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Package className="h-6 w-6 text-primary" />
+              </div>
               <div className="text-2xl font-bold">{totalProducts}</div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="text-sm text-muted-foreground">Total Products</div>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <Crown className="h-6 w-6 text-primary" />
+              </div>
+              <div className="text-2xl font-bold">{affiliates.length}</div>
+              <div className="text-sm text-muted-foreground">Active Affiliates</div>
+            </div>
+            <div className="text-center">
+              <div className="flex justify-center mb-2">
+                <DollarSign className="h-6 w-6 text-orange-500" />
+              </div>
+              <div className="text-2xl font-bold">{formatCurrency(affiliates.reduce((sum, a) => sum + (a.commission_unpaid || 0), 0))}</div>
+              <div className="text-sm text-muted-foreground">Pending Commission</div>
+            </div>
+          </div>
+        </Card>
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
@@ -247,45 +255,18 @@ export default function AdminDashboard() {
             </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button onClick={() => navigate('/admin/create-collection')} variant="outline" className="w-full justify-start">
-                    <Package className="h-4 w-4 mr-2" />
-                    Sort & Sync Products
-                  </Button>
-                  <Button onClick={() => navigate('/concierge')} variant="outline" className="w-full justify-start">
-                    <Crown className="h-4 w-4 mr-2" />
-                    Concierge Service
-                  </Button>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Platform Statistics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Active Affiliates:</span>
-                      <span className="font-semibold">{affiliates.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Commission Paid:</span>
-                      <span className="font-semibold">{formatCurrency(affiliates.reduce((sum, a) => sum + (a.total_commission || 0), 0))}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Pending Commissions:</span>
-                      <span className="font-semibold text-orange-600">{formatCurrency(affiliates.reduce((sum, a) => sum + (a.commission_unpaid || 0), 0))}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Complete Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RecentOrdersFeed 
+                  orders={recentOrders} 
+                  title=""
+                  onRefresh={loadDashboardData}
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
 

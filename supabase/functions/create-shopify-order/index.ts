@@ -357,7 +357,16 @@ serve(async (req) => {
       }
     }
 
-    // Don't add tip as line item - handle it properly in totals only
+    // Add driver tip as a line item for order details visibility
+    if (tipAmount > 0) {
+      lineItems.push({
+        title: "Driver Tip",
+        price: tipAmount.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        custom: true
+      });
+    }
 
     // Create order in Shopify with proper totals structure
     const orderData = {
@@ -440,19 +449,7 @@ serve(async (req) => {
           }
         },
         
-        // Handle tip properly - Use Shopify's native tip support
-        ...(tipAmount > 0 && {
-          total_tips_set: {
-            shop_money: {
-              amount: tipAmount.toFixed(2),
-              currency_code: "USD"
-            },
-            presentment_money: {
-              amount: tipAmount.toFixed(2),
-              currency_code: "USD"
-            }
-          }
-        }),
+        // Tip is now included as line item above, so no separate tip field needed
         
         // Ensure exact price matching for order totals
         current_total_price: totalAmount.toFixed(2),
