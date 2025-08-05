@@ -186,18 +186,38 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       
       console.log(`=== fetchCollections START (forceRefresh: ${forceRefresh}) ===`);
       
-      // Check cache first (unless force refresh)
+      console.log('⚡ Loading main delivery app with instant cache strategy...');
+
+      // First try instant cache for super fast loading
       if (!forceRefresh) {
+        try {
+          const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
+          
+          if (!instantError && instantData?.collections) {
+            console.log('✅ Main delivery app: Using instant cached collections');
+            setCollections(instantData.collections);
+            setRetryCount(0);
+            setLoading(false);
+            return;
+          }
+        } catch (instantError) {
+          console.log('⚠️ Instant cache failed, trying local cache...');
+        }
+
+        // Fallback to cache manager
         const cachedCollections = cacheManager.getShopifyCollections();
-        // TEMPORARILY DISABLE CACHE TO FORCE FRESH FETCH FOR SPIRITS
-        console.log('FORCING FRESH FETCH - Spirits collection debug mode');
-        console.log('Cache disabled temporarily to fetch spirits collection');
+        if (cachedCollections && cachedCollections.length > 0) {
+          console.log('Using cached collections from cache manager');
+          setCollections(cachedCollections);
+          setLoading(false);
+          return;
+        }
       } else {
         console.log('Force refresh - clearing cache and fetching fresh data');
         cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
       }
       
-      console.log('Fetching fresh collections from Shopify...');
+      console.log('Fetching fresh collections from regular endpoint...');
       
       // Use retry logic for API calls with enhanced error handling
       const result = await ErrorHandler.withRetry(async () => {

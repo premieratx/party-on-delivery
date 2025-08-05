@@ -120,9 +120,23 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
   const loadCollections = async () => {
     try {
       setLoading(true);
-      console.log('Custom Delivery App: Loading collections...');
+      console.log('⚡ Custom Delivery App: Loading with instant cache...');
 
-      // Try cache first
+      // First try instant cache for super fast loading
+      try {
+        const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
+        
+        if (!instantError && instantData?.collections) {
+          console.log('✅ Custom Delivery App: Using instant cached collections');
+          setCollections(instantData.collections as ShopifyCollection[]);
+          setLoading(false);
+          return;
+        }
+      } catch (instantError) {
+        console.log('⚠️ Instant cache failed, trying local cache...');
+      }
+
+      // Fallback to cache manager
       const cacheKey = 'custom_delivery_collections';
       const cachedData = await cacheManager.get(cacheKey);
       
@@ -133,7 +147,8 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
         return;
       }
 
-      // Load from Supabase edge function
+      // Final fallback to regular endpoint
+      console.log('Fetching fresh collections from regular endpoint...');
       const { data, error } = await supabase.functions.invoke('get-all-collections');
       
       if (error) throw error;

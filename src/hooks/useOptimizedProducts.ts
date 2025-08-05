@@ -67,18 +67,36 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
       setLoading(true);
       setError(null);
 
-      // Check cache first unless force refresh
+      console.log('⚡ Loading products with instant cache strategy...');
+
+      // First try instant cache for super fast loading
       if (!forceRefresh) {
+        try {
+          const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
+          
+          if (!instantError && instantData?.collections) {
+            console.log('✅ Using instant cached products data');
+            const processedCollections = processCollections(instantData.collections, initialLimit);
+            setCollections(processedCollections);
+            setCachedData(processedCollections);
+            setLoading(false);
+            return;
+          }
+        } catch (instantError) {
+          console.log('⚠️ Instant cache failed, trying local cache...');
+        }
+
+        // Fallback to local cache
         const cachedData = getCachedData();
         if (cachedData) {
-          console.log('Using cached products data');
+          console.log('Using local cached products data');
           setCollections(cachedData);
           setLoading(false);
           return;
         }
       }
 
-      console.log('Fetching fresh products from Shopify...');
+      console.log('Fetching fresh collections from regular endpoint...');
       const { data, error } = await supabase.functions.invoke('get-all-collections');
 
       if (error) throw error;
