@@ -298,17 +298,33 @@ export default function CustomCollectionCreator() {
     }
   };
 
-  // Sync to Shopify AND App - improved function with better error handling
-  const syncToShopifyAndApp = async () => {
+  // Sync to Shopify AND App - improved function with better error handling and retry logic
+  const syncToShopifyAndApp = async (retryCount = 0) => {
     console.log('🔄 Starting enhanced sync to Shopify and app...');
     
-    // Fetch fresh modifications from database instead of relying on stale state
-    const { data: freshMods, error: fetchError } = await supabase
-      .from('product_modifications')
-      .select('*');
+    // Fetch fresh modifications from database with retry logic
+    let freshMods, fetchError;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const result = await supabase
+        .from('product_modifications')
+        .select('*');
+      
+      if (!result.error) {
+        freshMods = result.data;
+        fetchError = null;
+        break;
+      }
+      
+      fetchError = result.error;
+      console.warn(`❌ Attempt ${attempt + 1} failed:`, fetchError);
+      
+      if (attempt < 2) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
     
     if (fetchError) {
-      console.error('❌ Error fetching fresh modifications:', fetchError);
+      console.error('❌ Error fetching fresh modifications after retries:', fetchError);
       toast({
         title: "Error",
         description: "Failed to fetch latest modifications.",
@@ -1004,6 +1020,9 @@ export default function CustomCollectionCreator() {
                         try {
                           await applyLocalChanges();
                           console.log('Local changes applied, now syncing...');
+                          
+                          // Add a small delay to ensure database transaction is committed
+                          await new Promise(resolve => setTimeout(resolve, 500));
                           
                           // Sync immediately after applying changes
                           await syncToShopifyAndApp();
