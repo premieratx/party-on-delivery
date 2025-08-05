@@ -89,16 +89,11 @@ const CustomPartyOnDeliveryStartScreen = () => {
           <div className="p-8 text-center space-y-6">
             {/* Logo */}
             <div className="flex justify-center mb-6">
-              <div className="relative">
-                <img 
-                  src={appConfig?.start_screen_config?.logo_url || customLogo} 
-                  alt="Party On Delivery & Concierge"
-                  className="h-20 w-auto rounded-full"
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm bg-black/50 px-2 py-1 rounded">POD</span>
-                </div>
-              </div>
+              <img 
+                src={customLogo} 
+                alt="Party On Delivery & Concierge"
+                className="h-20 w-20 rounded-full object-cover"
+              />
             </div>
 
             {/* Title */}
