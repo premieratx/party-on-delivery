@@ -39,6 +39,67 @@ interface ProductModification {
   updated_at: string;
 }
 
+// Helper functions to infer category and type from product data
+const inferCategoryFromProduct = (product: any): string => {
+  // Try to get category from collections first
+  if (product.collections && Array.isArray(product.collections)) {
+    for (const collection of product.collections) {
+      const handle = collection.handle?.toLowerCase() || '';
+      const title = collection.title?.toLowerCase() || '';
+      
+      if (handle.includes('beer') || title.includes('beer')) return 'beer';
+      if (handle.includes('wine') || title.includes('wine')) return 'wine';
+      if (handle.includes('spirits') || title.includes('spirits') || 
+          handle.includes('liquor') || title.includes('liquor')) return 'spirits';
+      if (handle.includes('cocktail') || title.includes('cocktail') ||
+          handle.includes('mixer') || title.includes('mixer')) return 'cocktails';
+      if (handle.includes('seltzer') || title.includes('seltzer') ||
+          handle.includes('hard-seltzer') || title.includes('hard seltzer')) return 'seltzers';
+      if (handle.includes('party') || title.includes('party') ||
+          handle.includes('supplies') || title.includes('supplies')) return 'party-supplies';
+    }
+  }
+  
+  // Try product title and handle
+  const title = product.title?.toLowerCase() || '';
+  const handle = product.handle?.toLowerCase() || '';
+  const productType = product.product_type?.toLowerCase() || '';
+  
+  if (title.includes('beer') || handle.includes('beer') || productType.includes('beer')) return 'beer';
+  if (title.includes('wine') || handle.includes('wine') || productType.includes('wine')) return 'wine';
+  if (title.includes('vodka') || title.includes('whiskey') || title.includes('tequila') || 
+      title.includes('rum') || title.includes('gin') || handle.includes('spirits') ||
+      productType.includes('spirits')) return 'spirits';
+  if (title.includes('cocktail') || title.includes('mixer') || handle.includes('cocktail')) return 'cocktails';
+  if (title.includes('seltzer') || handle.includes('seltzer')) return 'seltzers';
+  if (title.includes('cup') || title.includes('plate') || title.includes('napkin') ||
+      title.includes('decoration') || productType.includes('party')) return 'party-supplies';
+  
+  return 'other';
+};
+
+const inferTypeFromProduct = (product: any): string => {
+  const title = product.title?.toLowerCase() || '';
+  const handle = product.handle?.toLowerCase() || '';
+  
+  // Alcohol types
+  if (title.includes('lager') || title.includes('ale') || title.includes('ipa')) return 'beer';
+  if (title.includes('red wine') || title.includes('white wine') || title.includes('champagne')) return 'wine';
+  if (title.includes('vodka')) return 'vodka';
+  if (title.includes('whiskey') || title.includes('bourbon')) return 'whiskey';
+  if (title.includes('tequila')) return 'tequila';
+  if (title.includes('rum')) return 'rum';
+  if (title.includes('gin')) return 'gin';
+  
+  // Party supplies
+  if (title.includes('cup') || title.includes('glass')) return 'drinkware';
+  if (title.includes('plate') || title.includes('bowl')) return 'tableware';
+  if (title.includes('napkin') || title.includes('towel')) return 'paper-goods';
+  if (title.includes('decoration') || title.includes('banner')) return 'decorations';
+  
+  return 'unknown';
+};
+
 export default function CustomCollectionCreator() {
   // State
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -74,8 +135,8 @@ export default function CustomCollectionCreator() {
           id: product.id,
           title: product.title,
           handle: product.handle,
-          category: product.category || 'other',
-          type: product.product_type || 'unknown',
+          category: inferCategoryFromProduct(product),
+          type: product.product_type || product.type || inferTypeFromProduct(product),
           price: product.variants?.[0]?.price || product.price || '0.00',
           image_url: product.image?.src || product.image,
           vendor: product.vendor || 'Unknown',
@@ -103,8 +164,8 @@ export default function CustomCollectionCreator() {
         id: product.id,
         title: product.title,
         handle: product.handle,
-        category: product.category || 'other',
-        type: product.product_type || 'unknown',
+        category: inferCategoryFromProduct(product),
+        type: product.product_type || product.type || inferTypeFromProduct(product),
         price: product.variants?.[0]?.price || '0.00',
         image_url: product.image?.src || product.images?.[0]?.src,
         vendor: product.vendor || 'Unknown',
