@@ -312,8 +312,8 @@ serve(async (req) => {
       shopifyCollectionId = existingCollectionsData.custom_collections[0].id;
       console.log('✅ Found existing Shopify collection:', shopifyCollectionId);
       
-      // Clear existing products from the collection first
-      console.log('🧹 Clearing existing products from collection...');
+      // Check which products are already in the collection to avoid duplicates
+      console.log('🔍 Checking existing products in collection...');
       const collectsResponse = await withRetry(
         () => fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects.json?collection_id=${shopifyCollectionId}&limit=250`, {
           method: 'GET',
@@ -325,24 +325,21 @@ serve(async (req) => {
       );
       
       const collectsData = await collectsResponse.json();
-      if (collectsData.collects && collectsData.collects.length > 0) {
-        console.log(`🗑️ Removing ${collectsData.collects.length} existing products from collection`);
-        const deletePromises = collectsData.collects.map(async (collect: any) => {
-          try {
-            await withRetry(
-              () => fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects/${collect.id}.json`, {
-                method: 'DELETE',
-                headers: {
-                  'X-Shopify-Access-Token': shopifyAccessToken
-                }
-              })
-            );
-          } catch (error) {
-            console.warn('⚠️ Error removing product from collection:', error);
-          }
-        });
-        await Promise.allSettled(deletePromises);
-        console.log('✅ Cleared existing products from collection');
+      const existingProductIds = new Set(
+        collectsData.collects?.map((collect: any) => collect.product_id.toString()) || []
+      );
+      
+      // Filter out products that are already in the collection
+      const newProductIds = shopifyProductIds.filter(id => {
+        const numericId = id.replace('gid://shopify/Product/', '');
+        return !existingProductIds.has(numericId);
+      });
+      
+      if (newProductIds.length === 0) {
+        console.log('✅ All products are already in the collection - no changes needed');
+      } else {
+        console.log(`➕ Adding ${newProductIds.length} new products to collection (${existingProductIds.size} already exist)`);
+        shopifyProductIds = newProductIds; // Only add the new products
       }
     } else {
       // Collection doesn't exist, create it
