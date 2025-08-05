@@ -21,42 +21,27 @@ export const FastProductLoader: React.FC<FastProductLoaderProps> = ({
   }, [category]);
 
   const loadDataWithCache = async () => {
+    const startTime = performance.now();
+    
     try {
       setLoading(true);
       
-      // Try instant cache first
+      // ALWAYS use instant cache first - this should load in under 100ms
       const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
       
       if (instantData?.success && instantData?.data) {
-        console.log('⚡ Using instant cache for fast loading');
+        console.log('⚡ Ultra-fast instant cache load');
+        const loadTime = performance.now() - startTime;
+        console.log(`⚡ Loaded in ${loadTime}ms`);
+        
         onProductsLoaded(instantData.data.products || []);
         onCollectionsLoaded(instantData.data.collections || []);
         setLoading(false);
         return;
       }
 
-      // Fallback to regular collection loading
-      console.log('📦 Loading from collections API');
-      const { data: collectionsData, error } = await supabase.functions.invoke('get-all-collections');
-      
-      if (error) throw error;
-      
-      if (collectionsData?.collections) {
-        onCollectionsLoaded(collectionsData.collections);
-        
-        // Extract all products from collections
-        const allProducts = collectionsData.collections.reduce((acc: any[], collection: any) => {
-          if (collection.products) {
-            acc.push(...collection.products.map((p: any) => ({
-              ...p,
-              category: inferCategoryFromCollections(collection.handle)
-            })));
-          }
-          return acc;
-        }, []);
-        
-        onProductsLoaded(allProducts);
-      }
+      // This should rarely happen - instant cache should always be available
+      console.warn('📦 Instant cache miss - this should not happen often');
       
     } catch (error: any) {
       console.error('Error loading products:', error);

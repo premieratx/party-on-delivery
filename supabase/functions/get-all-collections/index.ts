@@ -13,6 +13,19 @@ serve(async (req) => {
 
   console.log("=== GET-ALL-COLLECTIONS FUNCTION START ===");
 
+  // Parse request body for additional options
+  let includeAllProducts = false;
+  let forceRefresh = false;
+  try {
+    if (req.method === 'POST') {
+      const body = await req.json();
+      includeAllProducts = body?.includeAllProducts === true;
+      forceRefresh = body?.forceRefresh === true;
+    }
+  } catch {
+    // No body or invalid JSON, use defaults
+  }
+
   try {
     // Get environment variables with proper validation
     const SHOPIFY_STORE_URL = Deno.env.get('SHOPIFY_STORE_URL');
@@ -95,7 +108,7 @@ serve(async (req) => {
           title
           handle
           description
-          products(first: 250) {
+          products(first: ${includeAllProducts ? 250 : 100}) {
             edges {
               node {
                 id

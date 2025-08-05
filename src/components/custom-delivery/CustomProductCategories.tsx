@@ -148,8 +148,8 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
       }
 
       // Final fallback to regular endpoint
-      console.log('Fetching fresh collections from regular endpoint...');
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      console.log('Fetching from instant cache for maximum speed...');
+      const { data, error } = await supabase.functions.invoke('instant-product-cache');
       
       if (error) throw error;
       

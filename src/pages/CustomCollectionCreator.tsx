@@ -90,60 +90,64 @@ export default function CustomCollectionCreator() {
         });
       }
       
-      // ULTRA FAST: Try instant cache first - should load in <100ms
-      const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+      // ULTRA FAST: Get all collections with ALL products
+      const { data: collectionsData } = await supabase.functions.invoke('get-all-collections', {
+        body: { limit: 250, includeAllProducts: true }
+      });
       
-      if (instantData?.success && instantData?.data && !forceCacheClear) {
-        console.log('⚡ Ultra-fast instant cache load');
-        const products = instantData.data.products || [];
-        const collections = instantData.data.collections || [];
+      if (collectionsData?.success && collectionsData?.collections) {
+        console.log('⚡ Fast collections load with all products');
+        const collections = collectionsData.collections;
         
-        // Quick transform
-        const transformedProducts = products.map((product: any) => ({
-          ...product,
-          category: product.category || '',
-          productType: product.product_type || product.productType || '',
-          collections: product.collections || []
-        }));
-        
-        setAllProducts(transformedProducts);
-        
-        // Fast attribute extraction from cached collections
+        // Extract ALL products from ALL collections
+        const allProductsFromCollections = new Map();
         const categories = new Set<string>();
         const productTypes = new Set<string>();
         const collectionNames = new Set<string>();
         
-        // Extract from cached data ONLY for speed
         collections.forEach((collection: any) => {
           if (collection.title) collectionNames.add(collection.title);
+          
           if (collection.products) {
             collection.products.forEach((product: any) => {
+              // Use Map to avoid duplicates by product ID
+              allProductsFromCollections.set(product.id, {
+                ...product,
+                category: product.category || inferCategoryFromProduct(product, collection),
+                productType: product.product_type || product.productType || product.productType || '',
+                collections: allProductsFromCollections.get(product.id)?.collections 
+                  ? [...allProductsFromCollections.get(product.id).collections, { 
+                      id: collection.id, 
+                      title: collection.title, 
+                      handle: collection.handle 
+                    }]
+                  : [{ id: collection.id, title: collection.title, handle: collection.handle }]
+              });
+              
+              // Extract attributes
               if (product.category) categories.add(product.category);
-              if (product.productType) productTypes.add(product.productType);
               if (product.product_type) productTypes.add(product.product_type);
+              if (product.productType) productTypes.add(product.productType);
             });
           }
         });
         
-        // Also extract from transformed products
-        transformedProducts.forEach((product: any) => {
-          if (product.category) categories.add(product.category);
-          if (product.productType) productTypes.add(product.productType);
-        });
+        const transformedProducts = Array.from(allProductsFromCollections.values());
         
+        setAllProducts(transformedProducts);
         setAvailableCategories(Array.from(categories).sort());
         setAvailableProductTypes(Array.from(productTypes).sort());
         setAvailableCollections(Array.from(collectionNames).sort());
         
         const loadTime = performance.now() - startTime;
-        console.log(`⚡ ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${transformedProducts.length} products`);
+        console.log(`⚡ FAST LOAD: ${Math.round(loadTime)}ms - ${transformedProducts.length} products from ${collections.length} collections`);
         
         setLoading(false);
         return;
       }
 
-      // Fallback to fetch-shopify-products if cache miss or forced refresh
-      console.log('📦 Loading from Shopify API...');
+      // Fallback to fetch-shopify-products if collections fail
+      console.log('📦 Fallback loading from Shopify API...');
       const response = await supabase.functions.invoke('fetch-shopify-products');
       if (response.data && response.data.products) {
         setAllProducts(response.data.products);
@@ -160,30 +164,8 @@ export default function CustomCollectionCreator() {
         setAvailableCategories(Array.from(categories).sort());
         setAvailableProductTypes(Array.from(productTypes).sort());
         
-        // If force cache clear, also refresh collections and sync app
-        if (forceCacheClear) {
-          await loadCollections(true);
-          
-          // Reload modifications first to get current state
-          await loadProductModifications();
-          
-          // Then check for products that need app sync
-          setTimeout(async () => {
-            const currentMods = await supabase.from('product_modifications').select('*');
-            if (currentMods.data) {
-              const shopifySyncedMods = currentMods.data.filter((m: any) => m.synced_to_shopify && !m.app_synced);
-              if (shopifySyncedMods.length > 0) {
-                console.log('Auto-syncing products to app after cache clear...');
-                await syncToApp();
-              }
-            }
-          }, 1000); // Small delay to ensure data is fresh
-          
-          toast({
-            title: "Sync Complete",
-            description: "Fresh data loaded from Shopify! Collections updated.",
-          });
-        }
+        // Load collections separately
+        await loadCollections(forceCacheClear);
       }
     } catch (error) {
       console.error('Error loading products:', error);
@@ -195,6 +177,23 @@ export default function CustomCollectionCreator() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to infer category from product and collection context
+  const inferCategoryFromProduct = (product: any, collection: any) => {
+    const title = product.title?.toLowerCase() || '';
+    const handle = collection.handle?.toLowerCase() || '';
+    
+    if (handle.includes('beer') || title.includes('beer')) return 'Beer';
+    if (handle.includes('wine') || title.includes('wine') || handle.includes('champagne')) return 'Wine';
+    if (handle.includes('spirit') || handle.includes('whiskey') || handle.includes('vodka') || 
+        handle.includes('gin') || handle.includes('rum') || handle.includes('tequila')) return 'Spirits';
+    if (handle.includes('cocktail') || title.includes('cocktail')) return 'Cocktails';
+    if (handle.includes('seltzer') || title.includes('seltzer')) return 'Seltzers';
+    if (handle.includes('mixer') || title.includes('mixer')) return 'Mixers';
+    if (handle.includes('party') || handle.includes('supplies')) return 'Party Supplies';
+    
+    return product.category || 'Other';
   };
 
   const loadProductModifications = async () => {

@@ -221,8 +221,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       
       // Use retry logic for API calls with enhanced error handling
       const result = await ErrorHandler.withRetry(async () => {
-        console.log('Making supabase.functions.invoke call to get-all-collections');
-        const { data, error } = await supabase.functions.invoke('get-all-collections');
+        console.log('Making supabase.functions.invoke call to instant-product-cache for maximum speed');
+        const { data, error } = await supabase.functions.invoke('instant-product-cache');
         
         if (error) {
           console.error('Supabase function invoke error:', error);

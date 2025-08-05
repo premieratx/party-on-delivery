@@ -95,8 +95,8 @@ export const ProductSearch = () => {
       }
 
       // Fallback: Try collections API (slower but more complete)
-      console.log('📦 Fallback: Loading from collections API');
-      const { data: collectionsData, error } = await supabase.functions.invoke('get-all-collections');
+      console.log('📦 Loading from instant cache for maximum speed');
+      const { data: collectionsData, error } = await supabase.functions.invoke('instant-product-cache');
       
       if (error) throw error;
       

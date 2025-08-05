@@ -136,45 +136,37 @@ export function useVirtualizedProducts({
     overscan: 5
   });
 
-  // Smart data fetching with progressive loading
+  // Smart data fetching with instant loading
   const fetchProducts = useCallback(async (offset = 0, useCache = true) => {
     try {
       if (offset === 0) {
         setLoading(true);
         setError(null);
 
-        // Try to get critical data first for instant loading
-        const criticalData = await preloadCriticalData();
-        if (criticalData) {
-          // Handle both new instant cache format and legacy format
+        // ALWAYS use instant cache for maximum speed
+        const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+        
+        if (instantData?.success && instantData?.data) {
+          console.log('⚡ Using instant cache for ultra-fast loading');
+          
+          // Extract products from instant cache
           let products = [];
-          if (criticalData.products) {
-            // New instant cache format
-            products = criticalData.products;
-          } else if (Array.isArray(criticalData)) {
-            // Legacy format - array of collections
-            products = criticalData.flatMap((collection: ShopifyCollection) => collection.products);
-          } else if (criticalData.collections) {
-            // New format with collections property
-            products = criticalData.collections.flatMap((collection: ShopifyCollection) => collection.products);
+          if (instantData.data.products) {
+            products = instantData.data.products;
+          } else if (instantData.data.collections) {
+            products = instantData.data.collections.flatMap((collection: any) => collection.products || []);
           }
           
           setAllProducts(products);
           setLoading(false);
-          
-          // Load full data in background after instant display
-          setTimeout(() => fetchFullData(), 100);
           return;
         }
       }
 
-      // Fetch full data with pagination
+      // This should rarely happen - instant cache should always be available
+      console.warn('📦 Instant cache miss - falling back to collections API');
       const { data, error } = await supabase.functions.invoke('get-all-collections', {
-        body: { 
-          offset, 
-          limit,
-          forceRefresh: !useCache && offset === 0
-        }
+        body: { offset, limit }
       });
 
       if (error) throw error;

@@ -72,44 +72,45 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
       console.log('⚡ Ultra-fast product loading initiated...');
       const startTime = Date.now();
 
-      // Use ultra-fast loader with multiple optimization strategies
-      const productData = await ultraFastLoader.loadProducts({
-        useCache: !forceRefresh,
-        priority: 'high',
-        timeout: forceRefresh ? 5000 : 2000,
-        fallbackToStale: true
-      });
+      // Use instant cache for maximum speed
+      const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+      
+      if (instantData?.success && instantData?.data && !forceRefresh) {
+        console.log(`✅ Ultra-fast instant cache load completed in ${Date.now() - startTime}ms`);
+        
+        // Process collections with initial limit
+        const processedCollections = processCollections(instantData.data.collections, initialLimit);
+        
+        setCollections(processedCollections);
+        setCachedData(processedCollections);
+        
+        // Check if there are more products to load
+        const hasMoreProducts = instantData.data.collections.some((collection: ShopifyCollection) => 
+          collection.products.length > initialLimit
+        );
+        setHasMore(hasMoreProducts);
+        
+        setLoading(false);
+        return;
+      }
 
-      console.log(`✅ Ultra-fast load completed in ${Date.now() - startTime}ms`);
-      
-      // Process collections with initial limit
-      const processedCollections = processCollections(productData.collections, initialLimit);
-      
+      // Fallback only if instant cache fails or force refresh
+      console.log('📦 Fallback to collections API');
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      if (error) throw error;
+
+      const processedCollections = processCollections(data.collections, initialLimit);
       setCollections(processedCollections);
       setCachedData(processedCollections);
       
-      // Check if there are more products to load
-      const hasMoreProducts = productData.collections.some((collection: ShopifyCollection) => 
+      const hasMoreProducts = data.collections.some((collection: ShopifyCollection) => 
         collection.products.length > initialLimit
       );
       setHasMore(hasMoreProducts);
 
-      // Background preload more data
-      if (!forceRefresh) {
-        setTimeout(() => ultraFastLoader.preloadEverything(), 100);
-      }
-
     } catch (err) {
-      console.error('Ultra-fast loader error:', err);
+      console.error('Product loading error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load products');
-
-      // Try emergency fallback to any cached data
-      const emergencyData = advancedCacheManager.get('emergency-products') as any;
-      if (emergencyData && Array.isArray(emergencyData.collections)) {
-        const processedCollections = processCollections(emergencyData.collections, initialLimit);
-        setCollections(processedCollections);
-        setError('Using emergency cache - connection issues detected');
-      }
     } finally {
       setLoading(false);
     }

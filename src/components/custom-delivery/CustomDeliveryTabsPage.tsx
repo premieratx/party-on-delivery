@@ -145,18 +145,12 @@ export function CustomDeliveryTabsPage({
           return;
         }
 
-        // Fallback to ultra-fast loader
-        const productData = await ultraFastLoader.loadProducts({
-          useCache: true,
-          priority: 'critical',
-          timeout: 1500,
-          fallbackToStale: true
-        });
-
-        console.log(`✅ Ultra-fast fallback loaded in ${Date.now() - startTime}ms`);
-
-        if (productData.collections) {
-          const relevantCollections = productData.collections.filter((collection: any) =>
+        // Use instant cache for maximum speed
+        const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+        if (instantData?.success && instantData?.data) {
+          console.log(`✅ Instant cache loaded in ${Date.now() - startTime}ms`);
+          
+          const relevantCollections = instantData.data.collections.filter((collection: any) =>
             collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
           );
 
@@ -166,7 +160,13 @@ export function CustomDeliveryTabsPage({
 
           setCollections(relevantCollections);
           setAllProducts(allProducts);
+          setLoading(false);
+          return;
         }
+
+        // No fallback data available
+        console.log('⚠️ No instant cache available, using emergency fallback');
+        throw new Error('No data sources available');
       } catch (error) {
         console.error('Lightning-fast loading failed:', error);
         
