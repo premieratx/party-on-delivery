@@ -30,8 +30,6 @@ import { PartyPlanner } from "./pages/PartyPlanner";
 import Checkout from "./pages/Checkout";
 import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 import { ProductSearch } from "./pages/ProductSearch";
-import CustomSiteManagement from "./pages/CustomSiteManagement";
-import CustomSiteView from "./pages/CustomSiteView";
 import CustomCollectionCreator from "./pages/CustomCollectionCreator";
 import CustomDeliveryApp from "./pages/CustomDeliveryApp";
 import CustomDeliveryPostCheckout from "./pages/CustomDeliveryPostCheckout";
@@ -126,13 +124,8 @@ const App = () => {
                   {/* Performance Optimization Route */}
                   <Route path="/performance-optimization" element={<PerformanceOptimization />} />
                   
-                  {/* Custom Site Routes */}
-                  <Route path="/custom-sites" element={<CustomSiteManagement />} />
-                  <Route path="/admin/custom-sites" element={<CustomSiteManagement />} />
-                  <Route path="/sites/:siteSlug" element={<CustomSiteView />} />
-                  
-                  {/* Test Routes */}
-                  <Route path="/test-sms" element={<TestSMS />} />
+                   {/* Test Routes */}
+                   <Route path="/test-sms" element={<TestSMS />} />
                   
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
