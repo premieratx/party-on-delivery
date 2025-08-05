@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, ArrowLeft, RefreshCw, Save, Smartphone } from 'lucide-react';
+import { Search, ArrowLeft, RefreshCw, Save, Smartphone, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -629,6 +629,65 @@ export default function CustomCollectionCreator() {
     }
   };
 
+  // Handle removing products from collections
+  const removeFromCollection = async (productIds: string[], collectionHandle: string) => {
+    try {
+      setSyncing(true);
+      
+      console.log(`🗑️ Removing ${productIds.length} products from collection: ${collectionHandle}`);
+      
+      const { data, error } = await supabase.functions.invoke('sync-custom-collection-to-shopify', {
+        body: {
+          action: 'remove_products',
+          collection_handle: collectionHandle,
+          product_ids: productIds
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "✅ Removed from Collection",
+          description: `Removed ${productIds.length} product(s) from ${collectionHandle}`,
+        });
+        
+        // Mark products as modified
+        await Promise.all(productIds.map(async (productId) => {
+          const product = allProducts.find(p => p.id === productId);
+          return supabase
+            .from('product_modifications')
+            .upsert({
+              shopify_product_id: productId,
+              product_title: product?.title || 'Unknown Product',
+              action: 'removed_from_collection',
+              collection: collectionHandle,
+              synced_to_shopify: true,
+              app_synced: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+        }));
+        
+        // Trigger sync to update app
+        await syncToShopifyAndApp();
+        await loadProductModifications();
+        await loadAllProducts(true);
+      } else {
+        throw new Error(data.error || 'Failed to remove products from collection');
+      }
+    } catch (error) {
+      console.error('Error removing from collection:', error);
+      toast({
+        title: "❌ Error",
+        description: "Failed to remove products from collection",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   // Test sync connection
   const testSyncConnection = async () => {
     console.log('🧪 Testing sync connections...');
@@ -1064,7 +1123,7 @@ export default function CustomCollectionCreator() {
                     </select>
                   </div>
                   <div>
-                    <Label htmlFor="bulkCollection">Update Collection</Label>
+                    <Label htmlFor="bulkCollection">Add to Collection</Label>
                     <select
                       id="bulkCollection"
                       value={bulkCollection}
@@ -1271,23 +1330,32 @@ export default function CustomCollectionCreator() {
                       {/* Collections */}
                       <div className="w-32">
                         <div className="flex flex-wrap gap-1">
-                          {product.collections && product.collections.length > 0 ? (
-                            product.collections.slice(0, 2).map((collection, index) => (
-                              <Badge 
-                                key={collection.id}
-                                variant="outline" 
-                                className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200"
-                              >
-                                {collection.title}
-                              </Badge>
-                            ))
-                          ) : (
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs text-muted-foreground"
-                            >
-                              None
-                            </Badge>
+                           {product.collections && product.collections.length > 0 ? (
+                             product.collections.slice(0, 2).map((collection, index) => (
+                               <div key={collection.id} className="flex items-center gap-1 mb-1">
+                                 <Badge 
+                                   variant="outline" 
+                                   className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200"
+                                 >
+                                   {collection.title}
+                                 </Badge>
+                                 <button
+                                   onClick={() => removeFromCollection([product.id], collection.handle)}
+                                   className="text-red-500 hover:text-red-700 transition-colors ml-1"
+                                   title="Remove from collection"
+                                   disabled={syncing}
+                                 >
+                                   <X className="w-3 h-3" />
+                                 </button>
+                               </div>
+                             ))
+                           ) : (
+                             <Badge 
+                               variant="outline" 
+                               className="text-xs text-muted-foreground"
+                             >
+                               None
+                             </Badge>
                           )}
                           {product.collections && product.collections.length > 2 && (
                             <Badge 
