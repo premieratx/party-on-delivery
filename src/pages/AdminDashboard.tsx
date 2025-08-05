@@ -184,13 +184,9 @@ export default function AdminDashboard() {
             <p className="text-muted-foreground">Manage your affiliate program and platform</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => navigate('/admin/custom-sites')} variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Site
-            </Button>
             <Button onClick={() => navigate('/admin/create-collection')} variant="outline">
               <Plus className="h-4 w-4 mr-2" />
-              Create Collection
+              Create Delivery App
             </Button>
             <Button onClick={handleLogout} variant="outline">
               <LogOut className="h-4 w-4 mr-2" />
@@ -243,16 +239,14 @@ export default function AdminDashboard() {
         <Tabs defaultValue="overview" className="space-y-4">
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="analytics">📊 Analytics</TabsTrigger>
               <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
-              <TabsTrigger value="vouchers">Vouchers</TabsTrigger>
+              <TabsTrigger value="vouchers">Affiliate Discount Codes</TabsTrigger>
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="performance">⚡ Performance</TabsTrigger>
               <TabsTrigger value="system-tests">🧪 System Tests</TabsTrigger>
-              <TabsTrigger value="ai-testing">🤖 AI Testing</TabsTrigger>
               <TabsTrigger value="ghl-setup">📱 GHL/SMS Setup</TabsTrigger>
               <TabsTrigger value="cleanup">🗑️ Cleanup</TabsTrigger>
             </TabsList>
@@ -264,13 +258,9 @@ export default function AdminDashboard() {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button onClick={() => navigate('/admin/custom-sites')} className="w-full justify-start">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Custom Site
-                  </Button>
                   <Button onClick={() => navigate('/admin/create-collection')} variant="outline" className="w-full justify-start">
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Product Collection
+                    Create Delivery App
                   </Button>
                   <Button onClick={() => navigate('/admin/product-management')} variant="outline" className="w-full justify-start">
                     <Package className="h-4 w-4 mr-2" />
@@ -311,9 +301,6 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-4">
-            <AnalyticsDashboard />
-          </TabsContent>
 
           <TabsContent value="affiliates" className="space-y-4">
             <div className="flex justify-between items-center">
@@ -548,9 +535,6 @@ export default function AdminDashboard() {
             <SystemTestingSuite />
           </TabsContent>
 
-          <TabsContent value="ai-testing" className="space-y-4">
-            <AITestingControl />
-          </TabsContent>
 
           <TabsContent value="ghl-setup" className="space-y-4">
             <div className="space-y-6">

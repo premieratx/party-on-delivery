@@ -304,17 +304,9 @@ export default function VoucherManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-medium">Voucher Management</h3>
-          <p className="text-sm text-muted-foreground">Create and manage discount vouchers and prepaid credits</p>
+          <h3 className="text-lg font-medium">Affiliate Discount Codes</h3>
+          <p className="text-sm text-muted-foreground">Manage affiliate discount codes and their settings</p>
         </div>
-        
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Create Voucher
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Voucher</DialogTitle>
@@ -475,10 +467,8 @@ export default function VoucherManagement() {
       <div className="space-y-4">
         {vouchers.length === 0 ? (
           <Card className="p-8 text-center">
-            <div className="text-muted-foreground mb-4">No vouchers created yet</div>
-            <Button onClick={() => setIsCreateOpen(true)} variant="outline">
-              Create Your First Voucher
-            </Button>
+            <div className="text-muted-foreground mb-4">No affiliate discount codes created yet</div>
+            <p className="text-sm text-muted-foreground">Affiliate discount codes will be created automatically when affiliates sign up</p>
           </Card>
         ) : (
           vouchers.map((voucher) => (
