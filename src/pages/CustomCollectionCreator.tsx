@@ -301,9 +301,25 @@ export default function CustomCollectionCreator() {
   // Sync to Shopify AND App - improved function with better error handling
   const syncToShopifyAndApp = async () => {
     console.log('🔄 Starting enhanced sync to Shopify and app...');
-    console.log('📊 Total product modifications:', productModifications.length);
     
-    const unsyncedMods = productModifications.filter(m => !m.synced_to_shopify);
+    // Fetch fresh modifications from database instead of relying on stale state
+    const { data: freshMods, error: fetchError } = await supabase
+      .from('product_modifications')
+      .select('*');
+    
+    if (fetchError) {
+      console.error('❌ Error fetching fresh modifications:', fetchError);
+      toast({
+        title: "Error",
+        description: "Failed to fetch latest modifications.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    console.log('📊 Total product modifications (fresh):', freshMods?.length || 0);
+    
+    const unsyncedMods = (freshMods || []).filter(m => !m.synced_to_shopify);
     console.log('📋 Unsynced modifications:', unsyncedMods.length, unsyncedMods);
     
     if (unsyncedMods.length === 0) {
