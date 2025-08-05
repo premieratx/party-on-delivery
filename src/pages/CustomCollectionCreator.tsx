@@ -135,48 +135,78 @@ export default function CustomCollectionCreator() {
     }
   }, []);
 
-  // Sync function - simplified 2-way sync
+  // Sync function - collection-specific sync
   const syncAll = async () => {
     setSyncing(true);
     try {
-      console.log('🔄 Starting 2-way sync...');
+      console.log('🔄 Starting collection sync to Shopify...');
       
-      // Get all modified products
-      const { data: mods, error: modError } = await supabase
-        .from('product_modifications')
-        .select('*')
-        .order('updated_at', { ascending: false });
-      
-      if (modError || !mods || mods.length === 0) {
+      // Group modifications by collection
+      const modsByCollection = new Map<string, any[]>();
+      modifications.forEach(mod => {
+        if (mod.collection && !mod.synced_to_shopify) {
+          if (!modsByCollection.has(mod.collection)) {
+            modsByCollection.set(mod.collection, []);
+          }
+          modsByCollection.get(mod.collection)!.push(mod);
+        }
+      });
+
+      if (modsByCollection.size === 0) {
         toast({
           title: "⚠️ No Changes to Sync",
-          description: "No product collection changes found to sync.",
+          description: "No collection changes found to sync to Shopify.",
         });
         return;
       }
-      
-      // Sync TO Shopify
-      const { data: shopifySync, error: shopifyError } = await supabase.functions.invoke('immediate-shopify-sync');
-      if (shopifyError) throw new Error(`Shopify sync failed: ${shopifyError.message}`);
-      
-      // Sync FROM Shopify back to delivery apps
-      const { data: appSync, error: appError } = await supabase.functions.invoke('sync-products-to-app', {
-        body: { forceFullSync: true }
-      });
-      if (appError) console.warn('App sync warning:', appError.message);
-      
-      // Clear caches
-      await supabase.from('cache').delete().like('key', '%shopify%');
-      await supabase.from('cache').delete().like('key', '%collections%');
-      
+
+      // Sync each collection to Shopify
+      let totalSynced = 0;
+      for (const [collectionHandle, mods] of modsByCollection) {
+        try {
+          console.log(`🔄 Syncing collection: ${collectionHandle} with ${mods.length} products`);
+          
+          const productIds = mods.map(mod => mod.shopify_product_id);
+          
+          const { data, error } = await supabase.functions.invoke('sync-custom-collection-to-shopify', {
+            body: {
+              collection_id: `custom-${collectionHandle}`,
+              title: collectionHandle.charAt(0).toUpperCase() + collectionHandle.slice(1).replace(/-/g, ' '),
+              handle: collectionHandle,
+              description: `Custom collection for ${collectionHandle}`,
+              product_ids: productIds
+            }
+          });
+
+          if (error) {
+            console.error(`❌ Error syncing collection ${collectionHandle}:`, error);
+            continue;
+          }
+
+          // Mark as synced
+          const { error: updateError } = await supabase
+            .from('product_modifications')
+            .update({ synced_to_shopify: true })
+            .in('id', mods.map(mod => mod.id));
+
+          if (updateError) {
+            console.warn('⚠️ Error marking modifications as synced:', updateError);
+          }
+
+          totalSynced += mods.length;
+          console.log(`✅ Synced collection ${collectionHandle} with ${mods.length} products`);
+          
+        } catch (error) {
+          console.error(`❌ Error syncing collection ${collectionHandle}:`, error);
+        }
+      }
+
       // Reload data
       await loadProductModifications();
-      await loadAllProducts(true);
-      await loadCollections();
       
       toast({
         title: "🎉 Sync Complete",
-        description: `Successfully synced ${mods.length} changes both TO and FROM Shopify!`,
+        description: `Successfully synced ${totalSynced} products across ${modsByCollection.size} collections to Shopify!`,
       });
       
     } catch (error) {
