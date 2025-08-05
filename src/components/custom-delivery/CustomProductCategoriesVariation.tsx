@@ -116,8 +116,36 @@ export function CustomProductCategories({
       setLoading(true);
       setError(null);
       
-      console.log('Fetching collections for custom app...');
+      console.log('⚡ Loading delivery app products with instant cache...');
       
+      // First try to get instant cached data
+      try {
+        const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
+        
+        if (!instantError && instantData?.collections) {
+          console.log('✅ Using instant cached data for delivery app');
+          
+          // Filter collections based on app configuration
+          const relevantCollections = instantData.collections.filter((collection: any) =>
+            collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
+          );
+
+          // Collect all products from all collections
+          const allProducts = relevantCollections.reduce((acc: ShopifyProduct[], collection: any) => {
+            return [...acc, ...collection.products];
+          }, []);
+
+          setCollections(relevantCollections);
+          setAllProducts(allProducts);
+          setLoading(false);
+          return;
+        }
+      } catch (instantError) {
+        console.log('⚠️ Instant cache failed, falling back to regular fetch');
+      }
+
+      // Fallback to regular collection fetch
+      console.log('Fetching collections from regular endpoint...');
       const { data, error } = await supabase.functions.invoke('get-all-collections');
       
       if (error) {
