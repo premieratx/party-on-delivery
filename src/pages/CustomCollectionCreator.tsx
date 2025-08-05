@@ -263,13 +263,13 @@ export default function CustomCollectionCreator() {
           console.log('Update error:', error);
           if (error) throw error;
         } else {
-          // Insert new record
-          console.log('Inserting new record:', update);
+          // Insert new record using upsert to handle conflicts
+          console.log('Upserting new record:', update);
           const { error } = await supabase
             .from('product_modifications')
-            .insert(update);
+            .upsert(update);
           
-          console.log('Insert error:', error);
+          console.log('Upsert error:', error);
           if (error) throw error;
         }
       }
