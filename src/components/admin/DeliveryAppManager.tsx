@@ -54,6 +54,18 @@ export function DeliveryAppManager() {
   const [appName, setAppName] = useState('');
   const [tabCount, setTabCount] = useState(5);
   const [tabs, setTabs] = useState<Array<{ name: string; collection_handle: string }>>([]);
+  
+  // Start screen customization
+  const [startScreenTitle, setStartScreenTitle] = useState('');
+  const [startScreenSubtitle, setStartScreenSubtitle] = useState('');
+  
+  // Main app customization  
+  const [mainAppHeroHeading, setMainAppHeroHeading] = useState('');
+  
+  // Post-checkout customization
+  const [postCheckoutHeading, setPostCheckoutHeading] = useState('');
+  const [postCheckoutSubheading, setPostCheckoutSubheading] = useState('');
+  const [postCheckoutRedirectUrl, setPostCheckoutRedirectUrl] = useState('');
 
   useEffect(() => {
     loadData();
@@ -126,6 +138,15 @@ export function DeliveryAppManager() {
       name: '',
       collection_handle: ''
     })));
+    
+    // Reset customization fields
+    setStartScreenTitle('');
+    setStartScreenSubtitle('');
+    setMainAppHeroHeading('');
+    setPostCheckoutHeading('');
+    setPostCheckoutSubheading('');
+    setPostCheckoutRedirectUrl('');
+    
     setIsCreating(true);
   };
 
@@ -179,6 +200,18 @@ export function DeliveryAppManager() {
           collections_config: {
             tab_count: validTabs.length,
             tabs: validTabs
+          },
+          start_screen_config: {
+            title: startScreenTitle,
+            subtitle: startScreenSubtitle
+          },
+          main_app_config: {
+            hero_heading: mainAppHeroHeading
+          },
+          post_checkout_config: {
+            heading: postCheckoutHeading,
+            subheading: postCheckoutSubheading,
+            redirect_url: postCheckoutRedirectUrl
           },
           is_active: true
         }])
@@ -242,6 +275,18 @@ export function DeliveryAppManager() {
           collections_config: {
             tab_count: validTabs.length,
             tabs: validTabs
+          },
+          start_screen_config: {
+            title: startScreenTitle,
+            subtitle: startScreenSubtitle
+          },
+          main_app_config: {
+            hero_heading: mainAppHeroHeading
+          },
+          post_checkout_config: {
+            heading: postCheckoutHeading,
+            subheading: postCheckoutSubheading,
+            redirect_url: postCheckoutRedirectUrl
           }
         })
         .eq('id', editingApp.id)
@@ -280,6 +325,15 @@ export function DeliveryAppManager() {
       setEditingApp(null);
       setAppName('');
       setTabs([]);
+      
+      // Reset customization fields
+      setStartScreenTitle('');
+      setStartScreenSubtitle('');
+      setMainAppHeroHeading('');
+      setPostCheckoutHeading('');
+      setPostCheckoutSubheading('');
+      setPostCheckoutRedirectUrl('');
+      
       toast.success('Delivery app updated successfully!');
 
     } catch (error: any) {
@@ -516,12 +570,110 @@ export function DeliveryAppManager() {
               ))}
             </div>
 
+            {/* Start Screen Customization */}
+            <Card className="border-blue-200 bg-blue-50/50">
+              <CardHeader>
+                <CardTitle className="text-blue-700">Start Screen Customization</CardTitle>
+                <p className="text-sm text-blue-600">Customize the landing page for your delivery app</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start-title">Start Screen Title</Label>
+                    <Input
+                      id="start-title"
+                      value={startScreenTitle}
+                      onChange={(e) => setStartScreenTitle(e.target.value)}
+                      placeholder="Austin's Premier Boat Delivery"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="start-subtitle">Start Screen Subtitle</Label>
+                    <Input
+                      id="start-subtitle"
+                      value={startScreenSubtitle}
+                      onChange={(e) => setStartScreenSubtitle(e.target.value)}
+                      placeholder="Cold drinks delivered to Lake Travis"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Main App Customization */}
+            <Card className="border-green-200 bg-green-50/50">
+              <CardHeader>
+                <CardTitle className="text-green-700">Main App Customization</CardTitle>
+                <p className="text-sm text-green-600">Customize the main delivery app interface</p>
+              </CardHeader>
+              <CardContent>
+                <div>
+                  <Label htmlFor="hero-heading">Hero Section Heading</Label>
+                  <Input
+                    id="hero-heading"
+                    value={mainAppHeroHeading}
+                    onChange={(e) => setMainAppHeroHeading(e.target.value)}
+                    placeholder="Fresh Beverages Delivered to Your Boat"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Post-Checkout Customization */}
+            <Card className="border-purple-200 bg-purple-50/50">
+              <CardHeader>
+                <CardTitle className="text-purple-700">Post-Checkout Customization</CardTitle>
+                <p className="text-sm text-purple-600">Customize the order confirmation page</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="checkout-heading">Confirmation Heading</Label>
+                    <Input
+                      id="checkout-heading"
+                      value={postCheckoutHeading}
+                      onChange={(e) => setPostCheckoutHeading(e.target.value)}
+                      placeholder="Order Confirmed!"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="checkout-subheading">Confirmation Subheading</Label>
+                    <Input
+                      id="checkout-subheading"
+                      value={postCheckoutSubheading}
+                      onChange={(e) => setPostCheckoutSubheading(e.target.value)}
+                      placeholder="We'll have your drinks to you soon"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="redirect-url">Add More Button URL (optional)</Label>
+                  <Input
+                    id="redirect-url"
+                    value={postCheckoutRedirectUrl}
+                    onChange={(e) => setPostCheckoutRedirectUrl(e.target.value)}
+                    placeholder="https://example.com/more-services"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional URL for an "Add More" button on the confirmation page
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => {
                 setIsCreating(false);
                 setEditingApp(null);
                 setAppName('');
                 setTabs([]);
+                // Reset customization fields
+                setStartScreenTitle('');
+                setStartScreenSubtitle('');
+                setMainAppHeroHeading('');
+                setPostCheckoutHeading('');
+                setPostCheckoutSubheading('');
+                setPostCheckoutRedirectUrl('');
               }}>
                 Cancel
               </Button>
@@ -671,6 +823,20 @@ export function DeliveryAppManager() {
                             name: tab.name,
                             collection_handle: tab.collection_handle
                           })));
+                          
+                          // Load existing customization data
+                          const startConfig = (app as any).start_screen_config || {};
+                          setStartScreenTitle(startConfig.title || '');
+                          setStartScreenSubtitle(startConfig.subtitle || '');
+                          
+                          const mainConfig = (app as any).main_app_config || {};
+                          setMainAppHeroHeading(mainConfig.hero_heading || '');
+                          
+                          const postConfig = (app as any).post_checkout_config || {};
+                          setPostCheckoutHeading(postConfig.heading || '');
+                          setPostCheckoutSubheading(postConfig.subheading || '');
+                          setPostCheckoutRedirectUrl(postConfig.redirect_url || '');
+                          
                           setIsCreating(true);
                         }}
                       >

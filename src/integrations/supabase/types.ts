@@ -1215,6 +1215,9 @@ export type Database = {
           custom_post_checkout_config: Json | null
           id: string
           is_active: boolean
+          main_app_config: Json | null
+          post_checkout_config: Json | null
+          start_screen_config: Json | null
           updated_at: string
         }
         Insert: {
@@ -1225,6 +1228,9 @@ export type Database = {
           custom_post_checkout_config?: Json | null
           id?: string
           is_active?: boolean
+          main_app_config?: Json | null
+          post_checkout_config?: Json | null
+          start_screen_config?: Json | null
           updated_at?: string
         }
         Update: {
@@ -1235,6 +1241,9 @@ export type Database = {
           custom_post_checkout_config?: Json | null
           id?: string
           is_active?: boolean
+          main_app_config?: Json | null
+          post_checkout_config?: Json | null
+          start_screen_config?: Json | null
           updated_at?: string
         }
         Relationships: []
