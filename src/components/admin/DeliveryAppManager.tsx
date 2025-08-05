@@ -207,19 +207,34 @@ export function DeliveryAppManager() {
     }
 
     try {
-      const appSlug = appName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      let appSlug = appName.toLowerCase().replace(/[^a-z0-9]/g, '-');
       
-      // Check if slug already exists
-      const { data: existingApp } = await supabase
-        .from('delivery_app_variations')
-        .select('id')
-        .eq('app_slug', appSlug)
-        .maybeSingle();
+      // Check if slug already exists and make it unique
+      let counter = 1;
+      let finalSlug = appSlug;
+      
+      while (true) {
+        const { data: existingApp } = await supabase
+          .from('delivery_app_variations')
+          .select('id')
+          .eq('app_slug', finalSlug)
+          .maybeSingle();
 
-      if (existingApp) {
-        toast.error('A delivery app with this name already exists');
-        return;
+        if (!existingApp) {
+          break; // This slug is available
+        }
+        
+        // Try with counter
+        finalSlug = `${appSlug}-${counter}`;
+        counter++;
+        
+        // Safety check to prevent infinite loop
+        if (counter > 100) {
+          throw new Error('Unable to generate unique app slug');
+        }
       }
+      
+      appSlug = finalSlug;
 
       // Upload logo if provided
       let uploadedLogoUrl = '';

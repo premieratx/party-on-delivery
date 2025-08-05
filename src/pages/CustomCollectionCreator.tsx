@@ -64,6 +64,31 @@ export default function CustomCollectionCreator() {
         localStorage.removeItem('shopify-collections-cache');
       }
 
+      // Try instant cache first for faster loading
+      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache');
+      
+      if (!cacheError && cacheData?.success && cacheData?.data?.products?.length > 0) {
+        console.log(`✅ Loaded ${cacheData.data.products.length} products from instant cache`);
+        
+        const processedProducts = cacheData.data.products.map((product: any) => ({
+          id: product.id,
+          title: product.title,
+          handle: product.handle,
+          category: product.category || 'other',
+          type: product.product_type || 'unknown',
+          price: product.variants?.[0]?.price || product.price || '0.00',
+          image_url: product.image?.src || product.image,
+          vendor: product.vendor || 'Unknown',
+          description: product.description || '',
+          collections: product.collections || []
+        }));
+
+        setAllProducts(processedProducts);
+        return;
+      }
+
+      // Fallback to fetch-shopify-products if instant cache fails
+      console.log('⚠️ Instant cache unavailable, trying direct fetch...');
       const { data, error } = await supabase.functions.invoke('fetch-shopify-products');
       
       if (error) throw error;

@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
         .select('*')
         .eq('key', 'instant_products_v3')
         .gte('expires_at', Date.now())
-        .single()
+        .maybeSingle()
       
       existingCache = data
     }
@@ -67,50 +67,52 @@ Deno.serve(async (req) => {
     let products = []
     let collections = []
 
-    // Only use results if we successfully got products - don't cache empty results!
-    if (shopifyResult.status === 'fulfilled' && !shopifyResult.value.error && shopifyResult.value.data?.products?.length > 0) {
+    // Handle different scenarios more gracefully
+    if (shopifyResult.status === 'fulfilled' && shopifyResult.value.data?.success && shopifyResult.value.data?.products?.length > 0) {
       products = shopifyResult.value.data.products
       console.log(`✅ Successfully fetched ${products.length} products`)
     } else {
       console.log('⚠️ No products fetched or error occurred')
       console.log('Shopify result:', shopifyResult)
       
-      // If force refresh failed and we have existing cache, return it
-      if (forceRefresh && existingCache) {
-        console.log('🔄 Force refresh failed, returning existing cache')
+      // Try to get any existing cache as fallback FIRST
+      const { data: fallbackCache } = await supabase
+        .from('cache')
+        .select('*')
+        .eq('key', 'instant_products_v3')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      
+      if (fallbackCache) {
+        console.log('📦 Using expired cache as fallback')
         return new Response(
           JSON.stringify({
             success: true,
-            source: 'existing',
-            data: existingCache.data,
-            warning: 'Force refresh failed, using existing cache'
+            source: 'fallback',
+            data: fallbackCache.data,
+            warning: 'Using cached data - fresh data unavailable due to rate limits'
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
-      }
-      
-      // Try to get any existing cache as fallback
-      if (!existingCache) {
-        const { data: fallbackCache } = await supabase
-          .from('cache')
-          .select('*')
-          .eq('key', 'instant_products_v3')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-        
-        if (fallbackCache) {
-          console.log('📦 Using expired cache as fallback')
-          return new Response(
-            JSON.stringify({
-              success: true,
-              source: 'fallback',
-              data: fallbackCache.data,
-              warning: 'Using expired cache - fresh data unavailable'
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          )
-        }
+      } else {
+        // No cache available at all - return empty but valid structure
+        console.log('❌ No cache available, returning empty structure')
+        return new Response(
+          JSON.stringify({
+            success: true,
+            source: 'empty',
+            data: { 
+              products: [], 
+              collections: [],
+              cached_at: new Date().toISOString(),
+              total_products: 0,
+              total_collections: 0
+            },
+            warning: 'No products available - cache empty and Shopify unavailable'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
     }
 
@@ -119,14 +121,40 @@ Deno.serve(async (req) => {
       console.log(`✅ Successfully fetched ${collections.length} collections`)
     }
 
-    // Don't cache if we have no products at all
-    if (products.length === 0) {
-      console.log('❌ No products to cache, aborting cache update')
+    // If we still have no products but have collections, don't completely fail
+    if (products.length === 0 && collections.length > 0) {
+      console.log('⚠️ No products but have collections, returning collections-only cache')
+      const cacheData = {
+        products: [],
+        collections: collections.slice(0, 50).map((collection: any) => ({
+          id: collection.id,
+          title: collection.title,
+          handle: collection.handle,
+          description: collection.description || '',
+          products_count: collection.products?.length || 0,
+          products: collection.products?.map((product: any) => ({
+            id: product.id,
+            title: product.title,
+            price: product.price,
+            image: product.image?.includes('?') 
+              ? `${product.image}&width=300&height=300` 
+              : `${product.image}?width=300&height=300`,
+            handle: product.handle,
+            description: product.description || '',
+            variants: product.variants?.slice(0, 1) || []
+          })) || []
+        })),
+        cached_at: new Date().toISOString(),
+        total_products: 0,
+        total_collections: collections.length
+      }
+      
       return new Response(
         JSON.stringify({
-          success: false,
-          error: 'No products available to cache',
-          data: { products: [], collections: collections }
+          success: true,
+          source: 'collections_only',
+          data: cacheData,
+          warning: 'Only collections available - product sync in progress'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
