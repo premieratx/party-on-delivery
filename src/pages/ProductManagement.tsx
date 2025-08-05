@@ -126,7 +126,7 @@ export const ProductManagement: React.FC = () => {
       
       toast({
         title: "Success",
-        description: `Loaded ${sortedCollections.length} collections with products (${data.source} cache)`,
+        description: `Loaded ${sortedCollections.length} collections with ${data.data?.total_products || 0} total products (${data.source} cache)`,
       });
       
     } catch (error) {

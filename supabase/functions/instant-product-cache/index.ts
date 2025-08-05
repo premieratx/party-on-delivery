@@ -148,7 +148,10 @@ Deno.serve(async (req) => {
       id: collection.id,
       title: collection.title,
       handle: collection.handle,
-      products: collection.products?.slice(0, 12).map((product: any) => ({
+      description: collection.description || '',
+      products_count: collection.products?.length || 0,
+      // For bulk editing, include ALL products in each collection, not just the first 12
+      products: collection.products?.map((product: any) => ({
         id: product.id,
         title: product.title,
         price: product.price,
@@ -156,6 +159,7 @@ Deno.serve(async (req) => {
           ? `${product.image}&width=300&height=300` 
           : `${product.image}?width=300&height=300`,
         handle: product.handle,
+        description: product.description || '',
         variants: product.variants?.slice(0, 1) || []
       })) || []
     }))
