@@ -9,6 +9,7 @@ import { useReliableStorage } from '@/hooks/useReliableStorage';
 import { useUnifiedCart, UnifiedCartItem } from '@/hooks/useUnifiedCart';
 import { getActiveDeliveryInfo, formatDeliveryDate, isDeliveryExpired } from '@/utils/deliveryInfoManager';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
+import { FastProductLoader } from '@/components/delivery/FastProductLoader';
 
 export type CustomDeliveryStep = 'order-continuation' | 'products' | 'cart';
 
@@ -36,6 +37,9 @@ export const CustomDeliveryAppWidget: React.FC = () => {
   const navigate = useNavigate();
   const [affiliateReferral, setAffiliateReferral] = useReliableStorage('customDeliveryApp_affiliateReferral', '');
   const [startingPage, setStartingPage] = useReliableStorage('customDeliveryApp_startingPage', '/custom-delivery');
+  const [products, setProducts] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
@@ -173,6 +177,11 @@ export const CustomDeliveryAppWidget: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <FastProductLoader 
+        onProductsLoaded={setProducts}
+        onCollectionsLoaded={setCollections}
+      />
+      
       {currentStep === 'products' && (
         <CustomProductCategories 
           onAddToCart={handleAddToCart}

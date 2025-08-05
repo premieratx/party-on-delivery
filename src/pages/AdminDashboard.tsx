@@ -243,7 +243,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
               <TabsTrigger value="vouchers">Affiliate Discount Codes</TabsTrigger>
-              <TabsTrigger value="products">Products</TabsTrigger>
+              <TabsTrigger value="products">Sort & Sync Products</TabsTrigger>
               <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="performance">⚡ Performance</TabsTrigger>
               <TabsTrigger value="system-tests">🧪 System Tests</TabsTrigger>

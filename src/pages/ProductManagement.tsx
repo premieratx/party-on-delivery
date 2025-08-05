@@ -202,27 +202,68 @@ export const ProductManagement: React.FC = () => {
       
       toast({
         title: "Syncing...",
-        description: "Syncing product categories to Shopify...",
+        description: "Optimizing and syncing to Shopify...",
       });
 
-      const { data, error } = await supabase.functions.invoke('sync-product-categories');
+      // Use the new optimized sync function
+      const { data, error } = await supabase.functions.invoke('shopify-sync-optimizer');
       
       if (error) throw error;
 
       if (data.success) {
         toast({
-          title: "Success",
-          description: `Synced ${data.synced_count} product categories to Shopify`,
+          title: "Success", 
+          description: `Sync optimization completed. Cleared ${data.cleared_modifications} stale modifications.`,
         });
+        
+        // Reload collections to see updates
+        await loadCollections();
       } else {
         throw new Error(data.error || 'Sync failed');
       }
       
     } catch (error: any) {
-      console.error('Error syncing to Shopify:', error);
+      console.error('Error in sync optimization:', error);
       toast({
         title: "Error",
-        description: `Failed to sync to Shopify: ${error.message}`,
+        description: `Failed to optimize sync: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsMovingProduct(false);
+    }
+  };
+
+  const forceSyncToShopify = async () => {
+    try {
+      setIsMovingProduct(true);
+      
+      toast({
+        title: "Force Syncing...",
+        description: "Forcing complete sync to Shopify...",
+      });
+
+      // Clear all caches first
+      await supabase.from('cache').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      
+      // Then sync
+      const { data, error } = await supabase.functions.invoke('immediate-shopify-sync');
+      
+      if (error) throw error;
+
+      toast({
+        title: "Force Sync Complete",
+        description: "All caches cleared and fresh sync completed.",
+      });
+      
+      // Reload collections
+      await loadCollections();
+      
+    } catch (error: any) {
+      console.error('Error in force sync:', error);
+      toast({
+        title: "Error",
+        description: `Force sync failed: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -290,13 +331,22 @@ export const ProductManagement: React.FC = () => {
               Refresh Collections
             </Button>
             <Button
+              variant="outline"
+              onClick={forceSyncToShopify}
+              disabled={isMovingProduct}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              {isMovingProduct ? 'Force Syncing...' : 'Force Sync'}
+            </Button>
+            <Button
               variant="default"
               onClick={syncCategoriesToShopify}
               disabled={isMovingProduct}
               className="flex items-center gap-2"
             >
               <Move className="h-4 w-4" />
-              {isMovingProduct ? 'Syncing...' : 'Sync to Shopify'}
+              {isMovingProduct ? 'Syncing...' : 'Smart Sync'}
             </Button>
           </div>
         </div>
@@ -375,6 +425,33 @@ export const ProductManagement: React.FC = () => {
             <Card>
               <CardContent className="p-4">
                 <div className="flex gap-4">
+                  <div className="w-64">
+                    <Label htmlFor="collection-select">Collections</Label>
+                    <Select 
+                      value={selectedCollection?.id || 'none'} 
+                      onValueChange={(value) => {
+                        if (value === 'none') {
+                          setSelectedCollection(null);
+                          setProducts([]);
+                        } else {
+                          const collection = collections.find(c => c.id === value);
+                          if (collection) selectCollection(collection);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a collection" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64 overflow-y-auto">
+                        <SelectItem value="none">All Collections</SelectItem>
+                        {collections.map(collection => (
+                          <SelectItem key={collection.id} value={collection.id}>
+                            {collection.title} ({collection.products?.length || 0} products)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="flex-1">
                     <Label htmlFor="search">Search Products</Label>
                     <div className="relative">

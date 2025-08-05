@@ -15,6 +15,7 @@ import { useSearchProducts } from "@/hooks/useSearchProducts";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
+import { FastProductLoader } from "@/components/delivery/FastProductLoader";
 
 interface ProductVariant {
   id: string;
@@ -49,18 +50,19 @@ export const ProductSearch = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [selectedVariants, setSelectedVariants] = useState<{ [productId: string]: ProductVariant }>({});
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const cartHook = useUnifiedCart();
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = cartHook;
   const { toast } = useToast();
-  
-  // Use the dedicated search products hook
-  const { 
-    products: allProducts,
-    isLoading: loading,
-    getProductsByCategory,
-    getAvailableCategories,
-    reload: reloadProducts
-  } = useSearchProducts();
+
+  // Fast category-based product filtering
+  const getProductsByCategory = (categoryId: string): Product[] => {
+    if (categoryId === 'all') return allProducts;
+    if (categoryId === 'favorites') return allProducts.slice(0, 20); // Show top 20 as favorites
+    return allProducts.filter(product => product.category === categoryId);
+  };
   
   // Load products for current category
   const products = useMemo(() => {
