@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShoppingCart, Plus, Minus, Search, ArrowLeft, Grid } from 'lucide-react';
+import { Loader2, ShoppingCart, Plus, Minus, Search, ArrowLeft, Grid, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
@@ -11,6 +11,7 @@ import { parseProductTitle } from '@/utils/productUtils';
 import { ultraFastLoader } from '@/utils/ultraFastLoader';
 import { advancedCacheManager } from '@/utils/advancedCacheManager';
 import logoImage from '@/assets/party-on-delivery-logo.png';
+import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 
 interface CustomDeliveryTabsPageProps {
   appName: string;
@@ -270,116 +271,157 @@ export function CustomDeliveryTabsPage({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background border-b">
-        <div className="container mx-auto px-4 py-4">
-          {/* Navigation */}
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" size="sm" onClick={onBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onGoHome}>
-              Home
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+      {/* Full Screen Hero Section */}
+      <div 
+        className="relative h-screen bg-cover bg-center bg-no-repeat flex flex-col"
+        style={{ backgroundImage: `url(${heroPartyAustin})` }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/40"></div>
+        
+        {/* Header with navigation */}
+        <div className="relative z-10 flex justify-between items-center p-6">
+          <Button variant="ghost" size="sm" onClick={onBack} className="text-white hover:bg-white/20">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onGoHome} className="text-white hover:bg-white/20">
+            Home
+          </Button>
+        </div>
 
-          {/* App Name & Hero Heading */}
-          <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold text-primary mb-1">{appName}</h1>
-            {heroHeading && (
-              <p className="text-lg text-muted-foreground font-medium">{heroHeading}</p>
-            )}
-          </div>
-
-          {/* Logo */}
-          <div className="flex justify-center mb-2">
+        {/* Centered content */}
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6">
+          {/* App Logo */}
+          <div className="mb-6">
             <img 
               src={logoImage} 
               alt="Party On Delivery Logo" 
-              className="w-16 h-16"
+              className="w-24 h-24 mx-auto"
             />
           </div>
 
-          {/* Powered by text */}
-          <div className="text-center mb-4">
-            <p className="text-sm text-muted-foreground">Powered by Party On Delivery</p>
-          </div>
+          {/* App Title */}
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
+            {appName}
+          </h1>
+          
+          {/* Hero Heading */}
+          {heroHeading && (
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl leading-relaxed">
+              {heroHeading}
+            </p>
+          )}
 
           {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <div className="relative mb-8 w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
               placeholder="Search all products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 py-3 text-lg bg-white/90 backdrop-blur-sm border-white/20"
             />
           </div>
 
-          {/* Category Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          {/* Category Navigation Buttons */}
+          <div className="flex flex-wrap gap-3 justify-center mb-8">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
-                variant={activeTab === tab.id ? 'default' : 'outline'}
+                variant={activeTab === tab.id ? 'default' : 'secondary'}
                 onClick={() => setActiveTab(tab.id)}
-                className="shrink-0 flex items-center gap-1"
+                className={`flex items-center gap-2 px-4 py-2 ${
+                  activeTab === tab.id 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-white/80 text-gray-800 hover:bg-white/90'
+                }`}
               >
-                {typeof tab.icon === 'string' ? tab.icon : <tab.icon className="h-4 w-4" />}
+                {typeof tab.icon === 'string' ? (
+                  <span className="text-lg">{tab.icon}</span>
+                ) : (
+                  <tab.icon className="h-4 w-4" />
+                )}
                 {tab.name}
               </Button>
             ))}
-            
-            {/* Cart/Checkout Split Button */}
-            <div className="flex-shrink-0 flex gap-1 ml-auto">
-              <Button
-                variant="outline"
-                onClick={onOpenCart}
-                className="flex items-center gap-1"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                {cartItemCount > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {cartItemCount}
-                  </Badge>
-                )}
-              </Button>
-              <Button
-                onClick={onProceedToCheckout}
-                disabled={cartItemCount === 0}
-                className="flex items-center gap-1"
-              >
-                Checkout
-              </Button>
-            </div>
+          </div>
+
+          {/* Cart/Checkout Button */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onOpenCart}
+              className="flex items-center gap-2 bg-white/80 text-gray-800 hover:bg-white/90 px-6 py-3"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              Cart
+              {cartItemCount > 0 && (
+                <Badge variant="destructive" className="ml-1">
+                  {cartItemCount}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              onClick={onProceedToCheckout}
+              disabled={cartItemCount === 0}
+              className="px-8 py-3 text-lg"
+            >
+              Checkout
+            </Button>
+          </div>
+
+          {/* Powered by text */}
+          <p className="text-white/70 mt-6 text-sm">Powered by Party On Delivery</p>
+        </div>
+
+        {/* Bottom scroll indicator */}
+        <div className="relative z-10 flex justify-center pb-8">
+          <div className="animate-bounce">
+            <ChevronRight className="h-6 w-6 text-white/70 rotate-90" />
           </div>
         </div>
       </div>
 
-      {/* Products Grid */}
-      <div className="container mx-auto px-4 py-6">
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">
-              {searchTerm ? `No products found for "${searchTerm}"` : 'No products available'}
-            </p>
+      {/* Products Section */}
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-2">
+              {activeTab === 'search' ? 'Search Results' : 
+               tabs.find(tab => tab.id === activeTab)?.name || 'Products'}
+            </h2>
+            {searchTerm && (
+              <p className="text-muted-foreground">
+                Showing results for "{searchTerm}"
+              </p>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                quantity={getCartItemQuantity(product.id, product.variants[0]?.id)}
-                onAddToCart={() => handleAddToCart(product)}
-                onUpdateQuantity={(delta) => handleQuantityChange(product.id, product.variants[0]?.id, delta)}
-              />
-            ))}
-          </div>
-        )}
+
+          {/* Products Grid */}
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg">
+                {searchTerm ? `No products found for "${searchTerm}"` : 'No products available'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  quantity={getCartItemQuantity(product.id, product.variants[0]?.id)}
+                  onAddToCart={() => handleAddToCart(product)}
+                  onUpdateQuantity={(delta) => handleQuantityChange(product.id, product.variants[0]?.id, delta)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
