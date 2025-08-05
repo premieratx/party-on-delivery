@@ -128,9 +128,9 @@ export default function CustomPartyOnDeliveryTabsPage() {
         onOpenCart={() => setIsCartOpen(true)}
         cartItems={cartItemsForCategories}
         onUpdateQuantity={handleUpdateQuantity}
-        onProceedToCheckout={() => setIsCartOpen(true)}
+        onProceedToCheckout={handleCheckout}
         onBack={() => window.location.href = '/app/party-on-delivery---concierge-'}
-        onGoHome={() => window.location.href = '/'}
+        onGoHome={() => window.location.href = '/app/party-on-delivery---concierge-'}
       />
 
       {/* Cart sidebar */}

@@ -246,9 +246,9 @@ export function CustomDeliveryTabsPage({
   };
 
   // Helper to get cart item quantity for a specific product
-  const getCartItemQuantity = (productId: string, variantId?: string) => {
+  const getCartItemQuantity = (productId: string, variantTitle?: string) => {
     const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variantId
+      item.id === productId && item.variant === variantTitle
     );
     return cartItem?.quantity || 0;
   };
@@ -260,16 +260,16 @@ export function CustomDeliveryTabsPage({
       name: product.title,
       price: product.price,
       image: product.image,
-      variant: product.variants[0]?.id
+      variant: product.variants[0]?.title !== 'Default Title' ? product.variants[0]?.title : undefined
     };
     
     onAddToCart(cartItem);
   };
 
-  const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
-    const currentQty = getCartItemQuantity(productId, variantId);
+  const handleQuantityChange = (productId: string, variantTitle: string | undefined, delta: number) => {
+    const currentQty = getCartItemQuantity(productId, variantTitle);
     const newQty = Math.max(0, currentQty + delta);
-    onUpdateQuantity(productId, variantId, newQty);
+    onUpdateQuantity(productId, variantTitle, newQty);
   };
 
   // Get current products based on active tab
@@ -489,9 +489,9 @@ export function CustomDeliveryTabsPage({
                 <ProductCard
                   key={product.id}
                   product={product}
-                  quantity={getCartItemQuantity(product.id, product.variants[0]?.id)}
+                  quantity={getCartItemQuantity(product.id, product.variants[0]?.title !== 'Default Title' ? product.variants[0]?.title : undefined)}
                   onAddToCart={() => handleAddToCart(product)}
-                  onUpdateQuantity={(delta) => handleQuantityChange(product.id, product.variants[0]?.id, delta)}
+                  onUpdateQuantity={(delta) => handleQuantityChange(product.id, product.variants[0]?.title !== 'Default Title' ? product.variants[0]?.title : undefined, delta)}
                 />
               ))}
             </div>
