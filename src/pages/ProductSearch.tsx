@@ -62,18 +62,20 @@ export const ProductSearch = () => {
   }, []);
 
   const loadInstantProducts = async () => {
+    const startTime = performance.now();
+    
     try {
       setLoading(true);
       
-      // Try instant cache first for immediate loading
+      // ULTRA FAST: Try instant cache first for immediate loading (<100ms)
       const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
       
       if (instantData?.success && instantData?.data) {
-        console.log('⚡ Using instant cache for search page');
+        console.log('⚡ Ultra-fast search page load from instant cache');
         const products = instantData.data.products || [];
         const collections = instantData.data.collections || [];
         
-        // Transform products with category inference
+        // Quick transform with category inference
         const enrichedProducts = products.map((product: any) => ({
           ...product,
           category: inferProductCategory(product.title, product.handle || ''),
@@ -82,12 +84,16 @@ export const ProductSearch = () => {
         
         setAllProducts(enrichedProducts);
         setCollections(collections);
+        
+        const loadTime = performance.now() - startTime;
+        console.log(`⚡ SEARCH PAGE ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${enrichedProducts.length} products`);
+        
         setLoading(false);
         return;
       }
 
-      // Fallback to collections API
-      console.log('📦 Loading from collections API');
+      // Fallback: Try collections API (slower but more complete)
+      console.log('📦 Fallback: Loading from collections API');
       const { data: collectionsData, error } = await supabase.functions.invoke('get-all-collections');
       
       if (error) throw error;
@@ -108,6 +114,9 @@ export const ProductSearch = () => {
         }, []);
         
         setAllProducts(allProducts);
+        
+        const loadTime = performance.now() - startTime;
+        console.log(`📦 Search page fallback load: ${Math.round(loadTime)}ms - ${allProducts.length} products`);
       }
       
     } catch (error: any) {
@@ -149,8 +158,6 @@ export const ProductSearch = () => {
     if (titleLower.includes('brandy') || titleLower.includes('cognac')) return 'brandy';
     return '';
   };
-
-  // Fast category-based product filtering
   const getProductsByCategory = (categoryId: string): Product[] => {
     if (categoryId === 'all') return allProducts;
     if (categoryId === 'favorites') return allProducts.slice(0, 20); // Show top 20 as favorites

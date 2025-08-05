@@ -73,29 +73,32 @@ export default function CustomCollectionCreator() {
   }, []);
 
   const loadAllProducts = async (forceCacheClear = false) => {
+    const startTime = performance.now();
     setLoading(true);
+    
     try {
       // Clear cache if requested
       if (forceCacheClear) {
-        console.log('Clearing Shopify cache for fresh sync...');
+        console.log('Clearing cache for fresh sync...');
         await supabase.from('cache').delete().eq('key', 'instant_products_v3');
         localStorage.removeItem('shopify-collections-cache');
         localStorage.removeItem('shopify-products-cache');
         
         toast({
           title: "Cache Cleared",
-          description: "Fetching fresh data from Shopify...",
+          description: "Fetching fresh data...",
         });
       }
       
-      // Try instant cache first for fast loading
+      // ULTRA FAST: Try instant cache first - should load in <100ms
       const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
       
       if (instantData?.success && instantData?.data && !forceCacheClear) {
-        console.log('⚡ Using instant cache for bulk editor');
+        console.log('⚡ Ultra-fast instant cache load');
         const products = instantData.data.products || [];
+        const collections = instantData.data.collections || [];
         
-        // Transform to match expected format and extract attributes
+        // Quick transform
         const transformedProducts = products.map((product: any) => ({
           ...product,
           category: product.category || '',
@@ -105,39 +108,35 @@ export default function CustomCollectionCreator() {
         
         setAllProducts(transformedProducts);
         
-        // Extract unique categories and product types from ALL collections, not just cached products
-        const { data: fullCollectionsData } = await supabase.functions.invoke('get-all-collections');
-        if (fullCollectionsData?.collections) {
-          const allProductsFromCollections = fullCollectionsData.collections.reduce((acc: any[], collection: any) => {
-            if (collection.products) {
-              acc.push(...collection.products);
-            }
-            return acc;
-          }, []);
-          
-          const categories = new Set<string>();
-          const productTypes = new Set<string>();
-          const collectionNames = new Set<string>();
-          
-          // Extract from all products in collections
-          allProductsFromCollections.forEach((product: any) => {
-            if (product.category) categories.add(product.category);
-            if (product.productType) productTypes.add(product.productType);
-            if (product.product_type) productTypes.add(product.product_type);
-          });
-          
-          // Extract collection names
-          fullCollectionsData.collections.forEach((collection: any) => {
-            if (collection.title) collectionNames.add(collection.title);
-            if (collection.handle) collectionNames.add(collection.handle);
-          });
-          
-          setAvailableCategories(Array.from(categories).sort());
-          setAvailableProductTypes(Array.from(productTypes).sort());
-          setAvailableCollections(Array.from(collectionNames).sort());
-          
-          console.log(`Extracted ${categories.size} categories, ${productTypes.size} product types, ${collectionNames.size} collections`);
-        }
+        // Fast attribute extraction from cached collections
+        const categories = new Set<string>();
+        const productTypes = new Set<string>();
+        const collectionNames = new Set<string>();
+        
+        // Extract from cached data ONLY for speed
+        collections.forEach((collection: any) => {
+          if (collection.title) collectionNames.add(collection.title);
+          if (collection.products) {
+            collection.products.forEach((product: any) => {
+              if (product.category) categories.add(product.category);
+              if (product.productType) productTypes.add(product.productType);
+              if (product.product_type) productTypes.add(product.product_type);
+            });
+          }
+        });
+        
+        // Also extract from transformed products
+        transformedProducts.forEach((product: any) => {
+          if (product.category) categories.add(product.category);
+          if (product.productType) productTypes.add(product.productType);
+        });
+        
+        setAvailableCategories(Array.from(categories).sort());
+        setAvailableProductTypes(Array.from(productTypes).sort());
+        setAvailableCollections(Array.from(collectionNames).sort());
+        
+        const loadTime = performance.now() - startTime;
+        console.log(`⚡ ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${transformedProducts.length} products`);
         
         setLoading(false);
         return;
@@ -217,6 +216,12 @@ export default function CustomCollectionCreator() {
   }, []);
 
   const loadCollections = async (forceCacheClear = false) => {
+    // Skip if we already have collections loaded (unless forcing refresh)
+    if (availableCollections.length > 0 && !forceCacheClear) {
+      console.log('✅ Collections already loaded, skipping');
+      return;
+    }
+    
     try {
       // Clear collections cache if force refresh
       if (forceCacheClear) {
@@ -225,6 +230,7 @@ export default function CustomCollectionCreator() {
         await supabase.from('cache').delete().eq('key', 'shopify-collections-metadata');
       }
       
+      // Only call if we don't have them yet
       const response = await supabase.functions.invoke('get-all-collections');
       if (response.data && response.data.collections) {
         const collectionNames = response.data.collections.map((c: any) => c.title || c.handle);
