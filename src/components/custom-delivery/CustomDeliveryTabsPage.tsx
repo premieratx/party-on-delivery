@@ -144,9 +144,15 @@ export function CustomDeliveryTabsPage({
       console.log(`✅ Collections loaded in ${Date.now() - startTime}ms`);
 
       // Filter to only the collections we need for tabs (not search)
+      const requestedCollectionHandles = collectionsConfig.tabs.map(tab => tab.collection_handle);
+      console.log('🔍 Requested collections:', requestedCollectionHandles);
+      console.log('📦 Available collections:', collectionsResponse.collections.map(c => c.handle));
+      
       const relevantCollections = collectionsResponse.collections.filter((collection: any) =>
         collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
       );
+      
+      console.log('✅ Found matching collections:', relevantCollections.map(c => `${c.handle} (${c.products?.length || 0} products)`));
 
       // Transform the data to match our interface
       const transformedCollections: ShopifyCollection[] = relevantCollections.map((collection: any) => ({
