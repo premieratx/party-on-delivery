@@ -11,7 +11,7 @@ import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
-import { useSearchProducts } from "@/hooks/useSearchProducts";
+
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
