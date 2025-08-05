@@ -52,7 +52,7 @@ class UltraFastLoader {
         options.timeout || 1000
       );
 
-      if (instantResult?.collections) {
+      if (instantResult?.collections || instantResult?.products) {
         const enriched = this.enrichProductData(instantResult, 'instant-cache');
         advancedCacheManager.set(cacheKey, enriched, 90 * 1000); // 90 seconds
         console.log(`⚡ Ultra-fast load from instant cache: ${Date.now() - startTime}ms`);
@@ -99,12 +99,26 @@ class UltraFastLoader {
     const { data, error } = await supabase.functions.invoke('instant-product-cache');
     
     if (error) throw error;
-    if (!data?.collections) throw new Error('No instant cache data');
+    
+    // Handle the nested data structure from instant cache
+    const cacheResult = data?.data || data;
+    if (!cacheResult?.collections && !cacheResult?.products) {
+      throw new Error('No instant cache data');
+    }
+
+    // Transform to expected format if needed
+    const transformedData = {
+      collections: cacheResult.collections || [],
+      products: cacheResult.products || [],
+      cached_at: cacheResult.cached_at || new Date().toISOString(),
+      total_products: cacheResult.total_products || 0,
+      total_collections: cacheResult.total_collections || 0
+    };
 
     // Store as emergency backup
-    advancedCacheManager.set('emergency-products', data, 24 * 60 * 60 * 1000); // 24 hours
+    advancedCacheManager.set('emergency-products', transformedData, 24 * 60 * 60 * 1000); // 24 hours
     
-    return data;
+    return transformedData;
   }
 
   // Load from collections endpoint with optimization
@@ -119,8 +133,23 @@ class UltraFastLoader {
 
   // Enrich product data with metadata and optimizations
   private enrichProductData(data: any, source: string): ProductData {
+    // Handle different data structures from different sources
     const collections = data.collections || [];
-    const products = this.extractAllProducts(collections);
+    const directProducts = data.products || [];
+    
+    // Extract products from collections or use direct products
+    let products: any[] = [];
+    if (directProducts.length > 0) {
+      // Use direct products if available (from instant cache)
+      products = directProducts.map(product => ({
+        ...product,
+        category: this.inferProductCategory('', product.title || '')
+      }));
+    } else {
+      // Extract from collections (from collections API)
+      products = this.extractAllProducts(collections);
+    }
+    
     const categories = this.extractCategories(collections);
 
     // Pre-optimize images in background
