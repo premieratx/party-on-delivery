@@ -3,13 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShoppingCart, Plus, Minus, Search, ArrowLeft, Grid, ChevronRight } from 'lucide-react';
+import { Loader2, ShoppingCart, Plus, Minus, Search, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { parseProductTitle } from '@/utils/productUtils';
-import { ultraFastLoader } from '@/utils/ultraFastLoader';
-import { advancedCacheManager } from '@/utils/advancedCacheManager';
 import logoImage from '@/assets/party-on-delivery-logo.png';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 
@@ -282,10 +280,10 @@ export function CustomDeliveryTabsPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      {/* Full Screen Hero Section */}
+    <div className="min-h-screen bg-background">
+      {/* Hero Section - Shorter like main app */}
       <div 
-        className="relative h-screen bg-cover bg-center bg-no-repeat flex flex-col"
+        className="relative h-[50vh] bg-cover bg-center bg-no-repeat flex flex-col"
         style={{ backgroundImage: `url(${heroPartyAustin})` }}
       >
         {/* Dark overlay */}
@@ -305,28 +303,28 @@ export function CustomDeliveryTabsPage({
         {/* Centered content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6">
           {/* App Logo */}
-          <div className="mb-6">
+          <div className="mb-4">
             <img 
               src={logoImage} 
               alt="Party On Delivery Logo" 
-              className="w-24 h-24 mx-auto"
+              className="w-16 h-16 mx-auto"
             />
           </div>
 
           {/* App Title */}
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
+          <h1 className="text-2xl md:text-4xl font-bold text-white mb-3 leading-tight">
             {appName}
           </h1>
           
           {/* Hero Heading */}
           {heroHeading && (
-            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl leading-relaxed">
+            <p className="text-lg md:text-xl text-white/90 mb-4 max-w-2xl leading-relaxed">
               {heroHeading}
             </p>
           )}
 
           {/* Search Bar */}
-          <div className="relative mb-8 w-full max-w-md">
+          <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
@@ -336,62 +334,60 @@ export function CustomDeliveryTabsPage({
               className="pl-10 py-3 text-lg bg-white/90 backdrop-blur-sm border-white/20"
             />
           </div>
-
-          {/* Category Navigation Buttons */}
-          <div className="flex flex-wrap gap-3 justify-center mb-8">
-            {tabs.map((tab) => (
-              <Button
-                key={tab.id}
-                variant={activeTab === tab.id ? 'default' : 'secondary'}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 ${
-                  activeTab === tab.id 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-white/80 text-gray-800 hover:bg-white/90'
-                }`}
-              >
-                {typeof tab.icon === 'string' ? (
-                  <span className="text-lg">{tab.icon}</span>
-                ) : (
-                  <tab.icon className="h-4 w-4" />
-                )}
-                {tab.name}
-              </Button>
-            ))}
-          </div>
-
-          {/* Cart/Checkout Button */}
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={onOpenCart}
-              className="flex items-center gap-2 bg-white/80 text-gray-800 hover:bg-white/90 px-6 py-3"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              Cart
-              {cartItemCount > 0 && (
-                <Badge variant="destructive" className="ml-1">
-                  {cartItemCount}
-                </Badge>
-              )}
-            </Button>
-            <Button
-              onClick={onProceedToCheckout}
-              disabled={cartItemCount === 0}
-              className="px-8 py-3 text-lg"
-            >
-              Checkout
-            </Button>
-          </div>
-
-          {/* Powered by text */}
-          <p className="text-white/70 mt-6 text-sm">Powered by Party On Delivery</p>
         </div>
+      </div>
 
-        {/* Bottom scroll indicator */}
-        <div className="relative z-10 flex justify-center pb-8">
-          <div className="animate-bounce">
-            <ChevronRight className="h-6 w-6 text-white/70 rotate-90" />
+      {/* Product Section with Tabs - Like Main App */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Category Tabs with Cart Button - Main App Style */}
+          <div className="flex items-center justify-between py-4">
+            {/* Category Tabs */}
+            <div className="flex gap-1 flex-wrap">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                    activeTab === tab.id 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {typeof tab.icon === 'string' ? (
+                    <span className="text-lg">{tab.icon}</span>
+                  ) : (
+                    <tab.icon className="h-4 w-4" />
+                  )}
+                  {tab.name}
+                </Button>
+              ))}
+            </div>
+
+            {/* Cart/Checkout Buttons - Right Side Like Main App */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={onOpenCart}
+                className="flex items-center gap-2"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Cart
+                {cartItemCount > 0 && (
+                  <Badge variant="destructive" className="ml-1">
+                    {cartItemCount}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                onClick={onProceedToCheckout}
+                disabled={cartItemCount === 0}
+                className="px-6"
+              >
+                Checkout
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -400,8 +396,8 @@ export function CustomDeliveryTabsPage({
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold mb-2">
               {activeTab === 'search' ? 'Search Results' : 
                tabs.find(tab => tab.id === activeTab)?.name || 'Products'}
             </h2>
@@ -410,6 +406,9 @@ export function CustomDeliveryTabsPage({
                 Showing results for "{searchTerm}"
               </p>
             )}
+            <p className="text-sm text-muted-foreground">
+              {filteredProducts.length} products available
+            </p>
           </div>
 
           {/* Products Grid with Responsive Layout */}
@@ -450,7 +449,7 @@ function ProductCard({ product, quantity, onAddToCart, onUpdateQuantity }: Produ
   const { cleanTitle, packageSize } = parseProductTitle(product.title);
 
   return (
-    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow bg-white/80 backdrop-blur-sm border-white/20">
+    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow bg-white border">
       <CardContent className="flex flex-col h-full p-2 md:p-3 relative">
         {/* Product Image */}
         <div className="aspect-square mb-2 relative overflow-hidden rounded-lg">
