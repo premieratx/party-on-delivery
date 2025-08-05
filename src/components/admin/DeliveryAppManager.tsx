@@ -363,7 +363,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open('/delivery-app', '_blank')}
+                  onClick={() => window.open('/', '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Open
@@ -371,7 +371,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/delivery-app')}`, '_blank')}
+                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/')}`, '_blank')}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
@@ -386,7 +386,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open('/delivery-app-view', '_blank')}
+                  onClick={() => window.open('/custom-delivery', '_blank')}
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Open
@@ -394,7 +394,7 @@ export function DeliveryAppManager() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/delivery-app-view')}`, '_blank')}
+                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/custom-delivery')}`, '_blank')}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
