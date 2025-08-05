@@ -58,8 +58,8 @@ Deno.serve(async (req) => {
       collections = collectionsResult.value.data?.collections || []
     }
 
-    // Optimize product data for instant loading
-    const optimizedProducts = products.slice(0, 500).map((product: any) => ({
+    // Optimize product data for instant loading - REMOVE 500 LIMIT!
+    const optimizedProducts = products.map((product: any) => ({
       id: product.id,
       title: product.title,
       price: product.price,
@@ -93,6 +93,8 @@ Deno.serve(async (req) => {
       total_products: products.length,
       total_collections: collections.length
     }
+
+    console.log(`✅ Caching ALL ${optimizedProducts.length} products (no 500 limit)`)
 
     // Cache for 2 minutes with aggressive expiry
     const expiresAt = Date.now() + (2 * 60 * 1000)
