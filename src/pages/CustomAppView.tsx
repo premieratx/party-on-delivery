@@ -42,6 +42,18 @@ interface DeliveryAppConfig {
       icon?: string;
     }>;
   };
+  start_screen_config?: {
+    title: string;
+    subtitle: string;
+  };
+  main_app_config?: {
+    hero_heading: string;
+  };
+  post_checkout_config?: {
+    heading: string;
+    subheading: string;
+    redirect_url: string;
+  };
 }
 
 export default function CustomAppView() {
@@ -96,7 +108,19 @@ export default function CustomAppView() {
                 collection_handle: string;
                 icon?: string;
               }>;
-            }
+            },
+            start_screen_config: data.start_screen_config as {
+              title: string;
+              subtitle: string;
+            } | undefined,
+            main_app_config: data.main_app_config as {
+              hero_heading: string;
+            } | undefined,
+            post_checkout_config: data.post_checkout_config as {
+              heading: string;
+              subheading: string;
+              redirect_url: string;
+            } | undefined
           };
           setAppConfig(typedConfig);
         }
@@ -206,6 +230,8 @@ export default function CustomAppView() {
       {currentStep === 'start' && (
         <CustomDeliveryStartScreen
           appName={appConfig.app_name}
+          title={appConfig.start_screen_config?.title || appConfig.app_name}
+          subtitle={appConfig.start_screen_config?.subtitle || 'Order your party supplies for delivery'}
           onStartOrder={handleStartOrder}
           onSearchProducts={handleSearchProducts}
           onGoHome={handleGoHome}
@@ -216,6 +242,7 @@ export default function CustomAppView() {
       {currentStep === 'tabs' && (
         <CustomDeliveryTabsPage
           appName={appConfig.app_name}
+          heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
           collectionsConfig={appConfig.collections_config}
           onAddToCart={handleAddToCart}
           cartItemCount={getTotalItems()}

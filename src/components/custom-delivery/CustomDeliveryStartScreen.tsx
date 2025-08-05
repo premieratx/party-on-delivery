@@ -6,6 +6,8 @@ import logoImage from '@/assets/party-on-delivery-logo.png';
 
 interface CustomDeliveryStartScreenProps {
   appName: string;
+  title?: string;
+  subtitle?: string;
   onStartOrder: () => void;
   onSearchProducts: () => void;
   onGoHome: () => void;
@@ -13,6 +15,8 @@ interface CustomDeliveryStartScreenProps {
 
 export function CustomDeliveryStartScreen({ 
   appName, 
+  title,
+  subtitle,
   onStartOrder, 
   onSearchProducts, 
   onGoHome 
@@ -49,10 +53,10 @@ export function CustomDeliveryStartScreen({
           />
           <div className="space-y-1">
             <h1 className="text-lg font-bold text-primary">
-              {appName}
+              {title || appName}
             </h1>
             <CardTitle className="text-sm text-muted-foreground">
-              Powered by Party On Delivery
+              {subtitle || 'Powered by Party On Delivery'}
             </CardTitle>
           </div>
         </CardHeader>

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CustomPostCheckout } from '@/components/custom-delivery/CustomPostCheckout';
 import { OrderCompleteView } from '@/components/OrderCompleteView';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 const CustomAppPostCheckout = () => {
@@ -110,39 +111,55 @@ const CustomAppPostCheckout = () => {
     );
   }
 
-  // If custom post-checkout is enabled and configured, show custom page
-  if (appConfig.custom_post_checkout_config?.enabled && 
-      appConfig.custom_post_checkout_config?.title) {
-    return (
-      <CustomPostCheckout 
-        config={appConfig.custom_post_checkout_config}
-        orderData={orderData || {
-          order_number: "Processing...",
-          customer_name: "Customer",
-          total_amount: 0
-        }}
-      />
-    );
-  }
+  // Check if we have custom post-checkout configuration
+  const postCheckoutConfig = appConfig.post_checkout_config;
+  const hasCustomPostCheckout = postCheckoutConfig && (postCheckoutConfig.heading || postCheckoutConfig.subheading || postCheckoutConfig.redirect_url);
 
-  // Otherwise, show default order complete view
+  const handleAddMore = () => {
+    if (postCheckoutConfig?.redirect_url) {
+      window.location.href = postCheckoutConfig.redirect_url;
+    } else {
+      window.location.href = `/${appName}`;
+    }
+  };
+
   return (
-    <OrderCompleteView 
-      orderNumber={orderData?.order_number || "Processing..."}
-      customerName={orderData?.customer_name || 'Customer'}
-      orderItems={orderData?.line_items || []}
-      totalAmount={orderData?.total_amount || 0}
-      deliveryDate={orderData?.delivery_date}
-      deliveryTime={orderData?.delivery_time}
-      deliveryAddress={orderData?.delivery_address}
-      shareToken={orderData?.share_token}
-      isLoading={!orderData}
-      subtotal={orderData?.subtotal || 0}
-      deliveryFee={orderData?.delivery_fee || 0}
-      tipAmount={orderData?.tip_amount || 0}
-      salesTax={orderData?.sales_tax || 0}
-      appliedDiscount={orderData?.applied_discount}
-    />
+    <div className="min-h-screen bg-background">
+      {/* Custom Post-Checkout Header */}
+      {hasCustomPostCheckout && (
+        <div className="text-center py-8 px-4 border-b">
+          {postCheckoutConfig.heading && (
+            <h1 className="text-3xl font-bold mb-2 text-primary">{postCheckoutConfig.heading}</h1>
+          )}
+          {postCheckoutConfig.subheading && (
+            <p className="text-lg text-muted-foreground mb-6">{postCheckoutConfig.subheading}</p>
+          )}
+          {postCheckoutConfig.redirect_url && (
+            <Button onClick={handleAddMore} className="mb-4" size="lg">
+              Add More
+            </Button>
+          )}
+        </div>
+      )}
+      
+      {/* Default Order Complete View */}
+      <OrderCompleteView 
+        orderNumber={orderData?.order_number || "Processing..."}
+        customerName={orderData?.customer_name || 'Customer'}
+        orderItems={orderData?.line_items || []}
+        totalAmount={orderData?.total_amount || 0}
+        deliveryDate={orderData?.delivery_date}
+        deliveryTime={orderData?.delivery_time}
+        deliveryAddress={orderData?.delivery_address}
+        shareToken={orderData?.share_token}
+        isLoading={!orderData}
+        subtotal={orderData?.subtotal || 0}
+        deliveryFee={orderData?.delivery_fee || 0}
+        tipAmount={orderData?.tip_amount || 0}
+        salesTax={orderData?.sales_tax || 0}
+        appliedDiscount={orderData?.applied_discount}
+      />
+    </div>
   );
 };
 

@@ -14,6 +14,7 @@ import logoImage from '@/assets/party-on-delivery-logo.png';
 
 interface CustomDeliveryTabsPageProps {
   appName: string;
+  heroHeading?: string;
   collectionsConfig: {
     tab_count: number;
     tabs: Array<{
@@ -78,6 +79,7 @@ const getTabIcon = (iconName: string) => {
 
 export function CustomDeliveryTabsPage({
   appName,
+  heroHeading,
   collectionsConfig,
   onAddToCart,
   cartItemCount,
@@ -283,9 +285,12 @@ export function CustomDeliveryTabsPage({
             </Button>
           </div>
 
-          {/* App Name */}
+          {/* App Name & Hero Heading */}
           <div className="text-center mb-4">
             <h1 className="text-2xl font-bold text-primary mb-1">{appName}</h1>
+            {heroHeading && (
+              <p className="text-lg text-muted-foreground font-medium">{heroHeading}</p>
+            )}
           </div>
 
           {/* Logo */}
