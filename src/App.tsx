@@ -36,6 +36,9 @@ import CustomDeliveryPostCheckout from "./pages/CustomDeliveryPostCheckout";
 import DeliveryAppView from "./pages/DeliveryAppView";
 import CustomAppView from "./pages/CustomAppView";
 import CustomAppPostCheckout from "./pages/CustomAppPostCheckout";
+import CustomPartyOnDeliveryStartScreen from "./pages/CustomPartyOnDeliveryStartScreen";
+import CustomPartyOnDeliveryTabsPage from "./pages/CustomPartyOnDeliveryTabsPage";
+import CustomPartyOnDeliveryPostCheckout from "./pages/CustomPartyOnDeliveryPostCheckout";
 import { ChatPartyPlanner } from "./components/party-planner/ChatPartyPlanner";
 import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
@@ -119,13 +122,18 @@ const App = () => {
                    {/* Delivery App Variations */}
                    <Route path="/delivery-app/:appSlug" element={<DeliveryAppView />} />
                    
-                    {/* Specific Airbnb Concierge Service Routes */}
-                    <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
-                    <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
-                    
-                    {/* Individual Custom Delivery Apps - Dynamic Routes */}
-                    <Route path="/:appName" element={<CustomAppView />} />
-                    <Route path="/:appName/success" element={<CustomAppPostCheckout />} />
+                     {/* Party On Delivery & Concierge Custom Routes */}
+                     <Route path="/app/party-on-delivery---concierge-" element={<CustomPartyOnDeliveryStartScreen />} />
+                     <Route path="/app/party-on-delivery---concierge-/tabs" element={<CustomPartyOnDeliveryTabsPage />} />
+                     <Route path="/app/party-on-delivery---concierge-/order-complete" element={<CustomPartyOnDeliveryPostCheckout />} />
+                     
+                     {/* Specific Airbnb Concierge Service Routes */}
+                     <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
+                     <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
+                     
+                     {/* Individual Custom Delivery Apps - Dynamic Routes */}
+                     <Route path="/:appName" element={<CustomAppView />} />
+                     <Route path="/:appName/success" element={<CustomAppPostCheckout />} />
                   
                   {/* Test Routes */}
               <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />
