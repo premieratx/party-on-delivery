@@ -103,12 +103,27 @@ export function CustomDeliveryTabsPage({
       icon: Search,
       collection: 'search'
     },
-    ...collectionsConfig.tabs.map(tab => ({
-      id: tab.collection_handle,
-      name: tab.name,
-      icon: getTabIcon(tab.icon || tab.name),
-      collection: tab.collection_handle
-    }))
+    ...collectionsConfig.tabs.map(tab => {
+      // Map specific collections correctly
+      let collectionHandle = tab.collection_handle;
+      
+      // Fix beer tab to use tailgate-beer collection
+      if (tab.name.toLowerCase().includes('beer') || tab.collection_handle.includes('beer')) {
+        collectionHandle = 'tailgate-beer';
+      }
+      
+      // Fix seltzer tab to use seltzers-wine-champagne collection  
+      if (tab.name.toLowerCase().includes('seltzer') || tab.collection_handle.includes('seltzer')) {
+        collectionHandle = 'seltzers-wine-champagne';
+      }
+
+      return {
+        id: collectionHandle,
+        name: tab.name,
+        icon: getTabIcon(tab.icon || tab.name),
+        collection: collectionHandle
+      };
+    })
   ];
 
   useEffect(() => {
@@ -137,8 +152,15 @@ export function CustomDeliveryTabsPage({
       console.log(`✅ Collections loaded in ${Date.now() - startTime}ms`);
 
       // Filter to only the collections we need for tabs (not search)
+      // Include the specific collections we're mapping to (tailgate-beer, seltzers-wine-champagne)
+      const requiredCollectionHandles = [
+        'tailgate-beer', 
+        'seltzers-wine-champagne',
+        ...collectionsConfig.tabs.map(tab => tab.collection_handle)
+      ];
+      
       const relevantCollections = collectionsResponse.collections.filter((collection: any) =>
-        collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
+        requiredCollectionHandles.includes(collection.handle)
       );
 
       // Transform the data to match our interface
