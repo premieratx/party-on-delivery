@@ -123,7 +123,7 @@ export function CustomDeliveryTabsPage({
       console.log('⚡ Loading collections for custom delivery app...');
       const startTime = Date.now();
 
-      // Use get-all-collections function to fetch collections with products
+      // Use get-all-collections function to fetch ALL collections with products for search
       const { data: collectionsResponse, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
 
       if (collectionsError) {
@@ -136,7 +136,7 @@ export function CustomDeliveryTabsPage({
 
       console.log(`✅ Collections loaded in ${Date.now() - startTime}ms`);
 
-      // Filter to only the collections we need for this app
+      // Filter to only the collections we need for tabs (not search)
       const relevantCollections = collectionsResponse.collections.filter((collection: any) =>
         collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
       );
@@ -147,7 +147,30 @@ export function CustomDeliveryTabsPage({
         title: collection.title,
         handle: collection.handle,
         description: collection.description || '',
-        products: (collection.products || []).map((product: any) => ({
+        products: (collection.products || [])
+          .map((product: any) => ({
+            id: product.id,
+            title: product.title,
+            price: parseFloat(product.price) || 0,
+            image: product.image || '',
+            description: product.description || '',
+            handle: product.handle,
+            variants: (product.variants || []).map((variant: any) => ({
+              id: variant.id,
+              title: variant.title,
+              price: parseFloat(variant.price) || 0,
+              available: variant.available !== false
+            }))
+          }))
+          // Remove duplicates based on product ID
+          .filter((product: any, index: number, array: any[]) => 
+            array.findIndex(p => p.id === product.id) === index
+          )
+      }));
+
+      // Get ALL products from ALL collections for search (not just selected collections)
+      const allProductsForSearch = collectionsResponse.collections.reduce((acc: ShopifyProduct[], collection: any) => {
+        const collectionProducts = (collection.products || []).map((product: any) => ({
           id: product.id,
           title: product.title,
           price: parseFloat(product.price) || 0,
@@ -160,17 +183,18 @@ export function CustomDeliveryTabsPage({
             price: parseFloat(variant.price) || 0,
             available: variant.available !== false
           }))
-        }))
-      }));
-
-      // Get all products from all collections
-      const allProducts = transformedCollections.reduce((acc: ShopifyProduct[], collection) => {
-        return [...acc, ...collection.products];
+        }));
+        return [...acc, ...collectionProducts];
       }, []);
 
+      // Remove duplicates from all products based on product ID
+      const uniqueProducts = allProductsForSearch.filter((product: any, index: number, array: any[]) => 
+        array.findIndex(p => p.id === product.id) === index
+      );
+
       setCollections(transformedCollections);
-      setAllProducts(allProducts);
-      console.log(`✅ Loaded ${transformedCollections.length} collections with ${allProducts.length} products`);
+      setAllProducts(uniqueProducts);
+      console.log(`✅ Loaded ${transformedCollections.length} collections with ${uniqueProducts.length} unique products for search`);
       
     } catch (error) {
       console.error('Error loading collections:', error);
