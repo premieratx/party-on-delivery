@@ -122,49 +122,40 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
       setLoading(true);
       console.log('⚡ Custom Delivery App: Loading with instant cache...');
 
-      // First try instant cache for super fast loading
-      try {
-        const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
-        
-        if (!instantError && instantData?.collections) {
-          console.log('✅ Custom Delivery App: Using instant cached collections');
-          setCollections(instantData.collections as ShopifyCollection[]);
-          setLoading(false);
-          return;
-        }
-      } catch (instantError) {
-        console.log('⚠️ Instant cache failed, trying local cache...');
-      }
-
-      // Fallback to cache manager
-      const cacheKey = 'custom_delivery_collections';
-      const cachedData = await cacheManager.get(cacheKey);
-      
-      if (cachedData) {
-        console.log('Custom Delivery App: Using cached collections');
-        setCollections(cachedData as ShopifyCollection[]);
-        setLoading(false);
-        return;
-      }
-
-      // Final fallback to regular endpoint
-      console.log('Fetching from instant cache for maximum speed...');
+      // Load from instant cache
       const { data, error } = await supabase.functions.invoke('instant-product-cache');
       
       if (error) throw error;
       
-      if (data?.success && data?.collections) {
-        console.log(`Custom Delivery App: Loaded ${data.collections.length} collections`);
-        setCollections(data.collections as ShopifyCollection[]);
+      if (data?.success && data?.data) {
+        const instantData = data.data;
         
-        // Cache for 30 minutes
-        await cacheManager.set(cacheKey, data.collections, 30 * 60 * 1000);
+        // Extract collections from the instant cache data structure
+        let loadedCollections: ShopifyCollection[] = [];
+        
+        if (instantData.collections && Array.isArray(instantData.collections)) {
+          loadedCollections = instantData.collections;
+          console.log(`✅ Custom Delivery App: Loaded ${loadedCollections.length} collections from instant cache`);
+        } else {
+          console.warn('⚠️ No collections found in instant cache data');
+        }
+        
+        setCollections(loadedCollections);
+        
+        // Debug: Log collection handles and categories
+        console.log('📋 Available collections:', loadedCollections.map(c => ({
+          handle: c.handle,
+          title: c.title,
+          category: mapCollectionToCategory(c.handle),
+          productCount: c.products?.length || 0
+        })));
+        
       } else {
-        throw new Error('Failed to load collections');
+        console.error('❌ Failed to load from instant cache:', data);
+        setCollections([]);
       }
     } catch (error) {
       console.error('Custom Delivery App: Error loading collections:', error);
-      // Set empty collections on error
       setCollections([]);
     } finally {
       setLoading(false);

@@ -168,7 +168,7 @@ class UltraFastLoader {
     };
   }
 
-  // Extract all products from collections
+  // Extract all products from collections with proper category inference
   private extractAllProducts(collections: any[]): any[] {
     const products: any[] = [];
     const seenIds = new Set();
@@ -177,16 +177,67 @@ class UltraFastLoader {
       collection.products?.forEach((product: any) => {
         if (!seenIds.has(product.id)) {
           seenIds.add(product.id);
-          products.push({
+          
+          // Enrich product with collection and category info
+          const enrichedProduct = {
             ...product,
             collectionHandle: collection.handle,
-            category: this.inferProductCategory(collection.handle, product.title)
-          });
+            collectionId: collection.id,
+            collections: [{ id: collection.id, title: collection.title, handle: collection.handle }],
+            category: this.inferCategoryFromCollections([collection.handle]),
+            productType: product.product_type || this.inferTypeFromProduct(product)
+          };
+          
+          products.push(enrichedProduct);
+        } else {
+          // If product already exists, merge collection info
+          const existingProduct = products.find(p => p.id === product.id);
+          if (existingProduct) {
+            const existingCollections = existingProduct.collections || [];
+            const newCollection = { id: collection.id, title: collection.title, handle: collection.handle };
+            
+            if (!existingCollections.find(c => c.id === collection.id)) {
+              existingCollections.push(newCollection);
+              existingProduct.collections = existingCollections;
+              existingProduct.category = this.inferCategoryFromCollections(existingCollections.map(c => c.handle));
+            }
+          }
         }
       });
     });
 
     return products;
+  }
+
+  // Helper method to infer category from collection handles
+  private inferCategoryFromCollections(handles: string[]): string {
+    for (const handle of handles) {
+      const lowerHandle = handle.toLowerCase();
+      if (lowerHandle.includes('beer') || lowerHandle.includes('tailgate')) return 'beer';
+      if (lowerHandle.includes('wine') || lowerHandle.includes('champagne')) return 'wine';
+      if (lowerHandle.includes('spirit') || lowerHandle.includes('whiskey') || lowerHandle.includes('vodka') || 
+          lowerHandle.includes('gin') || lowerHandle.includes('rum') || lowerHandle.includes('tequila')) return 'spirits';
+      if (lowerHandle.includes('cocktail') || lowerHandle.includes('mixer') || lowerHandle.includes('ready-to-drink')) return 'cocktails';
+      if (lowerHandle.includes('seltzer')) return 'seltzers';
+      if (lowerHandle.includes('party') || lowerHandle.includes('supplies') || lowerHandle.includes('decoration')) return 'party-supplies';
+    }
+    return 'other';
+  }
+
+  // Helper method to infer product type
+  private inferTypeFromProduct(product: any): string {
+    const title = product.title?.toLowerCase() || '';
+    const handle = product.handle?.toLowerCase() || '';
+    
+    if (title.includes('lager') || title.includes('ale') || title.includes('ipa')) return 'beer';
+    if (title.includes('red wine') || title.includes('white wine') || title.includes('champagne')) return 'wine';
+    if (title.includes('vodka')) return 'vodka';
+    if (title.includes('whiskey') || title.includes('bourbon')) return 'whiskey';
+    if (title.includes('tequila')) return 'tequila';
+    if (title.includes('rum')) return 'rum';
+    if (title.includes('gin')) return 'gin';
+    
+    return product.product_type || 'unknown';
   }
 
   // Extract category information
