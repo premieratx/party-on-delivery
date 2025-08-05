@@ -34,38 +34,67 @@ interface UseVirtualizedProductsOptions {
   limit?: number;
 }
 
-// Smart preloader for critical product data
+// ⚡ INSTANT product loader for sub-1-second loading
 const preloadCriticalData = async () => {
-  const cacheKey = 'critical_products_v2';
+  const cacheKey = 'instant_products_cache_v3';
   const cached = localStorage.getItem(cacheKey);
   const cacheExpiry = localStorage.getItem(`${cacheKey}_expiry`);
   
+  // Use cache if available and fresh (30 seconds)
   if (cached && cacheExpiry && Date.now() < parseInt(cacheExpiry)) {
     return JSON.parse(cached);
   }
   
-  // Fetch only essential product data for the first 30 products
+  try {
+    // Use instant cache function for maximum speed
+    const { data, error } = await supabase.functions.invoke('instant-product-cache');
+    
+    if (!error && data?.success) {
+      const productData = data.data;
+      localStorage.setItem(cacheKey, JSON.stringify(productData));
+      localStorage.setItem(`${cacheKey}_expiry`, (Date.now() + 30 * 1000).toString()); // 30 second cache
+      return productData;
+    }
+  } catch (error) {
+    console.warn('Instant cache failed, using fallback:', error);
+  }
+  
+  // Fallback to regular collections call
   const { data, error } = await supabase.functions.invoke('get-all-collections', {
-    body: { limit: 30, fields: 'id,title,price,image,handle,variants' }
+    body: { limit: 20, fields: 'id,title,price,image,handle,variants' }
   });
   
   if (!error && data?.collections) {
-    const criticalData = data.collections.map((collection: ShopifyCollection) => ({
-      ...collection,
-      products: collection.products.slice(0, 10).map(product => ({
-        id: product.id,
-        title: product.title,
-        price: product.price,
-        image: product.image?.includes('?') 
-          ? `${product.image}&width=300&height=300` 
-          : `${product.image}?width=300&height=300`,
-        handle: product.handle,
-        variants: product.variants.slice(0, 1) // Only first variant for speed
-      }))
-    }));
+    const criticalData = {
+      collections: data.collections.slice(0, 10).map((collection: ShopifyCollection) => ({
+        ...collection,
+        products: collection.products.slice(0, 8).map(product => ({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          image: product.image?.includes('?') 
+            ? `${product.image}&width=300&height=300` 
+            : `${product.image}?width=300&height=300`,
+          handle: product.handle,
+          variants: product.variants.slice(0, 1)
+        }))
+      })),
+      products: data.collections.flatMap((c: ShopifyCollection) => 
+        c.products.slice(0, 8).map(product => ({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          image: product.image?.includes('?') 
+            ? `${product.image}&width=300&height=300` 
+            : `${product.image}?width=300&height=300`,
+          handle: product.handle,
+          variants: product.variants.slice(0, 1)
+        }))
+      )
+    };
     
     localStorage.setItem(cacheKey, JSON.stringify(criticalData));
-    localStorage.setItem(`${cacheKey}_expiry`, (Date.now() + 2 * 60 * 1000).toString()); // 2 minutes
+    localStorage.setItem(`${cacheKey}_expiry`, (Date.now() + 30 * 1000).toString());
     return criticalData;
   }
   
@@ -117,11 +146,23 @@ export function useVirtualizedProducts({
         // Try to get critical data first for instant loading
         const criticalData = await preloadCriticalData();
         if (criticalData) {
-          const products = criticalData.flatMap((collection: ShopifyCollection) => collection.products);
+          // Handle both new instant cache format and legacy format
+          let products = [];
+          if (criticalData.products) {
+            // New instant cache format
+            products = criticalData.products;
+          } else if (Array.isArray(criticalData)) {
+            // Legacy format - array of collections
+            products = criticalData.flatMap((collection: ShopifyCollection) => collection.products);
+          } else if (criticalData.collections) {
+            // New format with collections property
+            products = criticalData.collections.flatMap((collection: ShopifyCollection) => collection.products);
+          }
+          
           setAllProducts(products);
           setLoading(false);
           
-          // Load full data in background
+          // Load full data in background after instant display
           setTimeout(() => fetchFullData(), 100);
           return;
         }
@@ -209,7 +250,9 @@ export function useVirtualizedProducts({
 
   // Refresh function
   const refresh = useCallback(() => {
-    // Clear cache
+    // Clear all instant cache versions
+    localStorage.removeItem('instant_products_cache_v3');
+    localStorage.removeItem('instant_products_cache_v3_expiry');
     localStorage.removeItem('critical_products_v2');
     localStorage.removeItem('critical_products_v2_expiry');
     
