@@ -93,6 +93,98 @@ async function withRetry<T>(
   throw lastError;
 }
 
+// Handle removing specific products from a collection
+async function handleRemoveProducts(collectionHandle: string, productIds: string[]) {
+  const shopifyStoreUrl = Deno.env.get('SHOPIFY_STORE_URL');
+  const shopifyAccessToken = Deno.env.get('SHOPIFY_ADMIN_API_ACCESS_TOKEN');
+
+  if (!shopifyStoreUrl || !shopifyAccessToken) {
+    throw new Error('Missing Shopify configuration');
+  }
+
+  console.log(`🗑️ Removing ${productIds.length} products from collection: ${collectionHandle}`);
+
+  // First, find the collection by handle
+  const getCollectionResponse = await withRetry(
+    () => fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/custom_collections.json?handle=${collectionHandle}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': shopifyAccessToken
+      }
+    })
+  );
+
+  if (!getCollectionResponse.ok) {
+    throw new Error(`Failed to find collection: ${getCollectionResponse.status}`);
+  }
+
+  const collectionsData = await getCollectionResponse.json();
+  if (!collectionsData.custom_collections || collectionsData.custom_collections.length === 0) {
+    throw new Error(`Collection "${collectionHandle}" not found`);
+  }
+
+  const shopifyCollectionId = collectionsData.custom_collections[0].id;
+
+  // Convert product IDs to numeric format
+  const numericProductIds = productIds.map((id: string) => {
+    if (id.startsWith('gid://shopify/Product/')) {
+      return id.replace('gid://shopify/Product/', '');
+    }
+    return id;
+  });
+
+  // Find existing collects for these products in this collection
+  const collectsResponse = await withRetry(
+    () => fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects.json?collection_id=${shopifyCollectionId}&limit=250`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': shopifyAccessToken
+      }
+    })
+  );
+
+  const collectsData = await collectsResponse.json();
+  const collectsToRemove = collectsData.collects?.filter((collect: any) => 
+    numericProductIds.includes(collect.product_id.toString())
+  ) || [];
+
+  console.log(`Found ${collectsToRemove.length} collects to remove`);
+
+  // Remove the collects
+  let removedCount = 0;
+  for (const collect of collectsToRemove) {
+    try {
+      await withRetry(
+        () => fetch(`https://${shopifyStoreUrl}/admin/api/2025-01/collects/${collect.id}.json`, {
+          method: 'DELETE',
+          headers: {
+            'X-Shopify-Access-Token': shopifyAccessToken
+          }
+        })
+      );
+      removedCount++;
+      console.log(`✅ Removed product ${collect.product_id} from collection`);
+    } catch (error) {
+      console.warn(`⚠️ Error removing product ${collect.product_id}:`, error);
+    }
+  }
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      removed_count: removedCount,
+      collection_handle: collectionHandle,
+      message: `Removed ${removedCount} product(s) from collection "${collectionHandle}"`
+    }),
+    {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    }
+  );
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -100,14 +192,21 @@ serve(async (req) => {
   }
 
   try {
-    const { collection_id, title, handle, description, product_ids } = await req.json();
+    const { collection_id, title, handle, description, product_ids, action, collection_handle } = await req.json();
     
     console.log('🔄 Starting Shopify collection sync:', { 
       collection_id, 
       title, 
       handle, 
+      action,
+      collection_handle,
       product_ids_count: product_ids?.length 
     });
+
+    // Handle remove products action
+    if (action === 'remove_products' && collection_handle && product_ids) {
+      return await handleRemoveProducts(collection_handle, product_ids);
+    }
 
     const shopifyStoreUrl = Deno.env.get('SHOPIFY_STORE_URL');
     const shopifyAccessToken = Deno.env.get('SHOPIFY_ADMIN_API_ACCESS_TOKEN');
