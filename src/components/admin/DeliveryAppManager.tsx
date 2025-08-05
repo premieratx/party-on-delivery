@@ -235,11 +235,17 @@ export function DeliveryAppManager() {
       }
       
       appSlug = finalSlug;
-
-      // Upload logo if provided
+      
+      // Upload logo if provided - with proper error handling
       let uploadedLogoUrl = '';
       if (logoFile) {
-        uploadedLogoUrl = await uploadLogo(logoFile, appSlug);
+        try {
+          uploadedLogoUrl = await uploadLogo(logoFile, appSlug);
+        } catch (uploadError) {
+          console.error('Logo upload failed:', uploadError);
+          toast.error('Logo upload failed, but app will be created without logo. You can add it later.');
+          // Continue without logo
+        }
       }
       
       // Create the database entry
