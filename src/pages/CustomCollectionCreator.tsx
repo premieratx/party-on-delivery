@@ -913,15 +913,18 @@ export default function CustomCollectionCreator() {
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
       
-      // Collection filter shows products in that collection regardless of sync status
+      // FIXED: Collection filter shows ALL products from that Shopify collection, not just sorted ones
       const matchesCollection = selectedCollectionFilter === 'all' || 
-        product.collections?.some(c => c.title === selectedCollectionFilter || c.handle === selectedCollectionFilter) ||
-        productModifications.find(m => m.shopify_product_id === product.id && m.collection === selectedCollectionFilter);
+        product.collections?.some(c => 
+          c.title === selectedCollectionFilter || 
+          c.handle === selectedCollectionFilter ||
+          c.title.toLowerCase() === selectedCollectionFilter.toLowerCase()
+        );
       
       // Basic search/filter matching
       const basicMatch = matchesSearch && matchesCategory && matchesProductType && matchesCollection;
       
-      // If collection is selected, show all products in that collection
+      // If collection is selected, show ALL products in that collection (not just sorted ones)
       if (selectedCollectionFilter !== 'all') {
         return basicMatch;
       }
@@ -1357,45 +1360,14 @@ export default function CustomCollectionCreator() {
                         </Badge>
                       </div>
 
-                      {/* Collections */}
+                      {/* Collections with Dropdown for Overflow */}
                       <div className="w-32">
-                        <div className="flex flex-wrap gap-1">
-                           {product.collections && product.collections.length > 0 ? (
-                             product.collections.slice(0, 2).map((collection, index) => (
-                               <div key={collection.id} className="flex items-center gap-1 mb-1">
-                                 <Badge 
-                                   variant="outline" 
-                                   className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200"
-                                 >
-                                   {collection.title}
-                                 </Badge>
-                                 <button
-                                   onClick={() => removeFromCollection([product.id], collection.handle)}
-                                   className="text-red-500 hover:text-red-700 transition-colors ml-1"
-                                   title="Remove from collection"
-                                   disabled={syncing}
-                                 >
-                                   <X className="w-3 h-3" />
-                                 </button>
-                               </div>
-                             ))
-                           ) : (
-                             <Badge 
-                               variant="outline" 
-                               className="text-xs text-muted-foreground"
-                             >
-                               None
-                             </Badge>
-                          )}
-                          {product.collections && product.collections.length > 2 && (
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs bg-gray-100 text-gray-600"
-                            >
-                              +{product.collections.length - 2}
-                            </Badge>
-                          )}
-                        </div>
+                        <CollectionDisplay 
+                          collections={product.collections || []}
+                          productId={product.id}
+                          onRemove={removeFromCollection}
+                          syncing={syncing}
+                        />
                       </div>
 
                       {/* Price */}
@@ -1465,6 +1437,98 @@ export default function CustomCollectionCreator() {
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Collection Display Component with Overflow Dropdown
+interface CollectionDisplayProps {
+  collections: Array<{ id: string; title: string; handle: string }>;
+  productId: string;
+  onRemove: (productIds: string[], collectionHandle: string) => void;
+  syncing: boolean;
+}
+
+function CollectionDisplay({ collections, productId, onRemove, syncing }: CollectionDisplayProps) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const maxVisible = 2;
+  const visibleCollections = collections.slice(0, maxVisible);
+  const hiddenCollections = collections.slice(maxVisible);
+
+  if (collections.length === 0) {
+    return (
+      <Badge variant="outline" className="text-xs text-muted-foreground">
+        None
+      </Badge>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <div className="flex flex-wrap gap-1">
+        {/* Always visible collections */}
+        {visibleCollections.map((collection) => (
+          <div key={collection.id} className="flex items-center gap-1 mb-1">
+            <Badge 
+              variant="outline" 
+              className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200"
+            >
+              {collection.title}
+            </Badge>
+            <button
+              onClick={() => onRemove([productId], collection.handle)}
+              className="text-red-500 hover:text-red-700 transition-colors ml-1"
+              title="Remove from collection"
+              disabled={syncing}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+        
+        {/* Dropdown for overflow collections */}
+        {hiddenCollections.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="text-xs bg-gray-100 text-gray-600 border border-gray-300 rounded px-2 py-1 hover:bg-gray-200 transition-colors"
+            >
+              +{hiddenCollections.length}
+            </button>
+            
+            {showDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 min-w-[200px]">
+                {hiddenCollections.map((collection) => (
+                  <div key={collection.id} className="flex items-center justify-between p-2 hover:bg-gray-50 border-b">
+                    <span className="text-xs text-gray-700 flex-1 mr-2">
+                      {collection.title}
+                    </span>
+                    <button
+                      onClick={() => {
+                        onRemove([productId], collection.handle);
+                        setShowDropdown(false);
+                      }}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                      title="Remove from collection"
+                      disabled={syncing}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Click outside to close dropdown */}
+      {showDropdown && (
+        <div 
+          className="fixed inset-0 z-0" 
+          onClick={() => setShowDropdown(false)}
+        />
+      )}
     </div>
   );
 }
