@@ -74,9 +74,10 @@ const App = () => {
                   <Route path="/affiliate/admin" element={<AdminDashboard />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/*" element={<AdminDashboard />} />
-                  <Route path="/admin/product-management" element={<ProductManagement />} />
-                  <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
-                  <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
+                   <Route path="/admin/product-management" element={<ProductManagement />} />
+                   <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
+                   <Route path="/admin/delivery-apps" element={<DeliveryAppView />} />
+                   <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
                   <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                   
                   {/* Custom Affiliate Landing Pages */}

@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ArrowLeft, RefreshCw, Save, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +59,7 @@ export default function CustomCollectionCreator() {
   const [bulkCategory, setBulkCategory] = useState('');
   const [bulkProductType, setBulkProductType] = useState('');
   const [bulkCollection, setBulkCollection] = useState('');
+  const [selectedCollectionFilter, setSelectedCollectionFilter] = useState('all');
 
   // Available options
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -797,6 +799,10 @@ export default function CustomCollectionCreator() {
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
       
+      const matchesCollection = selectedCollectionFilter === 'all' || 
+        product.collections?.some(c => c.title === selectedCollectionFilter || c.handle === selectedCollectionFilter) ||
+        productModifications.find(m => m.shopify_product_id === product.id && m.collection === selectedCollectionFilter);
+      
       // Tab filtering based on modification and sync status
       const hasUnsyncedModification = hasModification(product.id);
       const isProductSynced = isSynced(product.id);
@@ -812,7 +818,7 @@ export default function CustomCollectionCreator() {
         matchesTab = hasAnyMod;
       }
       
-      return matchesSearch && matchesCategory && matchesProductType && matchesTab;
+      return matchesSearch && matchesCategory && matchesProductType && matchesCollection && matchesTab;
     });
 
     return filtered;
@@ -908,7 +914,7 @@ export default function CustomCollectionCreator() {
               <CardTitle>Search & Filter</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <div>
                   <Label htmlFor="search">Search Products</Label>
                   <div className="relative">
@@ -921,6 +927,20 @@ export default function CustomCollectionCreator() {
                       className="pl-10"
                     />
                   </div>
+                </div>
+                <div>
+                  <Label htmlFor="collection">Collection</Label>
+                  <Select value={selectedCollectionFilter} onValueChange={setSelectedCollectionFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Collections" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Collections</SelectItem>
+                      {availableCollections.map(collection => (
+                        <SelectItem key={collection} value={collection}>{collection}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="categoryFilter">Category</Label>
@@ -961,6 +981,7 @@ export default function CustomCollectionCreator() {
                       setSearchTerm('');
                       setCategoryFilter('all');
                       setProductTypeFilter('all');
+                      setSelectedCollectionFilter('all');
                     }}
                     className="w-full"
                   >
