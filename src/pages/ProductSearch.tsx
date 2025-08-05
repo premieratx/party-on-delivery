@@ -15,7 +15,6 @@ import { useSearchProducts } from "@/hooks/useSearchProducts";
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
 import { parseProductTitle } from '@/utils/productUtils';
-import { FastProductLoader } from "@/components/delivery/FastProductLoader";
 
 interface ProductVariant {
   id: string;
@@ -56,6 +55,100 @@ export const ProductSearch = () => {
   const cartHook = useUnifiedCart();
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = cartHook;
   const { toast } = useToast();
+
+  // Load products instantly using cache
+  useEffect(() => {
+    loadInstantProducts();
+  }, []);
+
+  const loadInstantProducts = async () => {
+    try {
+      setLoading(true);
+      
+      // Try instant cache first for immediate loading
+      const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+      
+      if (instantData?.success && instantData?.data) {
+        console.log('⚡ Using instant cache for search page');
+        const products = instantData.data.products || [];
+        const collections = instantData.data.collections || [];
+        
+        // Transform products with category inference
+        const enrichedProducts = products.map((product: any) => ({
+          ...product,
+          category: inferProductCategory(product.title, product.handle || ''),
+          subcategory: inferSubcategory(product.title)
+        }));
+        
+        setAllProducts(enrichedProducts);
+        setCollections(collections);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback to collections API
+      console.log('📦 Loading from collections API');
+      const { data: collectionsData, error } = await supabase.functions.invoke('get-all-collections');
+      
+      if (error) throw error;
+      
+      if (collectionsData?.collections) {
+        setCollections(collectionsData.collections);
+        
+        // Extract and enrich products
+        const allProducts = collectionsData.collections.reduce((acc: any[], collection: any) => {
+          if (collection.products) {
+            acc.push(...collection.products.map((p: any) => ({
+              ...p,
+              category: inferProductCategory(p.title, collection.handle),
+              subcategory: inferSubcategory(p.title)
+            })));
+          }
+          return acc;
+        }, []);
+        
+        setAllProducts(allProducts);
+      }
+      
+    } catch (error: any) {
+      console.error('Error loading products:', error);
+      toast({
+        title: "Loading Error",
+        description: "Failed to load products. Please refresh.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inferProductCategory = (title: string, handle: string): string => {
+    const titleLower = title.toLowerCase();
+    const handleLower = handle.toLowerCase();
+    
+    if (handleLower.includes('beer') || handleLower.includes('tailgate') || titleLower.includes('beer')) return 'beer';
+    if (handleLower.includes('wine') || handleLower.includes('champagne') || titleLower.includes('wine')) return 'wine';
+    if (handleLower.includes('spirit') || handleLower.includes('whiskey') || handleLower.includes('vodka') || 
+        handleLower.includes('gin') || handleLower.includes('rum') || handleLower.includes('tequila') ||
+        titleLower.includes('whiskey') || titleLower.includes('vodka') || titleLower.includes('gin')) return 'spirits';
+    if (handleLower.includes('cocktail') || handleLower.includes('ready-to-drink') || titleLower.includes('cocktail')) return 'cocktails';
+    if (handleLower.includes('seltzer') || titleLower.includes('seltzer')) return 'seltzers';
+    if (handleLower.includes('mixer') || handleLower.includes('non-alcoholic') || titleLower.includes('mixer')) return 'mixers';
+    if (handleLower.includes('party') || handleLower.includes('supplies') || handleLower.includes('decoration')) return 'party-supplies';
+    return 'other';
+  };
+
+  const inferSubcategory = (title: string): string => {
+    const titleLower = title.toLowerCase();
+    if (titleLower.includes('whiskey') || titleLower.includes('bourbon')) return 'whiskey';
+    if (titleLower.includes('vodka')) return 'vodka';
+    if (titleLower.includes('gin')) return 'gin';
+    if (titleLower.includes('rum')) return 'rum';
+    if (titleLower.includes('tequila')) return 'tequila';
+    if (titleLower.includes('mezcal')) return 'mezcal';
+    if (titleLower.includes('brandy') || titleLower.includes('cognac')) return 'brandy';
+    return '';
+  };
 
   // Fast category-based product filtering
   const getProductsByCategory = (categoryId: string): Product[] => {

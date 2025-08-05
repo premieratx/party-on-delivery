@@ -41,6 +41,7 @@ import ConciergeService from "./pages/ConciergeService";
 import PerformanceOptimization from "./pages/PerformanceOptimization";
 import TestGroupOrderFlow from "./pages/TestGroupOrderFlow";
 import GroupOrderInvite from "./pages/GroupOrderInvite";
+import DeliveryAppManagerPage from "./pages/DeliveryAppManager";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,7 +77,7 @@ const App = () => {
                   <Route path="/admin/*" element={<AdminDashboard />} />
                    <Route path="/admin/product-management" element={<ProductManagement />} />
                    <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
-                   <Route path="/admin/delivery-apps" element={<DeliveryAppView />} />
+                   <Route path="/admin/delivery-app-manager" element={<DeliveryAppManagerPage />} />
                    <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
                   <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                   

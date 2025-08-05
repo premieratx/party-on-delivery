@@ -78,11 +78,7 @@ export default function CustomCollectionCreator() {
       // Clear cache if requested
       if (forceCacheClear) {
         console.log('Clearing Shopify cache for fresh sync...');
-        // Clear collections cache
-        await supabase.from('cache').delete().eq('key', 'shopify-collections');
-        await supabase.from('cache').delete().eq('key', 'shopify-collections-metadata');
-        
-        // Clear any local storage cache
+        await supabase.from('cache').delete().eq('key', 'instant_products_v3');
         localStorage.removeItem('shopify-collections-cache');
         localStorage.removeItem('shopify-products-cache');
         
@@ -92,6 +88,40 @@ export default function CustomCollectionCreator() {
         });
       }
       
+      // Try instant cache first for fast loading
+      const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+      
+      if (instantData?.success && instantData?.data && !forceCacheClear) {
+        console.log('⚡ Using instant cache for bulk editor');
+        const products = instantData.data.products || [];
+        
+        // Transform to match expected format
+        const transformedProducts = products.map((product: any) => ({
+          ...product,
+          category: product.category || '',
+          productType: product.product_type || '',
+          collections: product.collections || []
+        }));
+        
+        setAllProducts(transformedProducts);
+        
+        // Extract unique categories and product types
+        const categories = new Set<string>();
+        const productTypes = new Set<string>();
+        
+        transformedProducts.forEach((product: Product) => {
+          if (product.category) categories.add(product.category);
+          if (product.productType) productTypes.add(product.productType);
+        });
+        
+        setAvailableCategories(Array.from(categories).sort());
+        setAvailableProductTypes(Array.from(productTypes).sort());
+        setLoading(false);
+        return;
+      }
+
+      // Fallback to fetch-shopify-products if cache miss or forced refresh
+      console.log('📦 Loading from Shopify API...');
       const response = await supabase.functions.invoke('fetch-shopify-products');
       if (response.data && response.data.products) {
         setAllProducts(response.data.products);
