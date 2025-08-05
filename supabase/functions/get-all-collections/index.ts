@@ -95,7 +95,7 @@ serve(async (req) => {
           title
           handle
           description
-          products(first: 100) {
+          products(first: 250) {
             edges {
               node {
                 id
