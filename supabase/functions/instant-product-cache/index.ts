@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     }
 
     // Optimize product data for instant loading
-    const optimizedProducts = products.slice(0, 100).map((product: any) => ({
+    const optimizedProducts = products.slice(0, 500).map((product: any) => ({
       id: product.id,
       title: product.title,
       price: product.price,
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       variants: product.variants?.slice(0, 1) || []
     }))
 
-    const optimizedCollections = collections.slice(0, 20).map((collection: any) => ({
+    const optimizedCollections = collections.slice(0, 50).map((collection: any) => ({
       id: collection.id,
       title: collection.title,
       handle: collection.handle,

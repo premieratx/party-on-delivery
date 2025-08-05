@@ -95,27 +95,50 @@ export default function CustomCollectionCreator() {
         console.log('⚡ Using instant cache for bulk editor');
         const products = instantData.data.products || [];
         
-        // Transform to match expected format
+        // Transform to match expected format and extract attributes
         const transformedProducts = products.map((product: any) => ({
           ...product,
           category: product.category || '',
-          productType: product.product_type || '',
+          productType: product.product_type || product.productType || '',
           collections: product.collections || []
         }));
         
         setAllProducts(transformedProducts);
         
-        // Extract unique categories and product types
-        const categories = new Set<string>();
-        const productTypes = new Set<string>();
+        // Extract unique categories and product types from ALL collections, not just cached products
+        const { data: fullCollectionsData } = await supabase.functions.invoke('get-all-collections');
+        if (fullCollectionsData?.collections) {
+          const allProductsFromCollections = fullCollectionsData.collections.reduce((acc: any[], collection: any) => {
+            if (collection.products) {
+              acc.push(...collection.products);
+            }
+            return acc;
+          }, []);
+          
+          const categories = new Set<string>();
+          const productTypes = new Set<string>();
+          const collectionNames = new Set<string>();
+          
+          // Extract from all products in collections
+          allProductsFromCollections.forEach((product: any) => {
+            if (product.category) categories.add(product.category);
+            if (product.productType) productTypes.add(product.productType);
+            if (product.product_type) productTypes.add(product.product_type);
+          });
+          
+          // Extract collection names
+          fullCollectionsData.collections.forEach((collection: any) => {
+            if (collection.title) collectionNames.add(collection.title);
+            if (collection.handle) collectionNames.add(collection.handle);
+          });
+          
+          setAvailableCategories(Array.from(categories).sort());
+          setAvailableProductTypes(Array.from(productTypes).sort());
+          setAvailableCollections(Array.from(collectionNames).sort());
+          
+          console.log(`Extracted ${categories.size} categories, ${productTypes.size} product types, ${collectionNames.size} collections`);
+        }
         
-        transformedProducts.forEach((product: Product) => {
-          if (product.category) categories.add(product.category);
-          if (product.productType) productTypes.add(product.productType);
-        });
-        
-        setAvailableCategories(Array.from(categories).sort());
-        setAvailableProductTypes(Array.from(productTypes).sort());
         setLoading(false);
         return;
       }
