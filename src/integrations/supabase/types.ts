@@ -755,8 +755,10 @@ export type Database = {
           created_at: string
           custom_promo_code: string | null
           delivery_address: Json | null
+          delivery_app_id: string | null
           id: string
           is_active: boolean | null
+          is_delivery_app: boolean | null
           site_name: string
           site_slug: string
           site_type: string | null
@@ -769,8 +771,10 @@ export type Database = {
           created_at?: string
           custom_promo_code?: string | null
           delivery_address?: Json | null
+          delivery_app_id?: string | null
           id?: string
           is_active?: boolean | null
+          is_delivery_app?: boolean | null
           site_name: string
           site_slug: string
           site_type?: string | null
@@ -783,8 +787,10 @@ export type Database = {
           created_at?: string
           custom_promo_code?: string | null
           delivery_address?: Json | null
+          delivery_app_id?: string | null
           id?: string
           is_active?: boolean | null
+          is_delivery_app?: boolean | null
           site_name?: string
           site_slug?: string
           site_type?: string | null
@@ -796,6 +802,13 @@ export type Database = {
             columns: ["affiliate_id"]
             isOneToOne: false
             referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_affiliate_sites_delivery_app_id_fkey"
+            columns: ["delivery_app_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_app_variations"
             referencedColumns: ["id"]
           },
         ]
@@ -2162,6 +2175,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sync_configuration_rules: {
+        Row: {
+          actions: Json
+          conditions: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          priority: number
+          rule_name: string
+          rule_type: string
+          triggers: Json
+          updated_at: string
+        }
+        Insert: {
+          actions?: Json
+          conditions?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          rule_name: string
+          rule_type: string
+          triggers?: Json
+          updated_at?: string
+        }
+        Update: {
+          actions?: Json
+          conditions?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: number
+          rule_name?: string
+          rule_type?: string
+          triggers?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       system_health: {
         Row: {

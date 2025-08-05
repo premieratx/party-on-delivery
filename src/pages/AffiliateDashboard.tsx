@@ -32,7 +32,8 @@ import {
   FileText,
   Mail,
   Globe,
-  Edit
+  Edit,
+  Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { VoucherDisplay } from '@/components/common/VoucherDisplay';

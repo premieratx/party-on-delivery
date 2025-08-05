@@ -84,7 +84,7 @@ export default function AdminDashboard() {
       
       setRecentOrders(ordersWithDetails);
 
-      // Load affiliates data with custom sites
+      // Load affiliates data with delivery apps
       const { data: affiliatesData, error: affiliatesError } = await supabase
         .from('affiliates')
         .select(`
@@ -94,7 +94,8 @@ export default function AdminDashboard() {
             site_name,
             delivery_address,
             custom_promo_code,
-            is_active
+            is_active,
+            delivery_app_id
           )
         `)
         .eq('status', 'active')
@@ -315,139 +316,131 @@ export default function AdminDashboard() {
           <TabsContent value="affiliates" className="space-y-4">
             <div className="flex justify-between items-center">
               <div>
-                <h3 className="text-lg font-medium">Affiliate Management</h3>
-                <p className="text-sm text-muted-foreground">Manage your affiliate partners and their custom sites</p>
+                <h3 className="text-lg font-medium">Affiliate Partners</h3>
+                <p className="text-sm text-muted-foreground">View affiliate partners and their custom delivery apps</p>
               </div>
-              <Button onClick={() => navigate('/admin/custom-sites')} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Create Custom Site
-              </Button>
             </div>
             
             <div className="grid gap-4">
-              {affiliates.map((affiliate) => (
-                <Card key={affiliate.id} className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h4 className="text-lg font-semibold">{affiliate.name}</h4>
-                        <Badge variant="secondary">Code: {affiliate.affiliate_code}</Badge>
-                        <Badge variant={affiliate.status === 'active' ? 'default' : 'destructive'}>
-                          {affiliate.status}
-                        </Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div>
-                          <h5 className="font-medium text-sm text-muted-foreground mb-2">Contact Info</h5>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-sm">
-                              <Mail className="h-3 w-3" />
-                              {affiliate.email}
-                            </div>
-                            {affiliate.phone && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <Phone className="h-3 w-3" />
-                                {affiliate.phone}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 text-sm">
-                              <Building className="h-3 w-3" />
-                              {affiliate.company_name}
-                            </div>
-                            {affiliate.venmo_handle && (
-                              <div className="text-sm text-muted-foreground">
-                                Venmo: {affiliate.venmo_handle}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h5 className="font-medium text-sm text-muted-foreground mb-2">Performance</h5>
-                          <div className="space-y-1 text-sm">
-                            <div>Revenue: {formatCurrency(affiliate.total_sales || 0)}</div>
-                            <div>Orders: {affiliate.orders_count || 0}</div>
-                            <div>Commission: {formatCurrency(affiliate.commission_unpaid || 0)} pending</div>
-                            <div>Rate: {affiliate.commission_rate || 5}%</div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <h5 className="font-medium text-sm text-muted-foreground mb-2">Custom Site</h5>
-                          {affiliate.custom_affiliate_sites && affiliate.custom_affiliate_sites.length > 0 ? (
-                            <div className="space-y-2">
-                              {affiliate.custom_affiliate_sites.map((site: any) => (
-                                <div key={site.site_slug} className="space-y-1">
-                                  <div className="text-sm font-medium">{site.site_name}</div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="text-xs bg-muted px-2 py-1 rounded font-mono">
-                                      /sites/{site.site_slug}
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => copyCustomSiteLink(site.site_slug)}
-                                    >
-                                      <Copy className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                  {site.custom_promo_code && (
-                                    <div className="text-xs text-muted-foreground">
-                                      Promo: {site.custom_promo_code}
-                                    </div>
-                                  )}
-                                  {site.delivery_address && (
-                                    <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                      <MapPin className="h-3 w-3" />
-                                      {site.delivery_address.city}, {site.delivery_address.state}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-sm text-muted-foreground">No custom site</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => copyAffiliateLink(affiliate.affiliate_code)}
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy Link
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(`/a/${affiliate.affiliate_code}`, '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/admin/custom-sites?affiliate=${affiliate.id}`)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-              
-              {affiliates.length === 0 && (
+              {affiliates.length === 0 ? (
                 <Card className="p-8 text-center">
-                  <div className="text-muted-foreground mb-4">No affiliates found</div>
-                  <Button onClick={() => navigate('/admin/custom-sites')} variant="outline">
-                    Create First Custom Site
+                  <h4 className="text-lg font-medium mb-2">No Affiliates Yet</h4>
+                  <p className="text-muted-foreground mb-4">When affiliates sign up, they'll appear here with their custom delivery apps.</p>
+                  <Button onClick={() => window.open('/affiliate', '_blank')} variant="outline">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Go to Affiliate Signup
                   </Button>
                 </Card>
+              ) : (
+                affiliates.map((affiliate) => (
+                  <Card key={affiliate.id} className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h4 className="text-lg font-semibold">{affiliate.name}</h4>
+                          <Badge variant="secondary">Code: {affiliate.affiliate_code}</Badge>
+                          <Badge variant={affiliate.status === 'active' ? 'default' : 'destructive'}>
+                            {affiliate.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div>
+                            <h5 className="font-medium text-sm text-muted-foreground mb-2">Contact Info</h5>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Mail className="h-3 w-3" />
+                                {affiliate.email}
+                              </div>
+                              {affiliate.phone && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="h-3 w-3" />
+                                  {affiliate.phone}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2 text-sm">
+                                <Building className="h-3 w-3" />
+                                {affiliate.company_name}
+                              </div>
+                              {affiliate.venmo_handle && (
+                                <div className="text-sm text-muted-foreground">
+                                  Venmo: {affiliate.venmo_handle}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h5 className="font-medium text-sm text-muted-foreground mb-2">Performance</h5>
+                            <div className="space-y-1 text-sm">
+                              <div>Revenue: {formatCurrency(affiliate.total_sales || 0)}</div>
+                              <div>Orders: {affiliate.orders_count || 0}</div>
+                              <div>Commission: {formatCurrency(affiliate.commission_unpaid || 0)} pending</div>
+                              <div>Rate: {affiliate.commission_rate || 5}%</div>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h5 className="font-medium text-sm text-muted-foreground mb-2">Custom Delivery App</h5>
+                            {affiliate.custom_affiliate_sites && affiliate.custom_affiliate_sites.length > 0 ? (
+                              <div className="space-y-2">
+                                {affiliate.custom_affiliate_sites.map((site: any) => (
+                                  <div key={site.site_slug} className="space-y-1">
+                                    <div className="text-sm font-medium">{site.site_name}</div>
+                                    <div className="flex items-center gap-2">
+                                      <div className="text-xs bg-muted px-2 py-1 rounded font-mono">
+                                        /app/{site.site_slug}
+                                      </div>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => copyCustomSiteLink(site.site_slug)}
+                                      >
+                                        <Copy className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                    {site.custom_promo_code && (
+                                      <div className="text-xs text-muted-foreground">
+                                        Promo: {site.custom_promo_code}
+                                      </div>
+                                    )}
+                                    {site.delivery_address && (
+                                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        {JSON.parse(site.delivery_address).city || 'Austin'}, {JSON.parse(site.delivery_address).state || 'TX'}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-muted-foreground">No delivery app yet</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => copyAffiliateLink(affiliate.affiliate_code)}
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copy Link
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(`${window.location.origin}/a/${affiliate.affiliate_code}`, '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Visit
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))
               )}
             </div>
           </TabsContent>
