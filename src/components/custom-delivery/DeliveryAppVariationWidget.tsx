@@ -3,14 +3,14 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useReliableStorage } from '@/hooks/useReliableStorage';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { CustomOrderContinuation } from './CustomOrderContinuationVariation';
+import { CustomDeliveryIntro } from './CustomDeliveryIntro';
 import { CustomProductCategories } from './CustomProductCategoriesVariation';
 import { CustomDeliveryCart } from './CustomDeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type CustomDeliveryStep = 'order-continuation' | 'products' | 'cart';
+type CustomDeliveryStep = 'intro' | 'products' | 'cart';
 
 interface CustomCartItem {
   id: string;
@@ -49,7 +49,7 @@ interface DeliveryAppConfig {
 export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidgetProps) {
   useWakeLock();
   
-  const [currentStep, setCurrentStep] = useReliableStorage<CustomDeliveryStep>('customDeliveryStep', 'order-continuation');
+  const [currentStep, setCurrentStep] = useReliableStorage<CustomDeliveryStep>('customDeliveryStep', 'intro');
   const [deliveryInfo, setDeliveryInfo] = useLocalStorage<CustomDeliveryInfo>('customDeliveryInfo', {
     selectedDate: null,
     selectedTime: null,
@@ -107,12 +107,12 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
     loadAppConfig();
   }, [appSlug]);
 
-  const handleStartNewOrder = () => {
+  const handleStartOrder = () => {
     setCurrentStep('products');
   };
 
-  const handleResumeOrder = () => {
-    setCurrentStep('products');
+  const handleGoHome = () => {
+    window.location.href = '/';
   };
 
   const handleAddToCart = (product: Omit<CustomCartItem, 'quantity'>) => {
@@ -169,14 +169,12 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Order Continuation Step */}
-      {currentStep === 'order-continuation' && (
-        <CustomOrderContinuation
-          onStartNewOrder={handleStartNewOrder}
-          onResumeOrder={handleResumeOrder}
-          deliveryInfo={deliveryInfo}
-          cartItems={cartItems}
+      {/* Intro Step */}
+      {currentStep === 'intro' && (
+        <CustomDeliveryIntro
           appName={appConfig.app_name}
+          onStartOrder={handleStartOrder}
+          onGoHome={handleGoHome}
         />
       )}
 
@@ -189,7 +187,8 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
           cartItems={cartItems}
           onUpdateQuantity={handleUpdateQuantity}
           onProceedToCheckout={handleCheckout}
-          onBack={() => setCurrentStep('order-continuation')}
+          onBack={() => setCurrentStep('intro')}
+          onGoHome={handleGoHome}
           collectionsConfig={appConfig.collections_config}
           appName={appConfig.app_name}
         />
