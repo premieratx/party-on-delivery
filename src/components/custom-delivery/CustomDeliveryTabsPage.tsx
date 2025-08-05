@@ -243,6 +243,27 @@ export function CustomDeliveryTabsPage({
 
   const filteredProducts = getCurrentProducts();
 
+  // Helper function to get responsive grid classes based on collection type
+  const getResponsiveGridClasses = (tabId: string) => {
+    const collection = collections.find(c => c.handle === tabId);
+    const collectionHandle = collection?.handle || tabId;
+    
+    // Check if it's liquor/beer (8 per row desktop) or seltzers/cocktails/rentals (6 per row desktop)
+    const isLiquorBeer = collectionHandle.includes('spirits') || collectionHandle.includes('beer');
+    const isSeltzersRentals = collectionHandle.includes('seltzer') || collectionHandle.includes('cocktail') || collectionHandle.includes('rental');
+    
+    if (isLiquorBeer) {
+      // 8 per row on desktop, 3 per row on mobile
+      return "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4";
+    } else if (isSeltzersRentals) {
+      // 6 per row on desktop, 3 per row on mobile  
+      return "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4";
+    } else {
+      // Default: 5 per row on desktop, 3 per row on mobile
+      return "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4";
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -401,7 +422,7 @@ export function CustomDeliveryTabsPage({
             )}
           </div>
 
-          {/* Products Grid */}
+          {/* Products Grid with Responsive Layout */}
           {filteredProducts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">
@@ -409,7 +430,7 @@ export function CustomDeliveryTabsPage({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className={getResponsiveGridClasses(activeTab)}>
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -439,21 +460,21 @@ function ProductCard({ product, quantity, onAddToCart, onUpdateQuantity }: Produ
   const { cleanTitle, packageSize } = parseProductTitle(product.title);
 
   return (
-    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
-      <CardContent className="flex flex-col h-full p-3 relative">
+    <Card className="h-full flex flex-col hover:shadow-lg transition-shadow bg-white/80 backdrop-blur-sm border-white/20">
+      <CardContent className="flex flex-col h-full p-2 md:p-3 relative">
         {/* Product Image */}
-        <div className="aspect-square mb-3 relative overflow-hidden rounded-lg">
+        <div className="aspect-square mb-2 relative overflow-hidden rounded-lg">
           <OptimizedImage
             src={optimizedImage.src}
             alt={product.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
             priority={false}
           />
         </div>
 
         {/* Product Info */}
         <div className="flex-1 flex flex-col">
-          <h3 className="font-medium line-clamp-2 mb-1 text-sm text-center">
+          <h3 className="font-medium line-clamp-2 mb-1 text-xs md:text-sm text-center">
             {cleanTitle}
           </h3>
           {packageSize && (
@@ -463,48 +484,51 @@ function ProductCard({ product, quantity, onAddToCart, onUpdateQuantity }: Produ
           )}
           
           <div className="mt-auto">
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-bold text-primary text-lg">
+            <div className="flex items-center justify-center mb-2">
+              <span className="font-bold text-primary text-sm md:text-lg">
                 ${product.price.toFixed(2)}
               </span>
-              {quantity > 0 && (
+            </div>
+            
+            {quantity > 0 && (
+              <div className="text-center mb-2">
                 <Badge variant="secondary" className="text-xs">
                   {quantity} in cart
                 </Badge>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Quantity Controls - Smaller and Centered */}
+            {/* Quantity Controls - Responsive Size */}
             {quantity > 0 ? (
-              <div className="flex items-center justify-center gap-2 w-full">
+              <div className="flex items-center justify-center gap-1 md:gap-2 w-full">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(-1)}
-                  className="p-0 h-6 w-6 flex-shrink-0 rounded-full"
+                  className="p-0 h-5 w-5 md:h-6 md:w-6 flex-shrink-0 rounded-full"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-2 w-2 md:h-3 md:w-3" />
                 </Button>
-                <span className="font-medium min-w-[20px] text-center flex-1 text-sm">
+                <span className="font-medium min-w-[15px] md:min-w-[20px] text-center flex-1 text-xs md:text-sm">
                   {quantity}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(1)}
-                  className="p-0 h-6 w-6 flex-shrink-0 rounded-full"
+                  className="p-0 h-5 w-5 md:h-6 md:w-6 flex-shrink-0 rounded-full"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-2 w-2 md:h-3 md:w-3" />
                 </Button>
               </div>
             ) : (
               <div className="flex justify-center">
                 <Button
                   onClick={onAddToCart}
-                  className="h-6 w-6 rounded-full p-0 flex items-center justify-center"
+                  className="h-5 w-5 md:h-6 md:w-6 rounded-full p-0 flex items-center justify-center"
                   size="sm"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-2 w-2 md:h-3 md:w-3" />
                 </Button>
               </div>
             )}
