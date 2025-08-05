@@ -452,8 +452,8 @@ export default function CustomCollectionCreator() {
     });
   };
 
-  // Force re-sync selected products - regardless of current sync status
-  const forceSyncSelectedProducts = async () => {
+  // Bulk sync selected products using new GraphQL approach
+  const bulkSyncSelectedProducts = async () => {
     if (selectedProducts.size === 0) {
       toast({
         title: "Info",
@@ -462,101 +462,98 @@ export default function CustomCollectionCreator() {
       return;
     }
 
-    console.log('=== FORCE SYNCING SELECTED PRODUCTS ===');
-    console.log('Selected products:', Array.from(selectedProducts));
-
+    console.log('=== BULK SYNC SELECTED PRODUCTS ===');
+    const selectedProductIds = Array.from(selectedProducts);
+    
     setSyncing(true);
     try {
-      const selectedProductIds = Array.from(selectedProducts);
-      
-      // Get all modifications for selected products
-      const selectedModifications = productModifications.filter(mod => 
-        selectedProductIds.includes(mod.shopify_product_id)
-      );
-      
-      console.log('Found modifications for selected products:', selectedModifications.length);
+      // Group products by collection for batch operations
+      const operations = [{
+        type: 'add' as const,
+        collection_handle: bulkCollection || 'custom-products',
+        product_ids: selectedProductIds
+      }];
 
-      // If no modifications exist for some selected products, we need to handle this
-      const missingModifications = selectedProductIds.filter(productId => 
-        !productModifications.some(mod => mod.shopify_product_id === productId)
-      );
+      console.log(`🚀 Starting bulk sync with ${operations.length} operations`);
 
-      console.log('Products without modifications:', missingModifications.length);
+      // Use new bulk sync endpoint with GraphQL for speed
+      const { data: result, error } = await supabase.functions.invoke('shopify-bulk-sync', {
+        body: { operations }
+      });
 
-      // Create modifications for products that don't have them yet
-      if (missingModifications.length > 0) {
-        const newModifications = missingModifications.map(productId => {
-          const product = allProducts.find(p => p.id === productId);
-          return {
+      if (error) throw error;
+
+      console.log("✅ Bulk sync completed:", result);
+
+      // Update local modifications table efficiently
+      const updatePromises = selectedProductIds.map(async (productId) => {
+        const product = allProducts.find(p => p.id === productId);
+        return supabase
+          .from('product_modifications')
+          .upsert({
             shopify_product_id: productId,
             product_title: product?.title || 'Unknown Product',
             category: null,
             product_type: null,
-            collection: null,
-            synced_to_shopify: false,
-            app_synced: false
-          };
-        });
-
-        console.log('Creating new modifications:', newModifications.length);
-        const { error: insertError } = await supabase
-          .from('product_modifications')
-          .insert(newModifications);
-
-        if (insertError) throw insertError;
-      }
-
-      // Force all selected product modifications to be unsynced
-      console.log('Marking selected products as unsynced for re-sync...');
-      const { error: updateError } = await supabase
-        .from('product_modifications')
-        .update({ 
-          synced_to_shopify: false,
-          app_synced: false,
-          updated_at: new Date().toISOString()
-        })
-        .in('shopify_product_id', selectedProductIds);
-
-      if (updateError) throw updateError;
-
-      // Reload modifications to get updated data
-      await loadProductModifications();
-
-      // Use fast sync for immediate updates
-      console.log('🚀 Using fast sync for selected products...');
-      const { data: fastSyncResult, error: fastSyncError } = await supabase.functions.invoke('fast-product-sync', {
-        body: {
-          productIds: selectedProductIds,
-          collectionHandle: bulkCollection || 'custom-products',
-          operation: 'add'
-        }
+            collection: bulkCollection || 'custom-products',
+            synced_to_shopify: true,
+            app_synced: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
       });
-      
-      if (fastSyncError) {
-        console.error('Fast sync error:', fastSyncError);
-        throw fastSyncError;
-      }
-      
-      // Clear caches for immediate UI updates
+
+      await Promise.all(updatePromises);
+
+      // Trigger app sync in background for immediate UI response
+      supabase.functions.invoke('sync-products-to-app', {
+        body: { collection_handle: bulkCollection, incremental: true }
+      }).then(() => {
+        console.log('🔄 Background app sync triggered');
+      });
+
+      // Clear all relevant caches for immediate updates
       localStorage.removeItem('critical_products_v2');
       localStorage.removeItem('virtualized_products');
       localStorage.removeItem('shopify_collections_cache');
+
+      toast({
+        title: "✅ Bulk sync completed",
+        description: `Successfully synced ${selectedProductIds.length} products to Shopify. App updates processing in background.`,
+      });
+
+      await loadProductModifications();
+      setSelectedProducts(new Set());
       
-      // Now sync using the regular flow for Shopify integration
-      await syncToShopifyAndApp();
-
-      toast({
-        title: "Success",
-        description: `Fast synced ${selectedProducts.size} selected products! Changes will appear in delivery apps within 30 seconds.`,
-      });
-
     } catch (error) {
-      console.error('Error force syncing selected products:', error);
-      toast({
-        title: "Error",
-        description: "Failed to sync selected products.",
-        variant: "destructive"
-      });
+      console.error("❌ Bulk sync error:", error);
+      
+      // First check if it's an API permission error
+      const errorMessage = error.message || '';
+      if (errorMessage.includes('write_products') || errorMessage.includes('merchant approval')) {
+        toast({
+          title: "❌ Shopify API Permission Error", 
+          description: "Your Shopify app needs 'write_products' scope. Please update your Shopify app permissions.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "❌ Sync failed", 
+          description: "Bulk sync failed. Trying fallback method...",
+          variant: "destructive",
+        });
+        
+        // Fallback to individual sync
+        try {
+          await syncToShopifyAndApp();
+          toast({
+            title: "✅ Fallback successful",
+            description: "Used individual sync method successfully",
+          });
+        } catch (fallbackError) {
+          console.error('Fallback also failed:', fallbackError);
+        }
+      }
     } finally {
       setSyncing(false);
     }
@@ -1017,7 +1014,7 @@ export default function CustomCollectionCreator() {
                     </p>
                   </div>
                   <Button 
-                    onClick={forceSyncSelectedProducts}
+                    onClick={bulkSyncSelectedProducts}
                     disabled={syncing || selectedProducts.size === 0}
                     className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white"
                   >
