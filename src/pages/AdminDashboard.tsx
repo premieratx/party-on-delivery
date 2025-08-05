@@ -37,6 +37,7 @@ import { formatCurrency } from '@/utils/currency';
 import AITestingControl from '@/components/AITestingControl';
 import TestGHLIntegration from '@/components/TestGHLConnection';
 import CleanupUserData from '@/components/CleanupUserData';
+import { SystemTestingSuite } from '@/components/SystemTestingSuite';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -250,6 +251,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="performance">⚡ Performance</TabsTrigger>
+              <TabsTrigger value="system-tests">🧪 System Tests</TabsTrigger>
               <TabsTrigger value="ai-testing">🤖 AI Testing</TabsTrigger>
               <TabsTrigger value="ghl-setup">📱 GHL/SMS Setup</TabsTrigger>
               <TabsTrigger value="cleanup">🗑️ Cleanup</TabsTrigger>
@@ -540,6 +542,10 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="system-tests" className="space-y-4">
+            <SystemTestingSuite />
           </TabsContent>
 
           <TabsContent value="ai-testing" className="space-y-4">
