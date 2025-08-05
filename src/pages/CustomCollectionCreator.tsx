@@ -805,7 +805,7 @@ export default function CustomCollectionCreator() {
     const modification = productModifications.find(m => m.shopify_product_id === productId);
     if (!modification) return 'unmodified';
     if (modification.synced_to_shopify && modification.app_synced) return 'synced';
-    if (!modification.synced_to_shopify) return 're-synced';
+    if (!modification.synced_to_shopify) return 'pending';
     if (modification.synced_to_shopify && !modification.app_synced) return 'shopify-only';
     return 'pending';
   };
@@ -824,30 +824,36 @@ export default function CustomCollectionCreator() {
       const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
       const matchesProductType = productTypeFilter === 'all' || product.productType === productTypeFilter;
       
+      // Collection filter shows products in that collection regardless of sync status
       const matchesCollection = selectedCollectionFilter === 'all' || 
         product.collections?.some(c => c.title === selectedCollectionFilter || c.handle === selectedCollectionFilter) ||
         productModifications.find(m => m.shopify_product_id === product.id && m.collection === selectedCollectionFilter);
       
-      // Tab filtering based on modification and sync status
-      const hasUnsyncedModification = hasModification(product.id);
-      const isProductSynced = isSynced(product.id);
-      const isProductAppSynced = isAppSynced(product.id);
+      // Basic search/filter matching
+      const basicMatch = matchesSearch && matchesCategory && matchesProductType && matchesCollection;
+      
+      // If collection is selected, show all products in that collection
+      if (selectedCollectionFilter !== 'all') {
+        return basicMatch;
+      }
+      
+      // Otherwise, apply tab filtering based on modification and sync status
       const hasAnyMod = hasAnyModification(product.id);
       
       let matchesTab = false;
       if (activeTab === 'unsorted') {
-        // Show products that are either unmodified or have no modifications at all
+        // Show products that have no modifications (never been sorted)
         matchesTab = !hasAnyMod;
       } else if (activeTab === 'synced') {
-        // Show products that have any modification (synced, re-synced, or pending)
+        // Show products that have been sorted/synced (have modifications)
         matchesTab = hasAnyMod;
       }
       
-      return matchesSearch && matchesCategory && matchesProductType && matchesCollection && matchesTab;
+      return basicMatch && matchesTab;
     });
 
     return filtered;
-  }, [allProducts, productModifications, searchTerm, categoryFilter, productTypeFilter, activeTab]);
+  }, [allProducts, productModifications, searchTerm, categoryFilter, productTypeFilter, selectedCollectionFilter, activeTab]);
 
   const unsyncedCount = productModifications.filter(m => !m.synced_to_shopify).length;
 
@@ -1323,15 +1329,15 @@ export default function CustomCollectionCreator() {
                                    Synced
                                  </Badge>
                                );
-                             case 're-synced':
-                               return (
-                                 <Badge 
-                                   variant="secondary" 
-                                   className="text-xs bg-amber-100 text-amber-800 border-amber-200"
-                                 >
-                                   Re-synced
-                                 </Badge>
-                               );
+                              case 'pending':
+                                return (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="text-xs bg-amber-100 text-amber-800 border-amber-200"
+                                  >
+                                    Pending
+                                  </Badge>
+                                );
                              case 'shopify-only':
                                return (
                                  <Badge 
