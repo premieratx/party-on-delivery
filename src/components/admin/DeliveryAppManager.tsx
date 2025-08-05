@@ -10,7 +10,6 @@ import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CustomPostCheckoutEditor } from './CustomPostCheckoutEditor';
-import { CustomStartScreenEditor } from './CustomStartScreenEditor';
 
 interface DeliveryApp {
   id: string;
@@ -49,7 +48,6 @@ export function DeliveryAppManager() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingApp, setEditingApp] = useState<DeliveryApp | null>(null);
   const [selectedAppForConfig, setSelectedAppForConfig] = useState<DeliveryApp | null>(null);
-  const [selectedAppForStartScreen, setSelectedAppForStartScreen] = useState<DeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Form state
@@ -466,72 +464,117 @@ export function DeliveryAppManager() {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => copyAppUrl(app.app_slug)}
-                    >
-                      <Copy className="h-4 w-4 mr-1" />
-                      Copy URL
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.open(`/${app.app_slug}`, '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Start Page
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.open(`/${app.app_slug}/success`, '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Post-Checkout Page
-                    </Button>
-                     <Button
-                       size="sm"
-                       variant="outline"
-                       onClick={() => setSelectedAppForStartScreen(app)}
-                     >
-                       <Edit className="h-4 w-4 mr-1" />
-                       Start Screen
-                     </Button>
-                     <Button
-                       size="sm"
-                       variant="outline"
-                       onClick={() => setSelectedAppForConfig(app)}
-                     >
-                       <Settings className="h-4 w-4 mr-1" />
-                       Post-Checkout
-                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setEditingApp(app);
-                        setAppName(app.app_name);
-                        setTabCount(app.collections_config.tab_count);
-                        setTabs(app.collections_config.tabs.map(tab => ({
-                          name: tab.name,
-                          collection_handle: tab.collection_handle
-                        })));
-                        setIsCreating(true);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => deleteApp(app.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
-                    </Button>
+                  <div className="space-y-3">
+                    {/* Page URLs and Actions */}
+                    <div className="space-y-2">
+                      <h5 className="text-sm font-medium text-muted-foreground">Pages</h5>
+                      
+                      {/* Start Page Row */}
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <span className="text-sm">Start Page</span>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`/${app.app_slug}`, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Open
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/' + app.app_slug)}`, '_blank')}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* App Page Row */}
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <span className="text-sm">App Page (Tabs)</span>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`/app/${app.app_slug}`, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Open
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/app/' + app.app_slug)}`, '_blank')}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Post-Checkout Page Row */}
+                      <div className="flex items-center justify-between p-2 border rounded">
+                        <span className="text-sm">Post-Checkout Page</span>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`/${app.app_slug}/success`, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Open
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/' + app.app_slug + '/success')}`, '_blank')}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* App Management Actions */}
+                    <div className="flex gap-2 pt-3 border-t">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => copyAppUrl(app.app_slug)}
+                      >
+                        <Copy className="h-4 w-4 mr-1" />
+                        Copy URL
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingApp(app);
+                          setAppName(app.app_name);
+                          setTabCount(app.collections_config.tab_count);
+                          setTabs(app.collections_config.tabs.map(tab => ({
+                            name: tab.name,
+                            collection_handle: tab.collection_handle
+                          })));
+                          setIsCreating(true);
+                        }}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Configure
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => deleteApp(app.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -566,19 +609,6 @@ export function DeliveryAppManager() {
         </DialogContent>
       </Dialog>
 
-      {/* Start Screen Configuration Dialog */}
-      {selectedAppForStartScreen && (
-        <CustomStartScreenEditor
-          appId={selectedAppForStartScreen.id}
-          appName={selectedAppForStartScreen.app_name}
-          isOpen={!!selectedAppForStartScreen}
-          onClose={() => setSelectedAppForStartScreen(null)}
-          onConfigUpdated={(appId, config) => {
-            console.log('Start screen config updated:', config);
-            setSelectedAppForStartScreen(null);
-          }}
-        />
-      )}
     </div>
   );
 }
