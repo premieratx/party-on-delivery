@@ -92,12 +92,14 @@ export const ProductManagement: React.FC = () => {
     loadProductCategories();
   }, []);
 
-  const loadCollections = async () => {
+  const loadCollections = async (forceRefresh = false) => {
     try {
       setLoading(true);
       
-      // Fetch collections from Shopify via edge function
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      // Use the fast instant cache with optional force refresh for bulk sorting
+      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
+        body: { forceRefresh }
+      });
       
       if (error) {
         throw error;
@@ -107,7 +109,7 @@ export const ProductManagement: React.FC = () => {
         throw new Error(data.error);
       }
       
-      const collectionsData = data.collections || [];
+      const collectionsData = data.data?.collections || [];
       
       // Sort collections alphabetically
       const sortedCollections = collectionsData.sort((a: ShopifyCollection, b: ShopifyCollection) => 
@@ -118,14 +120,14 @@ export const ProductManagement: React.FC = () => {
       
       toast({
         title: "Success",
-        description: `Loaded ${collectionsData.length} collections from Shopify`,
+        description: `Loaded ${sortedCollections.length} collections with products (${data.source} cache)`,
       });
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading collections:', error);
       toast({
-        title: "Error",
-        description: `Failed to load collections: ${error.message}`,
+        title: "Error", 
+        description: "Failed to load collections. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -324,11 +326,12 @@ export const ProductManagement: React.FC = () => {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={loadCollections}
+              onClick={() => loadCollections(true)}
+              disabled={loading}
               className="flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
-              Refresh Collections
+              {loading ? 'Loading...' : 'Force Refresh'}
             </Button>
             <Button
               variant="outline"

@@ -67,8 +67,10 @@ export const ProductSearch = () => {
     try {
       setLoading(true);
       
-      // ULTRA FAST: Try instant cache first for immediate loading (<100ms)
-      const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+      // ULTRA FAST: Use instant cache with force refresh option
+      const { data: instantData } = await supabase.functions.invoke('instant-product-cache', {
+        body: { forceRefresh: false }
+      });
       
       if (instantData?.success && instantData?.data) {
         console.log('⚡ Ultra-fast search page load from instant cache');
