@@ -77,9 +77,17 @@ serve(async (req) => {
     logStep("Validating Stripe configuration");
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeSecretKey) {
-      throw new Error("STRIPE_SECRET_KEY not found in environment variables");
+      logStep("ERROR: STRIPE_SECRET_KEY missing from environment");
+      throw new Error("STRIPE_SECRET_KEY not found in environment variables. Please check Supabase secrets configuration.");
     }
-    logStep("✅ STRIPE_SECRET_KEY found", { keyPrefix: stripeSecretKey.substring(0, 12) + "..." });
+    if (!stripeSecretKey.startsWith('sk_')) {
+      logStep("ERROR: Invalid STRIPE_SECRET_KEY format", { keyPrefix: stripeSecretKey.substring(0, 8) });
+      throw new Error("Invalid STRIPE_SECRET_KEY format. Must start with 'sk_'");
+    }
+    logStep("✅ STRIPE_SECRET_KEY validated", { 
+      keyPrefix: stripeSecretKey.substring(0, 12) + "...",
+      environment: stripeSecretKey.includes('test') ? 'test' : 'live'
+    });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {

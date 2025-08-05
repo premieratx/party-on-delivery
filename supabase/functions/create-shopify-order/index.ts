@@ -391,53 +391,82 @@ serve(async (req) => {
         // Set line items (NO tip here - it goes in native tip field)
         line_items: lineItems,
         
-        // Proper Shopify shipping lines structure
+        // Proper Shopify shipping lines structure - matches Stripe exactly
         shipping_lines: shippingFee > 0 ? [{
-          title: `Local Delivery (0.0 lb: Items 0.0 lb, Package 0.0 lb)`,
-          price: shippingFee.toString(),
+          title: "Local Delivery",
+          price: shippingFee.toFixed(2),
           code: "LOCAL_DELIVERY",
-          carrier_identifier: "custom",
-          requested_fulfillment_service_id: null
+          source: "shopify",
+          phone: customerPhone || null,
+          delivery_method: "local"
         }] : [],
         
-        // Proper Shopify tax lines structure  
+        // Proper Shopify tax lines structure - matches Stripe exactly
         tax_lines: salesTax > 0 ? [{
-          title: "Sales Tax 8.25%",
-          price: salesTax.toString(),
-          rate: 0.0825
+          title: "Sales Tax",
+          price: salesTax.toFixed(2),
+          rate: (salesTax / subtotal).toFixed(4)
         }] : [],
         
-        // Apply discount codes properly
-        ...(discountCode && discountAmount && {
+        // Apply discount codes properly with exact Shopify structure
+        ...(discountCode && discountAmount && parseFloat(discountAmount) > 0 && {
+          discount_applications: [{
+            title: discountCode,
+            description: `${discountCode} discount applied`,
+            value: Math.abs(parseFloat(discountAmount)).toFixed(2),
+            value_type: discountType === 'percentage_discount' ? 'percentage' : 'fixed_amount',
+            allocation_method: "across",
+            target_selection: "all",
+            target_type: "line_item"
+          }],
           discount_codes: [{
             code: discountCode,
-            amount: Math.abs(parseFloat(discountAmount)).toString(),
+            amount: Math.abs(parseFloat(discountAmount)).toFixed(2),
             type: discountType === 'percentage_discount' ? 'percentage' : 'fixed_amount'
           }]
         }),
         
-        // Set totals to match Stripe charge exactly
-        subtotal_price: subtotal.toString(),
-        total_tax: salesTax.toString(),
+        // Set totals to match Stripe charge exactly - precision formatting
+        subtotal_price: subtotal.toFixed(2),
+        total_tax: salesTax.toFixed(2),
         total_shipping_price_set: {
           shop_money: {
-            amount: shippingFee.toString(),
+            amount: shippingFee.toFixed(2),
+            currency_code: "USD"
+          },
+          presentment_money: {
+            amount: shippingFee.toFixed(2),
             currency_code: "USD"
           }
         },
         
-        // Handle tip properly - Use Shopify's native tip support AND add as line item for visibility
+        // Handle tip properly - Use Shopify's native tip support
         ...(tipAmount > 0 && {
           total_tips_set: {
             shop_money: {
-              amount: (tipAmount * 100).toString(), // Convert to cents for Shopify
+              amount: tipAmount.toFixed(2),
+              currency_code: "USD"
+            },
+            presentment_money: {
+              amount: tipAmount.toFixed(2),
               currency_code: "USD"
             }
           }
         }),
         
-        current_total_price: totalAmount.toString(),
-        total_price: totalAmount.toString(),
+        // Ensure exact price matching for order totals
+        current_total_price: totalAmount.toFixed(2),
+        total_price: totalAmount.toFixed(2),
+        total_price_set: {
+          shop_money: {
+            amount: totalAmount.toFixed(2),
+            currency_code: "USD"
+          },
+          presentment_money: {
+            amount: totalAmount.toFixed(2),
+            currency_code: "USD"
+          }
+        },
         note: `🚚 DELIVERY ORDER 🚚
 📅 Delivery Date: ${deliveryDate}
 ⏰ Delivery Time: ${deliveryTime}
