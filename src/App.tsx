@@ -43,6 +43,8 @@ import TestGroupOrderFlow from "./pages/TestGroupOrderFlow";
 import GroupOrderInvite from "./pages/GroupOrderInvite";
 import DeliveryAppManagerPage from "./pages/DeliveryAppManager";
 import MainDeliveryApp from "./pages/MainDeliveryApp";
+import AirbnbConciergeServiceStartScreen from "./pages/AirbnbConciergeServiceStartScreen";
+import AirbnbConciergeServiceTabsPage from "./pages/AirbnbConciergeServiceTabsPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -117,9 +119,13 @@ const App = () => {
                    {/* Delivery App Variations */}
                    <Route path="/delivery-app/:appSlug" element={<DeliveryAppView />} />
                    
-                   {/* Individual Custom Delivery Apps - Dynamic Routes */}
-                   <Route path="/:appName" element={<CustomAppView />} />
-                   <Route path="/:appName/success" element={<CustomAppPostCheckout />} />
+                    {/* Specific Airbnb Concierge Service Routes */}
+                    <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
+                    <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
+                    
+                    {/* Individual Custom Delivery Apps - Dynamic Routes */}
+                    <Route path="/:appName" element={<CustomAppView />} />
+                    <Route path="/:appName/success" element={<CustomAppPostCheckout />} />
                   
                   {/* Test Routes */}
               <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />
