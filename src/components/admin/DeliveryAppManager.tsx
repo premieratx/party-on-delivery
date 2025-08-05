@@ -337,6 +337,97 @@ export function DeliveryAppManager() {
         </Button>
       </div>
 
+      {/* Delivery App Template Section */}
+      <Card className="border-2 border-primary/20 bg-primary/5">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-primary">Delivery App Template</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Base template cloned from main delivery app - used for creating new apps
+              </p>
+            </div>
+            <Badge variant="outline" className="text-primary border-primary">
+              Template
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <h5 className="text-sm font-medium text-muted-foreground">Template Pages</h5>
+            
+            {/* Template Start Page */}
+            <div className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">Start Screen Template</span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open('/delivery-app', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Open
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/delivery-app')}`, '_blank')}
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              </div>
+            </div>
+
+            {/* Template App Page */}
+            <div className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">App Page Template (Tabs)</span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open('/delivery-app-view', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Open
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/delivery-app-view')}`, '_blank')}
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              </div>
+            </div>
+
+            {/* Template Post-Checkout Page */}
+            <div className="flex items-center justify-between p-2 border rounded">
+              <span className="text-sm">Post-Checkout Template</span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open('/success', '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Open
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/success')}`, '_blank')}
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Create/Edit Dialog */}
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">

@@ -153,6 +153,8 @@ export const ProductManagement: React.FC = () => {
   const selectCollection = (collection: ShopifyCollection) => {
     setSelectedCollection(collection);
     setProducts(collection.products || []);
+    // Reset category filter when switching collections to show all products
+    setFilterCategory('all');
   };
 
   const updateProductCategory = async (productId: string, category: string, subcategory?: string) => {
@@ -433,13 +435,16 @@ export const ProductManagement: React.FC = () => {
                     <Select 
                       value={selectedCollection?.id || 'none'} 
                       onValueChange={(value) => {
-                        if (value === 'none') {
-                          setSelectedCollection(null);
-                          setProducts([]);
-                        } else {
-                          const collection = collections.find(c => c.id === value);
-                          if (collection) selectCollection(collection);
-                        }
+                         if (value === 'none') {
+                           setSelectedCollection(null);
+                           // Show all products from all collections
+                           const allProducts = collections.flatMap(c => c.products || []);
+                           setProducts(allProducts);
+                           setFilterCategory('all');
+                         } else {
+                           const collection = collections.find(c => c.id === value);
+                           if (collection) selectCollection(collection);
+                         }
                       }}
                     >
                       <SelectTrigger>
