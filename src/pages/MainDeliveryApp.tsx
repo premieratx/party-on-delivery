@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ProductCategories } from '@/components/delivery/ProductCategories';
-import { DeliveryCart } from '@/components/delivery/DeliveryCart';
+import { OptimizedProductCategories } from '@/components/delivery/OptimizedProductCategories';
+import { UnifiedCart } from '@/components/common/UnifiedCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
@@ -40,8 +40,8 @@ export default function MainDeliveryApp() {
   };
 
   const handleCheckout = () => {
-    // For template purposes, just close cart
-    setIsCartOpen(false);
+    // Navigate to checkout page
+    window.location.href = '/checkout';
   };
 
   // Convert unified cart items to the format expected by ProductCategories
@@ -65,28 +65,22 @@ export default function MainDeliveryApp() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Always show ProductCategories - this is the main tabs view */}
-      <ProductCategories
+      {/* Optimized Product Categories */}
+      <OptimizedProductCategories
         onAddToCart={handleAddToCart}
         cartItemCount={getTotalItems()}
         onOpenCart={() => setIsCartOpen(true)}
         cartItems={cartItemsForCategories}
         onUpdateQuantity={handleUpdateQuantity}
-        onProceedToCheckout={() => setIsCartOpen(true)}
+        onProceedToCheckout={handleCheckout}
         onBack={() => {}} // No back action for template
       />
 
-      {/* Cart sidebar */}
-      <DeliveryCart
+      {/* Unified Cart sidebar with cart trigger */}
+      <div data-cart-trigger onClick={() => setIsCartOpen(true)} className="hidden" />
+      <UnifiedCart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        items={cartItemsForCategories}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveFromCart}
-        totalPrice={getTotalPrice()}
-        onCheckout={handleCheckout}
-        deliveryInfo={mockDeliveryInfo}
-        onEmptyCart={handleEmptyCart}
       />
 
       {/* Bottom cart bar */}

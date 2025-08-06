@@ -53,7 +53,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           
           {/* Checkout button */}
           <Button
-            onClick={onCheckout}
+            onClick={() => window.location.href = '/checkout'}
             size="sm"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-1 sm:gap-2 flex-1 sm:flex-initial sm:min-w-[120px] justify-center h-8 sm:h-9"
             data-checkout-trigger="true"

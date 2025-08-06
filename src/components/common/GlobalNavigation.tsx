@@ -19,6 +19,7 @@ import {
   X,
   ChevronRight
 } from 'lucide-react';
+import { DeliveryAppDropdown } from '@/components/admin/DeliveryAppDropdown';
 
 interface NavigationProps {
   className?: string;
@@ -38,7 +39,6 @@ const navigationItems: NavItem[] = [
   { icon: Home, label: 'Home', href: '/', show: 'always', category: 'main' },
   { icon: Search, label: 'Search Products', href: '/search', show: 'always', category: 'main' },
   { icon: Package, label: 'Main Delivery', href: '/main-delivery-app', show: 'always', category: 'main' },
-  { icon: Users, label: 'Group Orders', href: '/group', show: 'always', category: 'main' },
   { icon: Gift, label: 'Party Planner', href: '/plan-my-party', show: 'always', category: 'main' },
   
   // User accounts
@@ -51,6 +51,7 @@ const navigationItems: NavItem[] = [
   { icon: Settings, label: 'Admin Panel', href: '/admin', show: 'admin', category: 'admin' },
   { icon: Package, label: 'Product Management', href: '/admin/product-management', show: 'admin', category: 'admin' },
   { icon: Settings, label: 'Delivery Apps', href: '/admin/delivery-app-manager', show: 'admin', category: 'admin' },
+  { icon: Users, label: 'Group Orders', href: '/group', show: 'admin', category: 'admin' },
 ];
 
 export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
@@ -365,7 +366,7 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
               </button>
               
               <nav className="flex items-center gap-4">
-                {getVisibleItems('main').slice(0, 4).map((item) => (
+                {getVisibleItems('main').filter(item => item.label !== 'Main Delivery').slice(0, 3).map((item) => (
                   <Button
                     key={item.href}
                     variant={location.pathname === item.href ? 'default' : 'ghost'}
@@ -377,6 +378,9 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
                     {item.label}
                   </Button>
                 ))}
+                
+                {/* Delivery App Dropdown */}
+                <DeliveryAppDropdown />
               </nav>
             </div>
 
