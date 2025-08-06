@@ -100,14 +100,20 @@ export const DeliveryAppDropdown: React.FC = () => {
   const handleAppSelect = (app: DeliveryApp) => {
     if (app.id === 'main') {
       navigate('/main-delivery-app');
-    } else if (app.handle === 'airbnb-concierge-service') {
-      navigate('/airbnb-concierge-service-start-screen');
-    } else if (app.handle === 'boat-delivery') {
-      // Navigate to boat delivery when that page exists
-      navigate('/main-delivery-app'); // Fallback for now
     } else {
-      // Navigate to custom delivery app
-      navigate(`/custom-delivery-app/${app.handle}`);
+      // Open custom delivery apps in new window for independent operation
+      const baseUrl = window.location.origin;
+      let targetUrl = '';
+      
+      if (app.handle === 'airbnb-concierge-service') {
+        targetUrl = `${baseUrl}/airbnb-concierge-service-start-screen`;
+      } else if (app.handle === 'boat-delivery') {
+        targetUrl = `${baseUrl}/main-delivery-app`; // Fallback for now
+      } else {
+        targetUrl = `${baseUrl}/custom-delivery-app/${app.handle}`;
+      }
+      
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
