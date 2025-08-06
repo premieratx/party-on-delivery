@@ -1,187 +1,432 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ShoppingCart, CreditCard } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { 
+  Home, 
+  ShoppingCart, 
+  Users, 
+  User, 
+  Settings, 
+  Menu,
+  Search,
+  Package,
+  TrendingUp,
+  Gift,
+  Phone,
+  X,
+  ChevronRight
+} from 'lucide-react';
 
-interface NavigationState {
-  path: string;
-  timestamp: number;
+interface NavigationProps {
+  className?: string;
 }
 
-export const GlobalNavigation = ({ className }: { className?: string }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { getTotalItems, getTotalPrice, cartItems } = useUnifiedCart();
+interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  badge?: string;
+  show: 'always' | 'authenticated' | 'admin' | 'affiliate' | 'customer';
+  category: 'main' | 'user' | 'admin' | 'affiliate';
+}
+
+const navigationItems: NavItem[] = [
+  // Main navigation
+  { icon: Home, label: 'Home', href: '/', show: 'always', category: 'main' },
+  { icon: Search, label: 'Search Products', href: '/search', show: 'always', category: 'main' },
+  { icon: Package, label: 'Main Delivery', href: '/main-delivery-app', show: 'always', category: 'main' },
+  { icon: Users, label: 'Group Orders', href: '/group', show: 'always', category: 'main' },
+  { icon: Gift, label: 'Party Planner', href: '/plan-my-party', show: 'always', category: 'main' },
   
-  // Hide cart button on search page
-  const isSearchPage = location.pathname === '/search';
+  // User accounts
+  { icon: User, label: 'Customer Login', href: '/customer/login', show: 'always', category: 'user' },
+  { icon: TrendingUp, label: 'Affiliate Program', href: '/affiliate', show: 'always', category: 'affiliate' },
+  { icon: User, label: 'My Dashboard', href: '/customer/dashboard', show: 'customer', category: 'user' },
+  { icon: TrendingUp, label: 'Affiliate Dashboard', href: '/affiliate/dashboard', show: 'affiliate', category: 'affiliate' },
+  
+  // Admin
+  { icon: Settings, label: 'Admin Panel', href: '/admin', show: 'admin', category: 'admin' },
+  { icon: Package, label: 'Product Management', href: '/admin/product-management', show: 'admin', category: 'admin' },
+  { icon: Settings, label: 'Delivery Apps', href: '/admin/delivery-app-manager', show: 'admin', category: 'admin' },
+];
 
-  // Get navigation history from sessionStorage
-  const getNavigationHistory = (): NavigationState[] => {
-    try {
-      const history = sessionStorage.getItem('navigation-history');
-      return history ? JSON.parse(history) : [];
-    } catch {
-      return [];
-    }
-  };
+export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const [userType, setUserType] = useState<'guest' | 'customer' | 'affiliate' | 'admin'>('guest');
+  const [showNavigation, setShowNavigation] = useState(true);
+  const { getTotalItems, getTotalPrice } = useUnifiedCart();
 
-  // Update navigation history
-  const updateNavigationHistory = (path: string) => {
-    const history = getNavigationHistory();
-    const newEntry: NavigationState = {
-      path,
-      timestamp: Date.now()
-    };
-    
-    // Remove duplicate paths and add new entry
-    const filteredHistory = history.filter(entry => entry.path !== path);
-    const updatedHistory = [...filteredHistory, newEntry];
-    
-    // Keep only last 20 entries
-    const trimmedHistory = updatedHistory.slice(-20);
-    
-    sessionStorage.setItem('navigation-history', JSON.stringify(trimmedHistory));
-  };
-
-  // Update history when location changes
-  React.useEffect(() => {
-    updateNavigationHistory(location.pathname);
+  // Check if current route should show navigation
+  useEffect(() => {
+    const hideNavOnRoutes = ['/checkout', '/order-complete', '/success'];
+    const shouldShow = !hideNavOnRoutes.some(route => location.pathname.startsWith(route));
+    setShowNavigation(shouldShow);
   }, [location.pathname]);
 
-  const history = getNavigationHistory();
-  const currentIndex = history.findIndex(entry => entry.path === location.pathname);
-  
-  const canGoBack = currentIndex > 0;
-  const canGoForward = currentIndex < history.length - 1 && currentIndex !== -1;
-
-  const handleBack = () => {
-    if (canGoBack) {
-      const previousPath = history[currentIndex - 1].path;
-      navigate(previousPath);
+  // Detect user type from URL and localStorage
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith('/admin')) {
+      setUserType('admin');
+    } else if (path.startsWith('/affiliate') && path !== '/affiliate') {
+      setUserType('affiliate');
+    } else if (path.startsWith('/customer') && path !== '/customer/login') {
+      setUserType('customer');
     } else {
-      // If no history, go to main delivery app
-      navigate('/');
+      setUserType('guest');
     }
-  };
+  }, [location.pathname]);
 
-  const handleForward = () => {
-    if (canGoForward) {
-      const nextPath = history[currentIndex + 1].path;
-      navigate(nextPath);
-    }
-  };
-
-  const handleHome = () => {
-    // Always go to the main delivery app home
-    navigate('/');
-  };
-
-  const handleCart = () => {
-    // Always trigger cart modal from delivery app
-    const cartButton = document.querySelector('[data-cart-trigger]') as HTMLButtonElement;
-    if (cartButton) {
-      cartButton.click();
-    } else {
-      // If not on delivery app, navigate there first then show cart
-      navigate('/');
-      setTimeout(() => {
-        const cartButtonRetry = document.querySelector('[data-cart-trigger]') as HTMLButtonElement;
-        if (cartButtonRetry) {
-          cartButtonRetry.click();
+  // Filter navigation items based on user type
+  const getVisibleItems = (category: string) => {
+    return navigationItems
+      .filter(item => item.category === category)
+      .filter(item => {
+        switch (item.show) {
+          case 'always':
+            return true;
+          case 'authenticated':
+            return userType !== 'guest';
+          case 'admin':
+            return userType === 'admin';
+          case 'affiliate':
+            return userType === 'affiliate';
+          case 'customer':
+            return userType === 'customer';
+          default:
+            return true;
         }
-      }, 100);
-    }
+      });
   };
 
-  const handleCheckout = () => {
-    if (cartItems.length === 0) {
-      // Navigate to home if cart is empty
-      navigate('/');
-      return;
-    }
-    
-    // If we're on the main delivery app, trigger checkout
-    if (location.pathname === '/' || location.pathname === '') {
-      // Try to find and click the checkout button in the current page
-      const checkoutButton = document.querySelector('[data-checkout-trigger]') as HTMLButtonElement;
-      if (checkoutButton) {
-        checkoutButton.click();
-        return;
-      }
-    }
-    
-    // Navigate to checkout page with cart data
-    navigate('/?step=checkout');
+  const handleNavigation = (href: string) => {
+    navigate(href);
+    setIsOpen(false);
   };
+
+  // Cart summary for mobile
+  const cartItems = getTotalItems();
+  const cartTotal = getTotalPrice();
+
+  if (!showNavigation) {
+    return null;
+  }
 
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50",
-      "bg-background/95 backdrop-blur border-t shadow-lg",
-      "flex items-center justify-between px-1 sm:px-4 py-2",
-      "h-14", // Fixed height for consistency
-      className
-    )}>
-      {/* Left: Back/Forward Navigation */}
-      <div className="flex items-center gap-0.5 sm:gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleBack}
-          disabled={!canGoBack}
-          className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[60px] sm:min-w-auto"
-        >
-          <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-          <span className="hidden sm:inline">Back</span>
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleForward}
-          disabled={!canGoForward}
-          className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[60px] sm:min-w-auto"
-        >
-          <span className="hidden sm:inline">Next</span>
-          <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 sm:ml-1" />
-        </Button>
-      </div>
-
-      {/* Center: Page indicator (hidden on small screens to save space) */}
-      <div className="text-xs text-muted-foreground hidden md:block">
-        {currentIndex + 1} / {history.length}
-      </div>
-
-      {/* Right: Home and Checkout */}
-      <div className="flex items-center gap-0.5 sm:gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleHome}
-          className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[60px] sm:min-w-auto"
-        >
-          <Home className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-          <span className="hidden sm:inline">Home</span>
-        </Button>
-
-        {/* Checkout Button - Always visible when there are items in cart */}
-        {cartItems.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCheckout}
-            className="h-8 sm:h-9 px-1 sm:px-3 text-xs sm:text-sm min-w-[70px] sm:min-w-auto bg-primary/10 hover:bg-primary/20"
-            data-checkout-global="true"
+    <>
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/20 md:hidden">
+        <div className="grid grid-cols-5 h-14">
+          {/* Home */}
+          <button
+            onClick={() => handleNavigation('/')}
+            className={`flex flex-col items-center justify-center text-xs transition-colors ${
+              location.pathname === '/' 
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Checkout</span>
-            <span className="sm:hidden">Pay</span>
-          </Button>
-        )}
+            <Home className="h-4 w-4 mb-1" />
+            <span>Home</span>
+          </button>
+
+          {/* Search */}
+          <button
+            onClick={() => handleNavigation('/search')}
+            className={`flex flex-col items-center justify-center text-xs transition-colors ${
+              location.pathname === '/search' 
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Search className="h-4 w-4 mb-1" />
+            <span>Search</span>
+          </button>
+
+          {/* Cart */}
+          <button
+            onClick={() => {
+              const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
+              cartTrigger?.click();
+            }}
+            className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors relative"
+          >
+            <ShoppingCart className="h-4 w-4 mb-1" />
+            <span>Cart</span>
+            {cartItems > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 text-[10px] rounded-full p-0 flex items-center justify-center"
+              >
+                {cartItems}
+              </Badge>
+            )}
+          </button>
+
+          {/* Account */}
+          <button
+            onClick={() => {
+              if (userType === 'affiliate') {
+                handleNavigation('/affiliate/dashboard');
+              } else if (userType === 'customer') {
+                handleNavigation('/customer/dashboard');
+              } else if (userType === 'admin') {
+                handleNavigation('/admin');
+              } else {
+                handleNavigation('/customer/login');
+              }
+            }}
+            className={`flex flex-col items-center justify-center text-xs transition-colors ${
+              ['/customer/dashboard', '/affiliate/dashboard', '/admin'].some(path => location.pathname.startsWith(path))
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <User className="h-4 w-4 mb-1" />
+            <span>Account</span>
+          </button>
+
+          {/* More Menu */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <button className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <Menu className="h-4 w-4 mb-1" />
+                <span>More</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-80">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold">Menu</h3>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-muted rounded-lg transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Cart Summary */}
+                {cartItems > 0 && (
+                  <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                    <h4 className="font-medium mb-2">Your Cart</h4>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">{cartItems} items</span>
+                      <span className="font-semibold">${cartTotal.toFixed(2)}</span>
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
+                        cartTrigger?.click();
+                        setIsOpen(false);
+                      }}
+                      className="w-full mt-3"
+                      size="sm"
+                    >
+                      View Cart
+                    </Button>
+                  </div>
+                )}
+
+                {/* Main Navigation */}
+                <div>
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                    Quick Actions
+                  </h4>
+                  <div className="space-y-1">
+                    {getVisibleItems('main').map((item) => (
+                      <button
+                        key={item.href}
+                        onClick={() => handleNavigation(item.href)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                          location.pathname === item.href
+                            ? 'bg-primary/10 text-primary'
+                            : 'hover:bg-muted/50'
+                        }`}
+                      >
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="font-medium">{item.label}</span>
+                        <ChevronRight className="h-4 w-4 ml-auto opacity-50" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* User Navigation */}
+                {getVisibleItems('user').length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                      Account
+                    </h4>
+                    <div className="space-y-1">
+                      {getVisibleItems('user').map((item) => (
+                        <button
+                          key={item.href}
+                          onClick={() => handleNavigation(item.href)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                            location.pathname === item.href
+                              ? 'bg-primary/10 text-primary'
+                              : 'hover:bg-muted/50'
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="font-medium">{item.label}</span>
+                          <ChevronRight className="h-4 w-4 ml-auto opacity-50" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Affiliate Navigation */}
+                {getVisibleItems('affiliate').length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                      Affiliate
+                    </h4>
+                    <div className="space-y-1">
+                      {getVisibleItems('affiliate').map((item) => (
+                        <button
+                          key={item.href}
+                          onClick={() => handleNavigation(item.href)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                            location.pathname === item.href
+                              ? 'bg-primary/10 text-primary'
+                              : 'hover:bg-muted/50'
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="font-medium">{item.label}</span>
+                          <ChevronRight className="h-4 w-4 ml-auto opacity-50" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Navigation */}
+                {getVisibleItems('admin').length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                      Admin
+                    </h4>
+                    <div className="space-y-1">
+                      {getVisibleItems('admin').map((item) => (
+                        <button
+                          key={item.href}
+                          onClick={() => handleNavigation(item.href)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors ${
+                            location.pathname === item.href
+                              ? 'bg-primary/10 text-primary'
+                              : 'hover:bg-muted/50'
+                          }`}
+                        >
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="font-medium">{item.label}</span>
+                          <ChevronRight className="h-4 w-4 ml-auto opacity-50" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Support */}
+                <div className="pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open('tel:+15127778888')}
+                    className="w-full justify-start gap-3"
+                  >
+                    <Phone className="h-4 w-4" />
+                    Call Support
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
-    </div>
+
+      {/* Desktop Navigation - Simple top bar */}
+      <div className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/20">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => handleNavigation('/')}
+                className="font-bold text-xl text-primary"
+              >
+                Party On Delivery
+              </button>
+              
+              <nav className="flex items-center gap-4">
+                {getVisibleItems('main').slice(0, 4).map((item) => (
+                  <Button
+                    key={item.href}
+                    variant={location.pathname === item.href ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handleNavigation(item.href)}
+                    className="gap-2"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Button>
+                ))}
+              </nav>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Cart Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
+                  cartTrigger?.click();
+                }}
+                className="relative gap-2"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Cart
+                {cartItems > 0 && (
+                  <Badge variant="destructive" className="ml-1">
+                    {cartItems}
+                  </Badge>
+                )}
+              </Button>
+
+              {/* Account Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (userType === 'affiliate') {
+                    handleNavigation('/affiliate/dashboard');
+                  } else if (userType === 'customer') {
+                    handleNavigation('/customer/dashboard');
+                  } else if (userType === 'admin') {
+                    handleNavigation('/admin');
+                  } else {
+                    handleNavigation('/customer/login');
+                  }
+                }}
+                className="gap-2"
+              >
+                <User className="h-4 w-4" />
+                {userType === 'guest' ? 'Login' : 'Account'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop spacing */}
+      <div className="hidden md:block h-16" />
+    </>
   );
 };
