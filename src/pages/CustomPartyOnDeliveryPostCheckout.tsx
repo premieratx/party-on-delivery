@@ -23,12 +23,39 @@ const CustomPartyOnDeliveryPostCheckout = () => {
         sessionId, paymentIntentId, orderNumber, errorParam
       });
       
-      if (errorParam) {
+        if (errorParam) {
+        console.log("🔥 ERROR PARAM DETECTED:", errorParam);
         setIsLoading(false);
-        toast({
-          title: "Order Processing Error",
-          description: "There was an issue creating your order. Please contact support.",
-          variant: "destructive",
+        
+        // Show specific error message based on error type
+        let errorTitle = "Order Processing Issue";
+        let errorDescription = "Your payment was processed but there was an issue creating your order.";
+        
+        if (errorParam.includes('processed') || errorParam.includes('payment')) {
+          errorTitle = "Payment Processed Successfully";
+          errorDescription = "Your payment went through! We're still processing your order. Please check your email for confirmation or contact support if needed.";
+          
+          toast({
+            title: errorTitle,
+            description: errorDescription,
+            variant: "default", // Use default variant for payment success
+          });
+        } else {
+          toast({
+            title: errorTitle,
+            description: errorDescription,
+            variant: "destructive",
+          });
+        }
+        
+        // Still try to show order data if available
+        const orderNumber = urlParams.get('order_number') || "Your order is being processed";
+        setOrderData({
+          order_number: orderNumber,
+          line_items: [],
+          total_amount: 0,
+          customer: { first_name: 'Customer' },
+          payment_intent_id: paymentIntentId
         });
         return;
       }

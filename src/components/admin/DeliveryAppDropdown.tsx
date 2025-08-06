@@ -107,8 +107,8 @@ export const DeliveryAppDropdown: React.FC = () => {
       
       if (app.handle === 'airbnb-concierge-service') {
         targetUrl = `${baseUrl}/airbnb-concierge-service-start-screen`;
-      } else if (app.handle === 'boat-delivery') {
-        targetUrl = `${baseUrl}/main-delivery-app`; // Fallback for now
+      } else if (app.handle === 'party-on-delivery---concierge-') {
+        targetUrl = `${baseUrl}/party-on-delivery---concierge-`;
       } else {
         targetUrl = `${baseUrl}/custom-delivery-app/${app.handle}`;
       }
