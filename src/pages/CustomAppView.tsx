@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useWakeLock } from '@/hooks/useWakeLock';
-import { useReliableStorage } from '@/hooks/useReliableStorage';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { CustomDeliveryStartScreen } from '@/components/custom-delivery/CustomDeliveryStartScreen';
 import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
@@ -21,14 +20,6 @@ interface CustomCartItem {
   image: string;
   variant?: string;
   category?: string;
-}
-
-interface CustomDeliveryInfo {
-  selectedDate: string | null;
-  selectedTime: string | null;
-  customerInfo: any | null;
-  deliveryAddress: any | null;
-  specialInstructions: string;
 }
 
 interface DeliveryAppConfig {
@@ -56,104 +47,124 @@ interface DeliveryAppConfig {
   };
 }
 
+// Centralized app config fetcher with caching
+const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null> => {
+  if (!appName) return null;
+
+  const { data, error } = await supabase
+    .from('delivery_app_variations')
+    .select('*')
+    .eq('app_slug', appName)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error loading app config:', error);
+    throw new Error('Failed to load delivery app configuration');
+  }
+
+  if (!data) return null;
+
+  return {
+    app_name: data.app_name,
+    app_slug: data.app_slug,
+    collections_config: data.collections_config as {
+      tab_count: number;
+      tabs: Array<{
+        name: string;
+        collection_handle: string;
+        icon?: string;
+      }>;
+    },
+    start_screen_config: data.start_screen_config as {
+      title: string;
+      subtitle: string;
+    } | undefined,
+    main_app_config: data.main_app_config as {
+      hero_heading: string;
+    } | undefined,
+    post_checkout_config: data.post_checkout_config as {
+      heading: string;
+      subheading: string;
+      redirect_url: string;
+    } | undefined
+  };
+};
+
+// Optimized storage hook
+const useAppStep = (initialStep: CustomDeliveryStep = 'start') => {
+  const [step, setStep] = useState<CustomDeliveryStep>(() => {
+    try {
+      const stored = sessionStorage.getItem('customDeliveryStep');
+      return (stored as CustomDeliveryStep) || initialStep;
+    } catch {
+      return initialStep;
+    }
+  });
+
+  const updateStep = (newStep: CustomDeliveryStep) => {
+    setStep(newStep);
+    try {
+      sessionStorage.setItem('customDeliveryStep', newStep);
+    } catch (error) {
+      console.warn('Failed to save step to sessionStorage:', error);
+    }
+  };
+
+  return [step, updateStep] as const;
+};
+
 export default function CustomAppView() {
   const { appName } = useParams<{ appName: string }>();
   useWakeLock();
   
-  const [currentStep, setCurrentStep] = useReliableStorage<CustomDeliveryStep>('customDeliveryStep', 'start');
-  const [deliveryInfo, setDeliveryInfo] = useLocalStorage<CustomDeliveryInfo>('customDeliveryInfo', {
-    selectedDate: null,
-    selectedTime: null,
-    customerInfo: null,
-    deliveryAddress: null,
-    specialInstructions: ''
-  });
+  const [currentStep, setCurrentStep] = useAppStep('start');
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [appConfig, setAppConfig] = useState<DeliveryAppConfig | null>(null);
-  const [loading, setLoading] = useState(true);
   
   const cartHook = useUnifiedCart();
   const { cartItems, addToCart, updateQuantity, emptyCart, getTotalItems, getTotalPrice } = cartHook;
 
-  // Load app configuration
-  useEffect(() => {
-    const loadAppConfig = async () => {
-      if (!appName) {
-        setLoading(false);
-        return;
-      }
+  // Optimized app config loading with React Query caching
+  const {
+    data: appConfig,
+    isLoading,
+    error,
+    isError
+  } = useQuery({
+    queryKey: ['delivery-app-config', appName],
+    queryFn: () => fetchAppConfig(appName!),
+    enabled: !!appName,
+    staleTime: 10 * 60 * 1000, // 10 minutes - configs don't change often
+    gcTime: 30 * 60 * 1000, // 30 minutes cache (updated from cacheTime)
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
 
-      try {
-        const { data, error } = await supabase
-          .from('delivery_app_variations')
-          .select('*')
-          .eq('app_slug', appName)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error loading app config:', error);
-          toast.error('Delivery app not found');
-          return;
-        }
-
-        if (data) {
-          const typedConfig = {
-            app_name: data.app_name,
-            app_slug: data.app_slug,
-            collections_config: data.collections_config as {
-              tab_count: number;
-              tabs: Array<{
-                name: string;
-                collection_handle: string;
-                icon?: string;
-              }>;
-            },
-            start_screen_config: data.start_screen_config as {
-              title: string;
-              subtitle: string;
-            } | undefined,
-            main_app_config: data.main_app_config as {
-              hero_heading: string;
-            } | undefined,
-            post_checkout_config: data.post_checkout_config as {
-              heading: string;
-              subheading: string;
-              redirect_url: string;
-            } | undefined
-          };
-          setAppConfig(typedConfig);
-        }
-      } catch (error) {
-        console.error('Error loading app config:', error);
-        toast.error('Failed to load delivery app');
-      } finally {
-        setLoading(false);
-      }
+  // Memoized app context to prevent unnecessary re-renders
+  const appContext = useMemo(() => {
+    if (!appConfig) return null;
+    return {
+      appSlug: appConfig.app_slug,
+      appName: appConfig.app_name
     };
+  }, [appConfig]);
 
-    loadAppConfig();
-  }, [appName]);
+  // Store app context in session storage when available
+  useEffect(() => {
+    if (appContext) {
+      try {
+        sessionStorage.setItem('custom-app-context', JSON.stringify(appContext));
+      } catch (error) {
+        console.warn('Failed to store app context:', error);
+      }
+    }
+  }, [appContext]);
 
   const handleStartOrder = () => {
-    // Store custom app context for checkout redirect
-    if (appConfig) {
-      sessionStorage.setItem('custom-app-context', JSON.stringify({
-        appSlug: appConfig.app_slug,
-        appName: appConfig.app_name
-      }));
-    }
     setCurrentStep('tabs');
   };
 
   const handleSearchProducts = () => {
-    // Store custom app context for checkout redirect
-    if (appConfig) {
-      sessionStorage.setItem('custom-app-context', JSON.stringify({
-        appSlug: appConfig.app_slug,
-        appName: appConfig.app_name
-      }));
-    }
     setCurrentStep('tabs');
   };
 
@@ -189,12 +200,12 @@ export default function CustomAppView() {
     setIsCartOpen(false);
     
     // Store custom app context for checkout redirect
-    if (appConfig) {
-      sessionStorage.setItem('custom-app-context', JSON.stringify({
-        appSlug: appConfig.app_slug,
-        appName: appConfig.app_name
-      }));
-      localStorage.setItem('custom-app-source', appConfig.app_slug);
+    if (appContext) {
+      try {
+        localStorage.setItem('custom-app-source', appContext.appSlug);
+      } catch (error) {
+        console.warn('Failed to store app source:', error);
+      }
     }
     
     // Convert cart items to proper format
@@ -212,8 +223,14 @@ export default function CustomAppView() {
     }));
     
     // Store in both formats for compatibility
-    localStorage.setItem('unified-cart', JSON.stringify(checkoutItems));
-    localStorage.setItem('party-cart', JSON.stringify(checkoutItems));
+    try {
+      localStorage.setItem('unified-cart', JSON.stringify(checkoutItems));
+      localStorage.setItem('party-cart', JSON.stringify(checkoutItems));
+    } catch (error) {
+      console.warn('Failed to store cart data:', error);
+      toast.error('Failed to save cart. Please try again.');
+      return;
+    }
     
     // Navigate to checkout
     window.location.href = '/checkout';
@@ -223,7 +240,8 @@ export default function CustomAppView() {
     setCurrentStep('start');
   };
 
-  if (loading) {
+  // Loading state
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -234,6 +252,27 @@ export default function CustomAppView() {
     );
   }
 
+  // Error state
+  if (isError || error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Unable to Load App</h1>
+          <p className="text-muted-foreground mb-4">
+            {error?.message || 'The delivery app could not be loaded. Please try again.'}
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // App not found
   if (!appConfig) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -287,9 +326,9 @@ export default function CustomAppView() {
         onCheckout={handleCheckout}
         totalPrice={getTotalPrice()}
         deliveryInfo={{
-          date: deliveryInfo.selectedDate ? new Date(deliveryInfo.selectedDate) : null,
-          timeSlot: deliveryInfo.selectedTime,
-          address: deliveryInfo.deliveryAddress
+          date: null,
+          timeSlot: null,
+          address: null
         }}
       />
 
