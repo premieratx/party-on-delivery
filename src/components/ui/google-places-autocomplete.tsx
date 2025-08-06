@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 declare global {
   interface Window {
@@ -26,15 +27,31 @@ export const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> =
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const [showTexasWarning, setShowTexasWarning] = React.useState(false);
+  const [showTexasWarning, setShowTexasWarning] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  // Fetch Google Maps API key securely
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-google-maps-key');
+        if (error) throw error;
+        setApiKey(data.apiKey);
+      } catch (error) {
+        console.error('Failed to fetch Google Maps API key:', error);
+      }
+    };
+
+    fetchApiKey();
+  }, []);
 
   useEffect(() => {
-    if (!inputRef.current) return;
+    if (!inputRef.current || !apiKey) return;
 
     // Load Google Maps script if not already loaded
     if (typeof window !== 'undefined' && !window.google) {
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCoTnTZGKRa8pVzlaEMGG6pbhtKO-UtqNU&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
       script.onload = initializeAutocomplete;
@@ -94,7 +111,7 @@ export const GooglePlacesAutocomplete: React.FC<GooglePlacesAutocompleteProps> =
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
       }
     };
-  }, [onChange, onPlaceSelect]);
+  }, [apiKey, onChange, onPlaceSelect]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
