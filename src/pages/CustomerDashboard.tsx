@@ -17,13 +17,18 @@ import { differenceInDays } from 'date-fns';
 import { formatInAppTimezone, toAppTimezone } from '@/utils/timezoneManager';
 
 interface Customer {
-  id: string;
+  id: string | number;
   email: string;
+  name?: string;
   first_name?: string;
   last_name?: string;
   phone?: string;
-  total_orders: number;
-  total_spent: number;
+  google_id?: string;
+  default_address?: any;
+  created_at?: string;
+  updated_at?: string;
+  total_orders?: number;
+  total_spent?: number;
 }
 
 interface Order {
@@ -121,9 +126,17 @@ const CustomerDashboard = () => {
           .single();
 
         if (createError) throw createError;
-        setCustomer(newCustomer);
+        setCustomer({
+          ...newCustomer,
+          total_orders: 0,
+          total_spent: 0
+        });
       } else {
-        setCustomer(customerData);
+        setCustomer({
+          ...customerData,
+          total_orders: 0,
+          total_spent: 0
+        });
       }
 
       // First, try to link any recent sessions to this customer before loading orders
@@ -157,9 +170,9 @@ const CustomerDashboard = () => {
           // Create a comprehensive filter for all possible ways to find customer orders
           const filters = [`customer_id.eq.${currentCustomer.id}`];
           
-          // Add session tokens if they exist
-          if (currentCustomer.session_tokens && currentCustomer.session_tokens.length > 0) {
-            currentCustomer.session_tokens.forEach(token => {
+          // Add session tokens if they exist (handle missing property)
+          if ((currentCustomer as any).session_tokens && (currentCustomer as any).session_tokens.length > 0) {
+            (currentCustomer as any).session_tokens.forEach((token: string) => {
               if (token && token.trim()) {
                 filters.push(`session_id.eq.${token}`);
               }
@@ -249,8 +262,8 @@ const CustomerDashboard = () => {
             const order = payload.new as Order;
             
             // Check if this order belongs to current customer
-            const belongsToCustomer = order.customer_id === currentCustomer?.id ||
-              (currentCustomer?.session_tokens && currentCustomer.session_tokens.includes(order.session_id)) ||
+            const belongsToCustomer = order.customer_id === String(currentCustomer?.id) ||
+              ((currentCustomer as any)?.session_tokens && (currentCustomer as any).session_tokens.includes(order.session_id)) ||
               (order.delivery_address && typeof order.delivery_address === 'object' && 
                order.delivery_address.email === session.user.email);
             

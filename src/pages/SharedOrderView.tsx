@@ -25,7 +25,7 @@ interface SharedOrder {
     first_name?: string;
     last_name?: string;
     email: string;
-  };
+  } | null;
 }
 
 interface Participant {
@@ -78,7 +78,7 @@ const SharedOrderView = () => {
         throw new Error('Order not found or no longer shareable');
       }
 
-      setOrder(orderData as SharedOrder);
+      setOrder(orderData as unknown as SharedOrder);
 
       // Load ALL orders in this group (same share_token)
       const { data: allGroupOrders, error: groupError } = await supabase
@@ -92,7 +92,7 @@ const SharedOrderView = () => {
       if (groupError) {
         console.error('Error loading group orders:', groupError);
       } else {
-        setGroupOrders(allGroupOrders || []);
+        setGroupOrders((allGroupOrders || []) as unknown as SharedOrder[]);
       }
 
       // Get participants
@@ -226,7 +226,7 @@ const SharedOrderView = () => {
           <div className="flex justify-between items-center py-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {order.customer.first_name}'s Group Order
+                {order.customer?.first_name || 'Customer'}'s Group Order
               </h1>
               <p className="text-sm text-muted-foreground">Order #{order.order_number}</p>
             </div>
@@ -289,7 +289,7 @@ const SharedOrderView = () => {
               Group Orders Summary
             </CardTitle>
             <CardDescription>
-              All orders placed by {order.customer.first_name}'s group
+              All orders placed by {order.customer?.first_name || 'Customer'}'s group
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -300,7 +300,7 @@ const SharedOrderView = () => {
                     <div>
                       <h4 className="font-medium">Order #{groupOrder.order_number}</h4>
                       <p className="text-sm text-muted-foreground">
-                        by {groupOrder.customer.first_name || groupOrder.customer.email}
+                        by {groupOrder.customer?.first_name || groupOrder.customer?.email || 'Customer'}
                       </p>
                     </div>
                     <Badge variant="outline">${groupOrder.total_amount}</Badge>

@@ -26,7 +26,7 @@ interface GroupOrder {
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
 }
 
 const GroupOrderView = () => {
@@ -78,7 +78,7 @@ const GroupOrderView = () => {
         return;
       }
 
-      setOrder(orderData);
+      setOrder(orderData as unknown as GroupOrder);
     } catch (error) {
       console.error('Error loading group order:', error);
       toast({

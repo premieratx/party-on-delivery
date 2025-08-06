@@ -27,7 +27,7 @@ interface GroupOrderData {
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
   group_participants?: any;
 }
 
@@ -80,7 +80,7 @@ export const GroupOrderJoinFlow: React.FC<GroupOrderJoinFlowProps> = ({
       }
 
       console.log('🔗 Group order loaded successfully:', data.order_number);
-      setOrderData(data);
+      setOrderData(data as unknown as GroupOrderData);
     } catch (error) {
       console.error('🔗 Error loading group order:', error);
       toast({

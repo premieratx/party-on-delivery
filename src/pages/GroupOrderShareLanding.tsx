@@ -22,7 +22,7 @@ interface GroupOrder {
     first_name: string;
     last_name: string;
     email: string;
-  };
+  } | null;
 }
 
 const GroupOrderShareLanding = () => {
@@ -103,7 +103,7 @@ const GroupOrderShareLanding = () => {
       }
 
       console.log('✅ Successfully loaded order:', orderData);
-      setOrder(orderData);
+      setOrder(orderData as unknown as GroupOrder);
     } catch (error) {
       console.error('💥 Error loading group order:', error);
       toast({
