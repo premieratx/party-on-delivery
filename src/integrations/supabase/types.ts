@@ -916,15 +916,7 @@ export type Database = {
           updated_at?: string
           zip_code?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "customer_addresses_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       customer_orders: {
         Row: {
@@ -1019,13 +1011,6 @@ export type Database = {
             referencedRelation: "affiliates"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "customer_orders_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
         ]
       }
       customer_profiles: {
@@ -1060,62 +1045,36 @@ export type Database = {
       }
       customers: {
         Row: {
-          created_at: string
+          created_at: string | null
+          default_address: Json | null
           email: string
-          first_name: string | null
           google_id: string | null
-          id: string
-          last_login_at: string | null
-          last_name: string | null
+          id: number
+          name: string | null
           phone: string | null
-          referred_by_affiliate_id: string | null
-          referred_by_code: string | null
-          session_tokens: string[] | null
-          total_orders: number | null
-          total_spent: number | null
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
+          default_address?: Json | null
           email: string
-          first_name?: string | null
           google_id?: string | null
-          id?: string
-          last_login_at?: string | null
-          last_name?: string | null
+          id?: number
+          name?: string | null
           phone?: string | null
-          referred_by_affiliate_id?: string | null
-          referred_by_code?: string | null
-          session_tokens?: string[] | null
-          total_orders?: number | null
-          total_spent?: number | null
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
+          default_address?: Json | null
           email?: string
-          first_name?: string | null
           google_id?: string | null
-          id?: string
-          last_login_at?: string | null
-          last_name?: string | null
+          id?: number
+          name?: string | null
           phone?: string | null
-          referred_by_affiliate_id?: string | null
-          referred_by_code?: string | null
-          session_tokens?: string[] | null
-          total_orders?: number | null
-          total_spent?: number | null
-          updated_at?: string
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "customers_referred_by_affiliate_id_fkey"
-            columns: ["referred_by_affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       daily_analytics: {
         Row: {
@@ -1248,6 +1207,45 @@ export type Database = {
           post_checkout_config?: Json | null
           start_screen_config?: Json | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_apps: {
+        Row: {
+          active: boolean | null
+          collections: Json | null
+          created_at: string | null
+          custom_branding: Json | null
+          description: string | null
+          id: number
+          logo_url: string | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          collections?: Json | null
+          created_at?: string | null
+          custom_branding?: Json | null
+          description?: string | null
+          id?: number
+          logo_url?: string | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          collections?: Json | null
+          created_at?: string | null
+          custom_branding?: Json | null
+          description?: string | null
+          id?: number
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1527,6 +1525,81 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          affiliate_code: string | null
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivery_address: Json | null
+          delivery_date: string | null
+          delivery_fee: number | null
+          delivery_time_slot: string | null
+          group_order_token: string | null
+          id: number
+          is_group_order: boolean | null
+          notes: string | null
+          order_items: Json | null
+          order_number: string
+          payment_status: string | null
+          status: string | null
+          stripe_payment_intent_id: string | null
+          subtotal: number | null
+          tax: number | null
+          total: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_code?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_address?: Json | null
+          delivery_date?: string | null
+          delivery_fee?: number | null
+          delivery_time_slot?: string | null
+          group_order_token?: string | null
+          id?: number
+          is_group_order?: boolean | null
+          notes?: string | null
+          order_items?: Json | null
+          order_number: string
+          payment_status?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_code?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivery_address?: Json | null
+          delivery_date?: string | null
+          delivery_fee?: number | null
+          delivery_time_slot?: string | null
+          group_order_token?: string | null
+          id?: number
+          is_group_order?: boolean | null
+          notes?: string | null
+          order_items?: Json | null
+          order_number?: string
+          payment_status?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal?: number | null
+          tax?: number | null
+          total?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       page_views: {
         Row: {
           city: string | null
@@ -1724,6 +1797,42 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      product_collections: {
+        Row: {
+          collection_id: number | null
+          created_at: string | null
+          id: number
+          product_id: number | null
+        }
+        Insert: {
+          collection_id?: number | null
+          created_at?: string | null
+          id?: number
+          product_id?: number | null
+        }
+        Update: {
+          collection_id?: number | null
+          created_at?: string | null
+          id?: number
+          product_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_collections_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "shopify_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_collections_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "shopify_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_modifications: {
         Row: {
@@ -1988,6 +2097,42 @@ export type Database = {
           },
         ]
       }
+      shopify_collections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          handle: string
+          id: number
+          image: Json | null
+          published: boolean | null
+          shopify_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          handle: string
+          id?: number
+          image?: Json | null
+          published?: boolean | null
+          shopify_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          handle?: string
+          id?: number
+          image?: Json | null
+          published?: boolean | null
+          shopify_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       shopify_collections_cache: {
         Row: {
           created_at: string
@@ -2070,6 +2215,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      shopify_products: {
+        Row: {
+          available: boolean | null
+          created_at: string | null
+          description: string | null
+          handle: string
+          id: number
+          images: Json | null
+          inventory_quantity: number | null
+          options: Json | null
+          price_max: number | null
+          price_min: number | null
+          product_type: string | null
+          shopify_id: string
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          variants: Json | null
+          vendor: string | null
+        }
+        Insert: {
+          available?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          handle: string
+          id?: number
+          images?: Json | null
+          inventory_quantity?: number | null
+          options?: Json | null
+          price_max?: number | null
+          price_min?: number | null
+          product_type?: string | null
+          shopify_id: string
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          variants?: Json | null
+          vendor?: string | null
+        }
+        Update: {
+          available?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          handle?: string
+          id?: number
+          images?: Json | null
+          inventory_quantity?: number | null
+          options?: Json | null
+          price_max?: number | null
+          price_min?: number | null
+          product_type?: string | null
+          shopify_id?: string
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          variants?: Json | null
+          vendor?: string | null
+        }
+        Relationships: []
       }
       shopify_products_cache: {
         Row: {
