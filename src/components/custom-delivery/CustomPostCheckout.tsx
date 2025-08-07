@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
@@ -91,10 +92,10 @@ export const CustomPostCheckout: React.FC<CustomPostCheckoutProps> = ({
           <div className="text-center space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <Button variant="outline" asChild className="flex-1">
-                <a href="/customer/login">Manage Order</a>
+                <Link to="/customer/login">Manage Order</Link>
               </Button>
               <Button variant="outline" asChild className="flex-1">
-                <a href="/">Continue Shopping</a>
+                <Link to="/">Continue Shopping</Link>
               </Button>
             </div>
           </div>

@@ -24,6 +24,12 @@ interface CachedProductData {
   cached_at: number;
 }
 
+// In-memory cache and request deduplication (frontend-only)
+let __memoryCache: CachedProductData | null = null;
+let __memoryCacheAt = 0;
+let __inflightPromise: Promise<void> | null = null;
+const __CACHE_TTL_MS = 2 * 60 * 1000;
+
 export const useOptimizedProductLoader = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -36,28 +42,52 @@ export const useOptimizedProductLoader = () => {
       setLoading(true);
       setError(null);
 
-      // Use optimized instant cache endpoint
-      const { data, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
-        body: { forceRefresh }
-      });
-
-      if (cacheError) {
-        console.error('Cache error:', cacheError);
-        throw cacheError;
+      const now = Date.now();
+      if (!forceRefresh && __memoryCache && (now - __memoryCacheAt) < __CACHE_TTL_MS) {
+        setProducts(__memoryCache.products || []);
+        setCollections(__memoryCache.collections || []);
+        setCategories(__memoryCache.categories || []);
+        return;
       }
 
-      if (data?.success && data?.data) {
-        const productData: CachedProductData = data.data;
-        setProducts(productData.products || []);
-        setCollections(productData.collections || []);
-        setCategories(productData.categories || []);
-      } else {
-        throw new Error('Failed to load product data');
+      if (!forceRefresh && __inflightPromise) {
+        await __inflightPromise;
+        if (__memoryCache) {
+          setProducts(__memoryCache.products || []);
+          setCollections(__memoryCache.collections || []);
+          setCategories(__memoryCache.categories || []);
+        }
+        return;
       }
+
+      __inflightPromise = (async () => {
+        const { data, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
+          body: { forceRefresh }
+        });
+
+        if (cacheError) {
+          console.error('Cache error:', cacheError);
+          throw cacheError;
+        }
+
+        if (data?.success && data?.data) {
+          const productData: CachedProductData = data.data;
+          __memoryCache = productData;
+          __memoryCacheAt = Date.now();
+          setProducts(productData.products || []);
+          setCollections(productData.collections || []);
+          setCategories(productData.categories || []);
+        } else {
+          throw new Error('Failed to load product data');
+        }
+      })();
+
+      await __inflightPromise;
     } catch (err: any) {
       console.error('Product loading error:', err);
       setError(err.message || 'Failed to load products');
     } finally {
+      __inflightPromise = null;
       setLoading(false);
     }
   }, []);

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { DeliveryWidget } from '@/components/DeliveryWidget';
 
 interface CustomSiteConfig {
@@ -112,7 +112,7 @@ export function CustomDeliveryWidget({ siteConfig }: CustomDeliveryWidgetProps) 
           {siteConfig.affiliate_code && ` (Partner Code: ${siteConfig.affiliate_code})`}
         </p>
         <p className="mt-1">
-          Powered by <a href="/" className="text-primary hover:underline">Party on Delivery</a>
+          Powered by <Link to="/" className="text-primary hover:underline">Party on Delivery</Link>
         </p>
       </div>
     </div>
