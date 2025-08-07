@@ -52,7 +52,13 @@ const Index = () => {
       variant: product.variant
     };
     
-    addToCart(cartItem);
+    console.log('🛒 Index: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = cartItems.find(item => 
+      item.id === cartItem.id && item.variant === cartItem.variant
+    )?.quantity || 0;
+    
+    updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
   };
 
   const handleUpdateQuantity = (productId: string, variantId: string | undefined, quantity: number) => {

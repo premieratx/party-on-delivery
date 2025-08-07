@@ -151,7 +151,11 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
       variant: variantId
     };
     
-    onAddToCart(cartItem);
+    console.log('🛒 UltraFastProductGrid: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = getCartItemQuantity(product.id, variantId);
+    
+    onUpdateQuantity(product.id, variantId, currentQty + 1);
   };
 
   const handleIncrement = (productId: string, variantId: string | undefined) => {

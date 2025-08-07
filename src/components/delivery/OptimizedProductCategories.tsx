@@ -126,7 +126,11 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined
     };
     
-    onAddToCart(cartItem);
+    console.log('🛒 OptimizedProductCategories: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = getCartItemQuantity(product.id, cartItem.variant);
+    
+    onUpdateQuantity(product.id, cartItem.variant, currentQty + 1);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {

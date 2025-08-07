@@ -206,7 +206,11 @@ export function CustomProductCategories({
       variant: product.variants[0]?.id
     };
     
-    onAddToCart(cartItem);
+    console.log('🛒 CustomProductCategoriesVariation: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = getCartItemQuantity(product.id, product.variants[0]?.id);
+    
+    onUpdateQuantity(product.id, product.variants[0]?.id, currentQty + 1);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {

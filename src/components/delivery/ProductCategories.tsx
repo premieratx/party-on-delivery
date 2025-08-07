@@ -406,8 +406,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       variant: variant ? variant.id : product.variants[0]?.id
     };
     
-    console.log('Adding to cart - delivery widget:', cartItem);
-    onAddToCart(cartItem);
+    console.log('🛒 ProductCategories: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = getCartItemQuantity(product.id, cartItem.variant);
+    
+    onUpdateQuantity(product.id, cartItem.variant, currentQty + 1);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {

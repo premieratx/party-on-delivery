@@ -295,7 +295,7 @@ export const ProductSearch = () => {
     const currentVariant = getCurrentVariant(product);
     console.log('Adding product variant to cart:', currentVariant);
     try {
-      addToCart({
+      const cartItem = {
         id: currentVariant.id,
         title: currentVariant.title,
         name: currentVariant.title,
@@ -303,7 +303,15 @@ export const ProductSearch = () => {
         image: currentVariant.image,
         variant: currentVariant.variants?.[0]?.id || currentVariant.id,
         category: product.category
-      });
+      };
+      
+      console.log('🛒 ProductSearch: Adding product to cart:', cartItem);
+      // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+      const currentQty = cartItems.find(item => 
+        item.id === cartItem.id && item.variant === cartItem.variant
+      )?.quantity || 0;
+      
+      updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
       console.log('Product variant added to cart successfully');
     } catch (error) {
       console.error('Error adding to cart:', error);

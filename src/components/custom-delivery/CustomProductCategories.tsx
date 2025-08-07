@@ -219,7 +219,11 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
       variant: variant.id
     };
 
-    onAddToCart(cartItem);
+    console.log('🛒 CustomProductCategories: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = getCartQuantity(product.id, variant.id);
+    
+    onUpdateQuantity(product.id, variant.id, currentQty + 1);
     
     // Show feedback
     import('@/hooks/use-toast').then(({ useToast }) => {

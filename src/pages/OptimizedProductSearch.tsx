@@ -69,7 +69,13 @@ export default function OptimizedProductSearch() {
       variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined
     };
     
-    addToCart(cartItem);
+    console.log('🛒 OptimizedProductSearch: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = cartItems.find(item => 
+      item.id === cartItem.id && item.variant === cartItem.variant
+    )?.quantity || 0;
+    
+    updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {

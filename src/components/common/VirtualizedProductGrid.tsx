@@ -95,7 +95,12 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
     };
     
     console.log('🛒 VirtualizedGrid: Adding to cart with complete data:', cartItem);
-    onAddToCart(cartItem);
+    
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = getCartItemQuantity(product.id, variantId);
+    console.log('🛒 VirtualizedGrid: Current quantity:', currentQty, 'Adding 1 more');
+    
+    onUpdateQuantity(product.id, variantId, currentQty + 1);
   }, [onAddToCart]);
 
   // Handle quantity change
