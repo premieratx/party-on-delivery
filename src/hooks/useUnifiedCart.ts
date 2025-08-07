@@ -133,13 +133,15 @@ export const useUnifiedCart = () => {
   // DEAD SIMPLE: Get quantity for specific item
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
     const itemKey = createItemKey(id, variant);
+    console.log(`🛒 GET QTY - Looking for: ${itemKey}`);
+    console.log('🛒 CART ITEMS KEYS:', cartItems.map(i => createItemKey(i.id, i.variant)));
+    
     const item = cartItems.find(item => 
       createItemKey(item.id, item.variant) === itemKey
     );
     
     const qty = item?.quantity || 0;
-    console.log(`🛒 GET QTY - ID: ${id}, variant: ${variant}, itemKey: ${itemKey}, found qty: ${qty}`);
-    console.log('🛒 CART ITEMS:', cartItems.map(i => `${i.id}||${i.variant}:${i.quantity}`));
+    console.log(`🛒 GET QTY - Found qty: ${qty}`);
     return qty;
   }, [cartItems]);
 
