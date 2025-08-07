@@ -21,46 +21,56 @@ export const useUnifiedCart = () => {
   // Simple key creation and matching helpers
   const getKey = (id: string, variant?: string) => `${id}::${variant || 'default'}`;
   const normalizeVariant = (v?: string) => (v && v.trim() !== '' ? v : 'default');
-  const matchesItem = (i: UnifiedCartItem, id: string, variant?: string) =>
-    (i.id === id || i.productId === id) && normalizeVariant(i.variant) === normalizeVariant(variant);
+  
+  const matchesItem = (item: UnifiedCartItem, id: string, variant?: string) => {
+    const itemVariant = normalizeVariant(item.variant);
+    const checkVariant = normalizeVariant(variant);
+    const itemId = item.productId || item.id;
+    
+    return itemId === id && itemVariant === checkVariant;
+  };
 
-  // Update quantity - FIXED to handle both new items and existing ones
+  // Update quantity - COMPLETELY REWRITTEN for reliability
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number, productData?: Partial<UnifiedCartItem>) => {
     const qty = Math.max(0, Math.floor(Number(newQuantity) || 0));
     
-    console.log('🛒 updateQuantity:', { id, variant, newQuantity: qty });
+    console.log('🛒 updateQuantity:', { id, variant: normalizeVariant(variant), newQuantity: qty });
     
     setCartItems(prev => {
-      const existing = prev.find(i => matchesItem(i, id, variant));
+      // Find existing item with proper matching
+      const existingIndex = prev.findIndex(item => matchesItem(item, id, variant));
       
       if (qty <= 0) {
         // Remove item if quantity is 0
-        return prev.filter(i => !matchesItem(i, id, variant));
+        if (existingIndex >= 0) {
+          console.log('🛒 Removing item from cart');
+          return prev.filter((_, index) => index !== existingIndex);
+        }
+        return prev;
       }
       
-      if (existing) {
+      if (existingIndex >= 0) {
         // Update existing item
         console.log('🛒 Updating existing item quantity to:', qty);
-        return prev.map(i => 
-          matchesItem(i, id, variant)
-            ? { ...i, quantity: qty }
-            : i
-        );
-      } else if (qty > 0) {
-        // Create new item if it doesn't exist and qty > 0
+        const updated = [...prev];
+        updated[existingIndex] = { ...updated[existingIndex], quantity: qty };
+        return updated;
+      } else if (qty > 0 && productData) {
+        // Create new item only if productData is provided
         console.log('🛒 Creating new item with quantity:', qty);
-        return [...prev, {
+        const newItem: UnifiedCartItem = {
           id: id,
           productId: id,
-          title: productData?.title || `Product ${id}`,
-          name: productData?.name || productData?.title || `Product ${id}`,
-          price: productData?.price || 0,
+          title: productData.title || `Product ${id}`,
+          name: productData.name || productData.title || `Product ${id}`,
+          price: productData.price || 0,
           quantity: qty,
-          image: productData?.image || '',
-          variant: variant,
-          eventName: productData?.eventName,
-          category: productData?.category
-        }];
+          image: productData.image || '',
+          variant: normalizeVariant(variant),
+          eventName: productData.eventName,
+          category: productData.category
+        };
+        return [...prev, newItem];
       }
       
       return prev;
@@ -68,7 +78,7 @@ export const useUnifiedCart = () => {
   }, []);
 
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
-    const item = cartItems.find(i => matchesItem(i, id, variant));
+    const item = cartItems.find(item => matchesItem(item, id, variant));
     return item?.quantity || 0;
   }, [cartItems]);
 
@@ -94,7 +104,7 @@ export const useUnifiedCart = () => {
 
 
   const removeItem = useCallback((id: string, variant?: string) => {
-    setCartItems(prev => prev.filter(i => !matchesItem(i, id, variant)));
+    setCartItems(prev => prev.filter(item => !matchesItem(item, id, variant)));
   }, []);
 
   // Empty cart
