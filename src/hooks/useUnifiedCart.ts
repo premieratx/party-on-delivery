@@ -198,64 +198,58 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // FIXED: Precise matching to prevent cross-product interference  
+  // BULLETPROOF: Increment/Decrement existing items OR add new ones
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
     console.log('🛒 updateQuantity called:', { id, variant, newQuantity });
     
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
     
     setCartItems(prev => {
-      console.log('🛒 Current cart before update:', prev.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+      console.log('🛒 BEFORE UPDATE - Cart state:', prev.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
       
-      // SUPER PRECISE MATCHING - both ID and variant must match exactly
-      const existingIndex = prev.findIndex(item => {
-        const idMatch = (item.id === id);
-        const variantMatch = (item.variant === variant);
-        const exactMatch = idMatch && variantMatch;
-        
-        console.log('🛒 Matching item:', {
-          itemId: item.id, 
-          itemVariant: item.variant,
-          lookingForId: id,
-          lookingForVariant: variant,
-          idMatch,
-          variantMatch,
-          exactMatch
-        });
-        
-        return exactMatch;
-      });
+      // Find exact match
+      const existingIndex = prev.findIndex(item => 
+        item.id === id && item.variant === variant
+      );
       
-      if (existingIndex === -1) {
-        // ITEM NOT FOUND - CREATE NEW ONE (only if qty > 0)
+      console.log('🛒 Found existing at index:', existingIndex);
+      
+      if (existingIndex >= 0) {
+        // UPDATE existing item
+        if (safeQuantity <= 0) {
+          console.log('🛒 REMOVING existing item');
+          const newCart = prev.filter((_, index) => index !== existingIndex);
+          console.log('🛒 AFTER REMOVAL - Cart state:', newCart.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+          return newCart;
+        } else {
+          console.log('🛒 UPDATING existing item quantity to:', safeQuantity);
+          const newCart = [...prev];
+          newCart[existingIndex] = { ...newCart[existingIndex], quantity: safeQuantity };
+          console.log('🛒 AFTER UPDATE - Cart state:', newCart.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+          return newCart;
+        }
+      } else {
+        // Item doesn't exist, only add if quantity > 0
         if (safeQuantity > 0) {
-          console.log('🛒 Creating NEW item via updateQuantity');
+          console.log('🛒 CREATING new item with qty:', safeQuantity);
           const newItem: UnifiedCartItem = {
             id,
             productId: id,
-            title: 'Product', // Will be updated when we have product data
-            name: 'Product',
-            price: 0, // Will be updated when we have product data
+            title: 'Product',
+            name: 'Product', 
+            price: 0,
             quantity: safeQuantity,
             image: '',
             variant
           };
-          return [...prev, newItem];
+          const newCart = [...prev, newItem];
+          console.log('🛒 AFTER CREATION - Cart state:', newCart.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+          return newCart;
         } else {
-          console.log('🛒 Item not found and qty is 0, no change');
+          console.log('🛒 Not creating item with 0 quantity');
           return prev;
         }
       }
-      
-      if (safeQuantity <= 0) {
-        console.log('🛒 Removing item - qty became 0');
-        return prev.filter((_, index) => index !== existingIndex);
-      }
-      
-      console.log('🛒 Updating existing item quantity to:', safeQuantity);
-      const newCart = [...prev];
-      newCart[existingIndex] = { ...newCart[existingIndex], quantity: safeQuantity };
-      return newCart;
     });
   }, []);
 
@@ -286,7 +280,7 @@ export const useUnifiedCart = () => {
     });
     
     const qty = item?.quantity || 0;
-    console.log('🛒 getCartItemQuantity:', {id, variant, foundQty: qty});
+    console.log('🛒 getCartItemQuantity:', {id, variant, foundQty: qty, totalItems: cartItems.length});
     return qty;
   }, [cartItems]);
 
