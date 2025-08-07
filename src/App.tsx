@@ -151,9 +151,11 @@ const App = () => {
                     {/* Custom Delivery Apps - Specific routes BEFORE dynamic ones */}
                     <Route path="/custom-delivery" element={<CustomDeliveryApp />} />
                     
-                    {/* Specific named apps - MUST come before dynamic routes */}
-                    <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
-                    <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
+    {/* Specific named apps - MUST come before dynamic routes */}
+    <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
+    <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
+    <Route path="/app/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
+    <Route path="/app/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
                     
                     {/* Party On Delivery Custom Routes */}
                     <Route path="/app/party-on-delivery---concierge-" element={<CustomPartyOnDeliveryStartScreen />} />

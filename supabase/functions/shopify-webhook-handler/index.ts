@@ -21,21 +21,26 @@ Deno.serve(async (req) => {
     
     console.log(`📨 Received Shopify webhook: ${topic}`)
 
-    // Handle different webhook types
-    switch (topic) {
-      case 'collections/update':
-      case 'collections/create':
-        await handleCollectionUpdate(supabase, webhookData)
-        break
-      
-      case 'products/update':
-      case 'products/create':
-        await handleProductUpdate(supabase, webhookData)
-        break
-        
-      default:
-        console.log(`ℹ️ Unhandled webhook topic: ${topic}`)
-    }
+// Handle different webhook types
+switch (topic) {
+  case 'collections/update':
+  case 'collections/create':
+    await handleCollectionUpdate(supabase, webhookData)
+    break
+  
+  case 'products/update':
+  case 'products/create':
+    await handleProductUpdate(supabase, webhookData)
+    break
+    
+  case 'orders/paid':
+  case 'orders/create':
+    await handleOrderUpdate(supabase, webhookData)
+    break
+    
+  default:
+    console.log(`ℹ️ Unhandled webhook topic: ${topic}`)
+}
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -88,4 +93,41 @@ async function handleProductUpdate(supabase: any, product: any) {
       data: product,
       updated_at: new Date().toISOString()
     })
+}
+
+async function handleOrderUpdate(supabase: any, order: any) {
+  console.log(`📦 Processing order webhook: ${order.id}`)
+  
+  // Standardize order format for processing
+  const standardOrder = {
+    shopify_order_id: order.id.toString(),
+    order_number: order.order_number || order.name,
+    customer_email: order.email || order.customer?.email,
+    customer_phone: order.phone || order.customer?.phone,
+    total_price: parseFloat(order.total_price) || 0,
+    subtotal_price: parseFloat(order.subtotal_price) || 0,
+    total_tax: parseFloat(order.total_tax) || 0,
+    shipping_address: order.shipping_address,
+    billing_address: order.billing_address,
+    line_items: order.line_items || [],
+    financial_status: order.financial_status,
+    fulfillment_status: order.fulfillment_status,
+    created_at: order.created_at,
+    updated_at: order.updated_at,
+    note: order.note,
+    tags: order.tags,
+    source_name: order.source_name
+  }
+  
+  // Store order in our system
+  await supabase
+    .from('shopify_orders_cache')
+    .upsert(standardOrder, { onConflict: 'shopify_order_id' })
+  
+  // If order is paid, trigger order processing
+  if (order.financial_status === 'paid') {
+    await supabase.functions.invoke('process-order-complete', {
+      body: { order: standardOrder }
+    })
+  }
 }

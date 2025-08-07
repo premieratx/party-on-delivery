@@ -767,9 +767,13 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
           <h2 className="text-2xl font-bold">Delivery App Variations</h2>
           <p className="text-muted-foreground">Create custom delivery apps with different collection tabs</p>
         </div>
-        <Button onClick={initializeNewApp} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          New Delivery App
+        <Button 
+          onClick={initializeNewApp} 
+          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-lg px-6 py-3 h-auto font-bold shadow-lg"
+          size="lg"
+        >
+          <Plus className="h-5 w-5" />
+          Create New Delivery App
         </Button>
       </div>
 

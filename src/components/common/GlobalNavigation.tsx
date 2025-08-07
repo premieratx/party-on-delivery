@@ -39,7 +39,6 @@ const navigationItems: NavItem[] = [
   { icon: Home, label: 'Home', href: '/', show: 'always', category: 'main' },
   { icon: Search, label: 'Search Products', href: '/search', show: 'always', category: 'main' },
   { icon: Package, label: 'Main Delivery', href: '/main-delivery-app', show: 'always', category: 'main' },
-  { icon: Gift, label: 'Party Planner', href: '/plan-my-party', show: 'always', category: 'main' },
   
   // User accounts
   { icon: User, label: 'Customer Login', href: '/customer/login', show: 'always', category: 'user' },
@@ -52,6 +51,7 @@ const navigationItems: NavItem[] = [
   { icon: Package, label: 'Product Management', href: '/admin/product-management', show: 'admin', category: 'admin' },
   { icon: Settings, label: 'Delivery Apps', href: '/admin/delivery-app-manager', show: 'admin', category: 'admin' },
   { icon: Users, label: 'Group Orders', href: '/group', show: 'admin', category: 'admin' },
+  { icon: Gift, label: 'Party Planner', href: '/plan-my-party', show: 'admin', category: 'admin' },
 ];
 
 export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
@@ -149,16 +149,33 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
             <span>Search</span>
           </button>
 
-          {/* Cart */}
+          {/* Delivery Apps */}
+          <button
+            onClick={() => handleNavigation('/main-delivery-app')}
+            className={`flex flex-col items-center justify-center text-xs transition-colors ${
+              location.pathname === '/main-delivery-app' 
+                ? 'text-primary' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Package className="h-4 w-4 mb-1" />
+            <span>Delivery</span>
+          </button>
+
+          {/* Cart with Checkout */}
           <button
             onClick={() => {
-              const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
-              cartTrigger?.click();
+              if (cartItems > 0) {
+                handleNavigation('/checkout');
+              } else {
+                const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
+                cartTrigger?.click();
+              }
             }}
             className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors relative"
           >
             <ShoppingCart className="h-4 w-4 mb-1" />
-            <span>Cart</span>
+            <span>{cartItems > 0 ? 'Checkout' : 'Cart'}</span>
             {cartItems > 0 && (
               <Badge 
                 variant="destructive" 
@@ -167,29 +184,6 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
                 {cartItems}
               </Badge>
             )}
-          </button>
-
-          {/* Account */}
-          <button
-            onClick={() => {
-              if (userType === 'affiliate') {
-                handleNavigation('/affiliate/dashboard');
-              } else if (userType === 'customer') {
-                handleNavigation('/customer/dashboard');
-              } else if (userType === 'admin') {
-                handleNavigation('/admin');
-              } else {
-                handleNavigation('/customer/login');
-              }
-            }}
-            className={`flex flex-col items-center justify-center text-xs transition-colors ${
-              ['/customer/dashboard', '/affiliate/dashboard', '/admin'].some(path => location.pathname.startsWith(path))
-                ? 'text-primary' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <User className="h-4 w-4 mb-1" />
-            <span>Account</span>
           </button>
 
           {/* More Menu */}
@@ -385,44 +379,27 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Cart Button */}
+              {/* Cart with Checkout */}
               <Button
-                variant="outline"
+                variant={cartItems > 0 ? "default" : "outline"}
                 size="sm"
                 onClick={() => {
-                  const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
-                  cartTrigger?.click();
+                  if (cartItems > 0) {
+                    handleNavigation('/checkout');
+                  } else {
+                    const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
+                    cartTrigger?.click();
+                  }
                 }}
                 className="relative gap-2"
               >
                 <ShoppingCart className="h-4 w-4" />
-                Cart
+                {cartItems > 0 ? 'Checkout' : 'Cart'}
                 {cartItems > 0 && (
-                  <Badge variant="destructive" className="ml-1">
+                  <Badge variant={cartItems > 0 ? "secondary" : "destructive"} className="ml-1">
                     {cartItems}
                   </Badge>
                 )}
-              </Button>
-
-              {/* Account Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (userType === 'affiliate') {
-                    handleNavigation('/affiliate/dashboard');
-                  } else if (userType === 'customer') {
-                    handleNavigation('/customer/dashboard');
-                  } else if (userType === 'admin') {
-                    handleNavigation('/admin');
-                  } else {
-                    handleNavigation('/customer/login');
-                  }
-                }}
-                className="gap-2"
-              >
-                <User className="h-4 w-4" />
-                {userType === 'guest' ? 'Login' : 'Account'}
               </Button>
             </div>
           </div>

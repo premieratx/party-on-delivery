@@ -106,11 +106,11 @@ export const DeliveryAppDropdown: React.FC = () => {
       let targetUrl = '';
       
       if (app.handle === 'airbnb-concierge-service') {
-        targetUrl = `${baseUrl}/airbnb-concierge-service-start-screen`;
+        targetUrl = `${baseUrl}/app/airbnb-concierge-service/tabs`;
       } else if (app.handle === 'party-on-delivery---concierge-') {
-        targetUrl = `${baseUrl}/party-on-delivery---concierge-`;
+        targetUrl = `${baseUrl}/app/party-on-delivery---concierge-/tabs`;
       } else {
-        targetUrl = `${baseUrl}/custom-delivery-app/${app.handle}`;
+        targetUrl = `${baseUrl}/app/${app.handle}/tabs`;
       }
       
       window.open(targetUrl, '_blank', 'noopener,noreferrer');
