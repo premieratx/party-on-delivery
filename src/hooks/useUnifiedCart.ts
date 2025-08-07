@@ -34,14 +34,18 @@ export const useUnifiedCart = () => {
     }
 
     const itemKey = createItemKey(item.id, item.variant);
+    console.log('🛒 ADD - Creating itemKey:', itemKey, 'from id:', item.id, 'variant:', item.variant);
     
     setCartItems(currentItems => {
       console.log('🛒 BEFORE ADD - Current cart:', currentItems.length, currentItems.map(i => `${i.id}:${i.quantity}`));
+      console.log('🛒 BEFORE ADD - Existing keys:', currentItems.map(i => createItemKey(i.id, i.variant)));
       // COMPLETELY ISOLATED: Copy array and find target
       const cartCopy = [...currentItems];
-      const targetIndex = cartCopy.findIndex(cartItem => 
-        createItemKey(cartItem.id, cartItem.variant) === itemKey
-      );
+      const targetIndex = cartCopy.findIndex(cartItem => {
+        const existingKey = createItemKey(cartItem.id, cartItem.variant);
+        console.log('🛒 ADD - Comparing keys:', existingKey, 'vs', itemKey);
+        return existingKey === itemKey;
+      });
 
       if (targetIndex >= 0) {
         // ISOLATED INCREMENT: Only modify this specific item
