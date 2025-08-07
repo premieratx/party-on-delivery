@@ -186,10 +186,12 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
               <Separator />
               
               <div className="space-y-2">
-                <h4 className="font-medium">Items ({orderItems?.length || 0}):</h4>
+                <h4 className="font-medium">Items ({orderItems?.filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip')?.length || 0}):</h4>
                 {orderItems && orderItems.length > 0 ? (
                   <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {orderItems.map((item: any, index: number) => (
+                    {orderItems
+                      .filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip') // Filter out tip from product list
+                      .map((item: any, index: number) => (
                       <div key={index} className="flex justify-between items-center text-sm">
                         <span>{item.name || item.title} × {item.quantity}</span>
                         <span>${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
@@ -208,7 +210,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
               {/* Order Total Breakdown */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
-                  <span>Subtotal ({orderItems?.length || 0} items):</span>
+                  <span>Subtotal ({orderItems?.filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip')?.length || 0} items):</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 
