@@ -71,12 +71,12 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           </Button>
         </div>
         
-        {/* Manage My Order link - far right */}
+        {/* Admin Dashboard link - far right */}
         <a 
-          href="/customer/login?redirect=dashboard"
+          href="/admin/dashboard"
           className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
-          My Orders
+          Admin
         </a>
       </div>
     </div>

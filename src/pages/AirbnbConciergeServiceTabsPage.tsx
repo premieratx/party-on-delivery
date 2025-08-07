@@ -47,6 +47,8 @@ export default function AirbnbConciergeServiceTabsPage() {
   };
 
   const handleCheckout = () => {
+    // Store delivery app referrer and app context for checkout
+    localStorage.setItem('deliveryAppReferrer', '/app/airbnb-concierge-service/tabs');
     // Store app context for checkout
     localStorage.setItem('app-context', JSON.stringify({
       appSlug: 'airbnb-concierge-service',

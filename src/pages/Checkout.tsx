@@ -69,9 +69,12 @@ export const Checkout = () => {
               <p className="text-muted-foreground mb-6">
                 Looks like you haven't added any items to your cart yet.
               </p>
-              <Button onClick={() => navigate('/')} className="w-full sm:w-auto">
+              <Button onClick={() => {
+                const referrer = localStorage.getItem('deliveryAppReferrer') || '/';
+                navigate(referrer);
+              }} className="w-full sm:w-auto">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Shopping
+                Back to Products
               </Button>
             </CardContent>
           </Card>
@@ -89,11 +92,15 @@ export const Checkout = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="outline"
-              onClick={() => navigate('/')}
+              onClick={() => {
+                // Navigate back to the delivery app they came from
+                const referrer = localStorage.getItem('deliveryAppReferrer') || '/';
+                navigate(referrer);
+              }}
               className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Back to Shopping</span>
+              <span className="hidden sm:inline">Back to Products</span>
               <span className="sm:hidden">Back</span>
             </Button>
             <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">Checkout</h1>

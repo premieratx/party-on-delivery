@@ -39,7 +39,7 @@ const navigationItems: NavItem[] = [
   { icon: Home, label: 'Home', href: '/', show: 'always', category: 'main' },
   
   // User accounts
-  { icon: User, label: 'Manage My Order', href: '/customer/login', show: 'always', category: 'user' },
+  { icon: User, label: 'Manage My Order', href: '/customer/login?redirect=dashboard', show: 'always', category: 'user' },
   { icon: TrendingUp, label: 'Affiliate Program', href: '/affiliate', show: 'always', category: 'affiliate' },
   { icon: User, label: 'My Dashboard', href: '/customer/dashboard', show: 'customer', category: 'user' },
   { icon: TrendingUp, label: 'Affiliate Dashboard', href: '/affiliate/dashboard', show: 'affiliate', category: 'affiliate' },
@@ -388,7 +388,7 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleNavigation('/customer/login')}
+                onClick={() => handleNavigation('/customer/login?redirect=dashboard')}
                 className="gap-2"
               >
                 <User className="h-4 w-4" />

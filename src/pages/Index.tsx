@@ -44,7 +44,8 @@ const Index = () => {
   };
 
   const handleCheckout = () => {
-    // Store app context for checkout
+    // Store delivery app referrer and app context for checkout
+    localStorage.setItem('deliveryAppReferrer', '/');
     localStorage.setItem('app-context', JSON.stringify({
       appSlug: 'main-delivery-app',
       appName: 'Party On Delivery'
