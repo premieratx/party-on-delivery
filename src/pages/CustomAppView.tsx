@@ -33,17 +33,15 @@ interface DeliveryAppConfig {
       icon?: string;
     }>;
   };
-  start_screen_config?: {
-    title: string;
-    subtitle: string;
-  };
   main_app_config?: {
     hero_heading: string;
+    hero_subheading?: string;
   };
   post_checkout_config?: {
     heading: string;
     subheading: string;
     redirect_url: string;
+    button_text?: string;
   };
 }
 
@@ -65,30 +63,28 @@ const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null
 
   if (!data) return null;
 
-  return {
-    app_name: data.app_name,
-    app_slug: data.app_slug,
-    collections_config: data.collections_config as {
-      tab_count: number;
-      tabs: Array<{
-        name: string;
-        collection_handle: string;
-        icon?: string;
-      }>;
-    },
-    start_screen_config: data.start_screen_config as {
-      title: string;
-      subtitle: string;
-    } | undefined,
-    main_app_config: data.main_app_config as {
-      hero_heading: string;
-    } | undefined,
-    post_checkout_config: data.post_checkout_config as {
-      heading: string;
-      subheading: string;
-      redirect_url: string;
-    } | undefined
-  };
+    return {
+      app_name: data.app_name,
+      app_slug: data.app_slug,
+      collections_config: data.collections_config as {
+        tab_count: number;
+        tabs: Array<{
+          name: string;
+          collection_handle: string;
+          icon?: string;
+        }>;
+      },
+      main_app_config: data.main_app_config as {
+        hero_heading: string;
+        hero_subheading?: string;
+      } | undefined,
+      post_checkout_config: data.post_checkout_config as {
+        heading: string;
+        subheading: string;
+        redirect_url: string;
+        button_text?: string;
+      } | undefined
+    };
 };
 
 // Optimized storage hook
@@ -118,7 +114,7 @@ export default function CustomAppView() {
   const { appName } = useParams<{ appName: string }>();
   useWakeLock();
   
-  const [currentStep, setCurrentStep] = useAppStep('start');
+  const [currentStep, setCurrentStep] = useAppStep('tabs');
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   const cartHook = useUnifiedCart();
@@ -286,34 +282,20 @@ export default function CustomAppView() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Start Screen */}
-      {currentStep === 'start' && (
-        <CustomDeliveryStartScreen
-          appName={appConfig.app_name}
-          title={appConfig.start_screen_config?.title || appConfig.app_name}
-          subtitle={appConfig.start_screen_config?.subtitle || 'Order your party supplies for delivery'}
-          onStartOrder={handleStartOrder}
-          onSearchProducts={handleSearchProducts}
-          onGoHome={handleGoHome}
-        />
-      )}
-
-      {/* Tabs Page */}
-      {currentStep === 'tabs' && (
-        <CustomDeliveryTabsPage
-          appName={appConfig.app_name}
-          heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
-          collectionsConfig={appConfig.collections_config}
-          onAddToCart={handleAddToCart}
-          cartItemCount={getTotalItems()}
-          onOpenCart={() => setIsCartOpen(true)}
-          cartItems={cartItems}
-          onUpdateQuantity={handleUpdateQuantity}
-          onProceedToCheckout={handleCheckout}
-          onBack={handleBackToStart}
-          onGoHome={handleGoHome}
-        />
-      )}
+      {/* Direct to Tabs Page - No Start Screen */}
+      <CustomDeliveryTabsPage
+        appName={appConfig.app_name}
+        heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
+        collectionsConfig={appConfig.collections_config}
+        onAddToCart={handleAddToCart}
+        cartItemCount={getTotalItems()}
+        onOpenCart={() => setIsCartOpen(true)}
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateQuantity}
+        onProceedToCheckout={handleCheckout}
+        onBack={handleGoHome}
+        onGoHome={handleGoHome}
+      />
 
       {/* Custom Delivery Cart */}
       <CustomDeliveryCart
@@ -333,7 +315,7 @@ export default function CustomAppView() {
       />
 
       {/* Bottom Cart Bar */}
-      {currentStep === 'tabs' && getTotalItems() > 0 && (
+      {getTotalItems() > 0 && (
         <BottomCartBar
           items={cartItems}
           totalPrice={getTotalPrice()}

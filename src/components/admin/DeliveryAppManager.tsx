@@ -269,17 +269,15 @@ export function DeliveryAppManager() {
             tab_count: validTabs.length,
             tabs: validTabs
           },
-          start_screen_config: {
-            title: startScreenTitle || appName,
-            subtitle: startScreenSubtitle || 'Order your party supplies for delivery'
-          },
           main_app_config: {
-            hero_heading: mainAppHeroHeading || `Order ${appName}`
+            hero_heading: heroHeadline || `Build Your ${appName} Package`,
+            hero_subheading: heroSubheading || 'Select from our curated collection of drinks and party supplies'
           },
           post_checkout_config: {
             heading: postCheckoutHeading || 'Thank you for your order!',
             subheading: postCheckoutSubheading || 'We will contact you shortly to confirm delivery details.',
-            redirect_url: postCheckoutRedirectUrl || ''
+            redirect_url: postCheckoutRedirectUrl || '',
+            button_text: postCheckoutButtonText || 'Order More Items'
           },
           // Use the correct format that matches Boat Delivery template
           custom_post_checkout_config: {
@@ -946,52 +944,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
               ))}
             </div>
 
-            {/* Start Screen Customization */}
-            <Card className="border-blue-200 bg-blue-50/50">
-              <CardHeader>
-                <CardTitle className="text-blue-700">Start Screen Customization</CardTitle>
-                <p className="text-sm text-blue-600">Customize the landing page for your delivery app</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="start-title">Start Screen Title</Label>
-                    <Input
-                      id="start-title"
-                      value={startScreenTitle}
-                      onChange={(e) => setStartScreenTitle(e.target.value)}
-                      placeholder="Austin's Premier Boat Delivery"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="start-subtitle">Start Screen Subtitle</Label>
-                    <Input
-                      id="start-subtitle"
-                      value={startScreenSubtitle}
-                      onChange={(e) => setStartScreenSubtitle(e.target.value)}
-                      placeholder="Cold drinks delivered to Lake Travis"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="logo-upload">Logo Upload</Label>
-                  <Input
-                    id="logo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setLogoFile(file);
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Upload a custom logo for the start screen (PNG, JPG, GIF)
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Hero Section Customization - Removed Start Screen */}
 
             {/* Main App Customization */}
             <Card className="border-green-200 bg-green-50/50">

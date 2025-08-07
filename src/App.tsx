@@ -162,9 +162,9 @@ const App = () => {
                     <Route path="/concierge" element={<ConciergeService />} />
                     <Route path="/performance-optimization" element={<PerformanceOptimization />} />
                     
-                    {/* CRITICAL: Custom app catch-all - MUST be second to last */}
-                    <Route path="/:appName" element={<CustomAppView />} />
-                    <Route path="/:appName/success" element={<CustomAppPostCheckout />} />
+                    {/* CRITICAL: Dynamic delivery app routes - MUST be second to last */}
+                    <Route path="/app/:appName" element={<CustomAppView />} />
+                    <Route path="/app/:appName/success" element={<CustomAppPostCheckout />} />
                     
                     {/* 404 - MUST be absolute last */}
                     <Route path="*" element={<NotFound />} />

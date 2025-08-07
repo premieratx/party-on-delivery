@@ -48,6 +48,16 @@ interface ShopifyCollection {
 interface ProductCategoriesProps {
   onAddToCart: (item: Omit<CartItem, 'quantity'>) => void;
   cartItemCount: number;
+  customAppName?: string;
+  customHeroHeading?: string;
+  customCollections?: {
+    tab_count: number;
+    tabs: Array<{
+      name: string;
+      collection_handle: string;
+      icon?: string;
+    }>;
+  };
   onOpenCart: () => void;
   cartItems: CartItem[]; // Add this to track individual cart items
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
@@ -65,7 +75,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   onUpdateQuantity,
   onProceedToCheckout,
   onBack,
-  onBackToStart
+  onBackToStart,
+  customAppName,
+  customHeroHeading,
+  customCollections
 }) => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(4); // Start with cocktails (index 4)
@@ -480,7 +493,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             className="h-24 lg:h-80 object-contain mb-4 drop-shadow-lg"
           />
           <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">
-            Build Your Party Package
+            {customHeroHeading || "Build Your Party Package"}
           </h1>
           <p className="text-white/90 text-lg drop-shadow-lg mb-4">
             Select from our curated collection of drinks and party supplies
