@@ -35,6 +35,7 @@ export const useUnifiedCart = () => {
     const itemKey = createItemKey(item.id, item.variant);
     
     setCartItems(currentItems => {
+      console.log('🛒 BEFORE ADD - Current cart:', currentItems.length, currentItems.map(i => `${i.id}:${i.quantity}`));
       // COMPLETELY ISOLATED: Copy array and find target
       const cartCopy = [...currentItems];
       const targetIndex = cartCopy.findIndex(cartItem => 
@@ -65,7 +66,8 @@ export const useUnifiedCart = () => {
         cartCopy.push(newItem);
         console.log('🛒 ISOLATED ADD');
       }
-
+      
+      console.log('🛒 AFTER ADD - New cart:', cartCopy.length, cartCopy.map(i => `${i.id}:${i.quantity}`));
       return cartCopy;
     });
     
@@ -81,6 +83,8 @@ export const useUnifiedCart = () => {
     console.log(`🛒 ULTRA ISOLATED UPDATE ${itemKey} to ${safeQuantity}`);
     
     setCartItems(currentItems => {
+      console.log('🛒 BEFORE UPDATE - Current cart:', currentItems.length, currentItems.map(i => `${i.id}:${i.quantity}`));
+      console.log('🛒 BEFORE UPDATE - Target:', itemKey, 'New qty:', safeQuantity);
       // COMPLETELY ISOLATED: Find and update ONLY the target item
       const cartCopy = [...currentItems];
       const targetIndex = cartCopy.findIndex(item => 
@@ -104,6 +108,7 @@ export const useUnifiedCart = () => {
         console.log('🛒 ITEM NOT FOUND FOR UPDATE');
       }
       
+      console.log('🛒 AFTER UPDATE - New cart:', cartCopy.length, cartCopy.map(i => `${i.id}:${i.quantity}`));
       return cartCopy;
     });
   }, []);
