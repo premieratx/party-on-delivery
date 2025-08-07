@@ -49,7 +49,7 @@ class UltraFastLoader {
       // 2. Try instant cache with aggressive timeout
       const instantResult = await this.withTimeout(
         this.loadFromInstantCache(),
-        options.timeout || 1000
+        options.timeout || 2000
       );
 
       if (instantResult?.collections || instantResult?.products) {
@@ -369,7 +369,7 @@ class UltraFastLoader {
     
     try {
       // Preload main data with better timeout
-      const loadPromise = this.loadProducts({ priority: 'critical', timeout: 10000 }).catch(err => {
+      const loadPromise = this.loadProducts({ priority: 'critical', timeout: 15000 }).catch(err => {
         console.warn('Main preload failed:', err.message);
         return null;
       });
@@ -379,7 +379,7 @@ class UltraFastLoader {
       const categoryPromises = categories.map((cat, index) => 
         new Promise(resolve => {
           setTimeout(() => {
-            this.loadProductsByCategory(cat, { priority: 'high', timeout: 8000 })
+            this.loadProductsByCategory(cat, { priority: 'high', timeout: 15000 })
               .catch(err => {
                 console.warn(`Category ${cat} preload failed:`, err.message);
                 return null;

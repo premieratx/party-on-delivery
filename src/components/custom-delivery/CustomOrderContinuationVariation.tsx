@@ -98,14 +98,7 @@ export function CustomOrderContinuation({
                   <Search className="h-4 w-4" />
                   Search
                 </Button>
-                <Button 
-                  onClick={() => navigate('/plan-my-party')}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <Users className="h-4 w-4" />
-                  Party Planner
-                </Button>
+                {/* Party Planner removed - replaced by user's better version */}
               </div>
             </CardContent>
           </Card>
