@@ -50,15 +50,11 @@ const ChatPartyPlanner = lazy(() => import("./components/party-planner/ChatParty
 const Checkout = lazy(() => import("./pages/Checkout"));
 
 // Delivery app routes
-const CustomDeliveryApp = lazy(() => import("./pages/CustomDeliveryApp"));
-const CustomDeliveryPostCheckout = lazy(() => import("./pages/CustomDeliveryPostCheckout"));
-const DeliveryAppView = lazy(() => import("./pages/DeliveryAppView"));
 const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
 
 // Specific custom apps
 const CustomPartyOnDeliveryStartScreen = lazy(() => import("./pages/CustomPartyOnDeliveryStartScreen"));
-const CustomPartyOnDeliveryTabsPage = lazy(() => import("./pages/CustomPartyOnDeliveryTabsPage"));
 const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomPartyOnDeliveryPostCheckout"));
 const AirbnbConciergeServiceStartScreen = lazy(() => import("./pages/AirbnbConciergeServiceStartScreen"));
 const AirbnbConciergeServiceTabsPage = lazy(() => import("./pages/AirbnbConciergeServiceTabsPage"));
@@ -146,24 +142,17 @@ const App = () => {
                     
                     {/* Main Delivery App - removed, now handled by Index page */}
                     
-                    {/* Custom Delivery Apps - Specific routes BEFORE dynamic ones */}
-                    <Route path="/custom-delivery" element={<CustomDeliveryApp />} />
-                    
-    {/* Specific named apps - MUST come before dynamic routes */}
-    <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
-    <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
-    <Route path="/app/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
-    <Route path="/app/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
+                    {/* Specific named apps - MUST come before dynamic routes */}
+                    <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
+                    <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
+                    <Route path="/app/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
+                    <Route path="/app/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
                     
                     {/* Party On Delivery Custom Routes */}
                     <Route path="/app/party-on-delivery---concierge-" element={<CustomPartyOnDeliveryStartScreen />} />
-                    <Route path="/app/party-on-delivery---concierge-/tabs" element={<CustomPartyOnDeliveryTabsPage />} />
                     <Route path="/app/party-on-delivery---concierge-/order-complete" element={<CustomPartyOnDeliveryPostCheckout />} />
                     
-                    {/* Dynamic delivery app routes */}
-                    <Route path="/app/:appSlug" element={<CustomDeliveryApp />} />
-                    <Route path="/app/:appSlug/success" element={<CustomDeliveryPostCheckout />} />
-                    <Route path="/delivery-app/:appSlug" element={<DeliveryAppView />} />
+                    {/* Dynamic delivery app routes - removed */}
                     
                     {/* Test Routes */}
                     <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />
