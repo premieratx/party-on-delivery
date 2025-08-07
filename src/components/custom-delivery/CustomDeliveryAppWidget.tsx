@@ -154,7 +154,7 @@ export const CustomDeliveryAppWidget: React.FC = () => {
       console.log('Standardized cart items:', standardCartItems);
       
       // Store custom app context for proper checkout flow
-      localStorage.setItem('custom-app-source', 'custom-delivery');
+      // localStorage.setItem('custom-app-source', 'custom-delivery'); // Removed to prevent cart interference
       
       // Navigate to checkout page
       navigate('/checkout');
