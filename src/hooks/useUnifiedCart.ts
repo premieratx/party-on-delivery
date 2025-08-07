@@ -222,44 +222,40 @@ export const useUnifiedCart = () => {
   const updateQuantity = useCallback((id: string, variant: string | undefined, quantity: number) => {
     console.log('useUnifiedCart: updateQuantity called', { id, variant, quantity });
     
+    // CRITICAL: Never allow negative quantities or NaN
+    const safeQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
+    
     setCartItems(prev => {
-      // Start with clean, validated cart
-      const cleanCart = prev.filter(item => 
-        item && item.id && item.quantity > 0 && item.price > 0
-      );
-      
-      const existingIndex = cleanCart.findIndex(item => 
+      const existingIndex = prev.findIndex(item => 
         item.id === id && item.variant === variant
       );
       
-      if (existingIndex >= 0) {
-        const newQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
-        
-        if (newQuantity <= 0) {
-          // Remove item completely
-          return cleanCart.filter((_, index) => index !== existingIndex);
-        } else {
-          // Update quantity
-          const updatedCart = [...cleanCart];
-          updatedCart[existingIndex] = { 
-            ...updatedCart[existingIndex], 
-            quantity: newQuantity
-          };
-          return updatedCart;
-        }
+      if (existingIndex === -1) {
+        console.log('useUnifiedCart: Item not found for update, ignoring');
+        return prev; // Don't add items through updateQuantity
       }
       
-      // Item not found, return cart unchanged
-      return cleanCart;
+      if (safeQuantity <= 0) {
+        console.log('useUnifiedCart: Removing item due to 0 quantity', { id, variant });
+        return prev.filter((_, index) => index !== existingIndex);
+      }
+      
+      console.log('useUnifiedCart: Updating item quantity', { id, variant, safeQuantity });
+      const newItems = [...prev];
+      newItems[existingIndex] = { ...newItems[existingIndex], quantity: safeQuantity };
+      return newItems;
     });
   }, []);
 
   const removeItem = useCallback((id: string, variant?: string) => {
-    setCartItems(prev => 
-      prev.filter(item => 
-        !((item.id === id || item.productId === id) && item.variant === variant)
-      )
-    );
+    console.log('useUnifiedCart: REMOVING ALL items', { id, variant });
+    setCartItems(prev => {
+      const filtered = prev.filter(item => 
+        !(item.id === id && item.variant === variant)
+      );
+      console.log('useUnifiedCart: Items after removal', { removedId: id, before: prev.length, after: filtered.length });
+      return filtered;
+    });
   }, []);
 
   const emptyCart = useCallback(() => {
