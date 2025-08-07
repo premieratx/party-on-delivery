@@ -144,67 +144,70 @@ export const useUnifiedCart = () => {
     };
   }, []);
 
-  // Optimized add to cart function
+  // FIXED: Reliable add to cart function that prevents phantom items
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'> | UnifiedCartItem[]) => {
     console.log('useUnifiedCart: addToCart called with:', item);
     
     setCartItems(prev => {
-      let newCart = [...prev];
+      // CRITICAL: Always start fresh to prevent phantom items
+      const cleanCart = prev.filter(cartItem => 
+        cartItem && cartItem.id && cartItem.quantity > 0 && cartItem.price > 0
+      );
       
       if (Array.isArray(item)) {
-        // Handle multiple items (from party planner)
-        item.forEach(newItem => {
-          const normalizedItem = {
-            ...newItem,
-            id: newItem.id || newItem.productId || '',
-            productId: newItem.productId || newItem.id,
-            name: newItem.name || newItem.title || '',
-            price: Number(newItem.price) || 0,
-            quantity: Number(newItem.quantity) || 1
-          };
-
-          const existingIndex = newCart.findIndex(cartItem => 
-            (cartItem.id === normalizedItem.id || cartItem.productId === normalizedItem.productId) && 
-            cartItem.variant === normalizedItem.variant
-          );
-          
-          if (existingIndex >= 0) {
-            if (normalizedItem.quantity === 0) {
-              newCart.splice(existingIndex, 1);
-            } else {
-              newCart[existingIndex] = normalizedItem;
-            }
-          } else if (normalizedItem.quantity > 0) {
-            newCart.push(normalizedItem);
-          }
-        });
+        // Handle multiple items (from party planner) - REPLACE entire cart
+        const validItems = item.filter(newItem => 
+          newItem && newItem.id && Number(newItem.quantity) > 0 && Number(newItem.price) > 0
+        );
+        
+        return validItems.map(newItem => ({
+          id: newItem.id || newItem.productId || '',
+          productId: newItem.productId || newItem.id,
+          title: newItem.title || newItem.name || '',
+          name: newItem.name || newItem.title || '',
+          price: Number(newItem.price) || 0,
+          quantity: Number(newItem.quantity) || 1,
+          image: newItem.image || '',
+          variant: newItem.variant,
+          eventName: newItem.eventName,
+          category: newItem.category
+        }));
       } else {
-        // Handle single item (from delivery widget)
+        // Handle single item (from delivery widget) - ADD to existing
         const normalizedItem: UnifiedCartItem = {
-          ...item,
-          quantity: 1,
           id: item.id || item.productId || '',
           productId: item.productId || item.id,
+          title: item.title || item.name || '',
           name: item.name || item.title || '',
-          price: Number(item.price) || 0
+          price: Number(item.price) || 0,
+          quantity: 1,
+          image: item.image || '',
+          variant: item.variant,
+          eventName: item.eventName,
+          category: item.category
         };
         
-        const existingIndex = newCart.findIndex(cartItem => 
-          (cartItem.id === normalizedItem.id || cartItem.productId === normalizedItem.productId) && 
+        // Validate item before adding
+        if (!normalizedItem.id || normalizedItem.price <= 0) {
+          console.warn('Invalid item, not adding to cart:', normalizedItem);
+          return cleanCart;
+        }
+        
+        const existingIndex = cleanCart.findIndex(cartItem => 
+          cartItem.id === normalizedItem.id && 
           cartItem.variant === normalizedItem.variant
         );
         
         if (existingIndex >= 0) {
-          newCart[existingIndex] = {
-            ...newCart[existingIndex],
-            quantity: newCart[existingIndex].quantity + 1
+          cleanCart[existingIndex] = {
+            ...cleanCart[existingIndex],
+            quantity: cleanCart[existingIndex].quantity + 1
           };
+          return cleanCart;
         } else {
-          newCart.push(normalizedItem);
+          return [...cleanCart, normalizedItem];
         }
       }
-      
-      return newCart;
     });
     
     // Trigger flash animation
@@ -215,29 +218,39 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
+  // FIXED: Reliable quantity update that prevents cart corruption
   const updateQuantity = useCallback((id: string, variant: string | undefined, quantity: number) => {
     console.log('useUnifiedCart: updateQuantity called', { id, variant, quantity });
     
     setCartItems(prev => {
-      const newCart = [...prev];
-      const existingIndex = newCart.findIndex(item => 
-        (item.id === id || item.productId === id) && 
-        (item.variant === variant || (!item.variant && !variant))
+      // Start with clean, validated cart
+      const cleanCart = prev.filter(item => 
+        item && item.id && item.quantity > 0 && item.price > 0
+      );
+      
+      const existingIndex = cleanCart.findIndex(item => 
+        item.id === id && item.variant === variant
       );
       
       if (existingIndex >= 0) {
-        const newQuantity = Math.max(0, Number(quantity) || 0);
+        const newQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
+        
         if (newQuantity <= 0) {
-          newCart.splice(existingIndex, 1);
+          // Remove item completely
+          return cleanCart.filter((_, index) => index !== existingIndex);
         } else {
-          newCart[existingIndex] = { 
-            ...newCart[existingIndex], 
+          // Update quantity
+          const updatedCart = [...cleanCart];
+          updatedCart[existingIndex] = { 
+            ...updatedCart[existingIndex], 
             quantity: newQuantity
           };
+          return updatedCart;
         }
       }
       
-      return newCart;
+      // Item not found, return cart unchanged
+      return cleanCart;
     });
   }, []);
 

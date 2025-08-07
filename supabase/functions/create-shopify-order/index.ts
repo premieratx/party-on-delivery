@@ -357,16 +357,7 @@ serve(async (req) => {
       }
     }
 
-    // Add driver tip as a line item for order details visibility
-    if (tipAmount > 0) {
-      lineItems.push({
-        title: "Driver Tip",
-        price: tipAmount.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        custom: true
-      });
-    }
+    // FIXED: Driver tip should NOT be included in line items - it's separate from taxable subtotal
 
     // Create order in Shopify with proper totals structure
     const orderData = {
@@ -474,12 +465,12 @@ ${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${actualDiscountA
 ✅ Payment Status: Paid
 
 💰 PAYMENT BREAKDOWN (MATCHES STRIPE CHARGE):
-   Subtotal: $${subtotal.toFixed(2)}
-   Delivery Fee: $${shippingFee.toFixed(2)}
-   Sales Tax: $${salesTax.toFixed(2)}
-   Driver Tip: $${tipAmount.toFixed(2)}
-   ${discountCode ? `Discount (${discountCode}): -$${Math.abs(parseFloat(discountAmount || '0')).toFixed(2)}` : ''}
-   TOTAL CHARGED: $${totalAmount.toFixed(2)}
+Subtotal: $${subtotal.toFixed(2)}
+Delivery Fee: $${shippingFee.toFixed(2)}
+Sales Tax: $${salesTax.toFixed(2)}
+Driver Tip: $${tipAmount.toFixed(2)}
+${discountCode ? `Discount (${discountCode}): -$${Math.abs(parseFloat(discountAmount || '0')).toFixed(2)}` : ''}
+TOTAL CHARGED: $${totalAmount.toFixed(2)}
 
 🏷️ RECOMSALE AFFILIATE TRACKING:
 ${discountCode ? `📊 Affiliate Code: ${discountCode}

@@ -154,8 +154,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [cartItems, customerInfo, addressInfo, affiliateCode, totalPrice, isAddingToOrder]);
   
-  // Pricing calculations - moved before state declarations
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  // FIXED: Safe pricing calculations with validation
+  const subtotal = cartItems.reduce((total, item) => {
+    const price = Number(item.price) || 0;
+    const quantity = Number(item.quantity) || 0;
+    return total + (price * quantity);
+  }, 0);
   
   // State declarations must come before any usage  
   const [tipAmount, setTipAmount] = useState(() => {
@@ -212,8 +216,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     }
   }, [appliedDiscountProp]);
   
-  // Calculate delivery fee using proper rules with discount consideration
+  // FIXED: Calculate delivery fee using proper rules with discount consideration
   const baseDeliveryFee = useDeliveryFee(subtotal, appliedDiscount);
+  console.log('Delivery fee calculation:', { subtotal, appliedDiscount, baseDeliveryFee });
   
   // State for distance-based delivery pricing
   const [distanceDeliveryFee, setDistanceDeliveryFee] = useState<number>(baseDeliveryFee);
@@ -346,9 +351,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         setDistanceDeliveryFee(0);
         setDeliveryDistance(null);
       } else {
-        // No address yet, use base delivery fee but recalculate with current subtotal
-        const currentDeliveryFee = useDeliveryFee(subtotal, appliedDiscount);
-        setDistanceDeliveryFee(currentDeliveryFee);
+        // No address yet, use base delivery fee
+        setDistanceDeliveryFee(baseDeliveryFee);
         setDeliveryDistance(null);
       }
     };

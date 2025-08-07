@@ -100,6 +100,9 @@ const App = () => {
                     {/* Order completion */}
                     <Route path="/success" element={<Success />} />
                     <Route path="/order-complete" element={<OrderComplete />} />
+                    <Route path="/post-checkout/:appName" element={<CustomAppPostCheckout />} />
+                    <Route path="/custom-post-checkout/:appName" element={<CustomAppPostCheckout />} />
+                    <Route path="/custom-party-on-delivery-post-checkout" element={<CustomPartyOnDeliveryPostCheckout />} />
                     
                     {/* Affiliate Routes */}
                     <Route path="/affiliate" element={<AffiliateIntro />} />

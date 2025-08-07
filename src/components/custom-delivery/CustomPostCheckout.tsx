@@ -53,31 +53,11 @@ export const CustomPostCheckout: React.FC<CustomPostCheckoutProps> = ({
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {/* Order Summary */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-semibold mb-2">Order Summary</h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span>Order Number:</span>
-                <span className="font-medium">#{orderData.order_number}</span>
-              </div>
-              {orderData.delivery_date && (
-                <div className="flex justify-between">
-                  <span>Delivery Date:</span>
-                  <span className="font-medium">{orderData.delivery_date}</span>
-                </div>
-              )}
-              {orderData.delivery_time && (
-                <div className="flex justify-between">
-                  <span>Delivery Time:</span>
-                  <span className="font-medium">{orderData.delivery_time}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span>Total:</span>
-                <span className="font-medium">${orderData.total_amount.toFixed(2)}</span>
-              </div>
-            </div>
+          {/* Simple Order Confirmation - REMOVED detailed breakdown per user request */}
+          <div className="text-center mb-4">
+            <p className="text-sm text-muted-foreground">
+              Order #{orderData.order_number} confirmed
+            </p>
           </div>
 
           {/* Custom Message */}
