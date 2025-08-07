@@ -153,10 +153,6 @@ export const CustomDeliveryAppWidget: React.FC = () => {
       
       console.log('Standardized cart items:', standardCartItems);
       
-      // Store cart items in the unified cart format
-      localStorage.setItem('unified-cart', JSON.stringify(standardCartItems));
-      localStorage.setItem('party-cart', JSON.stringify(standardCartItems));
-      
       // Store custom app context for proper checkout flow
       localStorage.setItem('custom-app-source', 'custom-delivery');
       
