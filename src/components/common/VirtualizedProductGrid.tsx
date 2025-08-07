@@ -80,7 +80,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
     return cartItem?.quantity || 0;
   }, [cartItems]);
 
-  // Handle add to cart
+  // Handle add to cart - FIXED to include all required data
   const handleAddToCart = useCallback((product: ShopifyProduct) => {
     const variant = product.variants[0];
     const variantId = variant?.id;
@@ -89,12 +89,12 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
       id: product.id,
       title: product.title,
       name: product.title,
-      price: product.price || 0,
+      price: variant?.price || product.price || 0,
       image: product.image,
       variant: variantId
     };
     
-    console.log('🛒 VirtualizedGrid: Adding to cart with exact variant:', { id: product.id, variant: variantId });
+    console.log('🛒 VirtualizedGrid: Adding to cart with complete data:', cartItem);
     onAddToCart(cartItem);
   }, [onAddToCart]);
 

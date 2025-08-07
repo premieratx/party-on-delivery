@@ -134,15 +134,24 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
     return cartItem?.quantity || 0;
   };
 
-  // FIXED: Use ONLY updateQuantity for ALL cart operations
+  // FIXED: Use addToCart with product data for proper cart management
   const handleAddToCart = (product: Product) => {
     const variant = product.variants?.[0];
     const variantId = variant?.id;
     
-    console.log('🛒 UltraFast: Adding to cart via updateQuantity:', { id: product.id, variant: variantId });
+    console.log('🛒 UltraFast: Adding to cart:', { id: product.id, variant: variantId });
     
-    // Use updateQuantity instead of onAddToCart to avoid conflicts
-    onUpdateQuantity(product.id, variantId, 1);
+    // Use onAddToCart to provide complete product data
+    const cartItem = {
+      id: product.id,
+      title: product.title,
+      name: product.title,
+      price: variant?.price || parseFloat(product.price),
+      image: product.image,
+      variant: variantId
+    };
+    
+    onAddToCart(cartItem);
   };
 
   const handleIncrement = (productId: string, variantId: string | undefined) => {
