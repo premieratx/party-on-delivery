@@ -134,30 +134,21 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
     return cartItem?.quantity || 0;
   };
 
+  // FIXED: Use ONLY updateQuantity for ALL cart operations
   const handleAddToCart = (product: Product) => {
     const variant = product.variants?.[0];
-    // CRITICAL: Use the exact same variant identifier everywhere
     const variantId = variant?.id || variant?.title;
     
-    const cartItem = {
-      id: product.id,
-      title: product.title,
-      name: product.title,
-      price: parseFloat(product.price) || 0,
-      image: product.image,
-      variant: variantId  // Use variant ID, not title
-    };
+    console.log('🛒 UltraFast: Adding to cart via updateQuantity:', { id: product.id, variant: variantId });
     
-    console.log('🛒 UltraFast: Adding to cart with exact variant:', { id: product.id, variant: variantId });
-    onAddToCart(cartItem);
+    // Use updateQuantity instead of onAddToCart to avoid conflicts
+    onUpdateQuantity(product.id, variantId, 1);
   };
 
-  // NUCLEAR OPTION: Always use updateQuantity for everything
   const handleIncrement = (productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     console.log('🛒 INCREMENT - before:', {productId, variantId, currentQty});
     
-    // ALWAYS increment existing quantity (even if 0)
     onUpdateQuantity(productId, variantId, currentQty + 1);
   };
 
