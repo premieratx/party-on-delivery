@@ -291,7 +291,7 @@ export const SuperFastProductGrid: React.FC<SuperFastProductGridProps> = memo(({
           <ProductCard
             key={product.id}
             product={product}
-            quantity={getCartItemQuantity(product.id, product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.title : undefined)}
+            quantity={getCartItemQuantity(product.id, product.variants?.[0]?.id || product.variants?.[0]?.title)}
             onQuantityChange={(productId, variantId, delta) => {
               if (delta > 0) {
                 handleIncrement(productId, variantId);

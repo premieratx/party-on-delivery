@@ -136,7 +136,8 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
 
   const handleAddToCart = (product: Product) => {
     const variant = product.variants?.[0];
-    const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
+    // CRITICAL: Use the exact same variant identifier everywhere
+    const variantId = variant?.id || variant?.title;
     
     const cartItem = {
       id: product.id,
@@ -144,17 +145,17 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
       name: product.title,
       price: parseFloat(product.price) || 0,
       image: product.image,
-      variant: variantTitle  // USE SAME VARIANT LOGIC AS INCREMENT/DECREMENT
+      variant: variantId  // Use variant ID, not title
     };
     
-    console.log('🛒 Adding to cart with variant:', { id: product.id, variant: variantTitle });
+    console.log('🛒 UltraFast: Adding to cart with exact variant:', { id: product.id, variant: variantId });
     onAddToCart(cartItem);
   };
 
-  // FIXED: SIMPLE STORE INCREMENT/DECREMENT
+  // FIXED: Use exact same variant ID as addToCart
   const handleIncrement = (productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    console.log('🛒 Product Grid Increment:', { productId, variantId, currentQty, newQty: currentQty + 1 });
+    console.log('🛒 UltraFast Increment:', { productId, variantId, currentQty, newQty: currentQty + 1 });
     
     // Always just increment by 1
     onUpdateQuantity(productId, variantId, currentQty + 1);
@@ -162,9 +163,9 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
 
   const handleDecrement = (productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    console.log('🛒 Product Grid Decrement:', { productId, variantId, currentQty, newQty: currentQty - 1 });
+    console.log('🛒 UltraFast Decrement:', { productId, variantId, currentQty, newQty: currentQty - 1 });
     
-    // Always just decrement by 1 (updateQuantity handles removal if qty becomes 0)
+    // Always just decrement by 1
     if (currentQty > 0) {
       onUpdateQuantity(productId, variantId, currentQty - 1);
     }
@@ -192,8 +193,8 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {filteredProducts.map((product) => {
         const variant = product.variants?.[0];
-        const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
-        const quantity = getCartItemQuantity(product.id, variantTitle);
+        const variantId = variant?.id || variant?.title; // Use EXACT same logic as addToCart
+        const quantity = getCartItemQuantity(product.id, variantId);
         
         return (
           <Card key={product.id} className="overflow-hidden">
@@ -229,7 +230,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDecrement(product.id, variantTitle)}
+                    onClick={() => handleDecrement(product.id, variantId)}
                     className="h-8 w-8 p-0"
                   >
                     <Minus className="h-4 w-4" />
@@ -239,7 +240,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => handleIncrement(product.id, variantTitle)}
+                    onClick={() => handleIncrement(product.id, variantId)}
                     className="h-8 w-8 p-0"
                   >
                     <Plus className="h-4 w-4" />

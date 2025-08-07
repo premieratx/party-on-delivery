@@ -83,7 +83,8 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   // Handle add to cart
   const handleAddToCart = useCallback((product: ShopifyProduct) => {
     const variant = product.variants[0];
-    const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
+    // CRITICAL: Use the exact same variant identifier everywhere  
+    const variantId = variant?.id || variant?.title;
     
     const cartItem = {
       id: product.id,
@@ -91,10 +92,10 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
       name: product.title,
       price: product.price || 0,
       image: product.image,
-      variant: variantTitle  // USE SAME VARIANT LOGIC AS INCREMENT/DECREMENT
+      variant: variantId  // Use variant ID, not title
     };
     
-    console.log('🛒 VirtualizedGrid: Adding to cart with variant:', { id: product.id, variant: variantTitle });
+    console.log('🛒 VirtualizedGrid: Adding to cart with exact variant:', { id: product.id, variant: variantId });
     onAddToCart(cartItem);
   }, [onAddToCart]);
 
@@ -171,16 +172,16 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
           >
             {searchFilteredItems.map(({ item: product, index }) => {
               const variant = product.variants[0];
-              const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
+              const variantId = variant?.id || variant?.title; // Use EXACT same logic as addToCart
               
               return (
                 <ProductCard
                   key={`${product.id}-${index}`}
                   product={product}
-                  quantity={getCartItemQuantity(product.id, variantTitle)}
+                  quantity={getCartItemQuantity(product.id, variantId)}
                   onAddToCart={() => handleAddToCart(product)}
-                  onIncrement={() => handleIncrement(product.id, variantTitle)}
-                  onDecrement={() => handleDecrement(product.id, variantTitle)}
+                  onIncrement={() => handleIncrement(product.id, variantId)}
+                  onDecrement={() => handleDecrement(product.id, variantId)}
                 />
               );
             })}
