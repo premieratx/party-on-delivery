@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface UnifiedCartItem {
   id: string;
@@ -32,11 +32,31 @@ export const useUnifiedCart = () => {
       const newItems = typeof updater === 'function' ? updater(prevItems) : updater;
       try {
         localStorage.setItem('unified-cart', JSON.stringify(newItems));
+        // Notify other hook instances in the same tab
+        window.dispatchEvent(new CustomEvent('unified-cart:changed'));
       } catch (error) {
         console.warn('Failed to save cart to localStorage:', error);
       }
       return newItems;
     });
+  }, []);
+
+  // Cross-instance sync: update on storage or custom event
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'unified-cart') {
+        setCartItemsState(getCartFromStorage());
+      }
+    };
+    const onCustom = () => {
+      setCartItemsState(getCartFromStorage());
+    };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('unified-cart:changed', onCustom as unknown as EventListener);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('unified-cart:changed', onCustom as unknown as EventListener);
+    };
   }, []);
 
   // Simple key creation and matching helpers
@@ -68,57 +88,58 @@ export const useUnifiedCart = () => {
       operation: qty === 0 ? 'REMOVE' : qty > 0 ? 'SET' : 'INVALID'
     });
     
-    setCartItems(prev => {
-      // Create a completely new array to prevent mutations
-      const currentItems = [...prev];
-      
-      // Find existing item using strict matching
-      const existingIndex = currentItems.findIndex(item => {
-        const itemId = item.productId || item.id;
-        const itemVariant = normalizeVariant(item.variant);
-        return itemId === id && itemVariant === normalizedVariant;
-      });
-      
-      if (qty <= 0) {
-        // REMOVE operation
-        if (existingIndex >= 0) {
-          console.log('🛒 ATOMIC REMOVE:', id, normalizedVariant);
-          return currentItems.filter((_, index) => index !== existingIndex);
-        }
-        // Item doesn't exist, nothing to remove
-        return currentItems;
-      }
-      
-      if (existingIndex >= 0) {
-        // UPDATE operation
-        console.log('🛒 ATOMIC UPDATE:', id, normalizedVariant, 'quantity:', qty);
-        const newItems = [...currentItems];
-        newItems[existingIndex] = { 
-          ...newItems[existingIndex], 
-          quantity: qty 
-        };
-        return newItems;
-      } else if (productData) {
-        // CREATE operation
-        console.log('🛒 ATOMIC CREATE:', id, normalizedVariant, 'quantity:', qty);
-        const newItem: UnifiedCartItem = {
-          id: id,
-          productId: id,
-          title: productData.title || `Product ${id}`,
-          name: productData.name || productData.title || `Product ${id}`,
-          price: productData.price || 0,
-          quantity: qty,
-          image: productData.image || '',
-          variant: normalizedVariant,
-          eventName: productData.eventName,
-          category: productData.category
-        };
-        return [...currentItems, newItem];
-      }
-      
-      // No changes needed
-      return currentItems;
+    const baseItems = getCartFromStorage();
+    // Work from latest storage to avoid stale overwrites across instances
+    const currentItems = [...baseItems];
+    
+    // Find existing item using strict matching
+    const existingIndex = currentItems.findIndex(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = normalizeVariant(item.variant);
+      return itemId === id && itemVariant === normalizedVariant;
     });
+    
+    let result = currentItems;
+    
+    if (qty <= 0) {
+      // REMOVE operation
+      if (existingIndex >= 0) {
+        console.log('🛒 ATOMIC REMOVE:', id, normalizedVariant);
+        result = currentItems.filter((_, index) => index !== existingIndex);
+      }
+      setCartItems(result);
+      return;
+    }
+    
+    if (existingIndex >= 0) {
+      // UPDATE operation
+      console.log('🛒 ATOMIC UPDATE:', id, normalizedVariant, 'quantity:', qty);
+      const newItems = [...currentItems];
+      newItems[existingIndex] = { 
+        ...newItems[existingIndex], 
+        quantity: qty 
+      };
+      result = newItems;
+    } else if (productData) {
+      // CREATE operation
+      console.log('🛒 ATOMIC CREATE:', id, normalizedVariant, 'quantity:', qty);
+      const newItem: UnifiedCartItem = {
+        id: id,
+        productId: id,
+        title: productData.title || `Product ${id}`,
+        name: productData.name || productData.title || `Product ${id}`,
+        price: productData.price || 0,
+        quantity: qty,
+        image: productData.image || '',
+        variant: normalizedVariant,
+        eventName: productData.eventName,
+        category: productData.category
+      };
+      result = [...currentItems, newItem];
+    }
+    
+    // No changes needed or updated result
+    setCartItems(result);
   }, []);
 
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
@@ -140,7 +161,7 @@ export const useUnifiedCart = () => {
     });
     
     // Get current quantity atomically
-    const currentQty = cartItems.find(cartItem => matchesItem(cartItem, item.id, item.variant))?.quantity || 0;
+    const currentQty = getCartFromStorage().find(cartItem => matchesItem(cartItem, item.id, item.variant))?.quantity || 0;
     console.log('🛒 ATOMIC INCREMENT from', currentQty, 'to', currentQty + 1);
     
     // Use updateQuantity with product data (atomic operation)
@@ -151,7 +172,8 @@ export const useUnifiedCart = () => {
   }, [cartItems, updateQuantity]);
 
   const removeItem = useCallback((id: string, variant?: string) => {
-    setCartItems(prev => prev.filter(item => !matchesItem(item, id, variant)));
+    const baseItems = getCartFromStorage();
+    setCartItems(baseItems.filter(item => !matchesItem(item, id, variant)));
   }, []);
 
   // Empty cart
