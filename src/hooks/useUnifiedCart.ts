@@ -197,19 +197,28 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // SIMPLE UPDATE QUANTITY - NEVER CORRUPTS CART
+  // SIMPLE UPDATE QUANTITY - BETTER MATCHING
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
     console.log('🛒 updateQuantity:', { id, variant, newQuantity });
     
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
     
     setCartItems(prev => {
-      const existingIndex = prev.findIndex(item => 
-        item.id === id && item.variant === variant
-      );
+      const existingIndex = prev.findIndex(item => {
+        // Match by ID first
+        const idMatch = (item.id === id || item.productId === id);
+        
+        // If no variant specified, match any item with this ID
+        if (!variant) return idMatch;
+        
+        // Match variant exactly OR if both are falsy
+        const variantMatch = (item.variant === variant) || (!item.variant && !variant);
+        
+        return idMatch && variantMatch;
+      });
       
       if (existingIndex === -1) {
-        console.log('🛒 Item not found for update');
+        console.log('🛒 Item STILL not found for update - cart contents:', prev.map(item => ({ id: item.id, variant: item.variant })));
         return prev;
       }
       
@@ -241,11 +250,20 @@ export const useUnifiedCart = () => {
     }
   }, []);
 
-  // Memoized calculations
+  // FIXED: More flexible cart item matching
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
-    const item = cartItems.find(item => 
-      (item.id === id || item.productId === id) && item.variant === variant
-    );
+    const item = cartItems.find(item => {
+      // Match by ID first
+      const idMatch = (item.id === id || item.productId === id);
+      
+      // If no variant specified, match any item with this ID
+      if (!variant) return idMatch;
+      
+      // Match variant exactly OR if both are falsy
+      const variantMatch = (item.variant === variant) || (!item.variant && !variant);
+      
+      return idMatch && variantMatch;
+    });
     return item?.quantity || 0;
   }, [cartItems]);
 
