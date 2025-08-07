@@ -2392,6 +2392,36 @@ export type Database = {
           },
         ]
       }
+      shopify_webhook_config: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          topics: string[] | null
+          updated_at: string | null
+          webhook_secret: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          topics?: string[] | null
+          updated_at?: string | null
+          webhook_secret: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          topics?: string[] | null
+          updated_at?: string | null
+          webhook_secret?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       site_configurations: {
         Row: {
           config_key: string
