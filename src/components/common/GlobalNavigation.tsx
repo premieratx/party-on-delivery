@@ -37,7 +37,6 @@ interface NavItem {
 const navigationItems: NavItem[] = [
   // Main navigation
   { icon: Home, label: 'Home', href: '/', show: 'always', category: 'main' },
-  { icon: Search, label: 'Search Products', href: '/search', show: 'always', category: 'main' },
   { icon: Package, label: 'Main Delivery', href: '/', show: 'always', category: 'main' },
   
   // User accounts
@@ -48,6 +47,7 @@ const navigationItems: NavItem[] = [
   
   // Admin
   { icon: Settings, label: 'Admin Panel', href: '/admin', show: 'admin', category: 'admin' },
+  { icon: Search, label: 'Search Products', href: '/search', show: 'admin', category: 'admin' },
   { icon: Package, label: 'Product Management', href: '/admin/product-management', show: 'admin', category: 'admin' },
   { icon: Settings, label: 'Delivery Apps', href: '/admin/delivery-app-manager', show: 'admin', category: 'admin' },
   { icon: Users, label: 'Group Orders', href: '/group', show: 'admin', category: 'admin' },
@@ -122,7 +122,7 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
     <>
       {/* Mobile Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/20 md:hidden">
-        <div className="grid grid-cols-5 h-14">
+        <div className="grid grid-cols-4 h-14">
           {/* Home */}
           <button
             onClick={() => handleNavigation('/')}
@@ -136,19 +136,6 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
             <span>Home</span>
           </button>
 
-          {/* Search */}
-          <button
-            onClick={() => handleNavigation('/search')}
-            className={`flex flex-col items-center justify-center text-xs transition-colors ${
-              location.pathname === '/search' 
-                ? 'text-primary' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Search className="h-4 w-4 mb-1" />
-            <span>Search</span>
-          </button>
-
           {/* Delivery Apps */}
           <button
             onClick={() => handleNavigation('/')}
@@ -160,6 +147,26 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
           >
             <Package className="h-4 w-4 mb-1" />
             <span>Delivery</span>
+          </button>
+
+          {/* Cart */}
+          <button
+            onClick={() => {
+              const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
+              cartTrigger?.click();
+            }}
+            className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors relative"
+          >
+            <ShoppingCart className="h-4 w-4 mb-1" />
+            <span>Cart</span>
+            {cartItems > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 text-[10px] rounded-full p-0 flex items-center justify-center"
+              >
+                {cartItems}
+              </Badge>
+            )}
           </button>
 
           {/* Cart with Checkout */}

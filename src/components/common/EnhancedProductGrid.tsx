@@ -168,7 +168,7 @@ function ProductCard({
               <span className={`font-bold text-primary ${
                 isMobile ? 'text-lg' : 'text-xl'
               }`}>
-                ${product.price.toFixed(2)}
+                ${(parseFloat(String(product.price)) || 0).toFixed(2)}
               </span>
               {quantity > 0 && (
                 <Badge variant="secondary" className="text-xs">

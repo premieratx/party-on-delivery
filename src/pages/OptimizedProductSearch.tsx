@@ -265,7 +265,7 @@ export default function OptimizedProductSearch() {
                         
                         <div className="flex items-center justify-between mb-3">
                           <span className="font-bold text-primary">
-                            ${product.price.toFixed(2)}
+                            ${(parseFloat(String(product.price)) || 0).toFixed(2)}
                           </span>
                         </div>
 

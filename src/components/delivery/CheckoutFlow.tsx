@@ -1007,27 +1007,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                         <Calendar
                           mode="single"
                           selected={deliveryInfo.date instanceof Date ? deliveryInfo.date : deliveryInfo.date ? new Date(deliveryInfo.date) : undefined}
-                          onSelect={(selectedDate) => {
-                            console.log('📅 Date selected:', selectedDate);
-                            if (selectedDate) {
-                              // Preserve existing time slot when changing date
-                              const preservedTimeSlot = deliveryInfo.timeSlot;
-                              updateDeliveryInfo('date', selectedDate);
-                              
-                              // Close the calendar popover after selection
-                              const popoverTrigger = document.querySelector('[data-state="open"] button') as HTMLElement;
-                              if (popoverTrigger) {
-                                popoverTrigger.click();
-                              }
-                              
-                              // Restore time slot if it was previously set
-                              if (preservedTimeSlot) {
-                                setTimeout(() => {
-                                  updateDeliveryInfo('timeSlot', preservedTimeSlot);
-                                }, 100);
-                              }
-                            }
-                          }}
+                           onSelect={(selectedDate) => {
+                             console.log('📅 Date selected:', selectedDate);
+                             if (selectedDate) {
+                               updateDeliveryInfo('date', selectedDate);
+                               
+                               // Close the popover immediately after selection
+                               const closePopover = () => {
+                                 const popoverContent = document.querySelector('[data-state="open"][role="dialog"]');
+                                 if (popoverContent) {
+                                   const popoverTrigger = popoverContent.closest('.relative')?.querySelector('button');
+                                   if (popoverTrigger) {
+                                     popoverTrigger.click();
+                                   }
+                                 }
+                               };
+                               
+                               // Use setTimeout to ensure the date is set before closing
+                               setTimeout(closePopover, 50);
+                             }
+                           }}
                           disabled={(date) => {
                             const today = new Date();
                             today.setHours(0, 0, 0, 0);
@@ -1048,20 +1047,12 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <p className="text-xs text-muted-foreground">
                       Same-day delivery available with 1-hour advance notice.
                     </p>
-                    <select
-                      value={deliveryInfo.timeSlot || ""}
-                      onChange={(e) => {
-                        // Preserve existing date when changing time slot
-                        const preservedDate = deliveryInfo.date;
-                        updateDeliveryInfo('timeSlot', e.target.value);
-                        
-                        // Restore date if it was cleared
-                        if (preservedDate && !deliveryInfo.date) {
-                          setTimeout(() => {
-                            updateDeliveryInfo('date', preservedDate);
-                          }, 100);
-                        }
-                      }}
+                     <select
+                       value={deliveryInfo.timeSlot || ""}
+                       onChange={(e) => {
+                         console.log('⏰ Time slot selected:', e.target.value);
+                         updateDeliveryInfo('timeSlot', e.target.value);
+                       }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="" disabled>Select a time slot</option>

@@ -127,7 +127,7 @@ const ProductCard = memo(({
 
           <div className="flex items-center justify-between">
             <span className="text-lg font-bold text-primary">
-              ${product.price.toFixed(2)}
+              ${(parseFloat(String(product.price)) || 0).toFixed(2)}
             </span>
             
             {quantity > 0 ? (

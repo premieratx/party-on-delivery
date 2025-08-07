@@ -19,7 +19,7 @@ export default function MainDeliveryApp() {
       id: product.id,
       title: product.title,
       name: product.title,
-      price: parseFloat(product.price),
+      price: parseFloat(product.price) || 0,
       image: product.image,
       variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.title : undefined
     };

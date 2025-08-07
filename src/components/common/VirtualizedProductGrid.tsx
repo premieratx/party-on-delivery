@@ -240,7 +240,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
           <div className="mt-auto">
             <div className="flex items-center justify-between mb-2">
               <span className="font-bold text-primary text-lg">
-                ${product.price.toFixed(2)}
+                ${(parseFloat(String(product.price)) || 0).toFixed(2)}
               </span>
               {quantity > 0 && (
                 <Badge variant="secondary" className="text-xs">
