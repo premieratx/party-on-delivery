@@ -363,6 +363,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const selectedCollection = collections.find(c => c.handle === stepMapping[selectedCategory]?.handle);
 
+  // FIXED: Auto-select first collection when collections load
+  useEffect(() => {
+    if (collections.length > 0 && selectedCategory === 4 && !selectedCollection) {
+      console.log('Auto-selecting first collection:', stepMapping[0]?.title);
+      setSelectedCategory(0);
+    }
+  }, [collections, selectedCategory, selectedCollection]);
+
+  // FIXED: Auto-select when custom collections are provided
+  useEffect(() => {
+    if (customCollections?.tabs && customCollections.tabs.length > 0 && selectedCategory === 4) {
+      console.log('Auto-selecting first custom collection:', customCollections.tabs[0].name);
+      setSelectedCategory(0);
+    }
+  }, [customCollections, selectedCategory]);
+
   // Helper to get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
     const cartItem = cartItems.find(item => 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
 import { TimeSelector } from './TimeSelector';
-
+import { CheckoutKeepShopping } from './CheckoutKeepShopping';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -14,9 +14,6 @@ import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-
-
-// Removed SimpleDatePicker import - using native date input
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
 import { CheckCircle, Calendar as CalendarIcon, Clock, MapPin, ShoppingBag, ExternalLink, ArrowLeft, User, CreditCard, Plus, Minus, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

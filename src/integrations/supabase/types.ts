@@ -2965,6 +2965,10 @@ export type Database = {
         Args: { p_share_token: string }
         Returns: Json
       }
+      get_post_checkout_url: {
+        Args: { app_name: string }
+        Returns: string
+      }
       get_product_category: {
         Args: { p_collection_handles: string[] }
         Returns: string
