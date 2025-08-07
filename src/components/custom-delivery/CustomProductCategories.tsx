@@ -216,7 +216,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
       name: product.title,
       price: variant.price,
       image: product.image,
-      variant: variant.title !== 'Default Title' ? variant.title : undefined
+      variant: variant.id
     };
 
     onAddToCart(cartItem);
@@ -336,7 +336,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
             {searchFilteredProducts.map((product) => {
               const selectedVariant = selectedVariants[product.id] || product.variants[0]?.id;
               const variant = product.variants.find(v => v.id === selectedVariant) || product.variants[0];
-              const cartQuantity = getCartQuantity(product.id, variant?.title !== 'Default Title' ? variant?.title : undefined);
+              const cartQuantity = getCartQuantity(product.id, variant?.id);
               
               return (
                 <Card key={`${product.id}-${selectedVariant}`} className="overflow-hidden hover:shadow-md transition-shadow">
@@ -416,7 +416,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleUpdateQuantity(product.id, -1, variant?.title !== 'Default Title' ? variant?.title : undefined);
+                            handleUpdateQuantity(product.id, -1, variant?.id);
                           }}
                           className="h-8 w-8 p-0 text-purple-600 hover:bg-purple-100"
                         >
@@ -432,7 +432,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleUpdateQuantity(product.id, 1, variant?.title !== 'Default Title' ? variant?.title : undefined);
+                            handleUpdateQuantity(product.id, 1, variant?.id);
                           }}
                           className="h-8 w-8 p-0 text-purple-600 hover:bg-purple-100"
                         >
@@ -457,7 +457,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
           onAddToCart={handleAddToCart}
           selectedVariant={selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id]) || selectedProduct.variants[0]}
           onUpdateQuantity={onUpdateQuantity}
-          cartQuantity={getCartQuantity(selectedProduct.id, selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id])?.title !== 'Default Title' ? selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id])?.title : undefined)}
+          cartQuantity={getCartQuantity(selectedProduct.id, selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id])?.id)}
         />
       )}
 
