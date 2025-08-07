@@ -163,62 +163,57 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // ULTRA-BULLETPROOF: Cart quantity updates that NEVER interfere with other products
+  // NUCLEAR OPTION: Absolutely zero cross-product interference
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
-    console.log('🛒 updateQuantity START:', { id, variant, newQuantity });
-    
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
+    const searchKey = `${id}_${variant || 'none'}`;
+    
+    console.log(`🛒 UPDATE ${searchKey} to qty: ${safeQuantity}`);
     
     setCartItems(prev => {
-      console.log('🛒 CART BEFORE:', prev.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
+      // Create a completely new array to avoid any reference issues
+      const currentCart = [...prev];
       
-      // SUPER PRECISE MATCHING - absolutely no cross-product interference
-      const targetIndex = prev.findIndex(item => {
-        const idMatches = item.id === id;
-        const variantMatches = item.variant === variant;
-        return idMatches && variantMatches;
+      // Find the EXACT item we want to update (and ONLY that item)
+      const targetIndex = currentCart.findIndex(item => {
+        const itemKey = `${item.id}_${item.variant || 'none'}`;
+        return itemKey === searchKey;
       });
       
-      console.log('🛒 TARGET INDEX:', targetIndex, 'for item:', id, variant ? `(${variant})` : '(no variant)');
+      console.log(`🛒 Found ${searchKey} at index: ${targetIndex}`);
+      console.log(`🛒 Current cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
       
       if (targetIndex >= 0) {
-        // EXISTING ITEM - Update or remove
+        // Item exists - update or remove it
         if (safeQuantity <= 0) {
-          // REMOVE this specific item only
-          const newCart = prev.filter((_, index) => index !== targetIndex);
-          console.log('🛒 REMOVED ITEM - CART AFTER:', newCart.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
-          return newCart;
+          // Remove this specific item
+          currentCart.splice(targetIndex, 1);
+          console.log(`🛒 REMOVED ${searchKey} - New cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
         } else {
-          // UPDATE this specific item only
-          const newCart = [...prev];
-          newCart[targetIndex] = { 
-            ...newCart[targetIndex], 
-            quantity: safeQuantity 
+          // Update this specific item
+          currentCart[targetIndex] = {
+            ...currentCart[targetIndex],
+            quantity: safeQuantity
           };
-          console.log('🛒 UPDATED ITEM - CART AFTER:', newCart.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
-          return newCart;
+          console.log(`🛒 UPDATED ${searchKey} to ${safeQuantity} - New cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
         }
-      } else {
-        // NEW ITEM - Only add if quantity > 0
-        if (safeQuantity > 0) {
-          const newItem: UnifiedCartItem = {
-            id,
-            productId: id,
-            title: `Product ${id}`,
-            name: `Product ${id}`, 
-            price: 0, // Will be updated by product data
-            quantity: safeQuantity,
-            image: '',
-            variant
-          };
-          const newCart = [...prev, newItem];
-          console.log('🛒 ADDED NEW ITEM - CART AFTER:', newCart.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
-          return newCart;
-        } else {
-          console.log('🛒 NOT ADDING - Zero quantity');
-          return prev;
-        }
+      } else if (safeQuantity > 0) {
+        // Item doesn't exist - add it
+        const newItem: UnifiedCartItem = {
+          id,
+          productId: id,
+          title: `Product ${id}`,
+          name: `Product ${id}`,
+          price: 0,
+          quantity: safeQuantity,
+          image: '',
+          variant
+        };
+        currentCart.push(newItem);
+        console.log(`🛒 ADDED ${searchKey} with qty ${safeQuantity} - New cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
       }
+      
+      return currentCart;
     });
   }, []);
 
@@ -235,18 +230,16 @@ export const useUnifiedCart = () => {
     // DO NOT clear party-cart to prevent interference
   }, []);
 
-  // FIXED: Precise cart quantity lookup
+  // FIXED: Ultra-precise cart quantity lookup
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
+    const searchKey = `${id}_${variant || 'none'}`;
     const item = cartItems.find(item => {
-      const idMatch = (item.id === id);
-      const variantMatch = (item.variant === variant);
-      const exactMatch = idMatch && variantMatch;
-      
-      return exactMatch;
+      const itemKey = `${item.id}_${item.variant || 'none'}`;
+      return itemKey === searchKey;
     });
     
     const qty = item?.quantity || 0;
-    console.log('🛒 getCartItemQuantity:', {id, variant, foundQty: qty, totalItems: cartItems.length});
+    console.log(`🛒 GET QTY for ${searchKey}: ${qty}`);
     return qty;
   }, [cartItems]);
 
