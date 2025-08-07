@@ -56,8 +56,6 @@ const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout")
 // Specific custom apps
 const CustomPartyOnDeliveryStartScreen = lazy(() => import("./pages/CustomPartyOnDeliveryStartScreen"));
 const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomPartyOnDeliveryPostCheckout"));
-const AirbnbConciergeServiceStartScreen = lazy(() => import("./pages/AirbnbConciergeServiceStartScreen"));
-const AirbnbConciergeServiceTabsPage = lazy(() => import("./pages/AirbnbConciergeServiceTabsPage"));
 
 // Other routes
 const ProductSearch = lazy(() => import("./pages/ProductSearch").then(m => ({ default: m.ProductSearch })));
@@ -142,17 +140,13 @@ const App = () => {
                     
                     {/* Main Delivery App - removed, now handled by Index page */}
                     
-                    {/* Specific named apps - MUST come before dynamic routes */}
-                    <Route path="/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
-                    <Route path="/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
-                    <Route path="/app/airbnb-concierge-service" element={<AirbnbConciergeServiceStartScreen />} />
-                    <Route path="/app/airbnb-concierge-service/tabs" element={<AirbnbConciergeServiceTabsPage />} />
-                    
                     {/* Party On Delivery Custom Routes */}
                     <Route path="/app/party-on-delivery---concierge-" element={<CustomPartyOnDeliveryStartScreen />} />
                     <Route path="/app/party-on-delivery---concierge-/order-complete" element={<CustomPartyOnDeliveryPostCheckout />} />
                     
-                    {/* Dynamic delivery app routes - removed */}
+                    {/* Dynamic delivery app routes */}
+                    <Route path="/app/:appName" element={<CustomAppView />} />
+                    <Route path="/app/:appName/order-complete" element={<CustomAppPostCheckout />} />
                     
                     {/* Test Routes */}
                     <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />
@@ -162,9 +156,6 @@ const App = () => {
                     <Route path="/concierge" element={<ConciergeService />} />
                     <Route path="/performance-optimization" element={<PerformanceOptimization />} />
                     
-                    {/* CRITICAL: Dynamic delivery app routes - MUST be second to last */}
-                    <Route path="/app/:appName" element={<CustomAppView />} />
-                    <Route path="/app/:appName/success" element={<CustomAppPostCheckout />} />
                     
                     {/* 404 - MUST be absolute last */}
                     <Route path="*" element={<NotFound />} />
