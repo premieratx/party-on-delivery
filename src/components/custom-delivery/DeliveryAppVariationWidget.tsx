@@ -116,10 +116,16 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
   };
 
   const handleAddToCart = (product: Omit<CustomCartItem, 'quantity'>) => {
-    console.log('Adding product to cart:', product);
-    addToCart({
+    console.log('🛒 DeliveryAppVariationWidget: Adding product to cart:', product);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = cartItems.find(item => 
+      item.id === product.id && item.variant === product.variant
+    )?.quantity || 0;
+    
+    updateQuantity(product.id, product.variant, currentQty + 1, {
       ...product,
-      name: product.title
+      name: product.title,
+      productId: product.id
     });
   };
 

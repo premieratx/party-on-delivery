@@ -27,7 +27,17 @@ export const FastProductGrid: React.FC<FastProductGridProps> = ({
     if (onAddToCart) {
       onAddToCart(item);
     } else {
-      addToCart(item);
+      console.log('🛒 FastProductGrid: Adding product to cart:', item);
+      // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+      const currentQty = cartItems.find(cartItem => 
+        cartItem.id === item.id && cartItem.variant === item.variant
+      )?.quantity || 0;
+      
+      updateQuantity(item.id, item.variant, currentQty + 1, {
+        ...item,
+        name: item.title,
+        productId: item.id
+      });
     }
   };
 

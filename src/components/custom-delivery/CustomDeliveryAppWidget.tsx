@@ -99,7 +99,17 @@ export const CustomDeliveryAppWidget: React.FC = () => {
   };
 
   const handleAddToCart = (item: Omit<UnifiedCartItem, 'quantity'>) => {
-    addToCart(item);
+    console.log('🛒 CustomDeliveryAppWidget: Adding product to cart:', item);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = cartItems.find(cartItem => 
+      cartItem.id === item.id && cartItem.variant === item.variant
+    )?.quantity || 0;
+    
+    updateQuantity(item.id, item.variant, currentQty + 1, {
+      ...item,
+      name: item.title,
+      productId: item.id
+    });
   };
 
   const handleUpdateQuantity = (id: string, variant: string | undefined, quantity: number) => {
