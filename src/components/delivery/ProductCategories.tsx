@@ -393,6 +393,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
+    console.log('Updating quantity:', productId, variantId, 'from', currentQty, 'to', newQty);
     onUpdateQuantity(productId, variantId, newQty);
   };
 
@@ -811,7 +812,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onUpdateQuantity(product.id, selectedVariant?.id, Math.max(0, cartQty - 1));
+                              handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
                             <Minus size={10} />
@@ -825,7 +826,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
-                              onUpdateQuantity(product.id, selectedVariant?.id, cartQty + 1);
+                              handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
                             <Plus size={10} />

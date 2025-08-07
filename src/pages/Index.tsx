@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
+import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
   // Enable wake lock to keep screen on during app usage
@@ -17,6 +18,29 @@ const Index = () => {
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [homepageApp, setHomepageApp] = useState<any>(null);
+
+  // Load the homepage delivery app configuration
+  useEffect(() => {
+    const loadHomepageApp = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('delivery_app_variations')
+          .select('*')
+          .eq('is_homepage', true)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setHomepageApp(data);
+        }
+      } catch (error) {
+        console.error('Error loading homepage app:', error);
+      }
+    };
+
+    loadHomepageApp();
+  }, []);
 
   const handleAddToCart = (product: any) => {
     const cartItem = {
@@ -76,7 +100,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Show original main delivery app with 5 tabs */}
+      {/* Show delivery app - either custom homepage app or default */}
       <ProductCategories
         onAddToCart={handleAddToCart}
         cartItemCount={getTotalItems()}
@@ -84,6 +108,11 @@ const Index = () => {
         cartItems={cartItemsForCategories}
         onUpdateQuantity={handleUpdateQuantity}
         onProceedToCheckout={handleCheckout}
+        customAppName={homepageApp?.app_name}
+        customHeroHeading={homepageApp?.main_app_config?.hero_heading}
+        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
+        customLogoUrl={homepageApp?.logo_url}
+        customCollections={homepageApp?.collections_config}
       />
 
       {/* Cart sidebar */}

@@ -33,6 +33,7 @@ interface DeliveryApp {
     text_color: string;
   };
   is_active: boolean;
+  is_homepage?: boolean;
   created_at: string;
 }
 
@@ -49,6 +50,31 @@ export function DeliveryAppManager() {
   const [editingApp, setEditingApp] = useState<DeliveryApp | null>(null);
   const [selectedAppForConfig, setSelectedAppForConfig] = useState<DeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  // Form data object for easier management
+  const [formData, setFormData] = useState({
+    appName: '',
+    tabCount: 5,
+    tabs: [] as Array<{ name: string; collection_handle: string }>,
+    startScreenTitle: '',
+    startScreenSubtitle: '',
+    heroHeading: '',
+    heroSubheading: '',
+    postCheckoutHeading: '',
+    postCheckoutSubheading: '',
+    postCheckoutRedirectUrl: '',
+    customPostCheckoutEnabled: false,
+    customPostCheckoutTitle: '',
+    customPostCheckoutMessage: '',
+    customPostCheckoutButtonText: '',
+    customPostCheckoutButtonUrl: '',
+    customPostCheckoutTextColor: '#000000',
+    customPostCheckoutBackgroundColor: '#ffffff'
+  });
+
+  // Alias deliveryApps as apps for easier reference
+  const apps = deliveryApps;
 
   // Form state
   const [appName, setAppName] = useState('');
@@ -785,70 +811,72 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
         </Button>
       </div>
 
-      {/* Delivery App Template Section */}
+      {/* Main Delivery App Configuration */}
       <Card className="border-2 border-primary/20 bg-primary/5">
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-primary">Delivery App Template</CardTitle>
+              <CardTitle className="text-primary">Main Delivery App Configuration</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Base template cloned from main delivery app - used for creating new apps
+                Customize the main delivery app that appears on the homepage
               </p>
             </div>
-            <Badge variant="outline" className="text-primary border-primary">
-              Template
+            <Badge variant="outline" className="text-green-600 border-green-600">
+              Homepage
             </Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <h5 className="text-sm font-medium text-muted-foreground">Template Pages</h5>
-            
-            {/* Template Start Page */}
-            <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">Start Screen Template</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open('/', '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  View
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/')}`, '_blank')}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Edit
-                </Button>
+            {/* Find and edit main delivery app */}
+            {apps.find((app: any) => app.is_homepage) ? (
+              <div className="flex items-center justify-between p-3 border rounded bg-green-50">
+                <div>
+                  <div className="font-medium">{apps.find((app: any) => app.is_homepage)?.app_name}</div>
+                  <div className="text-sm text-muted-foreground">Currently set as homepage</div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open('/', '_blank')}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => {
+                      const homepageApp = apps.find((app: any) => app.is_homepage);
+                      if (homepageApp) {
+                        setEditingApp(homepageApp);
+                        setAppName(homepageApp.app_name);
+                        setTabCount(homepageApp.collections_config.tab_count);
+                        setTabs(homepageApp.collections_config.tabs);
+                        setStartScreenTitle((homepageApp as any).start_screen_config?.title || '');
+                        setStartScreenSubtitle((homepageApp as any).start_screen_config?.subtitle || '');
+                        setMainAppHeroHeading((homepageApp as any).main_app_config?.hero_heading || '');
+                        setPostCheckoutHeading((homepageApp as any).post_checkout_config?.heading || '');
+                        setPostCheckoutSubheading((homepageApp as any).post_checkout_config?.subheading || '');
+                        setPostCheckoutRedirectUrl((homepageApp as any).post_checkout_config?.redirect_url || '');
+                        setLogoFile(null);
+                        setIsCreating(true);
+                      }
+                    }}
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Customize
+                  </Button>
+                </div>
               </div>
-            </div>
-
-            {/* Template App Page */}
-            <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">App Page Template (Tabs)</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open('/main-delivery-app', '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  View
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/main-delivery-app')}`, '_blank')}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Edit
-                </Button>
+            ) : (
+              <div className="p-3 border rounded bg-yellow-50">
+                <div className="text-sm text-yellow-700">
+                  No app is currently set as homepage. The default main delivery app is being used.
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Template Post-Checkout Page */}
             <div className="flex items-center justify-between p-2 border rounded">
@@ -1119,6 +1147,11 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                     <Badge variant={app.is_active ? 'default' : 'secondary'}>
                       {app.is_active ? 'Active' : 'Inactive'}
                     </Badge>
+                    {(app as any).is_homepage && (
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        Homepage
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -1255,6 +1288,29 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                       >
                         <Settings className="h-4 w-4 mr-1" />
                         Configure
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={(app as any).is_homepage ? "destructive" : "outline"}
+                        onClick={async () => {
+                          try {
+                            const { error } = await supabase
+                              .from('delivery_app_variations')
+                              .update({ is_homepage: !(app as any).is_homepage })
+                              .eq('id', app.id);
+                            
+                            if (error) throw error;
+                            
+                            // Refresh the data to update the UI
+                            await loadData();
+                            toast.success((app as any).is_homepage ? 'Removed from homepage' : 'Set as homepage');
+                          } catch (error) {
+                            console.error('Error updating homepage status:', error);
+                            toast.error('Failed to update homepage status');
+                          }
+                        }}
+                      >
+                        {(app as any).is_homepage ? 'Remove Homepage' : 'Set as Homepage'}
                       </Button>
                       <Button
                         size="sm"
