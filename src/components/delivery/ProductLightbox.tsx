@@ -188,7 +188,7 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                       variant="ghost"
                       size="sm"
                       className="h-10 w-10 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => onUpdateQuantity(product.id, variant?.title !== 'Default Title' ? variant?.title : undefined, Math.max(0, cartQuantity - 1))}
+                      onClick={() => onUpdateQuantity(product.id, variant?.id, Math.max(0, cartQuantity - 1))}
                     >
                       <Minus size={16} />
                     </Button>
@@ -199,7 +199,7 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                       variant="ghost"
                       size="sm"
                       className="h-10 w-10 p-0 hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => onUpdateQuantity(product.id, variant?.title !== 'Default Title' ? variant?.title : undefined, cartQuantity + 1)}
+                      onClick={() => onUpdateQuantity(product.id, variant?.id, cartQuantity + 1)}
                     >
                       <Plus size={16} />
                     </Button>
