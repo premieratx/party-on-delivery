@@ -137,7 +137,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
   // FIXED: Use ONLY updateQuantity for ALL cart operations
   const handleAddToCart = (product: Product) => {
     const variant = product.variants?.[0];
-    const variantId = variant?.id || variant?.title;
+    const variantId = variant?.id;
     
     console.log('🛒 UltraFast: Adding to cart via updateQuantity:', { id: product.id, variant: variantId });
     
@@ -183,7 +183,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {filteredProducts.map((product) => {
         const variant = product.variants?.[0];
-        const variantId = variant?.id || variant?.title; // Use EXACT same logic as addToCart
+        const variantId = variant?.id;
         const quantity = getCartItemQuantity(product.id, variantId);
         
         return (

@@ -83,8 +83,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   // Handle add to cart
   const handleAddToCart = useCallback((product: ShopifyProduct) => {
     const variant = product.variants[0];
-    // CRITICAL: Use the exact same variant identifier everywhere  
-    const variantId = variant?.id || variant?.title;
+    const variantId = variant?.id;
     
     const cartItem = {
       id: product.id,
@@ -92,7 +91,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
       name: product.title,
       price: product.price || 0,
       image: product.image,
-      variant: variantId  // Use variant ID, not title
+      variant: variantId
     };
     
     console.log('🛒 VirtualizedGrid: Adding to cart with exact variant:', { id: product.id, variant: variantId });
@@ -172,7 +171,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
           >
             {searchFilteredItems.map(({ item: product, index }) => {
               const variant = product.variants[0];
-              const variantId = variant?.id || variant?.title; // Use EXACT same logic as addToCart
+              const variantId = variant?.id;
               
               return (
                 <ProductCard

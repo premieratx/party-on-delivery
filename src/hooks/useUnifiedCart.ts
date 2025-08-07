@@ -18,8 +18,11 @@ export const useUnifiedCart = () => {
   const [cartItems, setCartItems] = useLocalStorage<UnifiedCartItem[]>('unified-cart', []);
   const [cartFlash, setCartFlash] = useState(false);
 
-  // Simple key creation
+  // Simple key creation and matching helpers
   const getKey = (id: string, variant?: string) => `${id}::${variant || 'default'}`;
+  const normalizeVariant = (v?: string) => (v && v.trim() !== '' ? v : 'default');
+  const matchesItem = (i: UnifiedCartItem, id: string, variant?: string) =>
+    (i.id === id || i.productId === id) && normalizeVariant(i.variant) === normalizeVariant(variant);
 
   // Add or increment item
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'>) => {
@@ -28,18 +31,19 @@ export const useUnifiedCart = () => {
     const key = getKey(item.id, item.variant);
     
     setCartItems(prev => {
-      const existing = prev.find(i => getKey(i.id, i.variant) === key);
+      const idForKey = item.productId || item.id;
+      const existing = prev.find(i => matchesItem(i, idForKey, item.variant));
       
       if (existing) {
         return prev.map(i => 
-          getKey(i.id, i.variant) === key 
+          matchesItem(i, idForKey, item.variant)
             ? { ...i, quantity: i.quantity + 1 }
             : i
         );
       }
       
       return [...prev, {
-        id: item.id,
+        id: idForKey,
         productId: item.productId || item.id,
         title: item.title || item.name || '',
         name: item.name || item.title || '',
@@ -59,25 +63,22 @@ export const useUnifiedCart = () => {
   // Update quantity
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
     const qty = Math.max(0, Math.floor(Number(newQuantity) || 0));
-    const key = getKey(id, variant);
     
     setCartItems(prev => {
       if (qty <= 0) {
-        return prev.filter(i => getKey(i.id, i.variant) !== key);
+        return prev.filter(i => !matchesItem(i, id, variant));
       }
       
       return prev.map(i => 
-        getKey(i.id, i.variant) === key 
+        matchesItem(i, id, variant)
           ? { ...i, quantity: qty }
           : i
       );
     });
   }, []);
 
-  // Remove item
   const removeItem = useCallback((id: string, variant?: string) => {
-    const key = getKey(id, variant);
-    setCartItems(prev => prev.filter(i => getKey(i.id, i.variant) !== key));
+    setCartItems(prev => prev.filter(i => !matchesItem(i, id, variant)));
   }, []);
 
   // Empty cart
@@ -85,10 +86,8 @@ export const useUnifiedCart = () => {
     setCartItems([]);
   }, []);
 
-  // Get quantity
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
-    const key = getKey(id, variant);
-    const item = cartItems.find(i => getKey(i.id, i.variant) === key);
+    const item = cartItems.find(i => matchesItem(i, id, variant));
     return item?.quantity || 0;
   }, [cartItems]);
 
