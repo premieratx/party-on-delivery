@@ -457,7 +457,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
           onAddToCart={handleAddToCart}
           selectedVariant={selectedVariants[selectedProduct.id] || selectedProduct.variants[0]?.id}
           onUpdateQuantity={onUpdateQuantity}
-          cartQuantity={getCartQuantity(selectedProduct.id, selectedVariants[selectedProduct.id])}
+          cartQuantity={getCartQuantity(selectedProduct.id, selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id])?.title !== 'Default Title' ? selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id])?.title : undefined)}
         />
       )}
 
