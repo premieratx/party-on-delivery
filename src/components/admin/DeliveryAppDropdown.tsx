@@ -78,7 +78,7 @@ export const DeliveryAppDropdown: React.FC = () => {
   const getCurrentApp = () => {
     const currentPath = location.pathname;
     
-    if (currentPath === '/main-delivery-app') {
+    if (currentPath === '/' || currentPath === '/main-delivery-app') {
       return mainDeliveryApp;
     }
     
@@ -99,7 +99,7 @@ export const DeliveryAppDropdown: React.FC = () => {
 
   const handleAppSelect = (app: DeliveryApp) => {
     if (app.id === 'main') {
-      navigate('/main-delivery-app');
+      navigate('/');  // Updated to go to home page (now the main delivery app)
     } else {
       // Open custom delivery apps in new window for independent operation
       const baseUrl = window.location.origin;

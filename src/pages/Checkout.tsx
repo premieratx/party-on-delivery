@@ -109,37 +109,7 @@ export const Checkout = () => {
           </div>
         </div>
 
-        {/* Skip cart items display for custom delivery apps */}
-        {!localStorage.getItem('custom-app-source') && (
-          <Card className="mb-4 sm:mb-6">
-            <CardHeader>
-              <CardTitle className="text-base sm:text-lg">Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 sm:space-y-3">
-                {cartItems.map((item, index) => (
-                  <div key={`${item.productId}-${index}`} className="flex justify-between items-center py-2 border-b last:border-b-0">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm sm:text-base truncate">{item.title}</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        {item.eventName && `${item.eventName} • `}
-                        {item.category}
-                      </p>
-                    </div>
-                    <div className="text-right ml-2">
-                      <div className="text-sm sm:text-base font-medium">
-                        {item.quantity} × ${item.price.toFixed(2)}
-                      </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* Order Summary - REMOVED per user request */}
 
         {/* Checkout Form */}
         <CheckoutFlow

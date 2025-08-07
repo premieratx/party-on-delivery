@@ -1010,12 +1010,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                           onSelect={(selectedDate) => {
                             console.log('📅 Date selected:', selectedDate);
                             if (selectedDate) {
-                              const updatedDeliveryInfo = { 
-                                ...deliveryInfo, 
-                                date: selectedDate, 
-                                timeSlot: '' // Reset time when date changes
-                              };
-                              onDeliveryInfoChange(updatedDeliveryInfo);
+                              // Preserve existing time slot when changing date
+                              const preservedTimeSlot = deliveryInfo.timeSlot;
+                              updateDeliveryInfo('date', selectedDate);
+                              
+                              // Close the calendar popover after selection
+                              const popoverTrigger = document.querySelector('[data-state="open"] button') as HTMLElement;
+                              if (popoverTrigger) {
+                                popoverTrigger.click();
+                              }
+                              
+                              // Restore time slot if it was previously set
+                              if (preservedTimeSlot) {
+                                setTimeout(() => {
+                                  updateDeliveryInfo('timeSlot', preservedTimeSlot);
+                                }, 100);
+                              }
                             }
                           }}
                           disabled={(date) => {
@@ -1041,8 +1051,16 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     <select
                       value={deliveryInfo.timeSlot || ""}
                       onChange={(e) => {
-                        const updatedDeliveryInfo = { ...deliveryInfo, timeSlot: e.target.value };
-                        onDeliveryInfoChange(updatedDeliveryInfo);
+                        // Preserve existing date when changing time slot
+                        const preservedDate = deliveryInfo.date;
+                        updateDeliveryInfo('timeSlot', e.target.value);
+                        
+                        // Restore date if it was cleared
+                        if (preservedDate && !deliveryInfo.date) {
+                          setTimeout(() => {
+                            updateDeliveryInfo('date', preservedDate);
+                          }, 100);
+                        }
                       }}
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
