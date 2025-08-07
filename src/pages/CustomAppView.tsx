@@ -174,9 +174,12 @@ export default function CustomAppView() {
   const handleAddToCart = (product: Omit<CustomCartItem, 'quantity'>) => {
     console.log('🛒 CustomApp: Adding product to cart:', product);
     // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = cartItems.find(item => 
-      item.id === product.id && item.variant === product.variant
-    )?.quantity || 0;
+    const currentQty = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = product.variant || 'default';
+      return itemId === product.id && itemVariant === checkVariant;
+    })?.quantity || 0;
     
     updateQuantity(product.id, product.variant, currentQty + 1, {
       ...product,

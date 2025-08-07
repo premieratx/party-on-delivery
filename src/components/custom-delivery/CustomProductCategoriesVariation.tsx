@@ -190,9 +190,12 @@ export function CustomProductCategories({
 
   // Helper to get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
-    const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variantId
-    );
+    const cartItem = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = variantId || 'default';
+      return itemId === productId && itemVariant === checkVariant;
+    });
     return cartItem?.quantity || 0;
   };
 

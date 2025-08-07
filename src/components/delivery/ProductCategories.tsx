@@ -22,6 +22,10 @@ import spiritsCategoryBg from '@/assets/spirits-category-bg.jpg';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 
+interface LocalCartItem extends CartItem {
+  productId?: string;
+}
+
 interface ShopifyProduct {
   id: string;
   title: string;
@@ -47,7 +51,7 @@ interface ShopifyCollection {
 }
 
 interface ProductCategoriesProps {
-  onAddToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  onAddToCart: (item: Omit<LocalCartItem, 'quantity'>) => void;
   cartItemCount: number;
   customAppName?: string;
   customHeroHeading?: string;
@@ -62,7 +66,7 @@ interface ProductCategoriesProps {
     }>;
   };
   onOpenCart: () => void;
-  cartItems: CartItem[]; // Add this to track individual cart items
+  cartItems: LocalCartItem[]; // Add this to track individual cart items
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
   onProceedToCheckout: () => void;
   onBack?: () => void;
@@ -381,9 +385,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Helper to get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
-    const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variantId
-    );
+    const cartItem = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = variantId || 'default';
+      return itemId === productId && itemVariant === checkVariant;
+    });
     return cartItem?.quantity || 0;
   };
 

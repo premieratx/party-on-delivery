@@ -8,11 +8,15 @@ import { useOptimizedShopify } from '@/utils/optimizedShopifyClient';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { supabase } from '@/integrations/supabase/client';
 
+interface LocalCartItem extends CartItem {
+  productId?: string;
+}
+
 interface OptimizedProductCategoriesProps {
-  onAddToCart: (item: Omit<CartItem, 'quantity'>) => void;
+  onAddToCart: (item: Omit<LocalCartItem, 'quantity'>) => void;
   cartItemCount: number;
   onOpenCart: () => void;
-  cartItems: CartItem[];
+  cartItems: LocalCartItem[];
   onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
   onProceedToCheckout: () => void;
   onBack?: () => void;
@@ -110,9 +114,12 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
 
   // Get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
-    const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variantId
-    );
+    const cartItem = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = variantId || 'default';
+      return itemId === productId && itemVariant === checkVariant;
+    });
     return cartItem?.quantity || 0;
   };
 

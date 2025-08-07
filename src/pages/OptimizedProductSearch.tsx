@@ -53,9 +53,12 @@ export default function OptimizedProductSearch() {
 
   // Get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
-    const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variantId
-    );
+    const cartItem = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = variantId || 'default';
+      return itemId === productId && itemVariant === checkVariant;
+    });
     return cartItem?.quantity || 0;
   };
 
@@ -71,9 +74,12 @@ export default function OptimizedProductSearch() {
     
     console.log('🛒 OptimizedProductSearch: Adding product to cart:', cartItem);
     // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = cartItems.find(item => 
-      item.id === cartItem.id && item.variant === cartItem.variant
-    )?.quantity || 0;
+    const currentQty = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = cartItem.variant || 'default';
+      return itemId === cartItem.id && itemVariant === checkVariant;
+    })?.quantity || 0;
     
     updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
   };

@@ -200,9 +200,12 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
     : allProducts;
 
   const getCartQuantity = (productId: string, variant?: string): number => {
-    const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variant
-    );
+    const cartItem = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = variant || 'default';
+      return itemId === productId && itemVariant === checkVariant;
+    });
     return cartItem?.quantity || 0;
   };
 
