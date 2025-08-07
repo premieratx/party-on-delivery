@@ -37,7 +37,6 @@ interface NavItem {
 const navigationItems: NavItem[] = [
   // Main navigation
   { icon: Home, label: 'Home', href: '/', show: 'always', category: 'main' },
-  { icon: Package, label: 'Main Delivery', href: '/', show: 'always', category: 'main' },
   
   // User accounts
   { icon: User, label: 'Customer Login', href: '/customer/login', show: 'always', category: 'user' },
@@ -136,19 +135,6 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
             <span>Home</span>
           </button>
 
-          {/* Delivery Apps */}
-          <button
-            onClick={() => handleNavigation('/')}
-            className={`flex flex-col items-center justify-center text-xs transition-colors ${
-              location.pathname === '/' 
-                ? 'text-primary' 
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Package className="h-4 w-4 mb-1" />
-            <span>Delivery</span>
-          </button>
-
           {/* Cart */}
           <button
             onClick={() => {
@@ -169,7 +155,7 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
             )}
           </button>
 
-          {/* Cart with Checkout */}
+          {/* Checkout */}
           <button
             onClick={() => {
               if (cartItems > 0) {
@@ -367,7 +353,7 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
               </button>
               
               <nav className="flex items-center gap-4">
-                {getVisibleItems('main').filter(item => item.label !== 'Main Delivery').slice(0, 3).map((item) => (
+                {getVisibleItems('main').slice(0, 3).map((item) => (
                   <Button
                     key={item.href}
                     variant={location.pathname === item.href ? 'default' : 'ghost'}
@@ -386,24 +372,20 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Cart with Checkout */}
+              {/* Cart */}
               <Button
-                variant={cartItems > 0 ? "default" : "outline"}
+                variant="outline"
                 size="sm"
                 onClick={() => {
-                  if (cartItems > 0) {
-                    handleNavigation('/checkout');
-                  } else {
-                    const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
-                    cartTrigger?.click();
-                  }
+                  const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
+                  cartTrigger?.click();
                 }}
                 className="relative gap-2"
               >
                 <ShoppingCart className="h-4 w-4" />
-                {cartItems > 0 ? 'Checkout' : 'Cart'}
+                Cart
                 {cartItems > 0 && (
-                  <Badge variant={cartItems > 0 ? "secondary" : "destructive"} className="ml-1">
+                  <Badge variant="destructive" className="ml-1">
                     {cartItems}
                   </Badge>
                 )}

@@ -132,13 +132,8 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
-    
-    if (newQty === 0) {
-      // Remove from cart entirely if quantity becomes 0
-      onUpdateQuantity(productId, variantId, 0);
-    } else {
-      onUpdateQuantity(productId, variantId, newQty);
-    }
+    console.log('OptimizedProductCategories: handleQuantityChange', { productId, variantId, currentQty, delta, newQty });
+    onUpdateQuantity(productId, variantId, newQty);
   };
 
   // Debounced search

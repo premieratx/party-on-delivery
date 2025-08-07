@@ -145,8 +145,7 @@ const App = () => {
                     <Route path="/search" element={<ProductSearch />} />
                     <Route path="/product-search" element={<ProductSearch />} />
                     
-                    {/* Main Delivery App */}
-                    <Route path="/main-delivery-app" element={<MainDeliveryApp />} />
+                    {/* Main Delivery App - removed, now handled by Index page */}
                     
                     {/* Custom Delivery Apps - Specific routes BEFORE dynamic ones */}
                     <Route path="/custom-delivery" element={<CustomDeliveryApp />} />

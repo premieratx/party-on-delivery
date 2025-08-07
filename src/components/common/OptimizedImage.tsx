@@ -40,7 +40,7 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
       // Enable faster loading for priority images
       if (priority) {
         img.loading = 'eager';
-        img.fetchPriority = 'high';
+        (img as any).fetchPriority = 'high';
       }
       
       img.onload = () => {
@@ -96,7 +96,7 @@ export const OptimizedImage = ({ src, alt, className = '', onClick, priority = f
           isLoading ? 'opacity-0' : 'opacity-100'
         } ${onClick ? 'cursor-pointer hover:opacity-80' : ''}`}
         loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "auto"}
+        {...(priority ? { fetchPriority: "high" as any } : {})}
         decoding="async"
         sizes="(max-width: 768px) 150px, 300px"
       />
