@@ -26,6 +26,7 @@ export const useUnifiedCart = () => {
   // ULTRA SIMPLE: Add item or increment if exists - ISOLATED
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'>) => {
     console.log('🛒 ULTRA SIMPLE ADD:', item.id, 'variant:', item.variant);
+    console.trace('🛒 ADD TO CART STACK TRACE');
     
     if (!item.id) {
       console.warn('🛒 No ID, skipping');
