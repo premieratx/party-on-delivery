@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { CustomCartItem } from './CustomDeliveryAppWidget';
 import { ProductLightbox } from '../delivery/ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
@@ -122,38 +123,25 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
       setLoading(true);
       console.log('⚡ Custom Delivery App: Loading with instant cache...');
 
-      // Load from instant cache
-      const { data, error } = await supabase.functions.invoke('instant-product-cache');
-      
-      if (error) throw error;
-      
-      if (data?.success && data?.data) {
-        const instantData = data.data;
-        
-        // Extract collections from the instant cache data structure
-        let loadedCollections: ShopifyCollection[] = [];
-        
-        if (instantData.collections && Array.isArray(instantData.collections)) {
-          loadedCollections = instantData.collections;
-          console.log(`✅ Custom Delivery App: Loaded ${loadedCollections.length} collections from instant cache`);
-        } else {
-          console.warn('⚠️ No collections found in instant cache data');
-        }
-        
-        setCollections(loadedCollections);
-        
-        // Debug: Log collection handles and categories
-        console.log('📋 Available collections:', loadedCollections.map(c => ({
-          handle: c.handle,
-          title: c.title,
-          category: mapCollectionToCategory(c.handle),
-          productCount: c.products?.length || 0
-        })));
-        
+      // Load from instant cache helper (fast + normalized)
+      const instant = await getInstantProducts();
+      let loadedCollections: ShopifyCollection[] = [];
+      if (instant.collections && Array.isArray(instant.collections)) {
+        loadedCollections = instant.collections as any;
+        console.log(`✅ Custom Delivery App: Loaded ${loadedCollections.length} collections from instant cache`);
       } else {
-        console.error('❌ Failed to load from instant cache:', data);
-        setCollections([]);
+        console.warn('⚠️ No collections found in instant cache data');
       }
+
+      setCollections(loadedCollections);
+
+      // Debug: Log collection handles and categories
+      console.log('📋 Available collections:', loadedCollections.map(c => ({
+        handle: c.handle,
+        title: c.title,
+        category: mapCollectionToCategory(c.handle),
+        productCount: c.products?.length || 0
+      })));
     } catch (error) {
       console.error('Custom Delivery App: Error loading collections:', error);
       setCollections([]);

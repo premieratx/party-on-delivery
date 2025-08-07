@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { SpeedProvider } from '@/providers/SpeedProvider'
 import { preloadManager } from '@/utils/preloadManager'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { initializePerformanceOptimizations } from '@/utils/performanceOptimizer'
@@ -32,6 +33,8 @@ initializeTimezone();
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
-    <App />
+    <SpeedProvider>
+      <App />
+    </SpeedProvider>
   </ErrorBoundary>
 );

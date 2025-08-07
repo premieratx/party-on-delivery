@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
@@ -229,11 +230,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       // First try instant cache for super fast loading
       if (!forceRefresh) {
         try {
-          const { data: instantData, error: instantError } = await supabase.functions.invoke('instant-product-cache');
-          
-          if (!instantError && instantData?.collections) {
+          const instant = await getInstantProducts();
+          if (instant.collections?.length) {
             console.log('✅ Main delivery app: Using instant cached collections');
-            setCollections(instantData.collections);
+            setCollections(instant.collections);
             setRetryCount(0);
             setLoading(false);
             return;
@@ -257,36 +257,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       
       console.log('Fetching fresh collections from regular endpoint...');
       
-      // Use retry logic for API calls with enhanced error handling
       const result = await ErrorHandler.withRetry(async () => {
-        console.log('Making supabase.functions.invoke call to instant-product-cache for maximum speed');
-        const { data, error } = await supabase.functions.invoke('instant-product-cache');
-        
-        if (error) {
-          console.error('Supabase function invoke error:', error);
-          throw new Error(`Function error: ${error.message || JSON.stringify(error)}`);
-        }
-        
-        console.log('Function response received:', {
-          hasData: !!data,
-          hasCollections: !!data?.collections,
-          collectionsCount: data?.collections?.length || 0,
-          hasError: !!data?.error
+        console.log('Using getInstantProducts for maximum speed');
+        const instant = await getInstantProducts({ forceRefresh });
+        console.log('Instant response received:', {
+          collectionsCount: instant.collections?.length || 0,
+          productsCount: instant.products?.length || 0,
         });
-        
-        if (data?.error) {
-          throw new Error(`API returned error: ${data.error}`);
-        }
-        
-        if (!data?.collections || !Array.isArray(data.collections)) {
+        if (!instant.collections || !Array.isArray(instant.collections)) {
           throw new Error('Invalid response format: no collections array');
         }
-        
-        if (data.collections.length === 0) {
+        if (instant.collections.length === 0) {
           throw new Error('No collections found in Shopify store');
         }
-        
-        return data;
+        return instant;
       }, {
         maxAttempts: 3,
         delayMs: 1000,

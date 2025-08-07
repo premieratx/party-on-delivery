@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 
 interface ShopifyProduct {
   id: string;
@@ -58,21 +59,9 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
   const loadAllProducts = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
-        body: { force_refresh: false }
-      });
-
-      if (error) {
-        console.error('Error loading products:', error);
-        return;
-      }
-
-      if (data?.collections) {
-        const products = data.collections.flatMap((collection: any) => 
-          collection.products || []
-        );
-        setAllProducts(products);
-      }
+      const instant = await getInstantProducts();
+      const products = (instant.collections || []).flatMap((collection: any) => collection.products || []);
+      setAllProducts(products);
     } catch (error) {
       console.error('Error loading all products:', error);
     }

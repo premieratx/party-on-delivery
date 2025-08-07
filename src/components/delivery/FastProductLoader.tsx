@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 
 interface FastProductLoaderProps {
   onProductsLoaded: (products: any[]) => void;
@@ -27,15 +28,15 @@ export const FastProductLoader: React.FC<FastProductLoaderProps> = ({
       setLoading(true);
       
       // ALWAYS use instant cache first - this should load in under 100ms
-      const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
+      const instant = await getInstantProducts();
       
-      if (instantData?.success && instantData?.data) {
+      if (instant) {
         console.log('⚡ Ultra-fast instant cache load');
         const loadTime = performance.now() - startTime;
         console.log(`⚡ Loaded in ${loadTime}ms`);
         
-        onProductsLoaded(instantData.data.products || []);
-        onCollectionsLoaded(instantData.data.collections || []);
+        onProductsLoaded(instant.products || []);
+        onCollectionsLoaded(instant.collections || []);
         setLoading(false);
         return;
       }

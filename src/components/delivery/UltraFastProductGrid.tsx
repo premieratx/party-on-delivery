@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 
 interface Product {
@@ -59,22 +60,14 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
         console.log('🚀 UltraFast: Loading products...');
         
         // Always try instant cache first
-        const { data, error } = await supabase.functions.invoke('instant-product-cache');
-        
-        if (error) {
-          console.error('UltraFast: Instant cache error:', error);
-          setProducts([]);
-          return;
-        }
+        const instant = await getInstantProducts();
+        const payloadProducts = instant.products?.length
+          ? instant.products
+          : (instant.collections?.flatMap((c: any) => c.products || []) || []);
 
-        if (data?.success && data?.data?.products) {
-          const loadTime = performance.now() - startTime;
-          console.log(`⚡ UltraFast: Loaded ${data.data.products.length} products in ${loadTime}ms`);
-          setProducts(data.data.products || []);
-        } else {
-          console.warn('UltraFast: No products in instant cache');
-          setProducts([]);
-        }
+        const loadTime = performance.now() - startTime;
+        console.log(`⚡ UltraFast: Loaded ${payloadProducts.length} products in ${Math.round(loadTime)}ms`);
+        setProducts(payloadProducts || []);
       } catch (err) {
         console.error('UltraFast: Exception loading products:', err);
         setProducts([]);

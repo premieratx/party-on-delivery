@@ -10,6 +10,7 @@ import { parseProductTitle } from '@/utils/productUtils';
 import { Input } from '@/components/ui/input';
 import { ultraFastLoader } from '@/utils/ultraFastLoader';
 import { advancedCacheManager } from '@/utils/advancedCacheManager';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 
 interface CustomProductCategoriesProps {
   onAddToCart: (item: any) => void;
@@ -143,11 +144,10 @@ export function CustomProductCategories({
         }
 
         // Use instant cache for maximum speed
-        const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
-        if (instantData?.success && instantData?.data) {
+        const instant = await getInstantProducts();
+        if (instant?.collections) {
           console.log(`✅ Instant cache loaded in ${Date.now() - startTime}ms`);
-          
-          const relevantCollections = instantData.data.collections.filter((collection: any) =>
+          const relevantCollections = (instant.collections as any[]).filter((collection: any) =>
             collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
           );
 
@@ -155,7 +155,7 @@ export function CustomProductCategories({
             return [...acc, ...collection.products];
           }, []);
 
-          setCollections(relevantCollections);
+          setCollections(relevantCollections as any);
           setAllProducts(allProducts);
           setLoading(false);
           return;
