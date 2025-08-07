@@ -4,6 +4,8 @@ import { ProductCategories } from '@/components/delivery/ProductCategories';
 interface CustomDeliveryTabsPageProps {
   appName: string;
   heroHeading?: string;
+  heroSubheading?: string;
+  logoUrl?: string;
   collectionsConfig: {
     tab_count: number;
     tabs: Array<{
@@ -25,6 +27,8 @@ interface CustomDeliveryTabsPageProps {
 export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
   appName,
   heroHeading,
+  heroSubheading,
+  logoUrl,
   collectionsConfig,
   onAddToCart,
   cartItemCount,
@@ -48,6 +52,8 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
         onProceedToCheckout={onProceedToCheckout}
         customAppName={appName}
         customHeroHeading={heroHeading}
+        customHeroSubheading={heroSubheading}
+        customLogoUrl={logoUrl}
         customCollections={collectionsConfig}
       />
     </div>

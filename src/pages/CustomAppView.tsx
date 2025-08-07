@@ -25,6 +25,7 @@ interface CustomCartItem {
 interface DeliveryAppConfig {
   app_name: string;
   app_slug: string;
+  logo_url?: string;
   collections_config: {
     tab_count: number;
     tabs: Array<{
@@ -66,6 +67,7 @@ const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null
     return {
       app_name: data.app_name,
       app_slug: data.app_slug,
+      logo_url: data.logo_url,
       collections_config: data.collections_config as {
         tab_count: number;
         tabs: Array<{
@@ -288,6 +290,8 @@ export default function CustomAppView() {
       <CustomDeliveryTabsPage
         appName={appConfig.app_name}
         heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
+        heroSubheading={appConfig.main_app_config?.hero_subheading || "Select from our curated collection of drinks and party supplies"}
+        logoUrl={appConfig.logo_url}
         collectionsConfig={appConfig.collections_config}
         onAddToCart={handleAddToCart}
         cartItemCount={getTotalItems()}

@@ -346,8 +346,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         setDistanceDeliveryFee(0);
         setDeliveryDistance(null);
       } else {
-        // No address yet, use base delivery fee
-        setDistanceDeliveryFee(baseDeliveryFee);
+        // No address yet, use base delivery fee but recalculate with current subtotal
+        const currentDeliveryFee = useDeliveryFee(subtotal, appliedDiscount);
+        setDistanceDeliveryFee(currentDeliveryFee);
         setDeliveryDistance(null);
       }
     };
@@ -787,8 +788,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             sessionId: paymentIntentId
           });
           
+          // Determine proper success URL based on context
+          const customAppSource = localStorage.getItem('custom-app-source');
+          let successUrl = '/order-complete';
+          
+          if (customAppSource) {
+            // For custom delivery apps, use their custom success page
+            successUrl = `/app/${customAppSource}/success`;
+          }
+          
           // Navigate with order details for proper loading
-          navigate(`/order-complete?order_number=${orderNumber}&session_id=${paymentIntentId}`);
+          navigate(`${successUrl}?order_number=${orderNumber}&session_id=${paymentIntentId}`);
           return; // Early return to prevent the default navigation
         } else {
           console.error("🔥 NO ORDER DATA IN RESPONSE:", response.data);
@@ -805,7 +815,9 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         });
         
         // Still navigate to avoid getting stuck, but with error info
-        navigate(`/order-complete?error=creation_failed&session_id=${paymentIntentId}`);
+        const customAppSource = localStorage.getItem('custom-app-source');
+        const errorUrl = customAppSource ? `/app/${customAppSource}/success` : '/order-complete';
+        navigate(`${errorUrl}?error=creation_failed&session_id=${paymentIntentId}`);
       }
     }
     
@@ -1328,7 +1340,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             variant="outline"
                             size="icon"
                             className="h-5 w-5 sm:h-7 sm:w-7"
-                            onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
+                            onClick={() => {
+                              const newQuantity = Math.max(0, item.quantity - 1);
+                              if (newQuantity === 0) {
+                                // Remove item from cart
+                                const updatedCart = cartItems.filter(cartItem => cartItem.id !== item.id);
+                                localStorage.setItem('party-cart', JSON.stringify(updatedCart));
+                                window.location.reload(); // Refresh to show updated cart
+                              } else {
+                                onUpdateQuantity(item.id, item.variant, newQuantity);
+                              }
+                            }}
                           >
                             <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
                          </Button>

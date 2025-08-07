@@ -50,6 +50,8 @@ interface ProductCategoriesProps {
   cartItemCount: number;
   customAppName?: string;
   customHeroHeading?: string;
+  customHeroSubheading?: string;
+  customLogoUrl?: string;
   customCollections?: {
     tab_count: number;
     tabs: Array<{
@@ -78,6 +80,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   onBackToStart,
   customAppName,
   customHeroHeading,
+  customHeroSubheading,
+  customLogoUrl,
   customCollections
 }) => {
   const navigate = useNavigate();
@@ -96,8 +100,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
 
-  // Always use the default main delivery app collections
+  // Use custom collections if provided, otherwise use default mapping
   const getStepMapping = () => {
+    if (customCollections?.tabs && customCollections.tabs.length > 0) {
+      return customCollections.tabs.map((tab, index) => ({
+        step: index,
+        title: tab.name,
+        handle: tab.collection_handle,
+        backgroundImage: getBackgroundForHandle(tab.collection_handle),
+        pageTitle: `Choose Your ${tab.name}`
+      }));
+    }
+    
     return [
       { step: 0, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
       { step: 1, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
@@ -118,6 +132,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   };
 
   const stepMapping = getStepMapping();
+  
+  // Get the maximum category index based on available collections/tabs
+  const maxCategoryIndex = (customCollections?.tabs?.length || stepMapping.length) - 1;
 
   useEffect(() => {
     // Always load all collections for main delivery app
@@ -488,15 +505,19 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         
         <div className="relative z-10 max-w-7xl mx-auto h-full flex flex-col justify-center items-center text-center px-4">
           <img 
-            src={partyOnDeliveryLogo}
-            alt="Party on Delivery" 
+            src={customLogoUrl || partyOnDeliveryLogo}
+            alt={customAppName || "Party on Delivery"} 
             className="h-24 lg:h-80 object-contain mb-4 drop-shadow-lg"
+            onError={(e) => {
+              // Fallback to default logo if custom logo fails to load
+              e.currentTarget.src = partyOnDeliveryLogo;
+            }}
           />
           <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">
-            {customHeroHeading || "Build Your Party Package"}
+            {customHeroHeading || customAppName || "Build Your Party Package"}
           </h1>
           <p className="text-white/90 text-lg drop-shadow-lg mb-4">
-            Select from our curated collection of drinks and party supplies
+            {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
           </p>
         </div>
       </div>
@@ -649,10 +670,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 {stepMapping.find(step => step.handle === selectedCollection?.handle)?.pageTitle || selectedCollection?.title}
               </h2>
               <button
-                onClick={() => selectedCategory < stepMapping.length - 1 && setSelectedCategory(selectedCategory + 1)}
-                disabled={selectedCategory === stepMapping.length - 1}
+                onClick={() => selectedCategory < maxCategoryIndex && setSelectedCategory(selectedCategory + 1)}
+                disabled={selectedCategory === maxCategoryIndex}
                 className={`p-2 rounded-full transition-colors ${
-                  selectedCategory === stepMapping.length - 1 
+                  selectedCategory === maxCategoryIndex 
                     ? 'text-muted-foreground cursor-not-allowed' 
                     : 'text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]'
                 }`}
