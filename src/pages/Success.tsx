@@ -31,12 +31,16 @@ const Success = () => {
       // Store session ID for later linking when user logs in
       storeSessionId(sessionId);
       
-      // Also store the payment intent ID from the session for more reliable linking
-      localStorage.setItem('lastPaymentIntent', sessionId);
+      // Determine if the returned identifier is a PaymentIntent (pi_) or Checkout Session (cs_)
+      const isPaymentIntent = sessionId.startsWith('pi_');
+      if (isPaymentIntent) {
+        // Only store as lastPaymentIntent when it's actually a PaymentIntent ID
+        localStorage.setItem('lastPaymentIntent', sessionId);
+      }
 
       try {
         const { data, error } = await supabase.functions.invoke('create-shopify-order', {
-          body: { sessionId: sessionId }
+          body: isPaymentIntent ? { paymentIntentId: sessionId } : { sessionId }
         });
 
         if (error) {
