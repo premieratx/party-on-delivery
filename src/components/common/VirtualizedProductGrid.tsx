@@ -22,6 +22,7 @@ interface ShopifyProduct {
 
 interface CartItem {
   id: string;
+  productId?: string;
   variant?: string;
   quantity: number;
 }
@@ -74,9 +75,12 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
 
   // Get cart item quantity
   const getCartItemQuantity = useCallback((productId: string, variantId?: string) => {
-    const cartItem = cartItems.find(item => 
-      item.id === productId && item.variant === variantId
-    );
+    const cartItem = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = variantId || 'default';
+      return itemId === productId && itemVariant === checkVariant;
+    });
     return cartItem?.quantity || 0;
   }, [cartItems]);
 

@@ -1343,14 +1343,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                             className="h-5 w-5 sm:h-7 sm:w-7"
                             onClick={() => {
                               const newQuantity = Math.max(0, item.quantity - 1);
-                              if (newQuantity === 0) {
-                                // Remove item from cart
-                                const updatedCart = cartItems.filter(cartItem => cartItem.id !== item.id);
-                                localStorage.setItem('party-cart', JSON.stringify(updatedCart));
-                                window.location.reload(); // Refresh to show updated cart
-                              } else {
-                                onUpdateQuantity(item.id, item.variant, newQuantity);
-                              }
+                              console.log('🛒 CheckoutFlow: Updating quantity:', { id: item.id, variant: item.variant, quantity: newQuantity });
+                              onUpdateQuantity(item.id, item.variant, newQuantity);
                             }}
                           >
                             <Minus className="w-2 h-2 sm:w-3 sm:h-3" />

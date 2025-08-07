@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
@@ -114,6 +114,7 @@ const useAppStep = (initialStep: CustomDeliveryStep = 'start') => {
 
 export default function CustomAppView() {
   const { appName } = useParams<{ appName: string }>();
+  const navigate = useNavigate(); // Add navigate hook
   useWakeLock();
   
   const [currentStep, setCurrentStep] = useAppStep('tabs');
@@ -228,18 +229,9 @@ export default function CustomAppView() {
       name: item.title
     }));
     
-    // Store in both formats for compatibility
-    try {
-      localStorage.setItem('unified-cart', JSON.stringify(checkoutItems));
-      localStorage.setItem('party-cart', JSON.stringify(checkoutItems));
-    } catch (error) {
-      console.warn('Failed to store cart data:', error);
-      toast.error('Failed to save cart. Please try again.');
-      return;
-    }
-    
-    // Navigate to checkout
-    window.location.href = '/checkout';
+    console.log('✅ CustomAppView: Navigating to checkout with unified cart data');
+    // No need to store cart data - unified cart handles persistence
+    navigate('/checkout');
   };
 
   const handleBackToStart = () => {
