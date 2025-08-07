@@ -25,7 +25,7 @@ export const useUnifiedCart = () => {
 
   // ULTRA SIMPLE: Add item or increment if exists - ISOLATED
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'>) => {
-    console.log('🛒 ULTRA SIMPLE ADD:', item.id);
+    console.log('🛒 ULTRA SIMPLE ADD:', item.id, 'variant:', item.variant);
     
     if (!item.id) {
       console.warn('🛒 No ID, skipping');
@@ -80,7 +80,7 @@ export const useUnifiedCart = () => {
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
     const itemKey = createItemKey(id, variant);
     
-    console.log(`🛒 ULTRA ISOLATED UPDATE ${itemKey} to ${safeQuantity}`);
+    console.log(`🛒 UPDATE QUANTITY CALLED - ID: ${id}, variant: ${variant}, newQuantity: ${newQuantity}, itemKey: ${itemKey}`);
     
     setCartItems(currentItems => {
       console.log('🛒 BEFORE UPDATE - Current cart:', currentItems.length, currentItems.map(i => `${i.id}:${i.quantity}`));
@@ -137,7 +137,8 @@ export const useUnifiedCart = () => {
     );
     
     const qty = item?.quantity || 0;
-    console.log(`🛒 SIMPLE GET QTY ${itemKey}: ${qty}`);
+    console.log(`🛒 GET QTY - ID: ${id}, variant: ${variant}, itemKey: ${itemKey}, found qty: ${qty}`);
+    console.log('🛒 CART ITEMS:', cartItems.map(i => `${i.id}||${i.variant}:${i.quantity}`));
     return qty;
   }, [cartItems]);
 
