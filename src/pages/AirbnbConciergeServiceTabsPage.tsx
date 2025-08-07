@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
-import { UnifiedCart } from '@/components/common/UnifiedCart';
+import { ProductCategories } from '@/components/delivery/ProductCategories';
+import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
@@ -12,7 +12,7 @@ export default function AirbnbConciergeServiceTabsPage() {
   // Enable wake lock to keep screen on
   useWakeLock();
   
-  // Use unified cart system
+  // Use unified cart system - same as main delivery app
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -22,9 +22,9 @@ export default function AirbnbConciergeServiceTabsPage() {
       id: product.id,
       title: product.title,
       name: product.title,
-      price: parseFloat(product.price),
+      price: parseFloat(String(product.price)) || 0,
       image: product.image,
-      variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.title : undefined
+      variant: product.variant
     };
     
     addToCart(cartItem);
@@ -43,11 +43,14 @@ export default function AirbnbConciergeServiceTabsPage() {
   };
 
   const handleCheckout = () => {
-    // Store app context and navigate to checkout
-    localStorage.setItem('currentAppContext', JSON.stringify({
-      appName: 'airbnb-concierge-service'
+    // Store app context for checkout
+    localStorage.setItem('app-context', JSON.stringify({
+      appSlug: 'airbnb-concierge-service',
+      appName: "Lynn's Lodgings Concierge Service"
     }));
-    navigate('/checkout');
+    
+    // Navigate to checkout
+    window.location.href = '/checkout';
   };
 
   const handleGoHome = () => {
@@ -58,8 +61,8 @@ export default function AirbnbConciergeServiceTabsPage() {
     navigate('/airbnb-concierge-service');
   };
 
-  // Convert unified cart items to the format expected by CustomDeliveryTabsPage
-  const cartItemsForTabs = cartItems.map(item => ({
+  // Convert unified cart items to the format expected by ProductCategories
+  const cartItemsForCategories = cartItems.map(item => ({
     id: item.id,
     title: item.title,
     name: item.name,
@@ -69,39 +72,40 @@ export default function AirbnbConciergeServiceTabsPage() {
     variant: item.variant
   }));
 
-  const collectionsConfig = {
-    tab_count: 3,
-    tabs: [
-      { name: 'Cocktails', collection_handle: 'cocktail-kits', icon: 'cocktails' },
-      { name: 'Liquor', collection_handle: 'spirits', icon: 'spirits' },
-      { name: 'Beer', collection_handle: 'tailgate-beer', icon: 'beer' }
-    ]
+  // Mock delivery info for cart component
+  const mockDeliveryInfo = {
+    date: new Date(),
+    timeSlot: '12:00 PM - 2:00 PM',
+    address: 'Sample Address',
+    instructions: ''
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Use the standard CustomDeliveryTabsPage component for consistency */}
-      <CustomDeliveryTabsPage
-        appName="Lynn's Lodgings Concierge Service"
-        heroHeading="All the Things, All the Fun"
-        collectionsConfig={collectionsConfig}
+      {/* Use same ProductCategories component as main delivery app for consistency */}
+      <ProductCategories
         onAddToCart={handleAddToCart}
         cartItemCount={getTotalItems()}
         onOpenCart={() => setIsCartOpen(true)}
-        cartItems={cartItemsForTabs}
+        cartItems={cartItemsForCategories}
         onUpdateQuantity={handleUpdateQuantity}
         onProceedToCheckout={handleCheckout}
-        onBack={handleBackToStart}
-        onGoHome={handleGoHome}
       />
 
-      {/* Unified Cart sidebar */}
-      <UnifiedCart
+      {/* Cart sidebar - same as main delivery app */}
+      <DeliveryCart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
+        items={cartItemsForCategories}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveFromCart}
+        totalPrice={getTotalPrice()}
+        onCheckout={handleCheckout}
+        deliveryInfo={mockDeliveryInfo}
+        onEmptyCart={handleEmptyCart}
       />
 
-      {/* Bottom cart bar */}
+      {/* Bottom cart bar - same as main delivery app */}
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}

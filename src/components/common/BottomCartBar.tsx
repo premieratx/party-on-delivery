@@ -27,9 +27,9 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg p-2 sm:p-3">
-      <div className="max-w-4xl mx-auto flex items-center justify-between gap-1 sm:gap-3">
-        {/* Cart and Checkout buttons on same row for mobile */}
-        <div className="flex items-center gap-1 sm:gap-3 w-full">
+      <div className="max-w-4xl mx-auto flex items-center justify-center gap-1 sm:gap-3">
+        {/* Cart and Checkout buttons centered */}
+        <div className="flex items-center gap-1 sm:gap-3 justify-center">
           {/* Cart button (only show if items exist) */}
           {totalItems > 0 && (
             <Button

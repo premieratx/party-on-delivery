@@ -99,27 +99,20 @@ export const DeliveryAppDropdown: React.FC = () => {
 
   const handleAppSelect = (app: DeliveryApp) => {
     if (app.id === 'main') {
-      navigate('/');  // Updated to go to home page (now the main delivery app)
+      navigate('/');
     } else {
-      // Open custom delivery apps in new window for independent operation
-      const baseUrl = window.location.origin;
-      let targetUrl = '';
-      
+      // Navigate to custom apps in same tab
       if (app.handle === 'airbnb-concierge-service') {
-        targetUrl = `${baseUrl}/app/airbnb-concierge-service/tabs`;
+        navigate('/app/airbnb-concierge-service/tabs');
       } else if (app.handle === 'party-on-delivery---concierge-') {
-        targetUrl = `${baseUrl}/app/party-on-delivery---concierge-/tabs`;
+        navigate('/app/party-on-delivery---concierge-/tabs');
       } else {
-        targetUrl = `${baseUrl}/app/${app.handle}/tabs`;
+        navigate(`/app/${app.handle}`);
       }
-      
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
-  const handleCreateNew = () => {
-    navigate('/admin/delivery-app-manager');
-  };
+  // Remove create new function as it's moved to admin dashboard
 
   return (
     <DropdownMenu>
@@ -163,15 +156,6 @@ export const DeliveryAppDropdown: React.FC = () => {
           </DropdownMenuItem>
         ))}
         
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
-          onClick={handleCreateNew}
-          className="cursor-pointer hover:bg-accent/50"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create New App
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

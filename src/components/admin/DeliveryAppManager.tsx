@@ -55,6 +55,11 @@ export function DeliveryAppManager() {
   const [tabCount, setTabCount] = useState(5);
   const [tabs, setTabs] = useState<Array<{ name: string; collection_handle: string }>>([]);
   
+  // Hero section customization
+  const [heroSectionLogo, setHeroSectionLogo] = useState<File | null>(null);
+  const [heroHeadline, setHeroHeadline] = useState('');
+  const [heroSubheading, setHeroSubheading] = useState('');
+  
   // Start screen customization
   const [startScreenTitle, setStartScreenTitle] = useState('');
   const [startScreenSubtitle, setStartScreenSubtitle] = useState('');
@@ -68,6 +73,7 @@ export function DeliveryAppManager() {
   const [postCheckoutHeading, setPostCheckoutHeading] = useState('');
   const [postCheckoutSubheading, setPostCheckoutSubheading] = useState('');
   const [postCheckoutRedirectUrl, setPostCheckoutRedirectUrl] = useState('');
+  const [postCheckoutButtonText, setPostCheckoutButtonText] = useState('');
 
   useEffect(() => {
     loadData();
@@ -142,6 +148,9 @@ export function DeliveryAppManager() {
     })));
     
     // Reset customization fields
+    setHeroSectionLogo(null);
+    setHeroHeadline('');
+    setHeroSubheading('');
     setStartScreenTitle('');
     setStartScreenSubtitle('');
     setLogoFile(null);
@@ -150,6 +159,7 @@ export function DeliveryAppManager() {
     setPostCheckoutHeading('');
     setPostCheckoutSubheading('');
     setPostCheckoutRedirectUrl('');
+    setPostCheckoutButtonText('');
     
     setIsCreating(true);
   };
@@ -989,9 +999,53 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                 <CardTitle className="text-green-700">Main App Customization</CardTitle>
                 <p className="text-sm text-green-600">Customize the main delivery app interface</p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="hero-heading">Hero Section Heading</Label>
+                  <Label htmlFor="hero-logo-upload">Hero Section Logo</Label>
+                  <Input
+                    id="hero-logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setHeroSectionLogo(file);
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload a logo for the hero section (PNG, JPG, GIF)
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="hero-headline">Hero Headline</Label>
+                  <Input
+                    id="hero-headline"
+                    value={heroHeadline}
+                    onChange={(e) => setHeroHeadline(e.target.value)}
+                    placeholder="Build Your Party Package"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Main headline displayed in the hero section
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="hero-subheading">Hero Subheading</Label>
+                  <Input
+                    id="hero-subheading"
+                    value={heroSubheading}
+                    onChange={(e) => setHeroSubheading(e.target.value)}
+                    placeholder="Select from our curated collection of drinks and party supplies"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Supporting text displayed below the headline
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="hero-heading">Hero Section Heading (Legacy)</Label>
                   <Input
                     id="hero-heading"
                     value={mainAppHeroHeading}
@@ -1029,17 +1083,31 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                     />
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="redirect-url">Add More Button URL (optional)</Label>
-                  <Input
-                    id="redirect-url"
-                    value={postCheckoutRedirectUrl}
-                    onChange={(e) => setPostCheckoutRedirectUrl(e.target.value)}
-                    placeholder="https://example.com/more-services"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Optional URL for an "Add More" button on the confirmation page
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="redirect-url">Redirect Button URL</Label>
+                    <Input
+                      id="redirect-url"
+                      value={postCheckoutRedirectUrl}
+                      onChange={(e) => setPostCheckoutRedirectUrl(e.target.value)}
+                      placeholder="https://example.com/more-services"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      URL for the main button on the confirmation page
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="button-text">Button Text</Label>
+                    <Input
+                      id="button-text"
+                      value={postCheckoutButtonText}
+                      onChange={(e) => setPostCheckoutButtonText(e.target.value)}
+                      placeholder="Visit Our Website"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Text displayed on the main button
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1051,12 +1119,16 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                 setAppName('');
                 setTabs([]);
                 // Reset customization fields
+                setHeroSectionLogo(null);
+                setHeroHeadline('');
+                setHeroSubheading('');
                 setStartScreenTitle('');
                 setStartScreenSubtitle('');
                 setMainAppHeroHeading('');
                 setPostCheckoutHeading('');
                 setPostCheckoutSubheading('');
                 setPostCheckoutRedirectUrl('');
+                setPostCheckoutButtonText('');
               }}>
                 Cancel
               </Button>
