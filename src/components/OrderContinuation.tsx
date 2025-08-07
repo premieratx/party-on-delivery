@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PartyPlanningButton } from '@/components/PartyPlanningButton';
+// import { PartyPlanningButton } from '@/components/PartyPlanningButton'; // removed
 import { ShoppingBag, Plus, ArrowRight, Users, Search, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/party-on-delivery-logo.png';

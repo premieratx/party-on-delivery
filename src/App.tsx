@@ -44,9 +44,7 @@ const SharedOrderView = lazy(() => import("./pages/SharedOrderView"));
 const GroupOrderInvite = lazy(() => import("./pages/GroupOrderInvite"));
 const TestGroupOrderFlow = lazy(() => import("./pages/TestGroupOrderFlow"));
 
-// Party planning routes
-const PartyPlanner = lazy(() => import("./pages/PartyPlanner").then(m => ({ default: m.PartyPlanner })));
-const ChatPartyPlanner = lazy(() => import("./components/party-planner/ChatPartyPlanner").then(m => ({ default: m.ChatPartyPlanner })));
+// Party planning routes - removed (replaced by user's better version)
 const Checkout = lazy(() => import("./pages/Checkout"));
 
 // Delivery app routes
@@ -132,9 +130,7 @@ const App = () => {
                     <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
                     <Route path="/join/:shareToken" element={<GroupOrderInvite />} />
                     
-                    {/* Party Planning Routes */}
-                    <Route path="/plan-my-party" element={<PartyPlanner />} />
-                    <Route path="/chat-party-planner" element={<ChatPartyPlanner />} />
+                    {/* Party Planning Routes - removed (replaced by user's better version) */}
                     <Route path="/checkout" element={<Checkout />} />
                     
                     {/* Search Routes */}
