@@ -225,7 +225,7 @@ export const SuperFastProductGrid: React.FC<SuperFastProductGridProps> = memo(({
   const handleQuantityChange = useCallback((productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
-    console.log('SuperFastProductGrid: handleQuantityChange', { productId, variantId, currentQty, delta, newQty });
+    console.log('SuperFastGrid: Quantity change', { productId, variantId, currentQty, delta, newQty });
     updateQuantity(productId, variantId, newQty);
   }, [getCartItemQuantity, updateQuantity]);
 

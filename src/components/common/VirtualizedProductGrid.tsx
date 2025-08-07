@@ -98,6 +98,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   const handleQuantityChange = useCallback((productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
+    console.log('VirtualizedGrid: Quantity change', { productId, variantId, currentQty, delta, newQty });
     onUpdateQuantity(productId, variantId, newQty);
   }, [getCartItemQuantity, onUpdateQuantity]);
 

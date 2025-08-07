@@ -150,7 +150,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
-    console.log('UltraFast: Updating quantity', { productId, variantId, currentQty, newQty, delta });
+    console.log('UltraFast: Quantity change', { productId, variantId, currentQty, delta, newQty });
     onUpdateQuantity(productId, variantId, newQty);
   };
 
