@@ -33,47 +33,12 @@ export const useUnifiedCart = () => {
   const abandonedCartTimerRef = useRef<NodeJS.Timeout>();
   const migrationDoneRef = useRef(false);
 
-  // One-time migration from party-cart format
-  useEffect(() => {
-    if (migrationDoneRef.current) return;
-    
-    const migratePartyCart = () => {
-      try {
-        const partyCart = localStorage.getItem('party-cart');
-        if (partyCart && cartItems.length === 0) {
-          const partyItems = JSON.parse(partyCart);
-          if (Array.isArray(partyItems) && partyItems.length > 0) {
-            const unifiedItems: UnifiedCartItem[] = partyItems.map(item => ({
-              id: item.productId || item.id,
-              productId: item.productId || item.id,
-              title: item.title,
-              name: item.title || item.name || '',
-              price: Number(item.price) || 0,
-              quantity: Number(item.quantity) || 1,
-              image: item.image || '',
-              eventName: item.eventName,
-              category: item.category,
-              variant: item.variant
-            }));
-            setCartItems(unifiedItems);
-            console.log(`Migrated ${unifiedItems.length} items from party-cart`);
-          }
-        }
-      } catch (error) {
-        console.error('Error migrating party cart:', error);
-      } finally {
-        migrationDoneRef.current = true;
-      }
-    };
+  // DISABLED: No more party-cart migration - causes cart interference
+  // useEffect(() => {
+  //   Migration disabled to prevent cart conflicts
+  // }, []);
 
-    migratePartyCart();
-  }, []);
-
-  // REMOVED PROBLEMATIC SYNC - CAUSES ISSUES
-  // The party-cart sync was causing session corruption
-  
-  // DO NOT sync party-cart automatically anymore
-  // Only sync on checkout when needed
+  // DISABLED: No party-cart sync to prevent interference
 
   // Debounced abandoned cart tracking
   const trackAbandonedCart = useCallback(
@@ -198,55 +163,59 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // BULLETPROOF: Increment/Decrement existing items OR add new ones
+  // ULTRA-BULLETPROOF: Cart quantity updates that NEVER interfere with other products
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
-    console.log('🛒 updateQuantity called:', { id, variant, newQuantity });
+    console.log('🛒 updateQuantity START:', { id, variant, newQuantity });
     
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
     
     setCartItems(prev => {
-      console.log('🛒 BEFORE UPDATE - Cart state:', prev.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+      console.log('🛒 CART BEFORE:', prev.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
       
-      // Find exact match
-      const existingIndex = prev.findIndex(item => 
-        item.id === id && item.variant === variant
-      );
+      // SUPER PRECISE MATCHING - absolutely no cross-product interference
+      const targetIndex = prev.findIndex(item => {
+        const idMatches = item.id === id;
+        const variantMatches = item.variant === variant;
+        return idMatches && variantMatches;
+      });
       
-      console.log('🛒 Found existing at index:', existingIndex);
+      console.log('🛒 TARGET INDEX:', targetIndex, 'for item:', id, variant ? `(${variant})` : '(no variant)');
       
-      if (existingIndex >= 0) {
-        // UPDATE existing item
+      if (targetIndex >= 0) {
+        // EXISTING ITEM - Update or remove
         if (safeQuantity <= 0) {
-          console.log('🛒 REMOVING existing item');
-          const newCart = prev.filter((_, index) => index !== existingIndex);
-          console.log('🛒 AFTER REMOVAL - Cart state:', newCart.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+          // REMOVE this specific item only
+          const newCart = prev.filter((_, index) => index !== targetIndex);
+          console.log('🛒 REMOVED ITEM - CART AFTER:', newCart.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
           return newCart;
         } else {
-          console.log('🛒 UPDATING existing item quantity to:', safeQuantity);
+          // UPDATE this specific item only
           const newCart = [...prev];
-          newCart[existingIndex] = { ...newCart[existingIndex], quantity: safeQuantity };
-          console.log('🛒 AFTER UPDATE - Cart state:', newCart.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+          newCart[targetIndex] = { 
+            ...newCart[targetIndex], 
+            quantity: safeQuantity 
+          };
+          console.log('🛒 UPDATED ITEM - CART AFTER:', newCart.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
           return newCart;
         }
       } else {
-        // Item doesn't exist, only add if quantity > 0
+        // NEW ITEM - Only add if quantity > 0
         if (safeQuantity > 0) {
-          console.log('🛒 CREATING new item with qty:', safeQuantity);
           const newItem: UnifiedCartItem = {
             id,
             productId: id,
-            title: 'Product',
-            name: 'Product', 
-            price: 0,
+            title: `Product ${id}`,
+            name: `Product ${id}`, 
+            price: 0, // Will be updated by product data
             quantity: safeQuantity,
             image: '',
             variant
           };
           const newCart = [...prev, newItem];
-          console.log('🛒 AFTER CREATION - Cart state:', newCart.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+          console.log('🛒 ADDED NEW ITEM - CART AFTER:', newCart.map(item => `${item.id}${item.variant ? `(${item.variant})` : ''}: ${item.quantity}`));
           return newCart;
         } else {
-          console.log('🛒 Not creating item with 0 quantity');
+          console.log('🛒 NOT ADDING - Zero quantity');
           return prev;
         }
       }
@@ -261,12 +230,9 @@ export const useUnifiedCart = () => {
   }, []);
 
   const emptyCart = useCallback(() => {
+    console.log('🛒 EMPTYING CART');
     setCartItems([]);
-    try {
-      localStorage.removeItem('party-cart');
-    } catch (error) {
-      console.warn('Failed to remove party-cart:', error);
-    }
+    // DO NOT clear party-cart to prevent interference
   }, []);
 
   // FIXED: Precise cart quantity lookup
