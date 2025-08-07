@@ -18,14 +18,14 @@ export const useUnifiedCart = () => {
   const [cartItems, setCartItems] = useLocalStorage<UnifiedCartItem[]>('unified-cart', []);
   const [cartFlash, setCartFlash] = useState(false);
 
-  // DEAD SIMPLE: Create unique key for each product+variant combo
+  // ULTRA SIMPLE: Create unique key for each product+variant combo
   const createItemKey = (id: string, variant?: string) => {
     return `${id}||${variant || 'no-variant'}`;
   };
 
-  // DEAD SIMPLE: Add item or increment if exists
+  // ULTRA SIMPLE: Add item or increment if exists - ISOLATED
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'>) => {
-    console.log('🛒 SIMPLE ADD:', item.id);
+    console.log('🛒 ULTRA SIMPLE ADD:', item.id);
     
     if (!item.id) {
       console.warn('🛒 No ID, skipping');
@@ -34,21 +34,22 @@ export const useUnifiedCart = () => {
 
     const itemKey = createItemKey(item.id, item.variant);
     
-    setCartItems(prev => {
-      const newCart = [...prev];
-      const existingIndex = newCart.findIndex(cartItem => 
+    setCartItems(currentItems => {
+      // COMPLETELY ISOLATED: Copy array and find target
+      const cartCopy = [...currentItems];
+      const targetIndex = cartCopy.findIndex(cartItem => 
         createItemKey(cartItem.id, cartItem.variant) === itemKey
       );
 
-      if (existingIndex >= 0) {
-        // Increment existing
-        newCart[existingIndex] = {
-          ...newCart[existingIndex],
-          quantity: newCart[existingIndex].quantity + 1
+      if (targetIndex >= 0) {
+        // ISOLATED INCREMENT: Only modify this specific item
+        cartCopy[targetIndex] = {
+          ...cartCopy[targetIndex],
+          quantity: cartCopy[targetIndex].quantity + 1
         };
-        console.log('🛒 INCREMENTED to:', newCart[existingIndex].quantity);
+        console.log('🛒 ISOLATED INCREMENT to:', cartCopy[targetIndex].quantity);
       } else {
-        // Add new
+        // ISOLATED ADD: Push new item without affecting others
         const newItem: UnifiedCartItem = {
           id: item.id,
           productId: item.productId || item.id,
@@ -61,44 +62,49 @@ export const useUnifiedCart = () => {
           eventName: item.eventName,
           category: item.category
         };
-        newCart.push(newItem);
-        console.log('🛒 ADDED NEW');
+        cartCopy.push(newItem);
+        console.log('🛒 ISOLATED ADD');
       }
 
-      return newCart;
+      return cartCopy;
     });
     
     setCartFlash(true);
     setTimeout(() => setCartFlash(false), 600);
   }, []);
 
-  // DEAD SIMPLE: Update specific item quantity
+  // ULTRA SIMPLE: Update specific item quantity - COMPLETELY ISOLATED
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
     const itemKey = createItemKey(id, variant);
     
-    console.log(`🛒 SIMPLE UPDATE ${itemKey} to ${safeQuantity}`);
+    console.log(`🛒 ULTRA ISOLATED UPDATE ${itemKey} to ${safeQuantity}`);
     
-    setCartItems(prev => {
-      const newCart = [...prev];
-      const targetIndex = newCart.findIndex(item => 
+    setCartItems(currentItems => {
+      // COMPLETELY ISOLATED: Find and update ONLY the target item
+      const cartCopy = [...currentItems];
+      const targetIndex = cartCopy.findIndex(item => 
         createItemKey(item.id, item.variant) === itemKey
       );
       
       if (targetIndex >= 0) {
         if (safeQuantity <= 0) {
-          newCart.splice(targetIndex, 1);
-          console.log('🛒 REMOVED');
+          // ISOLATED REMOVE: Remove only this item
+          cartCopy.splice(targetIndex, 1);
+          console.log('🛒 ISOLATED REMOVED');
         } else {
-          newCart[targetIndex] = {
-            ...newCart[targetIndex],
+          // ISOLATED UPDATE: Update only this item's quantity
+          cartCopy[targetIndex] = {
+            ...cartCopy[targetIndex],
             quantity: safeQuantity
           };
-          console.log('🛒 UPDATED');
+          console.log('🛒 ISOLATED UPDATED');
         }
+      } else {
+        console.log('🛒 ITEM NOT FOUND FOR UPDATE');
       }
       
-      return newCart;
+      return cartCopy;
     });
   }, []);
 

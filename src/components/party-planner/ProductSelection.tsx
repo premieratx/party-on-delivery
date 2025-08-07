@@ -91,8 +91,7 @@ export const ProductSelection = ({
   const [selectedProduct, setSelectedProduct] = useState<ShopifyProduct | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  // Use unified cart hook for consistent cart management
-  const { addToCart: addToUnifiedCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  // DISABLED: No cart operations from party planner
   const { toast } = useToast();
 
   // Reset state when category changes, but restore if we have current selections
