@@ -388,24 +388,26 @@ serve(async (req) => {
         financial_status: 'paid',
         fulfillment_status: 'unfulfilled',
         
-        // Set line items (NO tip here - it goes in native tip field)
+        // Set line items (products only - NO tip here)
         line_items: lineItems,
         
-        // Proper Shopify shipping lines structure - matches Stripe exactly
+        // Add tip as a separate line item (non-taxable)
+        ...(tipAmount > 0 && {
+          tip_amount: tipAmount.toFixed(2)
+        }),
+        
+        // Proper Shopify shipping lines structure
         shipping_lines: shippingFee > 0 ? [{
           title: "Local Delivery",
           price: shippingFee.toFixed(2),
-          code: "LOCAL_DELIVERY",
-          source: "shopify",
-          phone: customerPhone || null,
-          delivery_method: "local"
+          code: "LOCAL_DELIVERY"
         }] : [],
         
-        // Proper Shopify tax lines structure - matches Stripe exactly
+        // Proper Shopify tax lines structure (calculated on subtotal only, not tip)
         tax_lines: salesTax > 0 ? [{
           title: "Sales Tax",
           price: salesTax.toFixed(2),
-          rate: (salesTax / subtotal).toFixed(4)
+          rate: 0.0825
         }] : [],
         
         // Apply discount codes properly with exact Shopify structure
@@ -466,10 +468,10 @@ ${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${actualDiscountA
 
 💰 PAYMENT BREAKDOWN (MATCHES STRIPE CHARGE):
 Subtotal: $${subtotal.toFixed(2)}
-Delivery Fee: $${shippingFee.toFixed(2)}
-Sales Tax: $${salesTax.toFixed(2)}
-Driver Tip: $${tipAmount.toFixed(2)}
 ${discountCode ? `Discount (${discountCode}): -$${Math.abs(parseFloat(discountAmount || '0')).toFixed(2)}` : ''}
+Shipping: $${shippingFee.toFixed(2)}
+Taxes: $${salesTax.toFixed(2)}
+Tip: $${tipAmount.toFixed(2)}
 TOTAL CHARGED: $${totalAmount.toFixed(2)}
 
 🏷️ RECOMSALE AFFILIATE TRACKING:

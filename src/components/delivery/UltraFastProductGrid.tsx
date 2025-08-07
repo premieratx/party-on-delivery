@@ -150,6 +150,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
+    console.log('UltraFast: Updating quantity', { productId, variantId, currentQty, newQty, delta });
     onUpdateQuantity(productId, variantId, newQty);
   };
 
@@ -174,8 +175,9 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {filteredProducts.map((product) => {
-        const quantity = getCartItemQuantity(product.id);
         const variant = product.variants?.[0];
+        const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
+        const quantity = getCartItemQuantity(product.id, variantTitle);
         
         return (
           <Card key={product.id} className="overflow-hidden">
@@ -211,7 +213,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleQuantityChange(product.id, variant?.title, -1)}
+                    onClick={() => handleQuantityChange(product.id, variantTitle, -1)}
                     className="h-8 w-8 p-0"
                   >
                     <Minus className="h-4 w-4" />
@@ -221,7 +223,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => handleQuantityChange(product.id, variant?.title, 1)}
+                    onClick={() => handleQuantityChange(product.id, variantTitle, 1)}
                     className="h-8 w-8 p-0"
                   >
                     <Plus className="h-4 w-4" />
