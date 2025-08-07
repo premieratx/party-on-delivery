@@ -139,7 +139,14 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                              variant="outline"
                              size="icon"
                              className="h-6 w-6 sm:h-8 sm:w-8"
-                             onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity - 1)}
+                             onClick={() => {
+                               const newQuantity = item.quantity - 1;
+                               if (newQuantity <= 0) {
+                                 onRemoveItem(item.id, item.variant);
+                               } else {
+                                 onUpdateQuantity(item.id, item.variant, newQuantity);
+                               }
+                             }}
                            >
                              <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
                            </Button>
