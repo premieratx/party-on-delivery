@@ -67,25 +67,31 @@ export const ProductSearch = () => {
     try {
       setLoading(true);
       
-      // ULTRA FAST: Use instant cache with force refresh option
-      const { data: instantData } = await supabase.functions.invoke('instant-product-cache', {
-        body: { forceRefresh: false }
+      // ULTRA FAST: Use optimized system with aggressive caching
+      const { data: optimizedData } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
+        body: { 
+          lightweight: true,
+          includeImages: true,
+          limit: 200 // More products for search
+        }
       });
       
-      if (instantData?.success && instantData?.data) {
-        console.log('⚡ Ultra-fast search page load from instant cache');
-        const products = instantData.data.products || [];
-        const collections = instantData.data.collections || [];
+      if (optimizedData?.success && optimizedData?.products?.length > 0) {
+        console.log('⚡ Ultra-fast search page load from optimized system');
         
         // Quick transform with category inference
-        const enrichedProducts = products.map((product: any) => ({
-          ...product,
+        const enrichedProducts = optimizedData.products.map((product: any) => ({
+          id: product.id,
+          title: product.title,
+          price: parseFloat(product.price || '0'),
+          images: [product.image, ...(product.images || [])].filter(Boolean),
+          description: product.description || '',
           category: inferProductCategory(product.title, product.handle || ''),
-          subcategory: inferSubcategory(product.title)
+          subcategory: inferSubcategory(product.title),
+          variants: product.variants || []
         }));
         
         setAllProducts(enrichedProducts);
-        setCollections(collections);
         
         const loadTime = performance.now() - startTime;
         console.log(`⚡ SEARCH PAGE ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${enrichedProducts.length} products`);
@@ -95,8 +101,8 @@ export const ProductSearch = () => {
       }
 
       // Fallback: Try collections API (slower but more complete)
-      console.log('📦 Loading from instant cache for maximum speed');
-      const { data: collectionsData, error } = await supabase.functions.invoke('instant-product-cache');
+      console.log('📦 Loading from collections fallback...');
+      const { data: collectionsData, error } = await supabase.functions.invoke('get-all-collections');
       
       if (error) throw error;
       
@@ -107,9 +113,14 @@ export const ProductSearch = () => {
         const allProducts = collectionsData.collections.reduce((acc: any[], collection: any) => {
           if (collection.products) {
             acc.push(...collection.products.map((p: any) => ({
-              ...p,
+              id: p.id,
+              title: p.title,
+              price: parseFloat(p.price || p.variants?.[0]?.price || '0'),
+              images: p.images || [p.image].filter(Boolean),
+              description: p.description || '',
               category: inferProductCategory(p.title, collection.handle),
-              subcategory: inferSubcategory(p.title)
+              subcategory: inferSubcategory(p.title),
+              variants: p.variants || []
             })));
           }
           return acc;

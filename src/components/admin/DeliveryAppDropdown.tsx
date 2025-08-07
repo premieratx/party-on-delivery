@@ -52,7 +52,7 @@ export const DeliveryAppDropdown: React.FC = () => {
         {
           id: 'boat-delivery',
           name: 'Boat Delivery',
-          handle: 'boat-delivery',
+          handle: 'party-on-delivery---concierge-',
           is_active: true,
           is_default: false,
           created_at: new Date().toISOString()
@@ -87,8 +87,8 @@ export const DeliveryAppDropdown: React.FC = () => {
       return deliveryApps.find(app => app.handle === 'airbnb-concierge-service') || mainDeliveryApp;
     }
     
-    if (currentPath.includes('boat-delivery')) {
-      return deliveryApps.find(app => app.handle === 'boat-delivery') || mainDeliveryApp;
+    if (currentPath.includes('party-on-delivery---concierge-')) {
+      return deliveryApps.find(app => app.handle === 'party-on-delivery---concierge-') || mainDeliveryApp;
     }
     
     return mainDeliveryApp;

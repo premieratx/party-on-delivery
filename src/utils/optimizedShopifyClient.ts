@@ -1,4 +1,3 @@
-// src/utils/optimizedShopifyClient.ts
 import { supabase } from '@/integrations/supabase/client';
 
 interface CachedData<T> {
@@ -202,7 +201,7 @@ class OptimizedShopifyClient {
     try {
       console.log(`🔄 Fetching products for collection: ${collectionHandle}`);
       
-      const { data, error } = await supabase.functions.invoke('get-collection-products', {
+      const { data, error } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
         body: { 
           collectionHandle,
           limit: 50 // Reasonable limit per collection

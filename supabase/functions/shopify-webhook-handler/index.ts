@@ -98,18 +98,40 @@ async function handleProductUpdate(supabase: any, product: any) {
 async function handleOrderUpdate(supabase: any, order: any) {
   console.log(`📦 Processing order webhook: ${order.id}`)
   
-  // Standardize order format for processing
+  // Process line items to handle tips correctly
+  const processedLineItems = order.line_items?.map((item: any) => {
+    // If this is a tip item, mark it as such for proper Shopify handling
+    if (item.title?.toLowerCase().includes('tip') || 
+        item.title?.toLowerCase().includes('driver') ||
+        item.sku?.toLowerCase().includes('tip')) {
+      return {
+        ...item,
+        is_tip: true,
+        tip_amount: parseFloat(item.price || "0")
+      };
+    }
+    return item;
+  }) || [];
+
+  // Calculate subtotal excluding tips for proper order formatting
+  const tipItems = processedLineItems.filter((item: any) => item.is_tip);
+  const regularItems = processedLineItems.filter((item: any) => !item.is_tip);
+  const tipTotal = tipItems.reduce((sum: number, item: any) => sum + (item.tip_amount || 0), 0);
+  const itemsSubtotal = regularItems.reduce((sum: number, item: any) => sum + (parseFloat(item.price || "0") * item.quantity), 0);
+  
+  // Standardize order format for processing with proper tip handling
   const standardOrder = {
     shopify_order_id: order.id.toString(),
     order_number: order.order_number || order.name,
     customer_email: order.email || order.customer?.email,
     customer_phone: order.phone || order.customer?.phone,
     total_price: parseFloat(order.total_price) || 0,
-    subtotal_price: parseFloat(order.subtotal_price) || 0,
+    subtotal_price: itemsSubtotal, // Excluding tips
     total_tax: parseFloat(order.total_tax) || 0,
+    tip_amount: tipTotal, // Separate tip amount
     shipping_address: order.shipping_address,
     billing_address: order.billing_address,
-    line_items: order.line_items || [],
+    line_items: processedLineItems,
     financial_status: order.financial_status,
     fulfillment_status: order.fulfillment_status,
     created_at: order.created_at,
@@ -123,6 +145,8 @@ async function handleOrderUpdate(supabase: any, order: any) {
   await supabase
     .from('shopify_orders_cache')
     .upsert(standardOrder, { onConflict: 'shopify_order_id' })
+  
+  console.log(`✅ Order ${order.id} processed with tip handling - Tips: $${tipTotal}, Subtotal: $${itemsSubtotal}`)
   
   // If order is paid, trigger order processing
   if (order.financial_status === 'paid') {

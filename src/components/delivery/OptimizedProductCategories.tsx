@@ -6,6 +6,7 @@ import { ShoppingCart, Plus, Minus, Loader2, Search } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 import { useOptimizedShopify } from '@/utils/optimizedShopifyClient';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OptimizedProductCategoriesProps {
   onAddToCart: (item: Omit<CartItem, 'quantity'>) => void;
@@ -58,9 +59,27 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       setLoading(true);
       setError(null);
       
-      // Use optimized Shopify client for fast loading
-      const categoryProducts = await getCollectionProducts(handle);
-      setProducts(categoryProducts);
+      console.log(`Loading products for collection: ${handle} with optimized system`);
+      
+      // Use optimized fetch with collection filter for maximum speed
+      const { data: optimizedData, error: optimizedError } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
+        body: { 
+          lightweight: true,
+          includeImages: false,
+          limit: 50,
+          collectionHandle: handle
+        }
+      });
+      
+      if (!optimizedError && optimizedData?.products) {
+        console.log(`✅ Loaded ${optimizedData.products.length} products for ${handle} via optimized system`);
+        setProducts(optimizedData.products);
+      } else {
+        // Fallback to original method
+        console.log('Using fallback method for collection products');
+        const categoryProducts = await getCollectionProducts(handle);
+        setProducts(categoryProducts);
+      }
     } catch (err) {
       setError('Failed to load products');
       console.error('Error loading products:', err);
