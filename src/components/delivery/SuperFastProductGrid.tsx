@@ -221,12 +221,23 @@ export const SuperFastProductGrid: React.FC<SuperFastProductGridProps> = memo(({
     }
   }, [visibleCount, filteredProducts.length]);
 
-  // Optimized quantity change handler
-  const handleQuantityChange = useCallback((productId: string, variantId: string | undefined, delta: number) => {
+  // FIXED: SIMPLE STORE INCREMENT/DECREMENT
+  const handleIncrement = useCallback((productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    const newQty = Math.max(0, currentQty + delta);
-    console.log('SuperFastGrid: Quantity change', { productId, variantId, currentQty, delta, newQty });
-    updateQuantity(productId, variantId, newQty);
+    console.log('🛒 SuperFast Increment:', { productId, variantId, currentQty, newQty: currentQty + 1 });
+    
+    // Always just increment by 1
+    updateQuantity(productId, variantId, currentQty + 1);
+  }, [getCartItemQuantity, updateQuantity]);
+
+  const handleDecrement = useCallback((productId: string, variantId: string | undefined) => {
+    const currentQty = getCartItemQuantity(productId, variantId);
+    console.log('🛒 SuperFast Decrement:', { productId, variantId, currentQty, newQty: currentQty - 1 });
+    
+    // Always just decrement by 1 (updateQuantity handles removal if qty becomes 0)
+    if (currentQty > 0) {
+      updateQuantity(productId, variantId, currentQty - 1);
+    }
   }, [getCartItemQuantity, updateQuantity]);
 
   // Scroll listener for infinite loading
@@ -280,8 +291,14 @@ export const SuperFastProductGrid: React.FC<SuperFastProductGridProps> = memo(({
           <ProductCard
             key={product.id}
             product={product}
-            quantity={getCartItemQuantity(product.id, product.variants?.[0]?.id)}
-            onQuantityChange={handleQuantityChange}
+            quantity={getCartItemQuantity(product.id, product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.title : undefined)}
+            onQuantityChange={(productId, variantId, delta) => {
+              if (delta > 0) {
+                handleIncrement(productId, variantId);
+              } else {
+                handleDecrement(productId, variantId);
+              }
+            }}
             onProductClick={onProductClick}
           />
         ))}

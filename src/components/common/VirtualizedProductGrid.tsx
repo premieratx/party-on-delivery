@@ -82,48 +82,37 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
 
   // Handle add to cart
   const handleAddToCart = useCallback((product: ShopifyProduct) => {
+    const variant = product.variants[0];
+    const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
+    
     const cartItem = {
       id: product.id,
       title: product.title,
       name: product.title,
-      price: product.price,
+      price: product.price || 0,
       image: product.image,
-      variant: product.variants[0]?.id
+      variant: variantTitle  // USE SAME VARIANT LOGIC AS INCREMENT/DECREMENT
     };
     
+    console.log('🛒 VirtualizedGrid: Adding to cart with variant:', { id: product.id, variant: variantTitle });
     onAddToCart(cartItem);
   }, [onAddToCart]);
 
   // Handle quantity change
-  // SIMPLE STORE-LIKE FUNCTIONALITY
+  // FIXED: SIMPLE STORE INCREMENT/DECREMENT  
   const handleIncrement = useCallback((productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    console.log('🛒 VirtualizedGrid Increment:', { productId, variantId, currentQty });
+    console.log('🛒 VirtualizedGrid Increment:', { productId, variantId, currentQty, newQty: currentQty + 1 });
     
-    if (currentQty === 0) {
-      // Add new item to cart
-      const product = visibleItems.find(item => item.item.id === productId)?.item;
-      if (product) {
-        onAddToCart({
-          id: product.id,
-          title: product.title,
-          name: product.title,
-          price: product.price || 0,
-          image: product.image,
-          variant: variantId,
-          productId: product.id
-        });
-      }
-    } else {
-      // Update existing quantity
-      onUpdateQuantity(productId, variantId, currentQty + 1);
-    }
-  }, [getCartItemQuantity, onAddToCart, onUpdateQuantity, visibleItems]);
+    // Always just increment by 1
+    onUpdateQuantity(productId, variantId, currentQty + 1);
+  }, [getCartItemQuantity, onUpdateQuantity]);
 
   const handleDecrement = useCallback((productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    console.log('🛒 VirtualizedGrid Decrement:', { productId, variantId, currentQty });
+    console.log('🛒 VirtualizedGrid Decrement:', { productId, variantId, currentQty, newQty: currentQty - 1 });
     
+    // Always just decrement by 1 (updateQuantity handles removal if qty becomes 0)
     if (currentQty > 0) {
       onUpdateQuantity(productId, variantId, currentQty - 1);
     }
@@ -180,16 +169,21 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
               transition: isGridReady ? 'transform 0.1s ease-out' : 'none'
             }}
           >
-            {searchFilteredItems.map(({ item: product, index }) => (
-              <ProductCard
-                key={`${product.id}-${index}`}
-                product={product}
-                quantity={getCartItemQuantity(product.id, product.variants[0]?.id)}
-                onAddToCart={() => handleAddToCart(product)}
-                onIncrement={() => handleIncrement(product.id, product.variants[0]?.id)}
-                onDecrement={() => handleDecrement(product.id, product.variants[0]?.id)}
-              />
-            ))}
+            {searchFilteredItems.map(({ item: product, index }) => {
+              const variant = product.variants[0];
+              const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
+              
+              return (
+                <ProductCard
+                  key={`${product.id}-${index}`}
+                  product={product}
+                  quantity={getCartItemQuantity(product.id, variantTitle)}
+                  onAddToCart={() => handleAddToCart(product)}
+                  onIncrement={() => handleIncrement(product.id, variantTitle)}
+                  onDecrement={() => handleDecrement(product.id, variantTitle)}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

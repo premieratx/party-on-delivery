@@ -135,47 +135,36 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
   };
 
   const handleAddToCart = (product: Product) => {
+    const variant = product.variants?.[0];
+    const variantTitle = variant?.title !== 'Default Title' ? variant?.title : undefined;
+    
     const cartItem = {
       id: product.id,
       title: product.title,
       name: product.title,
       price: parseFloat(product.price) || 0,
       image: product.image,
-      variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.title : undefined
+      variant: variantTitle  // USE SAME VARIANT LOGIC AS INCREMENT/DECREMENT
     };
     
+    console.log('🛒 Adding to cart with variant:', { id: product.id, variant: variantTitle });
     onAddToCart(cartItem);
   };
 
-  // SIMPLE STORE-LIKE FUNCTIONALITY
+  // FIXED: SIMPLE STORE INCREMENT/DECREMENT
   const handleIncrement = (productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    console.log('🛒 UltraFast Increment:', { productId, variantId, currentQty });
+    console.log('🛒 Product Grid Increment:', { productId, variantId, currentQty, newQty: currentQty + 1 });
     
-    if (currentQty === 0) {
-      // Add new item to cart
-      const product = filteredProducts.find(p => p.id === productId);
-      if (product) {
-        onAddToCart({
-          id: product.id,
-          title: product.title,
-          name: product.title,
-          price: parseFloat(product.price) || 0,
-          image: product.image,
-          variant: variantId,
-          productId: product.id
-        });
-      }
-    } else {
-      // Update existing quantity
-      onUpdateQuantity(productId, variantId, currentQty + 1);
-    }
+    // Always just increment by 1
+    onUpdateQuantity(productId, variantId, currentQty + 1);
   };
 
   const handleDecrement = (productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    console.log('🛒 UltraFast Decrement:', { productId, variantId, currentQty });
+    console.log('🛒 Product Grid Decrement:', { productId, variantId, currentQty, newQty: currentQty - 1 });
     
+    // Always just decrement by 1 (updateQuantity handles removal if qty becomes 0)
     if (currentQty > 0) {
       onUpdateQuantity(productId, variantId, currentQty - 1);
     }
