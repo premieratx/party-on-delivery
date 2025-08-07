@@ -197,29 +197,40 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // SIMPLE UPDATE QUANTITY - BETTER MATCHING
+  // SIMPLE UPDATE QUANTITY - HANDLES BOTH ADD AND UPDATE
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
-    console.log('🛒 updateQuantity:', { id, variant, newQuantity });
+    console.log('🛒 updateQuantity called:', { id, variant, newQuantity });
     
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
     
     setCartItems(prev => {
+      console.log('🛒 Current cart before update:', prev.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
+      
       const existingIndex = prev.findIndex(item => {
-        // Match by ID first
         const idMatch = (item.id === id || item.productId === id);
-        
-        // If no variant specified, match any item with this ID
-        if (!variant) return idMatch;
-        
-        // Match variant exactly OR if both are falsy
         const variantMatch = (item.variant === variant) || (!item.variant && !variant);
-        
         return idMatch && variantMatch;
       });
       
       if (existingIndex === -1) {
-        console.log('🛒 Item STILL not found for update - cart contents:', prev.map(item => ({ id: item.id, variant: item.variant })));
-        return prev;
+        // ITEM NOT FOUND - CREATE NEW ONE
+        if (safeQuantity > 0) {
+          console.log('🛒 Creating NEW item via updateQuantity');
+          const newItem: UnifiedCartItem = {
+            id,
+            productId: id,
+            title: 'Product', // Will be updated when we have product data
+            name: 'Product',
+            price: 0, // Will be updated
+            quantity: safeQuantity,
+            image: '',
+            variant
+          };
+          return [...prev, newItem];
+        } else {
+          console.log('🛒 Item not found and qty is 0, no change');
+          return prev;
+        }
       }
       
       if (safeQuantity <= 0) {
@@ -227,7 +238,7 @@ export const useUnifiedCart = () => {
         return prev.filter((_, index) => index !== existingIndex);
       }
       
-      console.log('🛒 Setting quantity to:', safeQuantity);
+      console.log('🛒 Updating existing item quantity to:', safeQuantity);
       const newCart = [...prev];
       newCart[existingIndex] = { ...newCart[existingIndex], quantity: safeQuantity };
       return newCart;
