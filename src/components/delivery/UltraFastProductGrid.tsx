@@ -147,11 +147,38 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
     onAddToCart(cartItem);
   };
 
-  const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
+  // SIMPLE STORE-LIKE FUNCTIONALITY
+  const handleIncrement = (productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    const newQty = Math.max(0, currentQty + delta);
-    console.log('UltraFast: Quantity change', { productId, variantId, currentQty, delta, newQty });
-    onUpdateQuantity(productId, variantId, newQty);
+    console.log('🛒 UltraFast Increment:', { productId, variantId, currentQty });
+    
+    if (currentQty === 0) {
+      // Add new item to cart
+      const product = filteredProducts.find(p => p.id === productId);
+      if (product) {
+        onAddToCart({
+          id: product.id,
+          title: product.title,
+          name: product.title,
+          price: parseFloat(product.price) || 0,
+          image: product.image,
+          variant: variantId,
+          productId: product.id
+        });
+      }
+    } else {
+      // Update existing quantity
+      onUpdateQuantity(productId, variantId, currentQty + 1);
+    }
+  };
+
+  const handleDecrement = (productId: string, variantId: string | undefined) => {
+    const currentQty = getCartItemQuantity(productId, variantId);
+    console.log('🛒 UltraFast Decrement:', { productId, variantId, currentQty });
+    
+    if (currentQty > 0) {
+      onUpdateQuantity(productId, variantId, currentQty - 1);
+    }
   };
 
   if (loading) {
@@ -213,7 +240,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleQuantityChange(product.id, variantTitle, -1)}
+                    onClick={() => handleDecrement(product.id, variantTitle)}
                     className="h-8 w-8 p-0"
                   >
                     <Minus className="h-4 w-4" />
@@ -223,7 +250,7 @@ export const UltraFastProductGrid: React.FC<UltraFastProductGridProps> = ({
                   </span>
                   <Button
                     size="sm"
-                    onClick={() => handleQuantityChange(product.id, variantTitle, 1)}
+                    onClick={() => handleIncrement(product.id, variantTitle)}
                     className="h-8 w-8 p-0"
                   >
                     <Plus className="h-4 w-4" />

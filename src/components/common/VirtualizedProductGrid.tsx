@@ -95,11 +95,38 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   }, [onAddToCart]);
 
   // Handle quantity change
-  const handleQuantityChange = useCallback((productId: string, variantId: string | undefined, delta: number) => {
+  // SIMPLE STORE-LIKE FUNCTIONALITY
+  const handleIncrement = useCallback((productId: string, variantId: string | undefined) => {
     const currentQty = getCartItemQuantity(productId, variantId);
-    const newQty = Math.max(0, currentQty + delta);
-    console.log('VirtualizedGrid: Quantity change', { productId, variantId, currentQty, delta, newQty });
-    onUpdateQuantity(productId, variantId, newQty);
+    console.log('🛒 VirtualizedGrid Increment:', { productId, variantId, currentQty });
+    
+    if (currentQty === 0) {
+      // Add new item to cart
+      const product = visibleItems.find(item => item.item.id === productId)?.item;
+      if (product) {
+        onAddToCart({
+          id: product.id,
+          title: product.title,
+          name: product.title,
+          price: product.price || 0,
+          image: product.image,
+          variant: variantId,
+          productId: product.id
+        });
+      }
+    } else {
+      // Update existing quantity
+      onUpdateQuantity(productId, variantId, currentQty + 1);
+    }
+  }, [getCartItemQuantity, onAddToCart, onUpdateQuantity, visibleItems]);
+
+  const handleDecrement = useCallback((productId: string, variantId: string | undefined) => {
+    const currentQty = getCartItemQuantity(productId, variantId);
+    console.log('🛒 VirtualizedGrid Decrement:', { productId, variantId, currentQty });
+    
+    if (currentQty > 0) {
+      onUpdateQuantity(productId, variantId, currentQty - 1);
+    }
   }, [getCartItemQuantity, onUpdateQuantity]);
 
   // Grid ready effect
@@ -159,7 +186,8 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
                 product={product}
                 quantity={getCartItemQuantity(product.id, product.variants[0]?.id)}
                 onAddToCart={() => handleAddToCart(product)}
-                onUpdateQuantity={(delta) => handleQuantityChange(product.id, product.variants[0]?.id, delta)}
+                onIncrement={() => handleIncrement(product.id, product.variants[0]?.id)}
+                onDecrement={() => handleDecrement(product.id, product.variants[0]?.id)}
               />
             ))}
           </div>
@@ -181,14 +209,16 @@ interface ProductCardProps {
   product: ShopifyProduct;
   quantity: number;
   onAddToCart: () => void;
-  onUpdateQuantity: (delta: number) => void;
+  onIncrement: () => void;
+  onDecrement: () => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = React.memo(({
   product,
   quantity,
   onAddToCart,
-  onUpdateQuantity
+  onIncrement,
+  onDecrement
 }) => {
   const { cleanTitle, packageSize } = parseProductTitle(product.title);
   
@@ -256,7 +286,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onUpdateQuantity(-1)}
+                  onClick={onDecrement}
                   className="h-5 w-5 p-0 flex-shrink-0 rounded-full"
                 >
                   <Minus className="h-2.5 w-2.5" />
@@ -267,7 +297,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onUpdateQuantity(1)}
+                  onClick={onIncrement}
                   className="h-5 w-5 p-0 flex-shrink-0 rounded-full"
                 >
                   <Plus className="h-2.5 w-2.5" />

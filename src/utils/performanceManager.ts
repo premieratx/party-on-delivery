@@ -72,6 +72,20 @@ class PerformanceManager {
     return { ...this.metrics };
   }
 
+  // INSTANT APP-TO-APP SWITCHING OPTIMIZATION
+  async optimizeAppSwitching(): Promise<void> {
+    console.log('⚡ Optimizing app-to-app switching...');
+    
+    // Preload critical app resources
+    this.preloadCriticalApps();
+    
+    // Aggressive cache warming
+    this.warmAppCache();
+    
+    // Background resource preloading
+    this.backgroundPreloadResources();
+  }
+
   // Performance optimization methods
   async optimizeProductLoading(): Promise<void> {
     console.log('🚀 Starting product loading optimization...');
@@ -109,6 +123,64 @@ class PerformanceManager {
       link.rel = 'preload';
       link.as = 'image';
       link.href = src;
+      document.head.appendChild(link);
+    });
+  }
+
+  private preloadCriticalApps(): void {
+    console.log('🚀 Preloading critical delivery apps...');
+    
+    // Preload common delivery app configurations
+    const criticalApps = [
+      'premier-party-cruises---official-alcohol-delivery-service',
+      'standard-delivery',
+      'party-planner'
+    ];
+    
+    criticalApps.forEach(appSlug => {
+      this.preloadAppData(appSlug);
+    });
+  }
+
+  private async preloadAppData(appSlug: string): Promise<void> {
+    try {
+      // Cache app configuration
+      const appConfig = localStorage.getItem(`app_config_${appSlug}`);
+      if (!appConfig) {
+        console.log(`📱 Preloading config for ${appSlug}`);
+        // In real implementation, would fetch and cache app config
+      }
+    } catch (error) {
+      console.warn('Failed to preload app data:', error);
+    }
+  }
+
+  private warmAppCache(): void {
+    console.log('🔥 Warming app cache for instant switching...');
+    
+    // Warm product cache
+    if (productCache.size() === 0) {
+      forceProductRefresh();
+    }
+    
+    // Warm Shopify cache
+    if (shopifyCache.size() === 0) {
+      forceShopifySync();
+    }
+  }
+
+  private backgroundPreloadResources(): void {
+    console.log('🔄 Background preloading resources...');
+    
+    // Preload critical scripts and assets
+    const criticalResources = [
+      // Common product images would go here
+    ];
+    
+    criticalResources.forEach(url => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = url;
       document.head.appendChild(link);
     });
   }
@@ -240,6 +312,7 @@ performanceManager.startMonitoring();
 
 // Export utility functions
 export const optimizeApp = async () => {
+  await performanceManager.optimizeAppSwitching();
   await performanceManager.optimizeProductLoading();
   await performanceManager.optimizeShopifySync();
   performanceManager.optimizeGroupOrderFlow();

@@ -140,7 +140,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                              size="icon"
                              className="h-6 w-6 sm:h-8 sm:w-8"
                               onClick={() => {
-                                console.log('DeliveryCart: Minus clicked', { id: item.id, variant: item.variant, currentQty: item.quantity });
+                                console.log('🛒 Cart: Minus clicked', { id: item.id, variant: item.variant, currentQty: item.quantity });
                                 onUpdateQuantity(item.id, item.variant, item.quantity - 1);
                               }}
                            >

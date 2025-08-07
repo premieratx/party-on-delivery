@@ -218,12 +218,11 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // FIXED: Reliable quantity update that prevents cart corruption
-  const updateQuantity = useCallback((id: string, variant: string | undefined, quantity: number) => {
-    console.log('useUnifiedCart: updateQuantity called', { id, variant, quantity });
+  // SIMPLIFIED: Direct quantity update - works like normal store
+  const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
+    console.log('🛒 updateQuantity:', { id, variant, newQuantity });
     
-    // CRITICAL: Never allow negative quantities or NaN
-    const safeQuantity = Math.max(0, Math.floor(Number(quantity) || 0));
+    const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
     
     setCartItems(prev => {
       const existingIndex = prev.findIndex(item => 
@@ -231,16 +230,16 @@ export const useUnifiedCart = () => {
       );
       
       if (existingIndex === -1) {
-        console.log('useUnifiedCart: Item not found for update, ignoring');
-        return prev; // Don't add items through updateQuantity
+        console.log('🛒 Item not found, ignoring update');
+        return prev;
       }
       
       if (safeQuantity <= 0) {
-        console.log('useUnifiedCart: Removing item due to 0 quantity', { id, variant });
+        console.log('🛒 Removing item - quantity 0');
         return prev.filter((_, index) => index !== existingIndex);
       }
       
-      console.log('useUnifiedCart: Updating item quantity', { id, variant, safeQuantity });
+      console.log('🛒 Setting quantity to:', safeQuantity);
       const newItems = [...prev];
       newItems[existingIndex] = { ...newItems[existingIndex], quantity: safeQuantity };
       return newItems;
