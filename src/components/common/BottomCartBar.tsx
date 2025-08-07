@@ -27,9 +27,17 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg p-2 sm:p-3">
-      <div className="max-w-4xl mx-auto flex items-center justify-center gap-1 sm:gap-3">
+      <div className="max-w-4xl mx-auto flex items-center justify-between">
+        {/* Admin Dashboard link - far left */}
+        <a 
+          href="/admin/dashboard"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          Admin
+        </a>
+        
         {/* Cart and Checkout buttons centered */}
-        <div className="flex items-center gap-1 sm:gap-3 justify-center">
+        <div className="flex items-center gap-1 sm:gap-3 justify-center absolute left-1/2 transform -translate-x-1/2">
           {/* Cart button (only show if items exist) */}
           {totalItems > 0 && (
             <Button
@@ -53,7 +61,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           
           {/* Checkout button */}
           <Button
-            onClick={() => window.location.href = '/checkout'}
+            onClick={onCheckout}
             size="sm"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-1 sm:gap-2 flex-1 sm:flex-initial sm:min-w-[120px] justify-center h-8 sm:h-9"
             data-checkout-trigger="true"
@@ -62,6 +70,14 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
             <span className="text-xs sm:text-sm">{totalItems > 0 ? 'Checkout' : 'Checkout Now'}</span>
           </Button>
         </div>
+        
+        {/* Manage My Order link - far right */}
+        <a 
+          href="/customer/login?redirect=dashboard"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          My Orders
+        </a>
       </div>
     </div>
   );

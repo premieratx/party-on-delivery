@@ -151,7 +151,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
-                    <span>${deliveryFee.toFixed(2)}</span>
+                    <span>${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Sales Tax (8.25%)</span>

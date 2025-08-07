@@ -221,16 +221,18 @@ export const useUnifiedCart = () => {
     setCartItems(prev => {
       const newCart = [...prev];
       const existingIndex = newCart.findIndex(item => 
-        (item.id === id || item.productId === id) && item.variant === variant
+        (item.id === id || item.productId === id) && 
+        (item.variant === variant || (!item.variant && !variant))
       );
       
       if (existingIndex >= 0) {
-        if (quantity <= 0) {
+        const newQuantity = Math.max(0, Number(quantity) || 0);
+        if (newQuantity <= 0) {
           newCart.splice(existingIndex, 1);
         } else {
           newCart[existingIndex] = { 
             ...newCart[existingIndex], 
-            quantity: Math.max(0, Number(quantity) || 0)
+            quantity: newQuantity
           };
         }
       }

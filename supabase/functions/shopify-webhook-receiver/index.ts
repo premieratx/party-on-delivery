@@ -233,6 +233,9 @@ serve(async (req) => {
       
       case 'products/create':
       case 'products/update':
+      case 'collections/create':
+      case 'collections/update':
+      case 'inventory_levels/update':
         await handleProductUpdate(supabase, payload);
         break;
       
@@ -400,18 +403,34 @@ async function handleOrderFulfilled(supabase: any, order: ShopifyWebhookPayload)
   }
 }
 
-// Handle product updates
-async function handleProductUpdate(supabase: any, product: any) {
-  console.log(`🔄 Product updated: ${product.id}`);
+// Handle product/collection/inventory updates
+async function handleProductUpdate(supabase: any, data: any) {
+  console.log(`🔄 Product/collection/inventory updated: ${data.id}`);
   
   try {
-    // Invalidate product cache to force fresh data
-    await supabase
-      .from('cache')
-      .delete()
-      .ilike('key', '%product%');
+    // Invalidate all product-related caches
+    await Promise.all([
+      // Clear instant cache
+      supabase.from('cache').delete().eq('key', 'instant-product-cache'),
+      // Clear other product caches
+      supabase.from('cache').delete().ilike('key', '%product%'),
+      supabase.from('cache').delete().ilike('key', '%collection%'),
+      supabase.from('cache').delete().ilike('key', '%shopify%')
+    ]);
     
-    console.log(`✅ Product cache invalidated for product ${product.id}`);
+    // Trigger background cache refresh for instant loading
+    setTimeout(async () => {
+      try {
+        await supabase.functions.invoke('instant-product-cache', {
+          body: { forceRefresh: true }
+        });
+        console.log('✅ Background cache refresh triggered');
+      } catch (error) {
+        console.error('⚠️ Background cache refresh failed:', error);
+      }
+    }, 1000); // Small delay to ensure cache clearing is complete
+    
+    console.log(`✅ Product cache invalidated and refresh triggered`);
   } catch (error) {
     console.error(`❌ Error handling product update:`, error);
     throw error;

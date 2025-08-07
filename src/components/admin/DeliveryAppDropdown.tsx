@@ -112,8 +112,6 @@ export const DeliveryAppDropdown: React.FC = () => {
     }
   };
 
-  // Remove create new function as it's moved to admin dashboard
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

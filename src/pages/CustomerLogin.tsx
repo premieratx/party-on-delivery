@@ -36,7 +36,15 @@ const CustomerLogin = () => {
         const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
         const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
         
-        let redirectTo = redirectParam === 'dashboard' ? '/customer/dashboard' : (returnUrl || '/customer/dashboard');
+        // Default to customer dashboard instead of home page
+        let redirectTo = '/customer/dashboard';
+        
+        // Override with explicit redirect params
+        if (redirectParam === 'dashboard') {
+          redirectTo = '/customer/dashboard';
+        } else if (returnUrl) {
+          redirectTo = returnUrl;
+        }
         
         // If user chose to join group order, redirect to group order dashboard
         if (groupOrderJoinDecision === 'yes' && originalGroupOrderData) {

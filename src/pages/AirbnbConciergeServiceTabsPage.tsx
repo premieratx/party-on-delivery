@@ -5,12 +5,16 @@ import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 
 export default function AirbnbConciergeServiceTabsPage() {
   const navigate = useNavigate();
   
   // Enable wake lock to keep screen on
   useWakeLock();
+  
+  // Use optimized product loading
+  const { refreshProducts } = useOptimizedProductLoader();
   
   // Use unified cart system - same as main delivery app
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
@@ -109,7 +113,7 @@ export default function AirbnbConciergeServiceTabsPage() {
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}
-        isVisible={getTotalItems() > 0}
+        isVisible={true}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
       />
