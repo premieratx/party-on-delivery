@@ -2216,6 +2216,69 @@ export type Database = {
           },
         ]
       }
+      shopify_orders_cache: {
+        Row: {
+          billing_address: Json | null
+          created_at: string
+          customer_email: string | null
+          customer_phone: string | null
+          financial_status: string | null
+          fulfillment_status: string | null
+          id: string
+          line_items: Json | null
+          note: string | null
+          order_number: string | null
+          shipping_address: Json | null
+          shopify_order_id: string
+          source_name: string | null
+          subtotal_price: number | null
+          tags: string | null
+          total_price: number | null
+          total_tax: number | null
+          updated_at: string
+        }
+        Insert: {
+          billing_address?: Json | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          financial_status?: string | null
+          fulfillment_status?: string | null
+          id?: string
+          line_items?: Json | null
+          note?: string | null
+          order_number?: string | null
+          shipping_address?: Json | null
+          shopify_order_id: string
+          source_name?: string | null
+          subtotal_price?: number | null
+          tags?: string | null
+          total_price?: number | null
+          total_tax?: number | null
+          updated_at?: string
+        }
+        Update: {
+          billing_address?: Json | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          financial_status?: string | null
+          fulfillment_status?: string | null
+          id?: string
+          line_items?: Json | null
+          note?: string | null
+          order_number?: string | null
+          shipping_address?: Json | null
+          shopify_order_id?: string
+          source_name?: string | null
+          subtotal_price?: number | null
+          tags?: string | null
+          total_price?: number | null
+          total_tax?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shopify_products: {
         Row: {
           available: boolean | null
