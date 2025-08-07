@@ -116,7 +116,8 @@ export const useUnifiedCart = () => {
           }
         });
       } catch (error) {
-        console.error('Error tracking abandoned cart:', error);
+        // Don't break the app if abandoned cart tracking fails
+        console.warn('Abandoned cart tracking failed (non-critical):', error);
       }
     }, 30000), // 30 second debounce
     [cartItems]
@@ -197,7 +198,7 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // SIMPLE UPDATE QUANTITY - HANDLES BOTH ADD AND UPDATE
+  // FIXED: Precise matching to prevent cross-product interference  
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
     console.log('🛒 updateQuantity called:', { id, variant, newQuantity });
     
@@ -206,14 +207,27 @@ export const useUnifiedCart = () => {
     setCartItems(prev => {
       console.log('🛒 Current cart before update:', prev.map(item => ({id: item.id, variant: item.variant, qty: item.quantity})));
       
+      // SUPER PRECISE MATCHING - both ID and variant must match exactly
       const existingIndex = prev.findIndex(item => {
-        const idMatch = (item.id === id || item.productId === id);
-        const variantMatch = (item.variant === variant) || (!item.variant && !variant);
-        return idMatch && variantMatch;
+        const idMatch = (item.id === id);
+        const variantMatch = (item.variant === variant);
+        const exactMatch = idMatch && variantMatch;
+        
+        console.log('🛒 Matching item:', {
+          itemId: item.id, 
+          itemVariant: item.variant,
+          lookingForId: id,
+          lookingForVariant: variant,
+          idMatch,
+          variantMatch,
+          exactMatch
+        });
+        
+        return exactMatch;
       });
       
       if (existingIndex === -1) {
-        // ITEM NOT FOUND - CREATE NEW ONE
+        // ITEM NOT FOUND - CREATE NEW ONE (only if qty > 0)
         if (safeQuantity > 0) {
           console.log('🛒 Creating NEW item via updateQuantity');
           const newItem: UnifiedCartItem = {
@@ -221,7 +235,7 @@ export const useUnifiedCart = () => {
             productId: id,
             title: 'Product', // Will be updated when we have product data
             name: 'Product',
-            price: 0, // Will be updated
+            price: 0, // Will be updated when we have product data
             quantity: safeQuantity,
             image: '',
             variant
@@ -261,21 +275,19 @@ export const useUnifiedCart = () => {
     }
   }, []);
 
-  // FIXED: More flexible cart item matching
+  // FIXED: Precise cart quantity lookup
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
     const item = cartItems.find(item => {
-      // Match by ID first
-      const idMatch = (item.id === id || item.productId === id);
+      const idMatch = (item.id === id);
+      const variantMatch = (item.variant === variant);
+      const exactMatch = idMatch && variantMatch;
       
-      // If no variant specified, match any item with this ID
-      if (!variant) return idMatch;
-      
-      // Match variant exactly OR if both are falsy
-      const variantMatch = (item.variant === variant) || (!item.variant && !variant);
-      
-      return idMatch && variantMatch;
+      return exactMatch;
     });
-    return item?.quantity || 0;
+    
+    const qty = item?.quantity || 0;
+    console.log('🛒 getCartItemQuantity:', {id, variant, foundQty: qty});
+    return qty;
   }, [cartItems]);
 
   const getTotalPrice = useCallback(() => {
