@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useLocalStorage } from './useLocalStorage';
 
 export interface UnifiedCartItem {
   id: string;
@@ -15,8 +14,30 @@ export interface UnifiedCartItem {
 }
 
 export const useUnifiedCart = () => {
-  const [cartItems, setCartItems] = useLocalStorage<UnifiedCartItem[]>('unified-cart', []);
+  // Use direct localStorage without the problematic useLocalStorage hook
+  const getCartFromStorage = (): UnifiedCartItem[] => {
+    try {
+      const stored = localStorage.getItem('unified-cart');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const [cartItems, setCartItemsState] = useState<UnifiedCartItem[]>(getCartFromStorage);
   const [cartFlash, setCartFlash] = useState(false);
+
+  const setCartItems = useCallback((updater: UnifiedCartItem[] | ((prev: UnifiedCartItem[]) => UnifiedCartItem[])) => {
+    setCartItemsState(prevItems => {
+      const newItems = typeof updater === 'function' ? updater(prevItems) : updater;
+      try {
+        localStorage.setItem('unified-cart', JSON.stringify(newItems));
+      } catch (error) {
+        console.warn('Failed to save cart to localStorage:', error);
+      }
+      return newItems;
+    });
+  }, []);
 
   // Simple key creation and matching helpers
   const getKey = (id: string, variant?: string) => `${id}::${variant || 'default'}`;
