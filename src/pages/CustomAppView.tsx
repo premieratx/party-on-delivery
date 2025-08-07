@@ -199,6 +199,8 @@ export default function CustomAppView() {
     if (appContext) {
       try {
         localStorage.setItem('custom-app-source', appContext.appSlug);
+        // Also set the delivery app referrer for proper back navigation
+        localStorage.setItem('deliveryAppReferrer', `/app/${appContext.appSlug}`);
       } catch (error) {
         console.warn('Failed to store app source:', error);
       }

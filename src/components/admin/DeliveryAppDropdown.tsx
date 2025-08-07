@@ -46,30 +46,33 @@ export const DeliveryAppDropdown: React.FC = () => {
     try {
       setLoading(true);
       
-      // For now, we'll use predefined delivery apps
-      // Later this can be connected to a database table
-      const predefinedApps = [
-        {
-          id: 'boat-delivery',
-          name: 'Boat Delivery',
-          handle: 'party-on-delivery---concierge-',
-          is_active: true,
-          is_default: false,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'airbnb-delivery',
-          name: 'Airbnb Concierge',
-          handle: 'airbnb-concierge-service',
-          is_active: true,
-          is_default: false,
-          created_at: new Date().toISOString()
-        }
-      ];
+      // Fetch delivery apps from database
+      const { data, error } = await supabase
+        .from('delivery_app_variations')
+        .select('id, app_name, app_slug, is_active')
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
 
-      setDeliveryApps(predefinedApps);
+      if (error) {
+        console.error('Error fetching delivery apps:', error);
+        setDeliveryApps([]);
+        return;
+      }
+
+      // Transform data to match our interface
+      const apps = data?.map(app => ({
+        id: app.id,
+        name: app.app_name,
+        handle: app.app_slug,
+        is_active: app.is_active,
+        is_default: false,
+        created_at: new Date().toISOString()
+      })) || [];
+
+      setDeliveryApps(apps);
     } catch (error) {
       console.error('Error fetching delivery apps:', error);
+      setDeliveryApps([]);
     } finally {
       setLoading(false);
     }
@@ -82,13 +85,11 @@ export const DeliveryAppDropdown: React.FC = () => {
       return mainDeliveryApp;
     }
     
-    // Check for custom delivery apps
-    if (currentPath.includes('airbnb-concierge-service')) {
-      return deliveryApps.find(app => app.handle === 'airbnb-concierge-service') || mainDeliveryApp;
-    }
-    
-    if (currentPath.includes('party-on-delivery---concierge-')) {
-      return deliveryApps.find(app => app.handle === 'party-on-delivery---concierge-') || mainDeliveryApp;
+    // Check for custom delivery apps using app path
+    if (currentPath.startsWith('/app/')) {
+      const appSlug = currentPath.split('/app/')[1];
+      const foundApp = deliveryApps.find(app => app.handle === appSlug);
+      if (foundApp) return foundApp;
     }
     
     return mainDeliveryApp;
@@ -101,14 +102,8 @@ export const DeliveryAppDropdown: React.FC = () => {
     if (app.id === 'main') {
       navigate('/');
     } else {
-      // Navigate to custom apps in same tab
-      if (app.handle === 'airbnb-concierge-service') {
-        navigate('/app/airbnb-concierge-service/tabs');
-      } else if (app.handle === 'party-on-delivery---concierge-') {
-        navigate('/app/party-on-delivery---concierge-/tabs');
-      } else {
-        navigate(`/app/${app.handle}`);
-      }
+      // Navigate to custom delivery app
+      navigate(`/app/${app.handle}`);
     }
   };
 
