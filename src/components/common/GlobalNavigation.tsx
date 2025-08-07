@@ -38,7 +38,7 @@ const navigationItems: NavItem[] = [
   // Main navigation
   { icon: Home, label: 'Home', href: '/', show: 'always', category: 'main' },
   { icon: Search, label: 'Search Products', href: '/search', show: 'always', category: 'main' },
-  { icon: Package, label: 'Main Delivery', href: '/main-delivery-app', show: 'always', category: 'main' },
+  { icon: Package, label: 'Main Delivery', href: '/', show: 'always', category: 'main' },
   
   // User accounts
   { icon: User, label: 'Customer Login', href: '/customer/login', show: 'always', category: 'user' },
@@ -151,9 +151,9 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
 
           {/* Delivery Apps */}
           <button
-            onClick={() => handleNavigation('/main-delivery-app')}
+            onClick={() => handleNavigation('/')}
             className={`flex flex-col items-center justify-center text-xs transition-colors ${
-              location.pathname === '/main-delivery-app' 
+              location.pathname === '/' 
                 ? 'text-primary' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}

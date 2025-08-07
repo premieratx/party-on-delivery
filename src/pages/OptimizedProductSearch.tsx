@@ -75,7 +75,13 @@ export default function OptimizedProductSearch() {
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
-    updateQuantity(productId, variantId, newQty);
+    
+    if (newQty === 0) {
+      // Remove from cart entirely if quantity becomes 0
+      updateQuantity(productId, variantId, 0);
+    } else {
+      updateQuantity(productId, variantId, newQty);
+    }
   };
 
   // Handle search
