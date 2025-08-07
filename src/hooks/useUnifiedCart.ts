@@ -1,5 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+
+// Global cart instance tracker to prevent multiple instances
+let globalCartInstance: string | null = null;
 
 export interface UnifiedCartItem {
   id: string;
@@ -15,8 +18,30 @@ export interface UnifiedCartItem {
 }
 
 export const useUnifiedCart = () => {
+  const instanceId = useRef(Math.random().toString(36).substr(2, 9)).current;
   const [cartItems, setCartItems] = useLocalStorage<UnifiedCartItem[]>('unified-cart', []);
   const [cartFlash, setCartFlash] = useState(false);
+
+  // Ensure only one cart instance is active
+  useEffect(() => {
+    if (!globalCartInstance) {
+      globalCartInstance = instanceId;
+      console.log('🛒 CART MASTER INSTANCE:', instanceId);
+    } else if (globalCartInstance !== instanceId) {
+      console.warn('🛒 DUPLICATE CART INSTANCE BLOCKED:', instanceId);
+      return;
+    }
+
+    return () => {
+      if (globalCartInstance === instanceId) {
+        globalCartInstance = null;
+        console.log('🛒 CART MASTER INSTANCE RELEASED:', instanceId);
+      }
+    };
+  }, [instanceId]);
+
+  // Block all operations if this isn't the master instance
+  const isMasterInstance = globalCartInstance === instanceId;
 
   // Simple key creation and matching helpers
   const getKey = (id: string, variant?: string) => `${id}::${variant || 'default'}`;
@@ -30,8 +55,12 @@ export const useUnifiedCart = () => {
     return itemId === id && itemVariant === checkVariant;
   };
 
-  // Update quantity - ATOMIC OPERATIONS to prevent interference
+  // Update quantity - MASTER INSTANCE ONLY
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number, productData?: Partial<UnifiedCartItem>) => {
+    if (!isMasterInstance) {
+      console.warn('🛒 BLOCKED: updateQuantity from non-master instance');
+      return;
+    }
     if (!id) {
       console.warn('🛒 updateQuantity: Missing product ID');
       return;
@@ -98,15 +127,20 @@ export const useUnifiedCart = () => {
       // No changes needed
       return currentItems;
     });
-  }, []);
+  }, [isMasterInstance]);
 
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
+    if (!isMasterInstance) return 0;
     const item = cartItems.find(item => matchesItem(item, id, variant));
     return item?.quantity || 0;
-  }, [cartItems]);
+  }, [cartItems, isMasterInstance]);
 
-  // Add or increment item - ATOMIC to prevent conflicts
+  // Add or increment item - MASTER INSTANCE ONLY
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'>) => {
+    if (!isMasterInstance) {
+      console.warn('🛒 BLOCKED: addToCart from non-master instance');
+      return;
+    }
     if (!item.id) {
       console.warn('🛒 addToCart: Missing item.id, skipping');
       return;
@@ -127,19 +161,18 @@ export const useUnifiedCart = () => {
     
     setCartFlash(true);
     setTimeout(() => setCartFlash(false), 600);
-  }, [cartItems, updateQuantity]);
-
-
+  }, [cartItems, updateQuantity, isMasterInstance]);
 
   const removeItem = useCallback((id: string, variant?: string) => {
+    if (!isMasterInstance) return;
     setCartItems(prev => prev.filter(item => !matchesItem(item, id, variant)));
-  }, []);
+  }, [isMasterInstance]);
 
-  // Empty cart
+  // Empty cart - MASTER INSTANCE ONLY
   const emptyCart = useCallback(() => {
+    if (!isMasterInstance) return;
     setCartItems([]);
-  }, []);
-
+  }, [isMasterInstance]);
 
   // Get totals
   const getTotalPrice = useCallback(() => {
@@ -160,6 +193,7 @@ export const useUnifiedCart = () => {
     getCartItemQuantity,
     getTotalPrice,
     getTotalItems,
-    trackAbandonedCart: () => {}
+    trackAbandonedCart: () => {},
+    isMasterInstance // For debugging
   };
 };
