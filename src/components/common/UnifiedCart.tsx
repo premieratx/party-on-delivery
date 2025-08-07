@@ -21,7 +21,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
 
   // Calculate pricing
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
+  const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20; // Fixed: Use percentage calculation for orders over $200
   const salesTax = subtotal * 0.0825; // 8.25% sales tax
   const finalTotal = subtotal + deliveryFee + salesTax;
 

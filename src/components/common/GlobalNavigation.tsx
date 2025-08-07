@@ -372,24 +372,7 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Cart */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
-                  cartTrigger?.click();
-                }}
-                className="relative gap-2"
-              >
-                <ShoppingCart className="h-4 w-4" />
-                Cart
-                {cartItems > 0 && (
-                  <Badge variant="destructive" className="ml-1">
-                    {cartItems}
-                  </Badge>
-                )}
-              </Button>
+              {/* Cart button removed per user request */}
             </div>
           </div>
         </div>

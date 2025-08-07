@@ -50,7 +50,6 @@ const ChatPartyPlanner = lazy(() => import("./components/party-planner/ChatParty
 const Checkout = lazy(() => import("./pages/Checkout"));
 
 // Delivery app routes
-const MainDeliveryApp = lazy(() => import("./pages/MainDeliveryApp"));
 const CustomDeliveryApp = lazy(() => import("./pages/CustomDeliveryApp"));
 const CustomDeliveryPostCheckout = lazy(() => import("./pages/CustomDeliveryPostCheckout"));
 const DeliveryAppView = lazy(() => import("./pages/DeliveryAppView"));

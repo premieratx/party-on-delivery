@@ -1,8 +1,8 @@
 import React from 'react';
-import MainDeliveryApp from './MainDeliveryApp';
+import CustomPartyOnDeliveryTabsPage from './CustomPartyOnDeliveryTabsPage';
 
 const Index = () => {
-  return <MainDeliveryApp />;
+  return <CustomPartyOnDeliveryTabsPage />;
 };
 
 export default Index;
