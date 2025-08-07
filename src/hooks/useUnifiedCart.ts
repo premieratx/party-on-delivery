@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,14 +31,6 @@ export const useUnifiedCart = () => {
   const [cartItems, setCartItems] = useLocalStorage<UnifiedCartItem[]>('unified-cart', []);
   const [cartFlash, setCartFlash] = useState(false);
   const abandonedCartTimerRef = useRef<NodeJS.Timeout>();
-  const migrationDoneRef = useRef(false);
-
-  // DISABLED: No more party-cart migration - causes cart interference
-  // useEffect(() => {
-  //   Migration disabled to prevent cart conflicts
-  // }, []);
-
-  // DISABLED: No party-cart sync to prevent interference
 
   // Debounced abandoned cart tracking
   const trackAbandonedCart = useCallback(
@@ -88,34 +80,19 @@ export const useUnifiedCart = () => {
     [cartItems]
   );
 
-  // Cleanup function for timers
-  useEffect(() => {
-    return () => {
-      if (abandonedCartTimerRef.current) {
-        clearTimeout(abandonedCartTimerRef.current);
-      }
-    };
-  }, []);
 
-  // COMPLETELY REWRITTEN - SIMPLE STORE LOGIC
+  // SIMPLE INDEPENDENT CART LOGIC - NO CROSS-PRODUCT INTERFERENCE
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'> | UnifiedCartItem[]) => {
     console.log('🛒 addToCart called with:', item);
     
     setCartItems(prev => {
+      // Create completely fresh array to avoid any reference issues
+      const freshCart = prev.map(cartItem => ({ ...cartItem }));
+      
       if (Array.isArray(item)) {
-        // Party planner bulk add - REPLACE entire cart
-        return item.map(newItem => ({
-          id: newItem.id || newItem.productId || '',
-          productId: newItem.productId || newItem.id,
-          title: newItem.title || newItem.name || '',
-          name: newItem.name || newItem.title || '',
-          price: Number(newItem.price) || 0,
-          quantity: Number(newItem.quantity) || 1,
-          image: newItem.image || '',
-          variant: newItem.variant,
-          eventName: newItem.eventName,
-          category: newItem.category
-        }));
+        // DISABLED: No more party planner bulk add
+        console.warn('🛒 Bulk add disabled - adding items individually');
+        return freshCart;
       } else {
         // Single item add - INCREMENT existing or ADD new
         const normalizedItem: UnifiedCartItem = {
@@ -131,30 +108,31 @@ export const useUnifiedCart = () => {
           category: item.category
         };
         
-        if (!normalizedItem.id || normalizedItem.price <= 0) {
-          console.warn('🛒 Invalid item, ignoring');
-          return prev;
+        if (!normalizedItem.id) {
+          console.warn('🛒 Invalid item ID, ignoring');
+          return freshCart;
         }
         
-        const existingIndex = prev.findIndex(cartItem => 
+        // Find exact match using product ID and variant
+        const existingIndex = freshCart.findIndex(cartItem => 
           cartItem.id === normalizedItem.id && 
           cartItem.variant === normalizedItem.variant
         );
         
         if (existingIndex >= 0) {
-          // INCREMENT existing item
-          const newCart = [...prev];
-          newCart[existingIndex] = {
-            ...newCart[existingIndex],
-            quantity: newCart[existingIndex].quantity + 1
+          // INCREMENT existing item by 1
+          freshCart[existingIndex] = {
+            ...freshCart[existingIndex],
+            quantity: freshCart[existingIndex].quantity + 1
           };
-          console.log('🛒 Incremented existing item to qty:', newCart[existingIndex].quantity);
-          return newCart;
+          console.log('🛒 Incremented existing item to qty:', freshCart[existingIndex].quantity);
         } else {
           // ADD new item
+          freshCart.push(normalizedItem);
           console.log('🛒 Added new item with qty: 1');
-          return [...prev, normalizedItem];
         }
+        
+        return freshCart;
       }
     });
     
@@ -163,57 +141,39 @@ export const useUnifiedCart = () => {
     trackAbandonedCart();
   }, [trackAbandonedCart]);
 
-  // NUCLEAR OPTION: Absolutely zero cross-product interference
+  // ISOLATED PRODUCT QUANTITY UPDATE - ZERO INTERFERENCE
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number) => {
     const safeQuantity = Math.max(0, Math.floor(Number(newQuantity) || 0));
-    const searchKey = `${id}_${variant || 'none'}`;
     
-    console.log(`🛒 UPDATE ${searchKey} to qty: ${safeQuantity}`);
+    console.log(`🛒 UPDATE ${id} (variant: ${variant || 'none'}) to qty: ${safeQuantity}`);
     
     setCartItems(prev => {
-      // Create a completely new array to avoid any reference issues
-      const currentCart = [...prev];
+      // Create completely fresh cart array
+      const freshCart = prev.map(item => ({ ...item }));
       
-      // Find the EXACT item we want to update (and ONLY that item)
-      const targetIndex = currentCart.findIndex(item => {
-        const itemKey = `${item.id}_${item.variant || 'none'}`;
-        return itemKey === searchKey;
-      });
+      // Find EXACT match - no interference with other products
+      const targetIndex = freshCart.findIndex(item => 
+        item.id === id && item.variant === variant
+      );
       
-      console.log(`🛒 Found ${searchKey} at index: ${targetIndex}`);
-      console.log(`🛒 Current cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
+      console.log(`🛒 Target index for ${id}: ${targetIndex}`);
       
       if (targetIndex >= 0) {
-        // Item exists - update or remove it
         if (safeQuantity <= 0) {
-          // Remove this specific item
-          currentCart.splice(targetIndex, 1);
-          console.log(`🛒 REMOVED ${searchKey} - New cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
+          // Remove this specific item only
+          freshCart.splice(targetIndex, 1);
+          console.log(`🛒 REMOVED ${id} - Cart now has ${freshCart.length} items`);
         } else {
-          // Update this specific item
-          currentCart[targetIndex] = {
-            ...currentCart[targetIndex],
+          // Update ONLY this item's quantity
+          freshCart[targetIndex] = {
+            ...freshCart[targetIndex],
             quantity: safeQuantity
           };
-          console.log(`🛒 UPDATED ${searchKey} to ${safeQuantity} - New cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
+          console.log(`🛒 UPDATED ${id} to qty ${safeQuantity}`);
         }
-      } else if (safeQuantity > 0) {
-        // Item doesn't exist - add it
-        const newItem: UnifiedCartItem = {
-          id,
-          productId: id,
-          title: `Product ${id}`,
-          name: `Product ${id}`,
-          price: 0,
-          quantity: safeQuantity,
-          image: '',
-          variant
-        };
-        currentCart.push(newItem);
-        console.log(`🛒 ADDED ${searchKey} with qty ${safeQuantity} - New cart:`, currentCart.map(item => `${item.id}_${item.variant || 'none'}: ${item.quantity}`));
       }
       
-      return currentCart;
+      return freshCart;
     });
   }, []);
 
@@ -227,19 +187,16 @@ export const useUnifiedCart = () => {
   const emptyCart = useCallback(() => {
     console.log('🛒 EMPTYING CART');
     setCartItems([]);
-    // DO NOT clear party-cart to prevent interference
   }, []);
 
-  // FIXED: Ultra-precise cart quantity lookup
+  // PRECISE INDEPENDENT QUANTITY LOOKUP
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
-    const searchKey = `${id}_${variant || 'none'}`;
-    const item = cartItems.find(item => {
-      const itemKey = `${item.id}_${item.variant || 'none'}`;
-      return itemKey === searchKey;
-    });
+    const item = cartItems.find(item => 
+      item.id === id && item.variant === variant
+    );
     
     const qty = item?.quantity || 0;
-    console.log(`🛒 GET QTY for ${searchKey}: ${qty}`);
+    console.log(`🛒 GET QTY for ${id}: ${qty}`);
     return qty;
   }, [cartItems]);
 
