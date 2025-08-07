@@ -61,21 +61,9 @@ export const PartyPlanner = () => {
   };
 
   const handleAddToCart = (eventName: string, category: string, items: CartItem[]) => {
-    console.log('PartyPlanner: Adding to cart for event:', eventName, 'category:', category, 'items:', items);
-    
-    const unifiedItems = items.map(item => ({
-      id: item.productId,
-      productId: item.productId,
-      title: item.title,
-      name: item.title,
-      price: item.price,
-      quantity: item.quantity,
-      image: item.image,
-      eventName,
-      category
-    }));
-    
-    addToCart(unifiedItems);
+    // DISABLED: Party planner cart functionality removed for simplicity
+    console.log('🛒 Party planner cart disabled');
+    return;
 
     // Update category selections in partyDetails
     setPartyDetails(prev => {
