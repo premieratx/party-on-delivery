@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle, Wine, Search } from 'lucide-react';
+import { ProductSearchBar } from './ProductSearchBar';
 import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
@@ -99,6 +100,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [visibleProductCounts, setVisibleProductCounts] = useState<{[collectionIndex: number]: number}>({});
   const [retryCount, setRetryCount] = useState(0);
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Use custom collections if provided, otherwise use default mapping
   const getStepMapping = () => {

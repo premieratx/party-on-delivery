@@ -2945,6 +2945,14 @@ export type Database = {
           product_count: number
         }[]
       }
+      get_dashboard_data_fixed: {
+        Args: {
+          dashboard_type: string
+          user_email?: string
+          affiliate_code?: string
+        }
+        Returns: Json
+      }
       get_group_order_details: {
         Args: { p_share_token: string }
         Returns: Json
