@@ -455,7 +455,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
           isOpen={!!selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onAddToCart={handleAddToCart}
-          selectedVariant={selectedVariants[selectedProduct.id] || selectedProduct.variants[0]?.id}
+          selectedVariant={selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id]) || selectedProduct.variants[0]}
           onUpdateQuantity={onUpdateQuantity}
           cartQuantity={getCartQuantity(selectedProduct.id, selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id])?.title !== 'Default Title' ? selectedProduct.variants.find(v => v.id === selectedVariants[selectedProduct.id])?.title : undefined)}
         />
