@@ -210,6 +210,15 @@ export default function CustomAppView() {
     setCurrentStep('tabs');
   };
   const handleGoHome = () => {
+    try {
+      const override = sessionStorage.getItem('home-override');
+      if (override) {
+        navigate(override);
+        return;
+      }
+    } catch (e) {
+      // ignore
+    }
     navigate('/');
   };
 
