@@ -8,6 +8,9 @@ interface CustomDeliveryStartScreenProps {
   subtitle?: string;
   logoUrl?: string;
   startButtonText?: string;
+  backgroundColor?: string;
+  primaryColor?: string;
+  textColor?: string;
   onStartOrder: () => void;
   onSearchProducts: () => void;
   onGoHome: () => void;
@@ -19,6 +22,9 @@ export function CustomDeliveryStartScreen({
   subtitle,
   logoUrl,
   startButtonText,
+  backgroundColor,
+  primaryColor,
+  textColor,
   onStartOrder, 
   onSearchProducts, 
   onGoHome 
@@ -71,6 +77,7 @@ export function CustomDeliveryStartScreen({
             onClick={onStartOrder}
             className="w-full h-12 text-base"
             variant="default"
+            style={{ backgroundColor: primaryColor || undefined }}
           >
             <ArrowRight className="w-4 h-4 mr-2" />
             {startButtonText || getButtonText()}

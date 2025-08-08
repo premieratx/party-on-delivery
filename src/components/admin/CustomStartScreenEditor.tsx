@@ -25,6 +25,7 @@ interface StartScreenConfig {
   text_color: string;
   logo_url?: string;
   custom_styles?: string;
+  website_url?: string;
 }
 
 interface CustomStartScreenEditorProps {
@@ -52,11 +53,12 @@ export function CustomStartScreenEditor({
     start_button_text: 'Start Order Now',
     search_button_text: 'Search All Products',
     home_button_text: 'Back to Main App',
-    background_color: '#ffffff',
+    background_color: '#0b0b0b',
     primary_color: '#3b82f6',
-    text_color: '#1f2937',
+    text_color: '#f8fafc',
     logo_url: '',
-    custom_styles: ''
+    custom_styles: '',
+    website_url: ''
   });
 
   const [saving, setSaving] = useState(false);
@@ -136,9 +138,41 @@ export function CustomStartScreenEditor({
   const getPreviewStyles = () => ({
     backgroundColor: config.background_color,
     color: config.text_color,
-    '--primary-color': config.primary_color
+    '--primary-color': config.primary_color as any
   } as React.CSSProperties);
 
+  const handleAutoStyle = async () => {
+    if (!config.website_url) {
+      toast.error('Please enter a website URL first');
+      return;
+    }
+    try {
+      setSaving(true);
+      const { data, error } = await supabase.functions.invoke('extract-website-brand', {
+        body: { url: config.website_url }
+      });
+      if (error || !data?.success) throw new Error(data?.error || error?.message || 'Brand extraction failed');
+
+      const title = data.title as string | undefined;
+      const description = data.description as string | undefined;
+      const colors = data.colors as { background: string; primary: string; text: string };
+
+      setConfig(prev => ({
+        ...prev,
+        custom_title: prev.custom_title || title || prev.app_name,
+        custom_subtitle: prev.custom_subtitle || (description ? description.slice(0, 90) : prev.custom_subtitle),
+        background_color: colors.background || prev.background_color,
+        primary_color: colors.primary || prev.primary_color,
+        text_color: colors.text || prev.text_color,
+      }));
+      toast.success('Styles applied from website');
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || 'Failed to extract brand styles. Make sure FIRECRAWL_API_KEY is configured.');
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -246,6 +280,25 @@ export function CustomStartScreenEditor({
                     <CardTitle className="text-lg">Branding</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    <div>
+                      <Label htmlFor="brand-url" className="flex items-center gap-2">
+                        <Link className="h-4 w-4" /> Brand Website URL (optional)
+                      </Label>
+                      <Input
+                        id="brand-url"
+                        type="url"
+                        placeholder="https://example.com"
+                        value={config.website_url || ''}
+                        onChange={(e) => setConfig(prev => ({ ...prev, website_url: e.target.value }))}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">We’ll auto-style your start screen to match this site (no changes until you click the button).</p>
+                      <div className="mt-2">
+                        <Button type="button" variant="secondary" onClick={handleAutoStyle} disabled={saving || !config.website_url}>
+                          <Sparkles className="h-4 w-4 mr-2" /> Auto-style from Website
+                        </Button>
+                      </div>
+                    </div>
+
                     <div>
                       <Label htmlFor="logo-upload">Start Screen Logo</Label>
                       <Input

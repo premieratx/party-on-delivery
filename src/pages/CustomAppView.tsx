@@ -336,6 +336,9 @@ export default function CustomAppView() {
           subtitle={(appConfig.start_screen_config as any)?.custom_subtitle || appConfig.start_screen_config?.subtitle || 'Powered by Party On Delivery'}
           logoUrl={appConfig.start_screen_config?.logo_url || appConfig.logo_url}
           startButtonText={(appConfig.start_screen_config as any)?.start_button_text}
+          backgroundColor={(appConfig.start_screen_config as any)?.background_color}
+          primaryColor={(appConfig.start_screen_config as any)?.primary_color}
+          textColor={(appConfig.start_screen_config as any)?.text_color}
           onStartOrder={() => {
             try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
             setCurrentStep('tabs');
