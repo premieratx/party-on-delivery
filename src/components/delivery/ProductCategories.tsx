@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -111,9 +111,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
   const isMobile = useIsMobile();
-  const [hideTabs, setHideTabs] = useState(false);
-  const lastYRef = useRef(0);
-  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Use custom collections if provided, otherwise use default mapping
   const getStepMapping = () => {
@@ -196,27 +193,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     };
   }, []);
 
-  // Mobile: auto-hide tabs and blur keyboard on scroll down
-  useEffect(() => {
-    if (!isMobile) return;
-    const onScroll = () => {
-      const y = window.scrollY;
-      const last = lastYRef.current;
-      if (y > last + 10) {
-        setHideTabs(true);
-        // Blur any focused input (minimize keyboard)
-        const ae = document.activeElement as HTMLElement | null;
-        if (ae && ae.tagName === 'INPUT') {
-          (ae as HTMLInputElement).blur();
-        }
-      } else if (y < last - 10 || y < 40) {
-        setHideTabs(false);
-      }
-      lastYRef.current = y;
-    };
-    window.addEventListener('scroll', onScroll, { passive: true } as EventListenerOptions);
-    return () => window.removeEventListener('scroll', onScroll as any);
-  }, [isMobile]);
   // Re-fetch collections when custom site data changes
   useEffect(() => {
     if (isCustomSite && customSiteCollections.length > 0) {
@@ -598,7 +574,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
               {customHeroHeading || customAppName || "Build Your Party Package"}
             </h1>
-            <p className="text-white/90 text-lg drop-shadow-lg">
+            <p className="text-white/90 text-sm lg:text-base drop-shadow-lg">
               {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
             </p>
           </div>
@@ -614,24 +590,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
 
           {/* Bottom: Typing Intro */}
-          <div className="mt-4">
-            <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" speedMs={130} />
+          <div className="mt-4 mb-8">
+            <TypingIntro text="Let's Build Your Party Package!" className="text-white text-xl lg:text-3xl" speedMs={130} />
           </div>
         </div>
       </div>
 
       {/* Sticky Header Section */}
-      {isMobile && hideTabs && (
-        <div className="sticky top-0 z-40 -mt-[10px]">
-          <button
-            onClick={() => setHideTabs(false)}
-            className="mx-auto my-1 block rounded-full bg-muted/80 text-foreground px-3 py-1 text-xs shadow hover:bg-muted"
-          >
-            Show categories
-          </button>
-        </div>
-      )}
-      <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px] transition-transform duration-300 ${isMobile && hideTabs ? '-translate-y-full' : 'translate-y-0'}`}>}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px]">
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-1 h-16 sm:h-20">
