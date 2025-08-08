@@ -77,7 +77,8 @@ export function CustomStartScreenEditor({
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .update({
-          start_screen_config: config
+          start_screen_config: config,
+          logo_url: config.logo_url || null
         } as any)
         .eq('id', appId)
         .select()

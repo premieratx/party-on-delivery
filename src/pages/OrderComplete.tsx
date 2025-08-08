@@ -162,21 +162,23 @@ const OrderComplete = () => {
 
   // Load app configuration from session context (for standardized UI)
   useEffect(() => {
-    const ctx = sessionStorage.getItem('custom-app-context');
-    if (!ctx) return;
-    try {
-      const { appSlug } = JSON.parse(ctx);
-      supabase
-        .from('delivery_app_variations')
-        .select('*')
-        .eq('app_slug', appSlug)
-        .eq('is_active', true)
-        .maybeSingle()
-        .then(({ data }) => setAppConfig(data))
-        .catch(() => {});
-    } catch (e) {
-      // ignore
-    }
+    const loadConfig = async () => {
+      const ctx = sessionStorage.getItem('custom-app-context');
+      if (!ctx) return;
+      try {
+        const { appSlug } = JSON.parse(ctx);
+        const { data } = await supabase
+          .from('delivery_app_variations')
+          .select('*')
+          .eq('app_slug', appSlug)
+          .eq('is_active', true)
+          .maybeSingle();
+        setAppConfig(data);
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadConfig();
   }, []);
 
   const cfg: any = appConfig || {};

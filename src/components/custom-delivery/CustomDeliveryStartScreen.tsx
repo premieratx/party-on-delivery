@@ -2,12 +2,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Search } from 'lucide-react';
-import logoImage from '@/assets/party-on-delivery-logo.png';
-import discoBall from '@/assets/disco-ball.gif';
 interface CustomDeliveryStartScreenProps {
   appName: string;
   title?: string;
   subtitle?: string;
+  logoUrl?: string;
+  startButtonText?: string;
   onStartOrder: () => void;
   onSearchProducts: () => void;
   onGoHome: () => void;
@@ -17,6 +17,8 @@ export function CustomDeliveryStartScreen({
   appName, 
   title,
   subtitle,
+  logoUrl,
+  startButtonText,
   onStartOrder, 
   onSearchProducts, 
   onGoHome 
@@ -42,26 +44,23 @@ export function CustomDeliveryStartScreen({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-2">
-      <Card className="max-w-sm w-full shadow-floating animate-fade-in">
-        <CardHeader className="text-center py-4">
-          <img 
-            src={discoBall}
-            alt="Animated disco ball"
-            className="w-12 h-12 mx-auto mb-2 animate-spin"
-          />
-          {/* Logo */}
-          <img 
-            src={logoImage} 
-            alt="Party On Delivery Logo" 
-            className="w-24 h-24 mx-auto mb-2"
-          />
+    <div className="min-h-screen bg-gradient-to-br from-background to-background flex items-center justify-center p-4">
+      <Card className="max-w-sm w-full shadow-floating animate-fade-in bg-card/90 backdrop-blur border border-primary/10">
+        <CardHeader className="text-center py-6">
+          {logoUrl && (
+            <img 
+              src={logoUrl}
+              alt={`${appName} logo`}
+              className="h-16 w-auto mx-auto mb-3 animate-fade-in pulse"
+              loading="eager"
+            />
+          )}
           <div className="space-y-1">
-            <h1 className="text-lg font-bold text-primary">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
               {title || appName}
             </h1>
             <CardTitle className="text-sm text-muted-foreground">
-              {subtitle || 'Powered by Party On Delivery'}
+              {subtitle || 'Exclusive concierge delivery'}
             </CardTitle>
           </div>
         </CardHeader>
@@ -74,7 +73,7 @@ export function CustomDeliveryStartScreen({
             variant="default"
           >
             <ArrowRight className="w-4 h-4 mr-2" />
-            {getButtonText()}
+            {startButtonText || getButtonText()}
           </Button>
 
           {/* Search Products button */}

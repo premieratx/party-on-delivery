@@ -173,15 +173,9 @@ export default function CustomAppView() {
     }
   }, [appContext]);
 
-  // Auto-open cover modal on first visit per app (unless disabled)
+  // Cover modal disabled per new design (single start screen only)
   useEffect(() => {
-    if (!appConfig) return;
-    const enabled = appConfig.main_app_config?.cover_modal?.enabled !== false;
-    const seenKey = `coverSeen_${appConfig.app_slug}`;
-    const seen = sessionStorage.getItem(seenKey);
-    if (enabled && !seen) {
-      setCoverOpen(true);
-    }
+    setCoverOpen(false);
   }, [appConfig]);
   // URL overrides: step and open cart for shareable links
   useEffect(() => {
@@ -333,32 +327,15 @@ export default function CustomAppView() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Concierge Cover Modal */}
-      <CustomDeliveryCoverModal
-        open={coverOpen}
-        onOpenChange={(open) => {
-          setCoverOpen(open);
-          if (appConfig && !open) {
-            try { sessionStorage.setItem(`coverSeen_${appConfig.app_slug}`, '1'); } catch {}
-          }
-        }}
-        onStartOrder={() => {
-          setCoverOpen(false);
-          try { if (appConfig) sessionStorage.setItem(`coverSeen_${appConfig.app_slug}`, '1'); } catch {}
-        }}
-        appName={appConfig.app_name}
-        logoUrl={appConfig.logo_url || appConfig.start_screen_config?.logo_url}
-        title={appConfig.main_app_config?.cover_modal?.title || appConfig.start_screen_config?.title || `Welcome to ${appConfig.app_name}`}
-        subtitle={appConfig.main_app_config?.cover_modal?.subtitle || "Austin's favorite alcohol delivery service"}
-        phone={appConfig.main_app_config?.cover_modal?.phone}
-        sms={appConfig.main_app_config?.cover_modal?.sms}
-      />
+      {/* Cover modal removed: using config-driven start screen only */}
 
       {currentStep === 'start' ? (
         <CustomDeliveryStartScreen
           appName={appConfig.app_name}
           title={(appConfig.start_screen_config as any)?.custom_title || appConfig.start_screen_config?.title}
           subtitle={(appConfig.start_screen_config as any)?.custom_subtitle || appConfig.start_screen_config?.subtitle || 'Powered by Party On Delivery'}
+          logoUrl={appConfig.start_screen_config?.logo_url || appConfig.logo_url}
+          startButtonText={(appConfig.start_screen_config as any)?.start_button_text}
           onStartOrder={() => {
             try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
             setCurrentStep('tabs');
