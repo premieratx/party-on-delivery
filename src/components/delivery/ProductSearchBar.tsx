@@ -29,6 +29,13 @@ interface ProductSearchBarProps {
   showDropdownResults?: boolean;
   onResultsChange?: (results: ShopifyProduct[], query: string) => void;
   onSearchingChange?: (searching: boolean) => void;
+  // Controlled mode (optional)
+  value?: string;
+  onQueryChange?: (value: string) => void;
+  // UX hooks
+  onFocus?: () => void;
+  inputRef?: React.RefObject<HTMLInputElement>;
+  inputClassName?: string;
 }
 
 export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
@@ -37,7 +44,12 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   className = "",
   showDropdownResults = true,
   onResultsChange,
-  onSearchingChange
+  onSearchingChange,
+  value,
+  onQueryChange,
+  onFocus,
+  inputRef,
+  inputClassName
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
