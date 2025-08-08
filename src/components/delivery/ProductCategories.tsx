@@ -109,6 +109,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
   const isMobile = useIsMobile();
   const [hideTabs, setHideTabs] = useState(false);
@@ -485,6 +486,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     setSearchResults(results);
     setSearchQuery(query);
     setIsSearching(false);
+    setShowSearch(true);
   };
 
   if (loading) {
@@ -591,6 +593,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               showDropdownResults={false}
               onResultsChange={handleSearchResultsChange}
               onSearchingChange={setIsSearching}
+              onFocus={() => setShowSearch(true)}
             />
           </div>
 
@@ -626,10 +629,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   key={step.handle}
                   onClick={() => {
                     setSelectedCategory(index);
+                    // When switching tabs, hide search results until user focuses search again
+                    setShowSearch(false);
                     const targetCollection = collections.find(c => c.handle === step.handle);
                     if (targetCollection) {
                       // No need to fetch, collection already loaded
                     }
+                    // Scroll to top for a clean view of the selected tab
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   className={`relative overflow-hidden rounded-lg transition-all duration-300 group flex-1 ${
                     isActive 
@@ -783,7 +790,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       <div className="max-w-7xl mx-auto p-4">
-        {searchQuery.trim() && (
+        {showSearch && searchQuery.trim() && (
           <div className="mb-6">
             <div className="text-sm text-muted-foreground mb-2">Found {searchResults.length} products</div>
             <div className="grid gap-1.5 lg:gap-3 grid-cols-3 lg:grid-cols-6">
@@ -811,9 +818,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             </Button>
                           </div>
                         ) : (
-                          <Button variant="default" size="sm" className="rounded-full" onClick={() => handleAddToCart(product, variant)}>
-                            Add
-                          </Button>
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
+                            <Plus size={16} />
+                          </button>
                         )}
                       </div>
                     </div>
@@ -824,7 +831,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         )}
         {/* Product Grid - smaller tiles for spirits, beer, and mixers & n/a, consistent for others */}
-        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${searchQuery.trim() ? 'hidden' : ''}`}>
+        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''}`}>
           {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;

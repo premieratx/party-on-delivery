@@ -356,9 +356,16 @@ serve(async (req) => {
         });
       }
     }
-
-    // FIXED: Driver tip should NOT be included in line items - it's separate from taxable subtotal
-
+    // Ensure driver tip is represented as a non-taxable line item (not taxed)
+    if (tipAmount > 0) {
+      lineItems.push({
+        title: 'Driver Tip',
+        price: tipAmount.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
     // Create order in Shopify with proper totals structure
     const orderData = {
       order: {
@@ -391,10 +398,6 @@ serve(async (req) => {
         // Set line items (products only - NO tip here)
         line_items: lineItems,
         
-        // Add tip as a separate line item (non-taxable)
-        ...(tipAmount > 0 && {
-          tip_amount: tipAmount.toFixed(2)
-        }),
         
         // Proper Shopify shipping lines structure
         shipping_lines: shippingFee > 0 ? [{

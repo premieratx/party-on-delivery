@@ -146,13 +146,15 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     <div className={`relative w-full ${className}`}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          type="text"
-          placeholder={placeholder}
-          value={searchQuery}
-          onChange={handleInputChange}
-          className="pl-10 pr-10 h-12 text-base border-2 border-primary/20 focus:border-primary"
-        />
+          <Input
+            type="text"
+            placeholder={placeholder}
+            value={searchQuery}
+            onChange={handleInputChange}
+            onFocus={onFocus}
+            ref={inputRef as any}
+            className={`pl-10 pr-10 h-12 text-base border-2 border-primary/20 focus:border-primary ${inputClassName || ''}`}
+          />
         {searchQuery && (
           <Button
             variant="ghost"

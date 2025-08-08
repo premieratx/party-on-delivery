@@ -59,13 +59,15 @@ export const AdminLogin: React.FC = () => {
     };
 
     // Set up auth listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       
       console.log('Admin auth state change:', event, !!session?.user?.email);
       
       if (event === 'SIGNED_IN' && session?.user?.email) {
-        await processAuth(session.user.email);
+        setTimeout(() => {
+          processAuth(session.user.email);
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
         authProcessed = false;
         setGoogleLoading(false);

@@ -71,13 +71,15 @@ const CustomerLogin = () => {
 
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
         
         console.log('Customer auth state change:', event, !!session);
         
         if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-          await processAuth(session);
+          setTimeout(() => {
+            processAuth(session);
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           authProcessed = false;
           setIsLoading(false);

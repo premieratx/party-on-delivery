@@ -303,14 +303,14 @@ export default function OptimizedProductSearch() {
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            size="sm"
-                            onClick={() => handleAddToCart(product)}
-                            className="w-full"
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Add
-                          </Button>
+                          <div className="flex justify-center">
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
                         )}
                       </CardContent>
                     </Card>

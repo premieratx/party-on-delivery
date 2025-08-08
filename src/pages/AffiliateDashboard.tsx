@@ -132,13 +132,12 @@ export const AffiliateDashboard: React.FC = () => {
 
   useEffect(() => {
     // Set up auth state listener for handling OAuth redirects
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('🔥 Auth state changed in dashboard:', event, session?.user?.email);
       
       if (event === 'SIGNED_IN' && session?.user?.email) {
         console.log('✅ User signed in via OAuth, loading affiliate data...');
-        // Load data immediately for OAuth redirects
-        loadAffiliateData();
+        setTimeout(() => loadAffiliateData(), 0);
       }
       
       if (event === 'SIGNED_OUT') {
