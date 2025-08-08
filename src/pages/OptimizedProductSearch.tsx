@@ -292,9 +292,9 @@ export default function OptimizedProductSearch() {
             )}
 
             {/* Products Grid */}
-            {filteredProducts.length > 0 ? (
+            {displayProducts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {filteredProducts.map((product) => {
+                {displayProducts.map((product) => {
                   const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
                   
                   return (
