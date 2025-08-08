@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -111,6 +111,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
   const isMobile = useIsMobile();
+  const [hideTabs, setHideTabs] = useState(false);
+  const lastYRef = useRef(0);
 
   // Use custom collections if provided, otherwise use default mapping
   const getStepMapping = () => {
@@ -169,6 +171,31 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     };
   }, []);
 
+  // Mobile: hide category tabs only while searching and user scrolls
+  useEffect(() => {
+    if (!isMobile) return;
+    // If not searching, keep tabs visible and remove listener
+    if (!(isSearching || (searchQuery && searchQuery.trim().length > 0))) {
+      setHideTabs(false);
+      return;
+    }
+    const onScroll = () => {
+      const y = window.scrollY;
+      const last = lastYRef.current;
+      if (y > last + 10) {
+        setHideTabs(true);
+        const ae = document.activeElement as HTMLElement | null;
+        if (ae && ae.tagName === 'INPUT') {
+          (ae as HTMLInputElement).blur();
+        }
+      } else if (y < last - 10 || y < 40) {
+        setHideTabs(false);
+      }
+      lastYRef.current = y;
+    };
+    window.addEventListener('scroll', onScroll as any, { passive: true } as any);
+    return () => window.removeEventListener('scroll', onScroll as any);
+  }, [isMobile, isSearching, searchQuery]);
 
   // Re-fetch collections when custom site data changes
   useEffect(() => {
@@ -563,6 +590,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               placeholder="Search all products..."
               showDropdownResults={false}
               onResultsChange={handleSearchResultsChange}
+              onSearchingChange={setIsSearching}
             />
           </div>
 
@@ -574,7 +602,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px]">
+      {isMobile && hideTabs && (
+        <div className="sticky top-0 z-40 -mt-[10px]">
+          <button
+            onClick={() => setHideTabs(false)}
+            className="mx-auto my-1 block rounded-full bg-muted/80 text-foreground px-3 py-1 text-xs shadow hover:bg-muted"
+          >
+            Show categories
+          </button>
+        </div>
+      )}
+      <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px] transition-transform duration-300 ${isMobile && hideTabs ? '-translate-y-full' : 'translate-y-0'}`}>
+
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-1 h-16 sm:h-20">
