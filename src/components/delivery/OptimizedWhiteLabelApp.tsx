@@ -117,6 +117,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [showCart, setShowCart] = useState(false);
+  const [flashIndex, setFlashIndex] = useState<number | null>(null);
 
   // Apply custom branding
   useEffect(() => {
@@ -179,6 +180,29 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   useEffect(() => {
     loadAppCollections();
   }, [loadAppCollections]);
+
+  // Entrance tab flashing sequence - left to right
+  useEffect(() => {
+    const sequence = [0, 0, 1, 2, 3, 4, 0];
+    let i = 0;
+    let timeoutId: number | undefined;
+
+    const step = () => {
+      if (i < sequence.length) {
+        setFlashIndex(sequence[i]);
+        i += 1;
+        timeoutId = window.setTimeout(step, 600);
+      } else {
+        setFlashIndex(null);
+      }
+    };
+
+    step();
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      setFlashIndex(null);
+    };
+  }, []);
 
   // Memoized tab data for performance
   const tabData = useMemo(() => {
@@ -316,7 +340,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
                 placeholder="Search all products..."
               />
               <div className="mt-4">
-                <TypingIntro text="Let's Build Your Party Package!" className="text-foreground text-lg lg:text-2xl" />
+                <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" speedMs={130} />
               </div>
             </div>
           </div>
@@ -333,7 +357,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
                 <TabsTrigger
                   key={index}
                   value={index.toString()}
-                  className="flex flex-col items-center gap-2 p-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  className={`flex flex-col items-center gap-2 p-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
                 >
                   <span className="font-medium">{tab.name}</span>
                   {tab.hasProducts && (

@@ -590,7 +590,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
           {/* Bottom: Typing Intro */}
           <div className="mt-4">
-            <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" />
+            <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" speedMs={130} />
           </div>
         </div>
       </div>
