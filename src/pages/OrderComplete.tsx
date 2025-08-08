@@ -16,7 +16,7 @@ const OrderComplete = () => {
     const loadOrderData = async () => {
       const urlParams = new URLSearchParams(location.search);
       const sessionId = urlParams.get('session_id');
-      const paymentIntentId = urlParams.get('payment_intent');
+      const paymentIntentId = urlParams.get('payment_intent') || urlParams.get('session_id');
       const orderNumber = urlParams.get('order_number');
       const errorParam = urlParams.get('error');
       

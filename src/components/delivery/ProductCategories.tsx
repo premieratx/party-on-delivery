@@ -570,7 +570,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {/* Centered Content - evenly spaced */}
         <div className="relative z-10 h-full flex flex-col justify-between text-center px-4 py-6">
           {/* Top: Logo + Titles */}
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 mt-6 md:mt-10">
             <img 
               src={customLogoUrl || partyOnDeliveryLogo}
               alt={customAppName || "Party on Delivery"} 
@@ -600,7 +600,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
 
           {/* Bottom: Typing Intro */}
-          <div className="mt-4 mb-8">
+          <div className="mt-2 mb-4">
             <TypingIntro text={customHeroScrollingText || "Let's Build Your Party Package!"} className="text-white text-xl lg:text-3xl" speedMs={130} />
           </div>
         </div>

@@ -774,7 +774,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           }
           
           console.log("🔥 NAVIGATING TO ORDER COMPLETE:", {
-            url: `/order-complete?order_number=${orderNumber}&session_id=${paymentIntentId}`,
+            url: `/order-complete?order_number=${orderNumber}&payment_intent=${paymentIntentId}`,
             orderNumber,
             sessionId: paymentIntentId
           });
@@ -789,7 +789,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           }
           
           // Navigate with order details for proper loading
-          navigate(`${successUrl}?order_number=${orderNumber}&session_id=${paymentIntentId}`);
+          navigate(`${successUrl}?order_number=${orderNumber}&payment_intent=${paymentIntentId}`);
           return; // Early return to prevent the default navigation
         } else {
           console.error("🔥 NO ORDER DATA IN RESPONSE:", response.data);

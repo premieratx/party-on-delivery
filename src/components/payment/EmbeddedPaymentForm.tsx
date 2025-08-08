@@ -291,10 +291,10 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           // Check if we should redirect to custom app success page
           if (customAppContext) {
             const appData = JSON.parse(customAppContext);
-            window.location.href = `/app/${appData.appSlug}/order-complete?session_id=${paymentIntentId}`;
+            window.location.href = `/app/${appData.appSlug}/order-complete?payment_intent=${paymentIntentId}`;
           } else {
             // Mobile or checkout page - navigate with payment intent
-            window.location.href = `/order-complete?session_id=${paymentIntentId}`;
+            window.location.href = `/order-complete?payment_intent=${paymentIntentId}`;
           }
         } else {
           // Desktop widget - use callback

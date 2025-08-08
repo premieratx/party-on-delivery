@@ -131,22 +131,22 @@ const ProductCard = memo(({
             </span>
             
             {quantity > 0 ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 w-8 p-0"
+                  className="h-7 w-7 md:h-8 md:w-8 p-0"
                   onClick={handleDecrement}
                 >
                   <Minus className="h-3 w-3" />
                 </Button>
-                <span className="text-sm font-medium min-w-[1.5rem] text-center">
+                <span className="text-xs md:text-sm font-medium min-w-[1.25rem] md:min-w-[1.5rem] text-center">
                   {quantity}
                 </span>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 w-8 p-0"
+                  className="h-7 w-7 md:h-8 md:w-8 p-0"
                   onClick={handleIncrement}
                 >
                   <Plus className="h-3 w-3" />
