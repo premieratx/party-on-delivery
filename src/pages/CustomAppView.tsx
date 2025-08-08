@@ -167,6 +167,8 @@ export default function CustomAppView() {
     if (appContext) {
       try {
         sessionStorage.setItem('custom-app-context', JSON.stringify(appContext));
+        // Session-based home override: make this delivery app the Home for the session
+        sessionStorage.setItem('home-override', `/app/${appContext.appSlug}`);
       } catch (error) {
         console.warn('Failed to store app context:', error);
       }

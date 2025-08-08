@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingBag, ArrowLeft } from 'lucide-react';
@@ -12,6 +13,7 @@ export const CheckoutKeepShopping: React.FC<CheckoutKeepShoppingProps> = ({
   onBackToProducts,
   appName = "the store"
 }) => {
+  const navigate = useNavigate();
   return (
     <div className="flex items-center justify-center min-h-[400px] p-8">
       <Card className="w-full max-w-md text-center">
@@ -26,7 +28,14 @@ export const CheckoutKeepShopping: React.FC<CheckoutKeepShoppingProps> = ({
         </CardHeader>
         <CardContent>
           <Button 
-            onClick={onBackToProducts}
+            onClick={() => {
+              const override = sessionStorage.getItem('home-override');
+              if (override) {
+                navigate(override);
+              } else {
+                onBackToProducts();
+              }
+            }}
             className="w-full"
             size="lg"
           >

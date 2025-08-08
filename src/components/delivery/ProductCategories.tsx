@@ -567,43 +567,43 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </button>
         </div>
 
-        {/* Centered Content - evenly spaced */}
-        <div className="relative z-10 h-full flex flex-col justify-between text-center px-4 py-6">
-          {/* Top: Logo + Titles */}
-          <div className="flex flex-col items-center gap-2 mt-6 md:mt-10">
-            <img 
-              src={customLogoUrl || partyOnDeliveryLogo}
-              alt={customAppName || "Party on Delivery"} 
-              className="h-16 lg:h-56 object-contain drop-shadow-lg"
-              onError={(e) => {
-                e.currentTarget.src = partyOnDeliveryLogo;
-              }}
-            />
-            <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
-              {customHeroHeading || (customAppName && customAppName.toLowerCase().includes('premier party cruises') ? "Premier Party Cruises Concierge Service" : customAppName) || "Build Your Party Package"}
-            </h1>
-            <p className="text-white/90 text-sm lg:text-base drop-shadow-lg">
-              {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
-            </p>
-          </div>
+          {/* Centered Content - evenly spaced */}
+          <div className="relative z-10 h-full flex flex-col justify-between text-center px-4 py-6">
+            {/* Top: Logo + Titles */}
+            <div className="flex flex-col items-center gap-2 mt-10 md:mt-14">
+              <img 
+                src={customLogoUrl || partyOnDeliveryLogo}
+                alt={customAppName || "Party on Delivery"} 
+                className="h-16 lg:h-56 object-contain drop-shadow-lg"
+                onError={(e) => {
+                  e.currentTarget.src = partyOnDeliveryLogo;
+                }}
+              />
+              <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
+                {customHeroHeading || (customAppName && customAppName.toLowerCase().includes('premier party cruises') ? "Premier Party Cruises Concierge Service" : customAppName) || "Build Your Party Package"}
+              </h1>
+              <p className="text-white/90 text-sm lg:text-base drop-shadow-lg">
+                {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
+              </p>
+            </div>
 
-          {/* Middle: Search */}
-          <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto">
-            <ProductSearchBar 
-              onProductSelect={handleSearchSelect}
-              placeholder="Search all products..."
-              showDropdownResults={false}
-              onResultsChange={handleSearchResultsChange}
-              onSearchingChange={setIsSearching}
-              onFocus={() => setShowSearch(true)}
-            />
-          </div>
+            {/* Middle: Search */}
+            <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto">
+              <ProductSearchBar 
+                onProductSelect={handleSearchSelect}
+                placeholder="Search all products..."
+                showDropdownResults={false}
+                onResultsChange={handleSearchResultsChange}
+                onSearchingChange={setIsSearching}
+                onFocus={() => setShowSearch(true)}
+              />
+            </div>
 
-          {/* Bottom: Typing Intro */}
-          <div className="mt-2 mb-4">
-            <TypingIntro text={customHeroScrollingText || "Let's Build Your Party Package!"} className="text-white text-xl lg:text-3xl" speedMs={130} />
+            {/* Bottom: Typing Intro */}
+            <div className="mt-1 mb-2">
+              <TypingIntro text={customHeroScrollingText || "Let's Build Your Party Package!"} className="text-white text-xl lg:text-3xl" speedMs={65} />
+            </div>
           </div>
-        </div>
       </div>
 
       {/* Sticky Header Section */}

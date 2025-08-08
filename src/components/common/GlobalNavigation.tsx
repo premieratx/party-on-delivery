@@ -105,6 +105,14 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
   };
 
   const handleNavigation = (href: string) => {
+    if (href === '/') {
+      const override = sessionStorage.getItem('home-override');
+      if (override) {
+        navigate(override);
+        setIsOpen(false);
+        return;
+      }
+    }
     navigate(href);
     setIsOpen(false);
   };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedShopify } from '@/utils/optimizedShopifyClient';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
+import { getInstantProducts } from '@/utils/instantCacheClient';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function OptimizedProductSearch() {
   const navigate = useNavigate();
@@ -38,17 +40,22 @@ export default function OptimizedProductSearch() {
   } = useOptimizedShopify();
   
   const [products, setProducts] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const productCollectionsRef = useRef<Record<string, string[]>>({});
+  const isMobile = useIsMobile();
+  const [hideFilters, setHideFilters] = useState(false);
+  const lastYRef = useRef(0);
 
-  // Categories for filtering
+  // Categories for filtering (map to collection handles for consistency)
   const categories = [
-    { id: 'all', label: 'All Products' },
-    { id: 'spirits', label: 'Spirits' },
-    { id: 'beer', label: 'Beer' },
-    { id: 'cocktails', label: 'Cocktails' },
-    { id: 'mixers', label: 'Mixers & N/A' },
-    { id: 'seltzers', label: 'Seltzers' }
+    { id: 'all', label: 'All Products', handle: null as string | null },
+    { id: 'spirits', label: 'Spirits', handle: 'spirits' },
+    { id: 'beer', label: 'Beer', handle: 'tailgate-beer' },
+    { id: 'cocktails', label: 'Cocktails', handle: 'cocktail-kits' },
+    { id: 'mixers', label: 'Mixers & N/A', handle: 'mixers-non-alcoholic' },
+    { id: 'seltzers', label: 'Seltzers', handle: 'seltzer-collection' }
   ];
 
   // Get cart item quantity for a specific product
@@ -116,46 +123,76 @@ export default function OptimizedProductSearch() {
     }
   };
 
+  // Load full catalog instantly for initial view and category filtering
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const instant = await getInstantProducts();
+        const collections = instant.collections || [];
+        const map: Record<string, any> = {};
+        const pcMap: Record<string, string[]> = {};
+        collections.forEach((col: any) => {
+          (col.products || []).forEach((p: any) => {
+            map[p.id] = map[p.id] || p;
+            pcMap[p.id] = pcMap[p.id] || [];
+            if (!pcMap[p.id].includes(col.handle)) pcMap[p.id].push(col.handle);
+          });
+        });
+        const list = Object.values(map);
+        if (!mounted) return;
+        productCollectionsRef.current = pcMap;
+        setAllProducts(list as any[]);
+        if (!searchQuery.trim()) {
+          setProducts(list as any[]);
+        }
+      } catch (e) {
+        console.error('Instant catalog load failed', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   // Debounced search
   useEffect(() => {
     if (searchQuery.trim()) {
       const timer = setTimeout(() => {
         handleSearch(searchQuery);
-      }, 500);
-      
+      }, 400);
       return () => clearTimeout(timer);
     } else {
-      setProducts([]);
+      // No query: show category view from full catalog
+      const current = categories.find(c => c.id === selectedCategory);
+      if (current && current.handle) {
+        const handle = current.handle;
+        const filtered = allProducts.filter(p => (productCollectionsRef.current[p.id] || []).includes(handle));
+        setProducts(filtered);
+      } else {
+        setProducts(allProducts);
+      }
     }
-  }, [searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, selectedCategory, allProducts]);
 
-  // Filter products by category
-  const filteredProducts = products.filter(product => {
-    if (selectedCategory === 'all') return true;
-    
-    const title = product.title.toLowerCase();
-    const productType = product.product_type?.toLowerCase() || '';
-    
-    switch (selectedCategory) {
-      case 'spirits':
-        return title.includes('whiskey') || title.includes('vodka') || title.includes('rum') || 
-               title.includes('gin') || title.includes('tequila') || productType.includes('spirit');
-      case 'beer':
-        return title.includes('beer') || title.includes('ale') || title.includes('lager') || 
-               productType.includes('beer');
-      case 'cocktails':
-        return title.includes('cocktail') || title.includes('mix') || title.includes('kit') ||
-               productType.includes('cocktail');
-      case 'mixers':
-        return title.includes('mixer') || title.includes('soda') || title.includes('juice') ||
-               title.includes('water') || productType.includes('mixer');
-      case 'seltzers':
-        return title.includes('seltzer') || title.includes('spiked') || title.includes('hard seltzer') ||
-               productType.includes('seltzer');
-      default:
-        return true;
-    }
-  });
+  // Mobile: hide filters on scroll to maximize products shown
+  useEffect(() => {
+    if (!isMobile) return;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const last = lastYRef.current;
+      if (y > last + 10) {
+        setHideFilters(true);
+      } else if (y < last - 10 || y < 40) {
+        setHideFilters(false);
+      }
+      lastYRef.current = y;
+    };
+    window.addEventListener('scroll', onScroll as any, { passive: true } as any);
+    return () => window.removeEventListener('scroll', onScroll as any);
+  }, [isMobile]);
+
+  // Displayed products: when searching, ignore category filters (search trumps filters)
+  const displayProducts = products;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -210,7 +247,7 @@ export default function OptimizedProductSearch() {
       </div>
 
       {/* Category Filter */}
-      <div className="sticky top-28 z-20 bg-background/95 backdrop-blur-md border-b">
+      <div className={`sticky top-28 z-20 bg-background/95 backdrop-blur-md border-b transition-transform duration-300 ${isMobile && hideFilters ? '-translate-y-full' : 'translate-y-0'}`}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((category) => (
@@ -248,7 +285,7 @@ export default function OptimizedProductSearch() {
             {searchQuery && (
               <div className="mb-6">
                 <p className="text-sm text-muted-foreground">
-                  {filteredProducts.length} results for "{searchQuery}"
+                  {displayProducts.length} results for "{searchQuery}"
                   {selectedCategory !== 'all' && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
                 </p>
               </div>

@@ -23,8 +23,10 @@ const CustomerLogin = () => {
 
     const processAuth = async (session: any) => {
       if (!mounted || authProcessed || !session?.user?.email) return;
+      if (sessionStorage.getItem('customer-auth-processed') === '1') return;
       
       authProcessed = true;
+      sessionStorage.setItem('customer-auth-processed', '1');
       console.log('Processing customer auth for:', session.user.email);
       setIsLoading(false);
       
@@ -82,6 +84,7 @@ const CustomerLogin = () => {
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           authProcessed = false;
+          sessionStorage.removeItem('customer-auth-processed');
           setIsLoading(false);
         }
       }
