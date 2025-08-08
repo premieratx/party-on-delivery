@@ -116,6 +116,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const isMobile = useIsMobile();
   const [hideTabs, setHideTabs] = useState(false);
   const lastYRef = useRef(0);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 16);
+    };
+    window.addEventListener('scroll', onScroll as any, { passive: true } as any);
+    return () => window.removeEventListener('scroll', onScroll as any);
+  }, []);
 
   // Use custom collections if provided, otherwise use default mapping
   const getStepMapping = () => {
@@ -174,14 +183,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     };
   }, []);
 
-  // Mobile: hide category tabs only while searching and user scrolls
+  // Mobile: hide category tabs while scrolling down; reveal when scrolling up or near top
   useEffect(() => {
     if (!isMobile) return;
-    // If not searching, keep tabs visible and remove listener
-    if (!(isSearching || (searchQuery && searchQuery.trim().length > 0))) {
-      setHideTabs(false);
-      return;
-    }
     const onScroll = () => {
       const y = window.scrollY;
       const last = lastYRef.current;
@@ -198,7 +202,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     };
     window.addEventListener('scroll', onScroll as any, { passive: true } as any);
     return () => window.removeEventListener('scroll', onScroll as any);
-  }, [isMobile, isSearching, searchQuery]);
+  }, [isMobile]);
 
   // Re-fetch collections when custom site data changes
   useEffect(() => {
@@ -613,11 +617,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </button>
         </div>
       )}
-      <div className={`sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b -mt-[10px] transition-transform duration-300 ${isMobile && hideTabs ? '-translate-y-full' : 'translate-y-0'}`}>
+      <div className={`sticky top-0 md:top-16 z-50 bg-background/95 backdrop-blur-sm border-b -mt-[10px] transition-transform duration-300 ${isMobile && hideTabs ? '-translate-y-full' : 'translate-y-0'}`}>
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex gap-1 h-16 sm:h-20">
+          <div className={`flex gap-1 h-14 ${scrolled ? 'sm:h-14' : 'sm:h-20'}`}>
             {stepMapping.slice(0, 5).map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
@@ -653,7 +657,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     {/* Desktop layout: large title centered */}
                     <div className="hidden sm:block relative w-full h-full">
                       <div className="flex items-center justify-center h-full gap-2">
-                        <div className={`font-bold text-xl text-center ${
+                        <div className={`font-bold ${scrolled ? 'text-lg' : 'text-xl'} text-center ${
                           isActive ? 'text-primary' : 'text-foreground'
                         }`}>{step.title}</div>
                       </div>
