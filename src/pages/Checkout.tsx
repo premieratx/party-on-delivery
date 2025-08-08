@@ -120,7 +120,11 @@ export const Checkout = () => {
               instructions: deliveryInfo.instructions || ''
             }}
             totalPrice={totalAmount}
-            onBack={() => navigate('/')}
+            onBack={() => {
+              const override = (() => { try { return sessionStorage.getItem('home-override'); } catch { return null; } })();
+              const referrer = localStorage.getItem('deliveryAppReferrer');
+              navigate(override || referrer || '/');
+            }}
             onDeliveryInfoChange={(info) => {
               setDeliveryInfo({
                 date: info.date,

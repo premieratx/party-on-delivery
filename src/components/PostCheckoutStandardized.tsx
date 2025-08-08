@@ -40,7 +40,7 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
       }
     }
   };
-
+  const backUrl = (() => { try { return sessionStorage.getItem('home-override') || localStorage.getItem('deliveryAppReferrer') || '/'; } catch { return '/'; } })();
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4"
@@ -101,7 +101,7 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
                   <Link to="/customer/login">Manage Order</Link>
                 </Button>
                 <Button variant="outline" asChild className="flex-1">
-                  <Link to="/">Continue Shopping</Link>
+                  <Link to={backUrl}>Continue Shopping</Link>
                 </Button>
               </div>
             </div>

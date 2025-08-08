@@ -95,7 +95,7 @@ export const CustomPostCheckout: React.FC<CustomPostCheckoutProps> = ({
                 <Link to="/customer/login">Manage Order</Link>
               </Button>
               <Button variant="outline" asChild className="flex-1">
-                <Link to="/">Continue Shopping</Link>
+                <Link to={backUrl}>Continue Shopping</Link>
               </Button>
             </div>
           </div>
