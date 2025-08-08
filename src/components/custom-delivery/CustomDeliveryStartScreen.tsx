@@ -57,7 +57,7 @@ export function CustomDeliveryStartScreen({
             <img 
               src={logoUrl}
               alt={`${appName} logo`}
-              className="h-16 w-auto mx-auto mb-3 animate-fade-in pulse"
+              className="h-11 w-auto mx-auto mb-3 animate-fade-in pulse"
               loading="eager"
             />
           )}

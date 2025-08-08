@@ -68,7 +68,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                   <img
                     src={logoUrl || partyLogo}
                     alt={`${appName} logo - Party On Delivery`}
-                    className="h-10 w-auto drop-shadow"
+                    className="h-7 w-auto drop-shadow"
                     loading="eager"
                   />
                 </div>

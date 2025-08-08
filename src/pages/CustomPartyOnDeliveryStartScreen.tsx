@@ -92,7 +92,7 @@ const CustomPartyOnDeliveryStartScreen = () => {
               <img 
                 src={customLogo} 
                 alt="Party On Delivery & Concierge"
-                className="h-20 w-20 rounded-full object-cover"
+                className="h-14 w-14 rounded-full object-cover"
               />
             </div>
 

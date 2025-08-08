@@ -574,7 +574,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <img 
               src={customLogoUrl || partyOnDeliveryLogo}
               alt={customAppName || "Party on Delivery"} 
-              className="h-24 lg:h-80 object-contain drop-shadow-lg"
+              className="h-16 lg:h-56 object-contain drop-shadow-lg"
               onError={(e) => {
                 e.currentTarget.src = partyOnDeliveryLogo;
               }}
