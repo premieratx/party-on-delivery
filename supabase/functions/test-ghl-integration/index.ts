@@ -22,9 +22,31 @@ serve(async (req) => {
       throw new Error("GHL_API_KEY not configured");
     }
 
-    // Test phone number (replace with actual test number)
-    const testPhone = "+15125767975";
-    const testMessage = `🎉 GHL Integration Test - ${new Date().toLocaleString()}
+    // Try to read optional phone/email/message from request body
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch (_) {
+      // no body provided
+    }
+
+    const inputPhone: string | undefined = body?.phone;
+    const inputEmail: string | undefined = body?.email;
+    const inputMessage: string | undefined = body?.message;
+
+    // Helper: format phone to E.164 (default to +1 if 10 digits provided)
+    const formatPhone = (p?: string | null) => {
+      if (!p) return null;
+      const digits = p.replace(/\D/g, '');
+      if (p.startsWith('+')) return p;
+      if (digits.length === 10) return `+1${digits}`;
+      return `+${digits}`; // fallback
+    };
+
+    // Test phone number (fallback to default if none provided)
+    const testPhone = formatPhone(inputPhone) || "+15125767975";
+
+    const testMessage = (inputMessage || `🎉 GHL Integration Test - ${new Date().toLocaleString()}
 
 This is a test message to verify the GHL/Leadconnector SMS integration is working properly.
 
@@ -32,8 +54,9 @@ Test Details:
 - Function: test-ghl-integration
 - Time: ${new Date().toISOString()}
 - Status: Integration Active ✅
+${inputEmail ? `- Email: ${inputEmail}` : ''}
 
-If you received this message, the SMS integration is functioning correctly!`;
+If you received this message, the SMS integration is functioning correctly!`).toString();
 
     logStep('Attempting to send test SMS via GHL API');
 
