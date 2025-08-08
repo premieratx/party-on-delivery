@@ -558,35 +558,39 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </button>
         </div>
 
-        {/* Centered Content */}
-        <div className="relative z-10 h-full flex items-center justify-center flex-col text-center px-4">
-          <img 
-            src={customLogoUrl || partyOnDeliveryLogo}
-            alt={customAppName || "Party on Delivery"} 
-            className="h-24 lg:h-80 object-contain mb-4 drop-shadow-lg"
-            onError={(e) => {
-              // Fallback to default logo if custom logo fails to load
-              e.currentTarget.src = partyOnDeliveryLogo;
-            }}
-          />
-          <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2 drop-shadow-lg">
-            {customHeroHeading || customAppName || "Build Your Party Package"}
-          </h1>
-          <p className="text-white/90 text-lg drop-shadow-lg mb-4">
-            {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
-          </p>
+        {/* Centered Content - evenly spaced */}
+        <div className="relative z-10 h-full flex flex-col justify-between text-center px-4 py-6">
+          {/* Top: Logo + Titles */}
+          <div className="flex flex-col items-center gap-2">
+            <img 
+              src={customLogoUrl || partyOnDeliveryLogo}
+              alt={customAppName || "Party on Delivery"} 
+              className="h-24 lg:h-80 object-contain drop-shadow-lg"
+              onError={(e) => {
+                e.currentTarget.src = partyOnDeliveryLogo;
+              }}
+            />
+            <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
+              {customHeroHeading || customAppName || "Build Your Party Package"}
+            </h1>
+            <p className="text-white/90 text-lg drop-shadow-lg">
+              {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
+            </p>
+          </div>
 
-          {/* Search + Intro */}
-          <div className="w-[calc(100%-2rem)] max-w-2xl mt-[50px]">
+          {/* Middle: Search */}
+          <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto">
             <ProductSearchBar 
               onProductSelect={handleSearchSelect}
               placeholder="Search all products..."
               showDropdownResults={false}
               onResultsChange={handleSearchResultsChange}
             />
-            <div className="mt-4">
-              <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" />
-            </div>
+          </div>
+
+          {/* Bottom: Typing Intro */}
+          <div className="mt-4">
+            <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" />
           </div>
         </div>
       </div>
