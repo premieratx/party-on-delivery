@@ -75,6 +75,31 @@ const OrderComplete = () => {
           // Clear the session data so it doesn't persist
           sessionStorage.removeItem('checkout-completion-data');
           
+          // Process order on server if not already processed (mobile redirect path)
+          const piId = paymentIntentId || sessionId || parsedData.paymentIntentId;
+          const alreadyProcessed = localStorage.getItem('processedPaymentIntent') === piId;
+          if (piId && !alreadyProcessed) {
+            try {
+              const { data: processed, error: procError } = await supabase.functions.invoke('process-order-complete', {
+                body: { paymentIntentId: piId }
+              });
+              if (procError) {
+                console.error('❌ process-order-complete error:', procError);
+              } else {
+                console.log('✅ process-order-complete success:', processed);
+                if (processed?.order?.order_number) {
+                  setOrderData((prev: any) => ({
+                    ...prev,
+                    order_number: processed.order.order_number
+                  }));
+                  localStorage.setItem('processedPaymentIntent', piId);
+                }
+              }
+            } catch (e) {
+              console.error('❌ Failed to process order on complete page:', e);
+            }
+          }
+          
           // Background sync to get real order data with share token (optional)
           setTimeout(async () => {
             let foundOrder = null;
@@ -140,6 +165,30 @@ const OrderComplete = () => {
             payment_intent_id: paymentIntentId
           });
           setIsLoading(false);
+          
+          // Ensure server-side processing triggers if we landed here directly
+          const piId = paymentIntentId || sessionId;
+          if (piId) {
+            try {
+              const { data: processed, error: procError } = await supabase.functions.invoke('process-order-complete', {
+                body: { paymentIntentId: piId }
+              });
+              if (procError) {
+                console.error('❌ process-order-complete error:', procError);
+              } else {
+                console.log('✅ process-order-complete success:', processed);
+                if (processed?.order?.order_number) {
+                  setOrderData((prev: any) => ({
+                    ...prev,
+                    order_number: processed.order.order_number
+                  }));
+                  localStorage.setItem('processedPaymentIntent', piId);
+                }
+              }
+            } catch (e) {
+              console.error('❌ Failed to process order on complete page (no session data):', e);
+            }
+          }
           
           toast({
             title: "🎉 Order Complete!",

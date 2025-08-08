@@ -703,41 +703,26 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           affiliateCode
         });
 
-        const response = await supabase.functions.invoke('create-shopify-order', {
+        const response = await supabase.functions.invoke('process-order-complete', {
           body: { 
             paymentIntentId,
-            customerInfo,
-            addressInfo,
-            cartItems,
-            deliveryInfo: {
-              ...deliveryInfo,
-              address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`
-            },
             isAddingToOrder,
-            useSameAddress,
-            // Pass pricing details for verification
-            subtotal: discountedSubtotal,
-            deliveryFee: finalDeliveryFee,
-            salesTax: salesTax,
-            tipAmount: tipAmount,
-            appliedDiscount: appliedDiscount,
-            affiliateCode: affiliateCode
+            useSameAddress
           }
         });
         
-        console.log("🔥 CREATE-SHOPIFY-ORDER RESPONSE:", response);
+        console.log("🔥 PROCESS-ORDER-COMPLETE RESPONSE:", response);
         
         if (response.error) {
-          console.error("🔥 ERROR from create-shopify-order:", response.error);
-          throw new Error(`Order creation failed: ${response.error.message || response.error}`);
+          console.error("🔥 ERROR from process-order-complete:", response.error);
+          throw new Error(`Order processing failed: ${response.error.message || response.error}`);
         }
         
         if (response.data?.order) {
           const orderNumber = response.data.order.order_number || response.data.order.id;
-          console.log("🔥 ORDER CREATED SUCCESSFULLY:", {
+          console.log("🔥 ORDER PROCESSED SUCCESSFULLY:", {
             orderNumber,
-            orderId: response.data.order.id,
-            shopifyOrderId: response.data.shopifyOrderId
+            orderId: response.data.order.id
           });
           
           const orderInfo = {
@@ -783,6 +768,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             pageContext: 'order-completion'
           });
           
+          // Mark this payment intent as processed to avoid double-processing on mobile redirect
+          if (paymentIntentId) {
+            localStorage.setItem('processedPaymentIntent', paymentIntentId);
+          }
+          
           console.log("🔥 NAVIGATING TO ORDER COMPLETE:", {
             url: `/order-complete?order_number=${orderNumber}&session_id=${paymentIntentId}`,
             orderNumber,
@@ -803,13 +793,13 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           return; // Early return to prevent the default navigation
         } else {
           console.error("🔥 NO ORDER DATA IN RESPONSE:", response.data);
-          throw new Error("No order data received from order creation");
+          throw new Error("No order data received from order processing");
         }
       } catch (error) {
         console.error('🔥 CRITICAL ERROR in handlePaymentSuccess:', error);
         console.error('🔥 ERROR DETAILS:', {
-          message: error.message,
-          stack: error.stack,
+          message: (error as any).message,
+          stack: (error as any).stack,
           paymentIntentId,
           customerInfo,
           cartItems: cartItems.length
