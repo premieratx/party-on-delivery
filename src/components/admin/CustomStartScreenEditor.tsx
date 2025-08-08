@@ -77,7 +77,7 @@ export function CustomStartScreenEditor({
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .update({
-          custom_post_checkout_config: config
+          start_screen_config: config
         } as any)
         .eq('id', appId)
         .select()
@@ -113,6 +113,23 @@ export function CustomStartScreenEditor({
     setShowTemplateBuilder(false);
     setCurrentTab('editor');
     toast.success(`Template "${template.name}" applied successfully!`);
+  };
+
+  const handleLogoUpload = async (file: File) => {
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `start-screen-${appId}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('delivery-app-logos')
+        .upload(fileName, file, { upsert: true, cacheControl: '3600' });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('delivery-app-logos').getPublicUrl(fileName);
+      setConfig(prev => ({ ...prev, logo_url: data.publicUrl }));
+      toast.success('Logo uploaded');
+    } catch (e: any) {
+      console.error('Logo upload failed:', e);
+      toast.error(e.message || 'Logo upload failed');
+    }
   };
 
   const getPreviewStyles = () => ({
@@ -202,6 +219,16 @@ export function CustomStartScreenEditor({
                     </div>
 
                     <div>
+                      <Label htmlFor="custom-subtitle">Subtitle</Label>
+                      <Input
+                        id="custom-subtitle"
+                        value={config.custom_subtitle || ''}
+                        onChange={(e) => setConfig(prev => ({ ...prev, custom_subtitle: e.target.value }))}
+                        placeholder="Austin's favorite alcohol delivery service"
+                      />
+                    </div>
+
+                    <div>
                       <Label htmlFor="start-button">Start Button Text</Label>
                       <Input
                         id="start-button"
@@ -210,6 +237,32 @@ export function CustomStartScreenEditor({
                         placeholder="Start Order Now"
                       />
                     </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Branding</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <Label htmlFor="logo-upload">Start Screen Logo</Label>
+                      <Input
+                        id="logo-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleLogoUpload(file);
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">PNG/JPG/SVG. Optimized for mobile.</p>
+                    </div>
+                    {config.logo_url && (
+                      <div className="mt-2">
+                        <img src={config.logo_url} alt="Start screen logo preview" className="h-12 w-auto" />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -223,9 +276,15 @@ export function CustomStartScreenEditor({
                     <div className="border rounded-lg overflow-hidden" style={getPreviewStyles()}>
                       <div className="min-h-[400px] flex items-center justify-center p-4">
                         <div className="max-w-sm w-full text-center space-y-4">
+                          <div className="mx-auto mb-2 h-10 w-auto flex items-center justify-center">
+                            {config.logo_url && (
+                              <img src={config.logo_url} alt="Logo" className="h-10 w-auto" />
+                            )}
+                          </div>
                           <h1 className="text-lg font-bold" style={{ color: config.text_color }}>
                             {config.custom_title || config.app_name}
                           </h1>
+                          <p className="text-sm opacity-80">{config.custom_subtitle}</p>
                           <button 
                             className="w-full h-12 text-base rounded-lg text-white font-medium"
                             style={{ backgroundColor: config.primary_color }}

@@ -38,6 +38,7 @@ interface DeliveryAppConfig {
   start_screen_config?: {
     title?: string;
     subtitle?: string;
+    logo_url?: string;
   };
   main_app_config?: {
     hero_heading: string;
@@ -89,11 +90,8 @@ const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null
           icon?: string;
         }>;
       },
-      main_app_config: data.main_app_config as {
-        hero_heading: string;
-        hero_subheading?: string;
-        hero_scrolling_text?: string;
-      } | undefined,
+      start_screen_config: data.start_screen_config as any,
+      main_app_config: data.main_app_config as any,
       post_checkout_config: data.post_checkout_config as {
         heading: string;
         subheading: string;
@@ -323,6 +321,27 @@ export default function CustomAppView() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Concierge Cover Modal */}
+      <CustomDeliveryCoverModal
+        open={coverOpen}
+        onOpenChange={(open) => {
+          setCoverOpen(open);
+          if (appConfig && !open) {
+            try { sessionStorage.setItem(`coverSeen_${appConfig.app_slug}`, '1'); } catch {}
+          }
+        }}
+        onStartOrder={() => {
+          setCoverOpen(false);
+          try { if (appConfig) sessionStorage.setItem(`coverSeen_${appConfig.app_slug}`, '1'); } catch {}
+        }}
+        appName={appConfig.app_name}
+        logoUrl={appConfig.logo_url || appConfig.start_screen_config?.logo_url}
+        title={appConfig.main_app_config?.cover_modal?.title || appConfig.start_screen_config?.title || `Welcome to ${appConfig.app_name}`}
+        subtitle={appConfig.main_app_config?.cover_modal?.subtitle || "Austin's favorite alcohol delivery service"}
+        phone={appConfig.main_app_config?.cover_modal?.phone}
+        sms={appConfig.main_app_config?.cover_modal?.sms}
+      />
+
       {/* Direct to Tabs Page - No Start Screen */}
       <CustomDeliveryTabsPage
         appName={appConfig.app_name}

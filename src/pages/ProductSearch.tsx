@@ -11,6 +11,7 @@ import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
+import { getInstantProducts } from "@/utils/instantCacheClient";
 
 import { useNavigate } from "react-router-dom";
 import { UnifiedCart } from "@/components/common/UnifiedCart";
@@ -63,75 +64,89 @@ export const ProductSearch = () => {
 
   const loadInstantProducts = async () => {
     const startTime = performance.now();
-    
     try {
       setLoading(true);
-      
-      // ULTRA FAST: Use optimized system with aggressive caching
-      const { data: optimizedData } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
-        body: { 
-          lightweight: true,
-          includeImages: true,
-          limit: 200 // More products for search
-        }
-      });
-      
-      if (optimizedData?.success && optimizedData?.products?.length > 0) {
-        console.log('⚡ Ultra-fast search page load from optimized system');
-        
-        // Quick transform with category inference
-        const enrichedProducts = optimizedData.products.map((product: any) => ({
-          id: product.id,
-          title: product.title,
-          price: parseFloat(product.price || '0'),
-          images: [product.image, ...(product.images || [])].filter(Boolean),
-          description: product.description || '',
-          category: inferProductCategory(product.title, product.handle || ''),
-          subcategory: inferSubcategory(product.title),
-          variants: product.variants || []
-        }));
-        
-        setAllProducts(enrichedProducts);
-        
+
+      // 1) Try instant cache (race with very short timeout)
+      const instant = await getInstantProducts({ timeoutMs: 350 });
+      if (instant?.products && instant.products.length > 0) {
+        const enriched = instant.products.map((p: any) => {
+          const img = p.image || (p.images?.[0] ?? '');
+          return {
+            id: p.id,
+            title: p.title,
+            price: parseFloat(p.price || p.variants?.[0]?.price || '0'),
+            image: img,
+            images: [img, ...(p.images || []).filter(Boolean)],
+            description: p.description || '',
+            category: inferProductCategory(p.title, p.handle || ''),
+            subcategory: inferSubcategory(p.title),
+            variants: p.variants || []
+          };
+        });
+        setAllProducts(enriched);
         const loadTime = performance.now() - startTime;
-        console.log(`⚡ SEARCH PAGE ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${enrichedProducts.length} products`);
-        
+        console.log(`⚡ SEARCH PAGE INSTANT-CACHE LOAD: ${Math.round(loadTime)}ms - ${enriched.length} products`);
         setLoading(false);
         return;
       }
 
-      // Fallback: Try collections API (slower but more complete)
+      // 2) Optimized edge function
+      const { data: optimizedData } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
+        body: { lightweight: true, includeImages: true, limit: 200 }
+      });
+
+      if (optimizedData?.success && optimizedData?.products?.length > 0) {
+        const enrichedProducts = optimizedData.products.map((product: any) => {
+          const img = product.image || (product.images?.[0] ?? '');
+          return {
+            id: product.id,
+            title: product.title,
+            price: parseFloat(product.price || '0'),
+            image: img,
+            images: [img, ...(product.images || []).filter(Boolean)],
+            description: product.description || '',
+            category: inferProductCategory(product.title, product.handle || ''),
+            subcategory: inferSubcategory(product.title),
+            variants: product.variants || []
+          };
+        });
+        setAllProducts(enrichedProducts);
+        const loadTime = performance.now() - startTime;
+        console.log(`⚡ SEARCH PAGE ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${enrichedProducts.length} products`);
+        setLoading(false);
+        return;
+      }
+
+      // 3) Fallback: Collections API
       console.log('📦 Loading from collections fallback...');
       const { data: collectionsData, error } = await supabase.functions.invoke('get-all-collections');
-      
       if (error) throw error;
-      
       if (collectionsData?.collections) {
         setCollections(collectionsData.collections);
-        
-        // Extract and enrich products
         const allProducts = collectionsData.collections.reduce((acc: any[], collection: any) => {
           if (collection.products) {
-            acc.push(...collection.products.map((p: any) => ({
-              id: p.id,
-              title: p.title,
-              price: parseFloat(p.price || p.variants?.[0]?.price || '0'),
-              images: p.images || [p.image].filter(Boolean),
-              description: p.description || '',
-              category: inferProductCategory(p.title, collection.handle),
-              subcategory: inferSubcategory(p.title),
-              variants: p.variants || []
-            })));
+            acc.push(...collection.products.map((p: any) => {
+              const img = p.image || (p.images?.[0] ?? '');
+              return {
+                id: p.id,
+                title: p.title,
+                price: parseFloat(p.price || p.variants?.[0]?.price || '0'),
+                image: img,
+                images: [img, ...(p.images || []).filter(Boolean)],
+                description: p.description || '',
+                category: inferProductCategory(p.title, collection.handle),
+                subcategory: inferSubcategory(p.title),
+                variants: p.variants || []
+              };
+            }));
           }
           return acc;
         }, []);
-        
         setAllProducts(allProducts);
-        
         const loadTime = performance.now() - startTime;
         console.log(`📦 Search page fallback load: ${Math.round(loadTime)}ms - ${allProducts.length} products`);
       }
-      
     } catch (error: any) {
       console.error('Error loading products:', error);
       toast({

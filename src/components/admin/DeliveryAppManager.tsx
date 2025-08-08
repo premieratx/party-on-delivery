@@ -872,6 +872,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                         setTabs(homepageApp.collections_config.tabs);
                         setStartScreenTitle((homepageApp as any).start_screen_config?.title || '');
                         setStartScreenSubtitle((homepageApp as any).start_screen_config?.subtitle || '');
+                        setLogoUrl((homepageApp as any).start_screen_config?.logo_url || (homepageApp as any).logo_url || '');
                         setMainAppHeroHeading((homepageApp as any).main_app_config?.hero_heading || '');
                         setHeroHeadline((homepageApp as any).main_app_config?.hero_heading || '');
                         setHeroSubheading((homepageApp as any).main_app_config?.hero_subheading || '');
@@ -991,7 +992,57 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
               ))}
             </div>
 
-            {/* Hero Section Customization - Removed Start Screen */}
+            {/* Start Screen Customization */}
+            <Card className="border-blue-200 bg-blue-50/40">
+              <CardHeader>
+                <CardTitle className="text-blue-700">Start Screen Customization</CardTitle>
+                <p className="text-sm text-blue-600">Title, subtitle, and start screen logo</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start-title">Start Screen Title</Label>
+                    <Input
+                      id="start-title"
+                      value={startScreenTitle}
+                      onChange={(e) => setStartScreenTitle(e.target.value)}
+                      placeholder="Welcome to ..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="start-subtitle">Start Screen Subtitle</Label>
+                    <Input
+                      id="start-subtitle"
+                      value={startScreenSubtitle}
+                      onChange={(e) => setStartScreenSubtitle(e.target.value)}
+                      placeholder="Austin's favorite alcohol delivery service"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="start-logo-upload">Start Screen Logo</Label>
+                  <Input
+                    id="start-logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setLogoFile(file);
+                        try { setLogoUrl(URL.createObjectURL(file)); } catch {}
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">PNG/JPG/SVG. Uploaded on save.</p>
+                  {logoUrl && (
+                    <div className="mt-2">
+                      <img src={logoUrl} alt="Start screen logo preview" className="h-12 w-auto" />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Main App Customization */}
             <Card className="border-green-200 bg-green-50/50">
@@ -1300,10 +1351,10 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                           // Load existing customization data from the app configuration
                           const fullApp = app as any;
                           
-                          // Start screen config
                           const startConfig = fullApp.start_screen_config || {};
                           setStartScreenTitle(startConfig.title || '');
                           setStartScreenSubtitle(startConfig.subtitle || '');
+                          setLogoUrl(startConfig.logo_url || fullApp.logo_url || '');
                           
                           // Main app config
                           const mainConfig = fullApp.main_app_config || {};
