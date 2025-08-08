@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 const CustomAppPostCheckout = () => {
-  const { appName } = useParams<{ appName: string }>();
+  const { appName, appSlug } = useParams<{ appName?: string; appSlug?: string }>();
   const location = useLocation();
   const { toast } = useToast();
   
@@ -17,19 +17,18 @@ const CustomAppPostCheckout = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!appName) {
+      if (!(appName || appSlug)) {
         setIsLoading(false);
         return;
       }
 
       try {
-        // Load app configuration
         const { data: app, error: appError } = await supabase
           .from('delivery_app_variations')
           .select('*')
-          .eq('app_slug', appName)
+          .eq('app_slug', appName || appSlug || '')
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (appError || !app) {
           console.error('App not found:', appError);
@@ -116,16 +115,7 @@ const CustomAppPostCheckout = () => {
     );
   }
 
-  if (!appConfig) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">App Not Found</h1>
-          <p className="text-muted-foreground">The delivery app could not be found.</p>
-        </div>
-      </div>
-    );
-  }
+      {/* No app config found, fallback to standardized confirmation below */}
 
   // FIXED: Standardized post-checkout with minimal information
   if (appConfig?.custom_post_checkout_config) {
@@ -147,11 +137,18 @@ const CustomAppPostCheckout = () => {
     }
   }
 
-  // Standard post-checkout for apps without custom config
+  // Standard post-checkout with optional config fallback
+  const pc = (appConfig as any)?.post_checkout_config || (appConfig as any)?.start_screen_config;
   return (
     <PostCheckoutStandardized
       orderNumber={orderData?.order_number || 'Unknown'}
       customerName={orderData?.customer_name || 'Customer'}
+      customHeading={(appConfig as any)?.custom_post_checkout_config?.heading || pc?.heading || pc?.headline}
+      customSubheading={(appConfig as any)?.custom_post_checkout_config?.subheading || pc?.subheading || pc?.subheadline}
+      customButtonText={(appConfig as any)?.custom_post_checkout_config?.cta_button_text || pc?.cta_button_text}
+      customButtonUrl={(appConfig as any)?.custom_post_checkout_config?.cta_button_url || pc?.cta_button_url}
+      backgroundColor={(appConfig as any)?.custom_post_checkout_config?.background_color || pc?.background_color}
+      textColor={(appConfig as any)?.custom_post_checkout_config?.text_color || pc?.text_color}
     />
   );
 };

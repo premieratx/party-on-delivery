@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { OrderCompleteView } from '@/components/OrderCompleteView';
+import { PostCheckoutStandardized } from '@/components/PostCheckoutStandardized';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,7 @@ const OrderComplete = () => {
   const { toast } = useToast();
   const [orderData, setOrderData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [appConfig, setAppConfig] = useState<any>(null);
 
   useEffect(() => {
     const loadOrderData = async () => {
@@ -159,24 +160,39 @@ const OrderComplete = () => {
     loadOrderData();
   }, [location.search, toast]);
 
-  // Show confirmation page immediately, order details will load in background
+  // Load app configuration from session context (for standardized UI)
+  useEffect(() => {
+    const ctx = sessionStorage.getItem('custom-app-context');
+    if (!ctx) return;
+    try {
+      const { appSlug } = JSON.parse(ctx);
+      supabase
+        .from('delivery_app_variations')
+        .select('*')
+        .eq('app_slug', appSlug)
+        .eq('is_active', true)
+        .maybeSingle()
+        .then(({ data }) => setAppConfig(data))
+        .catch(() => {});
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const cfg: any = appConfig || {};
+  const cpc = cfg.custom_post_checkout_config || {};
+  const pc = cfg.post_checkout_config || cfg.start_screen_config || {};
+
   return (
-    <OrderCompleteView 
+    <PostCheckoutStandardized 
       orderNumber={orderData?.order_number || "Processing..."}
       customerName={orderData?.customer?.first_name || 'Customer'}
-      orderItems={orderData?.line_items || []}
-      totalAmount={parseFloat(orderData?.total_amount || '0') || 0}
-      deliveryDate={orderData?.delivery_date}
-      deliveryTime={orderData?.delivery_time}
-      deliveryAddress={orderData?.delivery_address}
-      shareToken={orderData?.share_token}
-      groupOrderName={orderData?.group_order_name}
-      isLoading={!orderData}
-      subtotal={parseFloat(orderData?.subtotal || '0') || 0}
-      deliveryFee={parseFloat(orderData?.delivery_fee || '0') || 0}
-      tipAmount={parseFloat(orderData?.tip_amount || '0') || 0}
-      salesTax={parseFloat(orderData?.sales_tax || '0') || 0}
-      appliedDiscount={orderData?.applied_discount}
+      customHeading={cpc.heading || pc.heading || pc.headline}
+      customSubheading={cpc.subheading || pc.subheading || pc.subheadline}
+      customButtonText={cpc.cta_button_text || pc.cta_button_text}
+      customButtonUrl={cpc.cta_button_url || pc.cta_button_url}
+      backgroundColor={cpc.background_color || pc.background_color}
+      textColor={cpc.text_color || pc.text_color}
     />
   );
 };
