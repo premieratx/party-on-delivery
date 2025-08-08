@@ -22,6 +22,7 @@ import partySuppliesCategoryBg from '@/assets/party-supplies-category-bg.jpg';
 import spiritsCategoryBg from '@/assets/spirits-category-bg.jpg';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
+import { TypingIntro } from '@/components/common/TypingIntro';
 
 interface LocalCartItem extends CartItem {
   productId?: string;
@@ -108,6 +109,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [flashIndex, setFlashIndex] = useState<number | null>(null);
 
   // Use custom collections if provided, otherwise use default mapping
   const getStepMapping = () => {
@@ -163,6 +165,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     return () => {
       window.removeEventListener('admin-sync-complete', handleAdminSync);
+    };
+  }, []);
+
+  // Entrance tab flashing sequence: beer (twice) -> seltzers -> cocktails -> mixers & N/A -> spirits -> beer
+  useEffect(() => {
+    const sequence = [1, 1, 2, 4, 3, 0, 1];
+    let i = 0;
+    let timeoutId: number | undefined;
+
+    const step = () => {
+      if (i < sequence.length) {
+        setFlashIndex(sequence[i]);
+        i += 1;
+        timeoutId = window.setTimeout(step, 600);
+      } else {
+        setFlashIndex(null);
+        setSelectedCategory(1);
+      }
+    };
+
+    step();
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      setFlashIndex(null);
     };
   }, []);
 
@@ -550,20 +576,23 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
           </p>
 
-          {/* Bottom-Centered Global Search */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-4 w-[calc(100%-2rem)] max-w-2xl">
+          {/* Search + Intro */}
+          <div className="w-[calc(100%-2rem)] max-w-2xl mt-[50px]">
             <ProductSearchBar 
               onProductSelect={handleSearchSelect}
               placeholder="Search all products..."
               showDropdownResults={false}
               onResultsChange={handleSearchResultsChange}
             />
+            <div className="mt-4">
+              <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px]">
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-1 h-16 sm:h-20">
@@ -585,7 +614,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     isActive 
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
-                  }`}
+                  } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
                 >
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title */}

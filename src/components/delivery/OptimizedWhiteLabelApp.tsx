@@ -11,6 +11,7 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { ProductSearchBar } from '@/components/delivery/ProductSearchBar';
+import { TypingIntro } from '@/components/common/TypingIntro';
 
 interface WhiteLabelAppConfig {
   id: string;
@@ -297,8 +298,8 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
 
       {/* Hero Section */}
       {appConfig.main_app_config?.hero_heading && (
-        <div className="relative bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
-          <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="relative bg-gradient-to-r from-primary/10 to-secondary/10 min-h-[22rem] lg:min-h-[34rem] flex items-center">
+          <div className="max-w-7xl mx-auto px-4 text-center w-full">
             <h2 className="text-3xl font-bold mb-2">
               {appConfig.main_app_config.hero_heading}
             </h2>
@@ -307,20 +308,23 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
                 {appConfig.main_app_config.description}
               </p>
             )}
-          </div>
 
-          {/* Bottom-Centered Global Search */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-4 w-[calc(100%-2rem)] max-w-2xl">
-            <ProductSearchBar 
-              onProductSelect={handleSearchSelect}
-              placeholder="Search all products..."
-            />
+            {/* Global Search + Intro */}
+            <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto mt-[50px]">
+              <ProductSearchBar 
+                onProductSelect={handleSearchSelect}
+                placeholder="Search all products..."
+              />
+              <div className="mt-4">
+                <TypingIntro text="Let's Build Your Party Package!" className="text-foreground text-lg lg:text-2xl" />
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Product Tabs */}
-      <div className="max-w-7xl mx-auto p-4">
+      <div className="max-w-7xl mx-auto p-4 -mt-[10px]">
         <Tabs value={activeTab.toString()} onValueChange={(value) => setActiveTab(parseInt(value))}>
           {/* Tab Navigation */}
           <div className="mb-6">

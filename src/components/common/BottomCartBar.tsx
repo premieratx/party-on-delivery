@@ -36,15 +36,15 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           Admin
         </a>
         
-        {/* Cart and Checkout buttons centered */}
-        <div className="flex items-center gap-1 sm:gap-3 justify-center absolute left-1/2 transform -translate-x-1/2">
+        {/* Actions on the right: Cart, Subtotal, Checkout */}
+        <div className="flex items-center gap-1 sm:gap-3 ml-auto">
           {/* Cart button (only show if items exist) */}
           {totalItems > 0 && (
             <Button
               variant="outline"
               size="sm"
               onClick={onOpenCart}
-              className="flex items-center gap-1 sm:gap-2 flex-shrink-0 h-8 sm:h-9 px-2 sm:px-3"
+              className="flex items-center gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3"
             >
               <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Cart</span>
@@ -54,7 +54,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           
           {/* Total price */}
           {totalItems > 0 && (
-            <span className="font-semibold text-sm sm:text-lg text-primary flex-shrink-0">
+            <span className="font-semibold text-sm sm:text-lg text-primary">
               ${totalPrice.toFixed(2)}
             </span>
           )}
@@ -63,21 +63,13 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           <Button
             onClick={onCheckout}
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-1 sm:gap-2 flex-1 sm:flex-initial sm:min-w-[120px] justify-center h-8 sm:h-9"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-1 sm:gap-2 sm:min-w-[120px] justify-center h-8 sm:h-9"
             data-checkout-trigger="true"
           >
             <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="text-xs sm:text-sm">{totalItems > 0 ? 'Checkout' : 'Checkout Now'}</span>
+            <span className="text-xs sm:text-sm">{totalItems > 0 ? 'Proceed to Checkout' : 'Checkout Now'}</span>
           </Button>
         </div>
-        
-        {/* Admin Dashboard link - far right */}
-        <a 
-          href="/admin/dashboard"
-          className="text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          Admin
-        </a>
       </div>
     </div>
   );
