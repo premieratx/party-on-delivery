@@ -397,17 +397,26 @@ class UltraFastLoader {
     }
   }
 
-  // Utility: Promise with timeout
-  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout')), timeoutMs);
+  // Utility: Promise with timeout (soft by default: returns null on timeout)
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
+    let timeoutId: any;
+    let timedOut = false;
+    const timeoutPromise = new Promise<null>((resolve) => {
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        resolve(null);
+      }, timeoutMs);
     });
 
     try {
-      return await Promise.race([promise, timeoutPromise]);
-    } catch (error) {
-      console.warn(`Operation timed out after ${timeoutMs}ms:`, error);
-      throw error;
+      const result = await Promise.race<[T | null]>([promise as any, timeoutPromise as any]) as unknown as T | null;
+      return result ?? null;
+    } finally {
+      clearTimeout(timeoutId);
+      if (timedOut) {
+        // Soft timeout notice without throwing to avoid noisy errors during preload
+        console.warn(`Operation exceeded ${timeoutMs}ms; continuing with fallback if available`);
+      }
     }
   }
 
