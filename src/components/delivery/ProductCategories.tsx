@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -169,29 +169,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     };
   }, []);
 
-  // Entrance tab flashing sequence: beer (twice) -> seltzers -> cocktails -> mixers & N/A -> spirits -> beer
-  useEffect(() => {
-    const sequence = [1, 1, 2, 4, 3, 0, 1];
-    let i = 0;
-    let timeoutId: number | undefined;
-
-    const step = () => {
-      if (i < sequence.length) {
-        setFlashIndex(sequence[i]);
-        i += 1;
-        timeoutId = window.setTimeout(step, 600);
-      } else {
-        setFlashIndex(null);
-        setSelectedCategory(1);
-      }
-    };
-
-    step();
-    return () => {
-      if (timeoutId) window.clearTimeout(timeoutId);
-      setFlashIndex(null);
-    };
-  }, []);
 
   // Re-fetch collections when custom site data changes
   useEffect(() => {
