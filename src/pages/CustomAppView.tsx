@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
@@ -117,6 +117,7 @@ const useAppStep = (initialStep: CustomDeliveryStep = 'start') => {
 export default function CustomAppView() {
   const { appName } = useParams<{ appName: string }>();
   const navigate = useNavigate(); // Add navigate hook
+  const [searchParams] = useSearchParams();
   useWakeLock();
   
   const [currentStep, setCurrentStep] = useAppStep('tabs');
@@ -160,15 +161,24 @@ export default function CustomAppView() {
       }
     }
   }, [appContext]);
-
-  const handleStartOrder = () => {
-    setCurrentStep('tabs');
-  };
+  // URL overrides: step and open cart for shareable links
+  useEffect(() => {
+    try {
+      const stepParam = searchParams.get('step') as CustomDeliveryStep | null;
+      if (stepParam && (stepParam === 'start' || stepParam === 'tabs' || stepParam === 'cart')) {
+        setCurrentStep(stepParam);
+      }
+      if (searchParams.get('cart') === '1' || searchParams.get('openCart') === '1') {
+        setIsCartOpen(true);
+      }
+    } catch (e) {
+      console.warn('Failed to parse URL params for CustomAppView');
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSearchProducts = () => {
     setCurrentStep('tabs');
   };
-
   const handleGoHome = () => {
     navigate('/');
   };

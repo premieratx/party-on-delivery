@@ -88,7 +88,6 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
   const handleAddToCart = useCallback((product: ShopifyProduct) => {
     const variant = product.variants[0];
     const variantId = variant?.id;
-    
     const cartItem = {
       id: product.id,
       title: product.title,
@@ -97,14 +96,9 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
       image: product.image,
       variant: variantId
     };
-    
     console.log('🛒 VirtualizedGrid: Adding to cart with complete data:', cartItem);
-    
-    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = getCartItemQuantity(product.id, variantId);
-    console.log('🛒 VirtualizedGrid: Current quantity:', currentQty, 'Adding 1 more');
-    
-    onUpdateQuantity(product.id, variantId, currentQty + 1);
+    // Delegate creation to parent so it can supply product data to unified cart
+    onAddToCart(cartItem);
   }, [onAddToCart]);
 
   // Handle quantity change
