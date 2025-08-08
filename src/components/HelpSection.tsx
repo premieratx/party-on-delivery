@@ -13,8 +13,8 @@ export const HelpSection = () => {
   };
 
   return (
-    <div className="text-center mt-8 p-6 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+    <div className="text-center mt-8 p-6 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 flex flex-col justify-evenly gap-4 min-h-[10rem]">
+      <h3 className="text-sm md:text-base font-semibold text-primary-foreground mb-2">
         Need Help? Give us a call or text!
       </h3>
       
@@ -22,7 +22,7 @@ export const HelpSection = () => {
         <Button 
           onClick={handleCall}
           variant="outline"
-          className="bg-white/20 hover:bg-white/30 border-white/30 text-gray-800 font-medium"
+          className="bg-white/20 hover:bg-white/30 border-white/30 text-primary-foreground font-medium"
         >
           <Phone className="w-4 h-4 mr-2" />
           Call Now
@@ -31,7 +31,7 @@ export const HelpSection = () => {
         <Button 
           onClick={handleSMS}
           variant="outline"
-          className="bg-white/20 hover:bg-white/30 border-white/30 text-gray-800 font-medium"
+          className="bg-white/20 hover:bg-white/30 border-white/30 text-primary-foreground font-medium"
         >
           <MessageSquare className="w-4 h-4 mr-2" />
           Send Text

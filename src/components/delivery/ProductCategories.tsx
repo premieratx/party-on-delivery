@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,7 @@ import spiritsCategoryBg from '@/assets/spirits-category-bg.jpg';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 import { TypingIntro } from '@/components/common/TypingIntro';
-
+import { useIsMobile } from '@/hooks/use-mobile';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -110,6 +110,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
+  const isMobile = useIsMobile();
+  const [hideTabs, setHideTabs] = useState(false);
+  const lastYRef = useRef(0);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Use custom collections if provided, otherwise use default mapping
   const getStepMapping = () => {
@@ -192,6 +196,27 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     };
   }, []);
 
+  // Mobile: auto-hide tabs and blur keyboard on scroll down
+  useEffect(() => {
+    if (!isMobile) return;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const last = lastYRef.current;
+      if (y > last + 10) {
+        setHideTabs(true);
+        // Blur any focused input (minimize keyboard)
+        const ae = document.activeElement as HTMLElement | null;
+        if (ae && ae.tagName === 'INPUT') {
+          (ae as HTMLInputElement).blur();
+        }
+      } else if (y < last - 10 || y < 40) {
+        setHideTabs(false);
+      }
+      lastYRef.current = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true } as EventListenerOptions);
+    return () => window.removeEventListener('scroll', onScroll as any);
+  }, [isMobile]);
   // Re-fetch collections when custom site data changes
   useEffect(() => {
     if (isCustomSite && customSiteCollections.length > 0) {
@@ -596,7 +621,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       {/* Sticky Header Section */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px]">
+      {isMobile && hideTabs && (
+        <div className="sticky top-0 z-40 -mt-[10px]">
+          <button
+            onClick={() => setHideTabs(false)}
+            className="mx-auto my-1 block rounded-full bg-muted/80 text-foreground px-3 py-1 text-xs shadow hover:bg-muted"
+          >
+            Show categories
+          </button>
+        </div>
+      )}
+      <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px] transition-transform duration-300 ${isMobile && hideTabs ? '-translate-y-full' : 'translate-y-0'}`}>}
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex gap-1 h-16 sm:h-20">

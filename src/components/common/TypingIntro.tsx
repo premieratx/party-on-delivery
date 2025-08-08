@@ -9,7 +9,7 @@ interface TypingIntroProps {
 export const TypingIntro: React.FC<TypingIntroProps> = ({
   text,
   speedMs = 40,
-  className = ''
+  className = 'text-primary-foreground'
 }) => {
   const [display, setDisplay] = useState('');
 
@@ -28,7 +28,7 @@ export const TypingIntro: React.FC<TypingIntroProps> = ({
 
   return (
     <div className={`w-full text-center`}>
-      <span className={`inline-block font-semibold text-foreground/95 ${className}`}>
+      <span className={`inline-block font-semibold ${className}`}>
         {display}
         <span className="ml-1 inline-block w-2 h-5 align-[-2px] bg-primary animate-[pulse_1s_ease-in-out_infinite]"></span>
       </span>
