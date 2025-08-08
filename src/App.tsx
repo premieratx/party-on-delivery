@@ -59,6 +59,7 @@ const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomParty
 const ProductSearch = lazy(() => import("./pages/ProductSearch").then(m => ({ default: m.ProductSearch })));
 const ConciergeService = lazy(() => import("./pages/ConciergeService"));
 const PerformanceOptimization = lazy(() => import("./pages/PerformanceOptimization"));
+const PerformanceTests = lazy(() => import("./pages/PerformanceTests"));
 const TestSMS = lazy(() => import("./components/TestSMS"));
 
 const queryClient = new QueryClient({
@@ -151,11 +152,12 @@ const App = () => {
                     <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />
                     <Route path="/test-sms" element={<TestSMS />} />
                     
-                    {/* Utility Routes */}
-                    <Route path="/concierge" element={<ConciergeService />} />
-                    <Route path="/performance-optimization" element={<PerformanceOptimization />} />
-                    
-                    
+{/* Utility Routes */}
+<Route path="/concierge" element={<ConciergeService />} />
+<Route path="/performance-optimization" element={<PerformanceOptimization />} />
+<Route path="/performance" element={<PerformanceTests />} />
+
+
                     {/* 404 - MUST be absolute last */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
