@@ -77,22 +77,22 @@ const ProductCard = memo(({
           
           {/* Quick Add/Remove Buttons */}
           {quantity > 0 && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full p-1 border">
+            <div className="absolute top-2 right-2 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full p-0.5 md:p-1 border">
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 rounded-full"
+                className="h-7 w-7 md:h-8 md:w-8 p-0 rounded-full"
                 onClick={handleDecrement}
               >
                 <Minus className="h-3 w-3" />
               </Button>
-              <span className="text-sm font-medium px-2 min-w-[1.5rem] text-center">
+              <span className="text-xs md:text-sm font-medium px-1.5 md:px-2 min-w-[1.25rem] md:min-w-[1.5rem] text-center">
                 {quantity}
               </span>
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 rounded-full"
+                className="h-7 w-7 md:h-8 md:w-8 p-0 rounded-full"
                 onClick={handleIncrement}
               >
                 <Plus className="h-3 w-3" />
