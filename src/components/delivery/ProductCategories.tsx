@@ -449,6 +449,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     setLightboxProduct(null);
   };
 
+  // Receive search results from hero search bar
+  const handleSearchResultsChange = (results: ShopifyProduct[], query: string) => {
+    setSearchResults(results);
+    setSearchQuery(query);
+    setIsSearching(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 flex items-center justify-center">
@@ -548,6 +555,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <ProductSearchBar 
               onProductSelect={handleSearchSelect}
               placeholder="Search all products..."
+              showDropdownResults={false}
+              onResultsChange={handleSearchResultsChange}
             />
           </div>
         </div>
@@ -724,8 +733,48 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       <div className="max-w-7xl mx-auto p-4">
+        {searchQuery.trim() && (
+          <div className="mb-6">
+            <div className="text-sm text-muted-foreground mb-2">Found {searchResults.length} products</div>
+            <div className="grid gap-1.5 lg:gap-3 grid-cols-3 lg:grid-cols-6">
+              {searchResults.slice(0, 50).map((product) => {
+                const variant = product.variants?.[0];
+                const price = variant?.price ?? product.price;
+                const cartQty = getCartItemQuantity(product.id, variant?.id);
+                return (
+                  <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col">
+                    <div className="bg-muted rounded overflow-hidden w-full aspect-square mb-3">
+                      <img src={product.image} alt={product.title} className="w-full h-full object-contain" />
+                    </div>
+                    <h4 className="font-bold leading-tight text-center text-sm mb-2 line-clamp-2">{product.title}</h4>
+                    <div className="mt-auto pt-2 flex flex-col items-center gap-2">
+                      <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${price.toFixed(2)}</Badge>
+                      <div className="flex justify-center">
+                        {cartQty > 0 ? (
+                          <div className="flex items-center gap-0.5 bg-muted rounded">
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                              <Minus size={10} />
+                            </Button>
+                            <span className="text-xs font-medium px-1.5 min-w-[1.5rem] text-center">{cartQty}</span>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                              <Plus size={10} />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="default" size="sm" className="rounded-full" onClick={() => handleAddToCart(product, variant)}>
+                            Add
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {/* Product Grid - smaller tiles for spirits, beer, and mixers & n/a, consistent for others */}
-        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'}`}>
+        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${searchQuery.trim() ? 'hidden' : ''}`}>
           {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;

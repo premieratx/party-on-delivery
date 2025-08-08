@@ -26,21 +26,28 @@ interface ProductSearchBarProps {
   onProductSelect: (product: ShopifyProduct) => void;
   placeholder?: string;
   className?: string;
+  showDropdownResults?: boolean;
+  onResultsChange?: (results: ShopifyProduct[], query: string) => void;
+  onSearchingChange?: (searching: boolean) => void;
 }
 
 export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   onProductSelect,
   placeholder = "Search all products...",
-  className = ""
+  className = "",
+  showDropdownResults = true,
+  onResultsChange,
+  onSearchingChange
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [allProducts, setAllProducts] = useState<ShopifyProduct[]>([]);
+  const [indexedProducts, setIndexedProducts] = useState<{ p: ShopifyProduct; t: string }[]>([]);
 
   // Debounce search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const debouncedSearchQuery = useDebounce(searchQuery, 150);
 
   // Load all products on mount
   useEffect(() => {
@@ -54,39 +61,51 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     } else {
       setSearchResults([]);
       setShowResults(false);
+      onResultsChange?.([], '');
+      onSearchingChange?.(false);
     }
-  }, [debouncedSearchQuery]);
+  }, [debouncedSearchQuery, performSearch, onResultsChange, onSearchingChange]);
 
   const loadAllProducts = async () => {
     try {
       const instant = await getInstantProducts();
       const products = (instant.collections || []).flatMap((collection: any) => collection.products || []);
       setAllProducts(products);
+      // Pre-index for faster search
+      const indexed = products.map((p: ShopifyProduct) => ({
+        p,
+        t: `${p.title} ${p.description || ''} ${p.handle || ''}`.toLowerCase()
+      }));
+      setIndexedProducts(indexed);
     } catch (error) {
       console.error('Error loading all products:', error);
     }
   };
 
   const performSearch = useCallback((query: string) => {
-    if (!query.trim() || allProducts.length === 0) {
+    const q = query.trim();
+    if (!q || indexedProducts.length === 0) {
       setSearchResults([]);
       setShowResults(false);
+      onResultsChange?.([], q);
+      onSearchingChange?.(false);
       return;
     }
 
     setIsSearching(true);
-    
-    const searchTerm = query.toLowerCase();
-    const results = allProducts.filter(product => 
-      product.title.toLowerCase().includes(searchTerm) ||
-      product.description?.toLowerCase().includes(searchTerm) ||
-      product.handle?.toLowerCase().includes(searchTerm)
-    ).slice(0, 20); // Limit to 20 results
+    onSearchingChange?.(true);
+    const searchTerm = q.toLowerCase();
+    const results = indexedProducts
+      .filter(ip => ip.t.includes(searchTerm))
+      .slice(0, 50)
+      .map(ip => ip.p);
 
     setSearchResults(results);
-    setShowResults(true);
+    setShowResults(!!showDropdownResults);
     setIsSearching(false);
-  }, [allProducts]);
+    onResultsChange?.(results, q);
+    onSearchingChange?.(false);
+  }, [indexedProducts, onResultsChange, onSearchingChange, showDropdownResults]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -136,7 +155,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
       </div>
 
       {/* Search Results Dropdown */}
-      {showResults && searchResults.length > 0 && (
+      {showDropdownResults && showResults && searchResults.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
           <div className="p-2">
             <div className="text-sm text-muted-foreground mb-2">
@@ -170,7 +189,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
       )}
 
       {/* No Results */}
-      {showResults && searchResults.length === 0 && !isSearching && searchQuery.trim() && (
+      {showDropdownResults && showResults && searchResults.length === 0 && !isSearching && searchQuery.trim() && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 p-4 text-center">
           <div className="text-muted-foreground">
             No products found for "{searchQuery}"
