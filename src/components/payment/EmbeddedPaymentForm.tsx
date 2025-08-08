@@ -280,21 +280,9 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         localStorage.setItem('lastPaymentIntent', paymentIntentId);
         localStorage.setItem('lastCartTotal', total.toString());
         
-        // Process the order through Shopify after successful payment
-        try {
-          await supabase.functions.invoke('create-shopify-order', {
-            body: {
-              paymentIntentId,
-              isAddingToOrder: false,
-              useSameAddress: false
-            }
-          });
-          console.log('✅ Shopify order created successfully');
-        } catch (shopifyError) {
-          console.error('⚠️ Shopify order creation failed:', shopifyError);
-          // Continue to success page even if Shopify fails
-        }
-        
+        // Defer Shopify order creation to Success page for faster UX
+        // Success page will process the order using the session/payment intent.
+
         // Check if we're in a custom delivery app context
         const customAppContext = sessionStorage.getItem('custom-app-context');
         

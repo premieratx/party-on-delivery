@@ -287,9 +287,9 @@ export default function OptimizedProductSearch() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                              className="h-8 w-8 p-0"
+                              className="h-6 w-6 md:h-8 md:w-8 p-0"
                             >
-                              <Minus className="h-3 w-3" />
+                              <Minus className="h-3 w-3 md:h-4 md:w-4" />
                             </Button>
                             
                             <span className="font-medium px-3">{quantity}</span>
@@ -297,18 +297,18 @@ export default function OptimizedProductSearch() {
                             <Button
                               size="sm"
                               onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                              className="h-8 w-8 p-0"
+                              className="h-6 w-6 md:h-8 md:w-8 p-0"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-3 w-3 md:h-4 md:w-4" />
                             </Button>
                           </div>
                         ) : (
                           <div className="flex justify-center">
                             <button
                               onClick={() => handleAddToCart(product)}
-                              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center"
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-3 w-3 md:h-4 md:w-4" />
                             </button>
                           </div>
                         )}

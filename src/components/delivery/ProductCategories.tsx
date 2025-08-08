@@ -606,7 +606,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       {/* Sticky Header Section */}
       {isMobile && hideTabs && (
-        <div className="sticky top-0 z-40 -mt-[10px]">
+        <div className="sticky top-0 z-50 -mt-[10px]">
           <button
             onClick={() => setHideTabs(false)}
             className="mx-auto my-1 block rounded-full bg-muted/80 text-foreground px-3 py-1 text-xs shadow hover:bg-muted"
@@ -615,7 +615,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </button>
         </div>
       )}
-      <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b -mt-[10px] transition-transform duration-300 ${isMobile && hideTabs ? '-translate-y-full' : 'translate-y-0'}`}>
+      <div className={`sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b -mt-[10px] transition-transform duration-300 ${isMobile && hideTabs ? '-translate-y-full' : 'translate-y-0'}`}>
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
