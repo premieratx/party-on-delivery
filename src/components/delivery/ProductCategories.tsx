@@ -578,7 +578,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               }}
             />
             <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
-              {customHeroHeading || customAppName || "Build Your Party Package"}
+              {customHeroHeading || (customAppName && customAppName.toLowerCase().includes('premier party cruises') ? "Premier Party Cruises Concierge Service" : customAppName) || "Build Your Party Package"}
             </h1>
             <p className="text-white/90 text-sm lg:text-base drop-shadow-lg">
               {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
