@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
-import { getInstantProducts } from '@/utils/instantCacheClient';
+import { getAllCollectionsCached } from '@/utils/instantCacheClient';
 
 interface ShopifyProduct {
   id: string;
@@ -47,7 +47,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   const [indexedProducts, setIndexedProducts] = useState<{ p: ShopifyProduct; t: string }[]>([]);
 
   // Debounce search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 150);
+  const debouncedSearchQuery = useDebounce(searchQuery, 100);
 
   // Load all products on mount
   useEffect(() => {
@@ -58,8 +58,8 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
   const loadAllProducts = async () => {
     try {
-      const instant = await getInstantProducts();
-      const products = (instant.collections || []).flatMap((collection: any) => collection.products || []);
+      const collections = await getAllCollectionsCached();
+      const products = (collections || []).flatMap((collection: any) => collection.products || []);
       setAllProducts(products);
       // Pre-index for faster search
       const indexed = products.map((p: ShopifyProduct) => ({

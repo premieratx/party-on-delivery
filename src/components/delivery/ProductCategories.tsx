@@ -91,7 +91,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customCollections
 }) => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(4); // Start with cocktails (index 4)
+  const [selectedCategory, setSelectedCategory] = useState(1); // Start with beer (index 1)
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -513,7 +513,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
       {/* Hero Section with Austin Background */}
-      <div className="relative h-64 lg:h-96 overflow-visible">
+      <div className="relative h-[22rem] lg:h-[34rem] overflow-visible">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroPartyAustin})` }}
