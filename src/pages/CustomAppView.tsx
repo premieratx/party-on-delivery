@@ -37,6 +37,7 @@ interface DeliveryAppConfig {
   main_app_config?: {
     hero_heading: string;
     hero_subheading?: string;
+    hero_scrolling_text?: string;
   };
   post_checkout_config?: {
     heading: string;
@@ -79,6 +80,7 @@ const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null
       main_app_config: data.main_app_config as {
         hero_heading: string;
         hero_subheading?: string;
+        hero_scrolling_text?: string;
       } | undefined,
       post_checkout_config: data.post_checkout_config as {
         heading: string;
@@ -302,6 +304,7 @@ export default function CustomAppView() {
         onProceedToCheckout={handleCheckout}
         onBack={handleGoHome}
         onGoHome={handleGoHome}
+        heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
       />
 
       {/* Custom Delivery Cart */}

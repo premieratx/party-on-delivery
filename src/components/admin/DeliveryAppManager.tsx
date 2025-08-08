@@ -85,6 +85,7 @@ export function DeliveryAppManager() {
   const [heroSectionLogo, setHeroSectionLogo] = useState<File | null>(null);
   const [heroHeadline, setHeroHeadline] = useState('');
   const [heroSubheading, setHeroSubheading] = useState('');
+  const [heroScrollingText, setHeroScrollingText] = useState('');
   
   // Start screen customization
   const [startScreenTitle, setStartScreenTitle] = useState('');
@@ -297,7 +298,8 @@ export function DeliveryAppManager() {
           },
           main_app_config: {
             hero_heading: heroHeadline || `Build Your ${appName} Package`,
-            hero_subheading: heroSubheading || 'Select from our curated collection of drinks and party supplies'
+            hero_subheading: heroSubheading || 'Select from our curated collection of drinks and party supplies',
+            hero_scrolling_text: heroScrollingText || ''
           },
           post_checkout_config: {
             heading: postCheckoutHeading || 'Thank you for your order!',

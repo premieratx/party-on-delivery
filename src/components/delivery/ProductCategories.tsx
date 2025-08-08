@@ -59,6 +59,7 @@ interface ProductCategoriesProps {
   customHeroHeading?: string;
   customHeroSubheading?: string;
   customLogoUrl?: string;
+  customHeroScrollingText?: string;
   customCollections?: {
     tab_count: number;
     tabs: Array<{
@@ -89,6 +90,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customHeroHeading,
   customHeroSubheading,
   customLogoUrl,
+  customHeroScrollingText,
   customCollections
 }) => {
   const navigate = useNavigate();
@@ -599,7 +601,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
           {/* Bottom: Typing Intro */}
           <div className="mt-4 mb-8">
-            <TypingIntro text="Let's Build Your Party Package!" className="text-white text-xl lg:text-3xl" speedMs={130} />
+            <TypingIntro text={customHeroScrollingText || "Let's Build Your Party Package!"} className="text-white text-xl lg:text-3xl" speedMs={130} />
           </div>
         </div>
       </div>

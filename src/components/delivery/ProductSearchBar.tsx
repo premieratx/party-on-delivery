@@ -107,7 +107,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     setIsSearching(false);
     onResultsChange?.(results, q);
     onSearchingChange?.(false);
-  }, [indexedProducts, onResultsChange, onSearchingChange, showDropdownResults]);
+  }, [indexedProducts, showDropdownResults]);
 
   // Perform search when debounced query changes
   useEffect(() => {
@@ -119,7 +119,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
       onResultsChange?.([], '');
       onSearchingChange?.(false);
     }
-  }, [debouncedSearchQuery, performSearch, onResultsChange, onSearchingChange]);
+  }, [debouncedSearchQuery, performSearch]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

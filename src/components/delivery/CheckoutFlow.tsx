@@ -794,8 +794,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           let successUrl = '/order-complete';
           
           if (customAppSource) {
-            // For custom delivery apps, use their custom success page
-            successUrl = `/app/${customAppSource}/success`;
+            // For custom delivery apps, use their custom post-checkout page
+            successUrl = `/app/${customAppSource}/order-complete`;
           }
           
           // Navigate with order details for proper loading
@@ -817,7 +817,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         
         // Still navigate to avoid getting stuck, but with error info
         const customAppSource = localStorage.getItem('custom-app-source');
-        const errorUrl = customAppSource ? `/app/${customAppSource}/success` : '/order-complete';
+        const errorUrl = customAppSource ? `/app/${customAppSource}/order-complete` : '/order-complete';
         navigate(`${errorUrl}?error=creation_failed&session_id=${paymentIntentId}`);
       }
     }
