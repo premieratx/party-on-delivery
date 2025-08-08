@@ -9,6 +9,7 @@ import { CustomDeliveryCart } from './CustomDeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 type CustomDeliveryStep = 'intro' | 'products' | 'cart';
 
@@ -63,6 +64,7 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
   
   const cartHook = useUnifiedCart();
   const { cartItems, addToCart, updateQuantity, emptyCart, getTotalItems, getTotalPrice } = cartHook;
+  const navigate = useNavigate();
 
   // Load app configuration
   useEffect(() => {
@@ -112,7 +114,7 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
   };
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   const handleAddToCart = (product: Omit<CustomCartItem, 'quantity'>) => {
@@ -151,7 +153,7 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
     console.log('Proceeding to checkout');
     setIsCartOpen(false);
     // Navigate to checkout with unified cart
-    window.location.href = '/checkout';
+    navigate('/checkout');
   };
 
   if (loading) {

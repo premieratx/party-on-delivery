@@ -436,6 +436,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   };
 
+  // Handle search select from hero search bar (add one to cart)
+  const handleSearchSelect = (product: ShopifyProduct) => {
+    const variantId = product.variants?.[0]?.id;
+    const currentQty = getCartItemQuantity(product.id, variantId);
+    onUpdateQuantity(product.id, variantId, currentQty + 1);
+  };
+
   // Close lightbox
   const closeLightbox = () => {
     setIsLightboxOpen(false);
@@ -499,7 +506,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
       {/* Hero Section with Austin Background */}
-      <div className="relative h-64 lg:h-96 overflow-hidden">
+      <div className="relative h-64 lg:h-96 overflow-visible">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroPartyAustin})` }}
@@ -517,8 +524,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <Search className="w-5 h-5 text-white" />
           </button>
         </div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto h-full flex flex-col justify-center items-center text-center px-4">
+
+        {/* Centered Content */}
+        <div className="relative z-10 h-full flex items-center justify-center flex-col text-center px-4">
           <img 
             src={customLogoUrl || partyOnDeliveryLogo}
             alt={customAppName || "Party on Delivery"} 
@@ -534,6 +542,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <p className="text-white/90 text-lg drop-shadow-lg mb-4">
             {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
           </p>
+
+          {/* Bottom-Centered Global Search */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-4 w-[calc(100%-2rem)] max-w-2xl">
+            <ProductSearchBar 
+              onProductSelect={handleSearchSelect}
+              placeholder="Search all products..."
+            />
+          </div>
         </div>
       </div>
 

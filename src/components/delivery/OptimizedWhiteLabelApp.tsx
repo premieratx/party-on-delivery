@@ -10,6 +10,7 @@ import { useOptimizedShopify } from '@/utils/optimizedShopifyClient';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { ProductSearchBar } from '@/components/delivery/ProductSearchBar';
 
 interface WhiteLabelAppConfig {
   id: string;
@@ -108,7 +109,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
 }) => {
   const { toast } = useToast();
   const { getCollections } = useOptimizedShopify();
-  const { cartItems, getTotalItems, getTotalPrice, emptyCart } = useUnifiedCart();
+  const { cartItems, getTotalItems, getTotalPrice, emptyCart, updateQuantity, getCartItemQuantity } = useUnifiedCart();
   
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,6 +201,13 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
     onCheckout?.(cartItems);
   }, [cartItems, onCheckout, toast]);
 
+  // Handle search select from hero search bar (add one to cart)
+  const handleSearchSelect = useCallback((product: any) => {
+    const variantId = product.variants?.[0]?.id;
+    const currentQty = getCartItemQuantity(product.id, variantId);
+    updateQuantity(product.id, variantId, currentQty + 1);
+  }, [getCartItemQuantity, updateQuantity]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary/10 flex items-center justify-center">
@@ -289,7 +297,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
 
       {/* Hero Section */}
       {appConfig.main_app_config?.hero_heading && (
-        <div className="bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
+        <div className="relative bg-gradient-to-r from-primary/10 to-secondary/10 py-8">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-2">
               {appConfig.main_app_config.hero_heading}
@@ -299,6 +307,14 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
                 {appConfig.main_app_config.description}
               </p>
             )}
+          </div>
+
+          {/* Bottom-Centered Global Search */}
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-4 w-[calc(100%-2rem)] max-w-2xl">
+            <ProductSearchBar 
+              onProductSelect={handleSearchSelect}
+              placeholder="Search all products..."
+            />
           </div>
         </div>
       )}

@@ -6,6 +6,7 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   // Enable wake lock to keep screen on during app usage
@@ -19,6 +20,7 @@ const Index = () => {
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
+  const navigate = useNavigate();
 
   // Load the homepage delivery app configuration
   useEffect(() => {
@@ -85,7 +87,7 @@ const Index = () => {
     }));
     
     // Navigate to checkout
-    window.location.href = '/checkout';
+    navigate('/checkout');
   };
 
   // Convert unified cart items to the format expected by ProductCategories

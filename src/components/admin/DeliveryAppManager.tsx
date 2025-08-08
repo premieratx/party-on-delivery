@@ -569,9 +569,11 @@ import { CustomDeliveryCart } from '@/components/custom-delivery/CustomDeliveryC
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useNavigate } from 'react-router-dom';
 
 export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}MainApp() {
   useWakeLock();
+  const navigate = useNavigate();
   
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -610,7 +612,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Mai
       appSlug: '${appSlug}',
       appName: '${config.app_name}'
     }));
-    window.location.href = '/checkout';
+    navigate('/checkout');
   };
 
   const cartItemsForCategories = cartItems.map(item => ({
