@@ -170,7 +170,7 @@ export default function CustomAppView() {
   };
 
   const handleGoHome = () => {
-    window.location.href = '/';
+    navigate('/');
   };
 
   const handleAddToCart = (product: Omit<CustomCartItem, 'quantity'>) => {

@@ -91,6 +91,23 @@ const CustomAppPostCheckout = () => {
     loadData();
   }, [appName, location.search, toast]);
 
+  // Timed redirect to app-specific URL if configured
+  React.useEffect(() => {
+    const redirectUrl = appConfig?.post_checkout_config?.redirect_url;
+    if (!redirectUrl) return;
+
+    const delaySec = (appConfig?.post_checkout_config as any)?.redirect_delay_seconds || 5;
+    const timer = setTimeout(() => {
+      if (redirectUrl.startsWith('http')) {
+        window.location.href = redirectUrl;
+      } else {
+        window.location.href = redirectUrl;
+      }
+    }, delaySec * 1000);
+
+    return () => clearTimeout(timer);
+  }, [appConfig]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

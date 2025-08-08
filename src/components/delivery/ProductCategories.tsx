@@ -393,13 +393,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [collections, selectedCategory, selectedCollection]);
 
-  // FIXED: Auto-select when custom collections are provided
-  useEffect(() => {
-    if (customCollections?.tabs && customCollections.tabs.length > 0 && selectedCategory === 4) {
-      console.log('Auto-selecting first custom collection:', customCollections.tabs[0].name);
-      setSelectedCategory(0);
-    }
-  }, [customCollections, selectedCategory]);
+  // Removed auto-select on last tab to allow clicking far-right tab
+  // Previously this forced index 4 back to 0 when custom collections exist, which
+  // made the last tab appear unclickable for 5-tab layouts.
 
   // Helper to get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {

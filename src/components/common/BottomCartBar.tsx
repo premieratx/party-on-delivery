@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, CreditCard } from 'lucide-react';
 import { UnifiedCartItem } from '@/hooks/useUnifiedCart';
@@ -28,13 +29,12 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg p-2 sm:p-3">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
-        {/* Admin Dashboard link - far left */}
-        <a 
-          href="/admin/dashboard"
+        <Link 
+          to="/admin/dashboard"
           className="text-xs text-muted-foreground hover:text-primary transition-colors"
         >
           Admin
-        </a>
+        </Link>
         
         {/* Actions on the right: Cart, Subtotal, Checkout */}
         <div className="flex items-center gap-1 sm:gap-3 ml-auto">

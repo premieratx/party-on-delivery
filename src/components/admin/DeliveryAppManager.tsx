@@ -393,7 +393,9 @@ export function DeliveryAppManager() {
             logo_url: uploadedLogoUrl
           },
           main_app_config: {
-            hero_heading: mainAppHeroHeading
+            hero_heading: heroHeadline || mainAppHeroHeading,
+            hero_subheading: heroSubheading,
+            hero_scrolling_text: heroScrollingText
           },
           post_checkout_config: {
             heading: postCheckoutHeading,
@@ -871,6 +873,9 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                         setStartScreenTitle((homepageApp as any).start_screen_config?.title || '');
                         setStartScreenSubtitle((homepageApp as any).start_screen_config?.subtitle || '');
                         setMainAppHeroHeading((homepageApp as any).main_app_config?.hero_heading || '');
+                        setHeroHeadline((homepageApp as any).main_app_config?.hero_heading || '');
+                        setHeroSubheading((homepageApp as any).main_app_config?.hero_subheading || '');
+                        setHeroScrollingText((homepageApp as any).main_app_config?.hero_scrolling_text || '');
                         setPostCheckoutHeading((homepageApp as any).post_checkout_config?.heading || '');
                         setPostCheckoutSubheading((homepageApp as any).post_checkout_config?.subheading || '');
                         setPostCheckoutRedirectUrl((homepageApp as any).post_checkout_config?.redirect_url || '');
@@ -1036,6 +1041,19 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Supporting text displayed below the headline
+                  </p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="hero-scrolling-text">Scrolling Hero Text</Label>
+                  <Input
+                    id="hero-scrolling-text"
+                    value={heroScrollingText}
+                    onChange={(e) => setHeroScrollingText(e.target.value)}
+                    placeholder="Scrolling announcement text for hero"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Text that animates across the hero area
                   </p>
                 </div>
                 
@@ -1290,7 +1308,9 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                           // Main app config
                           const mainConfig = fullApp.main_app_config || {};
                           setMainAppHeroHeading(mainConfig.hero_heading || '');
-                          
+                          setHeroHeadline(mainConfig.hero_heading || '');
+                          setHeroSubheading(mainConfig.hero_subheading || '');
+                          setHeroScrollingText(mainConfig.hero_scrolling_text || '');
                           // Post-checkout config
                           const postConfig = fullApp.post_checkout_config || {};
                           setPostCheckoutHeading(postConfig.heading || '');
