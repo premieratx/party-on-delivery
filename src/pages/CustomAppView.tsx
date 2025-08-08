@@ -9,6 +9,7 @@ import { CustomDeliveryCart } from '@/components/custom-delivery/CustomDeliveryC
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
 
 type CustomDeliveryStep = 'start' | 'tabs' | 'cart';
 
@@ -34,10 +35,21 @@ interface DeliveryAppConfig {
       icon?: string;
     }>;
   };
+  start_screen_config?: {
+    title?: string;
+    subtitle?: string;
+  };
   main_app_config?: {
     hero_heading: string;
     hero_subheading?: string;
     hero_scrolling_text?: string;
+    cover_modal?: {
+      enabled?: boolean;
+      title?: string;
+      subtitle?: string;
+      phone?: string;
+      sms?: string;
+    };
   };
   post_checkout_config?: {
     heading: string;
@@ -122,6 +134,7 @@ export default function CustomAppView() {
   
   const [currentStep, setCurrentStep] = useAppStep('tabs');
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [coverOpen, setCoverOpen] = useState(false);
   
   const cartHook = useUnifiedCart();
   const { cartItems, addToCart, updateQuantity, emptyCart, getTotalItems, getTotalPrice } = cartHook;
@@ -161,6 +174,17 @@ export default function CustomAppView() {
       }
     }
   }, [appContext]);
+
+  // Auto-open cover modal on first visit per app (unless disabled)
+  useEffect(() => {
+    if (!appConfig) return;
+    const enabled = appConfig.main_app_config?.cover_modal?.enabled !== false;
+    const seenKey = `coverSeen_${appConfig.app_slug}`;
+    const seen = sessionStorage.getItem(seenKey);
+    if (enabled && !seen) {
+      setCoverOpen(true);
+    }
+  }, [appConfig]);
   // URL overrides: step and open cart for shareable links
   useEffect(() => {
     try {
