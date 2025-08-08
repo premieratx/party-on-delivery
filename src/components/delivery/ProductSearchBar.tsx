@@ -54,17 +54,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     loadAllProducts();
   }, []);
 
-  // Perform search when debounced query changes
-  useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      performSearch(debouncedSearchQuery);
-    } else {
-      setSearchResults([]);
-      setShowResults(false);
-      onResultsChange?.([], '');
-      onSearchingChange?.(false);
-    }
-  }, [debouncedSearchQuery, performSearch, onResultsChange, onSearchingChange]);
+
 
   const loadAllProducts = async () => {
     try {
@@ -106,6 +96,18 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     onResultsChange?.(results, q);
     onSearchingChange?.(false);
   }, [indexedProducts, onResultsChange, onSearchingChange, showDropdownResults]);
+
+  // Perform search when debounced query changes
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      performSearch(debouncedSearchQuery);
+    } else {
+      setSearchResults([]);
+      setShowResults(false);
+      onResultsChange?.([], '');
+      onSearchingChange?.(false);
+    }
+  }, [debouncedSearchQuery, performSearch, onResultsChange, onSearchingChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
