@@ -198,7 +198,19 @@ export default function CustomAppView() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-show Start screen once per app if enabled and not seen
+  useEffect(() => {
+    if (!appConfig) return;
+    const enabled = (appConfig.start_screen_config as any)?.enabled !== false;
+    const seenKey = `startSeen_${appConfig.app_slug}`;
+    const seen = sessionStorage.getItem(seenKey);
+    if (enabled && !seen) {
+      setCurrentStep('start');
+    }
+  }, [appConfig]);
+
   const handleSearchProducts = () => {
+    try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
     setCurrentStep('tabs');
   };
   const handleGoHome = () => {
@@ -342,23 +354,36 @@ export default function CustomAppView() {
         sms={appConfig.main_app_config?.cover_modal?.sms}
       />
 
-      {/* Direct to Tabs Page - No Start Screen */}
-      <CustomDeliveryTabsPage
-        appName={appConfig.app_name}
-        heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
-        heroSubheading={appConfig.main_app_config?.hero_subheading || "Select from our curated collection of drinks and party supplies"}
-        logoUrl={appConfig.logo_url}
-        collectionsConfig={appConfig.collections_config}
-        onAddToCart={handleAddToCart}
-        cartItemCount={getTotalItems()}
-        onOpenCart={() => setIsCartOpen(true)}
-        cartItems={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onProceedToCheckout={handleCheckout}
-        onBack={handleGoHome}
-        onGoHome={handleGoHome}
-        heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
-      />
+      {currentStep === 'start' ? (
+        <CustomDeliveryStartScreen
+          appName={appConfig.app_name}
+          title={(appConfig.start_screen_config as any)?.custom_title || appConfig.start_screen_config?.title}
+          subtitle={(appConfig.start_screen_config as any)?.custom_subtitle || appConfig.start_screen_config?.subtitle || 'Powered by Party On Delivery'}
+          onStartOrder={() => {
+            try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
+            setCurrentStep('tabs');
+          }}
+          onSearchProducts={handleSearchProducts}
+          onGoHome={handleGoHome}
+        />
+      ) : (
+        <CustomDeliveryTabsPage
+          appName={appConfig.app_name}
+          heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
+          heroSubheading={appConfig.main_app_config?.hero_subheading || "Select from our curated collection of drinks and party supplies"}
+          logoUrl={appConfig.logo_url}
+          collectionsConfig={appConfig.collections_config}
+          onAddToCart={handleAddToCart}
+          cartItemCount={getTotalItems()}
+          onOpenCart={() => setIsCartOpen(true)}
+          cartItems={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onProceedToCheckout={handleCheckout}
+          onBack={handleGoHome}
+          onGoHome={handleGoHome}
+          heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
+        />
+      )}
 
       {/* Custom Delivery Cart */}
       <CustomDeliveryCart

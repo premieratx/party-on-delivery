@@ -79,6 +79,7 @@ export const ProductSearch = () => {
             image: img,
             images: [img, ...(p.images || []).filter(Boolean)],
             description: p.description || '',
+            handle: p.handle || '',
             category: inferProductCategory(p.title, p.handle || ''),
             subcategory: inferSubcategory(p.title),
             variants: p.variants || []
@@ -106,6 +107,7 @@ export const ProductSearch = () => {
             image: img,
             images: [img, ...(product.images || []).filter(Boolean)],
             description: product.description || '',
+            handle: product.handle || '',
             category: inferProductCategory(product.title, product.handle || ''),
             subcategory: inferSubcategory(product.title),
             variants: product.variants || []
@@ -135,6 +137,7 @@ export const ProductSearch = () => {
                 image: img,
                 images: [img, ...(p.images || []).filter(Boolean)],
                 description: p.description || '',
+                handle: p.handle || collection.handle || '',
                 category: inferProductCategory(p.title, collection.handle),
                 subcategory: inferSubcategory(p.title),
                 variants: p.variants || []

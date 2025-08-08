@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Search } from 'lucide-react';
 import logoImage from '@/assets/party-on-delivery-logo.png';
-
+import discoBall from '@/assets/disco-ball.gif';
 interface CustomDeliveryStartScreenProps {
   appName: string;
   title?: string;
@@ -45,6 +45,11 @@ export function CustomDeliveryStartScreen({
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-2">
       <Card className="max-w-sm w-full shadow-floating animate-fade-in">
         <CardHeader className="text-center py-4">
+          <img 
+            src={discoBall}
+            alt="Animated disco ball"
+            className="w-12 h-12 mx-auto mb-2 animate-spin"
+          />
           {/* Logo */}
           <img 
             src={logoImage} 
