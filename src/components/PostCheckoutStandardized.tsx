@@ -9,6 +9,11 @@ interface PostCheckoutStandardizedProps {
   orderNumber: string;
   customerName: string;
   
+  // Optional order details
+  deliveryDate?: string;
+  deliveryTime?: string;
+  lineItems?: Array<{ title?: string; name?: string; quantity?: number; qty?: number; variant_title?: string }>;
+  
   // Optional custom messaging from app config
   customHeading?: string;
   customSubheading?: string;
@@ -23,6 +28,9 @@ interface PostCheckoutStandardizedProps {
 export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> = ({
   orderNumber,
   customerName,
+  deliveryDate,
+  deliveryTime,
+  lineItems,
   customHeading,
   customSubheading,
   customButtonText,
@@ -62,6 +70,36 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
         </CardHeader>
         
         <CardContent className="space-y-6">
+          {/* Order Details */}
+          {(deliveryDate || deliveryTime || (lineItems && lineItems.length > 0)) && (
+            <div className="p-6 rounded-lg border bg-card">
+              <h3 className="text-lg font-semibold mb-3">Order details</h3>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                {deliveryDate && (
+                  <li>Delivery date: {deliveryDate}</li>
+                )}
+                {deliveryTime && (
+                  <li>Delivery time: {deliveryTime}</li>
+                )}
+                {lineItems && lineItems.length > 0 && (
+                  <li>
+                    Items:
+                    <ul className="list-disc pl-5 mt-1 space-y-1">
+                      {lineItems.map((item, idx) => {
+                        const title = item.title || item.name || 'Item';
+                        const qty = item.quantity ?? item.qty ?? 1;
+                        const variant = item.variant_title ? ` (${item.variant_title})` : '';
+                        return (
+                          <li key={idx}>{title}{variant} × {qty}</li>
+                        );
+                      })}
+                    </ul>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
           {/* Custom App Messaging */}
           {(customHeading || customSubheading || customButtonText) && (
             <div className="text-center p-6 border-2 border-dashed border-primary rounded-lg">
@@ -93,19 +131,17 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
             </div>
           )}
 
-          {/* Default Actions - Only show if no custom button */}
-          {!(customButtonText && customButtonUrl) && (
-            <div className="text-center space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button variant="outline" asChild className="flex-1">
-                  <Link to="/customer/login">Manage Order</Link>
-                </Button>
-                <Button variant="outline" asChild className="flex-1">
-                  <Link to={backUrl}>Continue Shopping</Link>
-                </Button>
-              </div>
+          {/* Default Actions - Always shown */}
+          <div className="text-center space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="outline" asChild className="flex-1">
+                <Link to="/customer/login">Manage Order</Link>
+              </Button>
+              <Button variant="outline" asChild className="flex-1">
+                <Link to={backUrl}>Continue Shopping</Link>
+              </Button>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>

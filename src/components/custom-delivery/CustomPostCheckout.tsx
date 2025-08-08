@@ -32,7 +32,7 @@ export const CustomPostCheckout: React.FC<CustomPostCheckoutProps> = ({
       window.location.href = config.cta_button_url;
     }
   };
-
+  const backUrl = (() => { try { return sessionStorage.getItem('home-override') || localStorage.getItem('deliveryAppReferrer') || '/'; } catch { return '/'; } })();
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4"

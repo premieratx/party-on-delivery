@@ -216,6 +216,9 @@ const CustomPartyOnDeliveryPostCheckout = () => {
     <PostCheckoutStandardized 
       orderNumber={orderData?.order_number || "Processing..."}
       customerName={orderData?.customer?.first_name || 'Customer'}
+      deliveryDate={orderData?.delivery_date}
+      deliveryTime={orderData?.delivery_time}
+      lineItems={orderData?.line_items}
       customHeading={cpc.heading || pc.heading || pc.headline}
       customSubheading={cpc.subheading || pc.subheading || pc.subheadline}
       customButtonText={cpc.cta_button_text || pc.cta_button_text}

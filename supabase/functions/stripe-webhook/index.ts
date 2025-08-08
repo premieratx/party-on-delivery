@@ -40,7 +40,7 @@ serve(async (req: Request) => {
     if (!sig) throw new Error("Missing Stripe-Signature header");
 
     const bodyText = await req.text();
-    const event = stripe.webhooks.constructEvent(bodyText, sig, webhookSecret);
+    const event = await stripe.webhooks.constructEventAsync(bodyText, sig, webhookSecret);
 
     log("Event received", { id: event.id, type: event.type });
 
