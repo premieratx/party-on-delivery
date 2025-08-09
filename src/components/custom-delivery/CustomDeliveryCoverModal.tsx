@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
-import { Check } from 'lucide-react';
+
 
 interface CoverFeature {
   label: string;
@@ -70,39 +70,40 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                   <img
                     src={logoUrl || partyLogo}
                     alt={`${appName} logo`}
-                    className="h-12 w-auto drop-shadow-lg animate-[fade-in_0.5s_ease-out]"
+                    className="h-60 w-auto max-h-[40vh] drop-shadow-lg animate-[fade-in_0.5s_ease-out]"
                     loading="eager"
                   />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight text-white animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
+                <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
                   {title || appName}
                 </h1>
-                <p className="mt-2 text-white/80 text-base animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
+                <p className="mt-2 text-white/80 text-lg animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
                   {subtitle}
                 </p>
               </header>
 
               {/* Middle: Checklist (Hulu-style bullets) */}
-              <ul className="w-full max-w-sm space-y-3 mt-4">
-                {checklistItems.filter(Boolean).slice(0, 3).map((item, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-start gap-3 text-white animate-[fade-in_0.4s_ease-out]"
-                    style={{ animationDelay: `${220 + idx * 100}ms`, animationFillMode: 'both' }}
-                  >
-                    <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Check className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="text-base leading-tight">{item}</span>
-                  </li>
+              <div className="w-full max-w-sm mt-6 space-y-4">
+                {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
+                  <React.Fragment key={idx}>
+                    <p
+                      className="text-center text-white text-3xl leading-tight animate-[fade-in_0.4s_ease-out]"
+                      style={{ animationDelay: `${220 + idx * 100}ms`, animationFillMode: 'both' }}
+                    >
+                      {item}
+                    </p>
+                    {idx < arr.length - 1 && (
+                      <div className="mx-auto h-3 w-3 rounded-full bg-white/90" aria-hidden="true" />
+                    )}
+                  </React.Fragment>
                 ))}
-              </ul>
+              </div>
 
               {/* Bottom: Buttons (Bloom-style) */}
               <div className="w-full max-w-sm space-y-3 mt-6 mb-2">
                 <Button
                   size="lg"
-                  className="w-full h-12 rounded-full text-base font-semibold shadow-lg"
+                  className="w-full h-12 rounded-full text-base font-semibold shadow-lg bg-primary text-primary-foreground hover:bg-primary/90"
                   onClick={() => {
                     onOpenChange(false);
                     onStartOrder?.();
@@ -113,8 +114,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
 
                 <Button
                   size="lg"
-                  variant="secondary"
-                  className="w-full h-12 rounded-full text-base font-semibold"
+                  className="w-full h-12 rounded-full text-base font-semibold bg-accent text-accent-foreground hover:bg-accent/90"
                   onClick={() => {
                     onOpenChange(false);
                     onSecondaryAction?.();

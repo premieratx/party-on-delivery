@@ -23,6 +23,8 @@ interface StartScreenConfig {
   checklist_item_1?: string;
   checklist_item_2?: string;
   checklist_item_3?: string;
+  checklist_item_4?: string;
+  checklist_item_5?: string;
   background_color: string;
   primary_color: string;
   text_color: string;
@@ -59,6 +61,8 @@ const [config, setConfig] = useState<StartScreenConfig>({
     checklist_item_1: 'Locally Owned',
     checklist_item_2: 'Same Day Delivery',
     checklist_item_3: 'Cocktail Kits on Demand',
+    checklist_item_4: 'Private Event Specialists',
+    checklist_item_5: 'Delivering All Over Austin',
     background_color: '#0b0b0b',
     primary_color: '#3b82f6',
     text_color: '#f8fafc',
@@ -279,7 +283,7 @@ const [config, setConfig] = useState<StartScreenConfig>({
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       <div>
                         <Label htmlFor="check-1">Checklist Item 1</Label>
                         <Input
@@ -305,6 +309,24 @@ const [config, setConfig] = useState<StartScreenConfig>({
                           value={config.checklist_item_3 || ''}
                           onChange={(e) => setConfig(prev => ({ ...prev, checklist_item_3: e.target.value }))}
                           placeholder="Cocktail Kits on Demand"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="check-4">Checklist Item 4</Label>
+                        <Input
+                          id="check-4"
+                          value={config.checklist_item_4 || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, checklist_item_4: e.target.value }))}
+                          placeholder="Private Event Specialists"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="check-5">Checklist Item 5</Label>
+                        <Input
+                          id="check-5"
+                          value={config.checklist_item_5 || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, checklist_item_5: e.target.value }))}
+                          placeholder="Delivering All Over Austin"
                         />
                       </div>
                     </div>
@@ -366,31 +388,34 @@ const [config, setConfig] = useState<StartScreenConfig>({
                     <div className="border rounded-lg overflow-hidden" style={getPreviewStyles()}>
                       <div className="min-h-[400px] flex items-center justify-center p-4">
                         <div className="max-w-sm w-full text-center space-y-4">
-                          <div className="mx-auto mb-2 h-10 w-auto flex items-center justify-center">
+                          <div className="mx-auto mb-2 flex items-center justify-center">
                             {config.logo_url && (
-                              <img src={config.logo_url} alt="Logo" className="h-10 w-auto" />
+                              <img src={config.logo_url} alt="Logo" className="h-24 w-auto" />
                             )}
                           </div>
-                          <h1 className=\"text-lg font-bold\" style={{ color: config.text_color }}>
+                          <h1 className="text-2xl font-bold" style={{ color: config.text_color }}>
                             {config.custom_title || config.app_name}
                           </h1>
-                          <p className=\"text-sm opacity-80\">{config.custom_subtitle}</p>
-                          <div className=\"mt-3 text-left space-y-1 text-sm\">
-                            {[config.checklist_item_1, config.checklist_item_2, config.checklist_item_3].filter(Boolean).map((t, i) => (
-                              <div key={i} className=\"flex items-center gap-2\">
-                                <span className=\"inline-block h-3 w-3 rounded-full bg-[var(--primary-color)]\" />
-                                <span>{t}</span>
-                              </div>
-                            ))}
+                          <p className="text-base opacity-80">{config.custom_subtitle}</p>
+                          <div className="mt-3 space-y-3">
+                            {[config.checklist_item_1, config.checklist_item_2, config.checklist_item_3, config.checklist_item_4, config.checklist_item_5]
+                              .filter(Boolean)
+                              .slice(0, 5)
+                              .map((t, i, arr) => (
+                                <React.Fragment key={i}>
+                                  <p className="text-lg">{t}</p>
+                                  {i < arr.length - 1 && <div className="mx-auto h-2 w-2 rounded-full bg-white/80" />}
+                                </React.Fragment>
+                              ))}
                           </div>
                           <button 
-                            className=\"w-full h-12 text-base rounded-full text-white font-medium mt-3\"
+                            className="w-full h-12 text-base rounded-full text-white font-medium mt-3"
                             style={{ backgroundColor: config.primary_color }}
                           >
                             {config.start_button_text}
                           </button>
                           <button 
-                            className=\"w-full h-11 text-base rounded-full border mt-2\"
+                            className="w-full h-11 text-base rounded-full border mt-2"
                             style={{ color: config.text_color }}
                           >
                             Margaritas Now

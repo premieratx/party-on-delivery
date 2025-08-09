@@ -88,6 +88,8 @@ export default function StartScreenPreview() {
       (app?.start_screen_config as any)?.checklist_item_1 || "Locally Owned",
       (app?.start_screen_config as any)?.checklist_item_2 || "Same Day Delivery",
       (app?.start_screen_config as any)?.checklist_item_3 || "Cocktail Kits on Demand",
+      (app?.start_screen_config as any)?.checklist_item_4 || "Private Event Specialists",
+      (app?.start_screen_config as any)?.checklist_item_5 || "Delivering All Over Austin",
     ];
     return { title, subtitle, logoUrl, buttonText, checklist };
   }, [app, overrideLogo, overrideSubtitle, overrideTitle]);
