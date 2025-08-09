@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
+import discoBall from '@/assets/disco-ball.gif';
 
 
 interface CoverFeature {
@@ -63,40 +64,49 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
             <div className="absolute inset-0 bg-black/70" />
 
             {/* Content */}
-            <div className="relative z-10 flex h-full flex-col items-center justify-between py-8 px-6">
+            <div className="relative z-10 flex h-full flex-col items-center justify-between py-6 px-6">
               {/* Top: Logo + Headings (Bloom-style) */}
               <header className="w-full text-center">
-                <div className="mx-auto mb-4 flex items-center justify-center">
+                <div className="mx-auto mb-3 relative inline-flex items-center justify-center">
                   <img
                     src={logoUrl || partyLogo}
                     alt={`${appName} logo`}
-                    className="h-60 w-auto max-h-[40vh] drop-shadow-lg animate-[fade-in_0.5s_ease-out]"
+                    className="h-44 w-auto max-h-[32vh] drop-shadow-lg animate-[fade-in_0.625s_ease-out]"
                     loading="eager"
                   />
+                  <img
+                    src={discoBall}
+                    alt=""
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 opacity-80 mix-blend-screen"
+                    style={{ animation: 'fade-out 0.6s ease-out 1.3s both' }}
+                  />
                 </div>
-                <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
+                <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
                   {title || appName}
                 </h1>
-                <p className="mt-2 text-white/80 text-lg animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
+                <p className="mt-2 text-white/80 text-lg animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
                   {subtitle}
                 </p>
               </header>
 
-              {/* Middle: Checklist (Hulu-style bullets) */}
-              <div className="w-full max-w-sm mt-6 space-y-4">
-                {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
-                  <React.Fragment key={idx}>
-                    <p
-                      className="text-center text-white text-3xl leading-tight animate-[fade-in_0.4s_ease-out]"
-                      style={{ animationDelay: `${220 + idx * 100}ms`, animationFillMode: 'both' }}
-                    >
-                      {item}
-                    </p>
-                    {idx < arr.length - 1 && (
-                      <div className="mx-auto h-3 w-3 rounded-full bg-white/90" aria-hidden="true" />
-                    )}
-                  </React.Fragment>
-                ))}
+              {/* Middle: Centered text rows with separators */}
+              <div className="flex-1 w-full max-w-sm flex items-center">
+                <div className="w-full mt-4 space-y-2">
+                  {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
+                    <React.Fragment key={idx}>
+                      <p
+                        className="text-center text-white text-xl md:text-2xl leading-tight animate-[fade-in_0.5s_ease-out]"
+                        style={{ animationDelay: `${220 + idx * 120}ms`, animationFillMode: 'both' }}
+                      >
+                        {item}
+                      </p>
+                      {idx < arr.length - 1 && (
+                        <div className="mx-auto h-2.5 w-2.5 rounded-full bg-white/90" aria-hidden="true" />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
 
               {/* Bottom: Buttons (Bloom-style) */}
