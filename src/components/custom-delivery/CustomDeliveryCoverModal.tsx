@@ -75,7 +75,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
             {/* Disco sparkle only; sweep removed for performance */}
 
             {/* Content */}
-            <div className="relative z-10 flex h-full flex-col items-center justify-between py-6 px-6">
+            <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)]">
               {/* Top: Logo + Headings (Bloom-style) */}
               <header className="w-full text-center">
                 <div className="mx-auto mb-3 relative inline-flex items-center justify-center">
@@ -124,7 +124,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               </div>
 
               {/* Bottom: Buttons (Bloom-style) */}
-              <div className="w-full max-w-sm space-y-3 mt-6 mb-2">
+              <div className="w-full max-w-sm space-y-3 mt-6 mb-0">
                 <Button
                   size="lg"
                   className={`w-full h-12 rounded-full text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.25s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
