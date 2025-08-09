@@ -200,4 +200,28 @@ All colors MUST be HSL.
   .animate-shine {
     animation: shine 1.25s ease-out 0.15s both;
   }
+  /* Sparkle glitter for logo intro */
+  @keyframes sparkle-twinkle {
+    0%, 100% {
+      opacity: 0;
+      transform: scale(0.6) rotate(0deg);
+      filter: drop-shadow(0 0 0 hsl(0 0% 100% / 0));
+    }
+    40% {
+      opacity: 1;
+      transform: scale(1) rotate(45deg);
+      filter: drop-shadow(0 0 8px hsl(0 0% 100% / 0.6));
+    }
+  }
+  .sparkle {
+    position: absolute;
+    background: radial-gradient(circle, hsl(0 0% 100%) 0%, hsl(0 0% 100% / 0.85) 40%, hsl(0 0% 100% / 0) 65%);
+    border-radius: 9999px;
+    opacity: 0;
+    animation: sparkle-twinkle 0.9s ease-out both;
+    will-change: transform, opacity, filter;
+  }
+  .sparkle-sm { width: 6px; height: 6px; }
+  .sparkle-md { width: 8px; height: 8px; }
+  .sparkle-lg { width: 10px; height: 10px; }
 }

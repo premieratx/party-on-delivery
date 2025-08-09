@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
-import discoBall from '@/assets/disco-ball.gif';
+
 
 interface CoverFeature {
   label: string;
@@ -51,7 +51,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   const [showSparkle, setShowSparkle] = React.useState(true);
   const [enablePulse, setEnablePulse] = React.useState(false);
   React.useEffect(() => {
-    const t = setTimeout(() => setShowSparkle(false), 3000);
+    const t = setTimeout(() => setShowSparkle(false), 1500);
     const p = setTimeout(() => setEnablePulse(true), 1000); // start pulse after initial sequence
     return () => {
       clearTimeout(t);
@@ -85,15 +85,17 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     className="h-44 w-auto max-h-[32vh] drop-shadow-lg animate-[fade-in_0.625s_ease-out]"
                     loading="eager"
                   />
+                  {showSparkle && (
+                    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                      <span className="sparkle sparkle-sm" style={{ top: '12%', left: '22%', animationDelay: '120ms' }} />
+                      <span className="sparkle sparkle-md" style={{ top: '28%', left: '76%', animationDelay: '240ms' }} />
+                      <span className="sparkle sparkle-lg" style={{ top: '60%', left: '18%', animationDelay: '360ms' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '70%', left: '64%', animationDelay: '480ms' }} />
+                      <span className="sparkle sparkle-md" style={{ top: '38%', left: '40%', animationDelay: '600ms' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '15%', left: '55%', animationDelay: '720ms' }} />
+                    </div>
+                  )}
                 </div>
-                {showSparkle && (
-                  <img
-                    src={discoBall}
-                    alt="Disco ball sparkle animation"
-                    className="mx-auto mb-2 h-14 w-14 animate-[fade-in_0.3s_ease-out] drop-shadow"
-                    aria-hidden="true"
-                  />
-                )}
                 <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
                   {title || appName}
                 </h1>
