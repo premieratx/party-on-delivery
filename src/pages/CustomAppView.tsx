@@ -206,13 +206,12 @@ export default function CustomAppView() {
   };
 
   const goToMargaritas = () => {
+    // Ensure modal closes by switching to tabs first
+    setCurrentStep('tabs');
     if (appConfig?.app_slug) {
       navigate(`/app/${appConfig.app_slug}?step=tabs&category=cocktails&productTitle=Spicy%20Margarita`);
-    } else {
-      setCurrentStep('tabs');
     }
   };
-
   // Prefill delivery address for Premier app
   useEffect(() => {
     if (appConfig?.app_slug === 'premier-party-cruises---official-alcohol-delivery-service') {
