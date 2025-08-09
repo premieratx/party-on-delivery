@@ -175,6 +175,21 @@ export default function CustomAppView() {
     }
   }, [appContext]);
 
+  // Prefill delivery address for Premier app
+  useEffect(() => {
+    if (appConfig?.app_slug === 'premier-party-cruises---official-alcohol-delivery-service') {
+      try {
+        localStorage.setItem('prefilled_delivery_address', JSON.stringify({
+          street: '13993 FM 2769',
+          city: 'Leander',
+          state: 'TX',
+          zip_code: '78641',
+          instructions: ''
+        }));
+      } catch {}
+    }
+  }, [appConfig]);
+
   // Cover modal disabled per new design (single start screen only)
   useEffect(() => {
     setCoverOpen(false);

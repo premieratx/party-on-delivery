@@ -7,6 +7,7 @@ import { ShareIcon, CopyIcon, MessageCircle, Facebook, Instagram, CheckCircle, C
 import { useToast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { formatDeliveryDate } from '@/utils/deliveryInfoManager';
+import { buildJoinUrl } from '@/utils/links';
 
 interface OrderCompleteViewProps {
   orderNumber: string;
@@ -49,8 +50,7 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
   // Generate share URL when shareToken is available
   useEffect(() => {
     if (shareToken) {
-      const baseUrl = window.location.origin;
-      const shareLink = `${baseUrl}/join/${shareToken}`;
+      const shareLink = buildJoinUrl(shareToken);
       setShareUrl(shareLink);
       console.log('🔗 Generated share link:', shareLink, 'with token:', shareToken);
     }

@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Share2, Users, Calendar, MapPin, Package, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatDeliveryDate } from '@/utils/deliveryInfoManager';
+import { CANONICAL_DOMAIN } from '@/utils/links';
 
 interface GroupOrderParticipant {
   email: string;
@@ -134,8 +135,7 @@ const GroupOrderDashboard = () => {
   };
 
   const handleShareOrder = () => {
-    // Create a proper group order join URL that ensures free shipping and proper flow
-    const shareUrl = `${window.location.origin}/?share=${shareToken}&customer=true&checkout=true`;
+    const shareUrl = `${CANONICAL_DOMAIN}/?share=${shareToken}&customer=true&checkout=true`;
     
     if (navigator.share) {
       navigator.share({

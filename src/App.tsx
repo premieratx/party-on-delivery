@@ -50,6 +50,7 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 // Delivery app routes
 const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
+const ShortLinkResolver = lazy(() => import("./pages/ShortLinkResolver"));
 
 // Specific custom apps
 const CustomPartyOnDeliveryStartScreen = lazy(() => import("./pages/CustomPartyOnDeliveryStartScreen"));
@@ -157,6 +158,9 @@ const App = () => {
 <Route path="/performance-optimization" element={<PerformanceOptimization />} />
 <Route path="/performance" element={<PerformanceTests />} />
 
+                    
+                    {/* Short link resolver */}
+                    <Route path="/:shortPath" element={<ShortLinkResolver />} />
 
                     {/* 404 - MUST be absolute last */}
                     <Route path="*" element={<NotFound />} />

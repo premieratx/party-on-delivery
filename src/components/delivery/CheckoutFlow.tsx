@@ -28,6 +28,7 @@ import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 import { useProgressSaver } from '@/hooks/useProgressSaver';
 import { useDeliveryFee } from '@/hooks/useDeliveryFee';
 import { validateEmail, validatePhoneNumber, formatPhoneNumber, getEmailErrorMessage, getPhoneErrorMessage } from '@/utils/validation';
+import { CANONICAL_DOMAIN } from '@/utils/links';
 
 interface CheckoutFlowProps {
   cartItems: CartItem[];
@@ -1441,8 +1442,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                                 
                                 sessionStorage.setItem('pendingGroupOrder', JSON.stringify(groupOrderData));
                                 
-                                // Create share URL
-                                const shareUrl = `${window.location.origin}/?group=${groupToken}`;
+                                const shareUrl = `${CANONICAL_DOMAIN}/?group=${groupToken}`;
                                 
                                 // Copy to clipboard and show modal
                                 navigator.clipboard.writeText(shareUrl).then(() => {

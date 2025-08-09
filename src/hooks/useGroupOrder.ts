@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { CANONICAL_DOMAIN } from '@/utils/links';
 interface GroupOrderParticipant {
   email: string;
   name: string;
@@ -151,7 +151,7 @@ export function useGroupOrder(): UseGroupOrderReturn {
   };
 
   const shareLink = groupToken 
-    ? `${window.location.origin}${window.location.pathname}?share=${groupToken}`
+    ? `${CANONICAL_DOMAIN}${window.location.pathname}?share=${groupToken}`
     : '';
 
   return {

@@ -1178,6 +1178,7 @@ export type Database = {
           logo_url: string | null
           main_app_config: Json | null
           post_checkout_config: Json | null
+          short_path: string | null
           start_screen_config: Json | null
           updated_at: string
         }
@@ -1193,6 +1194,7 @@ export type Database = {
           logo_url?: string | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
+          short_path?: string | null
           start_screen_config?: Json | null
           updated_at?: string
         }
@@ -1208,6 +1210,7 @@ export type Database = {
           logo_url?: string | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
+          short_path?: string | null
           start_screen_config?: Json | null
           updated_at?: string
         }

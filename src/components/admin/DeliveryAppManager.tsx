@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CustomPostCheckoutEditor } from './CustomPostCheckoutEditor';
+import { CANONICAL_DOMAIN, buildAppUrl } from '@/utils/links';
 
 interface DeliveryApp {
   id: string;
@@ -480,11 +481,10 @@ export function DeliveryAppManager() {
   };
 
   const copyAppUrl = (appSlug: string) => {
-    const url = `${window.location.origin}/app/${appSlug}`;
+    const url = buildAppUrl(appSlug);
     navigator.clipboard.writeText(url);
     toast.success('App URL copied to clipboard');
   };
-
   const createCustomDeliveryAppPages = async (appSlug: string, appName: string, validTabs: Array<{ name: string; collection_handle: string }>) => {
     try {
       // Get the config data that was just saved
