@@ -191,3 +191,13 @@ All colors MUST be HSL.
     pointer-events: auto;
   }
 }
+
+@layer utilities {
+  @keyframes shine {
+    0% { transform: translateX(-150%); }
+    100% { transform: translateX(250%); }
+  }
+  .animate-shine {
+    animation: shine 1.25s ease-out 0.15s both;
+  }
+}

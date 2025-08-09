@@ -3,13 +3,13 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { CustomDeliveryStartScreen } from '@/components/custom-delivery/CustomDeliveryStartScreen';
+
 import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
 import { CustomDeliveryCart } from '@/components/custom-delivery/CustomDeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
+
 
 type CustomDeliveryStep = 'start' | 'tabs' | 'cart';
 
@@ -353,43 +353,23 @@ export default function CustomAppView() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Cover modal removed: using config-driven start screen only */}
-
-      {currentStep === 'start' ? (
-        <CustomDeliveryStartScreen
-          appName={appConfig.app_name}
-          title={(appConfig.start_screen_config as any)?.custom_title || appConfig.start_screen_config?.title}
-          subtitle={(appConfig.start_screen_config as any)?.custom_subtitle || appConfig.start_screen_config?.subtitle || 'Powered by Party On Delivery'}
-          logoUrl={appConfig.start_screen_config?.logo_url || appConfig.logo_url}
-          startButtonText={(appConfig.start_screen_config as any)?.start_button_text}
-          backgroundColor={(appConfig.start_screen_config as any)?.background_color}
-          primaryColor={(appConfig.start_screen_config as any)?.primary_color}
-          textColor={(appConfig.start_screen_config as any)?.text_color}
-          onStartOrder={() => {
-            try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
-            setCurrentStep('tabs');
-          }}
-          onSearchProducts={handleSearchProducts}
-          onGoHome={handleGoHome}
-        />
-      ) : (
-        <CustomDeliveryTabsPage
-          appName={appConfig.app_name}
-          heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
-          heroSubheading={appConfig.main_app_config?.hero_subheading || "Select from our curated collection of drinks and party supplies"}
-          logoUrl={appConfig.logo_url}
-          collectionsConfig={appConfig.collections_config}
-          onAddToCart={handleAddToCart}
-          cartItemCount={getTotalItems()}
-          onOpenCart={() => setIsCartOpen(true)}
-          cartItems={cartItems}
-          onUpdateQuantity={handleUpdateQuantity}
-          onProceedToCheckout={handleCheckout}
-          onBack={handleGoHome}
-          onGoHome={handleGoHome}
-          heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
-        />
-      )}
+      {/* Start screen removed: go straight to tabs */}
+      <CustomDeliveryTabsPage
+        appName={appConfig.app_name}
+        heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
+        heroSubheading={appConfig.main_app_config?.hero_subheading || "Select from our curated collection of drinks and party supplies"}
+        logoUrl={appConfig.logo_url}
+        collectionsConfig={appConfig.collections_config}
+        onAddToCart={handleAddToCart}
+        cartItemCount={getTotalItems()}
+        onOpenCart={() => setIsCartOpen(true)}
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateQuantity}
+        onProceedToCheckout={handleCheckout}
+        onBack={handleGoHome}
+        onGoHome={handleGoHome}
+        heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
+      />
 
       {/* Custom Delivery Cart */}
       <CustomDeliveryCart

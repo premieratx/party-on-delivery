@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomDeliveryCoverModal } from "@/components/custom-delivery/CustomDeliveryCoverModal";
-import bgImage from "@/assets/old-fashioned-bg.jpg";
 
 interface AppRecord {
   app_name: string;
@@ -64,53 +62,18 @@ export default function StartScreenPreview() {
     load();
   }, [appSlug]);
 
-  const resolved = useMemo(() => {
-    const title =
-      overrideTitle ||
-      (app?.start_screen_config as any)?.custom_title ||
-      app?.start_screen_config?.title ||
-      app?.app_name ||
-      "Start";
-    const subtitle =
-      overrideSubtitle ||
-      (app?.start_screen_config as any)?.custom_subtitle ||
-      app?.start_screen_config?.subtitle ||
-      "Exclusive concierge delivery";
-    const logoUrl =
-      overrideLogo ||
-      app?.start_screen_config?.logo_url ||
-      app?.logo_url ||
-      undefined;
-    const buttonText =
-      (app?.start_screen_config as any)?.start_button_text ||
-      "Order Now";
-    const checklist = [
-      (app?.start_screen_config as any)?.checklist_item_1 || "Locally Owned",
-      (app?.start_screen_config as any)?.checklist_item_2 || "Same Day Delivery",
-      (app?.start_screen_config as any)?.checklist_item_3 || "Cocktail Kits on Demand",
-      (app?.start_screen_config as any)?.checklist_item_4 || "Private Event Specialists",
-      (app?.start_screen_config as any)?.checklist_item_5 || "Delivering All Over Austin",
-    ];
-    return { title, subtitle, logoUrl, buttonText, checklist };
-  }, [app, overrideLogo, overrideSubtitle, overrideTitle]);
-
-  const goToAppTabs = () => {
-    if (app?.app_slug) navigate(`/app/${app.app_slug}?step=tabs`);
-    else navigate("/");
-  };
-
-  const goToMargaritas = () => {
-    if (app?.app_slug) {
-      navigate(`/app/${app.app_slug}?step=tabs&category=cocktails&productTitle=Spicy%20Margarita`);
-    } else {
-      navigate("/");
+  useEffect(() => {
+    if (!loading) {
+      if (app?.app_slug) {
+        navigate(`/app/${app.app_slug}?step=tabs`, { replace: true });
+      }
     }
-  };
+  }, [loading, app, navigate]);
 
   if (loading) {
     return (
       <main className="min-h-screen grid place-items-center">
-        <div className="text-muted-foreground">Loading start screen…</div>
+        <div className="text-muted-foreground">Loading…</div>
       </main>
     );
   }
@@ -124,21 +87,8 @@ export default function StartScreenPreview() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <CustomDeliveryCoverModal
-        open={true}
-        onOpenChange={() => {}}
-        onStartOrder={goToAppTabs}
-        onSecondaryAction={goToMargaritas}
-        appName={app.app_name}
-        logoUrl={resolved.logoUrl}
-        title={resolved.title}
-        subtitle={resolved.subtitle}
-        buttonText={resolved.buttonText}
-        checklistItems={resolved.checklist}
-        backgroundImageUrl={bgImage}
-        secondaryButtonText="Margaritas Now"
-      />
+    <main className="min-h-screen grid place-items-center">
+      <div className="text-muted-foreground">Redirecting…</div>
     </main>
   );
 }

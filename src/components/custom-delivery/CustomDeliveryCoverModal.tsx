@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
-import discoBall from '@/assets/disco-ball.gif';
+
 
 
 interface CoverFeature {
@@ -60,8 +60,12 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               style={{ backgroundImage: `url(${backgroundImageUrl || backgroundImage})` }}
               aria-hidden="true"
             />
-            {/* Dark overlay */}
+            {/* Overlays */}
             <div className="absolute inset-0 bg-black/70" />
+            {/* Light sweep overlay */}
+            <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-25">
+              <div className="absolute -inset-1 bg-gradient-to-tr from-transparent via-white/12 to-transparent blur-2xl animate-slide-diagonal" />
+            </div>
 
             {/* Content */}
             <div className="relative z-10 flex h-full flex-col items-center justify-between py-6 px-6">
@@ -74,12 +78,9 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     className="h-44 w-auto max-h-[32vh] drop-shadow-lg animate-[fade-in_0.625s_ease-out]"
                     loading="eager"
                   />
-                  <img
-                    src={discoBall}
-                    alt=""
+                  <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 opacity-80 mix-blend-screen"
-                    style={{ animation: 'fade-out 0.6s ease-out 1.3s both' }}
+                    className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent blur-sm animate-shine"
                   />
                 </div>
                 <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
@@ -113,7 +114,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               <div className="w-full max-w-sm space-y-3 mt-6 mb-2">
                 <Button
                   size="lg"
-                  className="w-full h-12 rounded-full text-base font-semibold shadow-lg bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="w-full h-12 rounded-full text-base font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90"
                   onClick={() => {
                     onOpenChange(false);
                     onStartOrder?.();
