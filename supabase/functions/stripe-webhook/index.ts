@@ -57,7 +57,7 @@ serve(async (req: Request) => {
           try {
             log("Invoking create-shopify-order", { sessionId: session.id, paymentIntentId });
             const { data, error } = await supabase.functions.invoke("create-shopify-order", {
-              body: { stripeSessionId: session.id, payment_intent: paymentIntentId, trigger: "checkout.session.completed" },
+              body: { sessionId: session.id, paymentIntentId, trigger: "checkout.session.completed" },
             });
             if (error) log("create-shopify-order error", { error });
             else log("create-shopify-order result", data);
@@ -77,10 +77,32 @@ serve(async (req: Request) => {
           try {
             log("Invoking create-shopify-order (from PI)", { sessionId, paymentIntentId: pi.id });
             const { data, error } = await supabase.functions.invoke("create-shopify-order", {
-              body: { stripeSessionId: sessionId, payment_intent: pi.id, trigger: "payment_intent.succeeded" },
+              body: { paymentIntentId: pi.id, sessionId, trigger: "payment_intent.succeeded" },
             });
             if (error) log("create-shopify-order error", { error });
             else log("create-shopify-order result", data);
+          } catch (err) {
+            log("invoke error", { message: err instanceof Error ? err.message : String(err) });
+          }
+        })()
+      );
+    }
+    
+    if (event.type === "charge.succeeded") {
+      const charge = event.data.object as any;
+      const piId = typeof charge.payment_intent === 'string' ? charge.payment_intent : undefined;
+
+      EdgeRuntime.waitUntil(
+        (async () => {
+          try {
+            log("Invoking create-shopify-order (from Charge)", { paymentIntentId: piId });
+            if (piId) {
+              const { data, error } = await supabase.functions.invoke("create-shopify-order", {
+                body: { paymentIntentId: piId, trigger: "charge.succeeded" },
+              });
+              if (error) log("create-shopify-order error", { error });
+              else log("create-shopify-order result", data);
+            }
           } catch (err) {
             log("invoke error", { message: err instanceof Error ? err.message : String(err) });
           }

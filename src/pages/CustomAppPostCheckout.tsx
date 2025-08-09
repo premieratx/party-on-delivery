@@ -120,14 +120,17 @@ const CustomAppPostCheckout = () => {
   // FIXED: Standardized post-checkout with minimal information
   if (appConfig?.custom_post_checkout_config) {
     const config = appConfig.custom_post_checkout_config;
-    if (config.heading || config.subheading || config.cta_button_text) {
+    if (config.heading || config.subheading || config.title || config.message || config.cta_button_text) {
       // Custom post-checkout configuration exists
       return (
         <PostCheckoutStandardized
           orderNumber={orderData?.order_number || 'Unknown'}
           customerName={orderData?.customer_name || 'Customer'}
-          customHeading={config.heading}
-          customSubheading={config.subheading}
+          deliveryDate={orderData?.delivery_date}
+          deliveryTime={orderData?.delivery_time}
+          lineItems={orderData?.line_items}
+          customHeading={config.title || config.heading}
+          customSubheading={config.message || config.subheading}
           customButtonText={config.cta_button_text}
           customButtonUrl={config.cta_button_url}
           backgroundColor={config.background_color}
@@ -143,8 +146,11 @@ const CustomAppPostCheckout = () => {
     <PostCheckoutStandardized
       orderNumber={orderData?.order_number || 'Unknown'}
       customerName={orderData?.customer_name || 'Customer'}
-      customHeading={(appConfig as any)?.custom_post_checkout_config?.heading || pc?.heading || pc?.headline}
-      customSubheading={(appConfig as any)?.custom_post_checkout_config?.subheading || pc?.subheading || pc?.subheadline}
+      deliveryDate={orderData?.delivery_date}
+      deliveryTime={orderData?.delivery_time}
+      lineItems={orderData?.line_items}
+      customHeading={(appConfig as any)?.custom_post_checkout_config?.title || (appConfig as any)?.custom_post_checkout_config?.heading || pc?.heading || pc?.headline}
+      customSubheading={(appConfig as any)?.custom_post_checkout_config?.message || (appConfig as any)?.custom_post_checkout_config?.subheading || pc?.subheading || pc?.subheadline}
       customButtonText={(appConfig as any)?.custom_post_checkout_config?.cta_button_text || pc?.cta_button_text}
       customButtonUrl={(appConfig as any)?.custom_post_checkout_config?.cta_button_url || pc?.cta_button_url}
       backgroundColor={(appConfig as any)?.custom_post_checkout_config?.background_color || pc?.background_color}

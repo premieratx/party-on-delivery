@@ -241,8 +241,8 @@ const OrderComplete = () => {
       deliveryDate={orderData?.delivery_date}
       deliveryTime={orderData?.delivery_time}
       lineItems={orderData?.line_items}
-      customHeading={cpc.heading || pc.heading || pc.headline}
-      customSubheading={cpc.subheading || pc.subheading || pc.subheadline}
+      customHeading={cpc.title || cpc.heading || pc.heading || pc.headline}
+      customSubheading={cpc.message || cpc.subheading || pc.subheading || pc.subheadline}
       customButtonText={cpc.cta_button_text || pc.cta_button_text}
       customButtonUrl={cpc.cta_button_url || pc.cta_button_url}
       backgroundColor={cpc.background_color || pc.background_color}
