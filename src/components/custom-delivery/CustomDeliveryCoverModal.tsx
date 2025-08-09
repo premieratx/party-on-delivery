@@ -106,11 +106,11 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
 
               {/* Middle: Centered text rows with separators */}
               <div className="flex-1 w-full max-w-sm flex items-center">
-                <div className="w-full mt-4 space-y-2 mx-auto origin-center scale-[0.66]">
+                <div className="w-full mt-4 space-y-2 mx-auto">
                   {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
                     <React.Fragment key={idx}>
                       <p
-                        className="text-center text-white text-xl md:text-2xl leading-tight animate-[fade-in_0.5s_ease-out]"
+                        className="text-center text-white text-xl md:text-2xl leading-tight font-semibold animate-[fade-in_0.5s_ease-out]"
                         style={{ animationDelay: `${286 + idx * 156}ms`, animationFillMode: 'both' }}
                       >
                         {item}
@@ -127,7 +127,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               <div className="w-full max-w-sm space-y-3 mt-6 mb-2">
                 <Button
                   size="lg"
-                  className={`w-full h-12 rounded-full text-base font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.25s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
+                  className={`w-full h-12 rounded-full text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.25s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
                   style={!enablePulse ? { animationDelay: '416ms', animationFillMode: 'both' } : undefined}
                   onClick={() => {
                     onOpenChange(false);
