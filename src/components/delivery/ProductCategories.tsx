@@ -159,8 +159,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const stepMapping = getStepMapping();
   
-  // Get the maximum category index based on available collections/tabs
-  const maxCategoryIndex = (customCollections?.tabs?.length || stepMapping.length) - 1;
+  // Determine how many tabs to show based on config
+  const displayedTabsCount = Math.min(customCollections?.tab_count ?? stepMapping.length, stepMapping.length);
+  const displayedTabs = stepMapping.slice(0, displayedTabsCount);
+  const maxCategoryIndex = displayedTabsCount - 1;
+  const isCocktailsTab = !!stepMapping[selectedCategory]?.handle?.includes('cocktail');
 
   useEffect(() => {
     // Always load all collections for main delivery app
@@ -389,13 +392,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const selectedCollection = collections.find(c => c.handle === stepMapping[selectedCategory]?.handle);
 
-  // FIXED: Auto-select first collection when collections load
+  // Ensure selected category is valid when collections load or config changes
   useEffect(() => {
-    if (collections.length > 0 && selectedCategory === 4 && !selectedCollection) {
+    if (collections.length > 0 && (selectedCategory >= displayedTabsCount || !selectedCollection)) {
       console.log('Auto-selecting first collection:', stepMapping[0]?.title);
       setSelectedCategory(0);
     }
-  }, [collections, selectedCategory, selectedCollection]);
+  }, [collections, selectedCategory, selectedCollection, displayedTabsCount, stepMapping]);
 
   // Removed auto-select on last tab to allow clicking far-right tab
   // Previously this forced index 4 back to 0 when custom collections exist, which
@@ -463,8 +466,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Handle product click for cocktails (step 4 now)
   const handleProductClick = (product: ShopifyProduct) => {
-    // Only enable lightbox for cocktails (step 4, index 4)
-    if (selectedCategory === 4) { // Cocktails is now index 4
+    // Enable lightbox for cocktails collections
+    if (isCocktailsTab) {
       setLightboxProduct(product);
       setIsLightboxOpen(true);
     }
@@ -622,7 +625,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className={`flex gap-1 h-14 ${scrolled ? 'sm:h-14' : 'sm:h-20'}`}>
-            {stepMapping.slice(0, 5).map((step, index) => {
+            {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
               
@@ -695,7 +698,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     cartItemCount > 0 
                       ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
                       : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                  } ${selectedCategory === 4 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
+                  } ${selectedCategory === displayedTabsCount - 1 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
                 >
                   <div className={`text-[9px] font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
                 </button>
@@ -732,7 +735,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     cartItemCount > 0 
                       ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
                       : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                  } ${selectedCategory === 4 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
+                  } ${selectedCategory === displayedTabsCount - 1 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
                 >
                   {cartItemCount > 0 ? (
                     <>
@@ -782,7 +785,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </div>
             
             {/* Add instruction text for cocktails only */}
-            {selectedCategory === 4 && (
+            {isCocktailsTab && (
               <div className="text-center mt-2">
                 <p className="text-sm text-muted-foreground">Click each item to see photos and details</p>
               </div>
@@ -844,7 +847,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                <div 
                  key={product.id} 
                  className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
-                   selectedCategory === 4 ? 'cursor-pointer hover:border-primary/50' : ''
+                   isCocktailsTab ? 'cursor-pointer hover:border-primary/50' : ''
                  }`}
                  onClick={() => handleProductClick(product)}
                >
@@ -861,8 +864,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                  <div className={`flex flex-col flex-1 justify-between ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
                    <div className="flex-1 flex flex-col justify-start">
                     {(() => {
-                      // For cocktails (selectedCategory === 4), show full title without truncation
-                      if (selectedCategory === 4) {
+                      // For cocktails, show full title without truncation
+                      if (isCocktailsTab) {
                         return (
                           <h4 className="font-bold leading-tight text-center text-sm mb-2">
                             {product.title}
@@ -921,7 +924,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     ) : null}
 
                       {/* Cocktail drink count - only show for cocktails */}
-                      {selectedCategory === 4 && (() => {
+                      {isCocktailsTab && (() => {
                         const drinkMatch = product.description.match(/(\d+)\s*(?:drinks?|servings?|cocktails?)/i);
                         if (drinkMatch) {
                           return (
