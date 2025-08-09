@@ -51,7 +51,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   const [showSparkle, setShowSparkle] = React.useState(true);
   const [enablePulse, setEnablePulse] = React.useState(false);
   React.useEffect(() => {
-    const t = setTimeout(() => setShowSparkle(false), 1500);
+    const t = setTimeout(() => setShowSparkle(false), 4500);
     const p = setTimeout(() => setEnablePulse(true), 1000); // start pulse after initial sequence
     return () => {
       clearTimeout(t);
@@ -86,7 +86,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     loading="eager"
                   />
                   {showSparkle && (
-                    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                    <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-hidden="true" style={{ width: '300%', height: '300%' }}>
                       <span className="sparkle sparkle-sm" style={{ top: '12%', left: '22%', animationDelay: '120ms' }} />
                       <span className="sparkle sparkle-md" style={{ top: '28%', left: '76%', animationDelay: '240ms' }} />
                       <span className="sparkle sparkle-lg" style={{ top: '60%', left: '18%', animationDelay: '360ms' }} />
@@ -96,22 +96,22 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     </div>
                   )}
                 </div>
-                <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
+                <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '104ms', animationFillMode: 'both' }}>
                   {title || appName}
                 </h1>
-                <p className="mt-2 text-white/80 text-lg animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
+                <p className="mt-2 text-white/80 text-lg animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '208ms', animationFillMode: 'both' }}>
                   {subtitle}
                 </p>
               </header>
 
               {/* Middle: Centered text rows with separators */}
               <div className="flex-1 w-full max-w-sm flex items-center">
-                <div className="w-full mt-4 space-y-2">
+                <div className="w-full mt-4 space-y-2 mx-auto origin-center scale-[0.66]">
                   {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
                     <React.Fragment key={idx}>
                       <p
                         className="text-center text-white text-xl md:text-2xl leading-tight animate-[fade-in_0.5s_ease-out]"
-                        style={{ animationDelay: `${220 + idx * 120}ms`, animationFillMode: 'both' }}
+                        style={{ animationDelay: `${286 + idx * 156}ms`, animationFillMode: 'both' }}
                       >
                         {item}
                       </p>
@@ -127,8 +127,8 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               <div className="w-full max-w-sm space-y-3 mt-6 mb-2">
                 <Button
                   size="lg"
-                  className={`w-full h-12 rounded-full text-base font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
-                  style={!enablePulse ? { animationDelay: '320ms', animationFillMode: 'both' } : undefined}
+                  className={`w-full h-12 rounded-full text-base font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.25s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
+                  style={!enablePulse ? { animationDelay: '416ms', animationFillMode: 'both' } : undefined}
                   onClick={() => {
                     onOpenChange(false);
                     onStartOrder?.();
