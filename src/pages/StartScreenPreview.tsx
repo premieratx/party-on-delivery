@@ -1,0 +1,117 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { CustomDeliveryStartScreen } from "@/components/custom-delivery/CustomDeliveryStartScreen";
+import { CustomDeliveryCoverModal } from "@/components/custom-delivery/CustomDeliveryCoverModal";
+
+interface AppRecord {
+  app_name: string;
+  app_slug: string;
+  logo_url?: string | null;
+  start_screen_config?: {
+    title?: string;
+    subtitle?: string;
+    logo_url?: string;
+  } | null;
+}
+
+export default function StartScreenPreview() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [app, setApp] = useState<AppRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const appSlug = searchParams.get("app");
+  const mode = (searchParams.get("mode") || "modal").toLowerCase(); // "modal" | "card"
+
+  // Optional quick overrides for design iteration via URL params
+  const overrideTitle = searchParams.get("title") || undefined;
+  const overrideSubtitle = searchParams.get("subtitle") || undefined;
+  const overrideLogo = searchParams.get("logo") || undefined;
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        if (appSlug) {
+          const { data, error } = await supabase
+            .from("delivery_app_variations")
+            .select("app_name, app_slug, logo_url, start_screen_config")
+            .eq("app_slug", appSlug)
+            .maybeSingle();
+          if (!error && data) setApp(data as unknown as AppRecord);
+          else setApp(null);
+        } else {
+          // Fallback: use the app marked as homepage
+          const { data, error } = await supabase
+            .from("delivery_app_variations")
+            .select("app_name, app_slug, logo_url, start_screen_config")
+            .eq("is_homepage", true)
+            .maybeSingle();
+          if (!error && data) setApp(data as unknown as AppRecord);
+          else setApp(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [appSlug]);
+
+  const resolved = useMemo(() => {
+    const title = overrideTitle || app?.start_screen_config?.title || app?.app_name || "Start";
+    const subtitle = overrideSubtitle || app?.start_screen_config?.subtitle || "Exclusive concierge delivery";
+    const logoUrl = overrideLogo || app?.start_screen_config?.logo_url || app?.logo_url || undefined;
+    return { title, subtitle, logoUrl };
+  }, [app, overrideLogo, overrideSubtitle, overrideTitle]);
+
+  const handleStartOrder = () => {
+    if (app?.app_slug) navigate(`/app/${app.app_slug}`);
+    else navigate("/");
+  };
+
+  const handleSearch = () => navigate("/product-search");
+  const handleGoHome = () => navigate("/");
+
+  if (loading) {
+    return (
+      <main className="min-h-screen grid place-items-center">
+        <div className="text-muted-foreground">Loading start screen…</div>
+      </main>
+    );
+  }
+
+  if (!app) {
+    return (
+      <main className="min-h-screen grid place-items-center">
+        <div className="text-destructive">No app found. Provide ?app=your-app-slug or set a homepage app.</div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-background">
+      {mode === "modal" ? (
+        <CustomDeliveryCoverModal
+          open={true}
+          onOpenChange={() => {}}
+          onStartOrder={handleStartOrder}
+          appName={app.app_name}
+          logoUrl={resolved.logoUrl}
+          title={resolved.title}
+          subtitle={resolved.subtitle}
+        />
+      ) : (
+        <CustomDeliveryStartScreen
+          appName={app.app_name}
+          title={resolved.title}
+          subtitle={resolved.subtitle}
+          logoUrl={resolved.logoUrl}
+          onStartOrder={handleStartOrder}
+          onSearchProducts={handleSearch}
+          onGoHome={handleGoHome}
+        />
+      )}
+    </main>
+  );
+}
