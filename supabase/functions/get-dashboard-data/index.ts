@@ -97,11 +97,13 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in dashboard data retrieval", { message: errorMessage });
+    const errMsg = error instanceof Error
+      ? (error.message || JSON.stringify(error))
+      : (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    logStep("ERROR in dashboard data retrieval", { message: errMsg });
     
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: errMsg,
       success: false 
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -233,95 +235,77 @@ async function getAdminDashboardData(supabase: any): Promise<DashboardData> {
 async function getCustomerDashboardData(supabase: any, customerEmail: string): Promise<DashboardData> {
   logStep("Fetching customer dashboard data", { customerEmail });
 
-  // Get customer info
+  // Try to get customer info (may not exist yet)
   const { data: customer, error: customerError } = await supabase
     .from('customers')
     .select('*')
     .eq('email', customerEmail)
-    .single();
+    .maybeSingle();
 
-  if (customerError) throw customerError;
+  if (customerError && customerError.code !== 'PGRST116') {
+    // Only log unexpected errors
+    logStep('Customer lookup error', { error: customerError });
+  }
 
-  // Get customer's orders - include group orders and shared orders
-  let ordersQuery = supabase
+  // Fetch orders from multiple signals and merge client-side to avoid complex OR filters
+  const ordersByCustomerIdPromise = customer
+    ? supabase.from('customer_orders').select('*').eq('customer_id', customer.id)
+    : Promise.resolve({ data: [], error: null });
+
+  // Orders where delivery_address contains the email
+  const ordersByEmailPromise = supabase
     .from('customer_orders')
     .select('*')
-    .order('created_at', { ascending: false });
+    .contains('delivery_address', { email: customerEmail });
 
-  // Build comprehensive filter for all related orders, ensuring we only get unique orders
-  const filters = [`customer_id.eq.${customer.id}`];
-  
-  // Add session tokens if they exist
-  if (customer.session_tokens && customer.session_tokens.length > 0) {
-    customer.session_tokens.forEach((token: string) => {
-      if (token && token.trim()) {
-        filters.push(`session_id.eq.${token}`);
-      }
-    });
-  }
-  
-  // Add email-based orders
-  filters.push(`delivery_address->>email.eq.${customerEmail}`);
-  
-  // Look for group orders where this customer is a participant
-  const { data: groupOrders } = await supabase
+  // Orders where the user appears in group_participants
+  const groupOrdersPromise = supabase
     .from('customer_orders')
-    .select('id, share_token')
+    .select('*')
     .contains('group_participants', [{ email: customerEmail }]);
-  
-  if (groupOrders && groupOrders.length > 0) {
-    groupOrders.forEach((order: any) => {
-      filters.push(`id.eq.${order.id}`);
-    });
-  }
-  
-  // Also find orders that might be linked by share_token
-  const { data: sharedTokenOrders } = await supabase
-    .from('customer_orders')
-    .select('share_token')
-    .or(`customer_id.eq.${customer.id},delivery_address->>email.eq.${customerEmail}`)
-    .not('share_token', 'is', null);
-  
-  if (sharedTokenOrders && sharedTokenOrders.length > 0) {
-    const uniqueTokens = [...new Set(sharedTokenOrders.map(o => o.share_token))];
-    uniqueTokens.forEach(token => {
-      if (token) {
-        filters.push(`share_token.eq.${token}`);
-      }
-    });
-  }
-  
-  const { data: allOrders, error: ordersError } = await ordersQuery.or(filters.join(','));
 
-  if (ordersError) throw ordersError;
+  const [byCustomerId, byEmail, byGroup] = await Promise.all([
+    ordersByCustomerIdPromise,
+    ordersByEmailPromise,
+    groupOrdersPromise
+  ]);
 
-  // Remove duplicates by keeping only one record per session_id/shopify_order_id
-  const ordersMap = new Map();
-  allOrders?.forEach(order => {
+  // Handle any errors gracefully
+  if (byCustomerId.error) logStep('Orders by customer_id error', { error: byCustomerId.error });
+  if (byEmail.error) logStep('Orders by email error', { error: byEmail.error });
+  if (byGroup.error) logStep('Group orders error', { error: byGroup.error });
+
+  const allOrdersRaw = [
+    ...(byCustomerId.data || []),
+    ...(byEmail.data || []),
+    ...(byGroup.data || [])
+  ];
+
+  // De-duplicate orders by session_id/shopify_order_id/id
+  const ordersMap = new Map<string, any>();
+  for (const order of allOrdersRaw) {
     const key = order.session_id || order.shopify_order_id || order.id;
     const existing = ordersMap.get(key);
-    
-    // Prefer orders with customer_id set, or the most recent one
-    if (!existing || 
-        (order.customer_id && !existing.customer_id) ||
-        (order.customer_id === existing.customer_id && new Date(order.created_at) > new Date(existing.created_at))) {
+    if (!existing || new Date(order.created_at) > new Date(existing.created_at)) {
       ordersMap.set(key, order);
     }
-  });
-  
-  const orders = Array.from(ordersMap.values()).sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  }
+
+  const orders = Array.from(ordersMap.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  // Get recent addresses
+  // Recent addresses for this email
   const { data: addresses, error: addressesError } = await supabase
     .from('delivery_addresses')
     .select('*')
     .eq('customer_email', customerEmail)
     .order('last_used_at', { ascending: false });
+  if (addressesError) logStep('Addresses fetch error', { error: addressesError });
 
-  const totalRevenue = customer.total_spent || 0;
-  const totalOrders = customer.total_orders || 0;
+  // Derived totals from orders to ensure values even if customer row lacks stats
+  const totalRevenue = orders.reduce((sum: number, o: any) => sum + parseFloat(o.total_amount || 0), 0);
+  const totalOrders = orders.length;
 
   const recentActivity = orders.slice(0, 10).map((order: any) => ({
     type: 'order',
@@ -334,9 +318,11 @@ async function getCustomerDashboardData(supabase: any, customerEmail: string): P
     deliveryTime: order.delivery_time
   }));
 
+  const customersArr = customer ? [{ ...customer, addresses: addresses || [] }] : [{ email: customerEmail, addresses: addresses || [] }];
+
   return {
     orders,
-    customers: [{ ...customer, addresses: addresses || [] }],
+    customers: customersArr,
     affiliateReferrals: [],
     totalRevenue,
     totalOrders,

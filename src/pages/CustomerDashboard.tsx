@@ -114,13 +114,15 @@ const CustomerDashboard = () => {
 
       if (!customerData) {
         // Create new customer profile
+        const fullName = [session.user.user_metadata?.first_name, session.user.user_metadata?.last_name]
+          .filter(Boolean)
+          .join(' ') || session.user.user_metadata?.name || null;
         const { data: newCustomer, error: createError } = await supabase
           .from('customers')
           .insert({
             email: session.user.email!,
             google_id: session.user.id,
-            first_name: session.user.user_metadata?.first_name,
-            last_name: session.user.user_metadata?.last_name,
+            name: fullName,
           })
           .select()
           .single();
