@@ -49,9 +49,14 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   backgroundImageUrl,
 }) => {
   const [showSparkle, setShowSparkle] = React.useState(true);
+  const [enablePulse, setEnablePulse] = React.useState(false);
   React.useEffect(() => {
     const t = setTimeout(() => setShowSparkle(false), 3000);
-    return () => clearTimeout(t);
+    const p = setTimeout(() => setEnablePulse(true), 1000); // start pulse after initial sequence
+    return () => {
+      clearTimeout(t);
+      clearTimeout(p);
+    };
   }, []);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -120,7 +125,8 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               <div className="w-full max-w-sm space-y-3 mt-6 mb-2">
                 <Button
                   size="lg"
-                  className="w-full h-12 rounded-full text-base font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90"
+                  className={`w-full h-12 rounded-full text-base font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
+                  style={!enablePulse ? { animationDelay: '320ms', animationFillMode: 'both' } : undefined}
                   onClick={() => {
                     onOpenChange(false);
                     onStartOrder?.();
@@ -129,16 +135,6 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                   {buttonText}
                 </Button>
 
-                <Button
-                  size="lg"
-                  className="w-full h-12 rounded-full text-base font-semibold bg-accent text-accent-foreground hover:bg-accent/90"
-                  onClick={() => {
-                    onOpenChange(false);
-                    onSecondaryAction?.();
-                  }}
-                >
-                  {secondaryButtonText}
-                </Button>
               </div>
             </div>
           </div>

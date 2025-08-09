@@ -205,13 +205,6 @@ export default function CustomAppView() {
     setCurrentStep('tabs');
   };
 
-  const goToMargaritas = () => {
-    // Ensure modal closes by switching to tabs first
-    setCurrentStep('tabs');
-    if (appConfig?.app_slug) {
-      navigate(`/app/${appConfig.app_slug}?step=tabs&category=cocktails&productTitle=Spicy%20Margarita`);
-    }
-  };
   // Prefill delivery address for Premier app
   useEffect(() => {
     if (appConfig?.app_slug === 'premier-party-cruises---official-alcohol-delivery-service') {
@@ -395,7 +388,6 @@ export default function CustomAppView() {
           open={true}
           onOpenChange={() => {}}
           onStartOrder={goToAppTabs}
-          onSecondaryAction={goToMargaritas}
           appName={appConfig.app_name}
           logoUrl={resolved.logoUrl}
           title={resolved.title}
@@ -403,7 +395,6 @@ export default function CustomAppView() {
           buttonText={resolved.buttonText}
           checklistItems={resolved.checklist}
           backgroundImageUrl={bgImage}
-          secondaryButtonText="Margaritas Now"
         />
       )}
       {/* Start screen enabled above; tabs shown behind/after */}

@@ -414,12 +414,6 @@ const [config, setConfig] = useState<StartScreenConfig>({
                           >
                             {config.start_button_text}
                           </button>
-                          <button 
-                            className="w-full h-11 text-base rounded-full border mt-2"
-                            style={{ color: config.text_color }}
-                          >
-                            Margaritas Now
-                          </button>
                         </div>
                       </div>
                     </div>

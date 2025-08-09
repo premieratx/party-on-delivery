@@ -100,13 +100,6 @@ export default function StartScreenPreview() {
     else navigate("/");
   };
 
-  const goToMargaritas = () => {
-    if (app?.app_slug) {
-      navigate(`/app/${app.app_slug}?step=tabs&category=cocktails&productTitle=Spicy%20Margarita`);
-    } else {
-      navigate("/");
-    }
-  };
 
   useEffect(() => {
     if (!isPreview && !loading) {
@@ -139,7 +132,6 @@ export default function StartScreenPreview() {
           open={true}
           onOpenChange={() => {}}
           onStartOrder={goToAppTabs}
-          onSecondaryAction={goToMargaritas}
           appName={app.app_name}
           logoUrl={resolved.logoUrl}
           title={resolved.title}
@@ -147,7 +139,6 @@ export default function StartScreenPreview() {
           buttonText={resolved.buttonText}
           checklistItems={resolved.checklist}
           backgroundImageUrl={bgImage}
-          secondaryButtonText="Margaritas Now"
         />
       ) : (
         <div className="min-h-screen grid place-items-center">
