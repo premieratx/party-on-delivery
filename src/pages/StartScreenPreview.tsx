@@ -29,7 +29,7 @@ export default function StartScreenPreview() {
   const [loading, setLoading] = useState(true);
 
   const appSlug = searchParams.get("app");
-  const isPreview = searchParams.get("preview") === "1" || searchParams.get("mode") === "preview";
+  const isPreview = searchParams.get("preview") !== "0" && searchParams.get("mode") !== "redirect";
 
   // Optional quick overrides for design iteration via URL params
   const overrideTitle = searchParams.get("title") || undefined;

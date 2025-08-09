@@ -9,7 +9,8 @@ import { CustomDeliveryCart } from '@/components/custom-delivery/CustomDeliveryC
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
+import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
+import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 type CustomDeliveryStep = 'start' | 'tabs' | 'cart';
 
@@ -130,7 +131,7 @@ export default function CustomAppView() {
   const [searchParams] = useSearchParams();
   useWakeLock();
   
-  const [currentStep, setCurrentStep] = useAppStep('tabs');
+  const [currentStep, setCurrentStep] = useAppStep('start');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
   
@@ -174,6 +175,43 @@ export default function CustomAppView() {
       }
     }
   }, [appContext]);
+
+  const resolved = useMemo(() => {
+    if (!appConfig) return {
+      title: 'Welcome',
+      subtitle: 'Exclusive concierge delivery',
+      logoUrl: undefined,
+      buttonText: 'Order Now',
+      checklist: ['Locally Owned', 'Same Day Delivery', 'Cocktail Kits on Demand']
+    };
+    const cfg: any = appConfig.start_screen_config || {};
+    return {
+      title: cfg.custom_title || cfg.title || appConfig.app_name || 'Welcome',
+      subtitle: cfg.custom_subtitle || cfg.subtitle || 'Exclusive concierge delivery',
+      logoUrl: cfg.logo_url || appConfig.logo_url,
+      buttonText: cfg.start_button_text || 'Order Now',
+      checklist: [
+        cfg.checklist_item_1 || 'Locally Owned',
+        cfg.checklist_item_2 || 'Same Day Delivery',
+        cfg.checklist_item_3 || 'Cocktail Kits on Demand',
+        cfg.checklist_item_4 || 'Private Event Specialists',
+        cfg.checklist_item_5 || 'Delivering All Over Austin',
+      ],
+    };
+  }, [appConfig]);
+
+  const goToAppTabs = () => {
+    try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
+    setCurrentStep('tabs');
+  };
+
+  const goToMargaritas = () => {
+    if (appConfig?.app_slug) {
+      navigate(`/app/${appConfig.app_slug}?step=tabs&category=cocktails&productTitle=Spicy%20Margarita`);
+    } else {
+      setCurrentStep('tabs');
+    }
+  };
 
   // Prefill delivery address for Premier app
   useEffect(() => {
@@ -353,7 +391,23 @@ export default function CustomAppView() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Start screen removed: go straight to tabs */}
+      {currentStep === 'start' && (
+        <CustomDeliveryCoverModal
+          open={true}
+          onOpenChange={() => {}}
+          onStartOrder={goToAppTabs}
+          onSecondaryAction={goToMargaritas}
+          appName={appConfig.app_name}
+          logoUrl={resolved.logoUrl}
+          title={resolved.title}
+          subtitle={resolved.subtitle}
+          buttonText={resolved.buttonText}
+          checklistItems={resolved.checklist}
+          backgroundImageUrl={bgImage}
+          secondaryButtonText="Margaritas Now"
+        />
+      )}
+      {/* Start screen enabled above; tabs shown behind/after */}
       <CustomDeliveryTabsPage
         appName={appConfig.app_name}
         heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
