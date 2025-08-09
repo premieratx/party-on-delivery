@@ -3,8 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
-
-
+import discoBall from '@/assets/disco-ball.gif';
 
 interface CoverFeature {
   label: string;
@@ -49,6 +48,11 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   checklistItems = defaultChecklist,
   backgroundImageUrl,
 }) => {
+  const [showSparkle, setShowSparkle] = React.useState(true);
+  React.useEffect(() => {
+    const t = setTimeout(() => setShowSparkle(false), 3000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 overflow-hidden max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
@@ -63,9 +67,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
             {/* Overlays */}
             <div className="absolute inset-0 bg-black/70" />
             {/* Light sweep overlay */}
-            <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-25">
-              <div className="absolute -inset-1 bg-gradient-to-tr from-transparent via-white/12 to-transparent blur-2xl animate-slide-diagonal" />
-            </div>
+            {/* Disco sparkle only; sweep removed for performance */}
 
             {/* Content */}
             <div className="relative z-10 flex h-full flex-col items-center justify-between py-6 px-6">
@@ -78,11 +80,15 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     className="h-44 w-auto max-h-[32vh] drop-shadow-lg animate-[fade-in_0.625s_ease-out]"
                     loading="eager"
                   />
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/60 to-transparent blur-sm animate-shine"
-                  />
                 </div>
+                {showSparkle && (
+                  <img
+                    src={discoBall}
+                    alt="Disco ball sparkle animation"
+                    className="mx-auto mb-2 h-14 w-14 animate-[fade-in_0.3s_ease-out] drop-shadow"
+                    aria-hidden="true"
+                  />
+                )}
                 <h1 className="text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
                   {title || appName}
                 </h1>
