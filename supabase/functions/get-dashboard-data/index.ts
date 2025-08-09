@@ -19,6 +19,7 @@ interface DashboardData {
   totalOrders: number;
   pendingCommissions: number;
   recentActivity: any[];
+  abandonedOrders?: any[];
 }
 
 serve(async (req) => {
@@ -178,6 +179,18 @@ async function getAdminDashboardData(supabase: any): Promise<DashboardData> {
 
   if (referralsError) throw referralsError;
 
+  // Load abandoned orders (last 14 days)
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  const { data: abandonedOrders, error: abandonedErr } = await supabase
+    .from('abandoned_orders')
+    .select('*')
+    .gte('abandoned_at', fourteenDaysAgo.toISOString())
+    .order('abandoned_at', { ascending: false });
+  if (abandonedErr) {
+    console.warn('Abandoned orders fetch error', abandonedErr);
+  }
+
   // Calculate totals
   const totalRevenue = orders.reduce((sum: number, order: any) => sum + parseFloat(order.total_amount || 0), 0);
   const totalOrders = orders.length;
@@ -212,7 +225,8 @@ async function getAdminDashboardData(supabase: any): Promise<DashboardData> {
     totalRevenue,
     totalOrders,
     pendingCommissions,
-    recentActivity
+    recentActivity,
+    abandonedOrders: abandonedOrders || []
   };
 }
 

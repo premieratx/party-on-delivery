@@ -108,21 +108,8 @@ export default function AdminDashboard() {
         setAffiliates(affiliatesData || []);
       }
 
-      // Load abandoned orders from past 7 days
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const { data: abandonedData, error: abandonedError } = await supabase
-        .from('abandoned_orders')
-        .select('*')
-        .gte('abandoned_at', sevenDaysAgo.toISOString())
-        .order('abandoned_at', { ascending: false });
-
-      if (abandonedError) {
-        console.error('Error loading abandoned orders:', abandonedError);
-      } else {
-        setAbandonedOrders(abandonedData || []);
-      }
+      // Abandoned orders via dashboard service
+      setAbandonedOrders(dashboardData.data.abandonedOrders || []);
 
     } catch (error: any) {
       console.error('Error loading dashboard data:', error);
