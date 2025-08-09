@@ -20,6 +20,9 @@ interface StartScreenConfig {
   start_button_text?: string;
   search_button_text?: string;
   home_button_text?: string;
+  checklist_item_1?: string;
+  checklist_item_2?: string;
+  checklist_item_3?: string;
   background_color: string;
   primary_color: string;
   text_color: string;
@@ -45,14 +48,17 @@ export function CustomStartScreenEditor({
   onClose, 
   onConfigUpdated 
 }: CustomStartScreenEditorProps) {
-  const [config, setConfig] = useState<StartScreenConfig>({
+const [config, setConfig] = useState<StartScreenConfig>({
     enabled: false,
     app_name: appName,
     custom_title: '',
     custom_subtitle: 'Powered by Party On Delivery',
-    start_button_text: 'Start Order Now',
+    start_button_text: 'Order Now',
     search_button_text: 'Search All Products',
     home_button_text: 'Back to Main App',
+    checklist_item_1: 'Locally Owned',
+    checklist_item_2: 'Same Day Delivery',
+    checklist_item_3: 'Cocktail Kits on Demand',
     background_color: '#0b0b0b',
     primary_color: '#3b82f6',
     text_color: '#f8fafc',
@@ -269,8 +275,38 @@ export function CustomStartScreenEditor({
                         id="start-button"
                         value={config.start_button_text || ''}
                         onChange={(e) => setConfig(prev => ({ ...prev, start_button_text: e.target.value }))}
-                        placeholder="Start Order Now"
+                        placeholder="Order Now"
                       />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <Label htmlFor="check-1">Checklist Item 1</Label>
+                        <Input
+                          id="check-1"
+                          value={config.checklist_item_1 || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, checklist_item_1: e.target.value }))}
+                          placeholder="Locally Owned"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="check-2">Checklist Item 2</Label>
+                        <Input
+                          id="check-2"
+                          value={config.checklist_item_2 || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, checklist_item_2: e.target.value }))}
+                          placeholder="Same Day Delivery"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="check-3">Checklist Item 3</Label>
+                        <Input
+                          id="check-3"
+                          value={config.checklist_item_3 || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, checklist_item_3: e.target.value }))}
+                          placeholder="Cocktail Kits on Demand"
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -335,15 +371,29 @@ export function CustomStartScreenEditor({
                               <img src={config.logo_url} alt="Logo" className="h-10 w-auto" />
                             )}
                           </div>
-                          <h1 className="text-lg font-bold" style={{ color: config.text_color }}>
+                          <h1 className=\"text-lg font-bold\" style={{ color: config.text_color }}>
                             {config.custom_title || config.app_name}
                           </h1>
-                          <p className="text-sm opacity-80">{config.custom_subtitle}</p>
+                          <p className=\"text-sm opacity-80\">{config.custom_subtitle}</p>
+                          <div className=\"mt-3 text-left space-y-1 text-sm\">
+                            {[config.checklist_item_1, config.checklist_item_2, config.checklist_item_3].filter(Boolean).map((t, i) => (
+                              <div key={i} className=\"flex items-center gap-2\">
+                                <span className=\"inline-block h-3 w-3 rounded-full bg-[var(--primary-color)]\" />
+                                <span>{t}</span>
+                              </div>
+                            ))}
+                          </div>
                           <button 
-                            className="w-full h-12 text-base rounded-lg text-white font-medium"
+                            className=\"w-full h-12 text-base rounded-full text-white font-medium mt-3\"
                             style={{ backgroundColor: config.primary_color }}
                           >
                             {config.start_button_text}
+                          </button>
+                          <button 
+                            className=\"w-full h-11 text-base rounded-full border mt-2\"
+                            style={{ color: config.text_color }}
+                          >
+                            Margaritas Now
                           </button>
                         </div>
                       </div>

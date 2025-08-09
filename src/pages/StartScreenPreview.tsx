@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomDeliveryStartScreen } from "@/components/custom-delivery/CustomDeliveryStartScreen";
 import { CustomDeliveryCoverModal } from "@/components/custom-delivery/CustomDeliveryCoverModal";
+import bgImage from "@/assets/old-fashioned-bg.jpg";
 
 interface AppRecord {
   app_name: string;
@@ -12,6 +12,13 @@ interface AppRecord {
     title?: string;
     subtitle?: string;
     logo_url?: string;
+    custom_title?: string;
+    custom_subtitle?: string;
+    start_button_text?: string;
+    checklist_item_1?: string;
+    checklist_item_2?: string;
+    checklist_item_3?: string;
+    primary_color?: string;
   } | null;
 }
 
@@ -22,7 +29,6 @@ export default function StartScreenPreview() {
   const [loading, setLoading] = useState(true);
 
   const appSlug = searchParams.get("app");
-  const mode = (searchParams.get("mode") || "modal").toLowerCase(); // "modal" | "card"
 
   // Optional quick overrides for design iteration via URL params
   const overrideTitle = searchParams.get("title") || undefined;
@@ -59,19 +65,45 @@ export default function StartScreenPreview() {
   }, [appSlug]);
 
   const resolved = useMemo(() => {
-    const title = overrideTitle || app?.start_screen_config?.title || app?.app_name || "Start";
-    const subtitle = overrideSubtitle || app?.start_screen_config?.subtitle || "Exclusive concierge delivery";
-    const logoUrl = overrideLogo || app?.start_screen_config?.logo_url || app?.logo_url || undefined;
-    return { title, subtitle, logoUrl };
+    const title =
+      overrideTitle ||
+      (app?.start_screen_config as any)?.custom_title ||
+      app?.start_screen_config?.title ||
+      app?.app_name ||
+      "Start";
+    const subtitle =
+      overrideSubtitle ||
+      (app?.start_screen_config as any)?.custom_subtitle ||
+      app?.start_screen_config?.subtitle ||
+      "Exclusive concierge delivery";
+    const logoUrl =
+      overrideLogo ||
+      app?.start_screen_config?.logo_url ||
+      app?.logo_url ||
+      undefined;
+    const buttonText =
+      (app?.start_screen_config as any)?.start_button_text ||
+      "Order Now";
+    const checklist = [
+      (app?.start_screen_config as any)?.checklist_item_1 || "Locally Owned",
+      (app?.start_screen_config as any)?.checklist_item_2 || "Same Day Delivery",
+      (app?.start_screen_config as any)?.checklist_item_3 || "Cocktail Kits on Demand",
+    ];
+    return { title, subtitle, logoUrl, buttonText, checklist };
   }, [app, overrideLogo, overrideSubtitle, overrideTitle]);
 
-  const handleStartOrder = () => {
-    if (app?.app_slug) navigate(`/app/${app.app_slug}`);
+  const goToAppTabs = () => {
+    if (app?.app_slug) navigate(`/app/${app.app_slug}?step=tabs`);
     else navigate("/");
   };
 
-  const handleSearch = () => navigate("/product-search");
-  const handleGoHome = () => navigate("/");
+  const goToMargaritas = () => {
+    if (app?.app_slug) {
+      navigate(`/app/${app.app_slug}?step=tabs&category=cocktails&productTitle=Spicy%20Margarita`);
+    } else {
+      navigate("/");
+    }
+  };
 
   if (loading) {
     return (
@@ -91,27 +123,20 @@ export default function StartScreenPreview() {
 
   return (
     <main className="min-h-screen bg-background">
-      {mode === "modal" ? (
-        <CustomDeliveryCoverModal
-          open={true}
-          onOpenChange={() => {}}
-          onStartOrder={handleStartOrder}
-          appName={app.app_name}
-          logoUrl={resolved.logoUrl}
-          title={resolved.title}
-          subtitle={resolved.subtitle}
-        />
-      ) : (
-        <CustomDeliveryStartScreen
-          appName={app.app_name}
-          title={resolved.title}
-          subtitle={resolved.subtitle}
-          logoUrl={resolved.logoUrl}
-          onStartOrder={handleStartOrder}
-          onSearchProducts={handleSearch}
-          onGoHome={handleGoHome}
-        />
-      )}
+      <CustomDeliveryCoverModal
+        open={true}
+        onOpenChange={() => {}}
+        onStartOrder={goToAppTabs}
+        onSecondaryAction={goToMargaritas}
+        appName={app.app_name}
+        logoUrl={resolved.logoUrl}
+        title={resolved.title}
+        subtitle={resolved.subtitle}
+        buttonText={resolved.buttonText}
+        checklistItems={resolved.checklist}
+        backgroundImageUrl={bgImage}
+        secondaryButtonText="Margaritas Now"
+      />
     </main>
   );
 }

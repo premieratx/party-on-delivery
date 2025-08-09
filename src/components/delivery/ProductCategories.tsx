@@ -118,6 +118,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const lastYRef = useRef(0);
   const [scrolled, setScrolled] = useState(false);
 
+  // Deep-linking: optional category/product from URL (e.g., ?category=cocktails&productTitle=Spicy%20Margarita)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('category');
+    const prodTitle = params.get('productTitle');
+    (window as any).__dl = { cat, prodTitle };
+  }, []);
+ 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 16);
@@ -399,6 +407,33 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       setSelectedCategory(0);
     }
   }, [collections, selectedCategory, selectedCollection, displayedTabsCount, stepMapping]);
+
+  // Apply deep-linking after collections are available
+  useEffect(() => {
+    if (collections.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const cat = (params.get('category') || '').toLowerCase();
+    const prodTitle = params.get('productTitle');
+
+    if (cat) {
+      const idx = stepMapping.findIndex((s) => s.handle.includes(cat));
+      if (idx >= 0) setSelectedCategory(idx);
+    }
+
+    if (prodTitle) {
+      // Give time for selectedCategory state to settle
+      setTimeout(() => {
+        const cocktailsIdx = stepMapping.findIndex((s) => s.handle.includes('cocktail'));
+        const activeIdx = cat ? stepMapping.findIndex((s) => s.handle.includes(cat)) : cocktailsIdx;
+        const coll = collections.find((c) => c.handle === stepMapping[activeIdx]?.handle);
+        const found = coll?.products.find((p) => p.title.toLowerCase().includes(prodTitle.toLowerCase()));
+        if (found) {
+          setLightboxProduct(found as any);
+          setIsLightboxOpen(true);
+        }
+      }, 300);
+    }
+  }, [collections, stepMapping.join ? stepMapping.join(',') : displayedTabsCount]);
 
   // Removed auto-select on last tab to allow clicking far-right tab
   // Previously this forced index 4 back to 0 when custom collections exist, which

@@ -2,8 +2,8 @@ import React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
-import discoBall from '@/assets/disco-ball.gif';
-import lakeScene from '@/assets/patio-party-lake-travis.jpg';
+import backgroundImage from '@/assets/old-fashioned-bg.jpg';
+import { Check } from 'lucide-react';
 
 interface CoverFeature {
   label: string;
@@ -13,128 +13,116 @@ export interface CustomDeliveryCoverModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onStartOrder?: () => void;
+  onSecondaryAction?: () => void;
+  secondaryButtonText?: string;
   appName: string;
   logoUrl?: string;
   title?: string;
   subtitle?: string;
-  phone?: string; // e.g., 5125550123 or (512) 555-0123
-  sms?: string;   // same as phone, will fallback to phone
+  buttonText?: string;
+  checklistItems?: string[]; // up to 3 items
+  backgroundImageUrl?: string;
+  // Legacy props kept for compatibility (unused in new design)
+  phone?: string;
+  sms?: string;
   features?: CoverFeature[];
 }
 
-const defaultFeatures: CoverFeature[] = [
-  { label: "On time" },
-  { label: "Locally owned" },
-  { label: "Cocktail kits" },
-  { label: "Events" },
-  { label: "Same‑day delivery" }
+const defaultChecklist = [
+  'Locally Owned',
+  'Same Day Delivery',
+  'Cocktail Kits on Demand',
 ];
 
 export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> = ({
   open,
   onOpenChange,
   onStartOrder,
+  onSecondaryAction,
+  secondaryButtonText = 'Margaritas Now',
   appName,
   logoUrl,
-  title = "Concierge Delivery Service",
+  title = 'Exclusive Concierge Delivery',
   subtitle = "Austin's favorite alcohol delivery service",
-  phone = "5125550123",
-  sms,
-  features = defaultFeatures,
+  buttonText = 'Order Now',
+  checklistItems = defaultChecklist,
+  backgroundImageUrl,
 }) => {
-  const telHref = `tel:${phone.replace(/[^0-9+]/g, '')}`;
-  const smsHref = `sms:${(sms || phone).replace(/[^0-9+]/g, '')}`;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 overflow-hidden max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
         <article className="relative w-full">
-          {/* Background layer */}
-          <div className="relative h-[86vh] max-h-[760px] rounded-2xl overflow-hidden">
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${lakeScene})` }} aria-hidden="true" />
-            {/* Gradient + glass overlays for readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/30 to-background/70" />
-            <div className="absolute inset-0 backdrop-blur-[2px]" />
-
-            {/* Decorative light sweep */}
-            <div className="pointer-events-none absolute -left-1/3 top-0 h-full w-2/3 bg-gradient-to-r from-transparent via-primary/25 to-transparent animate-slide-in-right" aria-hidden="true" />
+          {/* Background */}
+          <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${backgroundImageUrl || backgroundImage})` }}
+              aria-hidden="true"
+            />
+            {/* Dark overlay */}
+            <div className="absolute inset-0 bg-black/70" />
 
             {/* Content */}
-            <div className="relative z-10 flex h-full flex-col items-center justify-between py-6 px-5">
-              {/* Header: Logo + Title */}
+            <div className="relative z-10 flex h-full flex-col items-center justify-between py-8 px-6">
+              {/* Top: Logo + Headings (Bloom-style) */}
               <header className="w-full text-center">
-                <div className="mx-auto mb-3 h-10 w-auto flex items-center justify-center">
-                  {/* Brand logo */}
+                <div className="mx-auto mb-4 flex items-center justify-center">
                   <img
                     src={logoUrl || partyLogo}
-                    alt={`${appName} logo - Party On Delivery`}
-                    className="h-7 w-auto drop-shadow"
+                    alt={`${appName} logo`}
+                    className="h-12 w-auto drop-shadow-lg animate-[fade-in_0.5s_ease-out]"
                     loading="eager"
                   />
                 </div>
-
-                <h1 className="text-2xl font-bold tracking-tight text-foreground animate-fade-in">
-                  {title}
+                <h1 className="text-3xl font-bold tracking-tight text-white animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '80ms', animationFillMode: 'both' }}>
+                  {title || appName}
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground animate-fade-in" style={{ animationDelay: '120ms' }}>
+                <p className="mt-2 text-white/80 text-base animate-[fade-in_0.5s_ease-out]" style={{ animationDelay: '160ms', animationFillMode: 'both' }}>
                   {subtitle}
                 </p>
               </header>
 
-              {/* Center visual: Disco ball */}
-              <div className="relative mt-3 mb-2 flex items-center justify-center">
-                <div className="relative">
-                  <img
-                    src={discoBall}
-                    alt="Animated disco ball with colorful light beam"
-                    className="h-28 w-28 object-contain drop-shadow-lg animate-scale-in"
-                  />
-                  {/* Light cone */}
-                  <div className="absolute left-1/2 top-full -translate-x-1/2 mt-1 h-28 w-28 rounded-full bg-primary/15 blur-xl" aria-hidden="true" />
-                </div>
-              </div>
+              {/* Middle: Checklist (Hulu-style bullets) */}
+              <ul className="w-full max-w-sm space-y-3 mt-4">
+                {checklistItems.filter(Boolean).slice(0, 3).map((item, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-start gap-3 text-white animate-[fade-in_0.4s_ease-out]"
+                    style={{ animationDelay: `${220 + idx * 100}ms`, animationFillMode: 'both' }}
+                  >
+                    <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Check className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-base leading-tight">{item}</span>
+                  </li>
+                ))}
+              </ul>
 
-              {/* CTA buttons */}
-              <div className="w-full space-y-2">
+              {/* Bottom: Buttons (Bloom-style) */}
+              <div className="w-full max-w-sm space-y-3 mt-6 mb-2">
                 <Button
                   size="lg"
-                  className="w-full h-12 text-base font-semibold shadow-lg"
+                  className="w-full h-12 rounded-full text-base font-semibold shadow-lg"
                   onClick={() => {
                     onOpenChange(false);
                     onStartOrder?.();
                   }}
                 >
-                  Start Order
+                  {buttonText}
                 </Button>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <a href={telHref} className="block">
-                    <Button variant="secondary" className="w-full h-11 font-medium">
-                      Call
-                    </Button>
-                  </a>
-                  <a href={smsHref} className="block">
-                    <Button variant="outline" className="w-full h-11 font-medium">
-                      Text
-                    </Button>
-                  </a>
-                </div>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="w-full h-12 rounded-full text-base font-semibold"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onSecondaryAction?.();
+                  }}
+                >
+                  {secondaryButtonText}
+                </Button>
               </div>
-
-              {/* Features footer */}
-              <footer className="w-full pt-3">
-                <ul className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs font-medium">
-                  {features.map((f, idx) => (
-                    <li
-                      key={idx}
-                      className="rounded-full bg-background/70 px-3 py-1 text-foreground/90 shadow-sm backdrop-blur animate-fade-in"
-                      style={{ animationDelay: `${180 + idx * 90}ms` }}
-                    >
-                      {f.label}
-                    </li>
-                  ))}
-                </ul>
-              </footer>
             </div>
           </div>
         </article>
