@@ -141,6 +141,45 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_app_assignments: {
+        Row: {
+          affiliate_id: string
+          app_variation_id: string
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+        }
+        Insert: {
+          affiliate_id: string
+          app_variation_id: string
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+        }
+        Update: {
+          affiliate_id?: string
+          app_variation_id?: string
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_affiliate"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_app_variation"
+            columns: ["app_variation_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_app_variations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_referrals: {
         Row: {
           affiliate_id: string | null
@@ -2899,7 +2938,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      affiliate_app_links: {
+        Row: {
+          affiliate_code: string | null
+          affiliate_email: string | null
+          affiliate_id: string | null
+          app_name: string | null
+          app_slug: string | null
+          app_variation_id: string | null
+          share_link: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_affiliate"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_app_variation"
+            columns: ["app_variation_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_app_variations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       cleanup_expired_cache: {
