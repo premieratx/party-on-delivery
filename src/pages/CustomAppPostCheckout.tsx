@@ -129,6 +129,11 @@ const CustomAppPostCheckout = () => {
           deliveryDate={orderData?.delivery_date}
           deliveryTime={orderData?.delivery_time}
           lineItems={orderData?.line_items}
+          subtotalAmount={orderData?.subtotal}
+          deliveryFeeAmount={orderData?.delivery_fee}
+          salesTaxAmount={orderData?.sales_tax}
+          tipAmount={orderData?.tip_amount}
+          totalAmount={orderData?.total_amount}
           customHeading={config.title || config.heading}
           customSubheading={config.message || config.subheading}
           customButtonText={config.cta_button_text}
@@ -149,6 +154,11 @@ const CustomAppPostCheckout = () => {
       deliveryDate={orderData?.delivery_date}
       deliveryTime={orderData?.delivery_time}
       lineItems={orderData?.line_items}
+      subtotalAmount={orderData?.subtotal}
+      deliveryFeeAmount={orderData?.delivery_fee}
+      salesTaxAmount={orderData?.sales_tax}
+      tipAmount={orderData?.tip_amount}
+      totalAmount={orderData?.total_amount}
       customHeading={(appConfig as any)?.custom_post_checkout_config?.title || (appConfig as any)?.custom_post_checkout_config?.heading || pc?.heading || pc?.headline}
       customSubheading={(appConfig as any)?.custom_post_checkout_config?.message || (appConfig as any)?.custom_post_checkout_config?.subheading || pc?.subheading || pc?.subheadline}
       customButtonText={(appConfig as any)?.custom_post_checkout_config?.cta_button_text || pc?.cta_button_text}

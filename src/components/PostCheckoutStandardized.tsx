@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
+import { formatCurrency } from '@/utils/currency';
 
 interface PostCheckoutStandardizedProps {
   // Required order data
@@ -13,6 +14,15 @@ interface PostCheckoutStandardizedProps {
   deliveryDate?: string;
   deliveryTime?: string;
   lineItems?: Array<{ title?: string; name?: string; quantity?: number; qty?: number; variant_title?: string }>;
+  
+  // Optional order amounts (for proper summary rendering)
+  subtotalAmount?: number;
+  deliveryFeeAmount?: number;
+  salesTaxAmount?: number;
+  tipAmount?: number; // not shown as an item, included in total
+  totalAmount?: number;
+  discountCode?: string;
+  discountAmount?: number;
   
   // Optional custom messaging from app config
   customHeading?: string;
@@ -31,6 +41,13 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
   deliveryDate,
   deliveryTime,
   lineItems,
+  subtotalAmount,
+  deliveryFeeAmount,
+  salesTaxAmount,
+  tipAmount,
+  totalAmount,
+  discountCode,
+  discountAmount,
   customHeading,
   customSubheading,
   customButtonText,
@@ -49,6 +66,8 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
     }
   };
   const backUrl = (() => { try { return sessionStorage.getItem('home-override') || localStorage.getItem('deliveryAppReferrer') || '/'; } catch { return '/'; } })();
+  const itemsToShow = Array.isArray(lineItems) ? lineItems.filter(item => !/(driver tip|tip)/i.test((item.title || item.name || ''))) : [];
+  const hasSummary = [subtotalAmount, deliveryFeeAmount, salesTaxAmount, totalAmount].some(v => typeof v === 'number');
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4"
@@ -70,8 +89,45 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {/* Order Details */}
-          {(deliveryDate || deliveryTime || (lineItems && lineItems.length > 0)) && (
+          {/* Order Summary (totals) */}
+          {hasSummary && (
+            <div className="p-6 rounded-lg border bg-card">
+              <h3 className="text-lg font-semibold mb-3">Order Summary</h3>
+              <div className="space-y-2 text-sm">
+                {typeof subtotalAmount === 'number' && (
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>{formatCurrency(subtotalAmount)}</span>
+                  </div>
+                )}
+                {typeof deliveryFeeAmount === 'number' && (
+                  <div className="flex justify-between">
+                    <span>Delivery Fee</span>
+                    <span>{formatCurrency(deliveryFeeAmount)}</span>
+                  </div>
+                )}
+                {typeof salesTaxAmount === 'number' && (
+                  <div className="flex justify-between">
+                    <span>Sales Tax</span>
+                    <span>{formatCurrency(salesTaxAmount)}</span>
+                  </div>
+                )}
+                {typeof discountAmount === 'number' && discountAmount > 0 && (
+                  <div className="flex justify-between">
+                    <span>Discount{discountCode ? ` (${discountCode})` : ''}</span>
+                    <span>-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>{formatCurrency(typeof totalAmount === 'number' ? totalAmount : ((subtotalAmount || 0) + (deliveryFeeAmount || 0) + (salesTaxAmount || 0) + (tipAmount || 0)))}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Order Details (items and schedule) */}
+          {(deliveryDate || deliveryTime || (itemsToShow && itemsToShow.length > 0)) && (
             <div className="p-6 rounded-lg border bg-card">
               <h3 className="text-lg font-semibold mb-3">Order details</h3>
               <ul className="list-disc pl-5 space-y-1 text-sm">
@@ -81,11 +137,11 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
                 {deliveryTime && (
                   <li>Delivery time: {deliveryTime}</li>
                 )}
-                {lineItems && lineItems.length > 0 && (
+                {itemsToShow && itemsToShow.length > 0 && (
                   <li>
                     Items:
                     <ul className="list-disc pl-5 mt-1 space-y-1">
-                      {lineItems.map((item, idx) => {
+                      {itemsToShow.map((item, idx) => {
                         const title = item.title || item.name || 'Item';
                         const qty = item.quantity ?? item.qty ?? 1;
                         const variant = item.variant_title ? ` (${item.variant_title})` : '';
@@ -99,6 +155,7 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
               </ul>
             </div>
           )}
+
 
           {/* Custom App Messaging */}
           {(customHeading || customSubheading || customButtonText) && (

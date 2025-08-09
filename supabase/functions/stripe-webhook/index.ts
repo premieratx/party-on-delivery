@@ -89,25 +89,11 @@ serve(async (req: Request) => {
     }
     
     if (event.type === "charge.succeeded") {
+      // Ignore charge.succeeded to prevent duplicate order creation
+      // We handle order creation on payment_intent.succeeded and checkout.session.completed only
       const charge = event.data.object as any;
       const piId = typeof charge.payment_intent === 'string' ? charge.payment_intent : undefined;
-
-      EdgeRuntime.waitUntil(
-        (async () => {
-          try {
-            log("Invoking create-shopify-order (from Charge)", { paymentIntentId: piId });
-            if (piId) {
-              const { data, error } = await supabase.functions.invoke("create-shopify-order", {
-                body: { paymentIntentId: piId, trigger: "charge.succeeded" },
-              });
-              if (error) log("create-shopify-order error", { error });
-              else log("create-shopify-order result", data);
-            }
-          } catch (err) {
-            log("invoke error", { message: err instanceof Error ? err.message : String(err) });
-          }
-        })()
-      );
+      log("Skipping create-shopify-order for charge.succeeded to avoid duplicates", { paymentIntentId: piId });
     }
 
     // Acknowledge immediately

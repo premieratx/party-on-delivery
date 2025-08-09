@@ -219,6 +219,11 @@ const CustomPartyOnDeliveryPostCheckout = () => {
       deliveryDate={orderData?.delivery_date}
       deliveryTime={orderData?.delivery_time}
       lineItems={orderData?.line_items}
+      subtotalAmount={orderData?.subtotal}
+      deliveryFeeAmount={orderData?.delivery_fee}
+      salesTaxAmount={orderData?.sales_tax}
+      tipAmount={orderData?.tip_amount}
+      totalAmount={orderData?.total_amount}
       customHeading={cpc.title || cpc.heading || pc.heading || pc.headline}
       customSubheading={cpc.message || cpc.subheading || pc.subheading || pc.subheadline}
       customButtonText={cpc.cta_button_text || pc.cta_button_text}
