@@ -102,7 +102,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
             {/* Disco sparkle only; sweep removed for performance */}
 
             {/* Content */}
-            <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)]">
+            <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)] font-oswald uppercase tracking-wider">
               {/* Top: Logo + Headings (Bloom-style) */}
               <header className="w-full text-center">
                 <div className="mx-auto mb-3 relative inline-flex items-center justify-center">
