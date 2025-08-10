@@ -70,13 +70,15 @@ export default function OptimizedProductSearch() {
   };
 
   const handleAddToCart = (product: any) => {
+    const firstVariantId = product.variants?.[0]?.id;
     const cartItem = {
-      id: product.id,
+      id: String(product.id),
       title: product.title,
       name: product.title,
       price: product.price,
       image: product.image,
-      variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined
+      // Always use the first variant id when present, even for Default Title
+      variant: firstVariantId ? String(firstVariantId) : 'default',
     };
     
     console.log('🛒 OptimizedProductSearch: Adding product to cart:', cartItem);
@@ -85,7 +87,7 @@ export default function OptimizedProductSearch() {
       const itemId = item.productId || item.id;
       const itemVariant = item.variant || 'default';
       const checkVariant = cartItem.variant || 'default';
-      return itemId === cartItem.id && itemVariant === checkVariant;
+      return String(itemId) === String(cartItem.id) && String(itemVariant) === String(checkVariant);
     })?.quantity || 0;
     
     updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
