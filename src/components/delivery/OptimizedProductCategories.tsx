@@ -200,7 +200,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       </div>
 
       {/* Category Tabs */}
-      <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-md border-b">
+      <div className="border-b">
         <div className="container mx-auto px-4">
           <div className="flex gap-2 py-4 overflow-x-auto">
             {CATEGORY_TABS.map((tab, index) => (

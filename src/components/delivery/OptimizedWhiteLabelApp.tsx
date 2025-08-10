@@ -359,7 +359,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
       <div className="max-w-7xl mx-auto p-4 -mt-[10px]">
         <Tabs value={activeTab.toString()} onValueChange={(value) => setActiveTab(parseInt(value))}>
           {/* Tab Navigation */}
-          <div className="mb-6 sticky top-16 z-30 bg-card/90 backdrop-blur border-b">
+          <div className="mb-6 border-b">
             <div className="max-w-7xl mx-auto">
               <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 h-auto p-2 bg-muted/50">
                 {tabData.map((tab, index) => (

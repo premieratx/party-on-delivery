@@ -185,6 +185,11 @@ export default function OptimizedProductSearch() {
       } else if (y < last - 10 || y < 40) {
         setHideFilters(false);
       }
+      // Hide mobile keyboard on scroll by blurring focused input
+      const ae = document.activeElement as HTMLElement | null;
+      if (ae && ae.tagName === 'INPUT') {
+        (ae as HTMLInputElement).blur();
+      }
       lastYRef.current = y;
     };
     window.addEventListener('scroll', onScroll as any, { passive: true } as any);
@@ -231,7 +236,7 @@ export default function OptimizedProductSearch() {
       </div>
 
       {/* Search Bar */}
-      <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-md border-b">
+      <div className="border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -247,7 +252,7 @@ export default function OptimizedProductSearch() {
       </div>
 
       {/* Category Filter */}
-      <div className={`sticky top-28 z-20 bg-background/95 backdrop-blur-md border-b transition-transform duration-300 ${isMobile && hideFilters ? '-translate-y-full' : 'translate-y-0'}`}>
+      <div className="border-b">
         <div className="container mx-auto px-4 py-3">
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((category) => (

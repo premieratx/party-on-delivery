@@ -84,6 +84,18 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     }
   };
 
+  // Hide mobile keyboard on scroll until field is tapped again
+  React.useEffect(() => {
+    const onScroll = () => {
+      const ae = document.activeElement as HTMLElement | null;
+      if (ae && ae.tagName === 'INPUT') {
+        (ae as HTMLInputElement).blur();
+      }
+    };
+    window.addEventListener('scroll', onScroll as any, { passive: true } as any);
+    return () => window.removeEventListener('scroll', onScroll as any);
+  }, []);
+
   const performSearch = useCallback((query: string) => {
     const q = query.trim();
     if (!q || indexedProducts.length === 0) {

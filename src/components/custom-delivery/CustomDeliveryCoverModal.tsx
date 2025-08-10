@@ -75,7 +75,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-h-[90vh] overflow-y-auto max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
-         <article className="relative w-full">
+         <article className="relative w-full" onClick={() => { onOpenChange(false); onStartOrder?.(); }}>
           {/* Background */}
           <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
             {backgroundVideoUrl ? (
@@ -169,7 +169,8 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                   size="lg"
                   className={`w-full h-11 sm:h-12 rounded-full text-xl sm:text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.4375s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
                   style={!enablePulse ? { animationDelay: '416ms', animationFillMode: 'both' } : undefined}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     onOpenChange(false);
                     onStartOrder?.();
                   }}
