@@ -134,14 +134,21 @@ export default function OptimizedProductSearch() {
         const collections = instant.collections || [];
         const map: Record<string, any> = {};
         const pcMap: Record<string, string[]> = {};
-        collections.forEach((col: any) => {
-          (col.products || []).forEach((p: any) => {
-            map[p.id] = map[p.id] || p;
-            pcMap[p.id] = pcMap[p.id] || [];
-            if (!pcMap[p.id].includes(col.handle)) pcMap[p.id].push(col.handle);
+        if (collections.length > 0) {
+          collections.forEach((col: any) => {
+            (col.products || []).forEach((p: any) => {
+              map[p.id] = map[p.id] || p;
+              pcMap[p.id] = pcMap[p.id] || [];
+              if (!pcMap[p.id].includes(col.handle)) pcMap[p.id].push(col.handle);
+            });
           });
-        });
-        const list = Object.values(map);
+        }
+        // Fallback: some responses only include products without collections
+        let list: any[] = Object.values(map);
+        if (list.length === 0 && Array.isArray(instant.products) && instant.products.length > 0) {
+          console.warn('Instant cache missing collections; falling back to products array');
+          list = instant.products as any[];
+        }
         if (!mounted) return;
         productCollectionsRef.current = pcMap;
         setAllProducts(list as any[]);
