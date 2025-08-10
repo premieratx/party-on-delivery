@@ -204,9 +204,9 @@ export default function CustomAppView() {
     try {
       const fromParams = searchParams.get('bgVideo') || searchParams.get('video');
       const fromConfig = (appConfig?.start_screen_config as any)?.background_video_url;
-      return (fromParams || fromConfig || '/videos/whiskey-pour-17370-360.mp4') as string | undefined;
+      return (fromParams || fromConfig || '/videos/whiskey-over-ice-5143-360.mp4') as string | undefined;
     } catch {
-      return '/videos/whiskey-pour-17370-360.mp4';
+      return '/videos/whiskey-over-ice-5143-360.mp4';
     }
   }, [searchParams, appConfig]);
 
