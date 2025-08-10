@@ -75,12 +75,13 @@ export const ProductSearch = () => {
   }, []);
 
   const loadInstantProducts = async () => {
-    const startTime = performance.now();
-    try {
-      setLoading(true);
+  const startTime = performance.now();
+  let loaded = false;
+  try {
+    setLoading(true);
 
       // 1) Try instant cache (race with very short timeout)
-      const instant = await getInstantProducts({ timeoutMs: 350 });
+      const instant = await getInstantProducts({ timeoutMs: 1500 });
       if (instant?.products && instant.products.length > 0) {
         const enriched = instant.products.map((p: any) => {
           const img = p.image || (p.images?.[0] ?? '');
@@ -98,6 +99,7 @@ export const ProductSearch = () => {
           };
         });
         setAllProducts(enriched);
+        loaded = true;
         const loadTime = performance.now() - startTime;
         console.log(`⚡ SEARCH PAGE INSTANT-CACHE LOAD: ${Math.round(loadTime)}ms - ${enriched.length} products`);
         setLoading(false);
@@ -126,6 +128,7 @@ export const ProductSearch = () => {
           };
         });
         setAllProducts(enrichedProducts);
+        loaded = true;
         const loadTime = performance.now() - startTime;
         console.log(`⚡ SEARCH PAGE ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${enrichedProducts.length} products`);
         setLoading(false);
@@ -159,9 +162,37 @@ export const ProductSearch = () => {
           return acc;
         }, []);
         setAllProducts(allProducts);
+        loaded = true;
         const loadTime = performance.now() - startTime;
         console.log(`📦 Search page fallback load: ${Math.round(loadTime)}ms - ${allProducts.length} products`);
       }
+    // 4) Last-chance: force refresh instant cache if still empty
+    if (!loaded) {
+      try {
+        const retry = await getInstantProducts({ forceRefresh: true, timeoutMs: 3000 });
+        if (retry?.products && retry.products.length > 0) {
+          const enriched = retry.products.map((p: any) => {
+            const img = p.image || (p.images?.[0] ?? '');
+            return {
+              id: p.id,
+              title: p.title,
+              price: parseFloat(p.price || p.variants?.[0]?.price || '0'),
+              image: img,
+              images: [img, ...(p.images || []).filter(Boolean)],
+              description: p.description || '',
+              handle: p.handle || '',
+              category: inferProductCategory(p.title, p.handle || ''),
+              subcategory: inferSubcategory(p.title),
+              variants: p.variants || []
+            };
+          });
+          setAllProducts(enriched);
+          loaded = true;
+        }
+      } catch (e) {
+        console.warn('Final instant cache retry failed', e);
+      }
+    }
     } catch (error: any) {
       console.error('Error loading products:', error);
       toast({
