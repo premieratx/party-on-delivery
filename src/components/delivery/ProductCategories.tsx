@@ -508,13 +508,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   };
 
-  // Handle search select from hero search bar (add one to cart)
   const handleSearchSelect = (product: ShopifyProduct) => {
     const variantId = product.variants?.[0]?.id;
-    const currentQty = getCartItemQuantity(product.id, variantId);
-    onUpdateQuantity(product.id, variantId, currentQty + 1);
+    // Use onAddToCart so product data is provided for new cart items
+    onAddToCart({
+      id: product.id,
+      title: product.title,
+      name: product.title,
+      price: product.variants?.[0]?.price || product.price || 0,
+      image: product.image,
+      variant: variantId,
+    });
   };
-
   // Close lightbox
   const closeLightbox = () => {
     setIsLightboxOpen(false);

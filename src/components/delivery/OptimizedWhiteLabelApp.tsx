@@ -229,8 +229,16 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   // Handle search select from hero search bar (add one to cart)
   const handleSearchSelect = useCallback((product: any) => {
     const variantId = product.variants?.[0]?.id;
+    const price = product.variants?.[0]?.price ?? product.price ?? 0;
     const currentQty = getCartItemQuantity(product.id, variantId);
-    updateQuantity(product.id, variantId, currentQty + 1);
+    updateQuantity(product.id, variantId, currentQty + 1, {
+      id: product.id,
+      title: product.title,
+      name: product.title,
+      price,
+      image: product.image,
+      variant: variantId,
+    });
   }, [getCartItemQuantity, updateQuantity]);
 
   if (loading) {
@@ -351,23 +359,25 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
       <div className="max-w-7xl mx-auto p-4 -mt-[10px]">
         <Tabs value={activeTab.toString()} onValueChange={(value) => setActiveTab(parseInt(value))}>
           {/* Tab Navigation */}
-          <div className="mb-6">
-            <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 h-auto p-2 bg-muted/50">
-              {tabData.map((tab, index) => (
-                <TabsTrigger
-                  key={index}
-                  value={index.toString()}
-                  className={`flex flex-col items-center gap-2 p-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
-                >
-                  <span className="font-medium">{tab.name}</span>
-                  {tab.hasProducts && (
-                    <Badge variant="secondary" className="text-xs">
-                      {tab.collection?.products.length || 0}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="mb-6 sticky top-16 z-30 bg-card/90 backdrop-blur border-b">
+            <div className="max-w-7xl mx-auto">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 h-auto p-2 bg-muted/50">
+                {tabData.map((tab, index) => (
+                  <TabsTrigger
+                    key={index}
+                    value={index.toString()}
+                    className={`flex flex-col items-center gap-2 p-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
+                  >
+                    <span className="font-medium">{tab.name}</span>
+                    {tab.hasProducts && (
+                      <Badge variant="secondary" className="text-xs">
+                        {tab.collection?.products.length || 0}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
           </div>
 
           {/* Tab Content */}
