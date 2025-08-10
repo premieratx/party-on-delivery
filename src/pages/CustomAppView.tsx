@@ -202,13 +202,11 @@ export default function CustomAppView() {
 
   const startBgVideo = useMemo(() => {
     try {
-      return (
-        searchParams.get('bgVideo') ||
-        searchParams.get('video') ||
-        ((appConfig?.start_screen_config as any)?.background_video_url ?? undefined)
-      ) as string | undefined;
+      const fromParams = searchParams.get('bgVideo') || searchParams.get('video');
+      const fromConfig = (appConfig?.start_screen_config as any)?.background_video_url;
+      return (fromParams || fromConfig || '/videos/whiskey-pour-17370-360.mp4') as string | undefined;
     } catch {
-      return undefined;
+      return '/videos/whiskey-pour-17370-360.mp4';
     }
   }, [searchParams, appConfig]);
 
