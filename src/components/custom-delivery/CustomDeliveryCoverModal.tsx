@@ -150,12 +150,12 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               {/* Bottom: Checklist (flattened) + Buttons */}
               <div className="w-full max-w-sm space-y-3 mt-2 mb-0">
                 {/* Restored vertical checklist with dot separators */}
-                <div className="w-full mx-auto mb-2">
+                <div className="w-full mx-auto mb-2" style={{ transform: 'translateY(-25%)' }}>
                   <div className="flex flex-col items-center space-y-1">
                     {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
                       <React.Fragment key={idx}>
                         <p
-                          className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_0.5s_ease-out]"
+                          className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_1s_ease-out]"
                           style={{ animationDelay: `${240 + idx * 120}ms`, animationFillMode: 'both' }}
                         >
                           {item}
