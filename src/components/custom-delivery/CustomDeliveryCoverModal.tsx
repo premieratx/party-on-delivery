@@ -63,7 +63,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 overflow-hidden max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
-        <article className="relative w-full">
+         <article className="relative w-full">
           {/* Background */}
           <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
             {backgroundVideoUrl ? (
@@ -100,7 +100,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     loading="eager"
                   />
                   {showSparkle && (
-                    <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" aria-hidden="true" style={{ width: '600%', height: '600%' }}>
+                    <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[fade-in_3s_ease-out]" aria-hidden="true" style={{ width: '600%', height: '600%' }}>
                       <span className="sparkle sparkle-sm" style={{ top: '12%', left: '22%', animationDelay: '120ms' }} />
                       <span className="sparkle sparkle-md" style={{ top: '28%', left: '76%', animationDelay: '240ms' }} />
                       <span className="sparkle sparkle-lg" style={{ top: '60%', left: '18%', animationDelay: '360ms' }} />
@@ -119,7 +119,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               </header>
 
               {/* Middle: Centered text rows with separators */}
-              <div className="flex-1 w-full max-w-sm flex items-center mt-2 sm:mt-4">
+              <div className="flex-1 w-full max-w-sm flex items-center mt-6 sm:mt-8">
                 <div className="w-full mt-4 space-y-2 mx-auto">
                   {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
                     <React.Fragment key={idx}>
@@ -138,7 +138,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               </div>
 
               {/* Bottom: Buttons (Bloom-style) */}
-              <div className="w-full max-w-sm space-y-3 mt-4 mb-0">
+              <div className="w-full max-w-sm space-y-3 mt-2 mb-0">
                 <Button
                   size="lg"
                   className={`w-full h-12 rounded-full text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.4375s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
