@@ -61,14 +61,16 @@ export const useUnifiedCart = () => {
 
   // Simple key creation and matching helpers
   const getKey = (id: string, variant?: string) => `${id}::${variant || 'default'}`;
-  const normalizeVariant = (v?: string) => (v && v.trim() !== '' ? v : 'default');
+  const normalizeVariant = (v?: string) => (v && v.trim() !== '' ? String(v) : 'default');
+  const normalizeId = (v: string | number | undefined | null) => String(v ?? '');
   
-  const matchesItem = (item: UnifiedCartItem, id: string, variant?: string) => {
+  const matchesItem = (item: UnifiedCartItem, id: string | number, variant?: string) => {
     const itemVariant = normalizeVariant(item.variant);
     const checkVariant = normalizeVariant(variant);
-    const itemId = item.productId || item.id;
+    const itemId = normalizeId(item.productId ?? item.id);
+    const checkId = normalizeId(id);
     
-    return itemId === id && itemVariant === checkVariant;
+    return itemId === checkId && itemVariant === checkVariant;
   };
 
   // Update quantity - SIMPLIFIED AND RELIABLE
@@ -80,9 +82,10 @@ export const useUnifiedCart = () => {
     
     const qty = Math.max(0, Math.floor(Number(newQuantity) || 0));
     const normalizedVariant = normalizeVariant(variant);
+    const nid = normalizeId(id);
     
     console.log('🛒 updateQuantity ATOMIC:', { 
-      id, 
+      id: nid, 
       variant: normalizedVariant, 
       newQuantity: qty,
       operation: qty === 0 ? 'REMOVE' : qty > 0 ? 'SET' : 'INVALID'
@@ -94,9 +97,9 @@ export const useUnifiedCart = () => {
     
     // Find existing item using strict matching
     const existingIndex = currentItems.findIndex(item => {
-      const itemId = item.productId || item.id;
+      const itemId = normalizeId(item.productId ?? item.id);
       const itemVariant = normalizeVariant(item.variant);
-      return itemId === id && itemVariant === normalizedVariant;
+      return itemId === nid && itemVariant === normalizedVariant;
     });
     
     let result = currentItems;
@@ -122,15 +125,15 @@ export const useUnifiedCart = () => {
       result = newItems;
     } else if (productData) {
       // CREATE operation
-      console.log('🛒 ATOMIC CREATE:', id, normalizedVariant, 'quantity:', qty);
+      console.log('🛒 ATOMIC CREATE:', nid, normalizedVariant, 'quantity:', qty);
       const newItem: UnifiedCartItem = {
-        id: id,
-        productId: id,
-        title: productData.title || `Product ${id}`,
-        name: productData.name || productData.title || `Product ${id}`,
-        price: productData.price || 0,
+        id: nid,
+        productId: nid,
+        title: String(productData.title || `Product ${nid}`),
+        name: String(productData.name || productData.title || `Product ${nid}`),
+        price: Number(productData.price || 0),
         quantity: qty,
-        image: productData.image || '',
+        image: String(productData.image || ''),
         variant: normalizedVariant,
         eventName: productData.eventName,
         category: productData.category
