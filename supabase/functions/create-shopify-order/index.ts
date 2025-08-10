@@ -357,15 +357,8 @@ serve(async (req) => {
       }
     }
     // Ensure driver tip is represented as a non-taxable line item (not taxed)
-    if (tipAmount > 0) {
-      lineItems.push({
-        title: 'Driver Tip',
-        price: tipAmount.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
+    // Tip is NOT added as a Shopify line item; we record it in note_attributes below to avoid showing as a product
+
     // Create order in Shopify with proper totals structure
     const orderData = {
       order: {
@@ -445,7 +438,8 @@ serve(async (req) => {
           }
         },
         
-        // Tip is now included as line item above, so no separate tip field needed
+        // Tip is recorded in note_attributes (not as a line item) so it doesn't appear as a product in Shopify
+
         
         // Ensure exact price matching for order totals
         current_total_price: totalAmount.toFixed(2),
@@ -484,7 +478,7 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
 🔖 Discount Type: ${discountType}
 💵 Discount Applied: $${actualDiscountApplied.toFixed(2)}
 🎯 Attribution: ${discountCode}-tracking-${Date.now()}` : 'No affiliate code used'}`,
-        tags: `delivery-order,stripe-payment${discountCode ? `,discount-${discountCode}` : ''}`,
+        tags: `delivery-order,stripe-payment${discountCode ? `,discount-${discountCode}` : ''}${tipAmount > 0 ? ',has-tip' : ''}`,
         note_attributes: [
           {
             name: "Stripe Payment Total",

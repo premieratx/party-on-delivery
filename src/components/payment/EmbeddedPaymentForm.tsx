@@ -329,7 +329,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 md:space-y-6">
-        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-6">
+        <form onSubmit={(e) => e.preventDefault()} className="space-y-3 md:space-y-6">
           {/* Tip Selection - Condensed or Full */}
           {tipConfirmed ? <div className="p-2 border border-green-500 rounded-lg bg-green-50">
               <div className="flex items-center justify-between">
@@ -505,7 +505,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
 
           {paymentError && <div className="text-red-600 text-sm">{paymentError}</div>}
 
-          <Button type="submit" disabled={!stripe || isProcessing} className="w-full text-xs md:text-sm" size="lg">
+          <Button type="button" disabled={!stripe || isProcessing} className="w-full text-xs md:text-sm" size="lg" onClick={(e) => handleSubmit(e as any)}>
             {isProcessing ? 'Processing...' : `Complete Payment - $${(total || 0).toFixed(2)}`}
           </Button>
         </form>
