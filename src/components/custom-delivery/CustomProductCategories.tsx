@@ -239,7 +239,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-40">
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-md mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
@@ -275,7 +275,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
       </div>
 
       {/* Category Tabs */}
-      <div className="bg-white border-b sticky top-[73px] z-30">
+      <div className="bg-white border-b">
         <div className="max-w-md mx-auto">
           <div className="flex overflow-x-auto scrollbar-hide">
             {categories.map((category) => {

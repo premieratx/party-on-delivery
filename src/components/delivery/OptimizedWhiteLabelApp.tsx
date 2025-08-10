@@ -288,7 +288,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/10">
       {/* Header */}
-      <div className="bg-card border-b border-border/40 sticky top-0 z-40 backdrop-blur-sm bg-card/80">
+      <div className="bg-card border-b border-border/40 backdrop-blur-sm bg-card/80">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

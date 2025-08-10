@@ -57,6 +57,18 @@ export const ProductSearch = () => {
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = cartHook;
   const { toast } = useToast();
 
+  // Hide mobile keyboard on scroll
+  useEffect(() => {
+    const onScroll = () => {
+      const ae = document.activeElement as HTMLElement | null;
+      if (ae && ae.tagName === 'INPUT') {
+        (ae as HTMLInputElement).blur();
+      }
+    };
+    window.addEventListener('scroll', onScroll as any, { passive: true } as any);
+    return () => window.removeEventListener('scroll', onScroll as any);
+  }, []);
+
   // Load products instantly using cache
   useEffect(() => {
     loadInstantProducts();
@@ -355,7 +367,7 @@ export const ProductSearch = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background border-b">
+      <div className="bg-background border-b">
         <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-4">
           {/* Mobile Header Layout */}
           <div className="flex items-center justify-between mb-2 sm:mb-4">

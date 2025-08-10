@@ -174,7 +174,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b">
+      <div className="bg-background/95 backdrop-blur-md border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold">Party On Delivery</h1>

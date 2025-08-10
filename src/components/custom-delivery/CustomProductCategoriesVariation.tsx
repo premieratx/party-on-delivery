@@ -276,7 +276,7 @@ export function CustomProductCategories({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background border-b">
+      <div className="bg-background border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <Button variant="ghost" size="sm" onClick={onBack}>
