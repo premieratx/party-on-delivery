@@ -130,7 +130,9 @@ export default function OptimizedProductSearch() {
     let mounted = true;
     (async () => {
       try {
-        const instant = await getInstantProducts();
+        setLoading(true);
+        // Give instant cache a bit more time on first load; then force refresh if empty
+        const instant = await getInstantProducts({ timeoutMs: 1500 });
         const collections = instant.collections || [];
         const map: Record<string, any> = {};
         const pcMap: Record<string, string[]> = {};
@@ -149,14 +151,42 @@ export default function OptimizedProductSearch() {
           console.warn('Instant cache missing collections; falling back to products array');
           list = instant.products as any[];
         }
+
+        // If still empty, try a force refresh
+        if (list.length === 0) {
+          const retry = await getInstantProducts({ forceRefresh: true, timeoutMs: 3000 });
+          const retryCollections = retry.collections || [];
+          const map2: Record<string, any> = {};
+          const pcMap2: Record<string, string[]> = {};
+          if (retryCollections.length > 0) {
+            retryCollections.forEach((col: any) => {
+              (col.products || []).forEach((p: any) => {
+                map2[p.id] = map2[p.id] || p;
+                pcMap2[p.id] = pcMap2[p.id] || [];
+                if (!pcMap2[p.id].includes(col.handle)) pcMap2[p.id].push(col.handle);
+              });
+            });
+          }
+          list = Object.values(map2);
+          if (list.length === 0 && Array.isArray(retry.products) && retry.products.length > 0) {
+            list = retry.products as any[];
+          }
+          if (Object.keys(pcMap2).length > 0) {
+            productCollectionsRef.current = pcMap2;
+          }
+        } else {
+          productCollectionsRef.current = pcMap;
+        }
+
         if (!mounted) return;
-        productCollectionsRef.current = pcMap;
         setAllProducts(list as any[]);
         if (!searchQuery.trim()) {
           setProducts(list as any[]);
         }
       } catch (e) {
         console.error('Instant catalog load failed', e);
+      } finally {
+        setLoading(false);
       }
     })();
     return () => { mounted = false; };
