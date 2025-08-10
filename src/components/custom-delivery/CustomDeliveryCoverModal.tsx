@@ -53,7 +53,18 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   const [showSparkle, setShowSparkle] = React.useState(true);
   const [enablePulse, setEnablePulse] = React.useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
-
+  
+  // Generate a dense sparkle field for full-screen coverage
+  const [sparkles, setSparkles] = React.useState<Array<{ top: number; left: number; size: 'sm' | 'md' | 'lg'; delay: number }>>([]);
+  React.useEffect(() => {
+    const items = Array.from({ length: 40 }, () => ({
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      size: (['sm', 'md', 'lg'] as const)[Math.floor(Math.random() * 3)],
+      delay: Math.floor(Math.random() * 800),
+    }));
+    setSparkles(items);
+  }, []);
   // control sparkle and CTA animations
   React.useEffect(() => {
     const t = setTimeout(() => setShowSparkle(false), 2000);
@@ -105,14 +116,23 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
             {/* Overlays */}
             <div className="absolute inset-0 bg-black/70" />
             {/* Glitter over top quarter on load */}
-            {showSparkle && (
-              <div className="pointer-events-none absolute inset-x-0 top-0" style={{ height: '25%' }} aria-hidden="true">
-                <span className="sparkle sparkle-sm" style={{ top: '12%', left: '18%', position: 'absolute', animationDelay: '80ms', animationDuration: '2s' }} />
-                <span className="sparkle sparkle-md" style={{ top: '30%', left: '36%', position: 'absolute', animationDelay: '160ms', animationDuration: '2s' }} />
-                <span className="sparkle sparkle-lg" style={{ top: '20%', left: '64%', position: 'absolute', animationDelay: '240ms', animationDuration: '2s' }} />
-                <span className="sparkle sparkle-sm" style={{ top: '8%', left: '80%', position: 'absolute', animationDelay: '320ms', animationDuration: '2s' }} />
-              </div>
-            )}
+              {showSparkle && (
+                <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                  {sparkles.map((s, idx) => (
+                    <span
+                      key={idx}
+                      className={`sparkle sparkle-${s.size}`}
+                      style={{
+                        top: `${s.top}%`,
+                        left: `${s.left}%`,
+                        position: 'absolute',
+                        animationDelay: `${s.delay}ms`,
+                        animationDuration: '20s',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
 
             {/* Content */}
             <div className="relative z-10 flex h-full flex-col items-center justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-[calc(env(safe-area-inset-bottom)+20px)] font-montserrat uppercase tracking-wider">
@@ -127,12 +147,12 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                   />
                   {showSparkle && (
                     <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[fade-in_3s_ease-out]" aria-hidden="true" style={{ width: '600%', height: '600%' }}>
-                      <span className="sparkle sparkle-sm" style={{ top: '12%', left: '22%', animationDelay: '120ms', animationDuration: '2.3s' }} />
-                      <span className="sparkle sparkle-md" style={{ top: '28%', left: '76%', animationDelay: '240ms', animationDuration: '2.3s' }} />
-                      <span className="sparkle sparkle-lg" style={{ top: '60%', left: '18%', animationDelay: '360ms', animationDuration: '2.3s' }} />
-                      <span className="sparkle sparkle-sm" style={{ top: '70%', left: '64%', animationDelay: '480ms', animationDuration: '2.3s' }} />
-                      <span className="sparkle sparkle-md" style={{ top: '38%', left: '40%', animationDelay: '600ms', animationDuration: '2.3s' }} />
-                      <span className="sparkle sparkle-sm" style={{ top: '15%', left: '55%', animationDelay: '720ms', animationDuration: '2.3s' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '12%', left: '22%', animationDelay: '120ms', animationDuration: '23s' }} />
+                      <span className="sparkle sparkle-md" style={{ top: '28%', left: '76%', animationDelay: '240ms', animationDuration: '23s' }} />
+                      <span className="sparkle sparkle-lg" style={{ top: '60%', left: '18%', animationDelay: '360ms', animationDuration: '23s' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '70%', left: '64%', animationDelay: '480ms', animationDuration: '23s' }} />
+                      <span className="sparkle sparkle-md" style={{ top: '38%', left: '40%', animationDelay: '600ms', animationDuration: '23s' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '15%', left: '55%', animationDelay: '720ms', animationDuration: '23s' }} />
                     </div>
                   )}
                 </div>
