@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { PerformanceMonitor } from "@/components/common/PerformanceMonitor";
 import { Suspense, lazy } from "react";
+import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
 import Index from "./pages/Index";
@@ -109,17 +110,17 @@ const App = () => {
                     <Route path="/affiliate" element={<AffiliateIntro />} />
                     <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
                     <Route path="/affiliate/admin-login" element={<AdminLogin />} />
-                    <Route path="/affiliate/admin" element={<AdminDashboard />} />
+                    <Route path="/affiliate/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                     <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
                     <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                     <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
                     
                     {/* Admin Routes - These should have auth guards */}
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/admin/*" element={<AdminDashboard />} />
-                    <Route path="/admin/product-management" element={<ProductManagement />} />
-                    <Route path="/admin/create-collection" element={<CustomCollectionCreator />} />
-                    <Route path="/admin/delivery-app-manager" element={<DeliveryAppManagerPage />} />
+                    <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    <Route path="/admin/*" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    <Route path="/admin/product-management" element={<RequireAdmin><ProductManagement /></RequireAdmin>} />
+                    <Route path="/admin/create-collection" element={<RequireAdmin><CustomCollectionCreator /></RequireAdmin>} />
+                    <Route path="/admin/delivery-app-manager" element={<RequireAdmin><DeliveryAppManagerPage /></RequireAdmin>} />
                     
                     {/* Customer Routes */}
                     <Route path="/customer/login" element={<CustomerLogin />} />
