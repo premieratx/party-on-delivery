@@ -59,6 +59,7 @@ const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomParty
 
 // Other routes
 const ProductSearch = lazy(() => import("./pages/ProductSearch").then(m => ({ default: m.ProductSearch })));
+const SearchPage = lazy(() => import("./pages/OptimizedProductSearch"));
 const ConciergeService = lazy(() => import("./pages/ConciergeService"));
 const PerformanceOptimization = lazy(() => import("./pages/PerformanceOptimization"));
 const PerformanceTests = lazy(() => import("./pages/PerformanceTests"));
@@ -138,8 +139,8 @@ const App = () => {
                     <Route path="/checkout" element={<Checkout />} />
                     
                     {/* Search Routes */}
-                    <Route path="/search" element={<ProductSearch />} />
-                    <Route path="/product-search" element={<ProductSearch />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/product-search" element={<SearchPage />} />
                     
                     {/* Main Delivery App - removed, now handled by Index page */}
                     
