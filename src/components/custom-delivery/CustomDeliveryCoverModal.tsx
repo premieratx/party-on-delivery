@@ -155,7 +155,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
                       <React.Fragment key={idx}>
                         <p
-                          className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_1s_ease-out]"
+                          className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_1.5s_ease-out]"
                           style={{ animationDelay: `${240 + idx * 120}ms`, animationFillMode: 'both' }}
                         >
                           {item}
