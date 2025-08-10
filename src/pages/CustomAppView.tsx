@@ -106,6 +106,8 @@ const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null
 const useAppStep = (initialStep: CustomDeliveryStep = 'start') => {
   const [step, setStep] = useState<CustomDeliveryStep>(() => {
     try {
+      // If initial step is explicitly 'start', always prefer it to avoid flicker
+      if (initialStep === 'start') return 'start';
       const stored = sessionStorage.getItem('customDeliveryStep');
       return (stored as CustomDeliveryStep) || initialStep;
     } catch {
@@ -131,7 +133,9 @@ export default function CustomAppView() {
   const [searchParams] = useSearchParams();
   useWakeLock();
   
-  const [currentStep, setCurrentStep] = useAppStep('start');
+  // Determine initial step from URL (force 'start' to avoid flicker)
+  const initialStepParam = (searchParams.get('step') as CustomDeliveryStep) || 'start';
+  const [currentStep, setCurrentStep] = useAppStep(initialStepParam);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
   
@@ -408,23 +412,25 @@ export default function CustomAppView() {
           backgroundVideoUrl={startBgVideo}
         />
       )}
-      {/* Start screen enabled above; tabs shown behind/after */}
-      <CustomDeliveryTabsPage
-        appName={appConfig.app_name}
-        heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
-        heroSubheading={appConfig.main_app_config?.hero_subheading || "Select from our curated collection of drinks and party supplies"}
-        logoUrl={appConfig.logo_url}
-        collectionsConfig={appConfig.collections_config}
-        onAddToCart={handleAddToCart}
-        cartItemCount={getTotalItems()}
-        onOpenCart={() => setIsCartOpen(true)}
-        cartItems={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onProceedToCheckout={handleCheckout}
-        onBack={handleGoHome}
-        onGoHome={handleGoHome}
-        heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
-      />
+      {/* Start screen enabled above; tabs shown behind/after with blur */}
+      <div className={currentStep === 'start' ? 'pointer-events-none blur-sm' : ''}>
+        <CustomDeliveryTabsPage
+          appName={appConfig.app_name}
+          heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
+          heroSubheading={appConfig.main_app_config?.hero_subheading || "Select from our curated collection of drinks and party supplies"}
+          logoUrl={appConfig.logo_url}
+          collectionsConfig={appConfig.collections_config}
+          onAddToCart={handleAddToCart}
+          cartItemCount={getTotalItems()}
+          onOpenCart={() => setIsCartOpen(true)}
+          cartItems={cartItems}
+          onUpdateQuantity={handleUpdateQuantity}
+          onProceedToCheckout={handleCheckout}
+          onBack={handleGoHome}
+          onGoHome={handleGoHome}
+          heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
+        />
+      </div>
 
       {/* Custom Delivery Cart */}
       <CustomDeliveryCart
