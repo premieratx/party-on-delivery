@@ -79,6 +79,7 @@ export default {
 			fontFamily: {
 				'oswald': ['Oswald', 'sans-serif'],
 				'playfair': ['Playfair Display', 'serif'],
+				'montserrat': ['Montserrat', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
