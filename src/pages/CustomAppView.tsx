@@ -200,6 +200,18 @@ export default function CustomAppView() {
     };
   }, [appConfig]);
 
+  const startBgVideo = useMemo(() => {
+    try {
+      return (
+        searchParams.get('bgVideo') ||
+        searchParams.get('video') ||
+        ((appConfig?.start_screen_config as any)?.background_video_url ?? undefined)
+      ) as string | undefined;
+    } catch {
+      return undefined;
+    }
+  }, [searchParams, appConfig]);
+
   const goToAppTabs = () => {
     try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
     setCurrentStep('tabs');
@@ -395,6 +407,7 @@ export default function CustomAppView() {
           buttonText={resolved.buttonText}
           checklistItems={resolved.checklist}
           backgroundImageUrl={bgImage}
+          backgroundVideoUrl={startBgVideo}
         />
       )}
       {/* Start screen enabled above; tabs shown behind/after */}

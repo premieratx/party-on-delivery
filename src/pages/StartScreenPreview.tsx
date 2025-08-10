@@ -139,6 +139,7 @@ export default function StartScreenPreview() {
           buttonText={resolved.buttonText}
           checklistItems={resolved.checklist}
           backgroundImageUrl={bgImage}
+          backgroundVideoUrl={searchParams.get('bgVideo') || searchParams.get('video') || undefined}
         />
       ) : (
         <div className="min-h-screen grid place-items-center">

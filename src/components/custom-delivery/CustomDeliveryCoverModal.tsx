@@ -52,14 +52,26 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
 }) => {
   const [showSparkle, setShowSparkle] = React.useState(true);
   const [enablePulse, setEnablePulse] = React.useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  // control sparkle and CTA animations
   React.useEffect(() => {
-    const t = setTimeout(() => setShowSparkle(false), 4500);
+    const t = setTimeout(() => setShowSparkle(false), 3000);
     const p = setTimeout(() => setEnablePulse(true), 1000); // start pulse after initial sequence
     return () => {
       clearTimeout(t);
       clearTimeout(p);
     };
   }, []);
+
+  // slow-motion playback for background video
+  React.useEffect(() => {
+    if (videoRef.current) {
+      try {
+        videoRef.current.playbackRate = 0.7;
+      } catch {}
+    }
+  }, [backgroundVideoUrl]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 overflow-hidden max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
@@ -68,8 +80,9 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
           <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
             {backgroundVideoUrl ? (
               <video
+                ref={videoRef}
                 src={backgroundVideoUrl}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover object-center"
                 autoPlay
                 muted
                 loop
@@ -101,12 +114,12 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                   />
                   {showSparkle && (
                     <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[fade-in_3s_ease-out]" aria-hidden="true" style={{ width: '600%', height: '600%' }}>
-                      <span className="sparkle sparkle-sm" style={{ top: '12%', left: '22%', animationDelay: '120ms' }} />
-                      <span className="sparkle sparkle-md" style={{ top: '28%', left: '76%', animationDelay: '240ms' }} />
-                      <span className="sparkle sparkle-lg" style={{ top: '60%', left: '18%', animationDelay: '360ms' }} />
-                      <span className="sparkle sparkle-sm" style={{ top: '70%', left: '64%', animationDelay: '480ms' }} />
-                      <span className="sparkle sparkle-md" style={{ top: '38%', left: '40%', animationDelay: '600ms' }} />
-                      <span className="sparkle sparkle-sm" style={{ top: '15%', left: '55%', animationDelay: '720ms' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '12%', left: '22%', animationDelay: '120ms', animationDuration: '2.3s' }} />
+                      <span className="sparkle sparkle-md" style={{ top: '28%', left: '76%', animationDelay: '240ms', animationDuration: '2.3s' }} />
+                      <span className="sparkle sparkle-lg" style={{ top: '60%', left: '18%', animationDelay: '360ms', animationDuration: '2.3s' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '70%', left: '64%', animationDelay: '480ms', animationDuration: '2.3s' }} />
+                      <span className="sparkle sparkle-md" style={{ top: '38%', left: '40%', animationDelay: '600ms', animationDuration: '2.3s' }} />
+                      <span className="sparkle sparkle-sm" style={{ top: '15%', left: '55%', animationDelay: '720ms', animationDuration: '2.3s' }} />
                     </div>
                   )}
                 </div>
@@ -119,10 +132,10 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               </header>
 
               {/* Middle: Centered text rows with separators */}
-              <div className="flex-1 w-full max-w-sm flex items-center mt-6 sm:mt-8">
+              <div className="flex-1 w-full max-w-sm flex items-center mt-8 sm:mt-10">
                 <div className="w-full mt-4 space-y-2 mx-auto">
                   {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
-                    <React.Fragment key={idx}>
+                    <div key={idx} className="contents">
                       <p
                         className="text-center text-white text-base md:text-lg leading-tight font-semibold animate-[fade-in_0.5s_ease-out]"
                         style={{ animationDelay: `${286 + idx * 156}ms`, animationFillMode: 'both' }}
@@ -132,13 +145,13 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                       {idx < arr.length - 1 && (
                         <div className="mx-auto h-2.5 w-2.5 rounded-full bg-white/90" aria-hidden="true" />
                       )}
-                    </React.Fragment>
+                    </div>
                   ))}
                 </div>
               </div>
 
               {/* Bottom: Buttons (Bloom-style) */}
-              <div className="w-full max-w-sm space-y-3 mt-2 mb-0">
+              <div className="w-full max-w-sm space-y-3 mt-1 mb-0">
                 <Button
                   size="lg"
                   className={`w-full h-12 rounded-full text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.4375s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
@@ -149,7 +162,8 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                   }}
                 >
                   {buttonText}
-                </Button>
+                </Button
+                >
 
               </div>
             </div>
