@@ -56,7 +56,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
 
   // control sparkle and CTA animations
   React.useEffect(() => {
-    const t = setTimeout(() => setShowSparkle(false), 3000);
+    const t = setTimeout(() => setShowSparkle(false), 2000);
     const p = setTimeout(() => setEnablePulse(true), 1000); // start pulse after initial sequence
     return () => {
       clearTimeout(t);
@@ -82,12 +82,18 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               <video
                 ref={videoRef}
                 src={backgroundVideoUrl}
-                className="absolute inset-0 w-full h-full object-cover object-center"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: '60% 50%' }}
                 autoPlay
                 muted
                 loop
                 playsInline
                 aria-hidden="true"
+                onLoadedMetadata={() => {
+                  try {
+                    if (videoRef.current) videoRef.current.currentTime = 0.5;
+                  } catch {}
+                }}
               />
             ) : (
               <div
@@ -98,8 +104,15 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
             )}
             {/* Overlays */}
             <div className="absolute inset-0 bg-black/70" />
-            {/* Light sweep overlay */}
-            {/* Disco sparkle only; sweep removed for performance */}
+            {/* Glitter over top quarter on load */}
+            {showSparkle && (
+              <div className="pointer-events-none absolute inset-x-0 top-0" style={{ height: '25%' }} aria-hidden="true">
+                <span className="sparkle sparkle-sm" style={{ top: '12%', left: '18%', position: 'absolute', animationDelay: '80ms', animationDuration: '2s' }} />
+                <span className="sparkle sparkle-md" style={{ top: '30%', left: '36%', position: 'absolute', animationDelay: '160ms', animationDuration: '2s' }} />
+                <span className="sparkle sparkle-lg" style={{ top: '20%', left: '64%', position: 'absolute', animationDelay: '240ms', animationDuration: '2s' }} />
+                <span className="sparkle sparkle-sm" style={{ top: '8%', left: '80%', position: 'absolute', animationDelay: '320ms', animationDuration: '2s' }} />
+              </div>
+            )}
 
             {/* Content */}
             <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 pt-6 pb-[calc(env(safe-area-inset-bottom)+24px)] font-montserrat uppercase tracking-wider">
@@ -136,17 +149,21 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
 
               {/* Bottom: Checklist (flattened) + Buttons */}
               <div className="w-full max-w-sm space-y-3 mt-2 mb-0">
-                {/* Flattened 3-row checklist just above CTA */}
+                {/* Restored vertical checklist with dot separators */}
                 <div className="w-full mx-auto mb-2">
-                  <div className="grid grid-rows-3 grid-flow-col auto-cols-fr gap-x-3 gap-y-1 justify-items-center">
-                    {checklistItems.filter(Boolean).slice(0, 5).map((item, idx) => (
-                      <p
-                        key={idx}
-                        className="text-white/90 text-xs md:text-sm font-medium leading-tight animate-[fade-in_0.5s_ease-out]"
-                        style={{ animationDelay: `${240 + idx * 120}ms`, animationFillMode: 'both' }}
-                      >
-                        {item}
-                      </p>
+                  <div className="flex flex-col items-center space-y-1">
+                    {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
+                      <React.Fragment key={idx}>
+                        <p
+                          className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_0.5s_ease-out]"
+                          style={{ animationDelay: `${240 + idx * 120}ms`, animationFillMode: 'both' }}
+                        >
+                          {item}
+                        </p>
+                        {idx < arr.length - 1 && (
+                          <span className="text-white/60" aria-hidden="true">•</span>
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
