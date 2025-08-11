@@ -94,7 +94,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customCollections
 }) => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(1); // Start with beer (index 1)
+  const [selectedCategory, setSelectedCategory] = useState(0); // Start with first (far left) tab
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -676,11 +676,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     // Scroll to top for a clean view of the selected tab
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`relative overflow-hidden rounded-lg transition-all duration-300 group flex-1 ${
+                  className={`relative overflow-hidden rounded-lg h-full transition-all duration-300 group flex-1 ${
                     isActive 
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
                   } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
+
                 >
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title */}
