@@ -9,18 +9,17 @@ import {
   Plus, 
   Minus, 
   ArrowLeft, 
-  Filter,
   Loader2 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { useOptimizedShopify } from '@/utils/optimizedShopifyClient';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { getInstantProducts } from '@/utils/instantCacheClient';
 import { useIsMobile } from '@/hooks/use-mobile';
-
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 export default function OptimizedProductSearch() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,10 +34,6 @@ export default function OptimizedProductSearch() {
     getTotalPrice 
   } = useUnifiedCart();
 
-  const { 
-    getCollectionProducts, 
-    searchProducts 
-  } = useOptimizedShopify();
   
   const [products, setProducts] = useState<any[]>([]);
   const [allProducts, setAllProducts] = useState<any[]>([]);
@@ -106,26 +101,7 @@ export default function OptimizedProductSearch() {
     }
   };
 
-  // Handle search
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) {
-      setProducts([]);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError(null);
-      const searchResults = await searchProducts(query);
-      setProducts(searchResults);
-    } catch (err) {
-      setError('Search failed');
-      console.error('Search error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+// Local in-memory search is handled in the debounced useEffect for instant results
   // Load full catalog instantly for initial view and category filtering
   useEffect(() => {
     let mounted = true;
@@ -193,12 +169,18 @@ export default function OptimizedProductSearch() {
     return () => { mounted = false; };
   }, []);
 
-  // Debounced search
+  // Debounced local search (fast, uses full catalog)
   useEffect(() => {
-    if (searchQuery.trim()) {
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
       const timer = setTimeout(() => {
-        handleSearch(searchQuery);
-      }, 400);
+        const filtered = allProducts.filter((p) =>
+          String(p.title).toLowerCase().includes(q) ||
+          String(p.description || '').toLowerCase().includes(q) ||
+          String(p.handle || '').toLowerCase().includes(q)
+        );
+        setProducts(filtered);
+      }, 200);
       return () => clearTimeout(timer);
     } else {
       // No query: show category view from full catalog
@@ -211,7 +193,6 @@ export default function OptimizedProductSearch() {
         setProducts(allProducts);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedCategory, allProducts]);
 
   // Mobile: hide filters on scroll to maximize products shown
@@ -291,22 +272,25 @@ export default function OptimizedProductSearch() {
         </div>
       </div>
 
-      {/* Category Filter */}
-      <div className="border-b bg-background/95 backdrop-blur-md sticky top-[7rem] z-40">
+      <div className={`border-b bg-background/95 backdrop-blur-md sticky top-[7rem] z-40 ${hideFilters ? 'translate-y-[-100%]' : ''} transition-transform`}>
         <div className="container mx-auto px-4 py-3">
-          <div className="flex gap-2 overflow-x-auto">
+          <RadioGroup
+            value={selectedCategory}
+            onValueChange={setSelectedCategory}
+            className="flex flex-wrap gap-2"
+          >
             {categories.map((category) => (
-              <Button
-                key={category.id}
-                variant={selectedCategory === category.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCategory(category.id)}
-                className="whitespace-nowrap"
-              >
-                {category.label}
-              </Button>
+              <div key={category.id} className="flex items-center">
+                <RadioGroupItem value={category.id} id={`cat-${category.id}`} className="sr-only" />
+                <Label
+                  htmlFor={`cat-${category.id}`}
+                  className={`px-3 py-2 rounded-md border cursor-pointer text-sm ${selectedCategory === category.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground border-input hover:bg-accent'}`}
+                >
+                  {category.label}
+                </Label>
+              </div>
             ))}
-          </div>
+          </RadioGroup>
         </div>
       </div>
 
@@ -338,7 +322,7 @@ export default function OptimizedProductSearch() {
 
             {/* Products Grid */}
             {displayProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
                 {displayProducts.map((product) => {
                   const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
                   
