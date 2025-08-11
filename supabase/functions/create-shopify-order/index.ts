@@ -438,8 +438,15 @@ serve(async (req) => {
           }
         },
         
-        // Tip is recorded in note_attributes (not as a line item) so it doesn't appear as a product in Shopify
-
+        // Tip under totals (not a line item)
+        ...(tipAmount > 0 && {
+          total_tip_received: tipAmount.toFixed(2),
+          tip_lines: [
+            {
+              amount: tipAmount.toFixed(2)
+            }
+          ]
+        }),
         
         // Ensure exact price matching for order totals
         current_total_price: totalAmount.toFixed(2),

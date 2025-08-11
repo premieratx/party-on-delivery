@@ -642,14 +642,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               />
             </div>
 
-            {/* Bottom: Typing Intro */}
-            <div className="mt-1 mb-2">
-              <TypingIntro text={customHeroScrollingText || "Let's Build Your Party Package!"} className="text-white text-xl lg:text-3xl" speedMs={65} />
-            </div>
+            {/* Bottom: Typing Intro (shown only when text provided) */}
+            {customHeroScrollingText && (
+              <div className="mt-1 mb-2">
+                <TypingIntro text={customHeroScrollingText} className="text-white text-xl lg:text-3xl" speedMs={65} />
+              </div>
+            )}
           </div>
       </div>
 
-      <div className="bg-background border-b -mt-[10px]">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px]">
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">

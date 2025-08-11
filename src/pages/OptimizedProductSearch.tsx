@@ -17,6 +17,7 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedShopify } from '@/utils/optimizedShopifyClient';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
+import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { getInstantProducts } from '@/utils/instantCacheClient';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -241,7 +242,7 @@ export default function OptimizedProductSearch() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-background/95 backdrop-blur-md border-b">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-4 h-16">
             <Button
@@ -275,7 +276,7 @@ export default function OptimizedProductSearch() {
       </div>
 
       {/* Search Bar */}
-      <div className="border-b">
+      <div className="border-b bg-background/95 backdrop-blur-md sticky top-16 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -291,7 +292,7 @@ export default function OptimizedProductSearch() {
       </div>
 
       {/* Category Filter */}
-      <div className="border-b">
+      <div className="border-b bg-background/95 backdrop-blur-md sticky top-[7rem] z-40">
         <div className="container mx-auto px-4 py-3">
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((category) => (
@@ -428,17 +429,14 @@ export default function OptimizedProductSearch() {
         onClose={() => setIsCartOpen(false)}
       />
 
-      {/* Checkout Button */}
-      {getTotalItems() > 0 && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-4">
-          <Button
-            onClick={() => navigate('/checkout')}
-            className="w-full h-12 text-lg font-semibold shadow-lg"
-          >
-            Checkout ({getTotalItems()} items) • ${getTotalPrice().toFixed(2)}
-          </Button>
-        </div>
-      )}
+      {/* Bottom Cart Bar - persistent */}
+      <BottomCartBar
+        items={cartItems}
+        totalPrice={getTotalPrice()}
+        isVisible={true}
+        onOpenCart={() => setIsCartOpen(true)}
+        onCheckout={() => navigate('/checkout')}
+      />
     </div>
   );
 }

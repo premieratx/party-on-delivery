@@ -428,7 +428,7 @@ export default function CustomAppView() {
           onProceedToCheckout={handleCheckout}
           onBack={handleGoHome}
           onGoHome={handleGoHome}
-          heroScrollingText={appConfig.main_app_config?.hero_scrolling_text}
+          heroScrollingText={currentStep === 'tabs' ? appConfig.main_app_config?.hero_scrolling_text : undefined}
         />
       </div>
 
@@ -450,15 +450,13 @@ export default function CustomAppView() {
       />
 
       {/* Bottom Cart Bar */}
-      {getTotalItems() > 0 && (
-        <BottomCartBar
-          items={cartItems}
-          totalPrice={getTotalPrice()}
-          isVisible={true}
-          onOpenCart={() => setIsCartOpen(true)}
-          onCheckout={handleCheckout}
-        />
-      )}
+      <BottomCartBar
+        items={cartItems}
+        totalPrice={getTotalPrice()}
+        isVisible={true}
+        onOpenCart={() => setIsCartOpen(true)}
+        onCheckout={handleCheckout}
+      />
     </div>
   );
 }
