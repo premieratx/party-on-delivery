@@ -654,21 +654,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px]">
 
-        {/* Sticky Search Bar shown when searching */}
-        {(showSearch || (searchQuery && searchQuery.trim().length > 0)) && (
-          <div className="max-w-7xl mx-auto px-4 py-3 border-b">
-            <div className="relative max-w-2xl mx-auto">
-              <ProductSearchBar
-                onProductSelect={handleSearchSelect}
-                placeholder="Search all products..."
-                showDropdownResults={false}
-                onResultsChange={handleSearchResultsChange}
-                onSearchingChange={setIsSearching}
-                onFocus={() => setShowSearch(true)}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
