@@ -90,8 +90,9 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
         .single();
       if (affErr) throw affErr;
 
-      // Optionally link to a delivery app via custom_affiliate_sites
+      // Optionally link to a delivery app
       if (form.delivery_app_id) {
+        // Create a custom site record (optional legacy flow)
         const site_slug = affiliate_code.toLowerCase();
         await supabase.from('custom_affiliate_sites').insert({
           site_slug,
@@ -100,6 +101,14 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
           is_active: true,
           affiliate_id: affiliate.id,
           delivery_app_id: form.delivery_app_id
+        });
+
+        // Create an assignment and mark as default for this affiliate
+        await supabase.from('affiliate_app_assignments').insert({
+          affiliate_id: affiliate.id,
+          app_variation_id: form.delivery_app_id,
+          assigned_by: 'admin',
+          _df: true
         });
       }
 

@@ -7,3 +7,7 @@ export const buildAppUrl = (appSlug: string) => `${CANONICAL_DOMAIN}/app/${appSl
 export const buildShortUrl = (shortPath: string) => `${CANONICAL_DOMAIN}/${shortPath}`;
 export const buildJoinUrl = (shareToken: string) => `${CANONICAL_DOMAIN}/join/${shareToken}`;
 export const buildRootQueryUrl = (query: string) => `${CANONICAL_DOMAIN}/?${query.replace(/^\?/, '')}`;
+
+// New helpers for affiliate short links
+export const buildAffiliateUrl = (affiliateCode: string) => `${CANONICAL_DOMAIN}/${affiliateCode}`;
+export const buildAppAffiliateUrl = (appShortPath: string, affiliateCode: string) => `${CANONICAL_DOMAIN}/${appShortPath}/${affiliateCode}`;

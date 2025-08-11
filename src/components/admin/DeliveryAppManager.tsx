@@ -10,7 +10,7 @@ import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings } from 'lucide-r
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CustomPostCheckoutEditor } from './CustomPostCheckoutEditor';
-import { CANONICAL_DOMAIN, buildAppUrl } from '@/utils/links';
+import { CANONICAL_DOMAIN, buildAppUrl, buildShortUrl } from '@/utils/links';
 
 interface DeliveryApp {
   id: string;

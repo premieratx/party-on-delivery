@@ -143,6 +143,7 @@ export type Database = {
       }
       affiliate_app_assignments: {
         Row: {
+          _df: boolean | null
           affiliate_id: string
           app_variation_id: string
           assigned_at: string
@@ -150,6 +151,7 @@ export type Database = {
           id: string
         }
         Insert: {
+          _df?: boolean | null
           affiliate_id: string
           app_variation_id: string
           assigned_at?: string
@@ -157,6 +159,7 @@ export type Database = {
           id?: string
         }
         Update: {
+          _df?: boolean | null
           affiliate_id?: string
           app_variation_id?: string
           assigned_at?: string
@@ -236,6 +239,8 @@ export type Database = {
           commission_value: number | null
           company_name: string
           created_at: string | null
+          discount_type: string | null
+          discount_value: number | null
           email: string
           google_id: string | null
           id: string
@@ -257,6 +262,8 @@ export type Database = {
           commission_value?: number | null
           company_name: string
           created_at?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
           email: string
           google_id?: string | null
           id?: string
@@ -278,6 +285,8 @@ export type Database = {
           commission_value?: number | null
           company_name?: string
           created_at?: string | null
+          discount_type?: string | null
+          discount_value?: number | null
           email?: string
           google_id?: string | null
           id?: string

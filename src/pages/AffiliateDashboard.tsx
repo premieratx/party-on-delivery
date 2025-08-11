@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { VoucherDisplay } from '@/components/common/VoucherDisplay';
+import { buildAffiliateUrl } from '@/utils/links';
 
 interface AffiliateData {
   id: string;
@@ -297,7 +298,7 @@ export const AffiliateDashboard: React.FC = () => {
     
     setCopying(true);
     try {
-      const affiliateUrl = `${window.location.origin}/a/${affiliate.affiliate_code}`;
+      const affiliateUrl = buildAffiliateUrl(affiliate.affiliate_code);
       await navigator.clipboard.writeText(affiliateUrl);
       toast({
         title: "Copied!",
@@ -316,14 +317,14 @@ export const AffiliateDashboard: React.FC = () => {
 
   const generateQRCode = () => {
     if (!affiliate) return;
-    const affiliateUrl = `${window.location.origin}/a/${affiliate.affiliate_code}`;
+    const affiliateUrl = buildAffiliateUrl(affiliate.affiliate_code);
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(affiliateUrl)}`;
     window.open(qrUrl, '_blank');
   };
 
   const addToHomeScreen = () => {
     if (!affiliate) return;
-    const affiliateUrl = `${window.location.origin}/a/${affiliate.affiliate_code}`;
+    const affiliateUrl = buildAffiliateUrl(affiliate.affiliate_code);
     
     if (navigator.share) {
       navigator.share({
@@ -342,7 +343,7 @@ export const AffiliateDashboard: React.FC = () => {
 
   const shareToSocial = (platform: string) => {
     if (!affiliate) return;
-    const affiliateUrl = `${window.location.origin}/a/${affiliate.affiliate_code}`;
+    const affiliateUrl = buildAffiliateUrl(affiliate.affiliate_code);
     const text = `Get FREE delivery on your party supplies with ${affiliate.company_name}! 🎉`;
     
     let shareUrl = '';
@@ -392,7 +393,7 @@ Since you're staying at one of our partner properties, you qualify for FREE DELI
 Perfect for pool parties, game nights, or just relaxing after exploring Austin!
 
 Use this special link to order:
-${window.location.origin}/a/${affiliate?.affiliate_code}
+${buildAffiliateUrl(affiliate?.affiliate_code || '')}
 
 Questions? Just reply to this email!
 
@@ -413,7 +414,7 @@ Welcome to your Austin getaway! As our valued guest, you get FREE DELIVERY on ic
 
 Perfect for pool time, BBQs, or exploring Austin's nightlife scene!
 
-ORDER NOW: ${window.location.origin}/a/${affiliate?.affiliate_code}
+ORDER NOW: ${buildAffiliateUrl(affiliate?.affiliate_code || '')}
 
 Questions? Contact ${affiliate?.name} at ${affiliate?.email}`;
   };
@@ -423,7 +424,7 @@ Questions? Contact ${affiliate?.name} at ${affiliate?.email}`;
 
 ${affiliate?.company_name} guests get FREE shipping on ice-cold drinks delivered to your door. Beer, wine, cocktails - all delivered cold! 
 
-Order: ${window.location.origin}/a/${affiliate?.affiliate_code}
+Order: ${buildAffiliateUrl(affiliate?.affiliate_code || '')}
 
 Enjoy Austin! 🍻
 ${affiliate?.name}`;
@@ -452,7 +453,7 @@ Tag a friend who needs this! 👇
 
 #AustinLife #PartyOnDelivery #POD #VacationVibes #AustinRentals #FreeDelivery
 
-Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
+Link in bio: ${buildAffiliateUrl(affiliate?.affiliate_code || '')}`;
   };
 
   const copyToClipboard = (text: string, type: string) => {
@@ -565,7 +566,7 @@ Link in bio: ${window.location.origin}/a/${affiliate?.affiliate_code}`;
   };
 
   const progressData = getProgressToNextTier();
-  const affiliateUrl = `${window.location.origin}/a/${affiliate.affiliate_code}`;
+  const affiliateUrl = buildAffiliateUrl(affiliate.affiliate_code);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4">
