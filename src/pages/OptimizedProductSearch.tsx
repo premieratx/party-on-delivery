@@ -25,6 +25,7 @@ export default function OptimizedProductSearch() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedSpirit, setSelectedSpirit] = useState<string>('all');
   
   const { 
     cartItems, 
@@ -52,6 +53,17 @@ export default function OptimizedProductSearch() {
     { id: 'cocktails', label: 'Cocktails', handle: 'cocktail-kits' },
     { id: 'mixers', label: 'Mixers & N/A', handle: 'mixers-non-alcoholic' },
     { id: 'seltzers', label: 'Seltzers', handle: 'seltzer-collection' }
+  ];
+
+  // Spirit types visible when Spirits is selected
+  const spiritTypes = [
+    { id: 'all', label: 'All Spirits' },
+    { id: 'whiskey', label: 'Whiskey' },
+    { id: 'vodka', label: 'Vodka' },
+    { id: 'rum', label: 'Rum' },
+    { id: 'tequila', label: 'Tequila' },
+    { id: 'mezcal', label: 'Mezcal' },
+    { id: 'liqueurs', label: 'Liqueurs' },
   ];
 
   // Get cart item quantity for a specific product
@@ -185,15 +197,33 @@ export default function OptimizedProductSearch() {
     } else {
       // No query: show category view from full catalog
       const current = categories.find(c => c.id === selectedCategory);
+      let base = allProducts;
       if (current && current.handle) {
         const handle = current.handle;
-        const filtered = allProducts.filter(p => (productCollectionsRef.current[p.id] || []).includes(handle));
-        setProducts(filtered);
-      } else {
-        setProducts(allProducts);
+        base = allProducts.filter(p => (productCollectionsRef.current[p.id] || []).includes(handle));
       }
+      // Spirits sub-filter
+      if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
+        const synonyms: Record<string, string[]> = {
+          whiskey: ['whiskey', 'bourbon', 'rye'],
+          vodka: ['vodka'],
+          rum: ['rum'],
+          tequila: ['tequila'],
+          mezcal: ['mezcal'],
+          liqueurs: ['liqueur', 'liqueurs', 'amaro', 'vermouth', 'aperitif', 'digestif'],
+        };
+        const keys = synonyms[selectedSpirit] || [selectedSpirit];
+        base = base.filter(p => {
+          const handles = productCollectionsRef.current[p.id] || [];
+          const matchHandle = handles.some(h => keys.some(k => h.includes(k)));
+          const t = `${String(p.title).toLowerCase()} ${String(p.description || '').toLowerCase()}`;
+          const matchText = keys.some(k => t.includes(k));
+          return matchHandle || matchText;
+        });
+      }
+      setProducts(base);
     }
-  }, [searchQuery, selectedCategory, allProducts]);
+  }, [searchQuery, selectedCategory, selectedSpirit, allProducts]);
 
   // Mobile: hide filters on scroll to maximize products shown
   useEffect(() => {
@@ -294,6 +324,30 @@ export default function OptimizedProductSearch() {
         </div>
       </div>
 
+      {selectedCategory === 'spirits' && (
+        <div className="border-b bg-background/95 backdrop-blur-md sticky top-[9.75rem] z-40">
+          <div className="container mx-auto px-4 py-2">
+            <RadioGroup
+              value={selectedSpirit}
+              onValueChange={setSelectedSpirit}
+              className="flex flex-wrap gap-2"
+            >
+              {spiritTypes.map((t) => (
+                <div key={t.id} className="flex items-center">
+                  <RadioGroupItem value={t.id} id={`sp-${t.id}`} className="sr-only" />
+                  <Label
+                    htmlFor={`sp-${t.id}`}
+                    className={`px-3 py-2 rounded-md border cursor-pointer text-sm ${selectedSpirit === t.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground border-input hover:bg-accent'}`}
+                  >
+                    {t.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        </div>
+      )}
+
       {/* Search Results */}
       <div className="container mx-auto px-4 py-6">
         {loading ? (
@@ -341,7 +395,7 @@ export default function OptimizedProductSearch() {
                           {product.title}
                         </h3>
                         
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-center mb-3">
                           <span className="font-bold text-primary">
                             ${(parseFloat(String(product.price)) || 0).toFixed(2)}
                           </span>
