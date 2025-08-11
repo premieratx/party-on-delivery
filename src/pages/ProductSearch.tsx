@@ -304,26 +304,27 @@ export const ProductSearch = () => {
 
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
-    let filtered = products;
+    const base = searchTerm.trim() ? allProducts : products;
+    let filtered = base;
 
-    // Filter by search term
     if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(product => 
-        product.title.toLowerCase().includes(searchLower) ||
-        product.description.toLowerCase().includes(searchLower)
+      const q = searchTerm.toLowerCase();
+      filtered = base.filter((product) =>
+        product.title.toLowerCase().includes(q) ||
+        (product.description || '').toLowerCase().includes(q) ||
+        (product.handle || '').toLowerCase().includes(q)
       );
     }
 
     // Sort alphabetically by product title for better organization
-    filtered = filtered.sort((a, b) => {
+    filtered = [...filtered].sort((a, b) => {
       const titleA = a.title.toLowerCase();
       const titleB = b.title.toLowerCase();
       return titleA.localeCompare(titleB);
     });
 
     return filtered;
-  }, [products, selectedCategory, searchTerm]);
+  }, [products, allProducts, searchTerm]);
 
   // Get the current selected variant for a product, or default to first/only variant
   const getCurrentVariant = (product: Product): ProductVariant => {
@@ -622,7 +623,7 @@ export const ProductSearch = () => {
       {/* Products Grid - Mobile Optimized */}
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
         {loading ? (
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
             {Array.from({ length: 24 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="aspect-[3/2] bg-muted rounded-lg mb-2" />
@@ -640,7 +641,7 @@ export const ProductSearch = () => {
             </p>
           </div>
         ) : (
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
             {filteredProducts.map((product, index) => {
               const currentVariant = getCurrentVariant(product);
               const quantity = getCartItemQuantity(currentVariant.id, currentVariant.variants?.[0]?.id || currentVariant.id);
