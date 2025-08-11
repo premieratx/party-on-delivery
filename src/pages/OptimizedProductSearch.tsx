@@ -203,6 +203,10 @@ export default function OptimizedProductSearch() {
         const handle = current.handle;
         base = allProducts.filter(p => (productCollectionsRef.current[p.id] || []).includes(handle));
       }
+      // If a specific spirit is chosen, start from full catalog to include items in sub-collections not tagged in the parent 'spirits' collection
+      if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
+        base = allProducts;
+      }
       // Spirits sub-filter
       if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
         const key = String(selectedSpirit).toLowerCase();
