@@ -893,16 +893,26 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                         setAppName(homepageApp.app_name);
                         setTabCount(homepageApp.collections_config.tab_count);
                         setTabs(homepageApp.collections_config.tabs);
-                        setStartScreenTitle((homepageApp as any).start_screen_config?.title || '');
-                        setStartScreenSubtitle((homepageApp as any).start_screen_config?.subtitle || '');
-                        setLogoUrl((homepageApp as any).start_screen_config?.logo_url || (homepageApp as any).logo_url || '');
+                        const sc = (homepageApp as any).start_screen_config || {};
+                        setStartScreenTitle(sc.title || '');
+                        setStartScreenSubtitle(sc.subtitle || '');
+                        setStartButtonText(sc.start_button_text || '');
+                        setChecklist1(sc.checklist_item_1 || '');
+                        setChecklist2(sc.checklist_item_2 || '');
+                        setChecklist3(sc.checklist_item_3 || '');
+                        setChecklist4(sc.checklist_item_4 || '');
+                        setChecklist5(sc.checklist_item_5 || '');
+                        setBackgroundVideoUrl(sc.background_video_url || '');
+                        setLogoUrl(sc.logo_url || (homepageApp as any).logo_url || '');
                         setMainAppHeroHeading((homepageApp as any).main_app_config?.hero_heading || '');
                         setHeroHeadline((homepageApp as any).main_app_config?.hero_heading || '');
                         setHeroSubheading((homepageApp as any).main_app_config?.hero_subheading || '');
                         setHeroScrollingText((homepageApp as any).main_app_config?.hero_scrolling_text || '');
-                        setPostCheckoutHeading((homepageApp as any).post_checkout_config?.heading || '');
-                        setPostCheckoutSubheading((homepageApp as any).post_checkout_config?.subheading || '');
-                        setPostCheckoutRedirectUrl((homepageApp as any).post_checkout_config?.redirect_url || '');
+                        const pc = (homepageApp as any).post_checkout_config || {};
+                        setPostCheckoutHeading(pc.heading || '');
+                        setPostCheckoutSubheading(pc.subheading || '');
+                        setPostCheckoutRedirectUrl(pc.redirect_url || '');
+                        setPostCheckoutButtonText(pc.button_text || '');
                         setLogoFile(null);
                         setIsCreating(true);
                       }
@@ -1019,7 +1029,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
             <Card className="border-blue-200 bg-blue-50/40">
               <CardHeader>
                 <CardTitle className="text-blue-700">Start Screen Customization</CardTitle>
-                <p className="text-sm text-blue-600">Title, subtitle, and start screen logo</p>
+                <p className="text-sm text-blue-600">Title, subtitle, logo, CTA text, 5-row checklist, and optional background video</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1041,6 +1051,53 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                       placeholder="Austin's favorite alcohol delivery service"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start-button-text">Start Button Text</Label>
+                    <Input
+                      id="start-button-text"
+                      value={startButtonText}
+                      onChange={(e) => setStartButtonText(e.target.value)}
+                      placeholder="Order Now"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="background-video-url">Background Video URL (optional)</Label>
+                    <Input
+                      id="background-video-url"
+                      value={backgroundVideoUrl}
+                      onChange={(e) => setBackgroundVideoUrl(e.target.value)}
+                      placeholder="/videos/whiskey-over-ice-5143-360.mp4"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Provide an MP4/GIF URL for the cover screen background</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="checklist-1">Checklist Row 1</Label>
+                    <Input id="checklist-1" value={checklist1} onChange={(e) => setChecklist1(e.target.value)} placeholder="Locally Owned" />
+                  </div>
+                  <div>
+                    <Label htmlFor="checklist-2">Checklist Row 2</Label>
+                    <Input id="checklist-2" value={checklist2} onChange={(e) => setChecklist2(e.target.value)} placeholder="Same Day Delivery" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="checklist-3">Checklist Row 3</Label>
+                    <Input id="checklist-3" value={checklist3} onChange={(e) => setChecklist3(e.target.value)} placeholder="Cocktail Kits on Demand" />
+                  </div>
+                  <div>
+                    <Label htmlFor="checklist-4">Checklist Row 4</Label>
+                    <Input id="checklist-4" value={checklist4} onChange={(e) => setChecklist4(e.target.value)} placeholder="Private Event Specialists" />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="checklist-5">Checklist Row 5</Label>
+                  <Input id="checklist-5" value={checklist5} onChange={(e) => setChecklist5(e.target.value)} placeholder="Delivering All Over Austin" />
                 </div>
 
                 <div>
@@ -1373,12 +1430,17 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                           
                           // Load existing customization data from the app configuration
                           const fullApp = app as any;
-                          
                           const startConfig = fullApp.start_screen_config || {};
                           setStartScreenTitle(startConfig.title || '');
                           setStartScreenSubtitle(startConfig.subtitle || '');
+                          setStartButtonText(startConfig.start_button_text || '');
+                          setChecklist1(startConfig.checklist_item_1 || '');
+                          setChecklist2(startConfig.checklist_item_2 || '');
+                          setChecklist3(startConfig.checklist_item_3 || '');
+                          setChecklist4(startConfig.checklist_item_4 || '');
+                          setChecklist5(startConfig.checklist_item_5 || '');
+                          setBackgroundVideoUrl(startConfig.background_video_url || '');
                           setLogoUrl(startConfig.logo_url || fullApp.logo_url || '');
-                          
                           // Main app config
                           const mainConfig = fullApp.main_app_config || {};
                           setMainAppHeroHeading(mainConfig.hero_heading || '');
@@ -1390,7 +1452,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                           setPostCheckoutHeading(postConfig.heading || '');
                           setPostCheckoutSubheading(postConfig.subheading || '');
                           setPostCheckoutRedirectUrl(postConfig.redirect_url || '');
-                          
+                          setPostCheckoutButtonText(postConfig.button_text || '');
                           setIsCreating(true);
                         }}
                       >
