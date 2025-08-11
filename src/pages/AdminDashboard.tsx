@@ -94,11 +94,11 @@ export default function AdminDashboard() {
       // Map orders with full customer details for admin view
       const ordersWithDetails = (dashboardData.data.orders || []).map((order: any) => ({
         ...order,
-        customer_name: order.customers ? 
-          `${order.customers.first_name || ''} ${order.customers.last_name || ''}`.trim() : 
-          'Unknown Customer',
-        customer_email: order.customers?.email || 'No email',
-        customer_phone: order.customers?.phone || 'No phone'
+        customer_name: order.customer_name || (
+          order.delivery_address?.email ? order.delivery_address.email.split('@')[0] : 'Unknown Customer'
+        ),
+        customer_email: order.customer_email || order.delivery_address?.email || 'No email',
+        customer_phone: order.customer_phone || 'No phone'
       }));
       
       setRecentOrders(ordersWithDetails);

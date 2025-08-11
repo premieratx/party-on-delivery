@@ -216,6 +216,11 @@ export default function CustomAppView() {
 
   const goToAppTabs = () => {
     try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
+    const aff = searchParams.get('aff') || undefined;
+    const params = new URLSearchParams(searchParams);
+    params.set('step', 'tabs');
+    if (aff) params.set('aff', aff);
+    navigate(`?${params.toString()}`, { replace: true });
     setCurrentStep('tabs');
   };
 
@@ -242,8 +247,12 @@ export default function CustomAppView() {
   useEffect(() => {
     try {
       const stepParam = searchParams.get('step') as CustomDeliveryStep | null;
+      const aff = searchParams.get('aff');
       if (stepParam && (stepParam === 'start' || stepParam === 'tabs' || stepParam === 'cart')) {
         setCurrentStep(stepParam);
+      }
+      if (aff) {
+        try { localStorage.setItem('affiliate_code', aff); } catch {}
       }
       if (searchParams.get('cart') === '1' || searchParams.get('openCart') === '1') {
         setIsCartOpen(true);

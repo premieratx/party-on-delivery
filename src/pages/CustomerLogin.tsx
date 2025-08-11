@@ -61,9 +61,9 @@ const CustomerLogin = () => {
           }
         }
         
-        console.log('Redirecting to:', redirectTo);
-        // Prefer SPA navigation to avoid reloading other routes first
-        navigate(redirectTo, { replace: true });
+         console.log('Redirecting to:', redirectTo);
+         // Force hard redirect to avoid landing on cover screens first
+         window.location.replace(redirectTo);
       } catch (error) {
         console.error('Customer auth processing error:', error);
         setIsLoading(false);

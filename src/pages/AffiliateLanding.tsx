@@ -78,7 +78,8 @@ export const AffiliateLanding: React.FC = () => {
   useEffect(() => {
     if (!loading && affiliateCode) {
       const target = assignedAppSlug ? `/app/${assignedAppSlug}?step=start&aff=${affiliateCode}` : `/?aff=${affiliateCode}`;
-      navigate(target, { replace: true });
+      // Use hard replace to ensure aff param persists and no intermediate flicker
+      window.location.replace(target);
     }
   }, [loading, assignedAppSlug, affiliateCode]);
 
