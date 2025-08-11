@@ -213,9 +213,10 @@ export default function OptimizedProductSearch() {
         base = base.filter((p) => {
           const type = String(p.product_type || p.productType || '').trim().toLowerCase();
           const handles = (productCollectionsRef.current[p.id] || []).map(h => String(h).toLowerCase());
-          const inType = type === key;
-          const inCollection = handles.some(h => h === key);
-          return inType || inCollection;
+          const inType = !!type && type === key;
+          const inCollectionExact = handles.includes(key);
+          const inCollectionLoose = handles.some(h => h.includes(key));
+          return inType || inCollectionExact || inCollectionLoose;
         });
       }
       setProducts(base);

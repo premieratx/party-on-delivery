@@ -7,13 +7,14 @@ import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { PerformanceMonitor } from "@/components/common/PerformanceMonitor";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
 import Index from "./pages/Index";
 import CoverPage from "./pages/CoverPage";
 import NotFound from "./pages/NotFound";
+import { getInstantProducts } from "@/utils/instantCacheClient";
 
 // Lazy load all other components
 const Success = lazy(() => import("./pages/Success"));
@@ -85,6 +86,10 @@ const PageLoader = () => (
 );
 
 const App = () => {
+  useEffect(() => {
+    // Warm the instant product cache on app load for faster /search navigation
+    getInstantProducts({ timeoutMs: 800 }).catch(() => {});
+  }, []);
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
