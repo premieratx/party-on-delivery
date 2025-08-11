@@ -18,8 +18,10 @@ export const AdminLogin: React.FC = () => {
     
     const processAuth = async (email: string) => {
       if (!mounted || authProcessed || !email) return;
+      if (sessionStorage.getItem('admin-auth-processed') === '1') return;
       
       authProcessed = true;
+      sessionStorage.setItem('admin-auth-processed', '1');
       console.log(`Processing admin auth for ${email}`);
       
       try {
@@ -70,6 +72,7 @@ export const AdminLogin: React.FC = () => {
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         authProcessed = false;
+        sessionStorage.removeItem('admin-auth-processed');
         setGoogleLoading(false);
       }
     });

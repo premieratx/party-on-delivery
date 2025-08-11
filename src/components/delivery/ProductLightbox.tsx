@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { parseProductTitle } from '@/utils/productUtils';
+import DOMPurify from 'dompurify';
 
 interface ShopifyProduct {
   id: string;
@@ -164,7 +165,7 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                   <h3 className="font-semibold mb-2">Description</h3>
                   <div 
                     className="text-muted-foreground text-sm leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: product.description }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.description) }}
                   />
                 </div>
               )}
