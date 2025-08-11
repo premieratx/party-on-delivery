@@ -331,6 +331,19 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
       {/* Hero Section */}
       {appConfig.main_app_config?.hero_heading && (
         <div className="relative bg-gradient-to-r from-primary/10 to-secondary/10 min-h-[22rem] lg:min-h-[34rem] flex items-center">
+          {/* Search button - top-left over hero */}
+          <div className="absolute top-4 left-4 z-20">
+            <button
+              onClick={() => (window.location.href = '/search')}
+              className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
+              aria-label="Search products"
+            >
+              {/* lucide search icon as inline svg to avoid extra imports */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.6 3.6a7.5 7.5 0 0013.05 13.05z" />
+              </svg>
+            </button>
+          </div>
           <div className="max-w-7xl mx-auto px-4 text-center w-full">
             <h2 className="text-3xl font-bold mb-2">
               {appConfig.main_app_config.hero_heading}
