@@ -205,27 +205,13 @@ export default function OptimizedProductSearch() {
       }
       // Spirits sub-filter
       if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
-        const synonyms: Record<string, string[]> = {
-          whiskey: ['whiskey', 'bourbon', 'rye'],
-          vodka: ['vodka'],
-          gin: ['gin'],
-          rum: ['rum'],
-          tequila: ['tequila'],
-          mezcal: ['mezcal'],
-          liqueurs: ['liqueur', 'liqueurs', 'amaro', 'vermouth', 'aperitif', 'digestif'],
-        };
-        const keys = synonyms[selectedSpirit] || [selectedSpirit];
-        base = base.filter(p => {
-          const handles = productCollectionsRef.current[p.id] || [];
-          const matchHandle = handles.some(h => keys.some(k => h.includes(k)));
-          const t = `${String(p.title).toLowerCase()} ${String(p.description || '').toLowerCase()}`;
-          const matchText = keys.some(k => t.includes(k));
-          let pass = matchHandle || matchText;
-          if (selectedSpirit === 'liqueurs') {
-            const negatives = ['whiskey','vodka','gin','rum','tequila','mezcal'];
-            if (negatives.some(k => t.includes(k))) pass = false;
-          }
-          return pass;
+        const key = String(selectedSpirit).toLowerCase();
+        base = base.filter((p) => {
+          const type = String(p.product_type || p.productType || '').trim().toLowerCase();
+          const handles = (productCollectionsRef.current[p.id] || []).map(h => String(h).toLowerCase());
+          const inType = type === key;
+          const inCollection = handles.some(h => h === key);
+          return inType || inCollection;
         });
       }
       setProducts(base);
