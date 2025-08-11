@@ -60,6 +60,7 @@ export default function OptimizedProductSearch() {
     { id: 'all', label: 'All Spirits' },
     { id: 'whiskey', label: 'Whiskey' },
     { id: 'vodka', label: 'Vodka' },
+    { id: 'gin', label: 'Gin' },
     { id: 'rum', label: 'Rum' },
     { id: 'tequila', label: 'Tequila' },
     { id: 'mezcal', label: 'Mezcal' },
@@ -207,6 +208,7 @@ export default function OptimizedProductSearch() {
         const synonyms: Record<string, string[]> = {
           whiskey: ['whiskey', 'bourbon', 'rye'],
           vodka: ['vodka'],
+          gin: ['gin'],
           rum: ['rum'],
           tequila: ['tequila'],
           mezcal: ['mezcal'],
@@ -218,7 +220,12 @@ export default function OptimizedProductSearch() {
           const matchHandle = handles.some(h => keys.some(k => h.includes(k)));
           const t = `${String(p.title).toLowerCase()} ${String(p.description || '').toLowerCase()}`;
           const matchText = keys.some(k => t.includes(k));
-          return matchHandle || matchText;
+          let pass = matchHandle || matchText;
+          if (selectedSpirit === 'liqueurs') {
+            const negatives = ['whiskey','vodka','gin','rum','tequila','mezcal'];
+            if (negatives.some(k => t.includes(k))) pass = false;
+          }
+          return pass;
         });
       }
       setProducts(base);
