@@ -231,7 +231,9 @@ export type Database = {
         Row: {
           affiliate_code: string
           commission_rate: number | null
+          commission_type: string
           commission_unpaid: number | null
+          commission_value: number | null
           company_name: string
           created_at: string | null
           email: string
@@ -250,7 +252,9 @@ export type Database = {
         Insert: {
           affiliate_code: string
           commission_rate?: number | null
+          commission_type?: string
           commission_unpaid?: number | null
+          commission_value?: number | null
           company_name: string
           created_at?: string | null
           email: string
@@ -269,7 +273,9 @@ export type Database = {
         Update: {
           affiliate_code?: string
           commission_rate?: number | null
+          commission_type?: string
           commission_unpaid?: number | null
+          commission_value?: number | null
           company_name?: string
           created_at?: string | null
           email?: string

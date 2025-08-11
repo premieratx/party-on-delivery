@@ -41,9 +41,9 @@ serve(async (req) => {
     );
 
     // Find affiliate by code
-    const { data: affiliate, error: affiliateError } = await supabaseService
+const { data: affiliate, error: affiliateError } = await supabaseService
       .from('affiliates')
-      .select('id, commission_rate')
+      .select('id, commission_rate, commission_type, commission_value')
       .eq('affiliate_code', affiliateCode)
       .single();
 
@@ -97,9 +97,21 @@ serve(async (req) => {
       logStep('Subtotal from fallback fields', { subtotal });
     }
     
-    const commissionAmount = (subtotal * affiliate.commission_rate) / 100;
+    // Determine commission based on affiliate settings
+    let commissionRateUsed = typeof affiliate.commission_value === 'number' && affiliate.commission_type === 'percent'
+      ? affiliate.commission_value
+      : affiliate.commission_rate;
 
-    logStep('Commission calculated', { subtotal, commissionRate: affiliate.commission_rate, commissionAmount });
+    let commissionAmount = 0;
+    if (affiliate.commission_type === 'flat' && typeof affiliate.commission_value === 'number' && affiliate.commission_value > 0) {
+      commissionAmount = affiliate.commission_value;
+      commissionRateUsed = 0; // Flat commission, no percent rate applied
+    } else {
+      const rate = (commissionRateUsed || 0);
+      commissionAmount = (subtotal * rate) / 100;
+    }
+
+    logStep('Commission calculated', { subtotal, commissionType: affiliate.commission_type, commissionRateUsed, commissionAmount });
 
     // Insert affiliate referral record
     const { data: referral, error: referralError } = await supabaseService
@@ -109,7 +121,7 @@ serve(async (req) => {
         order_id: orderId,
         customer_email: customerEmail,
         subtotal: subtotal,
-        commission_rate: affiliate.commission_rate,
+        commission_rate: commissionRateUsed,
         commission_amount: commissionAmount,
         paid_out: false
       })

@@ -38,6 +38,7 @@ import AITestingControl from '@/components/AITestingControl';
 import TestGHLIntegration from '@/components/TestGHLConnection';
 import CleanupUserData from '@/components/CleanupUserData';
 import { SystemTestingSuite } from '@/components/SystemTestingSuite';
+import AffiliateCreator from '@/components/admin/AffiliateCreator';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -263,6 +264,7 @@ export default function AdminDashboard() {
                 <h3 className="text-lg font-medium">Affiliate Partners</h3>
                 <p className="text-sm text-muted-foreground">View affiliate partners and their custom delivery apps</p>
               </div>
+              <AffiliateCreator onCreated={loadDashboardData} />
             </div>
             
             <div className="grid gap-4">

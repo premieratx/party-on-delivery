@@ -16,6 +16,7 @@ export const AffiliateLanding: React.FC = () => {
   const navigate = useNavigate();
   const [affiliate, setAffiliate] = useState<AffiliateInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [assignedAppSlug, setAssignedAppSlug] = useState<string | null>(null);
   const [affiliateReferral, setAffiliateReferral] = useReliableStorage('affiliateReferral', '');
 
   useEffect(() => {
@@ -45,6 +46,25 @@ export const AffiliateLanding: React.FC = () => {
       }
 
       setAffiliate(data);
+
+      // Fetch assigned delivery app slug if any
+      try {
+        const { data: site } = await supabase
+          .from('custom_affiliate_sites')
+          .select('delivery_app_id')
+          .eq('affiliate_id', data.id)
+          .eq('is_active', true)
+          .maybeSingle();
+        if (site?.delivery_app_id) {
+          const { data: app } = await supabase
+            .from('delivery_app_variations')
+            .select('app_slug')
+            .eq('id', site.delivery_app_id)
+            .maybeSingle();
+          if (app?.app_slug) setAssignedAppSlug(app.app_slug);
+        }
+      } catch {}
+
     } catch (error) {
       console.error('Error loading affiliate:', error);
       navigate('/');
@@ -54,18 +74,18 @@ export const AffiliateLanding: React.FC = () => {
   };
 
   const handleStartNewOrder = () => {
-    // Navigate to main app with affiliate tracking
-    navigate('/', { state: { fromAffiliate: affiliateCode } });
+    const target = assignedAppSlug ? `/app/${assignedAppSlug}?step=start` : '/';
+    navigate(target, { state: { fromAffiliate: affiliateCode } });
   };
 
   const handleResumeOrder = () => {
-    // Navigate to main app with affiliate tracking
-    navigate('/', { state: { fromAffiliate: affiliateCode, resumeOrder: true } });
+    const target = assignedAppSlug ? `/app/${assignedAppSlug}?step=tabs` : '/';
+    navigate(target, { state: { fromAffiliate: affiliateCode, resumeOrder: true } });
   };
 
   const handleAddToRecentOrder = () => {
-    // Navigate to main app with affiliate tracking
-    navigate('/', { state: { fromAffiliate: affiliateCode, addToRecent: true } });
+    const target = assignedAppSlug ? `/app/${assignedAppSlug}?step=tabs` : '/';
+    navigate(target, { state: { fromAffiliate: affiliateCode, addToRecent: true } });
   };
 
   if (loading) {
