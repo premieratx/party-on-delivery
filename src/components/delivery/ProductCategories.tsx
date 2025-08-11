@@ -599,14 +599,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <div className="absolute inset-0 bg-black/40" />
         </div>
         
-        {/* Search Icon - Top Left Corner of Hero */}
+        {/* Search App Button - Top Left Corner of Hero (standalone page) */}
         <div className="absolute top-4 left-4 z-20">
           <button
-            onClick={() => navigate("/search")}
-            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg p-3 transition-all duration-200 shadow-lg hover:shadow-xl"
-            aria-label="Search products"
+            onClick={() => navigate('/search')}
+            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg px-3 py-2 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+            aria-label="Open Search App"
           >
             <Search className="w-5 h-5 text-white" />
+            <span className="hidden sm:inline text-white font-medium">Search</span>
           </button>
         </div>
 
@@ -652,6 +653,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px]">
+
+        {/* Sticky Search Bar shown when searching */}
+        {(showSearch || (searchQuery && searchQuery.trim().length > 0)) && (
+          <div className="max-w-7xl mx-auto px-4 py-3 border-b">
+            <div className="relative max-w-2xl mx-auto">
+              <ProductSearchBar
+                onProductSelect={handleSearchSelect}
+                placeholder="Search all products..."
+                showDropdownResults={false}
+                onResultsChange={handleSearchResultsChange}
+                onSearchingChange={setIsSearching}
+                onFocus={() => setShowSearch(true)}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
