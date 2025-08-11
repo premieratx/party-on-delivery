@@ -199,25 +199,37 @@ export default function OptimizedProductSearch() {
       // No query: show category view from full catalog
       const current = categories.find(c => c.id === selectedCategory);
       let base = allProducts;
-      if (current && current.handle) {
+      if (current && current.handle && selectedCategory !== 'spirits') {
         const handle = current.handle;
         base = allProducts.filter(p => (productCollectionsRef.current[p.id] || []).includes(handle));
       }
-      // If a specific spirit is chosen, start from full catalog to include items in sub-collections not tagged in the parent 'spirits' collection
-      if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
-        base = allProducts;
-      }
-      // Spirits sub-filter
-      if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
-        const key = String(selectedSpirit).toLowerCase();
-        base = base.filter((p) => {
-          const type = String(p.product_type || p.productType || '').trim().toLowerCase();
-          const handles = (productCollectionsRef.current[p.id] || []).map(h => String(h).toLowerCase());
-          const inType = !!type && type === key;
-          const inCollectionExact = handles.includes(key);
-          return inType || inCollectionExact;
+
+      // Spirits category: broaden matching to maximize results (product_type, tags, collection handles, title, handle)
+      if (selectedCategory === 'spirits') {
+        const norm = (s: any) => String(s || '').trim().toLowerCase();
+        const spiritKeywordSets: Record<string, string[]> = {
+          all: ['whiskey','whisky','bourbon','rye','scotch','vodka','gin','rum','tequila','mezcal','brandy','cognac','liqueur','liqueurs','amaro','aperitif','digestif','cordial'],
+          whiskey: ['whiskey','whisky','bourbon','rye','scotch'],
+          vodka: ['vodka'],
+          gin: ['gin'],
+          rum: ['rum'],
+          tequila: ['tequila'],
+          mezcal: ['mezcal'],
+          liqueurs: ['liqueur','liqueurs','amaro','aperitif','digestif','cordial'],
+        };
+        const keys = spiritKeywordSets[selectedSpirit as keyof typeof spiritKeywordSets] || spiritKeywordSets.all;
+
+        base = allProducts.filter((p) => {
+          const type = norm(p.product_type || p.productType);
+          const tagsArr = Array.isArray(p.tags)
+            ? p.tags.map((t: any) => norm(t))
+            : norm(p.tags).split(',').map((t: any) => norm(t)).filter(Boolean);
+          const handles = (productCollectionsRef.current[p.id] || []).map(h => norm(h));
+          const haystack = [type, ...tagsArr, ...handles, norm(p.title), norm(p.handle)].filter(Boolean);
+          return keys.some(k => haystack.some(h => h.includes(k)));
         });
       }
+
       setProducts(base);
     }
   }, [searchQuery, selectedCategory, selectedSpirit, allProducts]);
