@@ -38,6 +38,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { VoucherDisplay } from '@/components/common/VoucherDisplay';
 import { buildAffiliateUrl } from '@/utils/links';
+import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 
 interface AffiliateData {
   id: string;
@@ -224,13 +225,17 @@ export const AffiliateDashboard: React.FC = () => {
       }
 
       // Use the unified dashboard data service
-      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
-        body: { 
-          type: 'affiliate', 
-          email: user.email,
-          affiliateCode: affiliateData.affiliate_code
-        }
-      });
+      const response: any = await withRetry(async () =>
+        await supabase.rpc('get_dashboard_data', {
+          dashboard_type: 'affiliate',
+          user_email: user.email,
+          affiliate_code: affiliateData.affiliate_code,
+        }),
+        { shouldRetry: isRetryableError, maxRetries: 3, initialDelay: 800 }
+      );
+
+      const rpcResult = response?.data;
+      const dashboardError = response?.error;
 
       if (dashboardError) {
         console.error('Dashboard data error:', dashboardError);
@@ -244,18 +249,19 @@ export const AffiliateDashboard: React.FC = () => {
 
         if (referralsError) throw referralsError;
         setRecentOrders(referrals || []);
-      } else if (dashboardData.error) {
-        throw new Error(dashboardData.error);
+      } else if (!rpcResult?.success) {
+        throw new Error(rpcResult?.error || 'Failed to load affiliate dashboard');
       } else {
         // Use dashboard service data  
-        setRecentOrders(dashboardData.data.affiliateReferrals || []);
-        setAffiliateOrders(dashboardData.data.orders || []);
+        const dashboardData = rpcResult.data;
+        setRecentOrders(dashboardData.affiliateReferrals || []);
+        setAffiliateOrders(dashboardData.orders || []);
         // Update affiliate stats from dashboard data
         setAffiliate(prev => ({
           ...prev,
-          total_sales: dashboardData.data.totalRevenue || prev.total_sales,
-          orders_count: dashboardData.data.totalOrders || prev.orders_count,
-          commission_unpaid: dashboardData.data.pendingCommissions || prev.commission_unpaid
+          total_sales: dashboardData.totalRevenue || prev.total_sales,
+          orders_count: dashboardData.totalOrders || prev.orders_count,
+          commission_unpaid: dashboardData.pendingCommissions || prev.commission_unpaid
         }));
       }
 

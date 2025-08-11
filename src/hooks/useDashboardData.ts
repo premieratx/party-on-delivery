@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 
 export interface DashboardData {
   orders: any[];
@@ -29,24 +30,26 @@ export function useDashboardData(options: UseDashboardDataOptions) {
       setLoading(true);
       setError(null);
 
-      // Use the function invoke method with query parameters in the body
-      const { data: result, error: fetchError } = await supabase.functions.invoke('get-dashboard-data', {
-        body: {
-          type: options.type,
-          email: options.email,
-          affiliateCode: options.affiliateCode
-        }
-      });
+      const response: any = await withRetry(async () =>
+        await supabase.rpc('get_dashboard_data', {
+          dashboard_type: options.type,
+          user_email: options.email ?? null,
+          affiliate_code: options.affiliateCode ?? null,
+        }),
+        { shouldRetry: isRetryableError, maxRetries: 3, initialDelay: 800 }
+      );
+      const rpcResult = response?.data;
+      const fetchError = response?.error;
 
       if (fetchError) {
-        throw new Error(fetchError.message);
+        throw new Error(fetchError.message || String(fetchError));
       }
 
-      if (result.error) {
-        throw new Error(result.error);
+      if (!rpcResult?.success) {
+        throw new Error(rpcResult?.error || 'Failed to load dashboard data');
       }
 
-      setData(result.data);
+      setData(rpcResult.data);
       setLastUpdated(new Date());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');

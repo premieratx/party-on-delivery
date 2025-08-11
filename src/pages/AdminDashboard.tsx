@@ -15,6 +15,7 @@ import { PerformanceOptimizationSummary } from '@/components/admin/PerformanceOp
 import { DatabaseOptimizationTester } from '@/components/admin/DatabaseOptimizationTester';
 import { PerformanceReportGenerator } from '@/components/admin/PerformanceReportGenerator';
 import { supabase } from '@/integrations/supabase/client';
+import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
@@ -58,15 +59,24 @@ export default function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const { data: dashboardData, error } = await supabase.functions.invoke('get-dashboard-data', {
-        body: { type: 'admin' }
-      });
+      const response: any = await withRetry(async () =>
+        await supabase.rpc('get_dashboard_data', {
+          dashboard_type: 'admin',
+          user_email: null,
+          affiliate_code: null,
+        }),
+        { shouldRetry: isRetryableError, maxRetries: 3, initialDelay: 800 }
+      );
+
+      const error = response?.error;
+      const rpcResult = response?.data;
 
       if (error) throw error;
-
-      if (dashboardData.error) {
-        throw new Error(dashboardData.error);
+      if (!rpcResult?.success) {
+        throw new Error(rpcResult?.error || 'Failed to load dashboard data');
       }
+
+      const dashboardData = rpcResult;
 
       // Set dashboard data with full order details
       setTotalRevenue(dashboardData.data.totalRevenue || 0);

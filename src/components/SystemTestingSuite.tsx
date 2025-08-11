@@ -157,11 +157,12 @@ export const SystemTestingSuite: React.FC = () => {
   const runAdminDashboardTest = async () => {
     updateTestStatus('Admin Dashboard Access', 'running');
     try {
-      const { data, error } = await supabase.functions.invoke('get-dashboard-data', { body: { type: 'admin' } });
+      const { data: rpcData, error } = await supabase.rpc('get_dashboard_data', { dashboard_type: 'admin' });
       
       if (error) throw error;
+      const result: any = rpcData;
 
-      if (data?.data?.orders || data?.success) {
+      if (result?.data?.orders || result?.success) {
         updateTestStatus('Admin Dashboard Access', 'passed', 
           'Dashboard data accessible');
       } else {

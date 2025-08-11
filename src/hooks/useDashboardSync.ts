@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
 
 interface DashboardSyncOptions {
@@ -20,29 +21,34 @@ export function useDashboardSync(options: DashboardSyncOptions) {
 
   const refreshDashboardData = useCallback(async () => {
     try {
-      const { data: dashboardData, error } = await supabase.functions.invoke('get-dashboard-data', {
-        body: { 
-          type: dashboardType,
-          email: userEmail,
-          affiliateCode: affiliateCode
-        }
-      });
+      const response: any = await withRetry(async () =>
+        await supabase.rpc('get_dashboard_data', {
+          dashboard_type: dashboardType,
+          user_email: userEmail ?? null,
+          affiliate_code: affiliateCode ?? null,
+        }),
+        { shouldRetry: isRetryableError, maxRetries: 3, initialDelay: 800 }
+      );
+
+      const rpcResult = response?.data;
+      const error = response?.error;
 
       if (error) throw error;
-      if (dashboardData.error) throw new Error(dashboardData.error);
+      if (!rpcResult?.success) throw new Error(rpcResult?.error || 'Failed to refresh dashboard');
 
-      // Trigger appropriate update callbacks
-      if (onOrderUpdate && dashboardData.data.orders) {
-        dashboardData.data.orders.forEach((order: any) => onOrderUpdate(order));
+      const dashboardData = rpcResult.data;
+
+      if (onOrderUpdate && dashboardData.orders) {
+        dashboardData.orders.forEach((order: any) => onOrderUpdate(order));
       }
-      if (onCustomerUpdate && dashboardData.data.customers) {
-        dashboardData.data.customers.forEach((customer: any) => onCustomerUpdate(customer));
+      if (onCustomerUpdate && dashboardData.customers) {
+        dashboardData.customers.forEach((customer: any) => onCustomerUpdate(customer));
       }
-      if (onAffiliateUpdate && dashboardData.data.affiliateReferrals) {
-        dashboardData.data.affiliateReferrals.forEach((referral: any) => onAffiliateUpdate(referral));
+      if (onAffiliateUpdate && dashboardData.affiliateReferrals) {
+        dashboardData.affiliateReferrals.forEach((referral: any) => onAffiliateUpdate(referral));
       }
 
-      return dashboardData.data;
+      return dashboardData;
     } catch (error) {
       console.error('Error refreshing dashboard data:', error);
       return null;
