@@ -215,8 +215,7 @@ export default function OptimizedProductSearch() {
           const handles = (productCollectionsRef.current[p.id] || []).map(h => String(h).toLowerCase());
           const inType = !!type && type === key;
           const inCollectionExact = handles.includes(key);
-          const inCollectionLoose = handles.some(h => h.includes(key));
-          return inType || inCollectionExact || inCollectionLoose;
+          return inType || inCollectionExact;
         });
       }
       setProducts(base);
