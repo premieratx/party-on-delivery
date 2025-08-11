@@ -62,9 +62,8 @@ const CustomerLogin = () => {
         }
         
         console.log('Redirecting to:', redirectTo);
-        
-        // Use replace to avoid back button issues
-        window.location.replace(redirectTo);
+        // Prefer SPA navigation to avoid reloading other routes first
+        navigate(redirectTo, { replace: true });
       } catch (error) {
         console.error('Customer auth processing error:', error);
         setIsLoading(false);
@@ -118,21 +117,16 @@ const CustomerLogin = () => {
     setIsLoading(true);
     console.log('Initiating Google login...');
     
-    try {
-      // Use current URL for redirect to preserve params
-      const currentUrl = window.location.href;
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: currentUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
+      try {
+        // Always redirect back to login with dashboard redirect param
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/customer/login?redirect=dashboard`,
+            queryParams: { access_type: 'offline', prompt: 'select_account' },
+            skipBrowserRedirect: false,
           },
-          skipBrowserRedirect: false,
-        },
-      });
+        });
 
       if (error) {
         console.error('OAuth initiation error:', error);

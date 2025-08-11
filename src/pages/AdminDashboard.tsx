@@ -59,6 +59,13 @@ export default function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
+      // Proactively sync last 3 days of Shopify orders so names/emails are accurate
+      try {
+        await supabase.functions.invoke('sync-shopify-orders-recent', { body: { days: 3 } });
+      } catch (e) {
+        console.warn('Shopify sync (admin) skipped:', e);
+      }
+
       const response: any = await withRetry(async () =>
         await supabase.rpc('get_dashboard_data', {
           dashboard_type: 'admin',

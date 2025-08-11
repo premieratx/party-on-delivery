@@ -101,6 +101,13 @@ const CustomerDashboard = () => {
         return;
       }
 
+      // Sync Shopify orders for this customer for the last 3 days
+      try {
+        await supabase.functions.invoke('sync-shopify-orders-recent', { body: { days: 3, customerEmail: session.user.email } });
+      } catch (e) {
+        console.warn('Shopify sync (customer) skipped:', e);
+      }
+
       // Load or create customer profile
       const { data: customerData, error: customerError } = await supabase
         .from('customers')

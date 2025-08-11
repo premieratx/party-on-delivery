@@ -102,3 +102,6 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.sync-shopify-orders-recent]
+verify_jwt = false
