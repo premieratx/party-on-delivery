@@ -91,6 +91,13 @@ export function DeliveryAppManager() {
   // Start screen customization
   const [startScreenTitle, setStartScreenTitle] = useState('');
   const [startScreenSubtitle, setStartScreenSubtitle] = useState('');
+  const [startButtonText, setStartButtonText] = useState('');
+  const [checklist1, setChecklist1] = useState('');
+  const [checklist2, setChecklist2] = useState('');
+  const [checklist3, setChecklist3] = useState('');
+  const [checklist4, setChecklist4] = useState('');
+  const [checklist5, setChecklist5] = useState('');
+  const [backgroundVideoUrl, setBackgroundVideoUrl] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState<string>('');
   
@@ -181,12 +188,20 @@ export function DeliveryAppManager() {
     setHeroSubheading('');
     setStartScreenTitle('');
     setStartScreenSubtitle('');
+    setStartButtonText('');
+    setChecklist1('');
+    setChecklist2('');
+    setChecklist3('');
+    setChecklist4('');
+    setChecklist5('');
+    setBackgroundVideoUrl('');
     setLogoFile(null);
     setLogoUrl('');
     setMainAppHeroHeading('');
     setPostCheckoutHeading('');
     setPostCheckoutSubheading('');
     setPostCheckoutRedirectUrl('');
+    setPostCheckoutButtonText('');
     setPostCheckoutButtonText('');
     
     setIsCreating(true);
@@ -391,6 +406,13 @@ export function DeliveryAppManager() {
           start_screen_config: {
             title: startScreenTitle,
             subtitle: startScreenSubtitle,
+            start_button_text: startButtonText,
+            checklist_item_1: checklist1,
+            checklist_item_2: checklist2,
+            checklist_item_3: checklist3,
+            checklist_item_4: checklist4,
+            checklist_item_5: checklist5,
+            background_video_url: backgroundVideoUrl,
             logo_url: uploadedLogoUrl
           },
           main_app_config: {
@@ -401,7 +423,8 @@ export function DeliveryAppManager() {
           post_checkout_config: {
             heading: postCheckoutHeading,
             subheading: postCheckoutSubheading,
-            redirect_url: postCheckoutRedirectUrl
+            redirect_url: postCheckoutRedirectUrl,
+            button_text: postCheckoutButtonText
           }
         })
         .eq('id', editingApp.id)
