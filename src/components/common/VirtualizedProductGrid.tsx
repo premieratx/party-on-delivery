@@ -265,7 +265,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
             </p>
           )}
           
-          <div className="mt-auto space-y-2">
+          <div className="mt-auto flex flex-col items-center gap-2">
             {/* Price Row */}
             <div className="flex items-center justify-center">
               <span className="font-bold text-primary text-lg">
@@ -278,28 +278,28 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - Compact and perfectly centered */}
-            <div className="w-full flex items-center justify-center py-1">
+            {/* Quantity Controls - Centered below price */}
+            <div className="flex items-center justify-center">
               {quantity > 0 ? (
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center gap-1 md:gap-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onDecrement}
-                    className="h-4 w-4 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
+                    className="h-6 w-6 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
                   >
-                    <Minus className="h-2 w-2 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    <Minus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
                   </Button>
-                  <span className="font-bold text-xs md:text-2xl lg:text-3xl text-center leading-none mx-1 md:mx-3">
+                  <span className="font-bold text-base md:text-4xl lg:text-6xl text-center leading-none min-w-[24px] md:min-w-[48px]">
                     {quantity}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onIncrement}
-                    className="h-4 w-4 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
+                    className="h-6 w-6 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
                   >
-                    <Plus className="h-2 w-2 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    <Plus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
                   </Button>
                 </div>
               ) : (
