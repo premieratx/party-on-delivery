@@ -33,6 +33,7 @@ export interface CoverPageConfig {
   checklist: string[];
   buttons: CoverButtonConfig[];
   is_active: boolean;
+  styles?: { title_size?: number; subtitle_size?: number; checklist_size?: number; spacing_y?: number };
 }
 
 interface CoverPageEditorProps {
@@ -57,12 +58,15 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [title, setTitle] = useState(initial?.title || "");
   const [subtitle, setSubtitle] = useState(initial?.subtitle || "");
   const [logoUrl, setLogoUrl] = useState(initial?.logo_url || "");
-  const [logoHeight, setLogoHeight] = useState<number>(initial?.logo_height ?? 80);
+  const [logoHeight, setLogoHeight] = useState<number>(initial?.logo_height ?? 160);
   const [bgImageUrl, setBgImageUrl] = useState(initial?.bg_image_url || "");
   const [bgVideoUrl, setBgVideoUrl] = useState(initial?.bg_video_url || "");
   const [checklist, setChecklist] = useState<string[]>(initial?.checklist || ["", "", "", "", ""]);
   const [buttons, setButtons] = useState<CoverButtonConfig[]>(initial?.buttons || []);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
+  const [titleSize, setTitleSize] = useState<number>((initial as any)?.styles?.title_size ?? 32);
+  const [subtitleSize, setSubtitleSize] = useState<number>((initial as any)?.styles?.subtitle_size ?? 18);
+  const [checklistSize, setChecklistSize] = useState<number>((initial as any)?.styles?.checklist_size ?? 14);
 
   const [apps, setApps] = useState<{ app_slug: string; app_name: string }[]>([]);
   const [saving, setSaving] = useState(false);
@@ -75,10 +79,10 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
       const base = (computedSlug || slugify(title) || 'cover').slice(0, 60);
       const fileName = `cover-${base}-${kind}.${ext}`;
       const { error: uploadError } = await supabase.storage
-        .from('delivery-app-logos')
+        .from('cover-assets')
         .upload(fileName, file, { cacheControl: '3600', upsert: true });
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('delivery-app-logos').getPublicUrl(fileName);
+      const { data } = supabase.storage.from('cover-assets').getPublicUrl(fileName);
       return data.publicUrl;
     } catch (e: any) {
       console.error('Upload failed', e);
@@ -112,6 +116,9 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setButtons(initial?.buttons || []);
     setIsActive(initial?.is_active ?? true);
     setSlugOk(true);
+    setTitleSize((initial as any)?.styles?.title_size ?? 32);
+    setSubtitleSize((initial as any)?.styles?.subtitle_size ?? 18);
+    setChecklistSize((initial as any)?.styles?.checklist_size ?? 14);
   }, [open, initial]);
 
   const computedSlug = useMemo(() => slugify(slug || title), [slug, title]);
@@ -179,6 +186,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
         checklist: (checklist || []).filter(Boolean).slice(0, 5),
         buttons: buttons as any,
         is_active: isActive,
+        styles: { title_size: titleSize, subtitle_size: subtitleSize, checklist_size: checklistSize, spacing_y: 20 },
       };
 
       if (isEditing && initial?.id) {
@@ -218,6 +226,23 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                 <div>
                   <Label htmlFor="subtitle">Subtitle</Label>
                   <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label>Title Size</Label>
+                    <input type="range" min={20} max={56} value={titleSize} onChange={(e) => setTitleSize(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{titleSize}px</div>
+                  </div>
+                  <div>
+                    <Label>Subtitle Size</Label>
+                    <input type="range" min={12} max={32} value={subtitleSize} onChange={(e) => setSubtitleSize(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{subtitleSize}px</div>
+                  </div>
+                  <div>
+                    <Label>Checklist Size</Label>
+                    <input type="range" min={10} max={24} value={checklistSize} onChange={(e) => setChecklistSize(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{checklistSize}px</div>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="logo">Logo URL</Label>
@@ -302,6 +327,36 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                 <div className="flex items-center justify-between py-1">
                   <Label htmlFor="active">Public</Label>
                   <Switch id="active" checked={isActive} onCheckedChange={setIsActive} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <Label className="mb-2 block">Live Preview</Label>
+                <div className="rounded-xl overflow-hidden bg-black/70 relative min-h-[520px] flex items-center justify-center">
+                  <div className="text-center px-6 w-full max-w-md">
+                    {logoUrl && (
+                      <img src={logoUrl} alt="Logo preview" className="mx-auto block" style={{ height: logoHeight || 160 }} />
+                    )}
+                    <h3 className="mt-3 text-white font-bold" style={{ fontSize: titleSize }}>
+                      {title || 'Title preview'}
+                    </h3>
+                    {subtitle && (
+                      <p className="text-white/90 mt-1" style={{ fontSize: subtitleSize }}>{subtitle}</p>
+                    )}
+                    <div className="my-5">
+                      {(checklist.filter(Boolean).slice(0,5)).map((c,i)=> (
+                        <p key={i} className="text-white/80 my-5" style={{ fontSize: checklistSize }}>{c}</p>
+                      ))}
+                    </div>
+                    <div className="min-h-[100px]" />
+                    <div className="flex flex-col gap-2">
+                      {(buttons || []).slice(0,3).map((b,i)=>(
+                        <Button key={i} className="my-5" style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}>{b.text}</Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

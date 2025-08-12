@@ -87,19 +87,19 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
             {/* Content */}
             <div className="relative z-10 flex h-full flex-col items-center justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-[calc(env(safe-area-inset-bottom)+20px)] uppercase tracking-wider">
               {/* Header */}
-              <header className="w-full text-center">
+              <header className="w-full text-center my-5">
                 <img
                   src={logoUrl || partyLogo}
                   alt={`${appName} logo`}
                   className="w-auto max-h-[30vh] drop-shadow-lg mx-auto"
-                  style={{ height: (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : undefined) }}
+                  style={{ height: (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : 160) }}
                   loading="eager"
                 />
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mt-2">
+                <h1 className="font-bold tracking-tight text-white mt-2" style={{ fontSize: 'clamp(24px,4vw,40px)' }}>
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="text-white/90 mt-1 text-sm sm:text-base">{subtitle}</p>
+                  <p className="text-white/90 mt-1" style={{ fontSize: 'clamp(14px,2.5vw,20px)' }}>{subtitle}</p>
                 )}
               </header>
 
@@ -109,13 +109,13 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
               {/* Checklist + Buttons */}
               <div className="w-full max-w-sm mt-2 mb-0">
                 {/* Auto-shrinking checklist area */}
-                <div className="w-full mx-auto">
+                <div className="w-full mx-auto my-5">
                   <div className="flex flex-col items-center gap-1 max-h-[20vh] overflow-hidden">
                     {(checklistItems?.filter(Boolean).slice(0, 5) || defaultChecklist).map((item, idx, arr) => (
                       <React.Fragment key={idx}>
                         <p
-                          className="text-white/90 text-[clamp(10px,2.8vw,14px)] font-semibold leading-tight animate-fade-in"
-                          style={{ animationDelay: `${idx * 80}ms` }}
+                          className="text-white/90 font-semibold leading-tight animate-fade-in my-5"
+                          style={{ animationDelay: `${idx * 80}ms`, fontSize: 'clamp(12px,2.8vw,16px)' }}
                         >
                           {item}
                         </p>
@@ -137,7 +137,7 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                       <Button
                         key={`${b.text}-${i}`}
                         size="lg"
-                        className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                        className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                         style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
                         onClick={(e) => { e.stopPropagation(); b.onClick(); }}
                       >
@@ -150,7 +150,7 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                     <Button
                       key={`${buttons[0].text}-0`}
                       size="lg"
-                      className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                      className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                       style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined }}
                       onClick={(e) => { e.stopPropagation(); buttons[0].onClick(); }}
                     >
@@ -161,7 +161,7 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                         <Button
                           key={`${b.text}-${i + 1}`}
                           size="lg"
-                          className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                          className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                           style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
                           onClick={(e) => { e.stopPropagation(); b.onClick(); }}
                         >
@@ -176,7 +176,7 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                       <Button
                         key={`${b.text}-${i}`}
                         size="lg"
-                        className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                        className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
                         style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
                         onClick={(e) => { e.stopPropagation(); b.onClick(); }}
                       >

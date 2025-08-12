@@ -169,7 +169,7 @@ export default function ShortLinkResolver() {
           onOpenChange={() => {}}
           appName={coverPage.title}
           logoUrl={coverPage.logo_url || undefined}
-          logoHeight={coverPage.logo_height || undefined}
+          logoHeight={coverPage.logo_height ?? 160}
           title={coverPage.title}
           subtitle={coverPage.subtitle || ''}
           checklistItems={checklist}
