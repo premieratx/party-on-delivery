@@ -6,8 +6,9 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CoverPageEditor, CoverPageConfig } from '@/components/admin/CoverPageEditor';
-import { Copy, ExternalLink, Plus, RefreshCcw, Edit } from 'lucide-react';
+import { Copy, ExternalLink, Plus, RefreshCcw, Edit, Trash } from 'lucide-react';
 import { CANONICAL_DOMAIN } from '@/utils/links';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const CoverPagesAdmin: React.FC = () => {
   const { toast } = useToast();
@@ -87,6 +88,16 @@ const CoverPagesAdmin: React.FC = () => {
     toast({ title: 'Copied', description: url });
   };
 
+  const handleDelete = async (id: string, title: string) => {
+    const { error } = await supabase.from('cover_pages').delete().eq('id', id);
+    if (error) {
+      console.error(error);
+      toast({ title: 'Error', description: 'Failed to delete cover page', variant: 'destructive' });
+    } else {
+      toast({ title: 'Deleted', description: `Removed “${title}”` });
+      load();
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
       <div className="container mx-auto space-y-6">
@@ -127,6 +138,23 @@ const CoverPagesAdmin: React.FC = () => {
                         <Button variant="outline" size="sm" onClick={() => copyUrl(p.slug)}><Copy className="h-4 w-4 mr-1" />Copy URL</Button>
                         <Button variant="outline" size="sm" onClick={() => window.open(`${CANONICAL_DOMAIN}/${p.slug}`, '_blank')}><ExternalLink className="h-4 w-4 mr-1" />Open</Button>
                         <Button size="sm" onClick={() => openEdit(p)}><Edit className="h-4 w-4 mr-1" />Edit</Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-1" />Delete</Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete cover page?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete "{p.title}".
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(p.id, p.title)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   ))

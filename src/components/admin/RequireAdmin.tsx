@@ -22,8 +22,16 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
         if (!mounted) return;
 
         if (!session) {
+          // If returning from OAuth, Supabase will exchange the code for a session asynchronously.
+          const hasAuthParams = window.location.search.includes('code=') || window.location.search.includes('state=') || window.location.hash.includes('access_token');
+          if (hasAuthParams) {
+            setAllowed(null); // wait for auth to settle
+            return;
+          }
           setAllowed(false);
-          navigate('/affiliate/admin-login', { replace: true });
+          if (window.location.pathname !== '/affiliate/admin-login') {
+            navigate('/affiliate/admin-login', { replace: true });
+          }
           return;
         }
 
