@@ -175,7 +175,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
 <div className="bg-background/95 backdrop-blur-md border-b">
-        <div className="container mx-auto px-2">
+        <div className="w-full px-2">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold">Party On Delivery</h1>
             
@@ -201,15 +201,15 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
 
       {/* Category Tabs */}
 <div className="border-b">
-        <div className="container mx-auto px-0">
-          <div className="flex w-full items-stretch gap-0 py-1 overflow-hidden">
+        <div className="w-full">
+          <div className="flex w-full items-stretch gap-0 py-1 overflow-hidden flex-nowrap">
             {CATEGORY_TABS.map((tab, index) => (
               <Button
                 key={tab.id}
                 variant={selectedCategory === index ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(index)}
-                className="flex-1 basis-0 min-w-0 px-0.5 py-1 h-auto min-h-10 max-h-12 text-[9.5px] tracking-tight leading-[1.05rem] whitespace-normal break-words text-center overflow-hidden"
+                className="flex-1 basis-0 min-w-0 px-0 py-1 h-auto min-h-10 max-h-12 text-[8px] tracking-tight leading-[0.95rem] whitespace-normal break-words text-center overflow-hidden"
               >
                 {tab.isSearch && <Search className="h-3 w-3 mr-1 inline-block align-[-2px]" />}
                 {tab.title}
