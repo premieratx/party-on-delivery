@@ -278,34 +278,34 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - Perfectly centered */}
-            <div className="flex justify-center items-center py-1">
+            {/* Quantity Controls - FIXED: Properly centered with large text */}
+            <div className="w-full flex justify-center py-2">
               {quantity > 0 ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onDecrement}
-                    className="h-7 w-7 p-0 rounded-full shrink-0"
+                    className="h-8 w-8 p-0 rounded-full"
                   >
-                    <Minus className="h-3 w-3" />
+                    <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="font-bold text-xl min-w-[28px] text-center">
+                  <span className="font-bold text-2xl min-w-[32px] text-center leading-none">
                     {quantity}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onIncrement}
-                    className="h-7 w-7 p-0 rounded-full shrink-0"
+                    className="h-8 w-8 p-0 rounded-full"
                   >
-                    <Plus className="h-3 w-3" />
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center shrink-0"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center"
                 >
                   <Plus className="h-4 w-4" strokeWidth={3} />
                 </button>
