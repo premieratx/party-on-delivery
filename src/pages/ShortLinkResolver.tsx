@@ -176,6 +176,11 @@ onClick: () => {
     if (b.openCart) params.set('openCart', '1');
     const affToAppend = (b.affiliate_code as string | undefined) || affiliateCode || undefined;
     if (affToAppend) params.set('aff', affToAppend);
+    // Also forward pricing flags to ensure reliability across reloads
+    const mpVal = typeof b.markup_percent === 'number' ? String((b.markup_percent as number).toFixed ? (b.markup_percent as number).toFixed(2) : b.markup_percent) : '0';
+    if (Number(mpVal) > 0) params.set('mp', mpVal);
+    if (b.free_shipping === true) params.set('fs', '1');
+
     window.location.href = `/app/${b.app_slug}?${params.toString()}`;
     return;
   }

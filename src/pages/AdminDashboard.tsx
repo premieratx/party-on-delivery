@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import SimpleProductManager from '@/components/admin/SimpleProductManager';

@@ -254,6 +254,15 @@ export default function CustomAppView() {
       if (aff) {
         try { localStorage.setItem('affiliate_code', aff); } catch {}
       }
+      // Persist pricing flags forwarded from cover buttons
+      const mp = searchParams.get('mp');
+      if (mp) {
+        try { sessionStorage.setItem('pricing.markupPercent', String(mp)); } catch {}
+      }
+      const fs = searchParams.get('fs');
+      if (fs === '1') {
+        try { sessionStorage.setItem('shipping.free', '1'); } catch {}
+      }
       if (searchParams.get('cart') === '1' || searchParams.get('openCart') === '1') {
         setIsCartOpen(true);
       }

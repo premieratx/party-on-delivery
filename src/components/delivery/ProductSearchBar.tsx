@@ -66,6 +66,9 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     loadAllProducts();
   }, []);
 
+  // Apply affiliate/delivery-app markup to displayed prices (session-based)
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
 
 
   const loadAllProducts = async () => {
@@ -197,7 +200,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                       {product.title}
                     </div>
                     <div className="text-primary font-semibold">
-                      ${typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                      ${typeof product.price === 'number' ? applyMarkup(product.price).toFixed(2) : product.price}
                     </div>
                   </div>
                 </div>
