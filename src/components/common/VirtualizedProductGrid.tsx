@@ -278,30 +278,28 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - Perfectly centered like green button */}
+            {/* Quantity Controls - Compact and perfectly centered */}
             <div className="w-full flex items-center justify-center py-1">
               {quantity > 0 ? (
-                <div className="flex items-center justify-center gap-0.5 md:gap-3">
+                <div className="flex items-center justify-center">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onDecrement}
-                    className="h-5 w-5 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
+                    className="h-4 w-4 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
                   >
-                    <Minus className="h-2.5 w-2.5 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    <Minus className="h-2 w-2 md:h-5 md:w-5 lg:h-6 lg:w-6" />
                   </Button>
-                  <div className="w-6 md:w-10 lg:w-12 flex items-center justify-center">
-                    <span className="font-bold text-xs md:text-2xl lg:text-3xl text-center leading-none">
-                      {quantity}
-                    </span>
-                  </div>
+                  <span className="font-bold text-xs md:text-2xl lg:text-3xl text-center leading-none mx-1 md:mx-3">
+                    {quantity}
+                  </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onIncrement}
-                    className="h-5 w-5 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
+                    className="h-4 w-4 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
                   >
-                    <Plus className="h-2.5 w-2.5 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    <Plus className="h-2 w-2 md:h-5 md:w-5 lg:h-6 lg:w-6" />
                   </Button>
                 </div>
               ) : (
