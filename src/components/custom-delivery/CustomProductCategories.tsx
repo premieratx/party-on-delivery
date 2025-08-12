@@ -13,7 +13,7 @@ import { getInstantProducts } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
-import { SearchIcon } from '@/components/common/SearchIcon';
+
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
@@ -468,7 +468,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
           
           <div className="space-y-4">
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search products..."
