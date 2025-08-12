@@ -202,14 +202,14 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       {/* Category Tabs */}
 <div className="border-b">
         <div className="w-full">
-          <div className="flex w-full items-stretch gap-0 py-1 overflow-hidden flex-nowrap">
+          <div className="flex w-full items-stretch gap-px py-1 overflow-hidden flex-nowrap px-0">
             {CATEGORY_TABS.map((tab, index) => (
               <Button
                 key={tab.id}
                 variant={selectedCategory === index ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(index)}
-                className="flex-1 basis-0 min-w-0 px-0 py-1 h-auto min-h-10 max-h-12 text-[7.5px] tracking-tight leading-[0.95rem] whitespace-normal break-words text-center overflow-hidden rounded-none first:rounded-l-md last:rounded-r-md -ml-px first:ml-0"
+                className="flex-1 basis-0 min-w-0 px-0 py-1 h-auto min-h-10 max-h-12 text-[7px] tracking-tight leading-[0.9rem] whitespace-normal break-words text-center overflow-hidden rounded-none first:rounded-l-md last:rounded-r-md"
               >
                 {tab.isSearch && <Search className="h-2.5 w-2.5 mr-1 inline-block align-[-2px]" />}
                 {tab.title}
@@ -221,7 +221,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
 
       {/* Search Input */}
       {isSearchTab && (
-        <div className="container mx-auto px-4 py-6">
+        <div className="w-full px-2 md:px-4 py-4">
           <div className="max-w-md mx-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -238,7 +238,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       )}
 
       {/* Products Grid */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="w-full px-2 md:px-4 py-6">
         {error ? (
           <div className="text-center py-12">
             <p className="text-destructive mb-4">{error}</p>
@@ -247,7 +247,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
             {products.map((product) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
