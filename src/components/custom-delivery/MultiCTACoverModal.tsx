@@ -16,6 +16,7 @@ export interface MultiCTACoverModalProps {
   onOpenChange: (open: boolean) => void;
   appName?: string;
   logoUrl?: string;
+  logoHeight?: number; // px height control for logo
   title?: string;
   subtitle?: string;
   checklistItems?: string[];
@@ -35,6 +36,7 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
   onOpenChange,
   appName = 'Party On Delivery',
   logoUrl,
+  logoHeight,
   title = 'Exclusive Concierge Delivery',
   subtitle = "Austin's favorite alcohol delivery service",
   checklistItems = defaultChecklist,
@@ -89,7 +91,8 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                 <img
                   src={logoUrl || partyLogo}
                   alt={`${appName} logo`}
-                  className="h-20 sm:h-28 w-auto max-h-[30vh] drop-shadow-lg"
+                  className="w-auto max-h-[30vh] drop-shadow-lg mx-auto"
+                  style={{ height: (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : undefined) }}
                   loading="eager"
                 />
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mt-2">
@@ -119,20 +122,61 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                   </div>
                 </div>
 
-                {/* Buttons grid (2-wide on mobile) */}
-                <div className="grid grid-cols-2 gap-2">
-                  {buttons.map((b, i) => (
+                {/* Buttons layout: stack for 1-2, special layout for 3, grid for 4+ */}
+                {buttons.length <= 2 ? (
+                  <div className="flex flex-col gap-3">
+                    {buttons.map((b, i) => (
+                      <Button
+                        key={`${b.text}-${i}`}
+                        size="lg"
+                        className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                        style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
+                        onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+                      >
+                        {b.text}
+                      </Button>
+                    ))}
+                  </div>
+                ) : buttons.length === 3 ? (
+                  <div className="flex flex-col gap-2">
                     <Button
-                      key={`${b.text}-${i}`}
+                      key={`${buttons[0].text}-0`}
                       size="lg"
-                      className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                      style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                      onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+                      className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                      style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined }}
+                      onClick={(e) => { e.stopPropagation(); buttons[0].onClick(); }}
                     >
-                      {b.text}
+                      {buttons[0].text}
                     </Button>
-                  ))}
-                </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {buttons.slice(1).map((b, i) => (
+                        <Button
+                          key={`${b.text}-${i + 1}`}
+                          size="lg"
+                          className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                          style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
+                          onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+                        >
+                          {b.text}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {buttons.map((b, i) => (
+                      <Button
+                        key={`${b.text}-${i}`}
+                        size="lg"
+                        className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                        style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
+                        onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+                      >
+                        {b.text}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

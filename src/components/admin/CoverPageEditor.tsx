@@ -27,6 +27,7 @@ export interface CoverPageConfig {
   title: string;
   subtitle?: string;
   logo_url?: string;
+  logo_height?: number;
   bg_image_url?: string;
   bg_video_url?: string;
   checklist: string[];
@@ -56,6 +57,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [title, setTitle] = useState(initial?.title || "");
   const [subtitle, setSubtitle] = useState(initial?.subtitle || "");
   const [logoUrl, setLogoUrl] = useState(initial?.logo_url || "");
+  const [logoHeight, setLogoHeight] = useState<number>(initial?.logo_height ?? 80);
   const [bgImageUrl, setBgImageUrl] = useState(initial?.bg_image_url || "");
   const [bgVideoUrl, setBgVideoUrl] = useState(initial?.bg_video_url || "");
   const [checklist, setChecklist] = useState<string[]>(initial?.checklist || ["", "", "", "", ""]);
@@ -85,6 +87,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setTitle(initial?.title || "");
     setSubtitle(initial?.subtitle || "");
     setLogoUrl(initial?.logo_url || "");
+    setLogoHeight(initial?.logo_height ?? 80);
     setBgImageUrl(initial?.bg_image_url || "");
     setBgVideoUrl(initial?.bg_video_url || "");
     setChecklist(initial?.checklist && initial.checklist.length ? initial.checklist : ["", "", "", "", ""]);
@@ -152,6 +155,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
         title,
         subtitle,
         logo_url: logoUrl || null,
+        logo_height: logoHeight || null,
         bg_image_url: bgImageUrl || null,
         bg_video_url: bgVideoUrl || null,
         checklist: (checklist || []).filter(Boolean).slice(0, 5),
@@ -180,7 +184,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Cover Page' : 'New Cover Page'}</DialogTitle>
         </DialogHeader>
@@ -200,6 +204,26 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                 <div>
                   <Label htmlFor="logo">Logo URL</Label>
                   <Input id="logo" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
+                </div>
+                <div>
+                  <Label htmlFor="logoUpload">Upload Logo</Label>
+                  <input
+                    id="logoUpload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => setLogoUrl(reader.result as string);
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">If no logo is provided, the default Party On Delivery logo will be used.</p>
+                </div>
+                <div>
+                  <Label htmlFor="logoHeight">Logo Height (px)</Label>
+                  <Input id="logoHeight" type="number" min={24} max={200} value={logoHeight ?? 80} onChange={(e) => setLogoHeight(Number(e.target.value) || 0)} />
                 </div>
                 <div>
                   <Label htmlFor="bgimg">Background Image URL</Label>

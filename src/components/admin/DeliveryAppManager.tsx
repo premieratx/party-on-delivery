@@ -92,6 +92,7 @@ export function DeliveryAppManager() {
   const [startScreenTitle, setStartScreenTitle] = useState('');
   const [startScreenSubtitle, setStartScreenSubtitle] = useState('');
   const [startButtonText, setStartButtonText] = useState('');
+  const [startScreenEnabled, setStartScreenEnabled] = useState(false);
   const [checklist1, setChecklist1] = useState('');
   const [checklist2, setChecklist2] = useState('');
   const [checklist3, setChecklist3] = useState('');
@@ -404,6 +405,7 @@ export function DeliveryAppManager() {
             tabs: validTabs
           },
           start_screen_config: {
+            enabled: startScreenEnabled,
             title: startScreenTitle,
             subtitle: startScreenSubtitle,
             start_button_text: startButtonText,
@@ -897,6 +899,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                         setStartScreenTitle(sc.title || '');
                         setStartScreenSubtitle(sc.subtitle || '');
                         setStartButtonText(sc.start_button_text || '');
+                        setStartScreenEnabled(sc.enabled === true);
                         setChecklist1(sc.checklist_item_1 || '');
                         setChecklist2(sc.checklist_item_2 || '');
                         setChecklist3(sc.checklist_item_3 || '');
@@ -1032,6 +1035,10 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                 <p className="text-sm text-blue-600">Title, subtitle, logo, CTA text, 5-row checklist, and optional background video</p>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <input id="start-enabled" type="checkbox" checked={startScreenEnabled} onChange={(e) => setStartScreenEnabled(e.target.checked)} />
+                  <Label htmlFor="start-enabled">Enable Start Screen</Label>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="start-title">Start Screen Title</Label>

@@ -134,7 +134,7 @@ export default function CustomAppView() {
   useWakeLock();
   
   // Determine initial step from URL (force 'start' to avoid flicker)
-  const initialStepParam = (searchParams.get('step') as CustomDeliveryStep) || 'start';
+  const initialStepParam = (searchParams.get('step') as CustomDeliveryStep) || 'tabs';
   const [currentStep, setCurrentStep] = useAppStep(initialStepParam);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
@@ -265,7 +265,7 @@ export default function CustomAppView() {
   // Auto-show Start screen once per app if enabled and not seen
   useEffect(() => {
     if (!appConfig) return;
-    const enabled = (appConfig.start_screen_config as any)?.enabled !== false;
+    const enabled = (appConfig.start_screen_config as any)?.enabled === true;
     const seenKey = `startSeen_${appConfig.app_slug}`;
     const seen = sessionStorage.getItem(seenKey);
     if (enabled && !seen) {
