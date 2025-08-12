@@ -628,7 +628,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
             disabled={cartItemCount === 0}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center ${cartItemCount > 0 ? 'bg-white/20 border border-white/30 hover:bg-white/30' : 'bg-white/10 border border-white/20 opacity-50 cursor-not-allowed'}`}
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center ${cartItemCount > 0 ? 'bg-white/20 border border-white/30 hover:bg-white/30' : 'bg-white/10 border border-white/20 opacity-50 cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-primary animate-pulse' : ''}`}
             aria-label="Checkout"
           >
             <CheckCircle className={`w-5 h-5 ${cartItemCount > 0 ? 'text-white' : 'text-white/60'}`} />
@@ -800,8 +800,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             </Button>
                           </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2 h-2 sm:w-4 sm:h-4 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus className="w-[8px] h-[8px] sm:w-4 sm:h-4" strokeWidth={4} />
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
+                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={4} />
                           </button>
                         )}
                       </div>
@@ -952,7 +952,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </div>
                         ) : (
                          <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-2 h-2 sm:w-4 sm:h-4"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-4 h-4 sm:w-5 sm:h-5"
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
@@ -969,7 +969,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }
                            }}
                          >
-                           <Plus className="w-[6px] h-[6px] sm:w-3 sm:h-3" strokeWidth={4} />
+                           <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={4} />
                         </button>
                       )}
                     </div>
