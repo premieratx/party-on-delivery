@@ -90,6 +90,18 @@ const App = () => {
     // Warm the instant product cache on app load for faster /search navigation
     getInstantProducts({ timeoutMs: 800 }).catch(() => {});
   }, []);
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const aff = params.get('aff') || params.get('affiliate') || params.get('ref');
+      if (aff) {
+        sessionStorage.setItem('affiliate.code', aff);
+        sessionStorage.setItem('affiliate_code', aff);
+        sessionStorage.setItem('affiliate_source', 'url');
+        localStorage.setItem('affiliate_code', aff);
+      }
+    } catch {}
+  }, []);
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
