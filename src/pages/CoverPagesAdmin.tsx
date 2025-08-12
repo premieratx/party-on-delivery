@@ -69,11 +69,13 @@ const CoverPagesAdmin: React.FC = () => {
       title: p.title,
       subtitle: p.subtitle || '',
       logo_url: p.logo_url || '',
+      logo_height: p.logo_height ?? 160,
       bg_image_url: p.bg_image_url || '',
       bg_video_url: p.bg_video_url || '',
       checklist: (p.checklist || []) as string[],
       buttons: (p.buttons || []) as any,
       is_active: !!p.is_active,
+      styles: p.styles || {},
     };
     setEditing(cfg);
     setEditorOpen(true);

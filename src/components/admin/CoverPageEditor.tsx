@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
+import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
 // Types
 export type CoverButtonType = 'delivery_app' | 'checkout' | 'url'
 export interface CoverButtonConfig {
@@ -79,7 +79,13 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [titleSize, setTitleSize] = useState<number>((initial as any)?.styles?.title_size ?? 32);
   const [subtitleSize, setSubtitleSize] = useState<number>((initial as any)?.styles?.subtitle_size ?? 18);
   const [checklistSize, setChecklistSize] = useState<number>((initial as any)?.styles?.checklist_size ?? 14);
-
+  const [titleOffsetY, setTitleOffsetY] = useState<number>((initial as any)?.styles?.title_offset_y ?? 0);
+  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>((initial as any)?.styles?.subtitle_offset_y ?? 0);
+  const [checklistOffsetY, setChecklistOffsetY] = useState<number>((initial as any)?.styles?.checklist_offset_y ?? 0);
+  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>((initial as any)?.styles?.buttons_offset_y ?? 0);
+  const [backgroundColor, setBackgroundColor] = useState<string>((initial as any)?.styles?.background_color ?? "");
+  const [logoBgColor, setLogoBgColor] = useState<string>((initial as any)?.styles?.logo_bg_color ?? "");
+  const [logoBgMode, setLogoBgMode] = useState<'auto' | 'rectangle' | 'none'>((initial as any)?.styles?.logo_bg_mode ?? 'auto');
   const [apps, setApps] = useState<{ app_slug: string; app_name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [slugOk, setSlugOk] = useState(true);
@@ -131,6 +137,13 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setTitleSize((initial as any)?.styles?.title_size ?? 32);
     setSubtitleSize((initial as any)?.styles?.subtitle_size ?? 18);
     setChecklistSize((initial as any)?.styles?.checklist_size ?? 14);
+    setTitleOffsetY((initial as any)?.styles?.title_offset_y ?? 0);
+    setSubtitleOffsetY((initial as any)?.styles?.subtitle_offset_y ?? 0);
+    setChecklistOffsetY((initial as any)?.styles?.checklist_offset_y ?? 0);
+    setButtonsOffsetY((initial as any)?.styles?.buttons_offset_y ?? 0);
+    setBackgroundColor((initial as any)?.styles?.background_color ?? "");
+    setLogoBgColor((initial as any)?.styles?.logo_bg_color ?? "");
+    setLogoBgMode((initial as any)?.styles?.logo_bg_mode ?? 'auto');
   }, [open, initial]);
 
   const computedSlug = useMemo(() => slugify(slug || title), [slug, title]);
@@ -198,7 +211,19 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
         checklist: (checklist || []).filter(Boolean).slice(0, 5),
         buttons: buttons as any,
         is_active: isActive,
-        styles: { title_size: titleSize, subtitle_size: subtitleSize, checklist_size: checklistSize, spacing_y: 20 },
+        styles: { 
+          title_size: titleSize, 
+          subtitle_size: subtitleSize, 
+          checklist_size: checklistSize, 
+          spacing_y: 20,
+          title_offset_y: titleOffsetY,
+          subtitle_offset_y: subtitleOffsetY,
+          checklist_offset_y: checklistOffsetY,
+          buttons_offset_y: buttonsOffsetY,
+          background_color: backgroundColor || null,
+          logo_bg_color: logoBgColor || null,
+          logo_bg_mode: logoBgMode,
+        },
       };
 
       if (isEditing && initial?.id) {
@@ -368,6 +393,57 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                         <Button key={i} className="my-5" style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}>{b.text}</Button>
                       ))}
                     </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="space-y-4 pt-6">
+                <Label className="mb-2 block">Layout & Background</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Background Color</Label>
+                    <input type="color" value={backgroundColor || '#000000'} onChange={(e) => setBackgroundColor(e.target.value)} className="h-10 w-full rounded border" />
+                  </div>
+                  <div>
+                    <Label>Logo Background Mode</Label>
+                    <Select value={logoBgMode} onValueChange={(v: any) => setLogoBgMode(v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto Mask</SelectItem>
+                        <SelectItem value="rectangle">Rectangle</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Logo Background Color</Label>
+                    <input type="color" value={logoBgColor || '#000000'} onChange={(e) => setLogoBgColor(e.target.value)} className="h-10 w-full rounded border" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Title Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={titleOffsetY} onChange={(e) => setTitleOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{titleOffsetY}px</div>
+                  </div>
+                  <div>
+                    <Label>Subtitle Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={subtitleOffsetY} onChange={(e) => setSubtitleOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{subtitleOffsetY}px</div>
+                  </div>
+                  <div>
+                    <Label>Checklist Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={checklistOffsetY} onChange={(e) => setChecklistOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{checklistOffsetY}px</div>
+                  </div>
+                  <div>
+                    <Label>Buttons Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={buttonsOffsetY} onChange={(e) => setButtonsOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{buttonsOffsetY}px</div>
                   </div>
                 </div>
               </CardContent>

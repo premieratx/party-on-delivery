@@ -356,10 +356,6 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
 
             {/* Global Search + Intro */}
             <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto mt-[50px]">
-              <ProductSearchBar 
-                onProductSelect={handleSearchSelect}
-                placeholder="Search all products..."
-              />
               <div className="mt-4">
                 <TypingIntro text="Let's Build Your Party Package!" className="text-white text-lg lg:text-2xl" speedMs={130} />
               </div>

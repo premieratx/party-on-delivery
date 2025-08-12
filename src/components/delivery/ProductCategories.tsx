@@ -655,17 +655,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </p>
             </div>
 
-            {/* Middle: Search */}
-            <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto">
-              <ProductSearchBar 
-                onProductSelect={handleSearchSelect}
-                placeholder="Search all products..."
-                showDropdownResults={false}
-                onResultsChange={handleSearchResultsChange}
-                onSearchingChange={setIsSearching}
-                onFocus={() => setShowSearch(true)}
-              />
-            </div>
+            {/* Middle: Search removed per request (use sticky search above tabs) */}
 
             {/* Bottom: Typing Intro (shown only when text provided) */}
             {customHeroScrollingText && (
