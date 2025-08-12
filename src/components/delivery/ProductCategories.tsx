@@ -732,10 +732,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
 
         {/* Desktop Cart / Checkout controls inline with tabs */}
-        <div className="hidden lg:flex items-center gap-2 absolute right-6 top-1/2 -translate-y-1/2 z-50">
+        <div className="hidden lg:flex items-center gap-0 absolute right-6 top-1/2 -translate-y-1/2 z-50">
           <button
             onClick={onOpenCart}
-            className="relative h-10 px-3 bg-muted border border-muted-foreground/30 hover:bg-muted/80 rounded-md transition-colors"
+            className={`relative h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 bg-muted border border-muted-foreground/30 hover:bg-muted/80 rounded-none transition-colors`}
             aria-label="Open Cart"
           >
             <span className="inline-flex items-center gap-2 text-sm">
@@ -751,7 +751,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
             disabled={cartItemCount === 0}
-            className={`h-10 px-3 rounded-md transition-colors ${cartItemCount > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
+            className={`h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 rounded-r-md rounded-l-none transition-colors ${cartItemCount > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'animate-[pulse_3s_ease-in-out_infinite] ring-2 ring-primary' : ''}`}
             aria-label="Checkout"
           >
             <span className="inline-flex items-center gap-2 text-sm">
