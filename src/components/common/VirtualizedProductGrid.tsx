@@ -279,23 +279,23 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
             {/* Quantity Controls */}
             {quantity > 0 ? (
-              <div className="flex items-center justify-center gap-1 w-full mx-auto max-w-[80px]">
+              <div className="flex items-center justify-center gap-1 w-full mx-auto max-w-[56px] md:max-w-[80px]">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onDecrement}
-                  className="h-3 w-3 md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
+                  className="h-[8px] w-[8px] md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
                 >
                   <Minus className="h-2 w-2 md:h-2.5 md:w-2.5" />
                 </Button>
-                <span className="font-medium min-w-[16px] text-center text-xs">
+                <span className="font-medium min-w-[12px] md:min-w-[16px] text-center text-xs">
                   {quantity}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={onIncrement}
-                  className="h-3 w-3 md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
+                  className="h-[8px] w-[8px] md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
                 >
                   <Plus className="h-2 w-2 md:h-2.5 md:w-2.5" />
                 </Button>
@@ -304,7 +304,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               <div className="flex justify-center">
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-3 h-3 md:w-6 md:h-6 flex items-center justify-center"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2 h-2 md:w-6 md:h-6 flex items-center justify-center"
                 >
                   <Plus className="h-3.5 w-3.5 md:h-3.5 md:w-3.5" strokeWidth={4} />
                 </button>
