@@ -48,8 +48,13 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
   
   const { getCollectionProducts, searchProducts } = useOptimizedShopify();
   
-  const currentTab = CATEGORY_TABS[selectedCategory];
-  const isSearchTab = currentTab?.isSearch;
+const currentTab = CATEGORY_TABS[selectedCategory];
+const isSearchTab = currentTab?.isSearch;
+
+// Apply affiliate markup to displayed prices
+const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+
 
   // Load products for current category
   useEffect(() => {
@@ -266,11 +271,11 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
                       {product.title}
                     </h3>
                     
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-primary">
-                        ${(parseFloat(String(product.price)) || 0).toFixed(2)}
-                      </span>
-                    </div>
+<div className="flex items-center justify-between mb-3">
+  <span className="font-bold text-primary">
+    ${(applyMarkup(parseFloat(String(product.price)) || 0).toFixed(2))}
+  </span>
+</div>
 
                     {quantity > 0 ? (
                       <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1.5">

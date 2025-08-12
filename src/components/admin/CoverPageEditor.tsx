@@ -25,6 +25,15 @@ export interface CoverButtonConfig {
   affiliate_code?: string;
   free_shipping?: boolean;
   markup_percent?: number; // 0-50
+  // Address prefill (per-button)
+  prefill_enabled?: boolean;
+  prefill_address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    instructions?: string;
+  };
 }
 
 
@@ -604,33 +613,65 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                         </div>
                       )}
 
-                      {/* Per-button options */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label>Affiliate Code (override)</Label>
-                          <Input value={b.affiliate_code || ''} onChange={(e) => updateButton(idx, { affiliate_code: e.target.value || undefined })} placeholder="e.g. AUSTINVIP" />
-                        </div>
-                        <div>
-                          <Label>Markup %</Label>
-                          <Input type="number" min={0} max={50} step={1} value={b.markup_percent ?? 0} onChange={(e) => updateButton(idx, { markup_percent: Number(e.target.value) })} />
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Switch checked={!!b.free_shipping} onCheckedChange={(v) => updateButton(idx, { free_shipping: v })} id={`freeship-${idx}`} />
-                          <Label htmlFor={`freeship-${idx}`}>Offer free shipping</Label>
-                        </div>
-                      </div>
+{/* Per-button options */}
+<div className="grid grid-cols-2 gap-2">
+  <div>
+    <Label>Affiliate Code (override)</Label>
+    <Input value={b.affiliate_code || ''} onChange={(e) => updateButton(idx, { affiliate_code: e.target.value || undefined })} placeholder="e.g. AUSTINVIP" />
+  </div>
+  <div>
+    <Label>Markup %</Label>
+    <Input type="number" min={0} max={50} step={1} value={b.markup_percent ?? 0} onChange={(e) => updateButton(idx, { markup_percent: Number(e.target.value) })} />
+  </div>
+  <div className="flex items-center gap-2 mt-2">
+    <Switch checked={!!b.free_shipping} onCheckedChange={(v) => updateButton(idx, { free_shipping: v })} id={`freeship-${idx}`} />
+    <Label htmlFor={`freeship-${idx}`}>Offer free shipping</Label>
+  </div>
+</div>
 
-                      {/* Button colors */}
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label>Button Background Color</Label>
-                          <input type="color" value={b.bg_color || '#0ea5e9'} onChange={(e) => updateButton(idx, { bg_color: e.target.value })} className="h-10 w-full rounded border" />
-                        </div>
-                        <div>
-                          <Label>Button Text Color</Label>
-                          <input type="color" value={b.text_color || '#ffffff'} onChange={(e) => updateButton(idx, { text_color: e.target.value })} className="h-10 w-full rounded border" />
-                        </div>
-                      </div>
+{/* Address prefill (optional per button) */}
+<div className="mt-3 space-y-2">
+  <div className="flex items-center gap-2">
+    <Switch checked={!!b.prefill_enabled} onCheckedChange={(v) => updateButton(idx, { prefill_enabled: v })} id={`prefill-${idx}`} />
+    <Label htmlFor={`prefill-${idx}`}>Prefill delivery address for this button</Label>
+  </div>
+  {b.prefill_enabled && (
+    <div className="grid grid-cols-2 gap-2">
+      <div className="col-span-2">
+        <Label>Street</Label>
+        <Input value={b.prefill_address?.street || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), street: e.target.value } })} placeholder="123 Main St" />
+      </div>
+      <div>
+        <Label>City</Label>
+        <Input value={b.prefill_address?.city || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), city: e.target.value } })} placeholder="Austin" />
+      </div>
+      <div>
+        <Label>State</Label>
+        <Input value={b.prefill_address?.state || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), state: e.target.value } })} placeholder="TX" />
+      </div>
+      <div>
+        <Label>ZIP</Label>
+        <Input value={b.prefill_address?.zip_code || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), zip_code: e.target.value } })} placeholder="78701" />
+      </div>
+      <div>
+        <Label>Instructions (optional)</Label>
+        <Input value={b.prefill_address?.instructions || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), instructions: e.target.value } })} placeholder="Gate code, unit #, etc." />
+      </div>
+    </div>
+  )}
+</div>
+
+{/* Button colors */}
+<div className="grid grid-cols-2 gap-2">
+  <div>
+    <Label>Button Background Color</Label>
+    <input type="color" value={b.bg_color || '#0ea5e9'} onChange={(e) => updateButton(idx, { bg_color: e.target.value })} className="h-10 w-full rounded border" />
+  </div>
+  <div>
+    <Label>Button Text Color</Label>
+    <input type="color" value={b.text_color || '#ffffff'} onChange={(e) => updateButton(idx, { text_color: e.target.value })} className="h-10 w-full rounded border" />
+  </div>
+</div>
 
                       <div className="flex justify-end">
                         <Button variant="destructive" size="sm" onClick={() => removeButton(idx)}>Remove</Button>

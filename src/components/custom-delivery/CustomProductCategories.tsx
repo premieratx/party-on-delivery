@@ -75,7 +75,12 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [showSearchModal, setShowSearchModal] = useState(false);
+const [showSearchModal, setShowSearchModal] = useState(false);
+
+  // Apply affiliate markup to displayed prices (session based)
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+
 
   // Custom delivery app categories - similar to main app but potentially different selection
   const categories = [
@@ -360,11 +365,11 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                           {product.title}
                         </h3>
                         
-                        <div className="mt-2">
-                          <span className="text-lg font-bold text-purple-600">
-                            ${variant?.price?.toFixed(2) || '0.00'}
-                          </span>
-                        </div>
+<div className="mt-2">
+  <span className="text-lg font-bold text-purple-600">
+    ${applyMarkup(variant?.price || 0).toFixed(2)}
+  </span>
+</div>
 
                         {/* Variant Selector */}
                         {product.variants.length > 1 && (
@@ -378,9 +383,9 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                               </SelectTrigger>
                               <SelectContent>
                                 {product.variants.map((variant) => (
-                                  <SelectItem key={variant.id} value={variant.id}>
-                                    {variant.title} - ${variant.price.toFixed(2)}
-                                  </SelectItem>
+<SelectItem key={variant.id} value={variant.id}>
+  {variant.title} - ${applyMarkup(variant.price).toFixed(2)}
+</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>

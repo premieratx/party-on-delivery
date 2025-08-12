@@ -138,40 +138,56 @@ export default function ShortLinkResolver() {
       text: b.text || 'Open',
       bgColor: b.bg_color || undefined,
       textColor: b.text_color || undefined,
-      onClick: () => {
-        if (b.type === 'delivery_app' && b.app_slug) {
-          // Persist per-button rules for downstream app
-          try {
-            const mp = typeof b.markup_percent === 'number' ? b.markup_percent : 0;
-            const fs = b.free_shipping === true; // explicit toggle
-            sessionStorage.setItem('pricing.markupPercent', String(mp.toFixed ? mp.toFixed(2) : mp));
-            sessionStorage.setItem('shipping.free', fs ? '1' : '0');
+onClick: () => {
+  if (b.type === 'delivery_app' && b.app_slug) {
+    // Persist per-button rules for downstream app
+    try {
+      const mp = typeof b.markup_percent === 'number' ? b.markup_percent : 0;
+      const fs = b.free_shipping === true; // explicit toggle
+      sessionStorage.setItem('pricing.markupPercent', String(mp.toFixed ? mp.toFixed(2) : mp));
+      sessionStorage.setItem('shipping.free', fs ? '1' : '0');
 
-            const btnAff = (b.affiliate_code as string | undefined) || affiliateCode || undefined;
-            if (btnAff) {
-              sessionStorage.setItem('affiliate.code', btnAff);
-              sessionStorage.setItem('affiliate_code', btnAff);
-              sessionStorage.setItem('affiliate_source', 'url');
-              localStorage.setItem('affiliate_code', btnAff);
-            }
-          } catch {}
-
-          const params = new URLSearchParams({ step: 'tabs' });
-          if (b.openCart) params.set('openCart', '1');
-          const affToAppend = (b.affiliate_code as string | undefined) || affiliateCode || undefined;
-          if (affToAppend) params.set('aff', affToAppend);
-          window.location.href = `/app/${b.app_slug}?${params.toString()}`;
-          return;
-        }
-        if (b.type === 'checkout') {
-          window.location.href = '/checkout';
-          return;
-        }
-        if (b.type === 'url' && b.url) {
-          window.location.href = b.url;
-          return;
-        }
+      const btnAff = (b.affiliate_code as string | undefined) || affiliateCode || undefined;
+      if (btnAff) {
+        sessionStorage.setItem('affiliate.code', btnAff);
+        sessionStorage.setItem('affiliate_code', btnAff);
+        sessionStorage.setItem('affiliate_source', 'url');
+        localStorage.setItem('affiliate_code', btnAff);
       }
+
+      // Address prefill handling
+      const pre = (b.prefill_enabled && b.prefill_address) ? b.prefill_address : null;
+      if (pre && (pre.street || pre.city || pre.state || pre.zip_code)) {
+        try {
+          localStorage.setItem('prefilled_delivery_address', JSON.stringify({
+            street: pre.street || '',
+            city: pre.city || '',
+            state: pre.state || '',
+            zip_code: pre.zip_code || '',
+            instructions: pre.instructions || ''
+          }));
+        } catch {}
+      } else {
+        try { localStorage.removeItem('prefilled_delivery_address'); } catch {}
+      }
+    } catch {}
+
+    const params = new URLSearchParams({ step: 'tabs' });
+    if (b.openCart) params.set('openCart', '1');
+    const affToAppend = (b.affiliate_code as string | undefined) || affiliateCode || undefined;
+    if (affToAppend) params.set('aff', affToAppend);
+    window.location.href = `/app/${b.app_slug}?${params.toString()}`;
+    return;
+  }
+  if (b.type === 'checkout') {
+    window.location.href = '/checkout';
+    return;
+  }
+  if (b.type === 'url' && b.url) {
+    window.location.href = b.url;
+    return;
+  }
+}
     }));
   }, [coverPage]);
 
