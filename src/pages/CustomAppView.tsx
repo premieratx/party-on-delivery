@@ -273,6 +273,15 @@ export default function CustomAppView() {
     }
   }, [appConfig]);
 
+  // Ensure returning 'Home' or revisiting app within the same session skips cover
+  useEffect(() => {
+    if (!appConfig) return;
+    const seen = sessionStorage.getItem(`startSeen_${appConfig.app_slug}`);
+    if (seen && currentStep === 'start') {
+      setCurrentStep('tabs');
+    }
+  }, [appConfig, currentStep]);
+
   const handleSearchProducts = () => {
     try { if (appConfig) sessionStorage.setItem(`startSeen_${appConfig.app_slug}`, '1'); } catch {}
     setCurrentStep('tabs');
