@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShoppingCart, ArrowLeft, Package, Users } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Package, Users, CheckCircle } from 'lucide-react';
 import { SuperFastProductGrid } from './SuperFastProductGrid';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
 import { useOptimizedShopify } from '@/utils/optimizedShopifyClient';
@@ -373,23 +373,51 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
         <Tabs value={activeTab.toString()} onValueChange={(value) => setActiveTab(parseInt(value))}>
           {/* Tab Navigation */}
           <div className="mb-6 border-b">
-            <div className="max-w-7xl mx-auto">
-              <TabsList className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 h-auto p-2 bg-muted/50">
-                {tabData.map((tab, index) => (
-                  <TabsTrigger
-                    key={index}
-                    value={index.toString()}
-                    className={`flex flex-col items-center gap-2 p-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
-                  >
-                    <span className="font-medium">{tab.name}</span>
-                    {tab.hasProducts && (
-                      <Badge variant="secondary" className="text-xs">
-                        {tab.collection?.products.length || 0}
-                      </Badge>
+            <div className="max-w-7xl mx-auto px-2">
+              <div className="flex flex-nowrap items-stretch justify-center gap-2">
+                <TabsList className="flex flex-nowrap gap-2 h-12 p-2 bg-muted/50 rounded-md">
+                  {tabData.map((tab, index) => (
+                    <TabsTrigger
+                      key={index}
+                      value={index.toString()}
+                      className={`px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
+                    >
+                      <span className="font-medium">{tab.name}</span>
+                      {tab.hasProducts && (
+                        <Badge variant="secondary" className="text-xs">
+                          {tab.collection?.products.length || 0}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                <button
+                  onClick={() => setShowCart(true)}
+                  className="hidden sm:flex items-center justify-center h-12 px-3 rounded-md bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 flex-none basis-20"
+                  aria-label="Open Cart"
+                >
+                  <span className="inline-flex items-center gap-2 font-bold">
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Cart</span>
+                    {totalItems > 0 && (
+                      <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                        {totalItems}
+                      </span>
                     )}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+                  </span>
+                </button>
+                <button
+                  onClick={handleCheckout}
+                  disabled={totalItems === 0}
+                  className={`hidden sm:flex items-center justify-center h-12 px-3 rounded-md ${totalItems > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'} flex-none basis-20`}
+                  aria-label="Checkout"
+                >
+                  <span className="inline-flex items-center gap-2 font-bold">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Checkout</span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
