@@ -248,6 +248,28 @@ export function DeliveryAppManager() {
     setTabs(newTabs);
   };
 
+  // Drag & Drop reordering for tabs
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const onDragStartTab = (index: number) => (e: React.DragEvent) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const onDragOverTab = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  const onDropTab = (index: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) return;
+    const newTabs = [...tabs];
+    const [moved] = newTabs.splice(dragIndex, 1);
+    newTabs.splice(index, 0, moved);
+    setTabs(newTabs);
+    setDragIndex(null);
+  };
+  const onDragEndTab = () => setDragIndex(null);
+
+
   const createDeliveryApp = async () => {
     if (!appName.trim()) {
       toast.error('App name is required');
@@ -995,7 +1017,15 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Configure Tabs</h3>
               {tabs.map((tab, index) => (
-                <Card key={index}>
+                <Card
+                  key={index}
+                  draggable
+                  onDragStart={onDragStartTab(index)}
+                  onDragOver={onDragOverTab(index)}
+                  onDrop={onDropTab(index)}
+                  onDragEnd={onDragEndTab}
+                  className={dragIndex === index ? 'ring-2 ring-primary' : ''}
+                >
                   <CardContent className="p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -1009,7 +1039,10 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                       
                       <div>
                         <Label>Collection</Label>
-                        <Select value={tab.collection_handle} onValueChange={(value) => updateTab(index, 'collection_handle', value)}>
+                        <Select
+                          value={collections.some(c => c.handle === tab.collection_handle) ? tab.collection_handle : undefined}
+                          onValueChange={(value) => updateTab(index, 'collection_handle', value)}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Select collection" />
                           </SelectTrigger>
@@ -1023,6 +1056,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                         </Select>
                       </div>
                     </div>
+                    <div className="mt-2 text-xs text-muted-foreground">Drag this card to reorder tabs</div>
                   </CardContent>
                 </Card>
               ))}

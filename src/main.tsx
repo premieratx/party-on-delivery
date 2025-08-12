@@ -8,19 +8,24 @@ import { initializePerformanceOptimizations } from '@/utils/performanceOptimizer
 import { initializeMobileOptimizations } from '@/utils/mobileOptimizations'
 import { initializeTimezone } from './utils/timezoneManager'
 
-// Start ultra-fast preloading immediately
-import('./utils/ultraFastLoader').then(({ ultraFastLoader }) => {
-  // Start aggressive preloading as soon as possible
-  ultraFastLoader.preloadEverything().catch(console.warn);
-});
+// Start ultra-fast preloading immediately (skip on admin routes to avoid builder jank)
+if (!window.location.pathname.startsWith('/admin')) {
+  import('./utils/ultraFastLoader').then(({ ultraFastLoader }) => {
+    ultraFastLoader.preloadEverything().catch(console.warn);
+  });
+}
+
 
 // Start advanced cache manager
 import('./utils/advancedCacheManager').then(({ advancedCacheManager }) => {
   console.log('🚀 Advanced cache manager initialized');
 });
 
-// Initialize existing preloading and cache management
-preloadManager.initialize();
+// Initialize existing preloading and cache management (skip on admin routes)
+if (!window.location.pathname.startsWith('/admin')) {
+  preloadManager.initialize();
+}
+
 
 // Initialize performance optimizations
 initializePerformanceOptimizations();
