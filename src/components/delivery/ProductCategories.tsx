@@ -920,58 +920,61 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       ${(selectedVariant?.price || 0).toFixed(2)}
                     </Badge>
                       
-                    {/* Cart controls with reduced spacing */}
-                    <div className="flex justify-center">
+                    {/* Oval Cart Controls - Centered */}
+                    <div className="flex justify-center items-center">
                       {cartQty > 0 ? (
-                         <div className="flex items-center gap-0.5 bg-muted rounded max-w-[27px] md:max-w-[80px]" onClick={(e) => e.stopPropagation()}>
+                        <div 
+                          className="flex items-center justify-center bg-muted/80 rounded-full px-2 py-1 gap-2 min-w-[80px] h-8 border border-border/50" 
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-[5px] w-[5px] md:h-4 md:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            className="h-6 w-6 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
+                            <Minus className="w-4 h-4" strokeWidth={2} />
                           </Button>
-                          <span className="text-[9px] md:text-[10px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center">
+                          <span className="text-sm font-bold min-w-[20px] text-center">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-[5px] w-[5px] md:h-4 md:w-4 p-0 hover:bg-primary hover:text-primary-foreground"
+                            className="h-6 w-6 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
+                            <Plus className="w-4 h-4" strokeWidth={2} />
                           </Button>
                         </div>
-                        ) : (
-                         <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-3 h-3 md:w-5 md:h-5"
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             if (selectedVariant) {
-                               onAddToCart({
-                                 id: product.id,
-                                 title: product.title,
-                                 name: product.title,
-                                 price: selectedVariant.price,
-                                 image: product.image,
-                                 variant: selectedVariant.id
-                               });
-                              setCartCountAnimation(true);
-                              setTimeout(() => setCartCountAnimation(false), 300);
-                            }
-                           }}
-                         >
-                           <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={4} />
-                        </button>
-                      )}
+                      ) : (
+                        <button
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-8 h-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (selectedVariant) {
+                              onAddToCart({
+                                id: product.id,
+                                title: product.title,
+                                name: product.title,
+                                price: selectedVariant.price,
+                                image: product.image,
+                                variant: selectedVariant.id
+                              });
+                             setCartCountAnimation(true);
+                             setTimeout(() => setCartCountAnimation(false), 300);
+                           }
+                          }}
+                        >
+                          <Plus className="w-4 h-4" strokeWidth={3} />
+                       </button>
+                     )}
                     </div>
                   </div>
                 </div>
