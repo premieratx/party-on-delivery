@@ -935,7 +935,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           >
                             <Minus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
                           </Button>
-                          <span className="text-[10px] md:text-[10px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center flex items-center justify-center">
+                          <span className="text-[6px] md:text-[10px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center flex items-center justify-center">
                             {cartQty}
                           </span>
                           <Button
@@ -950,9 +950,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             <Plus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
                           </Button>
                         </div>
-                        ) : (
-                         <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-3 h-3 md:w-5 md:h-5"
+                         ) : (
+                          <button
+                             className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-[8px] h-[8px] md:w-[14px] md:h-[14px]"
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
