@@ -800,7 +800,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             </Button>
                           </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2 h-2 sm:w-5 sm:h-5 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-1 h-1 sm:w-5 sm:h-5 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
                             <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={4} />
                           </button>
                         )}

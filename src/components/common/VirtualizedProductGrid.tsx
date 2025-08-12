@@ -307,7 +307,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               ) : (
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full !w-4 !h-4 flex items-center justify-center lg:!w-12 lg:!h-12"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full !w-2 !h-2 flex items-center justify-center lg:!w-12 lg:!h-12"
                 >
                   <Plus className="!h-4 !w-4 lg:!h-6 lg:!w-6" strokeWidth={3} />
                 </button>
