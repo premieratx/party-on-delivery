@@ -394,29 +394,31 @@ const CustomerDashboard = () => {
         created_at: order.created_at
       });
       
-      order.line_items.forEach((item: any) => {
+      (order.line_items || []).forEach((item: any) => {
         // Create a unique key for deduplication based on product details
         const itemKey = `${item.title}-${item.price}-${order.id}-${item.variant_id || ''}`;
         
-        // Only add if we haven't seen this exact item from this order before
+        // Push detailed (non-consolidated) copy with delivery info
+        allItems.push({
+          ...item,
+          order_id: order.id,
+          order_number: order.order_number,
+          order_created_at: order.created_at,
+          order_delivery_date: order.delivery_date,
+          order_delivery_time: order.delivery_time,
+        });
+        
+        // Only add to consolidated map if we haven't seen this exact item from this order before
         if (!itemDedupeMap.has(itemKey)) {
           itemDedupeMap.set(itemKey, true);
-          allItems.push({
-            ...item,
-            order_id: order.id,
-            order_number: order.order_number,
-            customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
-            order_created_at: order.created_at
-          });
         }
       });
     });
     
-    // Group items by product category
-    const groupedItems = allItems.reduce((groups, item) => {
+    // Group detailed items by product category (no consolidation so we can show delivery per item)
+    const groupedDetailed = allItems.reduce((groups, item) => {
       let category = 'Other';
-      
-      const title = item.title.toLowerCase();
+      const title = (item.title || '').toLowerCase();
       if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
           title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
         category = 'Beer';
@@ -432,25 +434,43 @@ const CustomerDashboard = () => {
                  title.includes('cosmopolitan') || title.includes('mojito')) {
         category = 'Cocktails';
       }
-      
-      if (!groups[category]) {
-        groups[category] = [];
-      }
+      if (!groups[category]) groups[category] = [];
       groups[category].push(item);
       return groups;
     }, {} as Record<string, any[]>);
-    
+
+    // Build consolidated grouping for totals display
+    const groupedItems = allItems.reduce((groups, item) => {
+      let category = 'Other';
+      const title = (item.title || '').toLowerCase();
+      if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
+          title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
+        category = 'Beer';
+      } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
+                 title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
+        category = 'Liquor';
+      } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
+                 title.includes('truly') || title.includes('high noon')) {
+        category = 'Seltzers';
+      } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
+        category = 'Wine & Champagne';
+      } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
+                 title.includes('cosmopolitan') || title.includes('mojito')) {
+        category = 'Cocktails';
+      }
+      if (!groups[category]) groups[category] = [];
+      groups[category].push(item);
+      return groups;
+    }, {} as Record<string, any[]>);
+
     // Further consolidate identical products across different orders by combining quantities
     Object.keys(groupedItems).forEach(category => {
       const consolidatedItems = new Map();
-      
-      groupedItems[category].forEach(item => {
+      groupedItems[category].forEach((item: any) => {
         const productKey = `${item.title}-${item.price}`;
-        
         if (consolidatedItems.has(productKey)) {
-          const existingItem = consolidatedItems.get(productKey);
+          const existingItem: any = consolidatedItems.get(productKey);
           existingItem.quantity += item.quantity;
-          // Keep track of which orders this item came from
           if (!existingItem.order_numbers) existingItem.order_numbers = [existingItem.order_number];
           if (!existingItem.order_numbers.includes(item.order_number)) {
             existingItem.order_numbers.push(item.order_number);
@@ -459,11 +479,10 @@ const CustomerDashboard = () => {
           consolidatedItems.set(productKey, { ...item });
         }
       });
-      
-      groupedItems[category] = Array.from(consolidatedItems.values()).sort((a, b) => a.title.localeCompare(b.title));
+      groupedItems[category] = Array.from(consolidatedItems.values()).sort((a: any, b: any) => a.title.localeCompare(b.title));
     });
     
-    return { groupedItems, orderMap };
+    return { groupedItems, groupedDetailed, orderMap };
   };
 
   const toggleOrderItems = (orderId: string) => {
@@ -647,86 +666,116 @@ const CustomerDashboard = () => {
                       const totalItems = Object.values(groupedItems).flat().length;
                       const totalValue = Object.values(groupedItems).flat().reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0);
                       
-                      return (
-                        <div className="space-y-6">
-                          <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
-                            <div>
-                              <p className="font-semibold text-lg">Total Summary</p>
-                              <p className="text-sm text-muted-foreground">{totalItems} items across {orders.length} orders</p>
-                            </div>
-                            <p className="text-xl font-bold">{formatCurrency(Number(totalValue) || 0)}</p>
-                          </div>
-                          
-                           {/* Show individual orders with their items */}
-                           {orders.map((order) => (
-                             <div key={order.id} className="space-y-4 border rounded-lg p-4 mb-4">
-                               <div className="flex justify-between items-start">
-                                 <div>
-                                   <h4 className="font-semibold text-primary text-lg">Order #{order.order_number}</h4>
-                                   <div className="text-sm text-muted-foreground space-y-1">
-                                     <p>Ordered by: <span className="font-medium">{`${customer?.first_name || ''} ${customer?.last_name || ''}`.trim() || customer?.email}</span></p>
-                                      <p>Date: <span className="font-medium">{formatInAppTimezone(order.created_at, 'EEEE, MMMM do, yyyy')}</span></p>
-                                      {order.delivery_date && order.delivery_time && (
-                                        <p>Delivery: <span className="font-medium">{formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do')} at {order.delivery_time}</span></p>
-                                      )}
-                                   </div>
-                                 </div>
-                                 <div className="text-right">
-                                   <p className="font-bold text-lg">{formatCurrency(order.total_amount)}</p>
-                                   <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                                     {order.status}
-                                   </Badge>
-                                 </div>
-                               </div>
-                               
-                               {/* Group items by category for this specific order */}
-                               <div className="space-y-3">
-                                 {(() => {
-                                   const orderItems = order.line_items || [];
-                                   const categorizedItems = orderItems.reduce((groups: any, item: any) => {
-                                     let category = 'Other';
-                                     const title = item.title.toLowerCase();
-                                     
-                                     if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
-                                         title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
-                                       category = 'Beer';
-                                     } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
-                                                title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
-                                       category = 'Liquor';
-                                     } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
-                                                title.includes('truly') || title.includes('high noon')) {
-                                       category = 'Seltzers';
-                                     } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
-                                       category = 'Wine & Champagne';
-                                     } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
-                                                title.includes('cosmopolitan') || title.includes('mojito')) {
-                                       category = 'Cocktails';
-                                     }
-                                     
-                                     if (!groups[category]) groups[category] = [];
-                                     groups[category].push(item);
-                                     return groups;
-                                   }, {});
-                                   
-                                   return Object.entries(categorizedItems).map(([category, items]) => (
-                                     <div key={category} className="space-y-1">
-                                       <h5 className="font-medium text-sm text-primary border-b pb-1">{category}</h5>
-                                       <div className="space-y-1 pl-3">
-                                         {(items as any[]).map((item, index) => (
-                                           <div key={`${order.id}-${index}`} className="flex justify-between items-center py-1 text-sm">
-                                             <span className="font-medium">{item.quantity}x {item.title}</span>
-                                             <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                                           </div>
-                                         ))}
+                          return (
+                            <div className="space-y-6">
+                              <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
+                                <div>
+                                  <p className="font-semibold text-lg">Total Summary</p>
+                                  <p className="text-sm text-muted-foreground">{totalItems} items across {orders.length} orders</p>
+                                </div>
+                                <p className="text-xl font-bold">{formatCurrency(Number(totalValue) || 0)}</p>
+                              </div>
+
+                              {/* All Purchases by Category (detailed, with delivery dates) */}
+                              {(() => {
+                                const { groupedDetailed } = getCombinedOrderSummary();
+                                const categories = Object.keys(groupedDetailed);
+                                if (categories.length === 0) return null;
+                                return (
+                                  <div className="space-y-4">
+                                    <h4 className="font-semibold">All Purchases by Category</h4>
+                                    {categories.map((category) => (
+                                      <div key={category} className="space-y-2">
+                                        <h5 className="font-medium text-sm text-primary border-b pb-1">{category}</h5>
+                                        <div className="space-y-1 pl-3">
+                                          {groupedDetailed[category]
+                                            .sort((a: any, b: any) => new Date(a.order_delivery_date || a.order_created_at).getTime() - new Date(b.order_delivery_date || b.order_created_at).getTime())
+                                            .map((item: any, idx: number) => (
+                                              <div key={`${category}-${idx}`} className="flex justify-between items-center py-1 text-sm">
+                                                <div className="flex flex-col">
+                                                  <span className="font-medium">{item.quantity}x {item.title}</span>
+                                                  <span className="text-xs text-muted-foreground">Order #{item.order_number} • {item.order_delivery_date ? `${formatInAppTimezone(item.order_delivery_date, 'MMM d, yyyy')}${item.order_delivery_time ? ` at ${item.order_delivery_time}` : ''}` : formatInAppTimezone(item.order_created_at, 'MMM d, yyyy')}</span>
+                                                </div>
+                                                <span className="font-medium">{formatCurrency(Number(item.price) * Number(item.quantity))}</span>
+                                              </div>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
+
+                               {/* Show individual orders with their items */}
+                               {orders.map((order) => (
+                                 <div key={order.id} className="space-y-4 border rounded-lg p-4 mb-4">
+                                   <div className="flex justify-between items-start">
+                                     <div>
+                                       <h4 className="font-semibold text-primary text-lg">Order #{order.order_number}</h4>
+                                       <div className="text-sm text-muted-foreground space-y-1">
+                                         <p>Ordered by: <span className="font-medium">{`${customer?.first_name || ''} ${customer?.last_name || ''}`.trim() || customer?.email}</span></p>
+                                          <p>Date: <span className="font-medium">{formatInAppTimezone(order.created_at, 'EEEE, MMMM do, yyyy')}</span></p>
+                                          {order.delivery_date && order.delivery_time && (
+                                            <p>Delivery: <span className="font-medium">{formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do')} at {order.delivery_time}</span></p>
+                                          )}
                                        </div>
                                      </div>
-                                   ));
-                                 })()}
-                               </div>
-                             </div>
-                           ))}
-                        </div>
-                      );
+                                     <div className="text-right">
+                                       <p className="font-bold text-lg">{formatCurrency(order.total_amount)}</p>
+                                       <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
+                                         {order.status}
+                                       </Badge>
+                                     </div>
+                                   </div>
+                                   
+                                   {/* Group items by category for this specific order */}
+                                   <div className="space-y-3">
+                                     {(() => {
+                                       const orderItems = order.line_items || [];
+                                       const categorizedItems = orderItems.reduce((groups: any, item: any) => {
+                                         let category = 'Other';
+                                         const title = item.title.toLowerCase();
+                                         
+                                         if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
+                                             title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
+                                           category = 'Beer';
+                                         } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
+                                                    title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
+                                           category = 'Liquor';
+                                         } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
+                                                    title.includes('truly') || title.includes('high noon')) {
+                                           category = 'Seltzers';
+                                         } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
+                                           category = 'Wine & Champagne';
+                                         } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
+                                                    title.includes('cosmopolitan') || title.includes('mojito')) {
+                                           category = 'Cocktails';
+                                         }
+                                         
+                                         if (!groups[category]) groups[category] = [];
+                                         groups[category].push(item);
+                                         return groups;
+                                       }, {});
+                                       
+                                       return Object.entries(categorizedItems).map(([category, items]) => (
+                                         <div key={category} className="space-y-1">
+                                           <h5 className="font-medium text-sm text-primary border-b pb-1">{category}</h5>
+                                           <div className="space-y-1 pl-3">
+                                             {(items as any[]).map((item, index) => (
+                                               <div key={`${order.id}-${index}`} className="flex justify-between items-center py-1 text-sm">
+                                                 <span className="font-medium">{item.quantity}x {item.title}</span>
+                                                 <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
+                                               </div>
+                                             ))}
+                                           </div>
+                                         </div>
+                                       ));
+                                     })()}
+                                   </div>
+                                 </div>
+                               ))}
+                            </div>
+                          );
                     })()}
                   </CardContent>
                 </CollapsibleContent>
