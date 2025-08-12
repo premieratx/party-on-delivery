@@ -278,36 +278,38 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - FIXED: Properly centered with large text */}
-            <div className="w-full flex justify-center py-2">
+            {/* Quantity Controls - FORCE CENTER AND HUGE TEXT */}
+            <div className="w-full flex items-center justify-center py-2">
               {quantity > 0 ? (
-                <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center justify-center gap-3">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onDecrement}
-                    className="h-8 w-8 p-0 rounded-full"
+                    className="h-10 w-10 p-0 rounded-full flex items-center justify-center"
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className="h-5 w-5" />
                   </Button>
-                  <span className="font-bold text-2xl min-w-[32px] text-center leading-none">
-                    {quantity}
-                  </span>
+                  <div className="min-w-[40px] flex items-center justify-center">
+                    <span className="font-black text-3xl text-center block">
+                      {quantity}
+                    </span>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onIncrement}
-                    className="h-8 w-8 p-0 rounded-full"
+                    className="h-10 w-10 p-0 rounded-full flex items-center justify-center"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-5 w-5" />
                   </Button>
                 </div>
               ) : (
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center"
                 >
-                  <Plus className="h-4 w-4" strokeWidth={3} />
+                  <Plus className="h-5 w-5" strokeWidth={3} />
                 </button>
               )}
             </div>
