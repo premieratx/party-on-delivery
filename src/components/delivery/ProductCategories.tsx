@@ -14,7 +14,7 @@ import { getInstantProducts } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
-import { SearchIcon } from '@/components/common/SearchIcon';
+
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
@@ -658,10 +658,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className={`flex gap-2 h-14 ${scrolled ? 'sm:h-14' : 'sm:h-20'}`}>
-            {/* Search button (always visible) */}
-            <div className="flex-shrink-0 self-stretch flex items-center">
-              <SearchIcon variant="tabs" />
-            </div>
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
