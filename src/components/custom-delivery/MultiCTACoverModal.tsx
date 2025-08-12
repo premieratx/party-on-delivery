@@ -66,26 +66,38 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
   logoBgColor,
   logoBgMode = 'auto',
 }) => {
-  const [showSparkle, setShowSparkle] = React.useState(true);
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const [showVideo, setShowVideo] = React.useState(false);
-  const fallbackSrc = backgroundVideoUrl ? backgroundImage : (backgroundImageUrl || backgroundImage);
-  React.useEffect(() => {
-    const t = setTimeout(() => setShowSparkle(false), 1800);
-    return () => clearTimeout(t);
-  }, []);
+const [showSparkle, setShowSparkle] = React.useState(true);
+const videoRef = React.useRef<HTMLVideoElement>(null);
+const [showVideo, setShowVideo] = React.useState(false);
+const fallbackSrc = backgroundVideoUrl ? backgroundImage : (backgroundImageUrl || backgroundImage);
+// Generate sparkle field covering ~75% of screen
+const [sparkles, setSparkles] = React.useState<Array<{ top: number; left: number; size: 'sm' | 'md' | 'lg'; delay: number; scale: number }>>([]);
+React.useEffect(() => {
+  const items = Array.from({ length: 60 }, () => ({
+    top: Math.random() * 75, // cover top 75%
+    left: Math.random() * 100,
+    size: (Math.random() < 0.5 ? 'lg' : (Math.random() < 0.8 ? 'md' : 'sm')) as 'sm' | 'md' | 'lg',
+    delay: Math.floor(Math.random() * 1000),
+    scale: 1.4 + Math.random() * 1.1,
+  }));
+  setSparkles(items);
+}, []);
+React.useEffect(() => {
+  const t = setTimeout(() => setShowSparkle(false), 3000);
+  return () => clearTimeout(t);
+}, []);
 
-  React.useEffect(() => {
-    if (videoRef.current) {
-      try { videoRef.current.playbackRate = 0.6; } catch {}
-    }
-    if (backgroundVideoUrl) {
-      setShowVideo(true);
-      try { videoRef.current?.play(); } catch {}
-    } else {
-      setShowVideo(false);
-    }
-  }, [backgroundVideoUrl]);
+React.useEffect(() => {
+  if (videoRef.current) {
+    try { videoRef.current.playbackRate = 0.6; } catch {}
+  }
+  if (backgroundVideoUrl) {
+    setShowVideo(true);
+    try { videoRef.current?.play(); } catch {}
+  } else {
+    setShowVideo(false);
+  }
+}, [backgroundVideoUrl]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -119,9 +131,31 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                 />
               )}
             </div>
-            <div className="absolute inset-0 bg-black/70" />
+<div className="absolute inset-0 bg-black/70" />
 
-            {/* Content */}
+{/* Sparkle overlay covering ~75% of the screen for 3s */}
+{showSparkle && (
+  <div className="pointer-events-none absolute inset-x-0 top-0" style={{ height: '75%' }} aria-hidden="true">
+    {sparkles.map((s, idx) => (
+      <span
+        key={idx}
+        className={`sparkle sparkle-${s.size}`}
+        style={{
+          top: `${s.top}%`,
+          left: `${s.left}%`,
+          position: 'absolute',
+          animationDelay: `${s.delay}ms`,
+          animationDuration: '18s',
+          transform: `scale(${s.scale})`,
+          filter: 'brightness(1.7) drop-shadow(0 0 14px hsl(var(--primary)))',
+          opacity: 0.95
+        }}
+      />
+    ))}
+  </div>
+)}
+
+{/* Content */}
             <div className="relative z-10 flex h-full flex-col items-center justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-[calc(env(safe-area-inset-bottom)+20px)] uppercase tracking-wider">
               <header className="w-full text-center my-5">
                 <div className="relative inline-block mx-auto">
@@ -158,20 +192,20 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                     loading="eager"
                   />
                 </div>
-                <h1
-                  className="font-bold tracking-tight text-white mt-2"
-                  style={{ fontSize: titleSizeProp ? `${titleSizeProp}px` : 'clamp(24px,4vw,40px)', marginTop: (titleOffsetY || 0) }}
-                >
-                  {title}
-                </h1>
-                {subtitle && (
-                  <p
-                    className="text-white/90 mt-1"
-                    style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : 'clamp(14px,2.5vw,20px)', marginTop: (subtitleOffsetY || 0) }}
-                  >
-                    {subtitle}
-                  </p>
-                )}
+<h1
+  className="font-bold tracking-tight text-white mt-2 animate-fade-in"
+  style={{ fontSize: titleSizeProp ? `${titleSizeProp}px` : 'clamp(24px,4vw,40px)', marginTop: (titleOffsetY || 0), animationDelay: '60ms', animationFillMode: 'both' }}
+>
+  {title}
+</h1>
+{subtitle && (
+  <p
+    className="text-white/90 mt-1 animate-fade-in"
+    style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : 'clamp(14px,2.5vw,20px)', marginTop: (subtitleOffsetY || 0), animationDelay: '140ms', animationFillMode: 'both' }}
+  >
+    {subtitle}
+  </p>
+)}
               </header>
 
               {/* Spacer */}
@@ -203,58 +237,58 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
 
                 {/* Buttons layout: stack for 1-2, special layout for 3, grid for 4+ */}
                 {buttons.length <= 2 ? (
-                  <div className="flex flex-col gap-3">
-                    {buttons.map((b, i) => (
-                      <Button
-                        key={`${b.text}-${i}`}
-                        size="lg"
-                        className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                        style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                        onClick={(e) => { e.stopPropagation(); b.onClick(); }}
-                      >
-                        {b.text}
-                      </Button>
-                    ))}
-                  </div>
+<div className="flex flex-col gap-3 animate-fade-in" style={{ animationDelay: '520ms', animationFillMode: 'both' }}>
+  {buttons.map((b, i) => (
+    <Button
+      key={`${b.text}-${i}`}
+      size="lg"
+      className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+      style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
+      onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+    >
+      {b.text}
+    </Button>
+  ))}
+</div>
                 ) : buttons.length === 3 ? (
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      key={`${buttons[0].text}-0`}
-                      size="lg"
-                      className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                      style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined }}
-                      onClick={(e) => { e.stopPropagation(); buttons[0].onClick(); }}
-                    >
-                      {buttons[0].text}
-                    </Button>
-                    <div className="grid grid-cols-2 gap-2">
-                      {buttons.slice(1).map((b, i) => (
-                        <Button
-                          key={`${b.text}-${i + 1}`}
-                          size="lg"
-                          className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                          style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                          onClick={(e) => { e.stopPropagation(); b.onClick(); }}
-                        >
-                          {b.text}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+<div className="flex flex-col gap-2 animate-fade-in" style={{ animationDelay: '520ms', animationFillMode: 'both' }}>
+  <Button
+    key={`${buttons[0].text}-0`}
+    size="lg"
+    className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+    style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined }}
+    onClick={(e) => { e.stopPropagation(); buttons[0].onClick(); }}
+  >
+    {buttons[0].text}
+  </Button>
+  <div className="grid grid-cols-2 gap-2">
+    {buttons.slice(1).map((b, i) => (
+      <Button
+        key={`${b.text}-${i + 1}`}
+        size="lg"
+        className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+        style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
+        onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+      >
+        {b.text}
+      </Button>
+    ))}
+  </div>
+</div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {buttons.map((b, i) => (
-                      <Button
-                        key={`${b.text}-${i}`}
-                        size="lg"
-                        className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                        style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                        onClick={(e) => { e.stopPropagation(); b.onClick(); }}
-                      >
-                        {b.text}
-                      </Button>
-                    ))}
-                  </div>
+<div className="grid grid-cols-2 gap-2 animate-fade-in" style={{ animationDelay: '520ms', animationFillMode: 'both' }}>
+  {buttons.map((b, i) => (
+    <Button
+      key={`${b.text}-${i}`}
+      size="lg"
+      className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+      style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
+      onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+    >
+      {b.text}
+    </Button>
+  ))}
+</div>
                 )}
               </div>
             </div>
