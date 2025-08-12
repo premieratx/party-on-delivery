@@ -278,40 +278,42 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - Responsive sizing for mobile/desktop */}
-            <div className="w-full flex items-center justify-center py-2">
-              {quantity > 0 ? (
-                <div className="flex items-center justify-center gap-2 md:gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onDecrement}
-                    className="h-7 w-7 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center"
-                  >
-                    <Minus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
-                  </Button>
-                  <div className="min-w-[30px] md:min-w-[40px] lg:min-w-[50px] flex items-center justify-center">
-                    <span className="font-black text-lg md:text-2xl lg:text-3xl text-center block leading-none">
-                      {quantity}
-                    </span>
+            {/* Quantity Controls - Properly centered within card boundaries */}
+            <div className="w-full flex items-center justify-center py-2 px-2">
+              <div className="flex items-center justify-center max-w-full">
+                {quantity > 0 ? (
+                  <div className="flex items-center justify-center gap-1 md:gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onDecrement}
+                      className="h-6 w-6 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center flex-shrink-0"
+                    >
+                      <Minus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    </Button>
+                    <div className="min-w-[24px] md:min-w-[40px] lg:min-w-[50px] flex items-center justify-center flex-shrink-0">
+                      <span className="font-black text-sm md:text-2xl lg:text-3xl text-center block leading-none">
+                        {quantity}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onIncrement}
+                      className="h-6 w-6 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center flex-shrink-0"
+                    >
+                      <Plus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onIncrement}
-                    className="h-7 w-7 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center"
+                ) : (
+                  <button
+                    onClick={onAddToCart}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-6 h-6 md:w-12 md:h-12 lg:w-14 lg:h-14 flex items-center justify-center flex-shrink-0"
                   >
-                    <Plus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
-                  </Button>
-                </div>
-              ) : (
-                <button
-                  onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-7 h-7 md:w-12 md:h-12 lg:w-14 lg:h-14 flex items-center justify-center"
-                >
-                  <Plus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" strokeWidth={3} />
-                </button>
-              )}
+                    <Plus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" strokeWidth={3} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
