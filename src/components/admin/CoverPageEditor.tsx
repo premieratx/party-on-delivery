@@ -348,9 +348,19 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving || !slugOk}>{saving ? 'Saving…' : 'Save'}</Button>
+        <div className="flex justify-between items-center gap-2 pt-4">
+          <div className="text-xs text-muted-foreground">URL: /{computedSlug || '(unsaved)'}</div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+            <Button
+              variant="secondary"
+              onClick={() => window.open(`${window.location.origin}/${computedSlug}`, '_blank')}
+              disabled={!computedSlug || !slugOk}
+            >
+              Preview
+            </Button>
+            <Button onClick={handleSave} disabled={saving || !slugOk}>{saving ? 'Saving…' : 'Save'}</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
