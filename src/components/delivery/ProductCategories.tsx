@@ -656,8 +656,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-7xl sm:mx-auto py-4">
-          <div className={`flex flex-nowrap gap-1 sm:gap-2 overflow-x-auto ${scrolled ? 'h-12 sm:h-14' : 'h-12 sm:h-20'}`}>
+        <div className="w-full max-w-none px-1 sm:px-4 sm:max-w-7xl sm:mx-auto py-4">
+          <div className={`flex flex-nowrap gap-1 sm:gap-2 overflow-x-hidden ${scrolled ? 'h-12 sm:h-14' : 'h-12 sm:h-20'}`}>
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
@@ -683,7 +683,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
 
                 >
-                  <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
+                  <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-1">
                     {/* Mobile layout: just title */}
                     <div className="sm:hidden flex flex-col items-center justify-center h-full px-2">
                       <div className={`text-[10px] font-bold leading-tight text-center whitespace-normal break-words px-1 ${

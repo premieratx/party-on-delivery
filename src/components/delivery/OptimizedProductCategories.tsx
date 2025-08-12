@@ -202,14 +202,14 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       {/* Category Tabs */}
       <div className="border-b">
         <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-7xl sm:mx-auto">
-          <div className="flex flex-nowrap gap-1 sm:gap-2 overflow-x-auto py-2">
+          <div className="flex flex-nowrap items-stretch gap-1 sm:gap-2 overflow-x-hidden h-12">
             {CATEGORY_TABS.map((tab, index) => (
               <Button
                 key={tab.id}
                 variant={selectedCategory === index ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(index)}
-                className="shrink-0 min-w-[96px] max-w-[48vw] whitespace-normal break-words leading-tight text-center px-2 py-2 text-xs"
+                className="flex-1 basis-0 min-w-0 h-full whitespace-normal break-words leading-tight text-center px-1 py-1 text-[10px]"
               >
                 {tab.isSearch && <Search className="h-4 w-4 mr-2" />}
                 {tab.title}

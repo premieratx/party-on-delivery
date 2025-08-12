@@ -276,8 +276,8 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
 
       {/* Category Tabs */}
       <div className="bg-white border-b">
-        <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-md sm:mx-auto">
-          <div className="flex flex-nowrap overflow-x-auto gap-1 scrollbar-hide">
+        <div className="w-full max-w-none px-1 sm:px-4 sm:max-w-md sm:mx-auto">
+          <div className="flex flex-nowrap items-stretch overflow-x-hidden gap-1 h-12">
             {categories.map((category) => {
               const categoryProducts = collections
                 .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
@@ -287,7 +287,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`flex-shrink-0 px-2 py-2 text-[11px] leading-tight text-center whitespace-normal break-words w-auto min-w-[96px] max-w-[48vw] font-medium border-b-2 transition-colors ${
+                  className={`flex-1 basis-0 min-w-0 px-1 py-1 text-[10px] leading-tight text-center whitespace-normal break-words font-medium border-b-2 transition-colors ${
                     activeCategory === category.id
                       ? 'border-primary text-primary bg-primary/10'
                       : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted'
