@@ -63,8 +63,9 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           <Button
             onClick={onCheckout}
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-1 sm:gap-2 sm:min-w-[120px] justify-center h-8 sm:h-9"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-1 sm:gap-2 sm:min-w-[120px] justify-center h-8 sm:h-9 touch-manipulation"
             data-checkout-trigger="true"
+            type="button"
           >
             <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
             <span className="text-xs sm:text-sm">{totalItems > 0 ? 'Proceed to Checkout' : 'Checkout Now'}</span>

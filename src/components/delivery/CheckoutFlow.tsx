@@ -1168,7 +1168,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </CardTitle>
                 </CardHeader>
                 
-                <CardContent className="space-y-2 md:space-y-4">
+                <CardContent className="space-y-2 md:space-y-4 px-2 sm:px-4 md:px-6">
                   <div className="space-y-2 md:space-y-4">
                     <div className="space-y-1 md:space-y-2">
                       <Label htmlFor="street">Street Address *</Label>
@@ -1196,7 +1196,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       />
                     </div>
                    
-                    <div className="grid grid-cols-2 gap-2 md:gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
                       <div className="space-y-1 md:space-y-2">
                         <Label htmlFor="city">City *</Label>
                         <Input
@@ -1244,7 +1244,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       />
                     </div>
                     
-                    <div className="flex gap-4">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                       <Button 
                         variant="outline"
                         onClick={() => setCurrentStep('datetime')}
