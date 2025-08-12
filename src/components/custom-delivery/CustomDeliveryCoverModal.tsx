@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
+import { ImageOptimizer } from '@/utils/imageOptimizer';
 
 
 interface CoverFeature {
@@ -53,7 +54,9 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   const [showSparkle, setShowSparkle] = React.useState(true);
   const [enablePulse, setEnablePulse] = React.useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
-  
+  const [showVideo, setShowVideo] = React.useState(false);
+  const fallbackSrc = backgroundVideoUrl ? backgroundImage : (backgroundImageUrl || backgroundImage);
+  const optimizedFallback = ImageOptimizer.optimizeShopifyImageUrl(fallbackSrc, 800, 80);
   // Generate a denser, brighter sparkle field for full-screen coverage
   const [sparkles, setSparkles] = React.useState<Array<{ top: number; left: number; size: 'sm' | 'md' | 'lg'; delay: number; scale: number }>>([]);
   React.useEffect(() => {
@@ -84,36 +87,87 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
       } catch {}
     }
   }, [backgroundVideoUrl]);
+
+  // Preload fallback image aggressively for instant paint
+  React.useEffect(() => {
+    if (!fallbackSrc) return;
+    // JS preload
+    ImageOptimizer.preloadImage(fallbackSrc).catch(() => {});
+    // Resource hint
+    const id = `preload-fallback-${fallbackSrc}`;
+    if (!document.getElementById(id)) {
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = fallbackSrc;
+      document.head.appendChild(link);
+    }
+  }, [fallbackSrc]);
+
+  // Only switch to video after it is ready very quickly; otherwise keep static image
+  React.useEffect(() => {
+    let cancelled = false;
+    if (!backgroundVideoUrl) {
+      setShowVideo(false);
+      return;
+    }
+    const testVideo = document.createElement('video');
+    testVideo.preload = 'metadata';
+    testVideo.src = backgroundVideoUrl;
+
+    const ready = () => {
+      if (!cancelled) setShowVideo(true);
+    };
+
+    testVideo.addEventListener('canplay', ready, { once: true });
+    testVideo.addEventListener('canplaythrough', ready, { once: true });
+
+    const to = setTimeout(() => {
+      // If not ready within ~450ms, prefer instant fallback image
+      if (!cancelled) setShowVideo(false);
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(to);
+      testVideo.removeEventListener('canplay', ready);
+      testVideo.removeEventListener('canplaythrough', ready);
+    };
+  }, [backgroundVideoUrl]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-h-[90vh] overflow-y-auto max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
          <article className="relative w-full" onClick={() => { onOpenChange(false); onStartOrder?.(); }}>
           {/* Background */}
           <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
-            {backgroundVideoUrl ? (
-              <video
-                ref={videoRef}
-                src={backgroundVideoUrl}
-                className="absolute inset-0 w-full h-full object-cover"
-                style={{ objectPosition: '60% 50%' }}
-                autoPlay
-                muted
-                loop
-                playsInline
-                aria-hidden="true"
-                onLoadedMetadata={() => {
-                  try {
-                    if (videoRef.current) videoRef.current.currentTime = 0.5;
-                  } catch {}
-                }}
-              />
-            ) : (
+            <div className="absolute inset-0">
               <div
                 className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${backgroundImageUrl || backgroundImage})` }}
+                style={{ backgroundImage: `url(${fallbackSrc})` }}
                 aria-hidden="true"
               />
-            )}
+              {backgroundVideoUrl && showVideo && (
+                <video
+                  ref={videoRef}
+                  src={backgroundVideoUrl}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ objectPosition: '60% 50%' }}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  aria-hidden="true"
+                  preload="metadata"
+                  poster={fallbackSrc}
+                  onLoadedMetadata={() => {
+                    try {
+                      if (videoRef.current) videoRef.current.currentTime = 0.5;
+                    } catch {}
+                  }}
+                />
+              )}
+            </div>
             {/* Overlays */}
             <div className="absolute inset-0 bg-black/70" />
             {/* Glitter over top quarter on load */}

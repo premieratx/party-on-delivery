@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
+import { ImageOptimizer } from '@/utils/imageOptimizer';
 
 export interface MultiCTAButton {
   text: string;
@@ -52,7 +53,8 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
 }) => {
   const [showSparkle, setShowSparkle] = React.useState(true);
   const videoRef = React.useRef<HTMLVideoElement>(null);
-
+  const [showVideo, setShowVideo] = React.useState(false);
+  const fallbackSrc = backgroundVideoUrl ? backgroundImage : (backgroundImageUrl || backgroundImage);
   React.useEffect(() => {
     const t = setTimeout(() => setShowSparkle(false), 1800);
     return () => clearTimeout(t);
@@ -70,24 +72,27 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
         <article className="relative w-full">
           {/* Background */}
           <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
-            {backgroundVideoUrl ? (
-              <video
-                ref={videoRef}
-                src={backgroundVideoUrl}
-                className="absolute inset-0 w-full h-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                aria-hidden="true"
-              />
-            ) : (
+            <div className="absolute inset-0">
               <div
                 className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${backgroundImageUrl || backgroundImage})` }}
+                style={{ backgroundImage: `url(${fallbackSrc})` }}
                 aria-hidden="true"
               />
-            )}
+              {backgroundVideoUrl && showVideo && (
+                <video
+                  ref={videoRef}
+                  src={backgroundVideoUrl}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  aria-hidden="true"
+                  preload="metadata"
+                  poster={fallbackSrc}
+                />
+              )}
+            </div>
             <div className="absolute inset-0 bg-black/70" />
 
             {/* Content */}
