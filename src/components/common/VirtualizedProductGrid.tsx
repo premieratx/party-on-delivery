@@ -288,7 +288,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
                 >
                   <Minus className="h-2 w-2 md:h-2.5 md:w-2.5" />
                 </Button>
-                <span className="font-medium min-w-[12px] md:min-w-[16px] text-center text-xs">
+                <span className="font-medium min-w-[12px] md:min-w-[16px] text-center text-[10px] md:text-xs flex items-center justify-center">
                   {quantity}
                 </span>
                 <Button
