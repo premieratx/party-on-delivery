@@ -927,7 +927,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <div className="flex justify-center items-center">
                       {cartQty > 0 ? (
                         <div 
-                          className="flex items-center justify-center bg-muted/80 rounded-full px-0.5 py-0.5 gap-0.5 min-w-[28px] h-4 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[60px] sm:h-8" 
+                          className="flex items-center justify-center bg-muted/80 rounded-full px-0.5 py-0.5 gap-0.5 min-w-[28px] h-6 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[60px] sm:h-8" 
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Button
@@ -958,7 +958,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </div>
                       ) : (
                         <button
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-1 h-1 md:w-8 md:h-8"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-0.5 h-0.5 md:w-8 md:h-8"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (selectedVariant) {
