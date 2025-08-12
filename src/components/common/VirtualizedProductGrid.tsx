@@ -309,7 +309,9 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
                   <Plus className="h-2.5 w-2.5 md:h-3 md:w-3" strokeWidth={4} />
                 </button>
               </div>
-            )
+            )}
+          </div>
+        </div>
                 </button>
               </div>
             )}

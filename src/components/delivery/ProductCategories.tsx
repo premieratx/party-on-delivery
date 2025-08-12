@@ -681,7 +681,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="w-full px-1 md:px-4 py-3">
-          <div className={`flex flex-nowrap justify-center gap-px h-10 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
+          <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
