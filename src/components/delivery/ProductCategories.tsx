@@ -927,7 +927,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <div className="flex justify-center items-center">
                       {cartQty > 0 ? (
                         <div 
-                          className="flex items-center justify-center bg-muted/80 rounded-full px-1 py-0.5 gap-1 min-w-[56px] h-6 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[80px] sm:h-8" 
+                          className="flex items-center justify-center bg-muted/80 rounded-full px-1 py-0.5 gap-1 min-w-[42px] h-6 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[60px] sm:h-8" 
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Button
