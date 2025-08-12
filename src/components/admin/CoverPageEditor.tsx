@@ -69,6 +69,24 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [slugOk, setSlugOk] = useState(true);
   const [checkingSlug, setCheckingSlug] = useState(false);
 
+  const uploadAsset = async (file: File, kind: 'logo' | 'bg'): Promise<string | null> => {
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const base = (computedSlug || slugify(title) || 'cover').slice(0, 60);
+      const fileName = `cover-${base}-${kind}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('delivery-app-logos')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('delivery-app-logos').getPublicUrl(fileName);
+      return data.publicUrl;
+    } catch (e: any) {
+      console.error('Upload failed', e);
+      toast({ title: 'Upload failed', description: e?.message || 'Try a smaller image', variant: 'destructive' });
+      return null;
+    }
+  };
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -211,12 +229,11 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                     id="logoUpload"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () => setLogoUrl(reader.result as string);
-                      reader.readAsDataURL(file);
+                      const url = await uploadAsset(file, 'logo');
+                      if (url) setLogoUrl(url);
                     }}
                   />
                   <p className="text-xs text-muted-foreground mt-1">If no logo is provided, the default Party On Delivery logo will be used.</p>
@@ -240,12 +257,11 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                 </div>
                 <div>
                   <Label htmlFor="bgimgUpload">Upload Background Image</Label>
-                  <input id="bgimgUpload" type="file" accept="image/*" onChange={(e) => {
+                  <input id="bgimgUpload" type="file" accept="image/*" onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => setBgImageUrl(reader.result as string);
-                    reader.readAsDataURL(file);
+                    const url = await uploadAsset(file, 'bg');
+                    if (url) setBgImageUrl(url);
                   }} />
                   <p className="text-xs text-muted-foreground mt-1">Tip: For videos, paste a URL instead. Images can be small uploads.</p>
                 </div>
