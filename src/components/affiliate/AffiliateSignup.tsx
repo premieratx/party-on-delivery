@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { CANONICAL_DOMAIN } from '@/utils/domain';
 
 interface AffiliateSignupProps {
   onSuccess: () => void;
