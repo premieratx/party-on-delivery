@@ -681,7 +681,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="w-full px-1 md:px-4 py-3">
-          <div className={`flex flex-nowrap justify-center gap-px min-h-14 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
+          <div className={`flex flex-nowrap justify-center gap-px h-10 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
@@ -700,7 +700,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     // Scroll to top for a clean view of the selected tab
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-1.5 rounded-none first:rounded-l-md last:rounded-r-md ${
+                  className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-2 rounded-none first:rounded-l-md last:rounded-r-md ${
                     isActive 
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
@@ -710,7 +710,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title */}
                     <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
-                      <div className={`text-[9px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
+                      <div className={`text-[12px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
                         isActive ? 'text-primary' : 'text-foreground'
                       }`}>{step.title}</div>
                     </div>
@@ -791,17 +791,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <div className="flex justify-center">
                         {cartQty > 0 ? (
                           <div className="flex items-center gap-0.5 bg-muted rounded">
-                            <Button variant="ghost" size="sm" className="h-3 w-3 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                              <Minus className="w-2 h-2 sm:w-[10px] sm:h-[10px]" />
+                            <Button variant="ghost" size="sm" className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                              <Minus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
                             </Button>
                             <span className="text-[10px] font-medium px-1 min-w-[1.25rem] text-center">{cartQty}</span>
-                            <Button variant="ghost" size="sm" className="h-3 w-3 sm:h-4 sm:w-4 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                              <Plus className="w-2 h-2 sm:w-[10px] sm:h-[10px]" />
+                            <Button variant="ghost" size="sm" className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                              <Plus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
                             </Button>
                           </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2.5 h-2.5 sm:w-4 sm:h-4 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus className="w-[8px] h-[8px] sm:w-3 sm:h-3" strokeWidth={3} />
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2 h-2 sm:w-4 sm:h-4 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
+                            <Plus className="w-[6px] h-[6px] sm:w-3 sm:h-3" strokeWidth={4} />
                           </button>
                         )}
                       </div>
@@ -927,13 +927,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-3 w-3 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus className="w-2 h-2 sm:w-[10px] sm:h-[10px]" />
+                            <Minus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
                           </Button>
                           <span className="text-[10px] font-medium px-1 min-w-[1.25rem] text-center">
                             {cartQty}
@@ -941,18 +941,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-3 w-3 sm:h-4 sm:w-4 p-0 hover:bg-primary hover:text-primary-foreground"
+                            className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-primary hover:text-primary-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus className="w-2 h-2 sm:w-[10px] sm:h-[10px]" />
+                            <Plus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
                           </Button>
                         </div>
                         ) : (
                          <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-2.5 h-2.5 sm:w-4 sm:h-4"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-2 h-2 sm:w-4 sm:h-4"
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
@@ -969,7 +969,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }
                            }}
                          >
-                           <Plus className="w-[8px] h-[8px] sm:w-3 sm:h-3" strokeWidth={3} />
+                           <Plus className="w-[6px] h-[6px] sm:w-3 sm:h-3" strokeWidth={4} />
                         </button>
                       )}
                     </div>
