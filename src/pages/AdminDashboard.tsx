@@ -126,8 +126,26 @@ export default function AdminDashboard() {
         setAffiliates(affiliatesData || []);
       }
 
-      // Abandoned orders via dashboard service
-      setAbandonedOrders(dashboardData.data.abandonedOrders || []);
+      // Abandoned orders: fetch directly for past 7 days to ensure visibility
+      try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: abandonedList, error: abandonedErr } = await supabase
+          .from('abandoned_orders')
+          .select('*')
+          .gte('abandoned_at', sevenDaysAgo)
+          .order('abandoned_at', { ascending: false })
+          .limit(500);
+        if (abandonedErr) {
+          console.warn('Failed to load abandoned orders (direct):', abandonedErr);
+          // Fallback to RPC result if available
+          setAbandonedOrders(dashboardData.data.abandonedOrders || []);
+        } else {
+          setAbandonedOrders(abandonedList || []);
+        }
+      } catch (e) {
+        console.warn('Abandoned orders fetch exception:', e);
+        setAbandonedOrders(dashboardData.data.abandonedOrders || []);
+      }
 
     } catch (error: any) {
       console.error('Error loading dashboard data:', error);

@@ -117,40 +117,85 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   
   console.log('CheckoutFlow - Current step:', currentStep, 'confirmedDateTime:', confirmedDateTime, 'confirmedAddress:', confirmedAddress);
   
-  // Track abandoned cart when checkout starts
-  useEffect(() => {
-    if (cartItems.length > 0 && !isAddingToOrder) {
-      // Track abandoned order after 30 seconds of inactivity
-      const abandonedTimer = setTimeout(async () => {
-        try {
-          const sessionId = `checkout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          const totalAmount = totalPrice;
-          const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-          
-          await supabase.functions.invoke('track-abandoned-order', {
-            body: {
-              sessionId,
-              customerEmail: customerInfo.email || undefined,
-              customerName: customerInfo.firstName && customerInfo.lastName ? 
-                `${customerInfo.firstName} ${customerInfo.lastName}` : undefined,
-              customerPhone: customerInfo.phone || undefined,
-              deliveryAddress: addressInfo.street ? 
-                `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}` : 
-                undefined,
-              affiliateCode: affiliateCode || undefined,
-              cartItems,
-              subtotal: subtotal.toString(),
-              totalAmount: totalAmount.toString()
-            }
-          });
-        } catch (error) {
-          console.error('Error tracking abandoned order:', error);
-        }
-      }, 30000); // 30 seconds
-      
-      return () => clearTimeout(abandonedTimer);
+  // Persistent checkout session id used to upsert abandoned orders reliably
+  const [checkoutSessionId] = useState<string>(() => {
+    try {
+      const existing = sessionStorage.getItem('checkout_session_id');
+      if (existing) return existing;
+      const id = `checkout_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+      sessionStorage.setItem('checkout_session_id', id);
+      return id;
+    } catch {
+      return `checkout_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
     }
-  }, [cartItems, customerInfo, addressInfo, affiliateCode, totalPrice, isAddingToOrder]);
+  });
+
+  // Debounced auto-save of abandoned checkout with all captured contact info
+  useEffect(() => {
+    if (cartItems.length === 0) return;
+
+    const affiliateFromStorage = affiliateCode ||
+      sessionStorage.getItem('affiliate.code') ||
+      sessionStorage.getItem('affiliate_code') ||
+      localStorage.getItem('affiliate_code') || undefined;
+
+    const timer = setTimeout(async () => {
+      try {
+        const deliveryAddr = addressInfo?.street
+          ? `${addressInfo.street}, ${addressInfo.city || ''}, ${addressInfo.state || ''} ${addressInfo.zipCode || ''}`.trim()
+          : undefined;
+        const localSubtotal = cartItems.reduce((t, it) => t + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0);
+
+        await supabase.functions.invoke('track-abandoned-order', {
+          body: {
+            sessionId: checkoutSessionId,
+            customerEmail: customerInfo?.email || undefined,
+            customerName: customerInfo?.firstName && customerInfo?.lastName
+              ? `${customerInfo.firstName} ${customerInfo.lastName}`
+              : undefined,
+            customerPhone: customerInfo?.phone || undefined,
+            deliveryAddress: deliveryAddr,
+            affiliateCode: affiliateFromStorage,
+            cartItems,
+            subtotal: localSubtotal.toFixed(2),
+            totalAmount: localSubtotal.toFixed(2)
+          }
+        });
+      } catch (error) {
+        console.warn('Abandoned save failed (will retry on next change):', error);
+      }
+    }, 5000); // save 5s after last change
+
+    return () => clearTimeout(timer);
+  }, [cartItems, customerInfo, addressInfo, affiliateCode, checkoutSessionId]);
+
+  // Final save on unload
+  useEffect(() => {
+    const handler = () => {
+      try {
+        const deliveryAddr = addressInfo?.street
+          ? `${addressInfo.street}, ${addressInfo.city || ''}, ${addressInfo.state || ''} ${addressInfo.zipCode || ''}`.trim()
+          : undefined;
+        supabase.functions.invoke('track-abandoned-order', {
+          body: {
+            sessionId: checkoutSessionId,
+            customerEmail: customerInfo?.email || undefined,
+            customerName: customerInfo?.firstName && customerInfo?.lastName
+              ? `${customerInfo.firstName} ${customerInfo.lastName}`
+              : undefined,
+            customerPhone: customerInfo?.phone || undefined,
+            deliveryAddress: deliveryAddr,
+            affiliateCode: sessionStorage.getItem('affiliate.code') || sessionStorage.getItem('affiliate_code') || localStorage.getItem('affiliate_code') || undefined,
+            cartItems,
+            subtotal: (cartItems.reduce((t, it) => t + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0)).toFixed(2),
+            totalAmount: (cartItems.reduce((t, it) => t + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0)).toFixed(2)
+          }
+        });
+      } catch {}
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [cartItems, customerInfo, addressInfo, checkoutSessionId]);
   
   // FIXED: Safe pricing calculations with validation
   const subtotal = cartItems.reduce((total, item) => {
