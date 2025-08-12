@@ -202,6 +202,10 @@ serve(async (req) => {
     });
 
     // Create payment intent with compact metadata (full data stored in order_drafts)
+    // Ensure discount code captured even if free shipping was auto-assigned via affiliate
+    const discountCodeToUse = (appliedDiscount?.code || ((validDeliveryFee === 0 && affiliateCode) ? String(affiliateCode) : '')).substring(0, 50);
+    const discountTypeToUse = (appliedDiscount?.type || ((validDeliveryFee === 0 && affiliateCode) ? 'free_shipping' : '')).substring(0, 20);
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount: validAmount,
       currency,
@@ -221,8 +225,8 @@ serve(async (req) => {
         sales_tax: validSalesTax.toFixed(2),
         tip_amount: validTipAmount.toFixed(2),
         total_amount: (validSubtotal + validDeliveryFee + validSalesTax + validTipAmount).toFixed(2),
-        discount_code: (appliedDiscount?.code || '').substring(0, 50),
-        discount_type: (appliedDiscount?.type || '').substring(0, 20),
+        discount_code: discountCodeToUse,
+        discount_type: discountTypeToUse,
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
         discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
         group_order_number: (groupOrderNumber || '').substring(0, 50),

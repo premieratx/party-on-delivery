@@ -153,7 +153,8 @@ serve(async (req) => {
     if (totalAmount < 0.50 || totalAmount > 10000) {
       throw new Error(`Invalid order amount: $${totalAmount.toFixed(2)}. Must be between $0.50 and $10,000.00`);
     }
-    const affiliateCode = body.affiliateCode;
+    // Prefer body-provided affiliateCode, else fall back to Stripe metadata affiliate_code or discount_code
+    const affiliateCode = body.affiliateCode || metadata?.affiliate_code || metadata?.discount_code || undefined;
     const commissionPercent = typeof body.commissionPercent === 'number' ? body.commissionPercent : undefined;
 
     logStep("Metadata parsed", { 
@@ -376,8 +377,18 @@ serve(async (req) => {
       logStep('Markup calculation error (continuing without markup line)', { message: e instanceof Error ? e.message : String(e) });
     }
 
-    // Ensure driver tip is represented as a non-taxable line item (not taxed)
-    // Tip is NOT added as a Shopify line item; we record it in note_attributes below to avoid showing as a product
+    // Ensure driver tip is represented as a non-taxable line item so Shopify totals match Stripe
+    if (tipAmount > 0.004) { // >= half cent
+      lineItems.push({
+        title: 'Driver Tip (Gratuity)',
+        price: tipAmount.toFixed(2),
+        quantity: 1,
+        taxable: false,
+        requires_shipping: false
+      });
+      logStep('Added driver tip line item', { tipAmount: tipAmount.toFixed(2) });
+    }
+
 
     // Create order in Shopify with proper totals structure
     const orderData = {
@@ -426,21 +437,12 @@ serve(async (req) => {
           rate: 0.0825
         }] : [],
         
-        // Apply discount codes properly with exact Shopify structure
-        ...(discountCode && discountAmount && parseFloat(discountAmount) > 0 && {
-          discount_applications: [{
-            title: discountCode,
-            description: `${discountCode} discount applied`,
-            value: Math.abs(parseFloat(discountAmount)).toFixed(2),
-            value_type: discountType === 'percentage_discount' ? 'percentage' : 'fixed_amount',
-            allocation_method: "across",
-            target_selection: "all",
-            target_type: "line_item"
-          }],
+        // Apply discount codes: always record the code for attribution, even if $0 free_shipping
+        ...(discountCode && {
           discount_codes: [{
             code: discountCode,
-            amount: Math.abs(parseFloat(discountAmount)).toFixed(2),
-            type: discountType === 'percentage_discount' ? 'percentage' : 'fixed_amount'
+            amount: Math.abs(parseFloat(discountAmount || '0')).toFixed(2),
+            type: discountType === 'percentage_discount' ? 'percentage' : 'code'
           }]
         }),
         
@@ -458,15 +460,9 @@ serve(async (req) => {
           }
         },
         
-        // Tip under totals (not a line item)
-        ...(tipAmount > 0 && {
-          total_tip_received: tipAmount.toFixed(2),
-          tip_lines: [
-            {
-              amount: tipAmount.toFixed(2)
-            }
-          ]
-        }),
+        // Tip is now represented as a non-taxable line item to ensure totals/revenue include gratuity
+        // Do not set total_tip_received or tip_lines to avoid double counting
+
         
         // Ensure exact price matching for order totals
         current_total_price: totalAmount.toFixed(2),

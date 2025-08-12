@@ -423,6 +423,22 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       hasStoredDiscount: !!localStorage.getItem('partyondelivery_applied_discount')
     });
     
+    // If this delivery app assigned free shipping via cover/app config, auto-apply using affiliate code or cover slug
+    const freeShipAssigned = sessionStorage.getItem('shipping.free') === '1';
+    if (freeShipAssigned && !appliedDiscount) {
+      const autoCode = (
+        sessionStorage.getItem('affiliate.code') ||
+        sessionStorage.getItem('affiliate_code') ||
+        sessionStorage.getItem('cover.slug') ||
+        'PREMIER2025'
+      ).toUpperCase();
+      const discount = { code: autoCode, type: 'free_shipping' as const, value: 0 };
+      setAppliedDiscount(discount);
+      setDiscountCode(autoCode);
+      onDiscountChange?.(discount);
+      return; // Done
+    }
+    
     // Only auto-apply affiliate discounts in valid contexts
     if ((isAddingToOrder || (affiliateCode && isValidAffiliateContext)) && !appliedDiscount) {
       // First check if discount was already set in localStorage from GroupOrderView
@@ -470,32 +486,50 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             // Store for future use
             localStorage.setItem('partyondelivery_applied_discount', JSON.stringify(discount));
           } else {
-            console.log('❌ Could not get original order info or token is invalid, clearing group token. Error:', error);
             // Clear invalid group token and use fallback
             localStorage.removeItem('groupOrderToken');
-            const fallbackDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
+            const autoCode = (
+              sessionStorage.getItem('affiliate.code') ||
+              sessionStorage.getItem('affiliate_code') ||
+              sessionStorage.getItem('cover.slug') ||
+              'PREMIER2025'
+            ).toUpperCase();
+            const fallbackDiscount = { code: autoCode, type: 'free_shipping' as const, value: 0 };
             setAppliedDiscount(fallbackDiscount);
-            setDiscountCode('PREMIER2025');
+            setDiscountCode(autoCode);
             if (onDiscountChange) {
               onDiscountChange(fallbackDiscount);
             }
+
           }
         }).catch(err => {
           console.error('❌ Error invoking get-group-order function:', err);
           // Clear invalid group token and use fallback on error
           localStorage.removeItem('groupOrderToken');
-          const fallbackDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
+          const autoCode = (
+            sessionStorage.getItem('affiliate.code') ||
+            sessionStorage.getItem('affiliate_code') ||
+            sessionStorage.getItem('cover.slug') ||
+            'PREMIER2025'
+          ).toUpperCase();
+          const fallbackDiscount = { code: autoCode, type: 'free_shipping' as const, value: 0 };
           setAppliedDiscount(fallbackDiscount);
-          setDiscountCode('PREMIER2025');
+          setDiscountCode(autoCode);
           if (onDiscountChange) {
             onDiscountChange(fallbackDiscount);
           }
         });
       } else if (!appliedDiscount && (isAddingToOrder || (affiliateCode && isValidAffiliateContext))) {
-        // Non-group orders or affiliate referrals use PREMIER2025
-        const defaultDiscount = { code: 'PREMIER2025', type: 'free_shipping' as const, value: 0 };
+        // Non-group orders or affiliate referrals use affiliate code or cover slug if available
+        const autoCode = (
+          sessionStorage.getItem('affiliate.code') ||
+          sessionStorage.getItem('affiliate_code') ||
+          sessionStorage.getItem('cover.slug') ||
+          'PREMIER2025'
+        ).toUpperCase();
+        const defaultDiscount = { code: autoCode, type: 'free_shipping' as const, value: 0 };
         setAppliedDiscount(defaultDiscount);
-        setDiscountCode('PREMIER2025');
+        setDiscountCode(autoCode);
         if (onDiscountChange) {
           onDiscountChange(defaultDiscount);
         }
