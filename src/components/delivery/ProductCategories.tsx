@@ -958,7 +958,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </div>
                       ) : (
                         <button
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-2 h-2 md:w-8 md:h-8"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-1 h-1 md:w-8 md:h-8"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (selectedVariant) {
