@@ -801,6 +801,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cover_pages: {
+        Row: {
+          bg_image_url: string | null
+          bg_video_url: string | null
+          buttons: Json
+          checklist: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          slug: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bg_image_url?: string | null
+          bg_video_url?: string | null
+          buttons?: Json
+          checklist?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          slug: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bg_image_url?: string | null
+          bg_video_url?: string | null
+          buttons?: Json
+          checklist?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          slug?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       custom_affiliate_sites: {
         Row: {
           affiliate_id: string | null
