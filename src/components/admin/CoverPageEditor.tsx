@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
@@ -377,27 +378,116 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
             <Card>
               <CardContent className="pt-6">
                 <Label className="mb-2 block">Live Preview</Label>
-                <div className="rounded-xl overflow-hidden bg-black/70 relative min-h-[520px] flex items-center justify-center">
-                  <div className="text-center px-6 w-full max-w-md">
-                    {logoUrl && (
-                      <img src={logoUrl} alt="Logo preview" className="mx-auto block" style={{ height: logoHeight || 160 }} />
+                <div className="w-full flex justify-center">
+                  <div
+                    className="rounded-[24px] shadow-xl ring-1 ring-black/10 overflow-hidden bg-black relative"
+                    style={{ width: 320, height: 672 }}
+                  >
+                    {/* Background */}
+                    {bgImageUrl && (
+                      <div
+                        className="absolute inset-0 bg-cover bg-center"
+                        style={{ backgroundImage: `url(${bgImageUrl})` }}
+                        aria-hidden="true"
+                      />
                     )}
-                    <h3 className="mt-3 text-white font-bold" style={{ fontSize: titleSize }}>
-                      {title || 'Title preview'}
-                    </h3>
-                    {subtitle && (
-                      <p className="text-white/90 mt-1" style={{ fontSize: subtitleSize }}>{subtitle}</p>
-                    )}
-                    <div className="my-5">
-                      {(checklist.filter(Boolean).slice(0,5)).map((c,i)=> (
-                        <p key={i} className="text-white/80 my-5" style={{ fontSize: checklistSize }}>{c}</p>
-                      ))}
-                    </div>
-                    <div className="min-h-[100px]" />
-                    <div className="flex flex-col gap-2">
-                      {(buttons || []).slice(0,3).map((b,i)=>(
-                        <Button key={i} className="my-5" style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}>{b.text}</Button>
-                      ))}
+                    <div className="absolute inset-0 bg-black/60" style={{ backgroundColor: backgroundColor || undefined }} />
+
+                    {/* Content */}
+                    <div className="relative z-10 flex h-full flex-col items-center justify-between px-4 pt-4 pb-4">
+                      <header className="w-full text-center">
+                        {logoUrl && (
+                          <img
+                            src={logoUrl}
+                            alt="Logo preview"
+                            className="mx-auto block drop-shadow"
+                            style={{ height: logoHeight || 160 }}
+                          />
+                        )}
+                        <h3
+                          className="mt-2 text-white font-bold"
+                          style={{ fontSize: `${titleSize}px`, marginTop: titleOffsetY || 0 }}
+                        >
+                          {title || 'Title preview'}
+                        </h3>
+                        {subtitle && (
+                          <p
+                            className="text-white/90 mt-1"
+                            style={{ fontSize: `${subtitleSize}px`, marginTop: subtitleOffsetY || 0 }}
+                          >
+                            {subtitle}
+                          </p>
+                        )}
+                      </header>
+
+                      <div className="flex-1" />
+
+                      <div className="w-full max-w-[280px]">
+                        <div className="w-full mx-auto my-3" style={{ marginTop: checklistOffsetY || 0 }}>
+                          <div className="flex flex-col items-center gap-1">
+                            {(checklist.filter(Boolean).slice(0, 5)).map((c, i, arr) => (
+                              <React.Fragment key={i}>
+                                <p className="text-white/90 font-semibold leading-tight my-1" style={{ fontSize: `${checklistSize}px` }}>{c}</p>
+                                {i < arr.length - 1 && <span className="text-white/60" aria-hidden="true">•</span>}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 30px gap required between text block and buttons */}
+                        <div className="h-[30px]" aria-hidden="true" style={{ marginTop: buttonsOffsetY || 0 }} />
+
+                        {/* Buttons layout */}
+                        {buttons.length <= 2 ? (
+                          <div className="flex flex-col gap-2">
+                            {buttons.map((b, i) => (
+                              <Button
+                                key={`${b.text}-${i}`}
+                                size="sm"
+                                className="w-full h-9 rounded-full font-semibold shadow"
+                                style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}
+                              >
+                                {b.text}
+                              </Button>
+                            ))}
+                          </div>
+                        ) : buttons.length === 3 ? (
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              size="sm"
+                              className="w-full h-9 rounded-full font-semibold shadow"
+                              style={{ backgroundColor: buttons[0].bg_color || undefined, color: buttons[0].text_color || undefined }}
+                            >
+                              {buttons[0].text}
+                            </Button>
+                            <div className="grid grid-cols-2 gap-2">
+                              {buttons.slice(1).map((b, i) => (
+                                <Button
+                                  key={`${b.text}-${i + 1}`}
+                                  size="sm"
+                                  className="h-9 rounded-full font-semibold shadow"
+                                  style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}
+                                >
+                                  {b.text}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            {buttons.map((b, i) => (
+                              <Button
+                                key={`${b.text}-${i}`}
+                                size="sm"
+                                className="h-9 rounded-full font-semibold shadow"
+                                style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}
+                              >
+                                {b.text}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

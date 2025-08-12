@@ -181,11 +181,11 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
               <div className="w-full max-w-sm mt-2 mb-0">
                 {/* Auto-shrinking checklist area */}
                 <div className="w-full mx-auto my-5" style={{ marginTop: (checklistOffsetY || 0) }}>
-                  <div className="flex flex-col items-center gap-1 max-h-[20vh] overflow-hidden">
+                  <div className="flex flex-col items-center gap-1">
                     {(checklistItems?.filter(Boolean).slice(0, 5) || defaultChecklist).map((item, idx, arr) => (
                       <React.Fragment key={idx}>
                         <p
-                          className="text-white/90 font-semibold leading-tight animate-fade-in my-5"
+                          className="text-white/90 font-semibold leading-tight animate-fade-in my-1"
                           style={{ animationDelay: `${idx * 80}ms`, fontSize: checklistSizeProp ? `${checklistSizeProp}px` : 'clamp(12px,2.8vw,16px)' }}
                         >
                           {item}
@@ -198,8 +198,8 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                   </div>
                 </div>
 
-                {/* Minimum 100px gap between checklist and first button */}
-                <div className="min-h-[100px]" aria-hidden="true" style={{ marginTop: (buttonsOffsetY || 0) }} />
+                {/* Required 30px gap between checklist and first button */}
+                <div className="h-[30px]" aria-hidden="true" style={{ marginTop: (buttonsOffsetY || 0) }} />
 
                 {/* Buttons layout: stack for 1-2, special layout for 3, grid for 4+ */}
                 {buttons.length <= 2 ? (

@@ -143,29 +143,23 @@ export default function ShortLinkResolver() {
           // Persist per-button rules for downstream app
           try {
             const mp = typeof b.markup_percent === 'number' ? b.markup_percent : 0;
-            const fs = b.free_shipping !== false; // default ON
-            const ca = !!b.prefill_address; // default OFF
+            const fs = b.free_shipping === true; // explicit toggle
             sessionStorage.setItem('pricing.markupPercent', String(mp.toFixed ? mp.toFixed(2) : mp));
             sessionStorage.setItem('shipping.free', fs ? '1' : '0');
-            sessionStorage.setItem('checkout.prefillAddress', ca ? '1' : '0');
-            if (typeof b.commission_percent === 'number') {
-              sessionStorage.setItem('commission.percent', String(b.commission_percent));
-            }
-            if (affiliateCode) {
-              try {
-                sessionStorage.setItem('affiliate.code', affiliateCode);
-                sessionStorage.setItem('affiliate_code', affiliateCode);
-                sessionStorage.setItem('affiliate_source', 'url');
-                localStorage.setItem('affiliate_code', affiliateCode);
-              } catch {}
+
+            const btnAff = (b.affiliate_code as string | undefined) || affiliateCode || undefined;
+            if (btnAff) {
+              sessionStorage.setItem('affiliate.code', btnAff);
+              sessionStorage.setItem('affiliate_code', btnAff);
+              sessionStorage.setItem('affiliate_source', 'url');
+              localStorage.setItem('affiliate_code', btnAff);
             }
           } catch {}
 
           const params = new URLSearchParams({ step: 'tabs' });
           if (b.openCart) params.set('openCart', '1');
-          if (affiliateCode) {
-            params.set('aff', affiliateCode);
-          }
+          const affToAppend = (b.affiliate_code as string | undefined) || affiliateCode || undefined;
+          if (affToAppend) params.set('aff', affToAppend);
           window.location.href = `/app/${b.app_slug}?${params.toString()}`;
           return;
         }
@@ -222,6 +216,13 @@ export default function ShortLinkResolver() {
           titleSize={coverPage.styles?.title_size}
           subtitleSize={coverPage.styles?.subtitle_size}
           checklistSize={coverPage.styles?.checklist_size}
+          backgroundColor={coverPage.styles?.background_color || undefined}
+          titleOffsetY={coverPage.styles?.title_offset_y}
+          subtitleOffsetY={coverPage.styles?.subtitle_offset_y}
+          checklistOffsetY={coverPage.styles?.checklist_offset_y}
+          buttonsOffsetY={coverPage.styles?.buttons_offset_y}
+          logoBgColor={coverPage.styles?.logo_bg_color || undefined}
+          logoBgMode={coverPage.styles?.logo_bg_mode || 'auto'}
         />
       </div>
     );
