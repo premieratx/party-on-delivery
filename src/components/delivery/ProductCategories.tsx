@@ -923,7 +923,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     {/* Cart controls with reduced spacing */}
                     <div className="flex justify-center">
                       {cartQty > 0 ? (
-                         <div className="flex items-center gap-0.5 bg-muted rounded max-w-[27px] md:max-w-[80px]" onClick={(e) => e.stopPropagation()}>
+                         <div className="flex items-center justify-center gap-0.5 bg-muted rounded max-w-[19px] md:max-w-[80px] mx-auto" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -935,7 +935,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           >
                             <Minus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
                           </Button>
-                          <span className="text-[9px] md:text-[10px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center">
+                          <span className="text-[10px] md:text-[10px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center">
                             {cartQty}
                           </span>
                           <Button

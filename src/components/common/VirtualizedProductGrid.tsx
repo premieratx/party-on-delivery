@@ -279,7 +279,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
             {/* Quantity Controls */}
             {quantity > 0 ? (
-              <div className="flex items-center justify-center gap-1 w-full mx-auto max-w-[56px] md:max-w-[80px]">
+              <div className="flex items-center justify-center gap-1 w-full mx-auto max-w-[39px] md:max-w-[80px]">
                 <Button
                   variant="outline"
                   size="sm"
