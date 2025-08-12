@@ -278,42 +278,40 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - Mobile optimized sizing */}
-            <div className="w-full flex items-center justify-center py-1 px-1">
-              <div className="flex items-center justify-center">
-                {quantity > 0 ? (
-                  <div className="flex items-center justify-center gap-1 md:gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={onDecrement}
-                      className="h-5 w-5 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center flex-shrink-0 border-muted-foreground/30"
-                    >
-                      <Minus className="h-2.5 w-2.5 md:h-5 md:w-5 lg:h-6 lg:w-6" />
-                    </Button>
-                    <div className="min-w-[20px] md:min-w-[40px] lg:min-w-[50px] flex items-center justify-center">
-                      <span className="font-bold text-xs md:text-2xl lg:text-3xl text-center block leading-none">
-                        {quantity}
-                      </span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={onIncrement}
-                      className="h-5 w-5 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center flex-shrink-0 border-muted-foreground/30"
-                    >
-                      <Plus className="h-2.5 w-2.5 md:h-5 md:w-5 lg:h-6 lg:w-6" />
-                    </Button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={onAddToCart}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 md:w-12 md:h-12 lg:w-14 lg:h-14 flex items-center justify-center flex-shrink-0"
+            {/* Quantity Controls - Perfectly centered like green button */}
+            <div className="w-full flex items-center justify-center py-1">
+              {quantity > 0 ? (
+                <div className="flex items-center justify-center gap-0.5 md:gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onDecrement}
+                    className="h-5 w-5 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
                   >
-                    <Plus className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" strokeWidth={3} />
-                  </button>
-                )}
-              </div>
+                    <Minus className="h-2.5 w-2.5 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                  </Button>
+                  <div className="w-6 md:w-10 lg:w-12 flex items-center justify-center">
+                    <span className="font-bold text-xs md:text-2xl lg:text-3xl text-center leading-none">
+                      {quantity}
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onIncrement}
+                    className="h-5 w-5 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
+                  >
+                    <Plus className="h-2.5 w-2.5 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={onAddToCart}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 md:w-12 md:h-12 lg:w-14 lg:h-14 flex items-center justify-center"
+                >
+                  <Plus className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" strokeWidth={3} />
+                </button>
+              )}
             </div>
           </div>
         </div>
