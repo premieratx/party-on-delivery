@@ -277,39 +277,39 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - Centered with 50% larger text */}
-            <div className="flex justify-center w-full">
-              {quantity > 0 ? (
-                <div className="flex items-center justify-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onDecrement}
-                    className="h-[8px] w-[8px] md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
-                  >
-                    <Minus className="h-2 w-2 md:h-2.5 md:w-2.5" />
-                  </Button>
-                  <span className="font-medium min-w-[18px] md:min-w-[24px] text-center text-sm md:text-lg">
-                    {quantity}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onIncrement}
-                    className="h-[8px] w-[8px] md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
-                  >
-                    <Plus className="h-2 w-2 md:h-2.5 md:w-2.5" />
-                  </Button>
-                </div>
-              ) : (
+            {/* Quantity Controls - Mobile optimized */}
+            {quantity > 0 ? (
+              <div className="flex items-center justify-center gap-2 w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onDecrement}
+                  className="h-6 w-6 md:h-8 md:w-8 p-0 flex-shrink-0 rounded-full"
+                >
+                  <Minus className="h-3 w-3 md:h-4 md:w-4" />
+                </Button>
+                <span className="font-bold text-lg md:text-xl min-w-[24px] text-center">
+                  {quantity}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onIncrement}
+                  className="h-6 w-6 md:h-8 md:w-8 p-0 flex-shrink-0 rounded-full"
+                >
+                  <Plus className="h-3 w-3 md:h-4 md:w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex justify-center w-full">
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2 h-2 md:w-6 md:h-6 flex items-center justify-center"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
                 >
-                  <Plus className="h-3.5 w-3.5 md:h-3.5 md:w-3.5" strokeWidth={4} />
+                  <Plus className="h-4 w-4 md:h-5 md:w-5" strokeWidth={3} />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
