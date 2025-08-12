@@ -920,42 +920,42 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       ${(selectedVariant?.price || 0).toFixed(2)}
                     </Badge>
                       
-                    {/* Oval Cart Controls - Centered */}
+                    {/* Oval Cart Controls - Responsive scaling */}
                     <div className="flex justify-center items-center">
                       {cartQty > 0 ? (
                         <div 
-                          className="flex items-center justify-center bg-muted/80 rounded-full px-2 py-1 gap-2 min-w-[80px] h-8 border border-border/50" 
+                          className="flex items-center justify-center bg-muted/80 rounded-full px-1 py-0.5 gap-1 min-w-[60px] h-6 border border-border/50 md:px-2 md:py-1 md:gap-2 md:min-w-[80px] md:h-8" 
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center"
+                            className="h-4 w-4 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center md:h-6 md:w-6"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus className="w-4 h-4" strokeWidth={2} />
+                            <Minus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
                           </Button>
-                          <span className="text-sm font-bold min-w-[20px] text-center">
+                          <span className="text-xs font-bold min-w-[16px] text-center md:text-sm md:min-w-[20px]">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center"
+                            className="h-4 w-4 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center md:h-6 md:w-6"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus className="w-4 h-4" strokeWidth={2} />
+                            <Plus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
                           </Button>
                         </div>
                       ) : (
                         <button
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-8 h-8"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-6 h-6 md:w-8 md:h-8"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (selectedVariant) {
@@ -972,7 +972,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                            }
                           }}
                         >
-                          <Plus className="w-4 h-4" strokeWidth={3} />
+                          <Plus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={3} />
                        </button>
                      )}
                     </div>
