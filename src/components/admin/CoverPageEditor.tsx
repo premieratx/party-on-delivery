@@ -93,7 +93,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setSlugOk(true);
   }, [open, initial]);
 
-  const autoSlug = useMemo(() => slugify(title || slug), [title, slug]);
+  const computedSlug = useMemo(() => slugify(slug || title), [slug, title]);
 
   const checkSlug = async (value: string) => {
     if (!value) { setSlugOk(false); return; }
@@ -127,7 +127,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     }
   };
 
-  useEffect(() => { checkSlug(autoSlug); }, [autoSlug]);
+  useEffect(() => { checkSlug(computedSlug); }, [computedSlug]);
 
   const addButton = () => setButtons((prev) => [...prev, { text: `Button ${prev.length + 1}`, type: 'delivery_app' }]);
   const removeButton = (idx: number) => setButtons((prev) => prev.filter((_, i) => i !== idx));
@@ -148,7 +148,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setSaving(true);
     try {
       const payload: any = {
-        slug: autoSlug,
+        slug: computedSlug,
         title,
         subtitle,
         logo_url: logoUrl || null,
@@ -254,7 +254,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
               <CardContent className="space-y-3 pt-6">
                 <div>
                   <Label htmlFor="slug">Slug (root URL)</Label>
-                  <Input id="slug" value={autoSlug} onChange={(e) => setSlug(e.target.value)} onBlur={(e) => checkSlug(e.target.value)} />
+                  <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} onBlur={(e) => checkSlug(slugify(e.target.value))} />
                   <div className="text-xs mt-1">
                     {checkingSlug ? 'Checking…' : slugOk ? 'Available' : 'Not available'}
                   </div>
