@@ -813,7 +813,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         )}
         {/* Product Grid - smaller tiles for spirits, beer, and mixers & n/a, consistent for others */}
-        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-4 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''}`}>
+        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''}`}>
           {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
@@ -923,36 +923,36 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     {/* Cart controls with reduced spacing */}
                     <div className="flex justify-center">
                       {cartQty > 0 ? (
-                         <div className="flex items-center gap-0.5 bg-muted rounded" onClick={(e) => e.stopPropagation()}>
+                         <div className="flex items-center gap-0.5 bg-muted rounded max-w-[27px] md:max-w-[80px]" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            className="h-[5px] w-[5px] md:h-4 md:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
+                            <Minus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
                           </Button>
-                          <span className="text-[10px] font-medium px-1 min-w-[1.25rem] text-center">
+                          <span className="text-[9px] md:text-[10px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-primary hover:text-primary-foreground"
+                            className="h-[5px] w-[5px] md:h-4 md:w-4 p-0 hover:bg-primary hover:text-primary-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
+                            <Plus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
                           </Button>
                         </div>
                         ) : (
                          <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-4 h-4 sm:w-5 sm:h-5"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-3 h-3 md:w-5 md:h-5"
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {

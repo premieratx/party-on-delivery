@@ -166,7 +166,7 @@ export const VirtualizedProductGrid: React.FC<VirtualizedProductGridProps> = ({
         <div style={{ height: totalHeight, position: 'relative' }}>
           {/* Grid container */}
           <div 
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 p-2"
+            className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 p-2"
             style={{
               transform: `translateY(${searchFilteredItems[0]?.offsetTop || 0}px)`,
               transition: isGridReady ? 'transform 0.1s ease-out' : 'none'
