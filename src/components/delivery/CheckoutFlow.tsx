@@ -1,5 +1,5 @@
 // CRITICAL: DO NOT MODIFY IMPORTS WITHOUT TESTING CHECKOUT FLOW END-TO-END
-import { calculateDistanceBasedDeliveryFee, getStandardDeliveryFee } from '@/utils/deliveryPricing';
+// removed distance-based delivery pricing import
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmbeddedPaymentForm } from '@/components/payment/EmbeddedPaymentForm';
@@ -304,59 +304,17 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     return timeSlots;
   };
 
-  // Calculate distance-based delivery fee when address is available
+  // Use base delivery fee rules only (no distance-based calculation)
   useEffect(() => {
-    const calculateDeliveryFee = async () => {
-      // Only calculate if we have a complete address and no free shipping discount
-      if (addressInfo.street && addressInfo.city && addressInfo.state && addressInfo.zipCode && appliedDiscount?.type !== 'free_shipping') {
-        setIsCalculatingDelivery(true);
-        console.log('🚚 Calculating distance-based delivery fee for:', {
-          address: addressInfo.street,
-          city: addressInfo.city,
-          state: addressInfo.state,
-          zip: addressInfo.zipCode,
-          subtotal
-        });
-        
-        try {
-          const pricing = await calculateDistanceBasedDeliveryFee(
-            addressInfo.street,
-            addressInfo.city,
-            addressInfo.state,
-            addressInfo.zipCode,
-            subtotal
-          );
-          
-          setDistanceDeliveryFee(pricing.fee);
-          setDeliveryDistance(pricing.distance || null);
-          
-          console.log('🚚 Distance-based delivery fee calculated:', {
-            fee: pricing.fee,
-            distance: pricing.distance,
-            isDistanceBased: pricing.isDistanceBased,
-            minimumOrder: pricing.minimumOrder
-          });
-        } catch (error) {
-          console.error('❌ Failed to calculate distance-based delivery fee:', error);
-          // Fallback to standard delivery fee
-          const standardPricing = getStandardDeliveryFee(subtotal);
-          setDistanceDeliveryFee(standardPricing.fee);
-        } finally {
-          setIsCalculatingDelivery(false);
-        }
-      } else if (appliedDiscount?.type === 'free_shipping') {
-        // Free shipping applied
-        setDistanceDeliveryFee(0);
-        setDeliveryDistance(null);
-      } else {
-        // No address yet, use base delivery fee
-        setDistanceDeliveryFee(baseDeliveryFee);
-        setDeliveryDistance(null);
-      }
-    };
-
-    calculateDeliveryFee();
-  }, [addressInfo.street, addressInfo.city, addressInfo.state, addressInfo.zipCode, subtotal, appliedDiscount, baseDeliveryFee]);
+    if (appliedDiscount?.type === 'free_shipping') {
+      setDistanceDeliveryFee(0);
+      setDeliveryDistance(null);
+    } else {
+      setDistanceDeliveryFee(baseDeliveryFee);
+      setDeliveryDistance(null);
+    }
+    setIsCalculatingDelivery(false);
+  }, [baseDeliveryFee, appliedDiscount]);
 
 
   
@@ -522,8 +480,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
   // Sales tax is always 8.25% applied to the subtotal (after discount if applicable)
   const salesTax = discountedSubtotal * 0.0825;
   
-  // Final delivery fee (uses distance-based calculation with discount consideration)
-  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : distanceDeliveryFee;
+  // Final delivery fee per base rules (no distance-based adjustments)
+  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : baseDeliveryFee;
   
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
 
