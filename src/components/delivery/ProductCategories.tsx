@@ -935,7 +935,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           >
                             <Minus className="w-[6px] h-[6px] md:w-[10px] md:h-[10px]" />
                           </Button>
-                          <span className="text-[6px] md:text-[10px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center flex items-center justify-center">
+                          <span className="text-[6px] md:text-[8px] font-medium px-1 min-w-[8px] md:min-w-[1.25rem] text-center flex items-center justify-center">
                             {cartQty}
                           </span>
                           <Button
