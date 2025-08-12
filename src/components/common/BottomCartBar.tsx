@@ -44,7 +44,9 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
               variant="outline"
               size="sm"
               onClick={onOpenCart}
-              className="flex items-center gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-3"
+              onTouchEnd={onOpenCart}
+              aria-label="Open cart"
+              className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3"
             >
               <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Cart</span>
