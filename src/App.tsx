@@ -12,7 +12,7 @@ import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
 import Index from "./pages/Index";
-import CoverPage from "./pages/CoverPage";
+
 import NotFound from "./pages/NotFound";
 import { getInstantProducts } from "@/utils/instantCacheClient";
 
@@ -102,7 +102,7 @@ const App = () => {
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Core pages - no lazy loading */}
-                    <Route path="/cover" element={<CoverPage />} />
+                    
                     <Route path="/" element={<Index />} />
                     
                     {/* Order completion */}
