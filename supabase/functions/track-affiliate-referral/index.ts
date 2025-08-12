@@ -24,14 +24,15 @@ serve(async (req) => {
       affiliateCode, 
       orderData,
       customerEmail,
-      orderId
+      orderId,
+      commissionPercent
     } = await req.json();
 
     if (!affiliateCode || !orderData || !customerEmail) {
       throw new Error("Missing required fields");
     }
 
-    logStep('Request data parsed', { affiliateCode, customerEmail, orderId });
+    logStep('Request data parsed', { affiliateCode, customerEmail, orderId, commissionPercent });
 
     // Create service client for database operations
     const supabaseService = createClient(
@@ -97,13 +98,18 @@ const { data: affiliate, error: affiliateError } = await supabaseService
       logStep('Subtotal from fallback fields', { subtotal });
     }
     
-    // Determine commission based on affiliate settings
-    let commissionRateUsed = typeof affiliate.commission_value === 'number' && affiliate.commission_type === 'percent'
-      ? affiliate.commission_value
-      : affiliate.commission_rate;
+    // Determine commission based on affiliate settings or override
+    let commissionRateUsed = (typeof commissionPercent === 'number' && !isNaN(commissionPercent) && commissionPercent > 0)
+      ? commissionPercent
+      : (typeof affiliate.commission_value === 'number' && affiliate.commission_type === 'percent'
+        ? affiliate.commission_value
+        : affiliate.commission_rate);
 
     let commissionAmount = 0;
-    if (affiliate.commission_type === 'flat' && typeof affiliate.commission_value === 'number' && affiliate.commission_value > 0) {
+    if (typeof commissionPercent === 'number' && commissionPercent > 0) {
+      // Override to percentage commission if provided by button-level rule
+      commissionAmount = (subtotal * commissionPercent) / 100;
+    } else if (affiliate.commission_type === 'flat' && typeof affiliate.commission_value === 'number' && affiliate.commission_value > 0) {
       commissionAmount = affiliate.commission_value;
       commissionRateUsed = 0; // Flat commission, no percent rate applied
     } else {
@@ -153,7 +159,8 @@ const { data: affiliate, error: affiliateError } = await supabaseService
           customerEmail: customerEmail,
           subtotal: subtotal,
           commissionAmount: commissionAmount,
-          totalCommissionEarned: affiliateDetails?.total_commission || 0
+          totalCommissionEarned: affiliateDetails?.total_commission || 0,
+          commissionPercentUsed: commissionRateUsed
         }
       }
     }).catch(error => logStep('Google Sheets sync error', error));

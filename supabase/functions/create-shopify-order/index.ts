@@ -154,6 +154,7 @@ serve(async (req) => {
       throw new Error(`Invalid order amount: $${totalAmount.toFixed(2)}. Must be between $0.50 and $10,000.00`);
     }
     const affiliateCode = body.affiliateCode;
+    const commissionPercent = typeof body.commissionPercent === 'number' ? body.commissionPercent : undefined;
 
     logStep("Metadata parsed", { 
       itemCount: cartItems.length, 
@@ -555,8 +556,14 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
               name: "Attribution Timestamp",
               value: new Date().toISOString()
             }
-          ] : [])
-        ]
+            ] : []),
+            ...(typeof commissionPercent === 'number' && commissionPercent > 0 ? [
+              {
+                name: "Commission Percent",
+                value: `${commissionPercent}`
+              }
+            ] : [])
+         ]
       }
     };
 
@@ -605,7 +612,8 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
             affiliateCode: affiliateCode,
             orderData: orderResult.order,
             customerEmail: customerEmail,
-            orderId: orderResult.order.id.toString()
+            orderId: orderResult.order.id.toString(),
+            commissionPercent
           }
         });
 

@@ -39,8 +39,11 @@ const Success = () => {
       }
 
       try {
+        const affiliateCode = sessionStorage.getItem('affiliate.code') || sessionStorage.getItem('affiliate_code') || localStorage.getItem('affiliate_code') || searchParams.get('aff') || '';
+        const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
+        const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
         const { data, error } = await supabase.functions.invoke('create-shopify-order', {
-          body: isPaymentIntent ? { paymentIntentId: sessionId } : { sessionId }
+          body: isPaymentIntent ? { paymentIntentId: sessionId, affiliateCode, commissionPercent } : { sessionId, affiliateCode, commissionPercent }
         });
 
         if (error) {

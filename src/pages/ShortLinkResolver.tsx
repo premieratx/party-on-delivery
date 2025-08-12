@@ -152,13 +152,20 @@ export default function ShortLinkResolver() {
               sessionStorage.setItem('commission.percent', String(b.commission_percent));
             }
             if (affiliateCode) {
-              sessionStorage.setItem('affiliate.code', affiliateCode);
+              try {
+                sessionStorage.setItem('affiliate.code', affiliateCode);
+                sessionStorage.setItem('affiliate_code', affiliateCode);
+                sessionStorage.setItem('affiliate_source', 'url');
+                localStorage.setItem('affiliate_code', affiliateCode);
+              } catch {}
             }
           } catch {}
 
           const params = new URLSearchParams({ step: 'tabs' });
           if (b.openCart) params.set('openCart', '1');
-          if (affiliateCode) params.set('aff', affiliateCode);
+          if (affiliateCode) {
+            params.set('aff', affiliateCode);
+          }
           window.location.href = `/app/${b.app_slug}?${params.toString()}`;
           return;
         }

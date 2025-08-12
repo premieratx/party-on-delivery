@@ -29,6 +29,9 @@ export function useAffiliateCodeManager() {
     // Only preserve if it's from a valid source in current session
     const sessionSource = sessionStorage.getItem('affiliate_source');
     if (!sessionSource) {
+      sessionStorage.removeItem('affiliate_code');
+      sessionStorage.removeItem('affiliate.code');
+      sessionStorage.removeItem('affiliate_source');
       setAffiliateState({
         code: null,
         source: null,
@@ -49,6 +52,7 @@ export function useAffiliateCodeManager() {
 
     // Store in session storage to persist during the session only
     sessionStorage.setItem('affiliate_code', code);
+    sessionStorage.setItem('affiliate.code', code);
     sessionStorage.setItem('affiliate_source', source || '');
     
     // Only store in localStorage for specific sources
@@ -75,12 +79,13 @@ export function useAffiliateCodeManager() {
     localStorage.removeItem('affiliateReferral');
     sessionStorage.removeItem('affiliate_code');
     sessionStorage.removeItem('affiliate_source');
+    sessionStorage.removeItem('affiliate.code');
   }, []);
 
   // Check for affiliate code from URL parameter
   const checkUrlForAffiliateCode = useCallback(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const codeFromUrl = urlParams.get('affiliate') || urlParams.get('ref');
+    const codeFromUrl = urlParams.get('affiliate') || urlParams.get('ref') || urlParams.get('aff');
     
     // Also check if we're on an affiliate landing page
     const pathMatch = window.location.pathname.match(/^\/a\/([^\/]+)/);
@@ -123,8 +128,8 @@ export function useAffiliateCodeManager() {
 
   // Initialize from session storage on mount
   useEffect(() => {
-    const sessionCode = sessionStorage.getItem('affiliate_code');
-    const sessionSource = sessionStorage.getItem('affiliate_source') as AffiliateCodeState['source'];
+    const sessionCode = sessionStorage.getItem('affiliate_code') || sessionStorage.getItem('affiliate.code');
+    const sessionSource = (sessionStorage.getItem('affiliate_source') as AffiliateCodeState['source']) || (sessionCode ? 'url' : null);
     
     if (sessionCode && sessionSource) {
       setAffiliateState({

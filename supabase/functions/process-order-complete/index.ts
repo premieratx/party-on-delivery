@@ -76,6 +76,8 @@ function extractStandardOrderData(metadata: any, paymentIntentId?: string, sessi
   const state = stateZip.split(' ')[0] || '';
   const zipCode = stateZip.split(' ')[1] || '';
   
+  const commissionPercent = metadata?.commission_percent ? parseFloat(metadata.commission_percent) : undefined;
+  
   return {
     paymentIntentId,
     sessionId,
@@ -110,6 +112,7 @@ function extractStandardOrderData(metadata: any, paymentIntentId?: string, sessi
     isAddingToOrder: metadata?.is_adding_to_order === 'true',
     useSameAddress: metadata?.use_same_address === 'true',
     groupOrderToken: metadata?.group_order_token,
+    ...(commissionPercent ? { commissionPercent } : {})
   };
 }
 
@@ -368,12 +371,14 @@ async function trackAffiliateReferral(orderData: StandardOrderData, shopifyOrder
   logStep("Tracking affiliate referral", { affiliateCode: orderData.affiliateCode });
   
   try {
+    const commissionPercent = (orderData as any)?.commissionPercent || (orderData as any)?.commission_percent || undefined;
     const { data: result, error } = await supabase.functions.invoke('track-affiliate-referral', {
       body: {
         affiliateCode: orderData.affiliateCode,
         orderData: shopifyOrder,
         customerEmail: orderData.customerEmail,
-        orderId: shopifyOrder.id.toString()
+        orderId: shopifyOrder.id.toString(),
+        commissionPercent
       }
     });
     
@@ -555,7 +560,8 @@ serve(async (req) => {
           deliveryFee: orderData.deliveryFee,
           salesTax: orderData.salesTax,
           totalAmount: orderData.totalAmount,
-          affiliateCode: orderData.affiliateCode
+          affiliateCode: orderData.affiliateCode,
+          commissionPercent: (orderData as any)?.commissionPercent || null
         }
       }
     }).catch(error => logStep("Google Sheets sync error", error));

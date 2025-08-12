@@ -65,8 +65,11 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   // Pricing with affiliate markup and per-button rules
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const freeShipAssigned = sessionStorage.getItem('shipping.free') === '1';
-  const affiliateCode = sessionStorage.getItem('affiliate.code') || '';
-  const commissionPercent = Number(sessionStorage.getItem('commission.percent') || '');
+  const affiliateCode = sessionStorage.getItem('affiliate.code') || sessionStorage.getItem('affiliate_code') || localStorage.getItem('affiliate_code') || '';
+  const commissionPercent = (() => {
+    const v = sessionStorage.getItem('commission.percent');
+    return v ? parseFloat(v) : 0;
+  })();
   // Calculate tip percentage based on subtotal (before delivery fee adjustment for $200+)
   const rawSubtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const adjustedSubtotal = rawSubtotal * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
@@ -254,7 +257,9 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           subtotal: validSubtotal,
           deliveryFee: validDeliveryFee,
           salesTax: validSalesTax,
-          groupOrderToken: currentGroupToken // Use consistent group token
+          groupOrderToken: currentGroupToken, // Use consistent group token
+          affiliateCode,
+          commissionPercent
         }
       });
       if (error) {
