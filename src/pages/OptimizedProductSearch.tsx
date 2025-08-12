@@ -435,7 +435,7 @@ export default function OptimizedProductSearch() {
                           <div className="flex justify-center">
                             <button
                               onClick={() => handleAddToCart(product)}
-                              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-4 h-4 md:w-8 md:h-8 flex items-center justify-center"
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2 h-2 md:w-8 md:h-8 flex items-center justify-center"
                             >
                               <Plus className="h-3.5 w-3.5 md:h-5 md:w-5" strokeWidth={4} />
                             </button>
