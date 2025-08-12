@@ -13,6 +13,9 @@ interface CustomDeliveryTabsPageProps {
       name: string;
       collection_handle: string;
       icon?: string;
+      subheadline_text?: string;
+      subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat';
+      subheadline_size?: 'sm' | 'md' | 'lg' | 'xl';
     }>;
   };
   onAddToCart: (item: any) => void;

@@ -22,6 +22,9 @@ interface DeliveryApp {
       name: string;
       collection_handle: string;
       icon?: string;
+      subheadline_text?: string;
+      subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat';
+      subheadline_size?: 'sm' | 'md' | 'lg' | 'xl';
     }>;
   };
   custom_post_checkout_config?: {
@@ -57,7 +60,7 @@ export function DeliveryAppManager() {
   const [formData, setFormData] = useState({
     appName: '',
     tabCount: 5,
-    tabs: [] as Array<{ name: string; collection_handle: string }>,
+    tabs: [] as Array<{ name: string; collection_handle: string; subheadline_text?: string; subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat'; subheadline_size?: 'sm' | 'md' | 'lg' | 'xl'; }>,
     startScreenTitle: '',
     startScreenSubtitle: '',
     heroHeading: '',
@@ -80,7 +83,7 @@ export function DeliveryAppManager() {
   // Form state
   const [appName, setAppName] = useState('');
   const [tabCount, setTabCount] = useState(5);
-  const [tabs, setTabs] = useState<Array<{ name: string; collection_handle: string }>>([]);
+  const [tabs, setTabs] = useState<Array<{ name: string; collection_handle: string; subheadline_text?: string; subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat'; subheadline_size?: 'sm' | 'md' | 'lg' | 'xl'; }>>([]);
   
   // Hero section customization
   const [heroSectionLogo, setHeroSectionLogo] = useState<File | null>(null);
@@ -1054,6 +1057,50 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                             ))}
                           </SelectContent>
                         </Select>
+                    </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-2">
+                        <Label>Subheadline Message (below tabs)</Label>
+                        <Input
+                          value={(tab as any).subheadline_text || ''}
+                          onChange={(e) => updateTab(index, 'subheadline_text', e.target.value)}
+                          placeholder="e.g., Free delivery over $100 • Cold drinks available"
+                        />
+                      </div>
+                      <div>
+                        <Label>Font</Label>
+                        <Select
+                          value={(tab as any).subheadline_font || 'default'}
+                          onValueChange={(value) => updateTab(index, 'subheadline_font', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Default font" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="default">Default</SelectItem>
+                            <SelectItem value="playfair">Playfair</SelectItem>
+                            <SelectItem value="oswald">Oswald</SelectItem>
+                            <SelectItem value="montserrat">Montserrat</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Size</Label>
+                        <Select
+                          value={(tab as any).subheadline_size || 'md'}
+                          onValueChange={(value) => updateTab(index, 'subheadline_size', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sm">Small</SelectItem>
+                            <SelectItem value="md">Medium</SelectItem>
+                            <SelectItem value="lg">Large</SelectItem>
+                            <SelectItem value="xl">XL</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground">Drag this card to reorder tabs</div>
@@ -1464,10 +1511,13 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                           setEditingApp(app);
                           setAppName(app.app_name);
                           setTabCount(app.collections_config.tab_count);
-                          setTabs(app.collections_config.tabs.map(tab => ({
-                            name: tab.name,
-                            collection_handle: tab.collection_handle
-                          })));
+                           setTabs(app.collections_config.tabs.map(tab => ({
+                             name: tab.name,
+                             collection_handle: tab.collection_handle,
+                             subheadline_text: (tab as any).subheadline_text || '',
+                             subheadline_font: (tab as any).subheadline_font || 'default',
+                             subheadline_size: (tab as any).subheadline_size || 'md'
+                           })));
                           
                           // Load existing customization data from the app configuration
                           const fullApp = app as any;

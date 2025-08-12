@@ -66,6 +66,9 @@ interface ProductCategoriesProps {
       name: string;
       collection_handle: string;
       icon?: string;
+      subheadline_text?: string;
+      subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat';
+      subheadline_size?: 'sm' | 'md' | 'lg' | 'xl';
     }>;
   };
   onOpenCart: () => void;
@@ -172,6 +175,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const displayedTabs = stepMapping.slice(0, displayedTabsCount);
   const maxCategoryIndex = displayedTabsCount - 1;
   const isCocktailsTab = !!stepMapping[selectedCategory]?.handle?.includes('cocktail');
+
+  // Subheadline config for current tab
+  const currentTabConfig = customCollections?.tabs?.[selectedCategory] as any;
+  const subFont = currentTabConfig?.subheadline_font || 'default';
+  const subSize = currentTabConfig?.subheadline_size || 'md';
+  const subFontClass = subFont === 'playfair' ? 'font-playfair' : subFont === 'oswald' ? 'font-oswald' : subFont === 'montserrat' ? 'font-montserrat' : '';
+  const subSizeClass = subSize === 'sm' ? 'text-sm' : subSize === 'lg' ? 'text-lg' : subSize === 'xl' ? 'text-xl' : 'text-base';
+  const subText = (currentTabConfig?.subheadline_text || '').trim();
 
   useEffect(() => {
     // Always load all collections for main delivery app
