@@ -923,37 +923,37 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       </Badge>
                     </div>
                       
-                    {/* Oval Cart Controls - Mobile 30% smaller qty, 50% smaller green circle */}
+                    {/* Oval Cart Controls - Mobile width -30%, green circle -50% */}
                     <div className="flex justify-center items-center">
                       {cartQty > 0 ? (
                         <div 
-                          className="flex items-center justify-center bg-muted/80 rounded-full px-1 py-0.5 gap-1 min-w-[42px] h-4 border border-border/50 md:px-2 md:py-1 md:gap-2 md:min-w-[80px] md:h-8" 
+                          className="flex items-center justify-center bg-muted/80 rounded-full px-1 py-0.5 gap-1 min-w-[42px] h-6 border border-border/50 md:px-2 md:py-1 md:gap-2 md:min-w-[80px] md:h-8" 
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-3 w-3 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center md:h-6 md:w-6"
+                            className="h-4 w-4 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center md:h-6 md:w-6"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus className="w-2 h-2 md:w-4 md:h-4" strokeWidth={2} />
+                            <Minus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
                           </Button>
-                          <span className="text-[10px] font-bold min-w-[12px] text-center md:text-sm md:min-w-[20px]">
+                          <span className="text-xs font-bold min-w-[16px] text-center md:text-sm md:min-w-[20px]">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-3 w-3 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center md:h-6 md:w-6"
+                            className="h-4 w-4 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center md:h-6 md:w-6"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus className="w-2 h-2 md:w-4 md:h-4" strokeWidth={2} />
+                            <Plus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
                           </Button>
                         </div>
                       ) : (
