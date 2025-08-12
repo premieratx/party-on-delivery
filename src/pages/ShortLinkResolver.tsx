@@ -136,6 +136,28 @@ export default function ShortLinkResolver() {
     }));
   }, [coverPage]);
 
+  // SEO for cover pages
+  React.useEffect(() => {
+    if (!coverPage) return;
+    document.title = `${coverPage.title} | Party On Delivery`;
+    const descText = coverPage.subtitle || 'Plan and order drinks with Party On Delivery.';
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    meta.content = descText;
+
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    link.href = `${window.location.origin}/${coverPage.slug}`;
+  }, [coverPage]);
+
   if (coverPage) {
     const checklist = (coverPage.checklist || []) as string[];
     return (

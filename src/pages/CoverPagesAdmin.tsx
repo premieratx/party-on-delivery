@@ -34,6 +34,28 @@ const CoverPagesAdmin: React.FC = () => {
 
   useEffect(() => { load(); }, []);
 
+  // Admin SEO (lightweight)
+  useEffect(() => {
+    document.title = 'Cover Pages Admin | Party On Delivery';
+    const desc = 'Create and manage public cover pages with multi-CTA modals.';
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    meta.content = desc;
+
+    // Canonical
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    link.href = `${CANONICAL_DOMAIN}/admin/cover-pages`;
+  }, []);
+
   const filtered = useMemo(() => {
     if (!search) return pages;
     return pages.filter((p) => (p.title || '').toLowerCase().includes(search.toLowerCase()) || (p.slug || '').includes(search.toLowerCase()));
