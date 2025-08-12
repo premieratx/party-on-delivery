@@ -612,6 +612,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         <div className="absolute top-4 right-4 z-20 flex items-center gap-2 lg:hidden">
           <button
             onClick={onOpenCart}
+            onTouchEnd={onOpenCart}
             className="relative w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
             aria-label="Open Cart"
           >
