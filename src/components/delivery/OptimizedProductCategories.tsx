@@ -202,7 +202,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       {/* Category Tabs */}
       <div className="border-b">
         <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-7xl sm:mx-auto">
-          <div className="flex flex-nowrap gap-1 sm:gap-2 py-4 overflow-x-auto">
+          <div className="flex flex-nowrap gap-1 sm:gap-2 overflow-x-auto py-2">
             {CATEGORY_TABS.map((tab, index) => (
               <Button
                 key={tab.id}
@@ -215,6 +215,38 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
                 {tab.title}
               </Button>
             ))}
+            <div className="flex-shrink-0 w-14">
+              <div className="flex flex-col h-full">
+                <button
+                  onClick={onOpenCart}
+                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
+                >
+                  <ShoppingCart className="w-3 h-3 text-foreground" />
+                  {cartItemCount > 0 && (
+                    <Badge variant="default" className="text-[8px] ml-1 bg-primary text-primary-foreground px-1">
+                      {cartItemCount}
+                    </Badge>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (cartItemCount > 0) {
+                      onProceedToCheckout();
+                    }
+                  }}
+                  disabled={cartItemCount === 0}
+                  className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
+                    cartItemCount > 0 
+                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
+                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  <div className={`text-[9px] font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

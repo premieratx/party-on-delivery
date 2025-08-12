@@ -289,8 +289,8 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                   onClick={() => setActiveCategory(category.id)}
                   className={`flex-shrink-0 px-2 py-2 text-[11px] leading-tight text-center whitespace-normal break-words w-auto min-w-[96px] max-w-[48vw] font-medium border-b-2 transition-colors ${
                     activeCategory === category.id
-                      ? 'border-purple-500 text-purple-600 bg-purple-50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      ? 'border-primary text-primary bg-primary/10'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
                     <div className="flex items-center gap-1">
@@ -305,6 +305,38 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                 </button>
               );
             })}
+            <div className="flex-shrink-0 w-14">
+              <div className="flex flex-col h-full">
+                <button
+                  onClick={onOpenCart}
+                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
+                >
+                  <ShoppingCart className="w-3 h-3 text-foreground" />
+                  {cartItemCount > 0 && (
+                    <Badge variant="default" className="text-[8px] ml-1 bg-primary text-primary-foreground px-1">
+                      {cartItemCount}
+                    </Badge>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (cartItemCount > 0) {
+                      onProceedToCheckout();
+                    }
+                  }}
+                  disabled={cartItemCount === 0}
+                  className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
+                    cartItemCount > 0 
+                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
+                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  <div className={`text-[9px] font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
