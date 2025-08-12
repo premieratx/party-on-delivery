@@ -65,7 +65,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           <Button
             onClick={onCheckout}
             size="sm"
-            variant="checkout"
+            variant="success"
             className="font-medium flex items-center gap-1 sm:gap-2 sm:min-w-[120px] justify-center h-8 sm:h-9 touch-manipulation checkout-blink"
             data-checkout-trigger="true"
             type="button"

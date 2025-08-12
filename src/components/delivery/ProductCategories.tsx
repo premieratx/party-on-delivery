@@ -460,20 +460,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }, [cartItemCount]);
 
   const handleAddToCart = (product: ShopifyProduct, variant?: any) => {
-    const cartItem = {
+    // Use onAddToCart to ensure product data is provided for CREATE
+    const item = {
       id: product.id,
       title: product.title,
       name: product.title,
       price: variant ? variant.price : product.price,
       image: product.image,
-      variant: variant ? variant.id : product.variants[0]?.id
+      variant: variant ? variant.id : product.variants[0]?.id,
     };
-    
-    console.log('🛒 ProductCategories: Adding product to cart:', cartItem);
-    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = getCartItemQuantity(product.id, cartItem.variant);
-    
-    onUpdateQuantity(product.id, cartItem.variant, currentQty + 1);
+    console.log('🛒 ProductCategories: Adding product to cart:', item);
+    onAddToCart(item as any);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
@@ -739,9 +736,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40`}
             aria-label="Open Cart"
           >
-            <span className="inline-flex items-center gap-2 font-bold">
-              <ShoppingCart className="w-4 h-4" />
-              <span>Cart</span>
+            <span className="inline-flex flex-col items-center gap-1 font-bold">
+              <span className="inline-flex items-center gap-1"><ShoppingCart className="w-4 h-4" /><span>Cart</span></span>
               {cartItemCount > 0 && (
                 <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
                   {cartItemCount}
@@ -753,12 +749,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
             disabled={cartItemCount === 0}
-            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-[hsl(var(--checkout))] text-[hsl(var(--checkout-foreground))] hover:opacity-90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-[hsl(var(--checkout))]' : ''}`}
+            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-success' : ''}`}
             aria-label="Checkout"
           >
-            <span className="inline-flex items-center gap-2 font-bold">
-              <CheckCircle className="w-4 h-4" />
+            <span className="inline-flex flex-col items-center gap-1 font-bold">
               <span>Checkout</span>
+              <CheckCircle className="w-4 h-4" />
             </span>
           </button>
 
@@ -786,12 +782,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
             disabled={cartItemCount === 0}
-            className={`h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 rounded-r-md rounded-l-none transition-colors ${cartItemCount > 0 ? 'bg-[hsl(var(--checkout))] text-[hsl(var(--checkout-foreground))] hover:opacity-90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-[hsl(var(--checkout))]' : ''}`}
+            className={`h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 rounded-r-md rounded-l-none transition-colors ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-success' : ''}`}
             aria-label="Checkout"
           >
-            <span className="inline-flex items-center gap-2 text-sm">
-              <CheckCircle className="w-4 h-4" />
+            <span className="inline-flex flex-col items-center gap-1 text-sm">
               <span>Checkout</span>
+              <CheckCircle className="w-4 h-4" />
             </span>
           </button>
         </div>

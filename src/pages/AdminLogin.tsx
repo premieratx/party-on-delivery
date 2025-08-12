@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/party-on-delivery-logo.png';
+import { CANONICAL_DOMAIN } from '@/utils/links';
 
 export const AdminLogin: React.FC = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -110,7 +111,7 @@ export const AdminLogin: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/admin`,
+          redirectTo: `${CANONICAL_DOMAIN}/admin`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',

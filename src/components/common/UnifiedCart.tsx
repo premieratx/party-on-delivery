@@ -171,9 +171,9 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           {cartItems.length > 0 && (
             <div className="border-t p-4 bg-background">
               <Button 
-                variant="default" 
+                variant="success" 
                 size="lg" 
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 text-lg"
+                className="w-full checkout-blink"
                 onClick={handleCheckout}
               >
                 Checkout Now - ${finalTotal.toFixed(2)}
