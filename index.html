@@ -18,6 +18,25 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <!-- Canonical domain enforcement: redirect any non-canonical host to order.partyondelivery.com before app loads -->
+    <script>
+      (function() {
+        try {
+          var canonicalHost = 'order.partyondelivery.com';
+          var host = window.location.hostname;
+          var isLocal = host === 'localhost' || host === '127.0.0.1';
+          if (!isLocal && host !== canonicalHost) {
+            var target = 'https://' + canonicalHost + window.location.pathname + window.location.search + window.location.hash;
+            // Use replace to avoid creating back button loop
+            window.location.replace(target);
+          }
+        } catch (e) {
+          // Fail open
+          console.warn('Canonical redirect check failed', e);
+        }
+      })();
+    </script>
   </head>
 
   <body>
