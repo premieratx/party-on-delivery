@@ -33,7 +33,19 @@ export interface CoverPageConfig {
   checklist: string[];
   buttons: CoverButtonConfig[];
   is_active: boolean;
-  styles?: { title_size?: number; subtitle_size?: number; checklist_size?: number; spacing_y?: number };
+  styles?: { 
+    title_size?: number; 
+    subtitle_size?: number; 
+    checklist_size?: number; 
+    spacing_y?: number;
+    background_color?: string;
+    title_offset_y?: number;
+    subtitle_offset_y?: number;
+    checklist_offset_y?: number;
+    buttons_offset_y?: number;
+    logo_bg_color?: string;
+    logo_bg_mode?: 'auto' | 'rectangle' | 'none';
+  };
 }
 
 interface CoverPageEditorProps {

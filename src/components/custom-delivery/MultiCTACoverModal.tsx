@@ -27,6 +27,14 @@ export interface MultiCTACoverModalProps {
   titleSize?: number;
   subtitleSize?: number;
   checklistSize?: number;
+  // New styling controls
+  backgroundColor?: string;
+  titleOffsetY?: number;
+  subtitleOffsetY?: number;
+  checklistOffsetY?: number;
+  buttonsOffsetY?: number;
+  logoBgColor?: string;
+  logoBgMode?: 'auto' | 'rectangle' | 'none';
 }
 
 const defaultChecklist = [
@@ -50,6 +58,13 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
   titleSize: titleSizeProp,
   subtitleSize: subtitleSizeProp,
   checklistSize: checklistSizeProp,
+  backgroundColor,
+  titleOffsetY,
+  subtitleOffsetY,
+  checklistOffsetY,
+  buttonsOffsetY,
+  logoBgColor,
+  logoBgMode = 'auto',
 }) => {
   const [showSparkle, setShowSparkle] = React.useState(true);
   const videoRef = React.useRef<HTMLVideoElement>(null);
@@ -64,6 +79,12 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
     if (videoRef.current) {
       try { videoRef.current.playbackRate = 0.6; } catch {}
     }
+    if (backgroundVideoUrl) {
+      setShowVideo(true);
+      try { videoRef.current?.play(); } catch {}
+    } else {
+      setShowVideo(false);
+    }
   }, [backgroundVideoUrl]);
 
   return (
@@ -71,7 +92,7 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
       <DialogContent className="p-0 max-h-[90vh] overflow-y-auto max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none animate-enter">
         <article className="relative w-full">
           {/* Background */}
-          <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
+          <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden" style={{ backgroundColor: backgroundColor || undefined }}>
             <div className="absolute inset-0">
               <div
                 className="absolute inset-0 bg-cover bg-center"
@@ -90,6 +111,11 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                   aria-hidden="true"
                   preload="metadata"
                   poster={fallbackSrc}
+                  onCanPlay={() => setShowVideo(true)}
+                  onLoadedData={() => {
+                    try { videoRef.current?.play(); } catch {}
+                    setShowVideo(true);
+                  }}
                 />
               )}
             </div>
@@ -97,20 +123,54 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
 
             {/* Content */}
             <div className="relative z-10 flex h-full flex-col items-center justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-[calc(env(safe-area-inset-bottom)+20px)] uppercase tracking-wider">
-              {/* Header */}
               <header className="w-full text-center my-5">
-                <img
-                  src={logoUrl || partyLogo}
-                  alt={`${appName} logo`}
-                  className="w-auto max-h-[30vh] drop-shadow-lg mx-auto"
-                  style={{ height: (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : 160) }}
-                  loading="eager"
-                />
-                <h1 className="font-bold tracking-tight text-white mt-2" style={{ fontSize: titleSizeProp ? `${titleSizeProp}px` : 'clamp(24px,4vw,40px)' }}>
+                <div className="relative inline-block mx-auto">
+                  {logoBgColor && logoBgMode !== 'none' && (
+                    logoBgMode === 'rectangle' ? (
+                      <div
+                        className="absolute inset-0 -m-1 rounded-md"
+                        style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.35))' }}
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          backgroundColor: logoBgColor,
+                          WebkitMaskImage: `url(${logoUrl || partyLogo})`,
+                          maskImage: `url(${logoUrl || partyLogo})`,
+                          WebkitMaskRepeat: 'no-repeat',
+                          maskRepeat: 'no-repeat',
+                          WebkitMaskPosition: 'center',
+                          maskPosition: 'center',
+                          WebkitMaskSize: 'contain',
+                          maskSize: 'contain',
+                        }}
+                        aria-hidden="true"
+                      />
+                    )
+                  )}
+                  <img
+                    src={logoUrl || partyLogo}
+                    alt={`${appName} logo`}
+                    className="relative w-auto max-h-[30vh] drop-shadow-lg mx-auto"
+                    style={{ height: (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : 160) }}
+                    loading="eager"
+                  />
+                </div>
+                <h1
+                  className="font-bold tracking-tight text-white mt-2"
+                  style={{ fontSize: titleSizeProp ? `${titleSizeProp}px` : 'clamp(24px,4vw,40px)', marginTop: (titleOffsetY || 0) }}
+                >
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="text-white/90 mt-1" style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : 'clamp(14px,2.5vw,20px)' }}>{subtitle}</p>
+                  <p
+                    className="text-white/90 mt-1"
+                    style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : 'clamp(14px,2.5vw,20px)', marginTop: (subtitleOffsetY || 0) }}
+                  >
+                    {subtitle}
+                  </p>
                 )}
               </header>
 
