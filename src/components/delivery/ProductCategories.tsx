@@ -788,9 +788,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <h4 className="font-bold leading-tight text-center text-sm mb-2 line-clamp-2">{product.title}</h4>
                     <div className="mt-auto pt-2 flex flex-col items-center gap-2">
                       <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${price.toFixed(2)}</Badge>
-                      <div className="flex justify-center">
+                      <div className="flex justify-center w-full">
                         {cartQty > 0 ? (
-                          <div className="flex items-center gap-0.5 bg-muted rounded">
+                          <div className="flex items-center justify-between bg-muted rounded px-1 py-0.5 w-[84px]">
                             <Button variant="ghost" size="sm" className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
                               <Minus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
                             </Button>
@@ -801,7 +801,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           </div>
                         ) : (
                           <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2.5 h-2.5 sm:w-5 sm:h-5 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={4} />
+                            <Plus className="w-1.5 h-1.5 sm:w-3 sm:h-3" strokeWidth={4} />
                           </button>
                         )}
                       </div>
@@ -921,9 +921,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     </Badge>
                       
                     {/* Cart controls with reduced spacing */}
-                    <div className="flex justify-center">
+                    <div className="flex justify-center w-full">
                       {cartQty > 0 ? (
-                         <div className="flex items-center gap-0.5 bg-muted rounded" onClick={(e) => e.stopPropagation()}>
+                         <div className="flex items-center justify-between bg-muted rounded px-1 py-0.5 w-[84px]" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -969,7 +969,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }
                            }}
                          >
-                           <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={4} />
+                           <Plus className="w-1.5 h-1.5 sm:w-3 sm:h-3" strokeWidth={4} />
                         </button>
                       )}
                     </div>
