@@ -201,15 +201,15 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
 
       {/* Category Tabs */}
       <div className="border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-2 py-4 overflow-x-auto">
+        <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-7xl sm:mx-auto">
+          <div className="flex flex-nowrap gap-1 sm:gap-2 py-4 overflow-x-auto">
             {CATEGORY_TABS.map((tab, index) => (
               <Button
                 key={tab.id}
                 variant={selectedCategory === index ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(index)}
-                className="whitespace-nowrap"
+                className="shrink-0 min-w-[96px] max-w-[48vw] whitespace-normal break-words leading-tight text-center px-2 py-2 text-xs"
               >
                 {tab.isSearch && <Search className="h-4 w-4 mr-2" />}
                 {tab.title}

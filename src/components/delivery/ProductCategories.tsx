@@ -656,7 +656,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-7xl sm:mx-auto py-4">
           <div className={`flex flex-wrap sm:flex-nowrap gap-0 sm:gap-2 h-auto ${scrolled ? 'sm:h-14' : 'sm:h-20'}`}>
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -676,7 +676,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     // Scroll to top for a clean view of the selected tab
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`relative overflow-hidden rounded-none sm:rounded-lg h-full transition-all duration-300 group flex-1 basis-1/3 sm:basis-auto min-w-0 first:ml-0 -ml-px ${
+                  className={`relative overflow-hidden rounded-none sm:rounded-lg h-full transition-all duration-300 group shrink-0 w-auto min-w-[96px] max-w-[48vw] sm:max-w-none first:ml-0 -ml-px ${
                     isActive 
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
@@ -686,7 +686,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title */}
                     <div className="sm:hidden flex flex-col items-center justify-center h-full px-2">
-                      <div className={`text-[11px] font-bold leading-tight text-center whitespace-normal break-words ${
+                      <div className={`text-[10px] font-bold leading-tight text-center whitespace-normal break-words px-1 ${
                         isActive ? 'text-primary' : 'text-foreground'
                       }`}>{step.title}</div>
                     </div>

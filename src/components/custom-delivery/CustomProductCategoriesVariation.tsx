@@ -277,7 +277,7 @@ export function CustomProductCategories({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-background border-b">
-        <div className="container mx-auto px-4 py-4">
+        <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-7xl sm:mx-auto py-4">
           <div className="flex items-center justify-between mb-4">
             <Button variant="ghost" size="sm" onClick={onBack}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -302,13 +302,13 @@ export function CustomProductCategories({
           </div>
 
           {/* Category Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex flex-nowrap gap-1 sm:gap-2 overflow-x-auto pb-2">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
                 variant={activeTab === tab.id ? 'default' : 'outline'}
                 onClick={() => setActiveTab(tab.id)}
-                className="shrink-0 flex items-center gap-1"
+                className="shrink-0 flex items-center gap-1 min-w-[96px] max-w-[48vw] whitespace-normal break-words leading-tight text-[11px] text-center px-2 py-2"
               >
                 {typeof tab.icon === 'string' ? tab.icon : <tab.icon className="h-4 w-4" />}
                 {tab.name}

@@ -276,8 +276,8 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
 
       {/* Category Tabs */}
       <div className="bg-white border-b">
-        <div className="max-w-md mx-auto">
-          <div className="flex overflow-x-auto scrollbar-hide">
+        <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-md sm:mx-auto">
+          <div className="flex flex-nowrap overflow-x-auto gap-1 scrollbar-hide">
             {categories.map((category) => {
               const categoryProducts = collections
                 .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
@@ -287,21 +287,21 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  className={`flex-shrink-0 px-2 py-2 text-[11px] leading-tight text-center whitespace-normal break-words w-auto min-w-[96px] max-w-[48vw] font-medium border-b-2 transition-colors ${
                     activeCategory === category.id
                       ? 'border-purple-500 text-purple-600 bg-purple-50'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <category.icon className="w-4 h-4" />
-                    <span>{category.name}</span>
-                    {categoryProducts.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        {categoryProducts.length}
-                      </Badge>
-                    )}
-                  </div>
+                    <div className="flex items-center gap-1">
+                      <category.icon className="w-4 h-4" />
+                      <span className="whitespace-normal break-words leading-tight text-center">{category.name}</span>
+                      {categoryProducts.length > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          {categoryProducts.length}
+                        </Badge>
+                      )}
+                    </div>
                 </button>
               );
             })}
