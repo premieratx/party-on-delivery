@@ -611,8 +611,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </button>
         </div>
 
-        {/* Cart/Checkout - Top Right of Hero */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        {/* Cart/Checkout - Top Right of Hero (mobile/tablet only) */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 lg:hidden">
           <button
             onClick={onOpenCart}
             className="relative w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
@@ -631,7 +631,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center ${cartItemCount > 0 ? 'bg-white/20 border border-white/30 hover:bg-white/30' : 'bg-white/10 border border-white/20 opacity-50 cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-primary animate-pulse' : ''}`}
             aria-label="Checkout"
           >
-            <CheckCircle className={`w-5 h-5 ${cartItemCount > 0 ? 'text-white' : 'text-white/60'}`} />
+            <CheckCircle className={`${cartItemCount > 0 ? 'text-white' : 'text-white/60'} w-5 h-5`} />
           </button>
         </div>
 
@@ -676,7 +676,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
       </div>
 
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px]">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px] relative">
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
@@ -729,6 +729,36 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             })}
             
           </div>
+        </div>
+
+        {/* Desktop Cart / Checkout controls inline with tabs */}
+        <div className="hidden lg:flex items-center gap-2 absolute right-6 top-1/2 -translate-y-1/2 z-50">
+          <button
+            onClick={onOpenCart}
+            className="relative h-10 px-3 bg-muted border border-muted-foreground/30 hover:bg-muted/80 rounded-md transition-colors"
+            aria-label="Open Cart"
+          >
+            <span className="inline-flex items-center gap-2 text-sm">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Cart</span>
+              {cartItemCount > 0 && (
+                <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                  {cartItemCount}
+                </span>
+              )}
+            </span>
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+            disabled={cartItemCount === 0}
+            className={`h-10 px-3 rounded-md transition-colors ${cartItemCount > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
+            aria-label="Checkout"
+          >
+            <span className="inline-flex items-center gap-2 text-sm">
+              <CheckCircle className="w-4 h-4" />
+              <span>Checkout</span>
+            </span>
+          </button>
         </div>
 
         {/* Section Heading with functional arrows */}

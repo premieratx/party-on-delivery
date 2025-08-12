@@ -266,32 +266,37 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
           )}
           
           <div className="mt-auto flex flex-col items-center gap-2">
-            {/* Price Row */}
-            <div className="flex items-center justify-center">
+            {/* Price Row - fixed height so it never shifts */}
+            <div className="flex items-center justify-center h-7">
               <span className="font-bold text-primary text-lg">
                 ${(parseFloat(String(product.price)) || 0).toFixed(2)}
               </span>
-              {quantity > 0 && (
-                <Badge variant="secondary" className="text-xs ml-2">
-                  {quantity}
-                </Badge>
-              )}
+              {/* Reserve space for badge to keep row height consistent */}
+              <span className="ml-2 inline-block min-w-[28px] text-center">
+                {quantity > 0 ? (
+                  <Badge variant="secondary" className="text-xs">
+                    {quantity}
+                  </Badge>
+                ) : (
+                  <span className="invisible">00</span>
+                )}
+              </span>
             </div>
 
-            {/* Quantity Controls - Force mobile centering with !important */}
-            <div className="flex items-center justify-center">
+            {/* Quantity Controls - keep center aligned with initial add circle */}
+            <div className="flex items-center justify-center h-12">
               {quantity > 0 ? (
-                <div className="flex items-center justify-center space-x-1">
+                <div className="flex items-center justify-center space-x-2">
                   <Button
                     variant="outline" 
                     size="sm"
                     onClick={onDecrement}
-                    className="!h-6 !w-6 !p-0 rounded-full border-muted-foreground/30 lg:!h-12 lg:!w-12"
+                    className="h-10 w-10 p-0 rounded-full border-muted-foreground/30 lg:h-12 lg:w-12"
                   >
-                    <Minus className="!h-3 !w-3 lg:!h-5 lg:!w-5" />
+                    <Minus className="h-4 w-4 lg:h-5 lg:w-5" />
                   </Button>
-                  <div className="!w-8 flex items-center justify-center lg:!w-16">
-                    <span className="font-bold !text-base text-center lg:!text-4xl">
+                  <div className="w-10 flex items-center justify-center lg:w-16">
+                    <span className="font-bold text-base text-center lg:text-2xl">
                       {quantity}
                     </span>
                   </div>
@@ -299,17 +304,18 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
                     variant="outline"
                     size="sm" 
                     onClick={onIncrement}
-                    className="!h-6 !w-6 !p-0 rounded-full border-muted-foreground/30 lg:!h-12 lg:!w-12"
+                    className="h-10 w-10 p-0 rounded-full border-muted-foreground/30 lg:h-12 lg:w-12"
                   >
-                    <Plus className="!h-3 !w-3 lg:!h-5 lg:!w-5" />
+                    <Plus className="h-4 w-4 lg:h-5 lg:w-5" />
                   </Button>
                 </div>
               ) : (
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full !w-2 !h-2 flex items-center justify-center lg:!w-12 lg:!h-12"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center lg:w-12 lg:h-12 shadow"
+                  aria-label="Add to cart"
                 >
-                  <Plus className="!h-4 !w-4 lg:!h-6 lg:!w-6" strokeWidth={3} />
+                  <Plus className="h-5 w-5 lg:h-6 lg:w-6" strokeWidth={3} />
                 </button>
               )}
             </div>
