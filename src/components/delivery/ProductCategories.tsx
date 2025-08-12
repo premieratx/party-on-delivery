@@ -728,11 +728,39 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               );
             })}
             
+          {/* Append Cart/Checkout as part of tabs (desktop) */}
+          <button
+            onClick={onOpenCart}
+            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40`}
+            aria-label="Open Cart"
+          >
+            <span className="inline-flex items-center gap-2 font-bold">
+              <ShoppingCart className="w-4 h-4" />
+              <span>Cart</span>
+              {cartItemCount > 0 && (
+                <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                  {cartItemCount}
+                </span>
+              )}
+            </span>
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+            disabled={cartItemCount === 0}
+            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'animate-[pulse_3s_ease-in-out_infinite] ring-2 ring-primary' : ''}`}
+            aria-label="Checkout"
+          >
+            <span className="inline-flex items-center gap-2 font-bold">
+              <CheckCircle className="w-4 h-4" />
+              <span>Checkout</span>
+            </span>
+          </button>
+
           </div>
         </div>
 
         {/* Desktop Cart / Checkout controls inline with tabs */}
-        <div className="hidden lg:flex items-center gap-0 absolute right-6 top-1/2 -translate-y-1/2 z-50">
+        <div className="hidden">
           <button
             onClick={onOpenCart}
             className={`relative h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 bg-muted border border-muted-foreground/30 hover:bg-muted/80 rounded-none transition-colors`}
