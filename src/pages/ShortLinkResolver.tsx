@@ -113,10 +113,12 @@ export default function ShortLinkResolver() {
   }, [shortPath, appShortPath, affiliateSlug, navigate]);
 
   const buttons = useMemo(() => {
-    if (!coverPage) return [] as { text: string; onClick: () => void }[];
+    if (!coverPage) return [] as { text: string; onClick: () => void; bgColor?: string; textColor?: string }[];
     const list = (coverPage.buttons || []) as Array<any>;
     return list.map((b: any) => ({
       text: b.text || 'Open',
+      bgColor: b.bg_color || undefined,
+      textColor: b.text_color || undefined,
       onClick: () => {
         if (b.type === 'delivery_app' && b.app_slug) {
           const params = new URLSearchParams({ step: 'tabs' });

@@ -599,7 +599,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <div className="absolute inset-0 bg-black/40" />
         </div>
         
-        {/* Search App Button - Top Left Corner of Hero (standalone page) */}
+        {/* Search App Button - Top Left Corner of Hero (all views) */}
         <div className="absolute top-4 left-4 z-20">
           <button
             onClick={() => navigate('/search')}

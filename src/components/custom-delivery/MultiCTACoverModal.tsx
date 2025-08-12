@@ -7,6 +7,8 @@ import backgroundImage from '@/assets/old-fashioned-bg.jpg';
 export interface MultiCTAButton {
   text: string;
   onClick: () => void;
+  bgColor?: string;
+  textColor?: string;
 }
 
 export interface MultiCTACoverModalProps {
@@ -123,7 +125,8 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                     <Button
                       key={`${b.text}-${i}`}
                       size="lg"
-                      className="h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90"
+                      className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
+                      style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
                       onClick={(e) => { e.stopPropagation(); b.onClick(); }}
                     >
                       {b.text}

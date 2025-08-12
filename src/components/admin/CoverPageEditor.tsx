@@ -17,6 +17,8 @@ export interface CoverButtonConfig {
   app_slug?: string;
   openCart?: boolean;
   url?: string;
+  bg_color?: string;
+  text_color?: string;
 }
 
 export interface CoverPageConfig {
@@ -205,7 +207,23 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                 </div>
                 <div>
                   <Label htmlFor="bgvid">Background Video URL (optional)</Label>
-                  <Input id="bgvid" value={bgVideoUrl} onChange={(e) => setBgVideoUrl(e.target.value)} placeholder="https://..." />
+                  <Input id="bgvid" value={bgVideoUrl} onChange={(e) => setBgVideoUrl(e.target.value)} placeholder="https://... or /videos/whiskey-pour-17370-360.mp4" />
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Button variant="outline" size="sm" onClick={() => { setBgImageUrl(''); setBgVideoUrl(''); }}>Use Default Old Fashioned Image</Button>
+                    <Button variant="outline" size="sm" onClick={() => { setBgVideoUrl('/videos/whiskey-pour-17370-360.mp4'); setBgImageUrl(''); }}>Use Whiskey Pour Video</Button>
+                    <Button variant="outline" size="sm" onClick={() => { setBgVideoUrl('/videos/whiskey-over-ice-5143-360.mp4'); setBgImageUrl(''); }}>Use Whiskey Over Ice Video</Button>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="bgimgUpload">Upload Background Image</Label>
+                  <input id="bgimgUpload" type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => setBgImageUrl(reader.result as string);
+                    reader.readAsDataURL(file);
+                  }} />
+                  <p className="text-xs text-muted-foreground mt-1">Tip: For videos, paste a URL instead. Images can be small uploads.</p>
                 </div>
                 <div>
                   <Label>Checklist (up to 5 rows)</Label>
@@ -306,6 +324,18 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                           <Input value={b.url || ''} placeholder="https://..." onChange={(e) => updateButton(idx, { url: e.target.value })} />
                         </div>
                       )}
+
+                      {/* Button colors */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label>Button Background Color</Label>
+                          <input type="color" value={b.bg_color || '#0ea5e9'} onChange={(e) => updateButton(idx, { bg_color: e.target.value })} className="h-10 w-full rounded border" />
+                        </div>
+                        <div>
+                          <Label>Button Text Color</Label>
+                          <input type="color" value={b.text_color || '#ffffff'} onChange={(e) => updateButton(idx, { text_color: e.target.value })} className="h-10 w-full rounded border" />
+                        </div>
+                      </div>
 
                       <div className="flex justify-end">
                         <Button variant="destructive" size="sm" onClick={() => removeButton(idx)}>Remove</Button>
