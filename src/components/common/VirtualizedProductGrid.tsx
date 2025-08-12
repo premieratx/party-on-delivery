@@ -278,36 +278,38 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
               )}
             </div>
 
-            {/* Quantity Controls - Centered below price */}
+            {/* Quantity Controls - Force mobile centering with !important */}
             <div className="flex items-center justify-center">
               {quantity > 0 ? (
-                <div className="flex items-center justify-center gap-1 md:gap-3">
+                <div className="flex items-center justify-center space-x-1">
                   <Button
-                    variant="outline"
+                    variant="outline" 
                     size="sm"
                     onClick={onDecrement}
-                    className="h-6 w-6 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
+                    className="!h-6 !w-6 !p-0 rounded-full border-muted-foreground/30 lg:!h-12 lg:!w-12"
                   >
-                    <Minus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    <Minus className="!h-3 !w-3 lg:!h-5 lg:!w-5" />
                   </Button>
-                  <span className="font-bold text-base md:text-4xl lg:text-6xl text-center leading-none min-w-[24px] md:min-w-[48px]">
-                    {quantity}
-                  </span>
+                  <div className="!w-8 flex items-center justify-center lg:!w-16">
+                    <span className="font-bold !text-base text-center lg:!text-4xl">
+                      {quantity}
+                    </span>
+                  </div>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="sm" 
                     onClick={onIncrement}
-                    className="h-6 w-6 md:h-12 md:w-12 lg:h-14 lg:w-14 p-0 rounded-full flex items-center justify-center border-muted-foreground/30"
+                    className="!h-6 !w-6 !p-0 rounded-full border-muted-foreground/30 lg:!h-12 lg:!w-12"
                   >
-                    <Plus className="h-3 w-3 md:h-5 md:w-5 lg:h-6 lg:w-6" />
+                    <Plus className="!h-3 !w-3 lg:!h-5 lg:!w-5" />
                   </Button>
                 </div>
               ) : (
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 md:w-12 md:h-12 lg:w-14 lg:h-14 flex items-center justify-center"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full !w-8 !h-8 flex items-center justify-center lg:!w-12 lg:!h-12"
                 >
-                  <Plus className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6" strokeWidth={3} />
+                  <Plus className="!h-4 !w-4 lg:!h-6 lg:!w-6" strokeWidth={3} />
                 </button>
               )}
             </div>
