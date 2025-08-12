@@ -98,7 +98,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <div className="pb-14">
+              <div className="md:pt-16 pb-14">
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Core pages - no lazy loading */}

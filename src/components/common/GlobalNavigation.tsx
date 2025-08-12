@@ -407,8 +407,6 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Desktop spacing */}
-      <div className="hidden md:block h-16" />
     </>
   );
 };
