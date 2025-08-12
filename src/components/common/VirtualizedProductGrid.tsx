@@ -284,9 +284,9 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
                   variant="outline"
                   size="sm"
                   onClick={onDecrement}
-                  className="h-5 w-5 p-0 flex-shrink-0 rounded-full"
+                  className="h-3 w-3 md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
                 >
-                  <Minus className="h-2.5 w-2.5" />
+                  <Minus className="h-2 w-2 md:h-2.5 md:w-2.5" />
                 </Button>
                 <span className="font-medium min-w-[16px] text-center text-xs">
                   {quantity}
@@ -295,18 +295,21 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
                   variant="outline"
                   size="sm"
                   onClick={onIncrement}
-                  className="h-5 w-5 p-0 flex-shrink-0 rounded-full"
+                  className="h-3 w-3 md:h-5 md:w-5 p-0 flex-shrink-0 rounded-full"
                 >
-                  <Plus className="h-2.5 w-2.5" />
+                  <Plus className="h-2 w-2 md:h-2.5 md:w-2.5" />
                 </Button>
               </div>
             ) : (
               <div className="flex justify-center">
                 <button
                   onClick={onAddToCart}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-3 h-3 md:w-6 md:h-6 flex items-center justify-center"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-2.5 w-2.5 md:h-3 md:w-3" strokeWidth={4} />
+                </button>
+              </div>
+            )
                 </button>
               </div>
             )}
