@@ -174,17 +174,17 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="bg-background/95 backdrop-blur-md border-b">
-        <div className="container mx-auto px-4">
+<div className="bg-background/95 backdrop-blur-md border-b">
+        <div className="container mx-auto px-2">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold">Party On Delivery</h1>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onOpenCart}
-                className="relative"
+                className="relative px-2"
               >
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Cart
@@ -200,16 +200,16 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
       </div>
 
       {/* Category Tabs */}
-      <div className="border-b">
-        <div className="container mx-auto px-1">
-          <div className="flex w-full items-stretch gap-0.5 py-1 overflow-hidden">
+<div className="border-b">
+        <div className="container mx-auto px-0">
+          <div className="flex w-full items-stretch gap-0 py-1 overflow-hidden">
             {CATEGORY_TABS.map((tab, index) => (
               <Button
                 key={tab.id}
                 variant={selectedCategory === index ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(index)}
-                className="flex-1 basis-0 min-w-0 px-1 py-1 h-auto min-h-10 max-h-12 text-[10px] leading-[1.05rem] whitespace-normal break-words text-center overflow-hidden"
+                className="flex-1 basis-0 min-w-0 px-0.5 py-1 h-auto min-h-10 max-h-12 text-[9.5px] tracking-tight leading-[1.05rem] whitespace-normal break-words text-center overflow-hidden"
               >
                 {tab.isSearch && <Search className="h-3 w-3 mr-1 inline-block align-[-2px]" />}
                 {tab.title}
@@ -273,14 +273,14 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
                     </div>
 
                     {quantity > 0 ? (
-                      <div className="flex items-center justify-between bg-primary/10 rounded-lg p-2">
+                      <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1.5">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                          className="h-8 w-8 p-0"
+                          className="h-6 w-6 p-0"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-2.5 w-2.5" />
                         </Button>
                         
                         <span className="font-medium px-3">{quantity}</span>
@@ -288,9 +288,9 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
                         <Button
                           size="sm"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          className="h-8 w-8 p-0"
+                          className="h-6 w-6 p-0"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-2.5 w-2.5" />
                         </Button>
                       </div>
                     ) : (
@@ -319,7 +319,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
 
       {/* Checkout Button */}
       {cartItemCount > 0 && (
-        <div className="fixed bottom-20 left-4 right-4 z-50 md:bottom-4">
+        <div className="fixed bottom-20 left-2 right-2 z-50 md:bottom-4">
           <Button
             onClick={onProceedToCheckout}
             className="w-full h-12 text-lg font-semibold shadow-lg"
