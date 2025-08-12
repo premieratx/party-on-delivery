@@ -801,6 +801,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cover_page_affiliate_assignments: {
+        Row: {
+          affiliate_id: string
+          cover_page_id: string
+          created_at: string
+          id: string
+          share_slug: string
+        }
+        Insert: {
+          affiliate_id: string
+          cover_page_id: string
+          created_at?: string
+          id?: string
+          share_slug: string
+        }
+        Update: {
+          affiliate_id?: string
+          cover_page_id?: string
+          created_at?: string
+          id?: string
+          share_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_cpaa_affiliate"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_cpaa_cover_page"
+            columns: ["cover_page_id"]
+            isOneToOne: false
+            referencedRelation: "cover_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cover_pages: {
         Row: {
           bg_image_url: string | null

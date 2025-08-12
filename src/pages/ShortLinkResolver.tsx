@@ -8,14 +8,16 @@ import MultiCTACoverModal from '@/components/custom-delivery/MultiCTACoverModal'
 // 2) /:affiliateSlug -> affiliate code only (fallback to default assigned app or home)
 // 3) /:appShortPath/:affiliateSlug -> combined app + affiliate
 export default function ShortLinkResolver() {
-  const { shortPath, appShortPath, affiliateSlug } = useParams<{
+  const { shortPath, appShortPath, affiliateSlug, coverSlug } = useParams<{
     shortPath?: string;
     appShortPath?: string;
     affiliateSlug?: string;
+    coverSlug?: string;
   }>();
   const navigate = useNavigate();
 
   const [coverPage, setCoverPage] = useState<any | null>(null);
+  const [affiliateCode, setAffiliateCode] = useState<string | null>(null);
 
   useEffect(() => {
     const resolve = async () => {
@@ -34,6 +36,23 @@ export default function ShortLinkResolver() {
           if (app?.app_slug) {
             navigate(`/app/${app.app_slug}?aff=${encodeURIComponent(affiliateSlug)}`, { replace: true });
             return;
+          }
+          navigate('/404', { replace: true });
+          return;
+        }
+        // Affiliate + Cover Page: /:affiliateSlug/:coverSlug
+        if (affiliateSlug && coverSlug) {
+          const { data: cp2, error: cp2Err } = await supabase
+            .from('cover_pages')
+            .select('*')
+            .eq('slug', coverSlug)
+            .eq('is_active', true)
+            .maybeSingle();
+          if (cp2Err) throw cp2Err;
+          if (cp2) {
+            setCoverPage(cp2);
+            setAffiliateCode(affiliateSlug);
+            return; // keep URL intact
           }
           navigate('/404', { replace: true });
           return;
@@ -110,7 +129,7 @@ export default function ShortLinkResolver() {
       }
     };
     resolve();
-  }, [shortPath, appShortPath, affiliateSlug, navigate]);
+  }, [shortPath, appShortPath, affiliateSlug, coverSlug, navigate]);
 
   const buttons = useMemo(() => {
     if (!coverPage) return [] as { text: string; onClick: () => void; bgColor?: string; textColor?: string }[];
@@ -121,8 +140,25 @@ export default function ShortLinkResolver() {
       textColor: b.text_color || undefined,
       onClick: () => {
         if (b.type === 'delivery_app' && b.app_slug) {
+          // Persist per-button rules for downstream app
+          try {
+            const mp = typeof b.markup_percent === 'number' ? b.markup_percent : 0;
+            const fs = b.free_shipping !== false; // default ON
+            const ca = !!b.prefill_address; // default OFF
+            sessionStorage.setItem('pricing.markupPercent', String(mp.toFixed ? mp.toFixed(2) : mp));
+            sessionStorage.setItem('shipping.free', fs ? '1' : '0');
+            sessionStorage.setItem('checkout.prefillAddress', ca ? '1' : '0');
+            if (typeof b.commission_percent === 'number') {
+              sessionStorage.setItem('commission.percent', String(b.commission_percent));
+            }
+            if (affiliateCode) {
+              sessionStorage.setItem('affiliate.code', affiliateCode);
+            }
+          } catch {}
+
           const params = new URLSearchParams({ step: 'tabs' });
           if (b.openCart) params.set('openCart', '1');
+          if (affiliateCode) params.set('aff', affiliateCode);
           window.location.href = `/app/${b.app_slug}?${params.toString()}`;
           return;
         }

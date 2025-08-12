@@ -356,6 +356,25 @@ serve(async (req) => {
         });
       }
     }
+
+    // Hidden markup: add as a separate taxable line item in Shopify
+    try {
+      const originalSubtotalFromItems = cartItems.reduce((sum: number, it: any) => sum + (parseFloat(it.price || '0') * (it.quantity || 1)), 0);
+      const markupAmount = Math.max(0, subtotal - originalSubtotalFromItems);
+      if (markupAmount > 0.004) { // >= half cent
+        lineItems.push({
+          title: 'Markup',
+          price: markupAmount.toFixed(2),
+          quantity: 1,
+          taxable: true,
+          requires_shipping: false
+        });
+        logStep('Added markup line item', { markupAmount: markupAmount.toFixed(2) });
+      }
+    } catch (e) {
+      logStep('Markup calculation error (continuing without markup line)', { message: e instanceof Error ? e.message : String(e) });
+    }
+
     // Ensure driver tip is represented as a non-taxable line item (not taxed)
     // Tip is NOT added as a Shopify line item; we record it in note_attributes below to avoid showing as a product
 

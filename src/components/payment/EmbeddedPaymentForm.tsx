@@ -62,12 +62,22 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
+  // Pricing with affiliate markup and per-button rules
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const freeShipAssigned = sessionStorage.getItem('shipping.free') === '1';
+  const affiliateCode = sessionStorage.getItem('affiliate.code') || '';
+  const commissionPercent = Number(sessionStorage.getItem('commission.percent') || '');
   // Calculate tip percentage based on subtotal (before delivery fee adjustment for $200+)
-  const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
-  const tipCalculationBase = validSubtotal >= 200 ? validSubtotal : validSubtotal;
+  const rawSubtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const adjustedSubtotal = rawSubtotal * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+  const validSubtotal = adjustedSubtotal; // use adjusted subtotal for payment
+  const originalDeliveryFee = validSubtotal >= 200 ? validSubtotal * 0.1 : 20;
+  const validDeliveryFee = (freeShipAssigned || appliedDiscount?.type === 'free_shipping') ? 0 : originalDeliveryFee;
+  const validSalesTax = validSubtotal * 0.0825; // 8.25% sales tax on subtotal incl. markup
+  const tipCalculationBase = validSubtotal;
   
-  // Internal state for tip management
-  const [internalTipAmount, setInternalTipAmount] = useState(tipCalculationBase * 0.10); // 10% pre-selected
+  // Use external tip state if provided, otherwise use internal
+  const [internalTipAmount, setInternalTipAmount] = useState(validSubtotal * 0.10); // 10% pre-selected
   const [internalTipType, setInternalTipType] = useState<'percentage' | 'custom'>('percentage');
   const [internalTipPercentage, setInternalTipPercentage] = useState(10);
   
@@ -82,8 +92,6 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   const [customTipConfirmed, setCustomTipConfirmed] = useState(false);
   const [confirmedTipAmount, setConfirmedTipAmount] = useState(0);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
-  const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
   const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
   const total = validSubtotal + validDeliveryFee + validSalesTax + validTipAmount;
   

@@ -38,22 +38,25 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   appliedDiscount = null,
   tipAmount = 0,
   onEmptyCart
-}) => {
+  }) => {
   // Calculate pricing with simple logic to avoid hooks issues
-  const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+  const subtotal = items.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
   
   // Import delivery fee calculator
   const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20;
-  const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
+  const assignedFreeShipping = sessionStorage.getItem('shipping.free') === '1';
+  const finalDeliveryFee = (appliedDiscount?.type === 'free_shipping' || assignedFreeShipping) ? 0 : deliveryFee;
   
-  console.log('DeliveryCart pricing:', { subtotal, deliveryFee, finalDeliveryFee, appliedDiscount });
+  console.log('DeliveryCart pricing:', { subtotal, deliveryFee, finalDeliveryFee, appliedDiscount, markupPercent });
   
   // Calculate discounted subtotal
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? subtotal * (1 - appliedDiscount.value / 100)
     : subtotal;
   
-  const salesTax = subtotal * 0.0825; // 8.25% sales tax
+  const salesTax = discountedSubtotal * 0.0825; // 8.25% sales tax on discounted subtotal
   const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
 
   if (!isOpen) return null;
@@ -122,7 +125,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                         <div className="flex items-start justify-between">
                           <div>
                             <h4 className="font-medium text-xs sm:text-sm line-clamp-2">{item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</h4>
-                            <p className="text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
+                            <p className="text-primary font-semibold text-xs sm:text-sm">${applyMarkup(item.price).toFixed(2)}</p>
                           </div>
                           <Button
                             variant="ghost"

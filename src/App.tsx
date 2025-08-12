@@ -171,6 +171,7 @@ const App = () => {
                     
                     {/* Short link resolver */}
                     <Route path="/:appShortPath/:affiliateSlug" element={<ShortLinkResolver />} />
+                    <Route path="/:affiliateSlug/:coverSlug" element={<ShortLinkResolver />} />
                     <Route path="/:shortPath" element={<ShortLinkResolver />} />
 
                     {/* 404 - MUST be absolute last */}
