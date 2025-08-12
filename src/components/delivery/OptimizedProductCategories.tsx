@@ -184,12 +184,12 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
                 variant="outline"
                 size="sm"
                 onClick={onOpenCart}
-                className="relative px-2"
+                className="relative h-9 px-1.5 gap-1 text-xs"
               >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                Cart
+                <ShoppingCart className="h-4 w-4" />
+                <span className="hidden sm:inline">Cart</span>
                 {cartItemCount > 0 && (
-                  <Badge variant="destructive" className="ml-2">
+                  <Badge variant="destructive" className="ml-1">
                     {cartItemCount}
                   </Badge>
                 )}
@@ -209,9 +209,9 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
                 variant={selectedCategory === index ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory(index)}
-                className="flex-1 basis-0 min-w-0 px-0 py-1 h-auto min-h-10 max-h-12 text-[8px] tracking-tight leading-[0.95rem] whitespace-normal break-words text-center overflow-hidden"
+                className="flex-1 basis-0 min-w-0 px-0 py-1 h-auto min-h-10 max-h-12 text-[7.5px] tracking-tight leading-[0.95rem] whitespace-normal break-words text-center overflow-hidden rounded-none first:rounded-l-md last:rounded-r-md -ml-px first:ml-0"
               >
-                {tab.isSearch && <Search className="h-3 w-3 mr-1 inline-block align-[-2px]" />}
+                {tab.isSearch && <Search className="h-2.5 w-2.5 mr-1 inline-block align-[-2px]" />}
                 {tab.title}
               </Button>
             ))}
@@ -278,19 +278,19 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
                           size="sm"
                           variant="outline"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                          className="h-6 w-6 p-0"
+                          className="h-5 w-5 p-0 sm:h-6 sm:w-6"
                         >
-                          <Minus className="h-2.5 w-2.5" />
+                          <Minus className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
                         </Button>
                         
-                        <span className="font-medium px-3">{quantity}</span>
+                        <span className="font-medium px-2">{quantity}</span>
                         
                         <Button
                           size="sm"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          className="h-6 w-6 p-0"
+                          className="h-5 w-5 p-0 sm:h-6 sm:w-6"
                         >
-                          <Plus className="h-2.5 w-2.5" />
+                          <Plus className="h-3 w-3 sm:h-2.5 sm:w-2.5" />
                         </Button>
                       </div>
                     ) : (
