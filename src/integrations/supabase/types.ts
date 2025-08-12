@@ -811,8 +811,10 @@ export type Database = {
           created_by: string | null
           id: string
           is_active: boolean
+          logo_height: number | null
           logo_url: string | null
           slug: string
+          styles: Json
           subtitle: string | null
           title: string
           updated_at: string
@@ -826,8 +828,10 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
+          logo_height?: number | null
           logo_url?: string | null
           slug: string
+          styles?: Json
           subtitle?: string | null
           title: string
           updated_at?: string
@@ -841,8 +845,10 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
+          logo_height?: number | null
           logo_url?: string | null
           slug?: string
+          styles?: Json
           subtitle?: string | null
           title?: string
           updated_at?: string

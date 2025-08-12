@@ -23,6 +23,9 @@ export interface MultiCTACoverModalProps {
   backgroundImageUrl?: string;
   backgroundVideoUrl?: string;
   buttons: MultiCTAButton[];
+  titleSize?: number;
+  subtitleSize?: number;
+  checklistSize?: number;
 }
 
 const defaultChecklist = [
@@ -43,6 +46,9 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
   backgroundImageUrl,
   backgroundVideoUrl,
   buttons,
+  titleSize: titleSizeProp,
+  subtitleSize: subtitleSizeProp,
+  checklistSize: checklistSizeProp,
 }) => {
   const [showSparkle, setShowSparkle] = React.useState(true);
   const videoRef = React.useRef<HTMLVideoElement>(null);
@@ -95,11 +101,11 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                   style={{ height: (typeof (logoHeight as number | undefined) === 'number' ? (logoHeight as number) : 160) }}
                   loading="eager"
                 />
-                <h1 className="font-bold tracking-tight text-white mt-2" style={{ fontSize: 'clamp(24px,4vw,40px)' }}>
+                <h1 className="font-bold tracking-tight text-white mt-2" style={{ fontSize: titleSizeProp ? `${titleSizeProp}px` : 'clamp(24px,4vw,40px)' }}>
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="text-white/90 mt-1" style={{ fontSize: 'clamp(14px,2.5vw,20px)' }}>{subtitle}</p>
+                  <p className="text-white/90 mt-1" style={{ fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : 'clamp(14px,2.5vw,20px)' }}>{subtitle}</p>
                 )}
               </header>
 
@@ -115,7 +121,7 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
                       <React.Fragment key={idx}>
                         <p
                           className="text-white/90 font-semibold leading-tight animate-fade-in my-5"
-                          style={{ animationDelay: `${idx * 80}ms`, fontSize: 'clamp(12px,2.8vw,16px)' }}
+                          style={{ animationDelay: `${idx * 80}ms`, fontSize: checklistSizeProp ? `${checklistSizeProp}px` : 'clamp(12px,2.8vw,16px)' }}
                         >
                           {item}
                         </p>

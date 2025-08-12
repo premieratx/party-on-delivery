@@ -176,6 +176,9 @@ export default function ShortLinkResolver() {
           backgroundImageUrl={coverPage.bg_image_url || undefined}
           backgroundVideoUrl={coverPage.bg_video_url || undefined}
           buttons={buttons}
+          titleSize={coverPage.styles?.title_size}
+          subtitleSize={coverPage.styles?.subtitle_size}
+          checklistSize={coverPage.styles?.checklist_size}
         />
       </div>
     );
