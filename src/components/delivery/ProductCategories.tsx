@@ -657,7 +657,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="w-full px-1 md:px-4 py-3">
-          <div className={`flex gap-px h-14 ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
+          <div className={`flex justify-center gap-px h-14 overflow-hidden ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
@@ -705,7 +705,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             })}
             
             {/* Checkout tab - separate styling */}
-            <div className="flex-shrink-0 w-16 sm:w-32">
+            <div className="flex-shrink-0 w-12 sm:w-28">
               <div className="sm:hidden flex flex-col h-full">
                 <button
                   onClick={onOpenCart}
@@ -848,16 +848,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <div className="flex justify-center">
                         {cartQty > 0 ? (
                           <div className="flex items-center gap-0.5 bg-muted rounded">
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                              <Minus size={12} />
+                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                              <Minus size={10} />
                             </Button>
-                            <span className="text-xs font-medium px-1 min-w-[1.25rem] text-center">{cartQty}</span>
-                            <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                              <Plus size={12} />
+                            <span className="text-[10px] font-medium px-1 min-w-[1.25rem] text-center">{cartQty}</span>
+                            <Button variant="ghost" size="sm" className="h-4 w-4 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                              <Plus size={10} />
                             </Button>
                           </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
                             <Plus size={12} />
                           </button>
                         )}
@@ -984,32 +984,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 w-5 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus size={12} />
+                            <Minus size={10} />
                           </Button>
-                          <span className="text-xs font-medium px-1 min-w-[1.25rem] text-center">
+                          <span className="text-[10px] font-medium px-1 min-w-[1.25rem] text-center">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 w-5 p-0 hover:bg-primary hover:text-primary-foreground"
+                            className="h-4 w-4 p-0 hover:bg-primary hover:text-primary-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus size={12} />
+                            <Plus size={10} />
                           </Button>
                         </div>
                         ) : (
                          <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-6 h-6"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-4 h-4"
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
