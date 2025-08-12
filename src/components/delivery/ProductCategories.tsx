@@ -115,11 +115,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [flashIndex, setFlashIndex] = useState<number | null>(null);
-  const isMobile = useIsMobile();
-  const [hideTabs, setHideTabs] = useState(false);
-  const lastYRef = useRef(0);
-  const [scrolled, setScrolled] = useState(false);
+const [flashIndex, setFlashIndex] = useState<number | null>(null);
+const isMobile = useIsMobile();
+const [hideTabs, setHideTabs] = useState(false);
+const lastYRef = useRef(0);
+const [scrolled, setScrolled] = useState(false);
+
+// Apply affiliate markup to displayed prices (session-based)
+const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+
 
   // Deep-linking: optional category/product from URL (e.g., ?category=cocktails&productTitle=Spicy%20Margarita)
   useEffect(() => {
@@ -859,9 +864,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <img src={product.image} alt={product.title} className="w-full h-full object-contain" />
                     </div>
                     <h4 className="font-bold leading-tight text-center text-sm mb-2 line-clamp-2">{product.title}</h4>
-                    <div className="mt-auto pt-2 flex flex-col items-center gap-2">
-                      <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${price.toFixed(2)}</Badge>
-                      <div className="flex justify-center">
+<div className="mt-auto pt-2 flex flex-col items-center gap-2">
+  <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${applyMarkup(price).toFixed(2)}</Badge>
+  <div className="flex justify-center">
                         {cartQty > 0 ? (
                           <div className="flex items-center gap-0.5 bg-muted rounded">
                             <Button variant="ghost" size="sm" className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
@@ -991,9 +996,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <div className="mt-auto pt-2 flex flex-col items-center gap-2">
                     {/* Price row - consistent alignment */}
                     <div className="flex items-center justify-center h-5">
-                      <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
-                        ${(selectedVariant?.price || 0).toFixed(2)}
-                      </Badge>
+<Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
+  ${applyMarkup(selectedVariant?.price || 0).toFixed(2)}
+</Badge>
                     </div>
                       
                     {/* Oval Cart Controls - Mobile specific sizing */}
