@@ -276,8 +276,8 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
 
       {/* Category Tabs */}
       <div className="bg-white border-b">
-        <div className="w-full max-w-none px-1 sm:px-4 sm:max-w-md sm:mx-auto">
-          <div className="flex flex-nowrap items-stretch overflow-x-hidden gap-1 h-12">
+        <div className="max-w-md mx-auto">
+          <div className="flex overflow-x-auto scrollbar-hide">
             {categories.map((category) => {
               const categoryProducts = collections
                 .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
@@ -287,56 +287,24 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`flex-1 basis-0 min-w-0 px-1 py-1 text-[10px] leading-tight text-center whitespace-normal break-words font-medium border-b-2 transition-colors ${
+                  className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeCategory === category.id
-                      ? 'border-primary text-primary bg-primary/10'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? 'border-purple-500 text-purple-600 bg-purple-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                    <div className="flex items-center gap-1">
-                      <category.icon className="w-4 h-4" />
-                      <span className="whitespace-normal break-words leading-tight text-center">{category.name}</span>
-                      {categoryProducts.length > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {categoryProducts.length}
-                        </Badge>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <category.icon className="w-4 h-4" />
+                    <span>{category.name}</span>
+                    {categoryProducts.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {categoryProducts.length}
+                      </Badge>
+                    )}
+                  </div>
                 </button>
               );
             })}
-            <div className="flex-shrink-0 w-14">
-              <div className="flex flex-col h-full">
-                <button
-                  onClick={onOpenCart}
-                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
-                >
-                  <ShoppingCart className="w-3 h-3 text-foreground" />
-                  {cartItemCount > 0 && (
-                    <Badge variant="default" className="text-[8px] ml-1 bg-primary text-primary-foreground px-1">
-                      {cartItemCount}
-                    </Badge>
-                  )}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (cartItemCount > 0) {
-                      onProceedToCheckout();
-                    }
-                  }}
-                  disabled={cartItemCount === 0}
-                  className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
-                    cartItemCount > 0 
-                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
-                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                  }`}
-                >
-                  <div className={`text-[9px] font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

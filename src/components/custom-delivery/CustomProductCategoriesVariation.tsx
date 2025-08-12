@@ -277,7 +277,7 @@ export function CustomProductCategories({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-background border-b">
-        <div className="w-full max-w-none px-2 sm:px-4 sm:max-w-7xl sm:mx-auto py-4">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <Button variant="ghost" size="sm" onClick={onBack}>
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -302,50 +302,18 @@ export function CustomProductCategories({
           </div>
 
           {/* Category Tabs */}
-          <div className="flex flex-nowrap items-stretch gap-1 sm:gap-2 overflow-x-hidden h-12">
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
                 variant={activeTab === tab.id ? 'default' : 'outline'}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 basis-0 min-w-0 h-full flex items-center gap-1 whitespace-normal break-words leading-tight text-[10px] text-center px-1 py-1"
+                className="shrink-0 flex items-center gap-1"
               >
                 {typeof tab.icon === 'string' ? tab.icon : <tab.icon className="h-4 w-4" />}
                 {tab.name}
               </Button>
             ))}
-            <div className="flex-shrink-0 w-14">
-              <div className="flex flex-col h-full">
-                <button
-                  onClick={onOpenCart}
-                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
-                >
-                  <ShoppingCart className="w-3 h-3 text-foreground" />
-                  {cartItemCount > 0 && (
-                    <Badge variant="default" className="text-[8px] ml-1 bg-primary text-primary-foreground px-1">
-                      {cartItemCount}
-                    </Badge>
-                  )}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (cartItemCount > 0) {
-                      onProceedToCheckout();
-                    }
-                  }}
-                  disabled={cartItemCount === 0}
-                  className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
-                    cartItemCount > 0 
-                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
-                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                  }`}
-                >
-                  <div className={`text-[9px] font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

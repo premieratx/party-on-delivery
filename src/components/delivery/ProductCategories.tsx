@@ -603,11 +603,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         <div className="absolute top-4 left-4 z-20">
           <button
             onClick={() => navigate('/search')}
-            className="bg-background/30 backdrop-blur-sm border border-border hover:bg-background/50 rounded-lg px-3 py-2 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg px-3 py-2 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
             aria-label="Open Search App"
           >
-            <Search className="w-5 h-5" />
-            <span className="hidden sm:inline font-medium">Search</span>
+            <Search className="w-5 h-5 text-white" />
+            <span className="hidden sm:inline text-white font-medium">Search</span>
           </button>
         </div>
 
@@ -626,13 +626,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
                 {customHeroHeading || (customAppName && customAppName.toLowerCase().includes('premier party cruises') ? "Premier Party Cruises Concierge Service" : customAppName) || "Build Your Party Package"}
               </h1>
-              <p className="text-white/90 text-sm lg:text-base drop-shadow-lg mb-3 sm:mb-5">
+              <p className="text-white/90 text-sm lg:text-base drop-shadow-lg">
                 {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
               </p>
             </div>
 
             {/* Middle: Search */}
-            <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto mt-3 sm:mt-5">
+            <div className="w-[calc(100%-2rem)] max-w-2xl mx-auto">
               <ProductSearchBar 
                 onProductSelect={handleSearchSelect}
                 placeholder="Search all products..."
@@ -656,8 +656,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className="w-full max-w-none px-1 sm:px-4 sm:max-w-7xl sm:mx-auto py-4">
-          <div className={`flex flex-nowrap gap-1 sm:gap-2 overflow-x-hidden ${scrolled ? 'h-12 sm:h-14' : 'h-12 sm:h-20'}`}>
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className={`flex gap-2 h-14 ${scrolled ? 'sm:h-14' : 'sm:h-20'}`}>
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
@@ -676,17 +676,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     // Scroll to top for a clean view of the selected tab
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`relative overflow-hidden rounded-none sm:rounded-lg h-full transition-all duration-300 group shrink-0 w-auto min-w-[96px] max-w-[48vw] sm:max-w-none first:ml-0 -ml-px ${
+                  className={`relative overflow-hidden rounded-lg h-full transition-all duration-300 group flex-1 ${
                     isActive 
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
                   } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
 
                 >
-                  <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-1">
+                  <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title */}
-                    <div className="sm:hidden flex flex-col items-center justify-center h-full px-2">
-                      <div className={`text-[10px] font-bold leading-tight text-center whitespace-normal break-words px-1 ${
+                    <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
+                      <div className={`text-xs font-bold leading-tight text-center ${
                         isActive ? 'text-primary' : 'text-foreground'
                       }`}>{step.title}</div>
                     </div>
@@ -848,17 +848,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <div className="flex justify-center">
                         {cartQty > 0 ? (
                           <div className="flex items-center gap-0.5 bg-muted rounded">
-                            <Button variant="ghost" size="sm" className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                              <Minus size={9} />
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                              <Minus size={10} />
                             </Button>
-                            <span className="text-[11px] sm:text-xs font-medium px-1 min-w-[1.25rem] text-center">{cartQty}</span>
-                            <Button variant="ghost" size="sm" className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                              <Plus size={9} />
+                            <span className="text-xs font-medium px-1.5 min-w-[1.5rem] text-center">{cartQty}</span>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                              <Plus size={10} />
                             </Button>
                           </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus size={isMobile ? 18 : 16} />
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
+                            <Plus size={16} />
                           </button>
                         )}
                       </div>
@@ -946,7 +946,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <SelectTrigger className="w-full h-8 text-xs">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="z-[60] bg-popover text-popover-foreground border shadow-md">
+                          <SelectContent>
                             {product.variants.map((variant) => (
                               <SelectItem key={variant.id} value={variant.id} className="text-xs">
                                 {variant.title}
@@ -984,32 +984,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus size={9} />
+                            <Minus size={10} />
                           </Button>
-                          <span className="text-[11px] sm:text-xs font-medium px-1 min-w-[1.25rem] text-center">
+                          <span className="text-xs font-medium px-1.5 min-w-[1.5rem] text-center">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-5 w-5 sm:h-6 sm:w-6 p-0 hover:bg-primary hover:text-primary-foreground"
+                            className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus size={9} />
+                            <Plus size={10} />
                           </Button>
                         </div>
                         ) : (
                          <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-6 h-6 sm:w-8 sm:h-8"
+                            className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'w-6 h-6' : 'w-8 h-8'}`}
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
@@ -1026,7 +1026,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }
                            }}
                          >
-                           <Plus size={isMobile ? 18 : 16} />
+                           <Plus size={(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 12 : 16} />
                         </button>
                       )}
                     </div>
