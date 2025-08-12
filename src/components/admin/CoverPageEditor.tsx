@@ -263,7 +263,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Cover Page' : 'New Cover Page'}</DialogTitle>
         </DialogHeader>
@@ -386,12 +386,12 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
 
             <Card>
               <CardContent className="pt-6">
-                <Label className="mb-2 block">Live Preview</Label>
-                <div className="w-full flex justify-center">
-                  <div
-                    className="rounded-[24px] shadow-xl ring-1 ring-black/10 overflow-hidden bg-black relative"
-                    style={{ width: 320, height: 672 }}
-                  >
+<Label className="mb-2 block">Live Preview</Label>
+<div className="w-full flex justify-center">
+  <div
+    className="rounded-[24px] shadow-xl ring-1 ring-black/10 overflow-hidden bg-black relative"
+    style={{ width: 420, height: 820 }}
+  >
                     {/* Background */}
                     {bgImageUrl && (
                       <div
@@ -432,16 +432,24 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                       <div className="flex-1" />
 
                       <div className="w-full max-w-[280px]">
-                        <div className="w-full mx-auto my-3" style={{ marginTop: checklistOffsetY || 0 }}>
-                          <div className="flex flex-col items-center gap-1">
-                            {(checklist.filter(Boolean).slice(0, 5)).map((c, i, arr) => (
-                              <React.Fragment key={i}>
-                                <p className="text-white/90 font-semibold leading-tight my-1" style={{ fontSize: `${checklistSize}px` }}>{c}</p>
-                                {i < arr.length - 1 && <span className="text-white/60" aria-hidden="true">•</span>}
-                              </React.Fragment>
-                            ))}
-                          </div>
-                        </div>
+<div className="w-full mx-auto my-3" style={{ marginTop: checklistOffsetY || 0 }}>
+  <div className="flex flex-col items-center gap-1">
+    {Array.from({ length: 5 }).map((_, i) => {
+      const text = (checklist[i] || '').trim() || `Row ${i + 1}`;
+      return (
+        <React.Fragment key={i}>
+          <p
+            className={`font-semibold leading-tight my-1 ${checklist[i] ? 'text-white/90' : 'text-white/50'}`}
+            style={{ fontSize: `${checklistSize}px`, animationDelay: `${i * 80}ms` }}
+          >
+            {text}
+          </p>
+          {i < 4 && <span className="text-white/60" aria-hidden="true">•</span>}
+        </React.Fragment>
+      );
+    })}
+  </div>
+</div>
 
                         {/* 30px gap required between text block and buttons */}
                         <div className="h-[30px]" aria-hidden="true" style={{ marginTop: buttonsOffsetY || 0 }} />
