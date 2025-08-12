@@ -611,6 +611,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </button>
         </div>
 
+        {/* Cart/Checkout - Top Right of Hero */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <button
+            onClick={onOpenCart}
+            className="relative w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
+            aria-label="Open Cart"
+          >
+            <ShoppingCart className="w-5 h-5 text-white" />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-1 -right-1 rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                {cartItemCount}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+            disabled={cartItemCount === 0}
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center ${cartItemCount > 0 ? 'bg-white/20 border border-white/30 hover:bg-white/30' : 'bg-white/10 border border-white/20 opacity-50 cursor-not-allowed'}`}
+            aria-label="Checkout"
+          >
+            <CheckCircle className={`w-5 h-5 ${cartItemCount > 0 ? 'text-white' : 'text-white/60'}`} />
+          </button>
+        </div>
+
           {/* Centered Content - evenly spaced */}
           <div className="relative z-10 h-full flex flex-col justify-between text-center px-4 py-6">
             {/* Top: Logo + Titles */}
@@ -657,7 +681,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="w-full px-1 md:px-4 py-3">
-          <div className={`flex flex-wrap justify-center content-center gap-px min-h-14 ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
+          <div className={`flex flex-nowrap justify-center gap-px min-h-14 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
@@ -704,87 +728,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               );
             })}
             
-            {/* Checkout tab - separate styling */}
-            <div className="flex-shrink-0 w-full basis-full sm:w-28 sm:basis-auto">
-              <div className="sm:hidden flex flex-col h-full">
-                <button
-                  onClick={onOpenCart}
-                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-md transition-all duration-300 flex justify-center items-center flex-1 p-0.5"
-                >
-                  <ShoppingCart className="w-3 h-3 text-foreground" />
-                  {cartItemCount > 0 && (
-                    <Badge variant="default" className="text-[8px] ml-1 bg-primary text-primary-foreground px-1">
-                      {cartItemCount}
-                    </Badge>
-                  )}
-                </button>
-                
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (cartItemCount > 0) {
-                      onProceedToCheckout();
-                    }
-                  }}
-                  disabled={cartItemCount === 0}
-                  className={`rounded-b-md transition-all duration-300 flex justify-center items-center flex-1 p-0.5 ${
-                    cartItemCount > 0 
-                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
-                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                  } ${selectedCategory === displayedTabsCount - 1 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
-                >
-                  <div className={`text-[9px] font-bold ${cartItemCount > 0 ? 'text-primary' : 'text-muted-foreground'}`}>Checkout</div>
-                </button>
-              </div>
-
-              {/* Desktop version - side by side buttons */}
-              <div className="hidden sm:grid grid-cols-2 gap-1 h-full">
-                {/* Cart Button */}
-                <button
-                  onClick={onOpenCart}
-                  data-cart-trigger
-                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-2"
-                >
-                  <ShoppingCart className="w-4 h-4 mb-1 text-foreground" />
-                  <div className="text-xs font-bold text-foreground">Cart</div>
-                  {cartItemCount > 0 && (
-                    <Badge variant="default" className="text-xs mt-1 bg-primary text-primary-foreground">
-                      {cartItemCount}
-                    </Badge>
-                  )}
-                </button>
-                
-                {/* Checkout Button */}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (cartItemCount > 0) {
-                      onProceedToCheckout();
-                    }
-                  }}
-                  disabled={cartItemCount === 0}
-                  className={`rounded-lg transition-all duration-300 flex flex-col justify-center items-center p-2 ${
-                    cartItemCount > 0 
-                      ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
-                      : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
-                  } ${selectedCategory === displayedTabsCount - 1 && cartItemCount > 0 ? 'animate-pulse border-primary/70' : ''}`}
-                >
-                  {cartItemCount > 0 ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 mb-1 text-primary" />
-                      <div className="text-xs font-bold text-primary">Checkout</div>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 mb-1 text-muted-foreground opacity-50" />
-                      <div className="text-xs font-bold text-muted-foreground">Checkout</div>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -857,8 +800,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             </Button>
                           </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-3 h-3 sm:w-4 sm:h-4 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus className="w-[9px] h-[9px] sm:w-3 sm:h-3" />
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-2.5 h-2.5 sm:w-4 sm:h-4 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
+                            <Plus className="w-[8px] h-[8px] sm:w-3 sm:h-3" strokeWidth={3} />
                           </button>
                         )}
                       </div>
@@ -1009,7 +952,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </div>
                         ) : (
                          <button
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-3 h-3 sm:w-4 sm:h-4"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-2.5 h-2.5 sm:w-4 sm:h-4"
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
@@ -1026,7 +969,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             }
                            }}
                          >
-                           <Plus className="w-[9px] h-[9px] sm:w-3 sm:h-3" />
+                           <Plus className="w-[8px] h-[8px] sm:w-3 sm:h-3" strokeWidth={3} />
                         </button>
                       )}
                     </div>
