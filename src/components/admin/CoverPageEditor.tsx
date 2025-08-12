@@ -34,6 +34,9 @@ export interface CoverButtonConfig {
     zip_code?: string;
     instructions?: string;
   };
+  // Layout controls per button
+  offset_y?: number; // additional top margin in px
+  spacing_below?: number; // additional bottom spacing in px
 }
 
 
@@ -59,6 +62,7 @@ export interface CoverPageConfig {
     subtitle_offset_y?: number;
     checklist_offset_y?: number;
     buttons_offset_y?: number;
+    logo_offset_y?: number;
     logo_bg_color?: string;
     logo_bg_mode?: 'auto' | 'rectangle' | 'none';
   };
@@ -99,6 +103,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>((initial as any)?.styles?.subtitle_offset_y ?? 0);
   const [checklistOffsetY, setChecklistOffsetY] = useState<number>((initial as any)?.styles?.checklist_offset_y ?? 0);
   const [buttonsOffsetY, setButtonsOffsetY] = useState<number>((initial as any)?.styles?.buttons_offset_y ?? 0);
+  const [logoOffsetY, setLogoOffsetY] = useState<number>((initial as any)?.styles?.logo_offset_y ?? 0);
   const [backgroundColor, setBackgroundColor] = useState<string>((initial as any)?.styles?.background_color ?? "");
   const [logoBgColor, setLogoBgColor] = useState<string>((initial as any)?.styles?.logo_bg_color ?? "");
   const [logoBgMode, setLogoBgMode] = useState<'auto' | 'rectangle' | 'none'>((initial as any)?.styles?.logo_bg_mode ?? 'auto');
@@ -157,6 +162,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setSubtitleOffsetY((initial as any)?.styles?.subtitle_offset_y ?? 0);
     setChecklistOffsetY((initial as any)?.styles?.checklist_offset_y ?? 0);
     setButtonsOffsetY((initial as any)?.styles?.buttons_offset_y ?? 0);
+    setLogoOffsetY((initial as any)?.styles?.logo_offset_y ?? 0);
     setBackgroundColor((initial as any)?.styles?.background_color ?? "");
     setLogoBgColor((initial as any)?.styles?.logo_bg_color ?? "");
     setLogoBgMode((initial as any)?.styles?.logo_bg_mode ?? 'auto');
@@ -236,6 +242,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
           subtitle_offset_y: subtitleOffsetY,
           checklist_offset_y: checklistOffsetY,
           buttons_offset_y: buttonsOffsetY,
+          logo_offset_y: logoOffsetY,
           background_color: backgroundColor || null,
           logo_bg_color: logoBgColor || null,
           logo_bg_mode: logoBgMode,
@@ -295,6 +302,34 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                     <Label>Checklist Size</Label>
                     <input type="range" min={10} max={24} value={checklistSize} onChange={(e) => setChecklistSize(Number(e.target.value))} className="w-full" />
                     <div className="text-xs text-muted-foreground">{checklistSize}px</div>
+                  </div>
+                </div>
+                {/* Typography & Layout Offsets */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2">
+                  <div>
+                    <Label>Logo Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={logoOffsetY} onChange={(e) => setLogoOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{logoOffsetY}px</div>
+                  </div>
+                  <div>
+                    <Label>Title Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={titleOffsetY} onChange={(e) => setTitleOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{titleOffsetY}px</div>
+                  </div>
+                  <div>
+                    <Label>Subtitle Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={subtitleOffsetY} onChange={(e) => setSubtitleOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{subtitleOffsetY}px</div>
+                  </div>
+                  <div>
+                    <Label>Checklist Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={checklistOffsetY} onChange={(e) => setChecklistOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{checklistOffsetY}px</div>
+                  </div>
+                  <div>
+                    <Label>Buttons Offset Y</Label>
+                    <input type="range" min={-120} max={120} value={buttonsOffsetY} onChange={(e) => setButtonsOffsetY(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{buttonsOffsetY}px</div>
                   </div>
                 </div>
                 <div>
@@ -537,28 +572,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                     <input type="color" value={logoBgColor || '#000000'} onChange={(e) => setLogoBgColor(e.target.value)} className="h-10 w-full rounded border" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Title Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={titleOffsetY} onChange={(e) => setTitleOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{titleOffsetY}px</div>
-                  </div>
-                  <div>
-                    <Label>Subtitle Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={subtitleOffsetY} onChange={(e) => setSubtitleOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{subtitleOffsetY}px</div>
-                  </div>
-                  <div>
-                    <Label>Checklist Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={checklistOffsetY} onChange={(e) => setChecklistOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{checklistOffsetY}px</div>
-                  </div>
-                  <div>
-                    <Label>Buttons Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={buttonsOffsetY} onChange={(e) => setButtonsOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{buttonsOffsetY}px</div>
-                  </div>
-                </div>
+                {/* Typography offsets moved near size controls above for a unified workflow */}
               </CardContent>
             </Card>
 
@@ -678,6 +692,18 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   <div>
     <Label>Button Text Color</Label>
     <input type="color" value={b.text_color || '#ffffff'} onChange={(e) => updateButton(idx, { text_color: e.target.value })} className="h-10 w-full rounded border" />
+  </div>
+</div>
+
+{/* Button spacing & offsets */}
+<div className="grid grid-cols-2 gap-2">
+  <div>
+    <Label>Offset Y (px)</Label>
+    <Input type="number" value={b.offset_y ?? 0} onChange={(e) => updateButton(idx, { offset_y: Number(e.target.value) })} />
+  </div>
+  <div>
+    <Label>Spacing Below (px)</Label>
+    <Input type="number" value={b.spacing_below ?? 0} onChange={(e) => updateButton(idx, { spacing_below: Number(e.target.value) })} />
   </div>
 </div>
 

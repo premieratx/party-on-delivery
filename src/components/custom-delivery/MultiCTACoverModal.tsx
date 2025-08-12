@@ -10,6 +10,9 @@ export interface MultiCTAButton {
   onClick: () => void;
   bgColor?: string;
   textColor?: string;
+  // Optional layout controls
+  offsetY?: number; // extra margin-top in px
+  spacingBelow?: number; // extra margin-bottom in px
 }
 
 export interface MultiCTACoverModalProps {
