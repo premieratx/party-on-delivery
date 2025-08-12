@@ -916,46 +916,49 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   
                   {/* Price and cart controls container - always at bottom */}
                   <div className="mt-auto pt-2 flex flex-col items-center gap-2">
-                    <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
-                      ${(selectedVariant?.price || 0).toFixed(2)}
-                    </Badge>
+                    {/* Price row - consistent alignment */}
+                    <div className="flex items-center justify-center h-5">
+                      <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
+                        ${(selectedVariant?.price || 0).toFixed(2)}
+                      </Badge>
+                    </div>
                       
-                    {/* Oval Cart Controls - Responsive scaling */}
+                    {/* Oval Cart Controls - Mobile 30% smaller qty, 50% smaller green circle */}
                     <div className="flex justify-center items-center">
                       {cartQty > 0 ? (
                         <div 
-                          className="flex items-center justify-center bg-muted/80 rounded-full px-1 py-0.5 gap-1 min-w-[60px] h-6 border border-border/50 md:px-2 md:py-1 md:gap-2 md:min-w-[80px] md:h-8" 
+                          className="flex items-center justify-center bg-muted/80 rounded-full px-1 py-0.5 gap-1 min-w-[42px] h-4 border border-border/50 md:px-2 md:py-1 md:gap-2 md:min-w-[80px] md:h-8" 
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-4 w-4 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center md:h-6 md:w-6"
+                            className="h-3 w-3 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center md:h-6 md:w-6"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, -1);
                             }}
                           >
-                            <Minus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
+                            <Minus className="w-2 h-2 md:w-4 md:h-4" strokeWidth={2} />
                           </Button>
-                          <span className="text-xs font-bold min-w-[16px] text-center md:text-sm md:min-w-[20px]">
+                          <span className="text-[10px] font-bold min-w-[12px] text-center md:text-sm md:min-w-[20px]">
                             {cartQty}
                           </span>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-4 w-4 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center md:h-6 md:w-6"
+                            className="h-3 w-3 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center md:h-6 md:w-6"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleQuantityChange(product.id, selectedVariant?.id, 1);
                             }}
                           >
-                            <Plus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
+                            <Plus className="w-2 h-2 md:w-4 md:h-4" strokeWidth={2} />
                           </Button>
                         </div>
                       ) : (
                         <button
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-6 h-6 md:w-8 md:h-8"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-3 h-3 md:w-8 md:h-8"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (selectedVariant) {
