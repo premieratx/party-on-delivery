@@ -40,6 +40,7 @@ import TestGHLIntegration from '@/components/TestGHLConnection';
 import CleanupUserData from '@/components/CleanupUserData';
 import { SystemTestingSuite } from '@/components/SystemTestingSuite';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
+import { CANONICAL_DOMAIN } from '@/utils/links';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -169,7 +170,7 @@ export default function AdminDashboard() {
   };
 
   const copyAffiliateLink = (affiliateCode: string) => {
-    const url = `${window.location.origin}/a/${affiliateCode}`;
+    const url = `${CANONICAL_DOMAIN}/a/${affiliateCode}`;
     navigator.clipboard.writeText(url);
     toast({
       title: "Copied!",
@@ -178,7 +179,7 @@ export default function AdminDashboard() {
   };
 
   const copyCustomSiteLink = (siteSlug: string) => {
-    const url = `${window.location.origin}/sites/${siteSlug}`;
+    const url = `${CANONICAL_DOMAIN}/sites/${siteSlug}`;
     navigator.clipboard.writeText(url);
     toast({
       title: "Copied!",

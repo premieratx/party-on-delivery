@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
+import { CANONICAL_DOMAIN } from "@/utils/links";
 // Types
 export type CoverButtonType = 'delivery_app' | 'checkout' | 'url'
 export interface CoverButtonConfig {
@@ -19,7 +20,12 @@ export interface CoverButtonConfig {
   url?: string;
   bg_color?: string;
   text_color?: string;
+  // New optional per-button options
+  affiliate_code?: string;
+  free_shipping?: boolean;
+  markup_percent?: number; // 0-50
 }
+
 
 export interface CoverPageConfig {
   id?: string;
@@ -508,6 +514,22 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                         </div>
                       )}
 
+                      {/* Per-button options */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label>Affiliate Code (override)</Label>
+                          <Input value={b.affiliate_code || ''} onChange={(e) => updateButton(idx, { affiliate_code: e.target.value || undefined })} placeholder="e.g. AUSTINVIP" />
+                        </div>
+                        <div>
+                          <Label>Markup %</Label>
+                          <Input type="number" min={0} max={50} step={1} value={b.markup_percent ?? 0} onChange={(e) => updateButton(idx, { markup_percent: Number(e.target.value) })} />
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Switch checked={!!b.free_shipping} onCheckedChange={(v) => updateButton(idx, { free_shipping: v })} id={`freeship-${idx}`} />
+                          <Label htmlFor={`freeship-${idx}`}>Offer free shipping</Label>
+                        </div>
+                      </div>
+
                       {/* Button colors */}
                       <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -537,7 +559,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
             <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button
               variant="secondary"
-              onClick={() => window.open(`${window.location.origin}/${computedSlug}`, '_blank')}
+              onClick={() => window.open(`${CANONICAL_DOMAIN}/${computedSlug}`, '_blank')}
               disabled={!computedSlug || !slugOk}
             >
               Preview
