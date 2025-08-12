@@ -657,7 +657,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
         <div className="w-full px-1 md:px-4 py-3">
-          <div className={`flex gap-px h-12 ${scrolled ? 'sm:h-14' : 'sm:h-20'}`}>
+          <div className={`flex gap-px h-14 ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
               const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
@@ -676,7 +676,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     // Scroll to top for a clean view of the selected tab
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
-                  className={`relative overflow-hidden h-full transition-all duration-300 group flex-1 min-w-0 rounded-none first:rounded-l-md last:rounded-r-md ${
+                  className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-1.5 rounded-none first:rounded-l-md last:rounded-r-md ${
                     isActive 
                       ? 'bg-primary/10 border-2 border-primary shadow-lg' 
                       : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
@@ -686,7 +686,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
                     {/* Mobile layout: just title */}
                     <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
-                      <div className={`text-[10px] font-bold leading-tight tracking-tight text-center whitespace-normal break-words ${
+                      <div className={`text-[9px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
                         isActive ? 'text-primary' : 'text-foreground'
                       }`}>{step.title}</div>
                     </div>
@@ -709,7 +709,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               <div className="sm:hidden flex flex-col h-full">
                 <button
                   onClick={onOpenCart}
-                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-lg transition-all duration-300 flex justify-center items-center flex-1 p-1"
+                  className="bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40 rounded-t-md transition-all duration-300 flex justify-center items-center flex-1 p-0.5"
                 >
                   <ShoppingCart className="w-3 h-3 text-foreground" />
                   {cartItemCount > 0 && (
@@ -728,7 +728,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     }
                   }}
                   disabled={cartItemCount === 0}
-                  className={`rounded-b-lg transition-all duration-300 flex justify-center items-center flex-1 p-1 ${
+                  className={`rounded-b-md transition-all duration-300 flex justify-center items-center flex-1 p-0.5 ${
                     cartItemCount > 0 
                       ? 'bg-primary/10 border-2 border-primary hover:bg-primary/20 cursor-pointer' 
                       : 'bg-muted/50 border border-muted-foreground/10 opacity-50 cursor-not-allowed'
