@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import MultiCTACoverModal from '@/components/custom-delivery/MultiCTACoverModal';
 
 // Resolves short links for:
-// 1) /:shortPath -> delivery app short_path (app precedence)
+// 1) /:shortPath -> first try cover_pages.slug (public), then delivery app short_path, then affiliate code
 // 2) /:affiliateSlug -> affiliate code only (fallback to default assigned app or home)
 // 3) /:appShortPath/:affiliateSlug -> combined app + affiliate
 export default function ShortLinkResolver() {
@@ -14,13 +15,14 @@ export default function ShortLinkResolver() {
   }>();
   const navigate = useNavigate();
 
+  const [coverPage, setCoverPage] = useState<any | null>(null);
+
   useEffect(() => {
     const resolve = async () => {
       const appPath = appShortPath || shortPath; // prefer explicit 2-seg param
-      const affCode = affiliateSlug || (appShortPath ? undefined : undefined);
 
       try {
-        // If both app and affiliate are present: resolve app then forward with aff param
+        // Combined app + affiliate: behave as before
         if (appShortPath && affiliateSlug) {
           const { data: app, error: appErr } = await supabase
             .from('delivery_app_variations')
@@ -37,8 +39,21 @@ export default function ShortLinkResolver() {
           return;
         }
 
-        // Single segment: app precedence
+        // Single segment: check COVER PAGES FIRST
         if (appPath) {
+          const { data: cp, error: cpErr } = await supabase
+            .from('cover_pages')
+            .select('*')
+            .eq('slug', appPath)
+            .eq('is_active', true)
+            .maybeSingle();
+          if (cpErr) throw cpErr;
+          if (cp) {
+            setCoverPage(cp);
+            return; // keep URL intact (root slug)
+          }
+
+          // Next: delivery app short link
           const { data: app, error: appErr } = await supabase
             .from('delivery_app_variations')
             .select('app_slug')
@@ -51,7 +66,7 @@ export default function ShortLinkResolver() {
             return;
           }
 
-          // Not an app short link: treat as affiliate code
+          // Fallback: affiliate code
           const { data: affiliate, error: affErr } = await supabase
             .from('affiliates')
             .select('id, affiliate_code')
@@ -60,18 +75,12 @@ export default function ShortLinkResolver() {
           if (affErr) throw affErr;
 
           if (affiliate?.id) {
-            // Find default app assignment for this affiliate
-            const { data: assign, error: assignErr } = await supabase
+            const { data: assign } = await supabase
               .from('affiliate_app_assignments')
               .select('app_variation_id')
               .eq('affiliate_id', affiliate.id)
               .eq('_df', true)
               .maybeSingle();
-            if (assignErr) {
-              // Even if this fails, we can still apply code at home
-              navigate(`/?aff=${encodeURIComponent(affiliate.affiliate_code)}`, { replace: true });
-              return;
-            }
 
             if (assign?.app_variation_id) {
               const { data: app2 } = await supabase
@@ -85,7 +94,6 @@ export default function ShortLinkResolver() {
                 return;
               }
             }
-            // Fallback: send to home with affiliate code
             navigate(`/?aff=${encodeURIComponent(affiliate.affiliate_code)}`, { replace: true });
             return;
           }
@@ -103,6 +111,50 @@ export default function ShortLinkResolver() {
     };
     resolve();
   }, [shortPath, appShortPath, affiliateSlug, navigate]);
+
+  const buttons = useMemo(() => {
+    if (!coverPage) return [] as { text: string; onClick: () => void }[];
+    const list = (coverPage.buttons || []) as Array<any>;
+    return list.map((b: any) => ({
+      text: b.text || 'Open',
+      onClick: () => {
+        if (b.type === 'delivery_app' && b.app_slug) {
+          const params = new URLSearchParams({ step: 'tabs' });
+          if (b.openCart) params.set('openCart', '1');
+          window.location.href = `/app/${b.app_slug}?${params.toString()}`;
+          return;
+        }
+        if (b.type === 'checkout') {
+          window.location.href = '/checkout';
+          return;
+        }
+        if (b.type === 'url' && b.url) {
+          window.location.href = b.url;
+          return;
+        }
+      }
+    }));
+  }, [coverPage]);
+
+  if (coverPage) {
+    const checklist = (coverPage.checklist || []) as string[];
+    return (
+      <div className="min-h-screen bg-background">
+        <MultiCTACoverModal
+          open={true}
+          onOpenChange={() => {}}
+          appName={coverPage.title}
+          logoUrl={coverPage.logo_url || undefined}
+          title={coverPage.title}
+          subtitle={coverPage.subtitle || ''}
+          checklistItems={checklist}
+          backgroundImageUrl={coverPage.bg_image_url || undefined}
+          backgroundVideoUrl={coverPage.bg_video_url || undefined}
+          buttons={buttons}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center">

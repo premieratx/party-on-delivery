@@ -254,6 +254,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="vouchers">Affiliate Discount Codes</TabsTrigger>
               <TabsTrigger value="products" onClick={() => navigate('/admin/create-collection')}>Sort & Sync Products</TabsTrigger>
               <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
+              <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')}>🎬 Cover Pages</TabsTrigger>
               <TabsTrigger value="performance">⚡ Performance & System Tests</TabsTrigger>
               <TabsTrigger value="ghl-setup">📱 GHL/SMS Setup</TabsTrigger>
               <TabsTrigger value="cleanup">🗑️ Cleanup</TabsTrigger>

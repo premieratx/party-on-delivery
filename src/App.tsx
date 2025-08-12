@@ -33,7 +33,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ProductManagement = lazy(() => import("./pages/ProductManagement").then(m => ({ default: m.ProductManagement })));
 const CustomCollectionCreator = lazy(() => import("./pages/CustomCollectionCreator"));
 const DeliveryAppManagerPage = lazy(() => import("./pages/DeliveryAppManager"));
-
+const CoverPagesAdmin = lazy(() => import("./pages/CoverPagesAdmin"));
 // Customer routes
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
@@ -124,9 +124,10 @@ const App = () => {
                     {/* Admin Routes - These should have auth guards */}
                     <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                     <Route path="/admin/*" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-                    <Route path="/admin/product-management" element={<RequireAdmin><ProductManagement /></RequireAdmin>} />
-                    <Route path="/admin/create-collection" element={<RequireAdmin><CustomCollectionCreator /></RequireAdmin>} />
-                    <Route path="/admin/delivery-app-manager" element={<RequireAdmin><DeliveryAppManagerPage /></RequireAdmin>} />
+<Route path="/admin/product-management" element={<RequireAdmin><ProductManagement /></RequireAdmin>} />
+<Route path="/admin/create-collection" element={<RequireAdmin><CustomCollectionCreator /></RequireAdmin>} />
+<Route path="/admin/delivery-app-manager" element={<RequireAdmin><DeliveryAppManagerPage /></RequireAdmin>} />
+<Route path="/admin/cover-pages" element={<RequireAdmin><CoverPagesAdmin /></RequireAdmin>} />
                     
                     {/* Customer Routes */}
                     <Route path="/customer/login" element={<CustomerLogin />} />

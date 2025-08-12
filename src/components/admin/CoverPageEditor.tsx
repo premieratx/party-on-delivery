@@ -145,7 +145,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     }
     setSaving(true);
     try {
-      const payload = {
+      const payload: any = {
         slug: autoSlug,
         title,
         subtitle,
@@ -153,12 +153,12 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
         bg_image_url: bgImageUrl || null,
         bg_video_url: bgVideoUrl || null,
         checklist: (checklist || []).filter(Boolean).slice(0, 5),
-        buttons,
+        buttons: buttons as any,
         is_active: isActive,
       };
 
       if (isEditing && initial?.id) {
-        const { error } = await supabase.from('cover_pages').update(payload).eq('id', initial.id);
+        const { error } = await supabase.from('cover_pages').update(payload as any).eq('id', initial.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from('cover_pages').insert(payload as any);
