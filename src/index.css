@@ -26,6 +26,10 @@ All colors MUST be HSL.
     --brand-blue: 217 91% 60%;
     --brand-blue-foreground: 0 0% 100%;
 
+    /* Checkout brand purple (matches cart slide-out) */
+    --checkout: 270 90% 60%;
+    --checkout-foreground: 0 0% 100%;
+
     /* Trust blue secondary */
     --secondary: 217 91% 60%;
     --secondary-foreground: 0 0% 100%;
@@ -97,6 +101,10 @@ All colors MUST be HSL.
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
+
+    /* Checkout brand purple (dark) */
+    --checkout: 270 90% 60%;
+    --checkout-foreground: 0 0% 100%;
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
@@ -224,4 +232,11 @@ All colors MUST be HSL.
   .sparkle-sm { width: 6px; height: 6px; }
   .sparkle-md { width: 8px; height: 8px; }
   .sparkle-lg { width: 10px; height: 10px; }
-}
+  }
+
+  /* Checkout blink animation */
+  @keyframes checkout-blink {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.88; transform: scale(1.02); }
+  }
+  .checkout-blink { animation: checkout-blink 1.5s ease-in-out infinite; }

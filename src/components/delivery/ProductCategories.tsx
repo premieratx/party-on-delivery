@@ -677,6 +677,19 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px] relative">
+        {/* Sticky search bar above tabs */}
+        <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
+          <div className="max-w-2xl mx-auto">
+            <ProductSearchBar
+              onProductSelect={handleSearchSelect}
+              placeholder="Search all products..."
+              showDropdownResults={false}
+              onResultsChange={handleSearchResultsChange}
+              onSearchingChange={setIsSearching}
+              onFocus={() => setShowSearch(true)}
+            />
+          </div>
+        </div>
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
@@ -688,6 +701,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               
               return (
                 <button
+                  type="button"
                   key={step.handle}
                   onClick={() => {
                     setSelectedCategory(index);
@@ -730,6 +744,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             
           {/* Append Cart/Checkout as part of tabs (desktop) */}
           <button
+            type="button"
             onClick={onOpenCart}
             className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40`}
             aria-label="Open Cart"
@@ -745,9 +760,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </span>
           </button>
           <button
+            type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
             disabled={cartItemCount === 0}
-            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'animate-[pulse_3s_ease-in-out_infinite] ring-2 ring-primary' : ''}`}
+            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-[hsl(var(--checkout))] text-[hsl(var(--checkout-foreground))] hover:opacity-90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-[hsl(var(--checkout))]' : ''}`}
             aria-label="Checkout"
           >
             <span className="inline-flex items-center gap-2 font-bold">
@@ -777,9 +793,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </span>
           </button>
           <button
+            type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
             disabled={cartItemCount === 0}
-            className={`h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 rounded-r-md rounded-l-none transition-colors ${cartItemCount > 0 ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'animate-[pulse_3s_ease-in-out_infinite] ring-2 ring-primary' : ''}`}
+            className={`h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 rounded-r-md rounded-l-none transition-colors ${cartItemCount > 0 ? 'bg-[hsl(var(--checkout))] text-[hsl(var(--checkout-foreground))] hover:opacity-90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-[hsl(var(--checkout))]' : ''}`}
             aria-label="Checkout"
           >
             <span className="inline-flex items-center gap-2 text-sm">

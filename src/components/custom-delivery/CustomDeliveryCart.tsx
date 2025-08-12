@@ -167,8 +167,9 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
             <div className="space-y-2">
               <Button
                 onClick={onCheckout}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                className="w-full checkout-blink"
                 size="lg"
+                variant="checkout"
               >
                 Continue to Checkout
               </Button>
