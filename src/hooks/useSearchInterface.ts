@@ -19,7 +19,6 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
 
   // Handle search focus with immediate UI changes and instant scrolling
   const handleSearchFocus = useCallback(() => {
-    console.log('Search focus triggered!');
     setIsSearchFocused(true);
     setHasUserInteracted(true);
     setShouldHideChrome(true);
@@ -72,7 +71,6 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
     if (!options.hideOnScroll) return;
 
     const handleScroll = () => {
-      console.log('Scroll detected, currentY:', window.scrollY);
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
 

@@ -151,7 +151,7 @@ const {
 // Notify parent component of search state changes
 useEffect(() => {
   onSearchStateChange?.({ isSearchFocused, shouldHideBottomMenu });
-}, [isSearchFocused, shouldHideBottomMenu, onSearchStateChange]);
+}, [isSearchFocused, shouldHideBottomMenu]); // Removed onSearchStateChange from deps to prevent infinite re-renders
 
 // Apply affiliate markup to displayed prices (session-based)
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
