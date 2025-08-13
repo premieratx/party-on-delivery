@@ -3,11 +3,40 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingCart, Beer, Wine, Package, Star } from 'lucide-react';
 
+// Mock product data
+const mockWineProducts = [
+  { title: "Dom Pérignon Champagne", price: "199.99", image: "https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?w=400&h=400&fit=crop" },
+  { title: "Kendall-Jackson Chardonnay", price: "24.99", image: "https://images.unsplash.com/photo-1506377247951-c7d0e1b2a9d8?w=400&h=400&fit=crop" },
+  { title: "Silver Oak Cabernet", price: "89.99", image: "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&h=400&fit=crop" },
+  { title: "Veuve Clicquot Rosé", price: "79.99", image: "https://images.unsplash.com/photo-1586370434639-0fe43b2d32d6?w=400&h=400&fit=crop" }
+];
+
+const mockBeerProducts = [
+  { title: "Corona Extra 12-pack", price: "16.99", image: "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&h=400&fit=crop" },
+  { title: "Stella Artois 6-pack", price: "12.99", image: "https://images.unsplash.com/photo-1618183479302-1e0aa382c36b?w=400&h=400&fit=crop" },
+  { title: "White Claw Variety Pack", price: "18.99", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" },
+  { title: "Heineken 12-pack", price: "19.99", image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&h=400&fit=crop" }
+];
+
+const mockSpiritsProducts = [
+  { title: "Grey Goose Vodka", price: "49.99", image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&h=400&fit=crop" },
+  { title: "Macallan 18 Year", price: "649.99", image: "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=400&h=400&fit=crop" },
+  { title: "Patron Silver Tequila", price: "54.99", image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=400&fit=crop" },
+  { title: "Hendricks Gin", price: "34.99", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" }
+];
+
+const mockSuppliesProducts = [
+  { title: "Party Cups 50-pack", price: "8.99", image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=400&fit=crop" },
+  { title: "Ice Bucket & Tongs", price: "24.99", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" },
+  { title: "Party Balloons Set", price: "12.99", image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=400&fit=crop" },
+  { title: "Cocktail Napkins", price: "5.99", image: "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=400&h=400&fit=crop" }
+];
+
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(0);
 
-  // Mock categories and products for testing
+  // Categories with products
   const categories = [
     { title: 'Wine & Champagne', icon: Wine, products: mockWineProducts },
     { title: 'Beer & Seltzers', icon: Beer, products: mockBeerProducts },
@@ -17,14 +46,14 @@ const Index = () => {
 
   useEffect(() => {
     // Simulate loading
-    setTimeout(() => setIsLoading(false), 1000);
+    setTimeout(() => setIsLoading(false), 500);
   }, []);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-primary mb-4">Party On Delivery</h1>
+          <h1 className="text-4xl font-bold text-primary mb-4">🎉 Party On Delivery</h1>
           <p className="text-muted-foreground mb-8">Loading your party essentials...</p>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
         </div>
@@ -102,34 +131,5 @@ const Index = () => {
     </div>
   );
 };
-
-// Mock product data for testing
-const mockWineProducts = [
-  { title: "Dom Pérignon Champagne", price: "199.99", image: "https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?w=400&h=400&fit=crop" },
-  { title: "Kendall-Jackson Chardonnay", price: "24.99", image: "https://images.unsplash.com/photo-1506377247951-c7d0e1b2a9d8?w=400&h=400&fit=crop" },
-  { title: "Silver Oak Cabernet", price: "89.99", image: "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&h=400&fit=crop" },
-  { title: "Veuve Clicquot Rosé", price: "79.99", image: "https://images.unsplash.com/photo-1586370434639-0fe43b2d32d6?w=400&h=400&fit=crop" }
-];
-
-const mockBeerProducts = [
-  { title: "Corona Extra 12-pack", price: "16.99", image: "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&h=400&fit=crop" },
-  { title: "Stella Artois 6-pack", price: "12.99", image: "https://images.unsplash.com/photo-1618183479302-1e0aa382c36b?w=400&h=400&fit=crop" },
-  { title: "White Claw Variety Pack", price: "18.99", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" },
-  { title: "Heineken 12-pack", price: "19.99", image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&h=400&fit=crop" }
-];
-
-const mockSpiritsProducts = [
-  { title: "Grey Goose Vodka", price: "49.99", image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&h=400&fit=crop" },
-  { title: "Macallan 18 Year", price: "649.99", image: "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=400&h=400&fit=crop" },
-  { title: "Patron Silver Tequila", price: "54.99", image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=400&fit=crop" },
-  { title: "Hendricks Gin", price: "34.99", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" }
-];
-
-const mockSuppliesProducts = [
-  { title: "Party Cups 50-pack", price: "8.99", image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=400&fit=crop" },
-  { title: "Ice Bucket & Tongs", price: "24.99", image: "https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=400&fit=crop" },
-  { title: "Party Balloons Set", price: "12.99", image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&h=400&fit=crop" },
-  { title: "Cocktail Napkins", price: "5.99", image: "https://images.unsplash.com/photo-1527281400683-1aae777175f8?w=400&h=400&fit=crop" }
-];
 
 export default Index;
