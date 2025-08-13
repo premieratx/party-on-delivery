@@ -18,8 +18,6 @@ const Index = () => {
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
-  // Import search interface for bottom menu hiding
-  const { shouldHideBottomMenu } = require('@/hooks/useSearchInterface').useSearchInterface({ hideOnScroll: true });
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
@@ -47,12 +45,6 @@ const Index = () => {
     loadHomepageApp();
   }, []);
 
-  // Always route main URL to the homepage delivery app with cover start screen
-  useEffect(() => {
-    if (homepageApp?.app_slug) {
-      navigate(`/app/${homepageApp.app_slug}?step=start`, { replace: true });
-    }
-  }, [homepageApp, navigate]);
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
@@ -155,7 +147,7 @@ const Index = () => {
         isVisible={getTotalItems() > 0}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
-        shouldHide={shouldHideBottomMenu}
+        shouldHide={false}
       />
     </div>
   );
