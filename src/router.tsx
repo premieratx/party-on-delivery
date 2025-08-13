@@ -3,21 +3,12 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import { AdminLogin } from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import RequireAdmin from "./components/admin/RequireAdmin";
-import { HomeHero } from "./routes/home/HomeHero";
-import { HomeHealthCheck } from "./routes/home/HomeHealthCheck";
-
-// Home component
-const Home = () => (
-  <div>
-    <HomeHero />
-    <HomeHealthCheck />
-  </div>
-);
+import Index from "./pages/Index";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
+    element: <Index />,
   },
   {
     path: "/affiliate/admin-login",

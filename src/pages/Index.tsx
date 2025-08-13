@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
+import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +13,7 @@ const Index = () => {
   
   const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showEntrancePopup, setShowEntrancePopup] = useState(true);
   const [homepageConfig, setHomepageConfig] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -81,6 +83,24 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Entrance Popup */}
+      <CustomDeliveryCoverModal
+        open={showEntrancePopup}
+        onOpenChange={setShowEntrancePopup}
+        onStartOrder={() => {
+          setShowEntrancePopup(false);
+        }}
+        appName="Party On Delivery"
+        title="Exclusive Concierge Delivery"
+        subtitle="Austin's favorite alcohol delivery service"
+        buttonText="Order Now"
+        checklistItems={[
+          'Locally Owned',
+          'Same Day Delivery', 
+          'Cocktail Kits on Demand'
+        ]}
+      />
+
       <ProductCategories
         onAddToCart={handleAddToCart}
         cartItemCount={getTotalItems()}
