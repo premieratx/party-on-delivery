@@ -176,7 +176,7 @@ export const AdminLogin: React.FC = () => {
           <Button
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className="w-full"
+            className="w-full border-2 border-black"
             size="lg"
           >
             {googleLoading ? (
