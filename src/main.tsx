@@ -1,13 +1,15 @@
-// Test 2: Add React imports
+// Test 3: Test React rendering
 import './index.css'
 import { createRoot } from 'react-dom/client'
 import React from 'react'
 
-console.log('Main.tsx with React imports executing');
+console.log('Main.tsx with React rendering executing');
 
-document.getElementById("root")!.innerHTML = `
-  <div style="padding: 20px;">
-    <h1>React Import Test</h1>
-    <p>Testing if React imports cause the require error</p>
+const SimpleComponent = () => (
+  <div style={{ padding: '20px' }}>
+    <h1>React Rendering Test</h1>
+    <p>Testing if React rendering causes the require error</p>
   </div>
-`;
+);
+
+createRoot(document.getElementById("root")!).render(<SimpleComponent />);
