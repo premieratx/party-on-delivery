@@ -45,12 +45,8 @@ const Index = () => {
     loadHomepageApp();
   }, []);
 
-  // Always route main URL to the homepage delivery app with cover start screen
-  useEffect(() => {
-    if (homepageApp?.app_slug) {
-      navigate(`/app/${homepageApp.app_slug}?step=start`, { replace: true });
-    }
-  }, [homepageApp, navigate]);
+  // Load homepage delivery app configuration for display
+  // Note: We render the app content directly instead of redirecting to avoid navigation loops
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
