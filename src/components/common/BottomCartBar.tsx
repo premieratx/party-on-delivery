@@ -10,7 +10,6 @@ interface BottomCartBarProps {
   isVisible: boolean;
   onOpenCart: () => void;
   onCheckout: () => void;
-  shouldHide?: boolean;
 }
 
 export const BottomCartBar: React.FC<BottomCartBarProps> = ({
@@ -18,8 +17,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   totalPrice,
   isVisible,
   onOpenCart,
-  onCheckout,
-  shouldHide = false
+  onCheckout
 }) => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   // Apply affiliate/delivery-app markup to totals consistently
@@ -27,13 +25,13 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
 
-  // Hide if not visible or should be hidden due to scroll/search
-  if (!isVisible || shouldHide) {
+  // Always show the bar when isVisible is true, even with 0 items
+  if (!isVisible) {
     return null;
   }
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3 transition-transform duration-200 ${shouldHide ? 'translate-y-full' : 'translate-y-0'}`}>
+    <div className="fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <Link 
           to="/admin/dashboard"

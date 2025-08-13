@@ -18,8 +18,6 @@ const Index = () => {
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
-  
-  console.log('🏠 Index component loaded - cart items:', cartItems.length);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
   const navigate = useNavigate();
@@ -46,6 +44,12 @@ const Index = () => {
     loadHomepageApp();
   }, []);
 
+  // Always route main URL to the homepage delivery app with cover start screen
+  useEffect(() => {
+    if (homepageApp?.app_slug) {
+      navigate(`/app/${homepageApp.app_slug}?step=start`, { replace: true });
+    }
+  }, [homepageApp, navigate]);
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
@@ -121,9 +125,9 @@ const Index = () => {
         cartItems={cartItemsForCategories}
         onUpdateQuantity={handleUpdateQuantity}
         onProceedToCheckout={handleCheckout}
-        customAppName={homepageApp?.app_name || "Party On Delivery"}
-        customHeroHeading={homepageApp?.main_app_config?.hero_heading || "Austin's Premier Party Delivery"}
-        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading || "Get everything you need for your party delivered fast"}
+        customAppName={homepageApp?.app_name}
+        customHeroHeading={homepageApp?.main_app_config?.hero_heading}
+        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
         customLogoUrl={homepageApp?.logo_url}
         customCollections={homepageApp?.collections_config}
       />
@@ -148,7 +152,6 @@ const Index = () => {
         isVisible={getTotalItems() > 0}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
-        shouldHide={false}
       />
     </div>
   );

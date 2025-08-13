@@ -134,14 +134,6 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  html {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
-    /* Performance optimizations */
-    will-change: scroll-position;
-  }
-
   body {
     @apply bg-background text-foreground;
     /* Mobile optimizations */
@@ -150,10 +142,6 @@ All colors MUST be HSL.
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
-    /* Performance improvements */
-    transform: translateZ(0);
-    backface-visibility: hidden;
   }
   
   /* Better mobile button targets */
@@ -231,38 +219,8 @@ All colors MUST be HSL.
       opacity: 1;
       transform: scale(1) rotate(45deg);
       filter: drop-shadow(0 0 8px hsl(0 0% 100% / 0.6));
+    }
   }
-}
-
-/* Condensed product grid styles for search mode with performance */
-.condensed-grid {
-  gap: 1rem !important;
-  /* Hardware acceleration */
-  transform: translateZ(0);
-  will-change: transform;
-}
-
-@media (max-width: 768px) {
-  .condensed-grid {
-    gap: 0.75rem !important;
-  }
-  
-  .condensed-grid > div {
-    transform: scale(0.9) translateZ(0);
-    transform-origin: center;
-    will-change: transform;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
-}
-
-/* Performance optimizations for animations */
-@media (prefers-reduced-motion: no-preference) {
-  * {
-    transition-property: transform, opacity, background-color, border-color;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-}
   .sparkle {
     position: absolute;
     background: radial-gradient(circle, hsl(0 0% 100%) 0%, hsl(0 0% 100% / 0.85) 40%, hsl(0 0% 100% / 0) 65%);

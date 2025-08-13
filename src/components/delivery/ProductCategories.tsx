@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
-import { getAllCollectionsCached } from '@/utils/instantCacheClient';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
@@ -24,7 +24,6 @@ import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 import { TypingIntro } from '@/components/common/TypingIntro';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useSearchInterface } from '@/hooks/useSearchInterface';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -79,10 +78,6 @@ interface ProductCategoriesProps {
   onBack?: () => void;
   onBackToStart?: () => void;
   showBackToStart?: boolean;
-  // New props to control menu visibility
-  isStartScreen?: boolean;
-  isCoverScreen?: boolean;
-  hideMenus?: boolean;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -99,10 +94,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customHeroSubheading,
   customLogoUrl,
   customHeroScrollingText,
-  customCollections,
-  isStartScreen = false,
-  isCoverScreen = false,
-  hideMenus = false
+  customCollections
 }) => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(0); // Start with first (far left) tab
@@ -129,23 +121,6 @@ const [hideTabs, setHideTabs] = useState(false);
 const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
 
-// Enhanced search interface with smooth UI transitions
-const {
-  isSearchFocused,
-  hasUserInteracted,
-  shouldHideChrome,
-  isScrolling,
-  shouldHideBottomMenu,
-  searchInputRef,
-  handleSearchFocus,
-  handleSearchBlur
-} = useSearchInterface({ 
-  hideOnScroll: true,
-  onSearchFocus: () => {
-    // Additional focus handling can go here
-  }
-});
-
 // Apply affiliate markup to displayed prices (session-based)
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
 const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
@@ -158,11 +133,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     const prodTitle = params.get('productTitle');
     (window as any).__dl = { cat, prodTitle };
   }, []);
-  
-  // Check URL parameters and current app state to determine if menus should be hidden
-  const searchParams = new URLSearchParams(window.location.search);
-  const currentStep = searchParams.get('step');
-  const shouldHideMenusCompletely = hideMenus || isStartScreen || isCoverScreen || currentStep === 'start';
  
   useEffect(() => {
     const onScroll = () => {
@@ -240,7 +210,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     };
   }, []);
 
-  // Mobile: enhanced tab hiding with smooth transitions
+  // Mobile: hide category tabs while scrolling down; reveal when scrolling up or near top
   useEffect(() => {
     if (!isMobile) return;
     const onScroll = () => {
@@ -248,6 +218,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       const last = lastYRef.current;
       if (y > last + 10) {
         setHideTabs(true);
+        const ae = document.activeElement as HTMLElement | null;
+        if (ae && ae.tagName === 'INPUT') {
+          (ae as HTMLInputElement).blur();
+        }
       } else if (y < last - 10 || y < 40) {
         setHideTabs(false);
       }
@@ -321,17 +295,13 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       // First try instant cache for super fast loading
       if (!forceRefresh) {
         try {
-          console.log('🔄 Attempting to load collections with getAllCollectionsCached...');
-          const instant = await getAllCollectionsCached();
-          console.log('📊 getAllCollectionsCached response:', instant);
-          if (instant?.length) {
-            console.log('✅ Main delivery app: Using cached collections from get-all-collections, count:', instant.length);
-            setCollections(instant);
+          const instant = await getInstantProducts();
+          if (instant.collections?.length) {
+            console.log('✅ Main delivery app: Using instant cached collections');
+            setCollections(instant.collections);
             setRetryCount(0);
             setLoading(false);
             return;
-          } else {
-            console.log('⚠️ No collections returned from getAllCollectionsCached, falling back to other methods');
           }
         } catch (instantError) {
           console.log('⚠️ Instant cache failed, trying local cache...');
@@ -353,18 +323,19 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       console.log('Fetching fresh collections from regular endpoint...');
       
       const result = await ErrorHandler.withRetry(async () => {
-        console.log('Using getAllCollectionsCached for maximum speed');
-        const collections = await getAllCollectionsCached(forceRefresh);
-        console.log('Collections response received:', {
-          collectionsCount: collections?.length || 0,
+        console.log('Using getInstantProducts for maximum speed');
+        const instant = await getInstantProducts({ forceRefresh });
+        console.log('Instant response received:', {
+          collectionsCount: instant.collections?.length || 0,
+          productsCount: instant.products?.length || 0,
         });
-        if (!collections || !Array.isArray(collections)) {
+        if (!instant.collections || !Array.isArray(instant.collections)) {
           throw new Error('Invalid response format: no collections array');
         }
-        if (collections.length === 0) {
+        if (instant.collections.length === 0) {
           throw new Error('No collections found in Shopify store');
         }
-        return { collections };
+        return instant;
       }, {
         maxAttempts: 3,
         delayMs: 1000,
@@ -632,8 +603,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      {/* Hero Section with Austin Background - hidden when search is focused */}
-      <div className={`relative overflow-visible transition-all duration-200 ${isSearchFocused ? 'h-0 opacity-0 pointer-events-none' : 'h-[22rem] lg:h-[34rem]'}`}>
+      {/* Hero Section with Austin Background */}
+      <div className="relative h-[22rem] lg:h-[34rem] overflow-visible">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroPartyAustin})` }}
@@ -709,7 +680,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px] relative">
         {/* Sticky search bar above tabs */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
           <div className="max-w-2xl mx-auto">
@@ -719,17 +690,14 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
               showDropdownResults={false}
               onResultsChange={handleSearchResultsChange}
               onSearchingChange={setIsSearching}
-              onFocus={handleSearchFocus}
-              onBlur={handleSearchBlur}
-              inputRef={searchInputRef}
-              inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
+              onFocus={() => setShowSearch(true)}
             />
           </div>
         </div>
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+        <div className="w-full px-1 md:px-4 py-3">
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -841,19 +809,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </button>
         </div>
 
-        {/* "Choose your..." guide row - shown only initially and when menus are not hidden */}
-        {!hasUserInteracted && !shouldHideMenusCompletely && selectedCollection && (
-          <div className="max-w-7xl mx-auto px-4 pb-2">
-            <div className="bg-muted/50 rounded-lg p-3 mb-4 border border-border/50 animate-fade-in">
-              <p className="text-muted-foreground text-center text-sm">
-                👆 Choose your {stepMapping.find(step => step.handle === selectedCollection?.handle)?.title.toLowerCase() || selectedCollection?.title.toLowerCase()}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Section Heading with functional arrows - hidden during cover/start screens */}
-        {!shouldHideMenusCompletely && selectedCollection && (
+        {/* Section Heading with functional arrows */}
+        {selectedCollection && (
           <div className="max-w-7xl mx-auto px-4 pb-4">
             <div className="flex items-center justify-center gap-4">
               {selectedCategory !== 0 && (
@@ -933,8 +890,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             </div>
           </div>
         )}
-        {/* Product Grid - optimized with React.memo and virtualization */}
-        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
+        {/* Product Grid - smaller tiles for spirits, beer, and mixers & n/a, consistent for others */}
+        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''}`}>
           {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
@@ -944,17 +901,13 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             return (
                <div 
                  key={product.id} 
-                 className={`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full ${
+                 className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
                    isCocktailsTab ? 'cursor-pointer hover:border-primary/50' : ''
-                 } ${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md`}
+                 }`}
                  onClick={() => handleProductClick(product)}
                >
-                 {/* Product image - condensed when search focused */}
-                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${
-                   isSearchFocused 
-                     ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-1' : 'mb-2'
-                     : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'
-                 }`}>
+                 {/* Product image - smaller for spirits, beer, and mixers & n/a sections */}
+                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'}`}>
                   <img
                     src={product.image}
                     alt={product.title}
@@ -962,12 +915,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                   />
                 </div>
                  
-                 {/* Product info with condensed height when search focused */}
-                 <div className={`flex flex-col flex-1 justify-between ${
-                   isSearchFocused 
-                     ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[4.5rem]' : 'min-h-[6rem]'
-                     : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'
-                 }`}>
+                 {/* Product info with smaller height for spirits, beer, and mixers & n/a */}
+                 <div className={`flex flex-col flex-1 justify-between ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
                    <div className="flex-1 flex flex-col justify-start">
                     {(() => {
                       // For cocktails, show full title without truncation
@@ -992,23 +941,15 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       }
                       
                       return (
-                         <>
-                           <h4 className={`font-bold leading-tight text-center line-clamp-2 ${
-                             isSearchFocused
-                               ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] mb-0.5' : 'text-xs mb-1'
-                               : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'
-                           }`}>
-                             {displayTitle}
-                           </h4>
-                           {displayPackage && (
-                             <p className={`text-foreground text-center whitespace-nowrap overflow-hidden text-ellipsis ${
-                               isSearchFocused
-                                 ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[8px] leading-2 mb-0.5' : 'text-[10px] mb-1'
-                                 : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3 mb-1' : 'text-xs mb-1'
-                             }`}>
-                               {displayPackage}
-                             </p>
-                           )}
+                        <>
+                          <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'} line-clamp-2`}>
+                            {displayTitle}
+                          </h4>
+                          {displayPackage && (
+                            <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
+                              {displayPackage}
+                            </p>
+                          )}
                         </>
                       );
                     })()}
@@ -1224,7 +1165,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         cartQuantity={lightboxProduct ? getCartItemQuantity(lightboxProduct.id, selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id) : 0}
         selectedVariant={lightboxProduct ? lightboxProduct.variants.find(v => v.id === (selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id)) || lightboxProduct.variants[0] : undefined}
         onProceedToCheckout={onProceedToCheckout}
-       />
-     </div>
-   );
- };
+      />
+    </div>
+  );
+};
