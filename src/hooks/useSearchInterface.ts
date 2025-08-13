@@ -11,22 +11,21 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [shouldHideChrome, setShouldHideChrome] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [shouldHideBottomMenu, setShouldHideBottomMenu] = useState(false);
   
   const lastScrollY = useRef(0);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle search focus with immediate UI changes and scrolling
+  // Handle search focus with immediate UI changes and instant scrolling
   const handleSearchFocus = useCallback(() => {
     setIsSearchFocused(true);
     setHasUserInteracted(true);
     setShouldHideChrome(true);
     options.onSearchFocus?.();
 
-    // Immediate scroll to top to bring search bar into view
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    // Instant scroll to top - no smooth animation for speed
+    window.scrollTo(0, 0);
 
     // Add mobile keyboard optimizations
     if (typeof window !== 'undefined') {
@@ -34,12 +33,12 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
       document.body.style.overflow = 'hidden';
       
       // Force viewport adjustment for mobile keyboards
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
           viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0');
         }
-      }, 100);
+      });
     }
   }, [options]);
 
@@ -61,7 +60,7 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
     }
   }, [options]);
 
-  // Handle scroll behavior
+  // Handle scroll behavior with bottom menu hiding
   useEffect(() => {
     if (!options.hideOnScroll) return;
 
@@ -69,11 +68,12 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
 
-      // Only trigger on significant scroll movements
-      if (scrollDelta > 5) {
+      // Trigger on any scroll movement for immediate response
+      if (scrollDelta > 1) {
         setIsScrolling(true);
         setHasUserInteracted(true);
         setShouldHideChrome(true);
+        setShouldHideBottomMenu(true);
 
         // Hide keyboard if focused
         if (isSearchFocused && searchInputRef.current) {
@@ -85,10 +85,12 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
           clearTimeout(scrollTimeoutRef.current);
         }
 
-        // Stop scrolling state after a delay
+        // Stop scrolling state after a brief delay
         scrollTimeoutRef.current = setTimeout(() => {
           setIsScrolling(false);
-        }, 150);
+          // Keep bottom menu hidden for longer
+          setTimeout(() => setShouldHideBottomMenu(false), 1000);
+        }, 100);
 
         lastScrollY.current = currentScrollY;
       }
@@ -120,12 +122,14 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
     hasUserInteracted,
     shouldHideChrome,
     isScrolling,
+    shouldHideBottomMenu,
     searchInputRef,
     handleSearchFocus,
     handleSearchBlur,
     resetInteraction: () => {
       setHasUserInteracted(false);
       setShouldHideChrome(false);
+      setShouldHideBottomMenu(false);
     }
   };
 };

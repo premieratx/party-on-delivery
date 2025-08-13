@@ -138,6 +138,8 @@ All colors MUST be HSL.
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
+    /* Performance optimizations */
+    will-change: scroll-position;
   }
 
   body {
@@ -149,6 +151,9 @@ All colors MUST be HSL.
     touch-action: manipulation;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
+    /* Performance improvements */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
   
   /* Better mobile button targets */
@@ -229,9 +234,12 @@ All colors MUST be HSL.
   }
 }
 
-/* Condensed product grid styles for search mode */
+/* Condensed product grid styles for search mode with performance */
 .condensed-grid {
   gap: 1rem !important;
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 @media (max-width: 768px) {
@@ -240,8 +248,19 @@ All colors MUST be HSL.
   }
   
   .condensed-grid > div {
-    transform: scale(0.9);
+    transform: scale(0.9) translateZ(0);
     transform-origin: center;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
+/* Performance optimizations for animations */
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    transition-property: transform, opacity, background-color, border-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
   .sparkle {

@@ -18,6 +18,9 @@ const Index = () => {
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
+  // Import search interface for bottom menu hiding
+  const { shouldHideBottomMenu } = require('@/hooks/useSearchInterface').useSearchInterface({ hideOnScroll: true });
+  
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
   const navigate = useNavigate();
@@ -152,6 +155,7 @@ const Index = () => {
         isVisible={getTotalItems() > 0}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
+        shouldHide={shouldHideBottomMenu}
       />
     </div>
   );

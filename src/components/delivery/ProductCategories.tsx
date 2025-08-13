@@ -135,6 +135,7 @@ const {
   hasUserInteracted,
   shouldHideChrome,
   isScrolling,
+  shouldHideBottomMenu,
   searchInputRef,
   handleSearchFocus,
   handleSearchBlur
@@ -626,11 +627,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     );
   }
 
-  console.log('ProductCategories render started');
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      {/* Hero Section with Austin Background */}
-      <div className="relative h-[22rem] lg:h-[34rem] overflow-visible">
+      {/* Hero Section with Austin Background - hidden when search is focused */}
+      <div className={`relative overflow-visible transition-all duration-200 ${isSearchFocused ? 'h-0 opacity-0 pointer-events-none' : 'h-[22rem] lg:h-[34rem]'}`}>
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroPartyAustin})` }}
@@ -930,7 +930,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             </div>
           </div>
         )}
-        {/* Product Grid - smaller tiles for spirits, beer, and mixers & n/a, consistent for others */}
+        {/* Product Grid - optimized with React.memo and virtualization */}
         <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
           {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
