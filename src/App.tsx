@@ -11,7 +11,7 @@ import { Suspense, lazy, useEffect } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
-import Index from "./pages/Index";
+import Home from "./pages/Home";
 
 import NotFound from "./pages/NotFound";
 import { getInstantProducts } from "@/utils/instantCacheClient";
@@ -109,7 +109,7 @@ const App = () => {
                   <Routes>
                     {/* Core pages - no lazy loading */}
                     
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<Home />} />
                     
                     {/* Order completion */}
                     <Route path="/success" element={<Success />} />
