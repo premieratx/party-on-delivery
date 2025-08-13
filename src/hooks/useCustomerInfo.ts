@@ -542,7 +542,7 @@ export function useCustomerInfo() {
 
   // Optimized debug logging with throttling
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.MODE === 'development') {
       console.log('useCustomerInfo - State updated:', { 
         customerComplete: customerInfo.firstName && customerInfo.email,
         addressComplete: addressInfo.street && addressInfo.city 

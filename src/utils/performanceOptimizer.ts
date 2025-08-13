@@ -295,7 +295,7 @@ export function initializePerformanceOptimizations() {
   MemoryManager.scheduleMemoryCleanup();
   
   // Log performance metrics every minute in development
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.MODE === 'development') {
     setInterval(() => {
       PerformanceMonitor.logPerformanceReport();
     }, 60000);
