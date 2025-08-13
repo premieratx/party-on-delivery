@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,8 +19,7 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-    <!-- Temporarily disabled canonical redirect to test -->
-    <!--
+    <!-- Canonical domain enforcement: redirect any non-canonical host to order.partyondelivery.com before app loads -->
     <script>
       (function() {
         try {
@@ -38,15 +37,6 @@
         }
       })();
     </script>
-    -->
-<link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
-<link rel="preconnect" href="https://*.supabase.co" crossorigin>
-<link rel="preconnect" href="https://api.stripe.com" crossorigin>
-
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#000000" />
-
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.supabase.co https://*.shopify.com https://api.stripe.com; img-src 'self' data: blob: https:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; base-uri 'self'; frame-ancestors 'self'">
   </head>
 
   <body>

@@ -2,40 +2,57 @@ import React, { useState, useEffect } from 'react';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
-import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  // Enable wake lock to keep screen on during app usage
   useWakeLock();
   
-  const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
+  // Use optimized product loading
+  const { refreshProducts } = useOptimizedProductLoader();
+  
+  // Use unified cart system
+  const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
+  
+  // Import search interface for bottom menu hiding
+  const { shouldHideBottomMenu } = require('@/hooks/useSearchInterface').useSearchInterface({ hideOnScroll: true });
+  
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [showEntrancePopup, setShowEntrancePopup] = useState(true);
-  const [homepageConfig, setHomepageConfig] = useState<any>(null);
+  const [homepageApp, setHomepageApp] = useState<any>(null);
   const navigate = useNavigate();
 
+  // Load the homepage delivery app configuration
   useEffect(() => {
-    const loadHomepageConfig = async () => {
+    const loadHomepageApp = async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('delivery_app_variations')
           .select('*')
           .eq('is_homepage', true)
           .eq('is_active', true)
           .maybeSingle();
         
-        if (data) setHomepageConfig(data);
+        if (!error && data) {
+          setHomepageApp(data);
+        }
       } catch (error) {
-        console.error('Failed to load homepage config:', error);
+        console.error('Error loading homepage app:', error);
       }
     };
 
-    loadHomepageConfig();
+    loadHomepageApp();
   }, []);
 
+  // Always route main URL to the homepage delivery app with cover start screen
+  useEffect(() => {
+    if (homepageApp?.app_slug) {
+      navigate(`/app/${homepageApp.app_slug}?step=start`, { replace: true });
+    }
+  }, [homepageApp, navigate]);
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
@@ -43,28 +60,47 @@ const Index = () => {
       name: product.title,
       price: parseFloat(String(product.price)) || 0,
       image: product.image,
-      variant: product.variant || 'default'
+      variant: product.variant
     };
     
-    const currentQuantity = cartItems.find(item => {
+    console.log('🛒 Index: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = cartItems.find(item => {
       const itemId = item.productId || item.id;
       const itemVariant = item.variant || 'default';
-      return itemId === cartItem.id && itemVariant === cartItem.variant;
+      const checkVariant = cartItem.variant || 'default';
+      return itemId === cartItem.id && itemVariant === checkVariant;
     })?.quantity || 0;
     
-    updateQuantity(cartItem.id, cartItem.variant, currentQuantity + 1, cartItem);
+    updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
+  };
+
+  const handleUpdateQuantity = (productId: string, variantId: string | undefined, quantity: number) => {
+    updateQuantity(productId, variantId, quantity);
+  };
+
+  const handleRemoveFromCart = (productId: string, variantId?: string) => {
+    removeItem(productId, variantId);
+  };
+
+  const handleEmptyCart = () => {
+    emptyCart();
   };
 
   const handleCheckout = () => {
+    // Store delivery app referrer and app context for checkout
     localStorage.setItem('deliveryAppReferrer', '/');
     localStorage.setItem('app-context', JSON.stringify({
       appSlug: 'main-delivery-app',
       appName: 'Party On Delivery'
     }));
+    
+    // Navigate to checkout
     navigate('/checkout');
   };
 
-  const cartItemsForDisplay = cartItems.map(item => ({
+  // Convert unified cart items to the format expected by ProductCategories
+  const cartItemsForCategories = cartItems.map(item => ({
     id: item.id,
     title: item.title,
     name: item.name,
@@ -74,7 +110,8 @@ const Index = () => {
     variant: item.variant
   }));
 
-  const deliveryInfo = {
+  // Mock delivery info for cart component
+  const mockDeliveryInfo = {
     date: new Date(),
     timeSlot: '12:00 PM - 2:00 PM',
     address: 'Sample Address',
@@ -83,56 +120,42 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Entrance Popup */}
-      <CustomDeliveryCoverModal
-        open={showEntrancePopup}
-        onOpenChange={setShowEntrancePopup}
-        onStartOrder={() => {
-          setShowEntrancePopup(false);
-        }}
-        appName="Party On Delivery"
-        title="Exclusive Concierge Delivery"
-        subtitle="Austin's favorite alcohol delivery service"
-        buttonText="Order Now"
-        checklistItems={[
-          'Locally Owned',
-          'Same Day Delivery', 
-          'Cocktail Kits on Demand'
-        ]}
-      />
-
+      {/* Show delivery app - either custom homepage app or default */}
       <ProductCategories
         onAddToCart={handleAddToCart}
         cartItemCount={getTotalItems()}
         onOpenCart={() => setIsCartOpen(true)}
-        cartItems={cartItemsForDisplay}
-        onUpdateQuantity={updateQuantity}
+        cartItems={cartItemsForCategories}
+        onUpdateQuantity={handleUpdateQuantity}
         onProceedToCheckout={handleCheckout}
-        customAppName={homepageConfig?.app_name}
-        customHeroHeading={homepageConfig?.main_app_config?.hero_heading}
-        customHeroSubheading={homepageConfig?.main_app_config?.hero_subheading}
-        customLogoUrl={homepageConfig?.logo_url}
-        customCollections={homepageConfig?.collections_config}
+        customAppName={homepageApp?.app_name}
+        customHeroHeading={homepageApp?.main_app_config?.hero_heading}
+        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
+        customLogoUrl={homepageApp?.logo_url}
+        customCollections={homepageApp?.collections_config}
       />
 
+      {/* Cart sidebar */}
       <DeliveryCart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        items={cartItemsForDisplay}
-        onUpdateQuantity={updateQuantity}
-        onRemoveItem={removeItem}
+        items={cartItemsForCategories}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveFromCart}
         totalPrice={getTotalPrice()}
         onCheckout={handleCheckout}
-        deliveryInfo={deliveryInfo}
-        onEmptyCart={emptyCart}
+        deliveryInfo={mockDeliveryInfo}
+        onEmptyCart={handleEmptyCart}
       />
 
+      {/* Bottom cart bar */}
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}
         isVisible={getTotalItems() > 0}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
+        shouldHide={shouldHideBottomMenu}
       />
     </div>
   );

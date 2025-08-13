@@ -27,8 +27,7 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
     return () => { mounted = false; };
   }, []);
 
-  // If Stripe isn't ready, render children without Elements to avoid blocking the app
-  if (!stripePromise) return <>{children}</>;
+  if (!stripePromise) return null;
 
   return (
     <Elements stripe={stripePromise}>

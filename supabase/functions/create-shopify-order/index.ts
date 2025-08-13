@@ -114,7 +114,9 @@ serve(async (req) => {
     if (!cartItems || cartItems.length === 0) {
       logStep("CRITICAL: No cart items found anywhere", { 
         availableMetadataKeys: Object.keys(metadata || {}),
-        cartDataId: metadata?.cart_data_id
+        cartDataId: metadata?.cart_data_id,
+        isGroupOrder: !!groupOrderToken,
+        groupOrderToken
       });
       throw new Error("No cart items found. Check order_drafts table and metadata structure.");
     }
@@ -131,6 +133,8 @@ serve(async (req) => {
     const customerName = metadata?.customer_name;
     const customerPhone = metadata?.customer_phone;
     const customerEmail = metadata?.customer_email;
+    const groupOrderNumber = metadata?.group_order_number;
+    const groupOrderToken = metadata?.group_order_token; // New: detect if joining existing order
     const discountCode = metadata?.discount_code;
     const discountAmount = metadata?.discount_amount;
     const subtotal = parseFloat(metadata?.subtotal || '0');
@@ -171,11 +175,65 @@ serve(async (req) => {
       totalAmount
     });
 
-    // Generate a unique share token for every order
+    // **GROUP ORDER DETECTION AND HANDLING**
+    let isJoiningGroupOrder = false;
+    let originalGroupOrderId = null;
+    let shareToken = null;
+    
+    // Generate a unique share token for EVERY order (not just group orders)
     const crypto = globalThis.crypto;
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
-    const shareToken = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+    const defaultShareToken = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+    
+    if (groupOrderToken) {
+      logStep("🔄 GROUP ORDER DETECTED - Processing group order join", { 
+        groupOrderToken,
+        customerEmail,
+        customerName,
+        cartItemsCount: cartItems.length,
+        subtotal
+      });
+      
+      try {
+        const supabaseClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+
+        // Try to join the existing group order
+        const { data: joinResult, error: joinError } = await supabaseClient.rpc('join_group_order', {
+          p_share_token: groupOrderToken,
+          p_customer_email: customerEmail,
+          p_customer_name: customerName,
+          p_line_items: cartItems,
+          p_subtotal: subtotal
+        });
+
+        if (joinError) {
+          logStep("Error joining group order", joinError);
+        } else if (joinResult && joinResult.success) {
+          isJoiningGroupOrder = true;
+          originalGroupOrderId = joinResult.original_order_id;
+          shareToken = joinResult.share_token;
+          logStep("Successfully joined group order", { 
+            originalOrderId: originalGroupOrderId,
+            shareToken: shareToken 
+          });
+        } else {
+          logStep("Group order join failed", joinResult);
+        }
+      } catch (groupError) {
+        logStep("Exception in group order handling", groupError);
+      }
+    }
+    
+    // If not joining a group order, use the generated default share token
+    if (!shareToken) {
+      shareToken = defaultShareToken;
+      logStep("Using generated share token for new order", { shareToken });
+    }
     
     // Enhanced affiliate tracking calculations
     let affiliateCommissionAmount = 0;
@@ -582,6 +640,20 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
       let orderGroupId;
       let isNewGroup = false;
 
+      // If this is a group order (friend adding to existing order), find the original order group
+      if (groupOrderNumber) {
+        const { data: originalOrder } = await supabaseClient
+          .from('shopify_orders')
+          .select('order_group_id')
+          .eq('shopify_order_number', groupOrderNumber)
+          .single();
+        
+        if (originalOrder?.order_group_id) {
+          orderGroupId = originalOrder.order_group_id;
+          logStep('Found existing order group for group order', { orderGroupId, groupOrderNumber });
+        }
+      }
+
       // If not a group order or if group order lookup failed, check for existing group by customer
       if (!orderGroupId) {
         const { data: existingGroup } = await supabaseClient
@@ -643,6 +715,11 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
         // Update Shopify order with group information
         try {
           let groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
+          
+          // Add group bundle tag if this is a group order
+          if (isJoiningGroupOrder || shareToken) {
+            groupTags += ', group-bundle';
+          }
           
           // Build tags array based on order type
           const tagArray = [groupTags];
@@ -739,6 +816,9 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
           status: 'confirmed',
           affiliate_code: affiliateCode,
           affiliate_id: null, // Will be populated by affiliate tracking
+          is_group_order: isJoiningGroupOrder,
+          group_order_id: isJoiningGroupOrder ? originalGroupOrderId : null,
+          // ALWAYS set the share_token for ALL orders (group or individual)
           share_token: shareToken,
           is_shareable: true, // Always make orders shareable
         };
@@ -755,6 +835,8 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
           logStep('Customer order record created', { 
             shareToken, 
             orderId: newOrder.id,
+            isGroupOrder: isJoiningGroupOrder,
+            orderType: isJoiningGroupOrder ? 'group-addition' : 'new-order',
             isShareable: true
           });
         } else {
@@ -800,11 +882,13 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
           shopifyOrderId: orderResult.order.id,
           orderNumber: orderResult.order.order_number
         },
-        shareToken: shareToken
+        shareToken: shareToken,
+        isGroupOrder: isJoiningGroupOrder,
+        groupParticipants: [] // Will be populated for joined orders
       };
 
-      // Use the send-order-confirmation function
-      const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-order-confirmation`, {
+      // Use the new group order confirmation function
+      const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-group-order-confirmation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -815,13 +899,13 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
       });
 
       if (emailResponse.ok) {
-        logStep('Order confirmation email sent successfully');
+        logStep('Group order confirmation email sent successfully');
       } else {
         const emailError = await emailResponse.text();
-        logStep('Failed to send order confirmation email', { error: emailError });
+        logStep('Failed to send group order confirmation email', { error: emailError });
       }
     } catch (emailError) {
-      logStep('Error sending order confirmation email', emailError);
+      logStep('Error sending group order confirmation email', emailError);
       // Don't fail the order creation if email fails
     }
 

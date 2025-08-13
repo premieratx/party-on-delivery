@@ -26,7 +26,7 @@ serve(async (req) => {
     
     // Support both 'items' and 'cartItems' for backward compatibility
     const cartItems = body.cartItems || body.items;
-    const { amount, currency, customerInfo, deliveryInfo, appliedDiscount, tipAmount, subtotal, deliveryFee, salesTax, affiliateCode, commissionPercent } = body;
+    const { amount, currency, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken, affiliateCode, commissionPercent } = body;
     
     logStep("Extracted data", {
       amount,
@@ -38,6 +38,7 @@ serve(async (req) => {
       deliveryFee,
       salesTax,
       tipAmount,
+      groupOrderToken,
       affiliateCode,
       commissionPercent
     });
@@ -173,7 +174,9 @@ serve(async (req) => {
             cartItems,
             customerInfo,
             deliveryInfo,
-            appliedDiscount
+            appliedDiscount,
+            groupOrderToken,
+            groupOrderNumber
           },
           total_amount: validSubtotal + validDeliveryFee + validSalesTax + validTipAmount,
           customer_email: customerEmail,
@@ -226,7 +229,9 @@ serve(async (req) => {
         discount_type: discountTypeToUse,
         discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
         discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
-        affiliate_code: (affiliateCode || '').substring(0, 50),
+        group_order_number: (groupOrderNumber || '').substring(0, 50),
+        group_order_token: (groupOrderToken || '').substring(0, 50),
+        is_adding_to_order: groupOrderToken ? 'true' : 'false',
         affiliate_code: (affiliateCode || '').substring(0, 50),
         commission_percent: (typeof commissionPercent === 'number' && !isNaN(commissionPercent) ? commissionPercent.toString() : '')
       }

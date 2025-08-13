@@ -20,8 +20,8 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { cartItems, deliveryInfo, customerInfo, appliedDiscount, tipAmount } = await req.json();
-    logStep("Request data received", { cartItems: cartItems?.length, deliveryInfo, customerInfo, appliedDiscount, tipAmount });
+    const { cartItems, deliveryInfo, customerInfo, appliedDiscount, tipAmount, groupOrderNumber } = await req.json();
+    logStep("Request data received", { cartItems: cartItems?.length, deliveryInfo, customerInfo, appliedDiscount, tipAmount, groupOrderNumber });
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -166,7 +166,7 @@ serve(async (req) => {
         customer_phone: customerInfo.phone,
         customer_email: customerInfo.email,
         cart_items: JSON.stringify(cartItems),
-        sales_tax: Number(salesTax) || 0,
+        group_order_number: groupOrderNumber || '',
         subtotal: subtotal.toString(),
         shipping_fee: deliveryFee.toString(),
         sales_tax: salesTax.toString(),

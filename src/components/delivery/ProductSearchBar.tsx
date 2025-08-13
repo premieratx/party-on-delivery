@@ -34,6 +34,7 @@ interface ProductSearchBarProps {
   onQueryChange?: (value: string) => void;
   // UX hooks
   onFocus?: () => void;
+  onBlur?: () => void;
   inputRef?: React.RefObject<HTMLInputElement>;
   inputClassName?: string;
 }
@@ -48,6 +49,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   value,
   onQueryChange,
   onFocus,
+  onBlur,
   inputRef,
   inputClassName
 }) => {
@@ -156,6 +158,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
             value={searchQuery}
             onChange={handleInputChange}
             onFocus={onFocus}
+            onBlur={onBlur}
             ref={inputRef as any}
             className={`pl-10 pr-10 h-12 text-base border-2 border-primary/20 focus:border-primary ${inputClassName || ''}`}
           />
