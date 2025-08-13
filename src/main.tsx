@@ -1,12 +1,10 @@
-// Polyfill for require if needed
-if (typeof window !== 'undefined' && !window.require) {
-  (window as any).require = function() {
-    throw new Error('require() is not available in browser environment');
-  };
-}
+// NO IMPORTS - testing if the error happens before any code runs
+console.log('Main.tsx is executing');
 
-import { createRoot } from 'react-dom/client'
-import TestSimple from './TestSimple'
-import './index.css'
-
-createRoot(document.getElementById("root")!).render(<TestSimple />)
+document.getElementById("root")!.innerHTML = `
+  <div style="padding: 20px;">
+    <h1>Static Test</h1>
+    <p>If you see this, the error is NOT in our code</p>
+    <script>console.log('Inline script executed');</script>
+  </div>
+`;
