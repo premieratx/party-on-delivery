@@ -1,0 +1,3 @@
+Contact: mailto:security@partyondelivery.com
+Policy: https://partyondelivery.com/security
+Preferred-Languages: en
