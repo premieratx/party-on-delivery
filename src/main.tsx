@@ -1,5 +1,19 @@
-import { createRoot } from 'react-dom/client'
-import App from './App'
-import './index.css'
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import { AppProviders } from "./providers/AppProviders";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { LoadingScreen } from "./components/LoadingScreen";
 
-createRoot(document.getElementById("root")!).render(<App />)
+const root = document.getElementById("root");
+if (!root) throw new Error("#root not found");
+
+createRoot(root).render(
+  <AppProviders>
+    <React.Suspense fallback={<LoadingScreen />}>
+      <ErrorBoundary fallback={<LoadingScreen message="Reloading…" />}>
+        <App />
+      </ErrorBoundary>
+    </React.Suspense>
+  </AppProviders>
+);
