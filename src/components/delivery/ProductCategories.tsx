@@ -79,6 +79,10 @@ interface ProductCategoriesProps {
   onBack?: () => void;
   onBackToStart?: () => void;
   showBackToStart?: boolean;
+  // New props to control menu visibility
+  isStartScreen?: boolean;
+  isCoverScreen?: boolean;
+  hideMenus?: boolean;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -95,7 +99,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customHeroSubheading,
   customLogoUrl,
   customHeroScrollingText,
-  customCollections
+  customCollections,
+  isStartScreen = false,
+  isCoverScreen = false,
+  hideMenus = false
 }) => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(0); // Start with first (far left) tab
@@ -149,7 +156,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     const cat = params.get('category');
     const prodTitle = params.get('productTitle');
     (window as any).__dl = { cat, prodTitle };
-  }, []);
+  // Check URL parameters and current app state to determine if menus should be hidden
+  const searchParams = new URLSearchParams(window.location.search);
+  const currentStep = searchParams.get('step');
+  const shouldHideMenusCompletely = hideMenus || isStartScreen || isCoverScreen || currentStep === 'start';
  
   useEffect(() => {
     const onScroll = () => {
@@ -693,7 +703,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
+      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
         {/* Sticky search bar above tabs */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
           <div className="max-w-2xl mx-auto">
@@ -713,7 +723,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -825,8 +835,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </button>
         </div>
 
-        {/* "Choose your..." guide row - shown only initially */}
-        {!hasUserInteracted && selectedCollection && (
+        {/* "Choose your..." guide row - shown only initially and when menus are not hidden */}
+        {!hasUserInteracted && !shouldHideMenusCompletely && selectedCollection && (
           <div className="max-w-7xl mx-auto px-4 pb-2">
             <div className="bg-muted/50 rounded-lg p-3 mb-4 border border-border/50 animate-fade-in">
               <p className="text-muted-foreground text-center text-sm">
@@ -836,8 +846,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
         )}
 
-        {/* Section Heading with functional arrows */}
-        {selectedCollection && (
+        {/* Section Heading with functional arrows - hidden during cover/start screens */}
+        {!shouldHideMenusCompletely && selectedCollection && (
           <div className="max-w-7xl mx-auto px-4 pb-4">
             <div className="flex items-center justify-center gap-4">
               {selectedCategory !== 0 && (
