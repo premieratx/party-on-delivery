@@ -83,7 +83,6 @@ interface ProductCategoriesProps {
   isStartScreen?: boolean;
   isCoverScreen?: boolean;
   hideMenus?: boolean;
-  onSearchStateChange?: (state: { isSearchFocused: boolean; shouldHideBottomMenu: boolean }) => void;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -103,8 +102,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customCollections,
   isStartScreen = false,
   isCoverScreen = false,
-  hideMenus = false,
-  onSearchStateChange
+  hideMenus = false
 }) => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(0); // Start with first (far left) tab
@@ -131,9 +129,12 @@ const [hideTabs, setHideTabs] = useState(false);
 const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
 
-// Simplified search interface
+// Enhanced search interface with smooth UI transitions
 const {
   isSearchFocused,
+  hasUserInteracted,
+  shouldHideChrome,
+  isScrolling,
   shouldHideBottomMenu,
   searchInputRef,
   handleSearchFocus,
@@ -144,11 +145,6 @@ const {
     // Additional focus handling can go here
   }
 });
-
-// Notify parent component of search state changes
-useEffect(() => {
-  onSearchStateChange?.({ isSearchFocused, shouldHideBottomMenu });
-}, [isSearchFocused, shouldHideBottomMenu, onSearchStateChange]);
 
 // Apply affiliate markup to displayed prices (session-based)
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
@@ -710,7 +706,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${isSearchFocused ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
+      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
         {/* Sticky search bar above tabs */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
           <div className="max-w-2xl mx-auto">
@@ -724,14 +720,13 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
               onBlur={handleSearchBlur}
               inputRef={searchInputRef}
               inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
-              isSearchFocused={isSearchFocused}
             />
           </div>
         </div>
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : 'opacity-100 transform translate-y-0'}`}>
+        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -844,7 +839,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
 
         {/* "Choose your..." guide row - shown only initially and when menus are not hidden */}
-        {!shouldHideMenusCompletely && selectedCollection && (
+        {!hasUserInteracted && !shouldHideMenusCompletely && selectedCollection && (
           <div className="max-w-7xl mx-auto px-4 pb-2">
             <div className="bg-muted/50 rounded-lg p-3 mb-4 border border-border/50 animate-fade-in">
               <p className="text-muted-foreground text-center text-sm">

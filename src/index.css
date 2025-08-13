@@ -174,11 +174,6 @@ All colors MUST be HSL.
     }
   }
 
-  /* Search focused state optimizations */
-  body.search-focused {
-    padding-bottom: 33vh !important; /* Space for condensed keyboard */
-  }
-
   /* Performance optimizations */
   img {
     content-visibility: auto;

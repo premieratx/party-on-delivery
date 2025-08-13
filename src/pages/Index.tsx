@@ -1,165 +1,162 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ShoppingCart, Beer, Wine, Package, Star } from 'lucide-react';
-import { getInstantProducts } from '@/utils/instantCacheClient';
-
-interface ShopifyProduct {
-  id: string;
-  title: string;
-  price: number;
-  image: string;
-  description: string;
-}
-
-interface ShopifyCollection {
-  id: string;
-  title: string;
-  handle: string;
-  products: ShopifyProduct[];
-}
+import { ProductCategories } from '@/components/delivery/ProductCategories';
+import { DeliveryCart } from '@/components/delivery/DeliveryCart';
+import { BottomCartBar } from '@/components/common/BottomCartBar';
+import { useWakeLock } from '@/hooks/useWakeLock';
+import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const [collections, setCollections] = useState<ShopifyCollection[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  // Enable wake lock to keep screen on during app usage
+  useWakeLock();
+  
+  // Use optimized product loading
+  const { refreshProducts } = useOptimizedProductLoader();
+  
+  // Use unified cart system
+  const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
+  
+  // Import search interface for bottom menu hiding
+  const { shouldHideBottomMenu } = require('@/hooks/useSearchInterface').useSearchInterface({ hideOnScroll: true });
+  
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [homepageApp, setHomepageApp] = useState<any>(null);
+  const navigate = useNavigate();
 
+  // Load the homepage delivery app configuration
   useEffect(() => {
-    const loadData = async () => {
+    const loadHomepageApp = async () => {
       try {
-        const data = await getInstantProducts();
-        console.log('Loaded instant data:', data?.collections?.length);
-        if (data?.collections && data.collections.length > 0) {
-          setCollections(data.collections);
-        } else {
-          console.log('No collections returned, using fallback');
-          setCollections([
-            { id: '1', title: 'Wine & Champagne', handle: 'wine-champagne', products: [] },
-            { id: '2', title: 'Beer & Seltzers', handle: 'beer-seltzers', products: [] },
-            { id: '3', title: 'Spirits', handle: 'spirits', products: [] },
-            { id: '4', title: 'Party Supplies', handle: 'party-supplies', products: [] }
-          ]);
+        const { data, error } = await supabase
+          .from('delivery_app_variations')
+          .select('*')
+          .eq('is_homepage', true)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (!error && data) {
+          setHomepageApp(data);
         }
-        setIsLoading(false);
       } catch (error) {
-        console.error('Error loading data:', error);
-        setCollections([
-          { id: '1', title: 'Wine & Champagne', handle: 'wine-champagne', products: [] },
-          { id: '2', title: 'Beer & Seltzers', handle: 'beer-seltzers', products: [] },
-          { id: '3', title: 'Spirits', handle: 'spirits', products: [] },
-          { id: '4', title: 'Party Supplies', handle: 'party-supplies', products: [] }
-        ]);
-        setIsLoading(false);
+        console.error('Error loading homepage app:', error);
       }
     };
 
-    loadData();
+    loadHomepageApp();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-primary mb-4">🎉 Party On Delivery</h1>
-          <p className="text-muted-foreground mb-8">Loading your party essentials...</p>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+  // Always route main URL to the homepage delivery app with cover start screen
+  useEffect(() => {
+    if (homepageApp?.app_slug) {
+      navigate(`/app/${homepageApp.app_slug}?step=start`, { replace: true });
+    }
+  }, [homepageApp, navigate]);
+  const handleAddToCart = (product: any) => {
+    const cartItem = {
+      id: product.id,
+      title: product.title,
+      name: product.title,
+      price: parseFloat(String(product.price)) || 0,
+      image: product.image,
+      variant: product.variant
+    };
+    
+    console.log('🛒 Index: Adding product to cart:', cartItem);
+    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
+    const currentQty = cartItems.find(item => {
+      const itemId = item.productId || item.id;
+      const itemVariant = item.variant || 'default';
+      const checkVariant = cartItem.variant || 'default';
+      return itemId === cartItem.id && itemVariant === checkVariant;
+    })?.quantity || 0;
+    
+    updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
+  };
 
-  if (!collections || collections.length === 0) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-primary mb-4">🎉 Party On Delivery</h1>
-          <p className="text-muted-foreground">No products available at the moment</p>
-        </div>
-      </div>
-    );
-  }
+  const handleUpdateQuantity = (productId: string, variantId: string | undefined, quantity: number) => {
+    updateQuantity(productId, variantId, quantity);
+  };
 
-  const currentCollection = collections[selectedCategory];
+  const handleRemoveFromCart = (productId: string, variantId?: string) => {
+    removeItem(productId, variantId);
+  };
+
+  const handleEmptyCart = () => {
+    emptyCart();
+  };
+
+  const handleCheckout = () => {
+    // Store delivery app referrer and app context for checkout
+    localStorage.setItem('deliveryAppReferrer', '/');
+    localStorage.setItem('app-context', JSON.stringify({
+      appSlug: 'main-delivery-app',
+      appName: 'Party On Delivery'
+    }));
+    
+    // Navigate to checkout
+    navigate('/checkout');
+  };
+
+  // Convert unified cart items to the format expected by ProductCategories
+  const cartItemsForCategories = cartItems.map(item => ({
+    id: item.id,
+    title: item.title,
+    name: item.name,
+    price: item.price,
+    image: item.image,
+    quantity: item.quantity,
+    variant: item.variant
+  }));
+
+  // Mock delivery info for cart component
+  const mockDeliveryInfo = {
+    date: new Date(),
+    timeSlot: '12:00 PM - 2:00 PM',
+    address: 'Sample Address',
+    instructions: ''
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary-glow text-white p-6 text-center">
-        <h1 className="text-3xl font-bold mb-2">🎉 Party On Delivery</h1>
-        <p className="text-lg opacity-90">Austin's fastest party supply delivery</p>
-        <div className="flex items-center justify-center gap-2 mt-2">
-          <Star className="w-4 h-4 fill-current" />
-          <span className="text-sm">4.9 • Over 1000+ happy customers</span>
-        </div>
-      </div>
+      {/* Show delivery app - either custom homepage app or default */}
+      <ProductCategories
+        onAddToCart={handleAddToCart}
+        cartItemCount={getTotalItems()}
+        onOpenCart={() => setIsCartOpen(true)}
+        cartItems={cartItemsForCategories}
+        onUpdateQuantity={handleUpdateQuantity}
+        onProceedToCheckout={handleCheckout}
+        customAppName={homepageApp?.app_name}
+        customHeroHeading={homepageApp?.main_app_config?.hero_heading}
+        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
+        customLogoUrl={homepageApp?.logo_url}
+        customCollections={homepageApp?.collections_config}
+      />
 
-      {/* Category Tabs */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
-        <div className="flex overflow-x-auto p-2 gap-2 max-w-4xl mx-auto">
-          {collections.slice(0, 6).map((collection, index) => {
-            const isActive = selectedCategory === index;
-            const IconComponent = index === 0 ? Wine : index === 1 ? Beer : index === 2 ? Package : Package;
-            
-            return (
-              <Button
-                key={collection.id}
-                variant={isActive ? "default" : "outline"}
-                onClick={() => setSelectedCategory(index)}
-                className="flex-shrink-0 flex items-center gap-2 min-w-max"
-              >
-                <IconComponent className="w-4 h-4" />
-                {collection.title}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Cart sidebar */}
+      <DeliveryCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItemsForCategories}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveFromCart}
+        totalPrice={getTotalPrice()}
+        onCheckout={handleCheckout}
+        deliveryInfo={mockDeliveryInfo}
+        onEmptyCart={handleEmptyCart}
+      />
 
-      {/* Products Grid */}
-      <div className="p-4 max-w-6xl mx-auto">
-        {currentCollection && (
-          <>
-            <h2 className="text-2xl font-bold mb-4">{currentCollection.title}</h2>
-            {currentCollection.products && currentCollection.products.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {currentCollection.products.slice(0, 12).map((product) => (
-                  <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="aspect-square relative bg-muted">
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                    <CardContent className="p-3">
-                      <h3 className="font-medium text-sm line-clamp-2 mb-2">
-                        {product.title}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-primary">
-                          ${Number(product.price).toFixed(2)}
-                        </span>
-                        <Button size="sm" className="h-8 w-8 p-0">
-                          <ShoppingCart className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Products loading...</h3>
-                <p className="text-muted-foreground">
-                  Our Shopify API is temporarily rate limited. Products will appear shortly.
-                </p>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {/* Bottom cart bar */}
+      <BottomCartBar
+        items={cartItems}
+        totalPrice={getTotalPrice()}
+        isVisible={getTotalItems() > 0}
+        onOpenCart={() => setIsCartOpen(true)}
+        onCheckout={handleCheckout}
+        shouldHide={shouldHideBottomMenu}
+      />
     </div>
   );
 };
