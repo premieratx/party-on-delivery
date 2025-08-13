@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
-import { getInstantProducts } from '@/utils/instantCacheClient';
+import { getAllCollectionsCached } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
@@ -321,10 +321,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       // First try instant cache for super fast loading
       if (!forceRefresh) {
         try {
-          const instant = await getInstantProducts();
-          if (instant.collections?.length) {
-            console.log('✅ Main delivery app: Using instant cached collections');
-            setCollections(instant.collections);
+          const instant = await getAllCollectionsCached();
+          if (instant?.length) {
+            console.log('✅ Main delivery app: Using cached collections from get-all-collections');
+            setCollections(instant);
             setRetryCount(0);
             setLoading(false);
             return;
@@ -349,19 +349,18 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       console.log('Fetching fresh collections from regular endpoint...');
       
       const result = await ErrorHandler.withRetry(async () => {
-        console.log('Using getInstantProducts for maximum speed');
-        const instant = await getInstantProducts({ forceRefresh });
-        console.log('Instant response received:', {
-          collectionsCount: instant.collections?.length || 0,
-          productsCount: instant.products?.length || 0,
+        console.log('Using getAllCollectionsCached for maximum speed');
+        const collections = await getAllCollectionsCached(forceRefresh);
+        console.log('Collections response received:', {
+          collectionsCount: collections?.length || 0,
         });
-        if (!instant.collections || !Array.isArray(instant.collections)) {
+        if (!collections || !Array.isArray(collections)) {
           throw new Error('Invalid response format: no collections array');
         }
-        if (instant.collections.length === 0) {
+        if (collections.length === 0) {
           throw new Error('No collections found in Shopify store');
         }
-        return instant;
+        return { collections };
       }, {
         maxAttempts: 3,
         delayMs: 1000,
