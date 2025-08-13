@@ -39,12 +39,6 @@ const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const OrderContinuation = lazy(() => import("./pages/OrderContinuation"));
 
-// Group order routes
-const GroupOrderView = lazy(() => import("./pages/GroupOrderView"));
-const GroupOrderDashboard = lazy(() => import("./components/GroupOrderDashboard"));
-const SharedOrderView = lazy(() => import("./pages/SharedOrderView"));
-const GroupOrderInvite = lazy(() => import("./pages/GroupOrderInvite"));
-const TestGroupOrderFlow = lazy(() => import("./pages/TestGroupOrderFlow"));
 
 // Party planning routes - removed (replaced by user's better version)
 const Checkout = lazy(() => import("./pages/Checkout"));
@@ -147,11 +141,6 @@ const App = () => {
                     <Route path="/order-continuation" element={<OrderContinuation />} />
                     <Route path="/manage-order" element={<CustomerLogin />} />
                     
-                    {/* Shared Order Routes */}
-                    <Route path="/order/:shareToken" element={<GroupOrderDashboard />} />
-                    <Route path="/group/:shareToken" element={<GroupOrderView />} />
-                    <Route path="/shared-order/:shareToken" element={<SharedOrderView />} />
-                    <Route path="/join/:shareToken" element={<GroupOrderInvite />} />
                     
                     {/* Party Planning Routes - removed (replaced by user's better version) */}
                     <Route path="/checkout" element={<Checkout />} />
@@ -171,7 +160,7 @@ const App = () => {
                     <Route path="/app/:appName/order-complete" element={<CustomAppPostCheckout />} />
                     
                     {/* Test Routes */}
-                    <Route path="/test-group-order-flow" element={<TestGroupOrderFlow />} />
+                    
                     <Route path="/test-sms" element={<TestSMS />} />
                     
 {/* Utility Routes */}
