@@ -4,6 +4,7 @@ import { Router } from "./router";
 import { AppProviders } from "./providers/AppProviders";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LoadingScreen } from "./components/LoadingScreen";
+import "./index.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("#root not found");
