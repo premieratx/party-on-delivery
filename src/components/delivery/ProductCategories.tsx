@@ -24,6 +24,7 @@ import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 import { TypingIntro } from '@/components/common/TypingIntro';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSearchInterface } from '@/hooks/useSearchInterface';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -121,6 +122,22 @@ const [hideTabs, setHideTabs] = useState(false);
 const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
 
+// Enhanced search interface with smooth UI transitions
+const {
+  isSearchFocused,
+  hasUserInteracted,
+  shouldHideChrome,
+  isScrolling,
+  searchInputRef,
+  handleSearchFocus,
+  handleSearchBlur
+} = useSearchInterface({ 
+  hideOnScroll: true,
+  onSearchFocus: () => {
+    // Additional focus handling can go here
+  }
+});
+
 // Apply affiliate markup to displayed prices (session-based)
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
 const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
@@ -210,7 +227,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     };
   }, []);
 
-  // Mobile: hide category tabs while scrolling down; reveal when scrolling up or near top
+  // Mobile: enhanced tab hiding with smooth transitions
   useEffect(() => {
     if (!isMobile) return;
     const onScroll = () => {
@@ -218,10 +235,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       const last = lastYRef.current;
       if (y > last + 10) {
         setHideTabs(true);
-        const ae = document.activeElement as HTMLElement | null;
-        if (ae && ae.tagName === 'INPUT') {
-          (ae as HTMLInputElement).blur();
-        }
       } else if (y < last - 10 || y < 40) {
         setHideTabs(false);
       }
@@ -680,7 +693,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px] relative">
+      <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px] relative transition-transform duration-300 ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-full' : 'translate-y-0'}`}>
         {/* Sticky search bar above tabs */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
           <div className="max-w-2xl mx-auto">
@@ -690,14 +703,17 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
               showDropdownResults={false}
               onResultsChange={handleSearchResultsChange}
               onSearchingChange={setIsSearching}
-              onFocus={() => setShowSearch(true)}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
+              inputRef={searchInputRef}
+              inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
             />
           </div>
         </div>
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className="w-full px-1 md:px-4 py-3">
+        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-300 ${hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -808,6 +824,17 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             </span>
           </button>
         </div>
+
+        {/* "Choose your..." guide row - shown only initially */}
+        {!hasUserInteracted && selectedCollection && (
+          <div className="max-w-7xl mx-auto px-4 pb-2">
+            <div className="bg-muted/50 rounded-lg p-3 mb-4 border border-border/50 animate-fade-in">
+              <p className="text-muted-foreground text-center text-sm">
+                👆 Choose your {stepMapping.find(step => step.handle === selectedCollection?.handle)?.title.toLowerCase() || selectedCollection?.title.toLowerCase()}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Section Heading with functional arrows */}
         {selectedCollection && (

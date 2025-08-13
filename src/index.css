@@ -134,6 +134,12 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+
   body {
     @apply bg-background text-foreground;
     /* Mobile optimizations */
@@ -142,6 +148,7 @@ All colors MUST be HSL.
     -webkit-text-size-adjust: 100%;
     touch-action: manipulation;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
   }
   
   /* Better mobile button targets */
