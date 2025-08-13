@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -147,7 +147,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return partySuppliesCategoryBg;
   };
 
-  const categoryMapping = getCategoryMapping();
+  const baseMapping = useMemo(() => getCategoryMapping(), [customCollections]);
+  const categoryMapping = useMemo(() => {
+    const matched = baseMapping.filter(tab => collections.some(c => c.handle === tab.handle));
+    if (matched.length > 0) return matched;
+    if (collections.length > 0) {
+      return collections.slice(0, Math.min(6, collections.length)).map((c, idx) => ({
+        step: idx,
+        title: c.title,
+        handle: c.handle,
+        backgroundImage: getCategoryBackground(c.handle),
+        pageTitle: c.title,
+      }));
+    }
+    return baseMapping;
+  }, [baseMapping, collections]);
+
   const displayedTabsCount = Math.min(customCollections?.tab_count ?? categoryMapping.length, categoryMapping.length);
   const displayedTabs = categoryMapping.slice(0, displayedTabsCount);
 
@@ -321,7 +336,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               onClick={() => setSelectedCategory(index)}
               className="flex-shrink-0 whitespace-nowrap"
             >
-              {tab.isSearch ? <Search className="w-4 h-4 mr-1" /> : null}
+              {(tab as any).isSearch ? <Search className="w-4 h-4 mr-1" /> : null}
               {tab.title}
             </Button>
           ))}
@@ -528,7 +543,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     );
   }
 
-  const isSearchTab = categoryMapping[selectedCategory]?.isSearch;
+  const isSearchTab = Boolean((categoryMapping as any)[selectedCategory]?.isSearch);
 
   return (
     <div className="min-h-screen bg-background">
