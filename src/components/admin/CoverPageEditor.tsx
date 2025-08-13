@@ -544,7 +544,6 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                       </div>
                     </div>
                   </div>
-                </div>
               </CardContent>
             </Card>
 
