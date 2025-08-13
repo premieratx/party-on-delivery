@@ -62,6 +62,12 @@ export interface CoverPageConfig {
     subtitle_offset_y?: number;
     checklist_offset_y?: number;
     buttons_offset_y?: number;
+    // New layout controls
+    buttons_bottom_offset?: number;
+    buttons_spacing?: number;
+    checklist_to_buttons_offset?: number;
+    dot_spacing?: number;
+    dot_size?: number;
     logo_offset_y?: number;
     logo_bg_color?: string;
     logo_bg_mode?: 'auto' | 'rectangle' | 'none';
@@ -107,6 +113,12 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [backgroundColor, setBackgroundColor] = useState<string>((initial as any)?.styles?.background_color ?? "");
   const [logoBgColor, setLogoBgColor] = useState<string>((initial as any)?.styles?.logo_bg_color ?? "");
   const [logoBgMode, setLogoBgMode] = useState<'auto' | 'rectangle' | 'none'>((initial as any)?.styles?.logo_bg_mode ?? 'auto');
+  // New layout controls
+  const [buttonsBottomOffset, setButtonsBottomOffset] = useState<number>((initial as any)?.styles?.buttons_bottom_offset ?? 0);
+  const [buttonsSpacing, setButtonsSpacing] = useState<number>((initial as any)?.styles?.buttons_spacing ?? 12);
+  const [checklistToButtonsOffset, setChecklistToButtonsOffset] = useState<number>((initial as any)?.styles?.checklist_to_buttons_offset ?? 30);
+  const [dotSpacing, setDotSpacing] = useState<number>((initial as any)?.styles?.dot_spacing ?? 8);
+  const [dotSize, setDotSize] = useState<number>((initial as any)?.styles?.dot_size ?? 14);
   const [apps, setApps] = useState<{ app_slug: string; app_name: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const [slugOk, setSlugOk] = useState(true);
@@ -166,6 +178,12 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setBackgroundColor((initial as any)?.styles?.background_color ?? "");
     setLogoBgColor((initial as any)?.styles?.logo_bg_color ?? "");
     setLogoBgMode((initial as any)?.styles?.logo_bg_mode ?? 'auto');
+    // New layout controls hydration
+    setButtonsBottomOffset((initial as any)?.styles?.buttons_bottom_offset ?? 0);
+    setButtonsSpacing((initial as any)?.styles?.buttons_spacing ?? 12);
+    setChecklistToButtonsOffset((initial as any)?.styles?.checklist_to_buttons_offset ?? 30);
+    setDotSpacing((initial as any)?.styles?.dot_spacing ?? 8);
+    setDotSize((initial as any)?.styles?.dot_size ?? 14);
   }, [open, initial]);
 
   const computedSlug = useMemo(() => slugify(slug || title), [slug, title]);
@@ -233,20 +251,26 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
         checklist: (checklist || []).filter(Boolean).slice(0, 5),
         buttons: buttons as any,
         is_active: isActive,
-        styles: { 
-          title_size: titleSize, 
-          subtitle_size: subtitleSize, 
-          checklist_size: checklistSize, 
-          spacing_y: 20,
-          title_offset_y: titleOffsetY,
-          subtitle_offset_y: subtitleOffsetY,
-          checklist_offset_y: checklistOffsetY,
-          buttons_offset_y: buttonsOffsetY,
-          logo_offset_y: logoOffsetY,
-          background_color: backgroundColor || null,
-          logo_bg_color: logoBgColor || null,
-          logo_bg_mode: logoBgMode,
-        },
+          styles: { 
+            title_size: titleSize, 
+            subtitle_size: subtitleSize, 
+            checklist_size: checklistSize, 
+            spacing_y: 20,
+            title_offset_y: titleOffsetY,
+            subtitle_offset_y: subtitleOffsetY,
+            checklist_offset_y: checklistOffsetY,
+            buttons_offset_y: buttonsOffsetY,
+            // New layout controls
+            buttons_bottom_offset: buttonsBottomOffset,
+            buttons_spacing: buttonsSpacing,
+            checklist_to_buttons_offset: checklistToButtonsOffset,
+            dot_spacing: dotSpacing,
+            dot_size: dotSize,
+            logo_offset_y: logoOffsetY,
+            background_color: backgroundColor || null,
+            logo_bg_color: logoBgColor || null,
+            logo_bg_mode: logoBgMode,
+          },
       };
 
       if (isEditing && initial?.id) {
@@ -468,79 +492,81 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
 
                       <div className="w-full max-w-[280px]">
                         <div className="w-full mx-auto my-3" style={{ marginTop: checklistOffsetY || 0 }}>
-                          <div className="flex flex-col items-center gap-1">
+                          <div className="flex flex-col items-center">
                             {(checklist || [])
                               .filter((c) => c && c.trim())
                               .slice(0, 5)
                               .map((text, i, arr) => (
                                 <React.Fragment key={i}>
                                   <p
-                                    className="text-white/90 font-semibold leading-tight my-1 animate-fade-in"
-                                    style={{ fontSize: `${checklistSize}px`, animationDelay: `${i * 120}ms`, animationFillMode: 'both' }}
+                                    className="text-white/90 font-semibold leading-tight animate-fade-in"
+                                    style={{ fontSize: `${checklistSize}px`, animationDelay: `${i * 120}ms`, animationFillMode: 'both', marginTop: (dotSpacing ?? 8) / 2, marginBottom: (dotSpacing ?? 8) / 2 }}
                                   >
                                     {text}
                                   </p>
                                   {i < arr.length - 1 && (
-                                    <span className="text-white/60 animate-fade-in" style={{ animationDelay: `${i * 120 + 60}ms`, animationFillMode: 'both' }} aria-hidden="true">•</span>
+                                    <span className="text-white/60 animate-fade-in" style={{ animationDelay: `${i * 120 + 60}ms`, animationFillMode: 'both', marginTop: (dotSpacing ?? 8) / 2, marginBottom: (dotSpacing ?? 8) / 2, fontSize: `${dotSize ?? 14}px` }} aria-hidden="true">•</span>
                                   )}
                                 </React.Fragment>
                               ))}
                           </div>
                         </div>
                       </div>
-                        {/* 30px gap required between text block and buttons */}
-                        <div className="h-[30px]" aria-hidden="true" style={{ marginTop: buttonsOffsetY || 0 }} />
+                        {/* Gap between text block and buttons (editable) */}
+                        <div className="h-[30px]" aria-hidden="true" style={{ marginTop: buttonsOffsetY || 0, height: (checklistToButtonsOffset ?? 30) }} />
 
                         {/* Buttons layout */}
-                        {buttons.length <= 2 ? (
-                          <div className="flex flex-col gap-2">
-                            {buttons.map((b, i) => (
-                              <Button
-                                key={`${b.text}-${i}`}
-                                size="sm"
-                                className="w-full h-9 rounded-full font-semibold shadow"
-                                style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}
-                              >
-                                {b.text}
-                              </Button>
-                            ))}
-                          </div>
-                        ) : buttons.length === 3 ? (
-                          <div className="flex flex-col gap-2">
-                            <Button
-                              size="sm"
-                              className="w-full h-9 rounded-full font-semibold shadow"
-                              style={{ backgroundColor: buttons[0].bg_color || undefined, color: buttons[0].text_color || undefined }}
-                            >
-                              {buttons[0].text}
-                            </Button>
-                            <div className="grid grid-cols-2 gap-2">
-                              {buttons.slice(1).map((b, i) => (
+                        <div style={{ marginBottom: buttonsBottomOffset || 0 }}>
+                          {buttons.length <= 2 ? (
+                            <div className="flex flex-col" style={{ rowGap: buttonsSpacing || 12 }}>
+                              {buttons.map((b, i) => (
                                 <Button
-                                  key={`${b.text}-${i + 1}`}
+                                  key={`${b.text}-${i}`}
                                   size="sm"
-                                  className="h-9 rounded-full font-semibold shadow"
-                                  style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}
+                                  className={`w-full h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
+                                  style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined, marginTop: (b as any).offset_y || 0, marginBottom: (b as any).spacing_below || 0 }}
                                 >
                                   {b.text}
                                 </Button>
                               ))}
                             </div>
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2">
-                            {buttons.map((b, i) => (
+                          ) : buttons.length === 3 ? (
+                            <div className="flex flex-col" style={{ rowGap: buttonsSpacing || 12 }}>
                               <Button
-                                key={`${b.text}-${i}`}
                                 size="sm"
-                                className="h-9 rounded-full font-semibold shadow"
-                                style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined }}
+                                className={`w-full h-9 rounded-full font-semibold shadow ${buttons[0].bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]`}
+                                style={{ backgroundColor: buttons[0].bg_color || undefined, color: buttons[0].text_color || undefined, marginTop: (buttons[0] as any).offset_y || 0, marginBottom: (buttons[0] as any).spacing_below || 0 }}
                               >
-                                {b.text}
+                                {buttons[0].text}
                               </Button>
-                            ))}
-                          </div>
-                        )}
+                              <div className="grid grid-cols-2" style={{ gap: buttonsSpacing || 12 }}>
+                                {buttons.slice(1).map((b, i) => (
+                                  <Button
+                                    key={`${b.text}-${i + 1}`}
+                                    size="sm"
+                                    className={`h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
+                                    style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined, marginTop: (b as any).offset_y || 0, marginBottom: (b as any).spacing_below || 0 }}
+                                  >
+                                    {b.text}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2" style={{ gap: buttonsSpacing || 12 }}>
+                              {buttons.map((b, i) => (
+                                <Button
+                                  key={`${b.text}-${i}`}
+                                  size="sm"
+                                  className={`h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
+                                  style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined, marginTop: (b as any).offset_y || 0, marginBottom: (b as any).spacing_below || 0 }}
+                                >
+                                  {b.text}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -571,6 +597,34 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                   <div>
                     <Label>Logo Background Color</Label>
                     <input type="color" value={logoBgColor || '#000000'} onChange={(e) => setLogoBgColor(e.target.value)} className="h-10 w-full rounded border" />
+                  </div>
+                </div>
+                {/* Spacing & Positions */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                  <div>
+                    <Label>Buttons Bottom Offset</Label>
+                    <input type="range" min={0} max={120} value={buttonsBottomOffset} onChange={(e) => setButtonsBottomOffset(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{buttonsBottomOffset}px</div>
+                  </div>
+                  <div>
+                    <Label>Buttons Spacing</Label>
+                    <input type="range" min={0} max={32} value={buttonsSpacing} onChange={(e) => setButtonsSpacing(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{buttonsSpacing}px</div>
+                  </div>
+                  <div>
+                    <Label>Checklist↔Buttons Offset</Label>
+                    <input type="range" min={0} max={120} value={checklistToButtonsOffset} onChange={(e) => setChecklistToButtonsOffset(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{checklistToButtonsOffset}px</div>
+                  </div>
+                  <div>
+                    <Label>Dot Spacing</Label>
+                    <input type="range" min={0} max={24} value={dotSpacing} onChange={(e) => setDotSpacing(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{dotSpacing}px</div>
+                  </div>
+                  <div>
+                    <Label>Dot Size</Label>
+                    <input type="range" min={8} max={28} value={dotSize} onChange={(e) => setDotSize(Number(e.target.value))} className="w-full" />
+                    <div className="text-xs text-muted-foreground">{dotSize}px</div>
                   </div>
                 </div>
                 {/* Typography offsets moved near size controls above for a unified workflow */}
