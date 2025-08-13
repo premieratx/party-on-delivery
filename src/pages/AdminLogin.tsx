@@ -138,8 +138,20 @@ export const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
-      <Card className="max-w-md w-full">
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1rem'
+    }}>
+      <Card className="max-w-md w-full" style={{
+        backgroundColor: 'white',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        borderRadius: '0.5rem',
+        border: '1px solid #e2e8f0'
+      }}>
         <CardHeader className="text-center">
           <img 
             src={logoImage} 
