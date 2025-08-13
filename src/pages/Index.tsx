@@ -125,19 +125,30 @@ const Index = () => {
     instructions: ''
   };
 
-  return (
+  console.log('🏠 Index rendering, showCoverModal:', showCoverModal, 'homepageApp:', homepageApp);
+  
+   return (
     <div className="min-h-screen bg-background">
-      {/* Show cover modal first */}
+      {/* SIMPLE FALLBACK TEST */}
       {showCoverModal && (
-        <CustomDeliveryCoverModal
-          open={showCoverModal}
-          onOpenChange={setShowCoverModal}
-          onStartOrder={handleStartShopping}
-          onSecondaryAction={handleViewApps}
-          secondaryButtonText="Browse Apps"
-          appName={homepageApp?.app_name || "Party On Delivery"}
-          logoUrl={homepageApp?.logo_url}
-        />
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4">
+            <h1 className="text-2xl font-bold mb-4">Party On Delivery</h1>
+            <p className="mb-6">Welcome to our delivery service!</p>
+            <button 
+              onClick={handleStartShopping}
+              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-4"
+            >
+              Start Shopping
+            </button>
+            <button 
+              onClick={handleViewApps}
+              className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700"
+            >
+              Browse Apps
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Show delivery apps grid if selected */}

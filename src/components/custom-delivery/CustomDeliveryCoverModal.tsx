@@ -146,6 +146,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   const subtitleDelay = 0.4;
   const listStartDelay = 0.6; // start list after subtitle begins
   const buttonDelay = listStartDelay + (visibleChecklist.length > 1 ? perStep * (visibleChecklist.length - 1) : 0) + 0.2;
+  console.log('🎯 CustomDeliveryCoverModal rendering, open:', open, 'appName:', appName);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-h-[90vh] overflow-y-auto max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
