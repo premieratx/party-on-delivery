@@ -51,25 +51,22 @@ const GroupOrderView = () => {
 
   const loadGroupOrder = async () => {
     try {
-      const { data: orderResponse, error } = await supabase
-        .rpc('get_group_order_details', { p_share_token: shareToken });
-      
-      if (error) throw error;
-      
-      const parsedResponse = orderResponse as { success: boolean; error?: string; order?: any };
-      if (!parsedResponse?.success) {
-        throw new Error(parsedResponse?.error || 'Order not found');
+      const { data: orderData, error } = await supabase
+        .from('customer_orders')
+        .select(`
+          *,
+          customers (
+            first_name,
+            last_name,
+            email
+          )
+        `)
+        .eq('share_token', shareToken)
+        .single();
+
+      if (error) {
+        throw error;
       }
-      
-      // Convert RPC response to expected format
-      const orderData = {
-        ...parsedResponse.order,
-        customers: {
-          first_name: parsedResponse.order.customer_name?.split(' ')[0] || '',
-          last_name: parsedResponse.order.customer_name?.split(' ').slice(1).join(' ') || '',
-          email: 'protected' // Don't expose email
-        }
-      };
 
       if (!orderData) {
         toast({

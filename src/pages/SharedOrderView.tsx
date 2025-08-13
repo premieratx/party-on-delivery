@@ -62,33 +62,38 @@ const SharedOrderView = () => {
         throw new Error('Invalid share link');
       }
 
-      // Get order details using secure RPC function
-      const { data: orderResponse, error: orderError } = await supabase
-        .rpc('get_group_order_details', { p_share_token: shareToken });
-      
+      // Get order details using share token
+      const { data: orderData, error: orderError } = await supabase
+        .from('customer_orders')
+        .select(`
+          *,
+          customer:customers(first_name, last_name, email)
+        `)
+        .eq('share_token', shareToken)
+        .eq('is_shareable', true)
+        .maybeSingle();
+
       if (orderError) throw orderError;
-      
-      const parsedResponse = orderResponse as { success: boolean; error?: string; order?: any };
-      if (!parsedResponse?.success) {
-        throw new Error(parsedResponse?.error || 'Order not found or no longer shareable');
+      if (!orderData) {
+        throw new Error('Order not found or no longer shareable');
       }
-      
-      const orderData = parsedResponse.order;
 
-      // Create order object from RPC response
-      const enrichedOrder = {
-        ...orderData,
-        customer: {
-          first_name: orderData.customer_name?.split(' ')[0] || '',
-          last_name: orderData.customer_name?.split(' ').slice(1).join(' ') || '',
-          email: 'protected' // Don't expose email for security
-        }
-      };
+      setOrder(orderData as unknown as SharedOrder);
 
-      setOrder(enrichedOrder as unknown as SharedOrder);
+      // Load ALL orders in this group (same share_token)
+      const { data: allGroupOrders, error: groupError } = await supabase
+        .from('customer_orders')
+        .select(`
+          *,
+          customer:customers(first_name, last_name, email)
+        `)
+        .eq('share_token', shareToken);
 
-      // Note: Group orders view is simplified for security - only show main order
-      setGroupOrders([enrichedOrder] as unknown as SharedOrder[]);
+      if (groupError) {
+        console.error('Error loading group orders:', groupError);
+      } else {
+        setGroupOrders((allGroupOrders || []) as unknown as SharedOrder[]);
+      }
 
       // Get participants
       const { data: participantsData, error: participantsError } = await supabase
