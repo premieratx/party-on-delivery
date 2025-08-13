@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -31,6 +32,7 @@ interface StartScreenConfig {
   logo_url?: string;
   custom_styles?: string;
   website_url?: string;
+  checklist_spacing?: number;
 }
 
 interface CustomStartScreenEditorProps {
@@ -68,7 +70,8 @@ const [config, setConfig] = useState<StartScreenConfig>({
     text_color: '#f8fafc',
     logo_url: '',
     custom_styles: '',
-    website_url: ''
+    website_url: '',
+    checklist_spacing: 8
   });
 
   const [saving, setSaving] = useState(false);
@@ -330,6 +333,13 @@ const [config, setConfig] = useState<StartScreenConfig>({
                         />
                       </div>
                     </div>
+                    <div>
+                      <Label>Checklist spacing</Label>
+                      <div className="flex items-center gap-3">
+                        <Slider min={0} max={24} step={1} value={[config.checklist_spacing ?? 8]} onValueChange={(v) => setConfig(prev => ({ ...prev, checklist_spacing: v[0] }))} />
+                        <span className="text-xs text-muted-foreground w-10 text-right">{(config.checklist_spacing ?? 8)}px</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -397,14 +407,14 @@ const [config, setConfig] = useState<StartScreenConfig>({
                             {config.custom_title || config.app_name}
                           </h1>
                           <p className="text-base opacity-80">{config.custom_subtitle}</p>
-                          <div className="mt-3 space-y-3">
+                          <div className="mt-3">
                             {[config.checklist_item_1, config.checklist_item_2, config.checklist_item_3, config.checklist_item_4, config.checklist_item_5]
                               .filter(Boolean)
                               .slice(0, 5)
                               .map((t, i, arr) => (
                                 <React.Fragment key={i}>
-                                  <p className="text-lg">{t}</p>
-                                  {i < arr.length - 1 && <div className="mx-auto h-2 w-2 rounded-full bg-white/80" />}
+                                  <p className="text-lg" style={{ marginTop: ((config.checklist_spacing ?? 8) / 2), marginBottom: ((config.checklist_spacing ?? 8) / 2) }}>{t}</p>
+                                  {i < arr.length - 1 && <div className="mx-auto h-2 w-2 rounded-full bg-white/80" style={{ marginTop: ((config.checklist_spacing ?? 8) / 2), marginBottom: ((config.checklist_spacing ?? 8) / 2) }} />}
                                 </React.Fragment>
                               ))}
                           </div>

@@ -28,6 +28,7 @@ export interface CustomDeliveryCoverModalProps {
   phone?: string;
   sms?: string;
   features?: CoverFeature[];
+  checklistSpacing?: number;
 }
 
 const defaultChecklist = [
@@ -50,6 +51,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   checklistItems = defaultChecklist,
   backgroundImageUrl,
   backgroundVideoUrl,
+  checklistSpacing = 8,
 }) => {
   const [showSparkle, setShowSparkle] = React.useState(true);
   const [enablePulse, setEnablePulse] = React.useState(false);
@@ -226,17 +228,31 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
               <div className="w-full max-w-sm space-y-3 mt-2 mb-0">
                 {/* Restored vertical checklist with dot separators */}
                 <div className="w-full mx-auto mb-2 translate-y-[-15%] md:translate-y-[-25%]">
-                  <div className="flex flex-col items-center space-y-1">
+                  <div className="flex flex-col items-center">
                     {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
                       <React.Fragment key={idx}>
                         <p
                           className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_1.5s_ease-out]"
-                          style={{ animationDelay: `${240 + idx * 120}ms`, animationFillMode: 'both' }}
+                          style={{
+                            animationDelay: `${240 + idx * 120}ms`,
+                            animationFillMode: 'both',
+                            marginTop: (checklistSpacing ?? 8) / 2,
+                            marginBottom: (checklistSpacing ?? 8) / 2
+                          }}
                         >
                           {item}
                         </p>
                         {idx < arr.length - 1 && (
-                          <span className="text-white/60" aria-hidden="true">•</span>
+                          <span
+                            className="text-white/60"
+                            aria-hidden="true"
+                            style={{
+                              marginTop: (checklistSpacing ?? 8) / 2,
+                              marginBottom: (checklistSpacing ?? 8) / 2
+                            }}
+                          >
+                            •
+                          </span>
                         )}
                       </React.Fragment>
                     ))}

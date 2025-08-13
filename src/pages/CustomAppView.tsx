@@ -437,6 +437,7 @@ export default function CustomAppView() {
           checklistItems={resolved.checklist}
           backgroundImageUrl={bgImage}
           backgroundVideoUrl={startBgVideo}
+          checklistSpacing={(appConfig.start_screen_config as any)?.checklist_spacing ?? 8}
         />
       )}
       {/* Start screen enabled above; tabs shown behind/after with blur */}

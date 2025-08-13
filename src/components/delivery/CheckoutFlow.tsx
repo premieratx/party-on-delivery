@@ -197,11 +197,15 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     return () => window.removeEventListener('beforeunload', handler);
   }, [cartItems, customerInfo, addressInfo, checkoutSessionId]);
   
-  // FIXED: Safe pricing calculations with validation
+  // FIXED: Safe pricing calculations with validation + affiliate markup support
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const applyMarkup = (price: number) =>
+    price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+
   const subtotal = cartItems.reduce((total, item) => {
     const price = Number(item.price) || 0;
     const quantity = Number(item.quantity) || 0;
-    return total + (price * quantity);
+    return total + (applyMarkup(price) * quantity);
   }, 0);
   
   // State declarations must come before any usage  
@@ -1358,7 +1362,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                      <div className="flex-1 min-w-0">
                        <p className="font-medium text-xs sm:text-sm line-clamp-2">{item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</p>
                        <div className="flex items-center gap-2 mt-1">
-                         <span className="text-xs sm:text-sm text-muted-foreground">${item.price} each</span>
+                         <span className="text-xs sm:text-sm text-muted-foreground">${applyMarkup(item.price).toFixed(2)} each</span>
                        </div>
                      </div>
                      
@@ -1393,7 +1397,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                        </div>
                        
                        {/* Total Price for Item */}
-                       <p className="font-semibold min-w-[50px] sm:min-w-[60px] text-right text-xs sm:text-sm">${((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
+                       <p className="font-semibold min-w-[50px] sm:min-w-[60px] text-right text-xs sm:text-sm">${(applyMarkup(item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
                      </div>
                    </div>
                 ))}
