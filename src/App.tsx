@@ -12,6 +12,7 @@ import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
 import Home from "./pages/Home";
+import HomeTest from "./pages/HomeTest";
 
 import NotFound from "./pages/NotFound";
 import { getInstantProducts } from "@/utils/instantCacheClient";
@@ -110,6 +111,7 @@ const App = () => {
                     {/* Core pages - no lazy loading */}
                     
                     <Route path="/" element={<Home />} />
+                    <Route path="/home-test" element={<HomeTest />} />
                     
                     {/* Order completion */}
                     <Route path="/success" element={<Success />} />
