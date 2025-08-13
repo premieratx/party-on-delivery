@@ -8,39 +8,32 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  // Enable wake lock to keep screen on during app usage
   useWakeLock();
   
-  // Use unified cart system
-  const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
-  
+  const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [homepageApp, setHomepageApp] = useState<any>(null);
+  const [homepageConfig, setHomepageConfig] = useState<any>(null);
   const navigate = useNavigate();
 
-  // Load the homepage delivery app configuration
   useEffect(() => {
-    const loadHomepageApp = async () => {
+    const loadHomepageConfig = async () => {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('delivery_app_variations')
           .select('*')
           .eq('is_homepage', true)
           .eq('is_active', true)
           .maybeSingle();
         
-        if (!error && data) {
-          setHomepageApp(data);
-        }
+        if (data) setHomepageConfig(data);
       } catch (error) {
-        console.error('Error loading homepage app:', error);
+        console.error('Failed to load homepage config:', error);
       }
     };
 
-    loadHomepageApp();
+    loadHomepageConfig();
   }, []);
 
-  // Remove redirect logic - show content directly on homepage
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
@@ -48,47 +41,28 @@ const Index = () => {
       name: product.title,
       price: parseFloat(String(product.price)) || 0,
       image: product.image,
-      variant: product.variant
+      variant: product.variant || 'default'
     };
     
-    console.log('🛒 Index: Adding product to cart:', cartItem);
-    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = cartItems.find(item => {
+    const currentQuantity = cartItems.find(item => {
       const itemId = item.productId || item.id;
       const itemVariant = item.variant || 'default';
-      const checkVariant = cartItem.variant || 'default';
-      return itemId === cartItem.id && itemVariant === checkVariant;
+      return itemId === cartItem.id && itemVariant === cartItem.variant;
     })?.quantity || 0;
     
-    updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
-  };
-
-  const handleUpdateQuantity = (productId: string, variantId: string | undefined, quantity: number) => {
-    updateQuantity(productId, variantId, quantity);
-  };
-
-  const handleRemoveFromCart = (productId: string, variantId?: string) => {
-    removeItem(productId, variantId);
-  };
-
-  const handleEmptyCart = () => {
-    emptyCart();
+    updateQuantity(cartItem.id, cartItem.variant, currentQuantity + 1, cartItem);
   };
 
   const handleCheckout = () => {
-    // Store delivery app referrer and app context for checkout
     localStorage.setItem('deliveryAppReferrer', '/');
     localStorage.setItem('app-context', JSON.stringify({
       appSlug: 'main-delivery-app',
       appName: 'Party On Delivery'
     }));
-    
-    // Navigate to checkout
     navigate('/checkout');
   };
 
-  // Convert unified cart items to the format expected by ProductCategories
-  const cartItemsForCategories = cartItems.map(item => ({
+  const cartItemsForDisplay = cartItems.map(item => ({
     id: item.id,
     title: item.title,
     name: item.name,
@@ -98,8 +72,7 @@ const Index = () => {
     variant: item.variant
   }));
 
-  // Mock delivery info for cart component
-  const mockDeliveryInfo = {
+  const deliveryInfo = {
     date: new Date(),
     timeSlot: '12:00 PM - 2:00 PM',
     address: 'Sample Address',
@@ -108,35 +81,32 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Show delivery app - either custom homepage app or default */}
       <ProductCategories
         onAddToCart={handleAddToCart}
         cartItemCount={getTotalItems()}
         onOpenCart={() => setIsCartOpen(true)}
-        cartItems={cartItemsForCategories}
-        onUpdateQuantity={handleUpdateQuantity}
+        cartItems={cartItemsForDisplay}
+        onUpdateQuantity={updateQuantity}
         onProceedToCheckout={handleCheckout}
-        customAppName={homepageApp?.app_name}
-        customHeroHeading={homepageApp?.main_app_config?.hero_heading}
-        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
-        customLogoUrl={homepageApp?.logo_url}
-        customCollections={homepageApp?.collections_config}
+        customAppName={homepageConfig?.app_name}
+        customHeroHeading={homepageConfig?.main_app_config?.hero_heading}
+        customHeroSubheading={homepageConfig?.main_app_config?.hero_subheading}
+        customLogoUrl={homepageConfig?.logo_url}
+        customCollections={homepageConfig?.collections_config}
       />
 
-      {/* Cart sidebar */}
       <DeliveryCart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        items={cartItemsForCategories}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveFromCart}
+        items={cartItemsForDisplay}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeItem}
         totalPrice={getTotalPrice()}
         onCheckout={handleCheckout}
-        deliveryInfo={mockDeliveryInfo}
-        onEmptyCart={handleEmptyCart}
+        deliveryInfo={deliveryInfo}
+        onEmptyCart={emptyCart}
       />
 
-      {/* Bottom cart bar */}
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}

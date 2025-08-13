@@ -60,7 +60,6 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
         customHeroSubheading={heroSubheading}
         customLogoUrl={logoUrl}
         customCollections={collectionsConfig}
-        customHeroScrollingText={heroScrollingText}
       />
     </div>
   );
