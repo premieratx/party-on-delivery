@@ -156,6 +156,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     const cat = params.get('category');
     const prodTitle = params.get('productTitle');
     (window as any).__dl = { cat, prodTitle };
+  }, []);
+  
   // Check URL parameters and current app state to determine if menus should be hidden
   const searchParams = new URLSearchParams(window.location.search);
   const currentStep = searchParams.get('step');
@@ -1222,7 +1224,4 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
        />
      </div>
    );
- });
  };
- 
- export { ProductCategories };
