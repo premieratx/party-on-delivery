@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
+import { DraggableCoverPreview } from "./DraggableCoverPreview";
 import { CANONICAL_DOMAIN } from "@/utils/links";
 // Types
 export type CoverButtonType = 'delivery_app' | 'checkout' | 'url'
@@ -123,6 +124,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [saving, setSaving] = useState(false);
   const [slugOk, setSlugOk] = useState(true);
   const [checkingSlug, setCheckingSlug] = useState(false);
+  const [showDraggablePreview, setShowDraggablePreview] = useState(false);
 
   const uploadAsset = async (file: File, kind: 'logo' | 'bg'): Promise<string | null> => {
     try {
@@ -445,7 +447,59 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
 
             <Card>
               <CardContent className="pt-6">
-<Label className="mb-2 block">Live Preview</Label>
+                <div className="flex items-center justify-between mb-4">
+                  <Label>Live Preview</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDraggablePreview(!showDraggablePreview)}
+                  >
+                    {showDraggablePreview ? 'Static Preview' : 'Draggable Preview'}
+                  </Button>
+                </div>
+                
+                {showDraggablePreview ? (
+                  <DraggableCoverPreview
+                    config={{
+                      slug: computedSlug,
+                      title,
+                      subtitle,
+                      logo_url: logoUrl,
+                      logo_height: logoHeight,
+                      bg_image_url: bgImageUrl,
+                      bg_video_url: bgVideoUrl,
+                      checklist: checklist.filter(Boolean),
+                      buttons,
+                      is_active: isActive,
+                      styles: {
+                        title_size: titleSize,
+                        subtitle_size: subtitleSize,
+                        checklist_size: checklistSize,
+                        title_offset_y: titleOffsetY,
+                        subtitle_offset_y: subtitleOffsetY,
+                        checklist_offset_y: checklistOffsetY,
+                        buttons_offset_y: buttonsOffsetY,
+                        logo_offset_y: logoOffsetY,
+                        background_color: backgroundColor,
+                        logo_bg_color: logoBgColor,
+                        logo_bg_mode: logoBgMode,
+                        buttons_bottom_offset: buttonsBottomOffset,
+                        buttons_spacing: buttonsSpacing,
+                        checklist_to_buttons_offset: checklistToButtonsOffset,
+                        dot_spacing: dotSpacing,
+                        dot_size: dotSize
+                      }
+                    }}
+                    onPositionChange={(elementId, x, y) => {
+                      console.log(`Element ${elementId} moved to ${x.toFixed(1)}%, ${y.toFixed(1)}%`);
+                      toast({
+                        title: "Position Updated",
+                        description: `${elementId} moved to ${x.toFixed(1)}%, ${y.toFixed(1)}%`,
+                      });
+                    }}
+                    className="w-full h-[500px]"
+                  />
+                ) : (
 <div className="w-full flex justify-center">
   <div
     className="rounded-[24px] shadow-xl ring-1 ring-black/10 overflow-hidden overflow-y-auto bg-black relative"
@@ -568,8 +622,9 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                           )}
                         </div>
                       </div>
-                    </div>
-                  </div>
+                     </div>
+                   </div>
+                )}
               </CardContent>
             </Card>
 

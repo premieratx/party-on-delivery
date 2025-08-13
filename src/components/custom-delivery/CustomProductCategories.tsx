@@ -184,11 +184,10 @@ const [showSearchModal, setShowSearchModal] = useState(false);
     }))
   );
 
-  // Filter products by search term
+  // Filter products by search term - ONLY by title for consistency
   const searchFilteredProducts = searchTerm 
     ? allProducts.filter(product => 
-        product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase())
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : allProducts;
 

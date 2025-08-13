@@ -103,8 +103,10 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     setIsSearching(true);
     onSearchingChange?.(true);
     const searchTerm = q.toLowerCase();
+    
+    // Filter ONLY by product title for consistent behavior with search app
     const results = indexedProducts
-      .filter(ip => ip.t.includes(searchTerm))
+      .filter(ip => ip.p.title.toLowerCase().includes(searchTerm))
       .slice(0, 50)
       .map(ip => ip.p);
 

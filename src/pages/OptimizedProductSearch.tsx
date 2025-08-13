@@ -187,13 +187,12 @@ export default function OptimizedProductSearch() {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       const timer = setTimeout(() => {
+        // Filter ONLY by title for consistency with delivery app search
         const filtered = allProducts.filter((p) =>
-          String(p.title).toLowerCase().includes(q) ||
-          String(p.description || '').toLowerCase().includes(q) ||
-          String(p.handle || '').toLowerCase().includes(q)
+          String(p.title).toLowerCase().includes(q)
         );
         setProducts(filtered);
-      }, 200);
+      }, 100);
       return () => clearTimeout(timer);
     } else {
       // No query: show category view from full catalog

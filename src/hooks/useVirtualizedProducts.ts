@@ -136,8 +136,9 @@ export function useVirtualizedProducts({
     overscan: 5
   });
 
-  // Smart data fetching with instant loading
+  // Smart data fetching with instant loading and performance monitoring
   const fetchProducts = useCallback(async (offset = 0, useCache = true) => {
+    const startTime = performance.now();
     try {
       if (offset === 0) {
         setLoading(true);
@@ -147,7 +148,8 @@ export function useVirtualizedProducts({
         const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
         
         if (instantData?.success && instantData?.data) {
-          console.log('⚡ Using instant cache for ultra-fast loading');
+          const duration = performance.now() - startTime;
+          console.log(`⚡ Instant cache loaded in ${duration.toFixed(2)}ms`);
           
           // Extract products from instant cache
           let products = [];

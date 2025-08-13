@@ -177,21 +177,27 @@ function ProductCard({
               )}
             </div>
 
-            {/* Quantity Controls - Smaller mobile buttons */}
+            {/* Quantity Controls - Optimized for mobile touch */}
             {quantity > 0 ? (
-              <div className="flex items-center justify-center gap-1 w-full">
+              <div className="flex items-center justify-center gap-2 w-full">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(-1)}
-                  className={`p-0 flex-shrink-0 ${
-                    isMobile ? 'h-5 w-5' : 'h-8 w-8'
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onUpdateQuantity(-1);
+                  }}
+                  className={`p-0 flex-shrink-0 touch-manipulation ${
+                    isMobile ? 'h-8 w-8' : 'h-10 w-10'
                   }`}
+                  style={{ touchAction: 'manipulation' }}
                 >
-                  <Minus className={`${isMobile ? 'h-2 w-2' : 'h-4 w-4'}`} />
+                  <Minus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </Button>
-                <span className={`font-medium min-w-[20px] text-center flex-1 ${
-                  isMobile ? 'text-xs' : 'text-base'
+                <span className={`font-medium min-w-[24px] text-center flex-1 ${
+                  isMobile ? 'text-sm' : 'text-base'
                 }`}>
                   {quantity}
                 </span>
@@ -199,17 +205,29 @@ function ProductCard({
                   variant="outline"
                   size="sm"
                   onClick={() => onUpdateQuantity(1)}
-                  className={`p-0 flex-shrink-0 ${
-                    isMobile ? 'h-5 w-5' : 'h-8 w-8'
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onUpdateQuantity(1);
+                  }}
+                  className={`p-0 flex-shrink-0 touch-manipulation ${
+                    isMobile ? 'h-8 w-8' : 'h-10 w-10'
                   }`}
+                  style={{ touchAction: 'manipulation' }}
                 >
-                  <Plus className={`${isMobile ? 'h-2 w-2' : 'h-4 w-4'}`} />
+                  <Plus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 </Button>
               </div>
             ) : (
               <Button
                 onClick={onAddToCart}
-                className={`w-full ${isMobile ? 'h-8 text-xs' : 'h-9 text-sm'}`}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onAddToCart();
+                }}
+                className={`w-full touch-manipulation ${isMobile ? 'h-10 text-sm' : 'h-11 text-base'}`}
+                style={{ touchAction: 'manipulation' }}
                 size={isMobile ? "sm" : "default"}
               >
                 Add to Cart
