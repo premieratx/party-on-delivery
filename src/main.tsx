@@ -1,11 +1,13 @@
-// Test 1: Add CSS import
+// Test 2: Add React imports
 import './index.css'
+import { createRoot } from 'react-dom/client'
+import React from 'react'
 
-console.log('Main.tsx with CSS import executing');
+console.log('Main.tsx with React imports executing');
 
 document.getElementById("root")!.innerHTML = `
   <div style="padding: 20px;">
-    <h1>CSS Import Test</h1>
-    <p>Testing if CSS import causes the require error</p>
+    <h1>React Import Test</h1>
+    <p>Testing if React imports cause the require error</p>
   </div>
 `;
