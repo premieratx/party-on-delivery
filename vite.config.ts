@@ -1,17 +1,25 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { componentTagger } from "lovable-tagger";
+import path from "path";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  server: {
+    host: "::",
+    port: 8080,
+    strictPort: true,
+  },
   plugins: [
     react(),
+    mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Party On Delivery',
         short_name: 'POD',
-        description: 'Austin’s ultimate party delivery & concierge app',
+        description: "Austin's ultimate party delivery & concierge app",
         theme_color: '#000000',
         background_color: '#ffffff',
         display: 'standalone',
@@ -30,14 +38,15 @@ export default defineConfig({
         ]
       }
     })
-  ],
-  server: {
-    port: 8080,
-    strictPort: true,
+  ].filter(Boolean),
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
   },
   build: {
     sourcemap: false,
     minify: 'esbuild',
     target: 'esnext',
   },
-});
+}));
