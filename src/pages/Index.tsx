@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
 import { CustomDeliveryAppsGrid } from '@/components/custom-delivery/CustomDeliveryAppsGrid';
+import { GlobalNavigation } from '@/components/common/GlobalNavigation';
 
 const Index = () => {
   // Enable wake lock to keep screen on during app usage
@@ -125,6 +126,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Global Navigation */}
+      <GlobalNavigation />
+      
       {/* Show cover modal first */}
       {showCoverModal && (
         <CustomDeliveryCoverModal
