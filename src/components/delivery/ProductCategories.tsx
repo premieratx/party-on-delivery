@@ -24,7 +24,7 @@ import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 import { TypingIntro } from '@/components/common/TypingIntro';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useSearchInterface } from '@/hooks/useSearchInterface';
+// import { useSearchInterface } from '@/hooks/useSearchInterface';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -132,26 +132,20 @@ const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
 
 // Enhanced search interface with smooth UI transitions
-const {
-  isSearchFocused,
-  hasUserInteracted,
-  shouldHideChrome,
-  isScrolling,
-  shouldHideBottomMenu,
-  searchInputRef,
-  handleSearchFocus,
-  handleSearchBlur
-} = useSearchInterface({ 
-  hideOnScroll: true,
-  onSearchFocus: () => {
-    // Additional focus handling can go here
-  }
-});
+// Temporarily disabled search interface integration
+const isSearchFocused = false;
+const shouldHideBottomMenu = false;
+const shouldHideChrome = false;
+const isScrolling = false;
+const hasUserInteracted = false;
+const searchInputRef = useRef<HTMLInputElement>(null);
+const handleSearchFocus = () => {};
+const handleSearchBlur = () => {};
 
 // Notify parent component of search state changes
 useEffect(() => {
   onSearchStateChange?.({ isSearchFocused, shouldHideBottomMenu });
-}, [isSearchFocused, shouldHideBottomMenu]); // Removed onSearchStateChange from deps to prevent infinite re-renders
+}, []);
 
 // Apply affiliate markup to displayed prices (session-based)
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
