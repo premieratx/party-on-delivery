@@ -127,8 +127,13 @@ const Index = () => {
 
   console.log('🏠 Index rendering, showCoverModal:', showCoverModal, 'homepageApp:', homepageApp);
   
-   return (
-    <div className="min-h-screen bg-background">
+  // TEMP: Force render something visible no matter what
+  return (
+    <div className="min-h-screen bg-red-500 p-4">
+      <h1 className="text-white text-4xl">INDEX PAGE IS WORKING!</h1>
+      <p className="text-white">showCoverModal: {String(showCoverModal)}</p>
+      <p className="text-white">homepageApp: {JSON.stringify(homepageApp)}</p>
+      
       {/* SIMPLE FALLBACK TEST */}
       {showCoverModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
