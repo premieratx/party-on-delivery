@@ -48,8 +48,6 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
               variant="outline"
               size="sm"
               onClick={onOpenCart}
-              onTouchEnd={onOpenCart}
-              onPointerUp={(e) => { e.preventDefault(); onOpenCart(); }}
               aria-label="Open cart"
               className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3"
             >
