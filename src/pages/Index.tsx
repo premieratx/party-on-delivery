@@ -18,11 +18,9 @@ const Index = () => {
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
-  // Import search interface for bottom menu hiding
-  const { shouldHideBottomMenu } = require('@/hooks/useSearchInterface').useSearchInterface({ hideOnScroll: true });
-  
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
+  const [searchState, setSearchState] = useState({ isSearchFocused: false, shouldHideBottomMenu: false });
   const navigate = useNavigate();
 
   // Load the homepage delivery app configuration
@@ -133,6 +131,7 @@ const Index = () => {
         customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
         customLogoUrl={homepageApp?.logo_url}
         customCollections={homepageApp?.collections_config}
+        onSearchStateChange={setSearchState}
       />
 
       {/* Cart sidebar */}
@@ -155,7 +154,7 @@ const Index = () => {
         isVisible={getTotalItems() > 0}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
-        shouldHide={shouldHideBottomMenu}
+        shouldHide={searchState.shouldHideBottomMenu}
       />
     </div>
   );

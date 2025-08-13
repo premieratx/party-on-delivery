@@ -83,6 +83,7 @@ interface ProductCategoriesProps {
   isStartScreen?: boolean;
   isCoverScreen?: boolean;
   hideMenus?: boolean;
+  onSearchStateChange?: (state: { isSearchFocused: boolean; shouldHideBottomMenu: boolean }) => void;
 }
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -102,7 +103,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customCollections,
   isStartScreen = false,
   isCoverScreen = false,
-  hideMenus = false
+  hideMenus = false,
+  onSearchStateChange
 }) => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(0); // Start with first (far left) tab
@@ -145,6 +147,11 @@ const {
     // Additional focus handling can go here
   }
 });
+
+// Notify parent component of search state changes
+useEffect(() => {
+  onSearchStateChange?.({ isSearchFocused, shouldHideBottomMenu });
+}, [isSearchFocused, shouldHideBottomMenu, onSearchStateChange]);
 
 // Apply affiliate markup to displayed prices (session-based)
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
