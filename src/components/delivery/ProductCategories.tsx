@@ -151,6 +151,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const displayedTabsCount = Math.min(customCollections?.tab_count ?? categoryMapping.length, categoryMapping.length);
   const displayedTabs = categoryMapping.slice(0, displayedTabsCount);
 
+  // Auto-select first tab that has a matching collection if current selection doesn't exist
+  useEffect(() => {
+    if (!collections || collections.length === 0) return;
+    const currentHandle = categoryMapping[selectedCategory]?.handle;
+    const hasCurrent = !!collections.find(c => c.handle === currentHandle);
+    if (!hasCurrent) {
+      const firstAvailableIndex = categoryMapping.findIndex(tab =>
+        !!collections.find(c => c.handle === tab.handle)
+      );
+      if (firstAvailableIndex !== -1) {
+        setSelectedCategory(firstAvailableIndex);
+      }
+    }
+  }, [collections, selectedCategory, categoryMapping]);
+
   // Current collection
   const selectedCollection = collections.find(c => c.handle === categoryMapping[selectedCategory]?.handle);
 
