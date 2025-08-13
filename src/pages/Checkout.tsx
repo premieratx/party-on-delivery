@@ -30,7 +30,9 @@ export const Checkout = () => {
     setLoading(false);
   }, []);
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+  const totalAmount = cartItems.reduce((sum, item) => sum + (applyMarkup(item.price) * item.quantity), 0);
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   if (loading) {

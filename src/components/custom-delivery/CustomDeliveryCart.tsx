@@ -31,6 +31,9 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
   onEmptyCart
 }) => {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+  const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
 
   if (items.length === 0) {
     return (
@@ -109,7 +112,7 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
 
                         <div className="flex items-center justify-between mt-2">
                           <span className="font-bold text-purple-600">
-                            ${item.price.toFixed(2)}
+                            ${applyMarkup(item.price).toFixed(2)}
                           </span>
 
                           <div className="flex items-center gap-2">
@@ -160,7 +163,7 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-lg font-semibold text-gray-900">Total</span>
               <span className="text-2xl font-bold text-purple-600">
-                ${totalPrice.toFixed(2)}
+                ${adjustedTotal.toFixed(2)}
               </span>
             </div>
 

@@ -20,6 +20,10 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   onCheckout
 }) => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  // Apply affiliate/delivery-app markup to totals consistently
+  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
+  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
+  const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
 
   // Always show the bar when isVisible is true, even with 0 items
   if (!isVisible) {
@@ -58,7 +62,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           {/* Total price */}
           {totalItems > 0 && (
             <span className="font-semibold text-sm sm:text-lg text-primary">
-              ${totalPrice.toFixed(2)}
+              ${adjustedTotal.toFixed(2)}
             </span>
           )}
           
