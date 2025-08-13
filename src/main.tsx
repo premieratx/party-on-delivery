@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
+import { Router } from "./router";
 import { AppProviders } from "./providers/AppProviders";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LoadingScreen } from "./components/LoadingScreen";
@@ -12,7 +12,7 @@ createRoot(root).render(
   <AppProviders>
     <React.Suspense fallback={<LoadingScreen />}>
       <ErrorBoundary>
-        <App />
+        <Router />
       </ErrorBoundary>
     </React.Suspense>
   </AppProviders>
