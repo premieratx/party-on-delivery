@@ -11,7 +11,7 @@ if (!root) throw new Error("#root not found");
 createRoot(root).render(
   <AppProviders>
     <React.Suspense fallback={<LoadingScreen />}>
-      <ErrorBoundary fallback={<LoadingScreen message="Reloading…" />}>
+      <ErrorBoundary>
         <App />
       </ErrorBoundary>
     </React.Suspense>
