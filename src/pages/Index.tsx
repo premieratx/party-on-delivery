@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingCart, Beer, Wine, Package, Star } from 'lucide-react';
-import { getAllCollectionsCached } from '@/utils/instantCacheClient';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 
 interface ShopifyProduct {
   id: string;
@@ -25,15 +25,14 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadCollections = async () => {
+    const loadData = async () => {
       try {
-        const data = await getAllCollectionsCached();
-        console.log('Loaded collections:', data?.length);
-        if (data && data.length > 0) {
-          setCollections(data);
+        const data = await getInstantProducts();
+        console.log('Loaded instant data:', data?.collections?.length);
+        if (data?.collections && data.collections.length > 0) {
+          setCollections(data.collections);
         } else {
           console.log('No collections returned, using fallback');
-          // Use a simple fallback with basic categories
           setCollections([
             { id: '1', title: 'Wine & Champagne', handle: 'wine-champagne', products: [] },
             { id: '2', title: 'Beer & Seltzers', handle: 'beer-seltzers', products: [] },
@@ -43,8 +42,7 @@ const Index = () => {
         }
         setIsLoading(false);
       } catch (error) {
-        console.error('Error loading collections:', error);
-        // Use fallback data
+        console.error('Error loading data:', error);
         setCollections([
           { id: '1', title: 'Wine & Champagne', handle: 'wine-champagne', products: [] },
           { id: '2', title: 'Beer & Seltzers', handle: 'beer-seltzers', products: [] },
@@ -55,7 +53,7 @@ const Index = () => {
       }
     };
 
-    loadCollections();
+    loadData();
   }, []);
 
   if (isLoading) {
