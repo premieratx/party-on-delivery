@@ -31,7 +31,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg p-2 sm:p-3">
+    <div className="fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3">
       <div className="max-w-4xl mx-auto flex items-center justify-between">
         <Link 
           to="/admin/dashboard"
@@ -47,9 +47,11 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={onOpenCart}
+              onClick={() => { console.log('BottomCartBar: Cart button clicked'); onOpenCart(); }}
               aria-label="Open cart"
-              className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3"
+              className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3 touch-manipulation"
+              data-cart-trigger="true"
+              type="button"
             >
               <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Cart</span>
