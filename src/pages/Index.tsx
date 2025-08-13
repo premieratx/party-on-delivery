@@ -44,12 +44,7 @@ const Index = () => {
     loadHomepageApp();
   }, []);
 
-  // Always route main URL to the homepage delivery app with cover start screen
-  useEffect(() => {
-    if (homepageApp?.app_slug) {
-      navigate(`/app/${homepageApp.app_slug}?step=start`, { replace: true });
-    }
-  }, [homepageApp, navigate]);
+  // Remove redirect logic - show content directly on homepage
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
