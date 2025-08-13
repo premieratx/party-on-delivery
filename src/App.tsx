@@ -134,8 +134,10 @@ const App = () => {
                     <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
                     
                     {/* Admin Routes - These should have auth guards */}
+                    <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                     <Route path="/admin/*" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
 <Route path="/admin/product-management" element={<RequireAdmin><ProductManagement /></RequireAdmin>} />
 <Route path="/admin/create-collection" element={<RequireAdmin><CustomCollectionCreator /></RequireAdmin>} />
 <Route path="/admin/delivery-app-manager" element={<RequireAdmin><DeliveryAppManagerPage /></RequireAdmin>} />

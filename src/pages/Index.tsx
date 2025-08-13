@@ -20,9 +20,6 @@ const Index = () => {
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
-  // Import search interface for bottom menu hiding
-  const { shouldHideBottomMenu } = require('@/hooks/useSearchInterface').useSearchInterface({ hideOnScroll: true });
-  
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
   const [showCoverModal, setShowCoverModal] = useState(true);
@@ -60,6 +57,7 @@ const Index = () => {
     setShowCoverModal(false);
     setShowAppsGrid(true);
   };
+
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
@@ -125,35 +123,19 @@ const Index = () => {
     instructions: ''
   };
 
-  console.log('🏠 Index rendering, showCoverModal:', showCoverModal, 'homepageApp:', homepageApp);
-  
-  // TEMP: Force render something visible no matter what
   return (
-    <div className="min-h-screen bg-red-500 p-4">
-      <h1 className="text-white text-4xl">INDEX PAGE IS WORKING!</h1>
-      <p className="text-white">showCoverModal: {String(showCoverModal)}</p>
-      <p className="text-white">homepageApp: {JSON.stringify(homepageApp)}</p>
-      
-      {/* SIMPLE FALLBACK TEST */}
+    <div className="min-h-screen bg-background">
+      {/* Show cover modal first */}
       {showCoverModal && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4">
-            <h1 className="text-2xl font-bold mb-4">Party On Delivery</h1>
-            <p className="mb-6">Welcome to our delivery service!</p>
-            <button 
-              onClick={handleStartShopping}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 mr-4"
-            >
-              Start Shopping
-            </button>
-            <button 
-              onClick={handleViewApps}
-              className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700"
-            >
-              Browse Apps
-            </button>
-          </div>
-        </div>
+        <CustomDeliveryCoverModal
+          open={showCoverModal}
+          onOpenChange={setShowCoverModal}
+          onStartOrder={handleStartShopping}
+          onSecondaryAction={handleViewApps}
+          secondaryButtonText="Browse Apps"
+          appName={homepageApp?.app_name || "Party On Delivery"}
+          logoUrl={homepageApp?.logo_url}
+        />
       )}
 
       {/* Show delivery apps grid if selected */}
@@ -204,7 +186,7 @@ const Index = () => {
         isVisible={true}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
-        shouldHide={shouldHideBottomMenu}
+        shouldHide={false}
         showAdmin={true}
       />
     </div>
