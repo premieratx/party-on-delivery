@@ -34,13 +34,23 @@ export const useProductLoader = () => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
+      console.log('Loading collections with forceRefresh:', forceRefresh);
+      
       const { data, error } = await supabase.functions.invoke('get-all-collections', {
         body: { forceRefresh }
       });
 
-      if (error) throw error;
+      console.log('Collections response:', { data, error });
 
-      const collections = data?.collections || [];
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      // Handle the response format from get-all-collections
+      const collections = data?.collections || data || [];
+      console.log('Processed collections:', collections.length);
+      
       setState({
         collections,
         loading: false,

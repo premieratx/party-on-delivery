@@ -106,6 +106,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // Data loading
   const { collections, loading, error, refreshCollections } = useProductLoader();
 
+  console.log('ProductCategories render:', { 
+    collectionsCount: collections.length, 
+    loading, 
+    error,
+    collections: collections.slice(0, 2) // First 2 collections for debugging
+  });
+
   // Apply affiliate markup to prices
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
@@ -486,6 +493,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <p className="text-destructive mb-4">{error}</p>
           <Button onClick={refreshCollections} variant="outline">
             Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // No collections state
+  if (!loading && collections.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <p className="text-muted-foreground mb-4">No product collections found.</p>
+          <Button onClick={refreshCollections} variant="outline">
+            Refresh
           </Button>
         </div>
       </div>
