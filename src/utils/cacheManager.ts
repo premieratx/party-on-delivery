@@ -11,13 +11,13 @@ interface CacheItem<T> {
 export class CacheManager {
   private static instance: CacheManager;
   private cacheKeys = {
-    SHOPIFY_COLLECTIONS: 'shopify-collections',
-    DELIVERY_PRICING: 'delivery-pricing',
-    CUSTOMER_INFO: 'partyondelivery_customer',
-    ADDRESS_INFO: 'partyondelivery_address',
-    LAST_ORDER: 'partyondelivery_last_order',
-    CART_ITEMS: 'partyondelivery_cart',
-    DELIVERY_INFO: 'partyondelivery_delivery_info'
+    SHOPIFY_COLLECTIONS: 'shopify_collections_v2',
+    DELIVERY_PRICING: 'delivery_pricing_v2', 
+    CUSTOMER_INFO: 'customer_info_v2',
+    ADDRESS_INFO: 'address_info_v2',
+    LAST_ORDER: 'last_order_v2',
+    CART_ITEMS: 'cart_items_v2',
+    DELIVERY_INFO: 'delivery_info_v2'
   };
 
   public static getInstance(): CacheManager {

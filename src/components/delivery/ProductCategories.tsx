@@ -328,18 +328,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b transition-transform duration-200 ${scrolled ? 'shadow-md' : ''}`}>
       <div className="max-w-6xl mx-auto px-4">
         <div className={`flex py-4 gap-2 ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap justify-center'}`}>
-          {displayedTabs.map((tab, index) => (
-            <Button
-              key={tab.step}
-              variant={selectedCategory === index ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setSelectedCategory(index)}
-              className={`${isMobile ? 'flex-shrink-0 whitespace-nowrap' : ''}`}
-            >
-              {'isSearch' in tab && tab.isSearch ? <Search className="w-4 h-4 mr-1" /> : null}
-              {tab.title}
-            </Button>
-          ))}
+          {displayedTabs.map((tab, index) => {
+            const isSearchTab = 'isSearch' in tab && (tab as any).isSearch;
+            return (
+              <Button
+                key={tab.step}
+                variant={selectedCategory === index ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedCategory(index)}
+                className={`${isMobile ? 'flex-shrink-0 whitespace-nowrap' : ''}`}
+              >
+                {isSearchTab && <Search className="w-4 h-4 mr-1" />}
+                {tab.title}
+              </Button>
+            );
+          })}
         </div>
       </div>
     </div>
