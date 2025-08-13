@@ -8,58 +8,41 @@ interface UseSearchInterfaceOptions {
 
 export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  const [shouldHideChrome, setShouldHideChrome] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false);
   const [shouldHideBottomMenu, setShouldHideBottomMenu] = useState(false);
   
   const lastScrollY = useRef(0);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle search focus with immediate UI changes and instant scrolling
+  // Handle search focus - simplified
   const handleSearchFocus = useCallback(() => {
-    console.log('Search focus triggered!');
     setIsSearchFocused(true);
-    setHasUserInteracted(true);
-    setShouldHideChrome(true);
     setShouldHideBottomMenu(true);
     options.onSearchFocus?.();
 
-    // Instant scroll to top - no smooth animation for speed
+    // Scroll to top instantly
     window.scrollTo(0, 0);
 
-    // Add mobile keyboard optimizations but keep scrolling enabled
+    // Mobile keyboard optimizations
     if (typeof window !== 'undefined') {
-      // Don't disable scrolling - allow users to scroll through products
-      document.body.style.position = 'relative';
-      
-      // Force viewport adjustment for mobile keyboards
       requestAnimationFrame(() => {
         const viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
           viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0');
         }
-        
-        // Add class for search-focused state
         document.body.classList.add('search-focused');
       });
     }
   }, [options]);
 
-  // Handle search blur with cleanup
+  // Handle search blur - simplified cleanup
   const handleSearchBlur = useCallback(() => {
     setIsSearchFocused(false);
     options.onSearchBlur?.();
     
-    // Restore body styles
     if (typeof window !== 'undefined') {
-      document.body.style.height = '';
-      document.body.style.overflow = '';
-      document.body.style.position = '';
       document.body.classList.remove('search-focused');
       
-      // Restore normal viewport
       const viewport = document.querySelector('meta[name="viewport"]');
       if (viewport) {
         viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no');
@@ -67,40 +50,27 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
     }
   }, [options]);
 
-  // Handle scroll behavior with enhanced menu hiding during search
+  // Simplified scroll behavior
   useEffect(() => {
     if (!options.hideOnScroll) return;
 
     const handleScroll = () => {
-      console.log('Scroll detected, currentY:', window.scrollY);
       const currentScrollY = window.scrollY;
       const scrollDelta = Math.abs(currentScrollY - lastScrollY.current);
 
-      // More aggressive hiding when search is focused
-      const threshold = isSearchFocused ? 1 : 3;
-      
-      if (scrollDelta > threshold) {
-        setIsScrolling(true);
-        setHasUserInteracted(true);
-        setShouldHideChrome(true);
+      if (scrollDelta > 5) {
         setShouldHideBottomMenu(true);
 
-        // Clear previous timeout
         if (scrollTimeoutRef.current) {
           clearTimeout(scrollTimeoutRef.current);
         }
 
-        // Stop scrolling state after a brief delay
+        // Show menu again after scrolling stops (only if search not focused)
         scrollTimeoutRef.current = setTimeout(() => {
-          setIsScrolling(false);
-          // Keep menus hidden longer when search is focused
           if (!isSearchFocused) {
-            setTimeout(() => {
-              setShouldHideBottomMenu(false);
-              setShouldHideChrome(false);
-            }, 1500);
+            setShouldHideBottomMenu(false);
           }
-        }, 100);
+        }, 1000);
 
         lastScrollY.current = currentScrollY;
       }
@@ -116,30 +86,12 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
     };
   }, [isSearchFocused, options.hideOnScroll]);
 
-  // Reset interaction state on page reload
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      setHasUserInteracted(false);
-      setShouldHideChrome(false);
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
   return {
     isSearchFocused,
-    hasUserInteracted,
-    shouldHideChrome,
-    isScrolling,
     shouldHideBottomMenu,
     searchInputRef,
     handleSearchFocus,
     handleSearchBlur,
-    resetInteraction: () => {
-      setHasUserInteracted(false);
-      setShouldHideChrome(false);
-      setShouldHideBottomMenu(false);
-    }
+    resetInteraction: () => setShouldHideBottomMenu(false)
   };
 };
