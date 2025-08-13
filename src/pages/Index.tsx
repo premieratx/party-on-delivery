@@ -7,6 +7,8 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
+import { CustomDeliveryAppsGrid } from '@/components/custom-delivery/CustomDeliveryAppsGrid';
 
 const Index = () => {
   // Enable wake lock to keep screen on during app usage
@@ -23,6 +25,8 @@ const Index = () => {
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
+  const [showCoverModal, setShowCoverModal] = useState(true);
+  const [showAppsGrid, setShowAppsGrid] = useState(false);
   const navigate = useNavigate();
 
   // Load the homepage delivery app configuration
@@ -47,12 +51,15 @@ const Index = () => {
     loadHomepageApp();
   }, []);
 
-  // Always route main URL to the homepage delivery app with cover start screen
-  useEffect(() => {
-    if (homepageApp?.app_slug) {
-      navigate(`/app/${homepageApp.app_slug}?step=start`, { replace: true });
-    }
-  }, [homepageApp, navigate]);
+  const handleStartShopping = () => {
+    setShowCoverModal(false);
+    // Instead of redirecting, show the main delivery app
+  };
+
+  const handleViewApps = () => {
+    setShowCoverModal(false);
+    setShowAppsGrid(true);
+  };
   const handleAddToCart = (product: any) => {
     const cartItem = {
       id: product.id,
@@ -120,20 +127,46 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Show delivery app - either custom homepage app or default */}
-      <ProductCategories
-        onAddToCart={handleAddToCart}
-        cartItemCount={getTotalItems()}
-        onOpenCart={() => setIsCartOpen(true)}
-        cartItems={cartItemsForCategories}
-        onUpdateQuantity={handleUpdateQuantity}
-        onProceedToCheckout={handleCheckout}
-        customAppName={homepageApp?.app_name}
-        customHeroHeading={homepageApp?.main_app_config?.hero_heading}
-        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
-        customLogoUrl={homepageApp?.logo_url}
-        customCollections={homepageApp?.collections_config}
-      />
+      {/* Show cover modal first */}
+      {showCoverModal && homepageApp && (
+        <CustomDeliveryCoverModal
+          open={showCoverModal}
+          onOpenChange={setShowCoverModal}
+          onStartOrder={handleStartShopping}
+          onSecondaryAction={handleViewApps}
+          secondaryButtonText="Browse Apps"
+          appName={homepageApp.app_name || "Party On Delivery"}
+          logoUrl={homepageApp.logo_url}
+        />
+      )}
+
+      {/* Show delivery apps grid if selected */}
+      {showAppsGrid && (
+        <CustomDeliveryAppsGrid
+          onAppSelect={(appSlug) => navigate(`/app/${appSlug}`)}
+          onBack={() => {
+            setShowAppsGrid(false);
+            setShowCoverModal(true);
+          }}
+        />
+      )}
+
+      {/* Show main delivery app when cover is dismissed */}
+      {!showCoverModal && !showAppsGrid && (
+        <ProductCategories
+          onAddToCart={handleAddToCart}
+          cartItemCount={getTotalItems()}
+          onOpenCart={() => setIsCartOpen(true)}
+          cartItems={cartItemsForCategories}
+          onUpdateQuantity={handleUpdateQuantity}
+          onProceedToCheckout={handleCheckout}
+          customAppName={homepageApp?.app_name}
+          customHeroHeading={homepageApp?.main_app_config?.hero_heading}
+          customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
+          customLogoUrl={homepageApp?.logo_url}
+          customCollections={homepageApp?.collections_config}
+        />
+      )}
 
       {/* Cart sidebar */}
       <DeliveryCart
@@ -148,14 +181,15 @@ const Index = () => {
         onEmptyCart={handleEmptyCart}
       />
 
-      {/* Bottom cart bar */}
+      {/* Bottom cart bar with admin button */}
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}
-        isVisible={getTotalItems() > 0}
+        isVisible={getTotalItems() > 0 || !showCoverModal}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
-        shouldHide={shouldHideBottomMenu}
+        shouldHide={shouldHideBottomMenu || showCoverModal}
+        showAdmin={true}
       />
     </div>
   );

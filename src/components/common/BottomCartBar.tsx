@@ -11,6 +11,7 @@ interface BottomCartBarProps {
   onOpenCart: () => void;
   onCheckout: () => void;
   shouldHide?: boolean;
+  showAdmin?: boolean;
 }
 
 export const BottomCartBar: React.FC<BottomCartBarProps> = ({
@@ -19,7 +20,8 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   isVisible,
   onOpenCart,
   onCheckout,
-  shouldHide = false
+  shouldHide = false,
+  showAdmin = false
 }) => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   // Apply affiliate/delivery-app markup to totals consistently
@@ -35,12 +37,14 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   return (
     <div className={`fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3 transition-transform duration-200 ${shouldHide ? 'translate-y-full' : 'translate-y-0'}`}>
       <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <Link 
-          to="/admin/dashboard"
-          className="text-xs text-muted-foreground hover:text-primary transition-colors"
-        >
-          Admin
-        </Link>
+        {showAdmin && (
+          <Link 
+            to="/admin/dashboard"
+            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            Admin
+          </Link>
+        )}
         
         {/* Actions on the right: Cart, Subtotal, Checkout */}
         <div className="flex items-center gap-1 sm:gap-3 ml-auto">

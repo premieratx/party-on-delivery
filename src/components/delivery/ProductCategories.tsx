@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle, Wine, Search } from 'lucide-react';
 import { ProductSearchBar } from './ProductSearchBar';
+import { DeliveryAppSelector } from './DeliveryAppSelector';
 import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../DeliveryWidget';
 import { ProductLightbox } from './ProductLightbox';
@@ -707,20 +708,29 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       </div>
 
       <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
-        {/* Sticky search bar above tabs */}
+        {/* Header with app selector and search */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
-          <div className="max-w-2xl mx-auto">
-            <ProductSearchBar
-              onProductSelect={handleSearchSelect}
-              placeholder="Search all products..."
-              showDropdownResults={false}
-              onResultsChange={handleSearchResultsChange}
-              onSearchingChange={setIsSearching}
-              onFocus={handleSearchFocus}
-              onBlur={handleSearchBlur}
-              inputRef={searchInputRef}
-              inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
+          <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
+            {/* App Selector */}
+            <DeliveryAppSelector 
+              currentAppSlug={customAppName?.toLowerCase().replace(/\s+/g, '-')}
+              className="flex-shrink-0"
             />
+            
+            {/* Search Bar */}
+            <div className="flex-1 max-w-lg">
+              <ProductSearchBar
+                onProductSelect={handleSearchSelect}
+                placeholder="Search all products..."
+                showDropdownResults={false}
+                onResultsChange={handleSearchResultsChange}
+                onSearchingChange={setIsSearching}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+                inputRef={searchInputRef}
+                inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
+              />
+            </div>
           </div>
         </div>
 
@@ -907,19 +917,19 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 <div className="mt-auto pt-2 flex flex-col items-center gap-2">
   <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${applyMarkup(price).toFixed(2)}</Badge>
   <div className="flex justify-center">
-                        {cartQty > 0 ? (
-                          <div className="flex items-center gap-0.5 bg-muted rounded">
-                            <Button variant="ghost" size="sm" className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-destructive hover:text-destructive-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                              <Minus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
+                         {cartQty > 0 ? (
+                          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                              <Minus className="w-4 h-4" />
                             </Button>
-                            <span className="text-[10px] font-medium px-1 min-w-[1.25rem] text-center">{cartQty}</span>
-                            <Button variant="ghost" size="sm" className="h-1.5 w-1.5 sm:h-4 sm:w-4 p-0 hover:bg-primary hover:text-primary-foreground" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                              <Plus className="w-[6px] h-[6px] sm:w-[10px] sm:h-[10px]" />
+                            <span className="text-sm font-bold px-2 min-w-[2rem] text-center">{cartQty}</span>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                              <Plus className="w-4 h-4" />
                             </Button>
                           </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-1 h-1 sm:w-5 sm:h-5 flex items-center justify-center" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" strokeWidth={4} />
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center transition-transform hover:scale-110" onClick={() => handleAddToCart(product, variant)}>
+                            <Plus className="w-5 h-5" strokeWidth={3} />
                           </button>
                         )}
                       </div>
@@ -1057,61 +1067,58 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 </Badge>
                     </div>
                       
-                    {/* Oval Cart Controls - Mobile specific sizing */}
-                    <div className="flex justify-center items-center">
-                      {cartQty > 0 ? (
-                        <div 
-                          className="flex items-center justify-center bg-muted/80 rounded-full px-0.5 py-0.5 gap-0.5 min-w-[28px] h-6 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[60px] sm:h-8" 
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-4 w-4 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center sm:h-6 sm:w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleQuantityChange(product.id, selectedVariant?.id, -1);
-                            }}
-                          >
-                            <Minus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={2} />
-                          </Button>
-                          <span className="text-xs font-bold min-w-[16px] text-center sm:text-sm sm:min-w-[20px]">
-                            {cartQty}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-4 w-4 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center sm:h-6 sm:w-6"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleQuantityChange(product.id, selectedVariant?.id, 1);
-                            }}
-                          >
-                            <Plus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={2} />
-                          </Button>
-                        </div>
-                      ) : (
-                        <button
-                          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-0.5 h-0.5 md:w-8 md:h-8"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (selectedVariant) {
-                              onAddToCart({
-                                id: product.id,
-                                title: product.title,
-                                name: product.title,
-                                price: selectedVariant.price,
-                                image: product.image,
-                                variant: selectedVariant.id
-                              });
-                             setCartCountAnimation(true);
-                             setTimeout(() => setCartCountAnimation(false), 300);
-                           }
-                          }}
-                        >
-                          <Plus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
-                       </button>
-                     )}
+                     {/* Centered Cart Controls with larger, more visible buttons */}
+                     <div className="flex justify-center items-center">
+                       {cartQty > 0 ? (
+                         <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             className="h-8 w-8 p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleQuantityChange(product.id, selectedVariant?.id, -1);
+                             }}
+                           >
+                             <Minus className="w-4 h-4" />
+                           </Button>
+                           <span className="text-sm font-bold px-2 min-w-[2rem] text-center">
+                             {cartQty}
+                           </span>
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             className="h-8 w-8 p-0 rounded-full hover:bg-primary hover:text-primary-foreground"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleQuantityChange(product.id, selectedVariant?.id, 1);
+                             }}
+                           >
+                             <Plus className="w-4 h-4" />
+                           </Button>
+                         </div>
+                       ) : (
+                         <button
+                           className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-12 h-12 flex items-center justify-center transition-transform hover:scale-110 shadow-lg"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             if (selectedVariant) {
+                               onAddToCart({
+                                 id: product.id,
+                                 title: product.title,
+                                 name: product.title,
+                                 price: selectedVariant.price,
+                                 image: product.image,
+                                 variant: selectedVariant.id
+                               });
+                              setCartCountAnimation(true);
+                              setTimeout(() => setCartCountAnimation(false), 300);
+                            }
+                           }}
+                         >
+                           <Plus className="w-6 h-6" strokeWidth={3} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
