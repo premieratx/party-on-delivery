@@ -321,13 +321,17 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       // First try instant cache for super fast loading
       if (!forceRefresh) {
         try {
+          console.log('🔄 Attempting to load collections with getAllCollectionsCached...');
           const instant = await getAllCollectionsCached();
+          console.log('📊 getAllCollectionsCached response:', instant);
           if (instant?.length) {
-            console.log('✅ Main delivery app: Using cached collections from get-all-collections');
+            console.log('✅ Main delivery app: Using cached collections from get-all-collections, count:', instant.length);
             setCollections(instant);
             setRetryCount(0);
             setLoading(false);
             return;
+          } else {
+            console.log('⚠️ No collections returned from getAllCollectionsCached, falling back to other methods');
           }
         } catch (instantError) {
           console.log('⚠️ Instant cache failed, trying local cache...');

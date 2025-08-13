@@ -19,6 +19,7 @@ const Index = () => {
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
   
+  console.log('🏠 Index component loaded - cart items:', cartItems.length);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
   const navigate = useNavigate();
@@ -120,9 +121,9 @@ const Index = () => {
         cartItems={cartItemsForCategories}
         onUpdateQuantity={handleUpdateQuantity}
         onProceedToCheckout={handleCheckout}
-        customAppName={homepageApp?.app_name}
-        customHeroHeading={homepageApp?.main_app_config?.hero_heading}
-        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
+        customAppName={homepageApp?.app_name || "Party On Delivery"}
+        customHeroHeading={homepageApp?.main_app_config?.hero_heading || "Austin's Premier Party Delivery"}
+        customHeroSubheading={homepageApp?.main_app_config?.hero_subheading || "Get everything you need for your party delivered fast"}
         customLogoUrl={homepageApp?.logo_url}
         customCollections={homepageApp?.collections_config}
       />
