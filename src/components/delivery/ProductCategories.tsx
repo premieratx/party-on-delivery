@@ -327,16 +327,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const renderCategoryTabs = () => (
     <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b transition-transform duration-200 ${scrolled ? 'shadow-md' : ''}`}>
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex overflow-x-auto scrollbar-hide py-4 gap-2">
+        <div className={`flex py-4 gap-2 ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap justify-center'}`}>
           {displayedTabs.map((tab, index) => (
             <Button
               key={tab.step}
               variant={selectedCategory === index ? "default" : "ghost"}
               size="sm"
               onClick={() => setSelectedCategory(index)}
-              className="flex-shrink-0 whitespace-nowrap"
+              className={`${isMobile ? 'flex-shrink-0 whitespace-nowrap' : ''}`}
             >
-              {(tab as any).isSearch ? <Search className="w-4 h-4 mr-1" /> : null}
+              {'isSearch' in tab && tab.isSearch ? <Search className="w-4 h-4 mr-1" /> : null}
               {tab.title}
             </Button>
           ))}
@@ -543,7 +543,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     );
   }
 
-  const isSearchTab = Boolean((categoryMapping as any)[selectedCategory]?.isSearch);
+  const isSearchTab = Boolean('isSearch' in categoryMapping[selectedCategory] && categoryMapping[selectedCategory].isSearch);
 
   return (
     <div className="min-h-screen bg-background">
