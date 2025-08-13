@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Minus, Loader2, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { CartItem } from '../DeliveryWidget';
+import React, { useState, useEffect, useRef } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { useProductLoader } from '@/hooks/useProductLoader';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Minus, Search, Star, ShoppingCart, Home, ArrowLeft, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { parseProductTitle } from '@/utils/productUtils';
+import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { TypingIntro } from '@/components/common/TypingIntro';
 
+// Import category backgrounds
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
@@ -19,6 +20,16 @@ import spiritsCategoryBg from '@/assets/spirits-category-bg.jpg';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 
+interface CartItem {
+  id: string;
+  title: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+  variant?: string;
+}
+
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -26,16 +37,14 @@ interface LocalCartItem extends CartItem {
 interface Product {
   id: string;
   title: string;
-  price: number;
+  price: string | number;
   image: string;
-  images?: string[];
   description?: string;
-  handle: string;
+  handle?: string;
   variants?: Array<{
     id: string;
     title: string;
-    price: number;
-    available: boolean;
+    price: string | number;
   }>;
 }
 
@@ -43,38 +52,34 @@ interface Collection {
   id: string;
   title: string;
   handle: string;
-  description: string;
+  description?: string;
   products: Product[];
 }
 
 interface ProductCategoriesProps {
-  onAddToCart: (item: Omit<LocalCartItem, 'quantity'>) => void;
+  onAddToCart: (product: any) => void;
   cartItemCount: number;
+  onOpenCart: () => void;
+  cartItems: LocalCartItem[];
+  onUpdateQuantity: (id: string, variant: string | undefined, newQuantity: number, productData?: any) => void;
+  onProceedToCheckout: () => void;
   customAppName?: string;
   customHeroHeading?: string;
   customHeroSubheading?: string;
   customLogoUrl?: string;
   customCollections?: {
-    tab_count: number;
-    tabs: Array<{
+    tabs?: Array<{
       name: string;
       collection_handle: string;
-      icon?: string;
-      subheadline_text?: string;
-      subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat';
-      subheadline_size?: 'sm' | 'md' | 'lg' | 'xl';
     }>;
+    tab_count?: number;
   };
-  onOpenCart: () => void;
-  cartItems: LocalCartItem[];
-  onUpdateQuantity: (id: string, variant: string | undefined, quantity: number) => void;
-  onProceedToCheckout: () => void;
   onBack?: () => void;
   onBackToStart?: () => void;
   showBackToStart?: boolean;
 }
 
-export const ProductCategories: React.FC<ProductCategoriesProps> = ({
+export function ProductCategories({
   onAddToCart,
   cartItemCount,
   onOpenCart,
@@ -86,381 +91,391 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customHeroSubheading,
   customLogoUrl,
   customCollections
-}) => {
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  
-  // State
-  const [selectedCategory, setSelectedCategory] = useState(0);
-  const [selectedVariants, setSelectedVariants] = useState<{[productId: string]: string}>({});
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+}: ProductCategoriesProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [scrollY, setScrollY] = useState(0);
   const [showSearch, setShowSearch] = useState(false);
-  const [visibleProductCount, setVisibleProductCount] = useState(50);
-  const [scrolled, setScrolled] = useState(false);
-  
-  // Refs
-  const lastScrollY = useRef(0);
-  
-  // Data loading
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 32; // 8 per row x 4 rows
   const { collections, loading, error, refreshCollections } = useProductLoader();
+  
+  // Extract all products from collections
+  const products = collections.flatMap(collection => collection.products || []);
 
-  console.log('ProductCategories render:', { 
-    collectionsCount: collections.length, 
-    loading, 
-    error,
-    collections: collections.slice(0, 2) // First 2 collections for debugging
-  });
-
-  // Apply affiliate markup to prices
-  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
-  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
-
-  // Category mapping
   const getCategoryMapping = () => {
-    if (customCollections?.tabs && customCollections.tabs.length > 0) {
-      return customCollections.tabs.map((tab, index) => ({
-        step: index,
-        title: tab.name,
-        handle: tab.collection_handle,
-        backgroundImage: getCategoryBackground(tab.collection_handle),
-        pageTitle: `Choose Your ${tab.name}`
-      }));
+    if (customCollections?.tabs) {
+      return [
+        { id: 'all', name: 'All Products', icon: '🛍️' },
+        ...customCollections.tabs.map(tab => ({
+          id: tab.collection_handle,
+          name: tab.name,
+          icon: getCategoryIcon(tab.name)
+        }))
+      ];
     }
     
     return [
-      { step: 0, title: 'Spirits', handle: 'spirits', backgroundImage: spiritsCategoryBg, pageTitle: 'Choose Your Spirits' },
-      { step: 1, title: 'Beer', handle: 'tailgate-beer', backgroundImage: beerCategoryBg, pageTitle: 'Choose Your Beer' },
-      { step: 2, title: 'Seltzers', handle: 'seltzer-collection', backgroundImage: seltzerCategoryBg, pageTitle: 'Choose Your Seltzers' },
-      { step: 3, title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Choose Your Mixers & Non-Alcoholic Drinks' },
-      { step: 4, title: 'Cocktails', handle: 'cocktail-kits', backgroundImage: cocktailCategoryBg, pageTitle: 'Choose Your Cocktails' },
-      { step: 5, title: 'Search', handle: 'search', backgroundImage: partySuppliesCategoryBg, pageTitle: 'Search Products', isSearch: true }
+      { id: 'all', name: 'All Products', icon: '🛍️', bgImage: '' },
+      { id: 'spirits', name: 'Spirits', icon: '🥃', bgImage: spiritsCategoryBg },
+      { id: 'beer', name: 'Beer', icon: '🍺', bgImage: beerCategoryBg },
+      { id: 'wine', name: 'Wine', icon: '🍷', bgImage: cocktailCategoryBg },
+      { id: 'mixers', name: 'Mixers & N/A', icon: '🥤', bgImage: seltzerCategoryBg },
+      { id: 'party-supplies', name: 'Party Supplies', icon: '🎉', bgImage: partySuppliesCategoryBg }
     ];
   };
 
-  const getCategoryBackground = (handle: string) => {
-    if (handle.includes('spirit')) return spiritsCategoryBg;
-    if (handle.includes('beer')) return beerCategoryBg;
-    if (handle.includes('seltzer')) return seltzerCategoryBg;
-    if (handle.includes('cocktail')) return cocktailCategoryBg;
-    return partySuppliesCategoryBg;
+  const getCategoryIcon = (name: string): string => {
+    const iconMap: Record<string, string> = {
+      'Spirits': '🥃', 'Liquor': '🥃',
+      'Beer': '🍺', 'Beers': '🍺',
+      'Wine': '🍷', 'Champagne': '🍾', 'Wine & Champagne': '🍾',
+      'Cocktails': '🍸', 'Cocktail Kits': '🍸', 'Cocktail Kits!': '🍸',
+      'Mixers': '🥤', 'Mixers & N/A': '🥤', 'Seltzers': '💧',
+      'Party Supplies': '🎉'
+    };
+    return iconMap[name] || '🛍️';
   };
 
-  const baseMapping = useMemo(() => getCategoryMapping(), [customCollections]);
-  const categoryMapping = useMemo(() => {
-    const matched = baseMapping.filter(tab => collections.some(c => c.handle === tab.handle));
-    if (matched.length > 0) return matched;
-    if (collections.length > 0) {
-      return collections.slice(0, Math.min(6, collections.length)).map((c, idx) => ({
-        step: idx,
-        title: c.title,
-        handle: c.handle,
-        backgroundImage: getCategoryBackground(c.handle),
-        pageTitle: c.title,
-      }));
-    }
-    return baseMapping;
-  }, [baseMapping, collections]);
+  const getCategoryBackground = (categoryId: string) => {
+    const bgMap: Record<string, string> = {
+      'spirits': spiritsCategoryBg,
+      'beer': beerCategoryBg, 
+      'wine': cocktailCategoryBg,
+      'mixers': seltzerCategoryBg,
+      'party-supplies': partySuppliesCategoryBg
+    };
+    return bgMap[categoryId] || '';
+  };
 
-  const displayedTabsCount = Math.min(customCollections?.tab_count ?? categoryMapping.length, categoryMapping.length);
-  const displayedTabs = categoryMapping.slice(0, displayedTabsCount);
-
-  // Auto-select first tab that has a matching collection if current selection doesn't exist
   useEffect(() => {
-    if (!collections || collections.length === 0) return;
-    const currentHandle = categoryMapping[selectedCategory]?.handle;
-    const hasCurrent = !!collections.find(c => c.handle === currentHandle);
-    if (!hasCurrent) {
-      const firstAvailableIndex = categoryMapping.findIndex(tab =>
-        !!collections.find(c => c.handle === tab.handle)
-      );
-      if (firstAvailableIndex !== -1) {
-        setSelectedCategory(firstAvailableIndex);
-      }
+    if (customCollections?.tabs && customCollections.tabs.length > 0) {
+      setSelectedCategory(customCollections.tabs[0].collection_handle);
     }
-  }, [collections, selectedCategory, categoryMapping]);
+  }, [customCollections]);
 
-  // Current collection
-  const selectedCollection = collections.find(c => c.handle === categoryMapping[selectedCategory]?.handle);
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
-  // Scroll handling - simplified
+  // Load more products with pagination
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 16);
-      
-      // Load more products when near bottom
-      if (selectedCollection && currentScrollY + window.innerHeight >= document.documentElement.scrollHeight - 200) {
-        const totalProducts = selectedCollection.products.length;
-        if (visibleProductCount < totalProducts) {
-          setVisibleProductCount(prev => Math.min(prev + 25, totalProducts));
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+        if (!loading) {
+          setCurrentPage(prev => prev + 1);
         }
       }
-      
-      lastScrollY.current = currentScrollY;
     };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [selectedCollection, visibleProductCount]);
+  }, [loading]);
 
-  // Search functionality
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (!query.trim()) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const allProducts = collections.flatMap(c => c.products);
-      const filtered = allProducts.filter(product =>
-        product.title.toLowerCase().includes(query.toLowerCase())
-      );
-      setSearchResults(filtered);
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setIsSearching(false);
-    }
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setSelectedCategory('all');
   };
 
-  // Product interaction handlers
-  const handleProductClick = (product: Product) => {
-    // For now, just add to cart on click
-    handleAddProductToCart(product);
+  // Get cart item quantities for product grid
+  const getCartItemQuantities = () => {
+    const quantities: Record<string, number> = {};
+    cartItems.forEach(item => {
+      const key = `${item.id}-${item.variant || 'default'}`;
+      quantities[key] = item.quantity;
+    });
+    return quantities;
   };
-
-  const handleAddProductToCart = (product: Product, selectedVariant?: string) => {
-    const variant = selectedVariant || selectedVariants[product.id] || 'default';
-    const variantData = product.variants?.find(v => v.id === variant);
-    
-    const cartItem = {
-      id: product.id,
-      title: product.title,
-      name: product.title,
-      price: variantData?.price || product.price,
-      image: product.image,
-      variant: variant
-    };
-    
-    onAddToCart(cartItem);
-    setSelectedVariants(prev => ({ ...prev, [product.id]: variant }));
-  };
-
-  const getCartItemQuantity = (productId: string, variant?: string) => {
-    return cartItems.find(item => {
-      const itemId = item.productId || item.id;
-      const itemVariant = item.variant || 'default';
-      const checkVariant = variant || 'default';
-      return itemId === productId && itemVariant === checkVariant;
-    })?.quantity || 0;
-  };
-
-  // Reset visible count when category changes
-  useEffect(() => {
-    setVisibleProductCount(50);
-  }, [selectedCategory]);
-
-  // Category tabs config
-  const currentTabConfig = customCollections?.tabs?.[selectedCategory];
-  const subheadlineText = currentTabConfig?.subheadline_text || '';
-  const subheadlineFont = currentTabConfig?.subheadline_font || 'default';
-  const subheadlineSize = currentTabConfig?.subheadline_size || 'md';
-
-  const subheadlineFontClass = {
-    playfair: 'font-playfair',
-    oswald: 'font-oswald', 
-    montserrat: 'font-montserrat',
-    default: ''
-  }[subheadlineFont];
-
-  const subheadlineSizeClass = {
-    sm: 'text-sm',
-    md: 'text-base',
-    lg: 'text-lg',
-    xl: 'text-xl'
-  }[subheadlineSize];
 
   // Render functions
   const renderHeroSection = () => (
-    <div className="relative min-h-[70vh] flex flex-col justify-center items-center text-center text-white overflow-hidden">
+    <div className="relative h-80 md:h-96 bg-gradient-to-br from-primary/10 to-primary/5 overflow-hidden">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${heroPartyAustin})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+      <div className="absolute inset-0 bg-black/40" />
       
-      <div className="relative z-10 max-w-4xl mx-auto px-4">
-        {customLogoUrl && (
-          <img 
-            src={customLogoUrl} 
-            alt={customAppName || 'Logo'} 
-            className="h-24 w-auto mx-auto mb-6"
-          />
-        )}
-        
-        <TypingIntro
-          text={customHeroHeading || "Austin's Premier Party Delivery"}
-          className="text-4xl md:text-6xl font-bold mb-4"
-          speedMs={50}
-        />
-        
-        <p className="text-xl md:text-2xl mb-8 opacity-90">
-          {customHeroSubheading || "Premium drinks delivered to your door in 30 minutes"}
-        </p>
-        
-        <Button 
-          onClick={() => setSelectedCategory(0)}
-          size="lg"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg"
-        >
-          Start Shopping
-        </Button>
-      </div>
-    </div>
-  );
-
-  const renderCategoryTabs = () => (
-    <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b transition-transform duration-200 ${scrolled ? 'shadow-md' : ''}`}>
-      <div className="max-w-6xl mx-auto px-4">
-        <div className={`flex py-4 gap-2 ${isMobile ? 'overflow-x-auto scrollbar-hide' : 'flex-wrap justify-center'}`}>
-          {displayedTabs.map((tab, index) => {
-            const isSearchTab = 'isSearch' in tab && (tab as any).isSearch;
-            return (
-              <Button
-                key={tab.step}
-                variant={selectedCategory === index ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setSelectedCategory(index)}
-                className={`${isMobile ? 'flex-shrink-0 whitespace-nowrap' : ''}`}
-              >
-                {isSearchTab && <Search className="w-4 h-4 mr-1" />}
-                {tab.title}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSearchSection = () => (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <div className="relative mb-6">
-        <Input
-          type="text"
-          placeholder="Search for products..."
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="pl-10 pr-4"
-        />
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-      </div>
-      
-      {isSearching && (
-        <div className="flex justify-center py-8">
-          <Loader2 className="w-8 h-8 animate-spin" />
-        </div>
-      )}
-      
-      {searchResults.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {searchResults.map(product => renderProductCard(product))}
-        </div>
-      )}
-      
-      {searchQuery && !isSearching && searchResults.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
-          No products found for "{searchQuery}"
-        </div>
-      )}
-    </div>
-  );
-
-  const renderProductCard = (product: Product) => {
-    const selectedVariant = selectedVariants[product.id];
-    const variantData = product.variants?.find(v => v.id === selectedVariant);
-    const displayPrice = applyMarkup(variantData?.price || product.price);
-    const quantity = getCartItemQuantity(product.id, selectedVariant);
-
-    return (
-      <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-all duration-200">
-        <div className="relative">
-          <img
-            src={product.image}
-            alt={product.title}
-            className="w-full h-48 object-cover cursor-pointer group-hover:scale-105 transition-transform duration-200"
-            onClick={() => handleProductClick(product)}
-            loading="lazy"
-          />
-          {quantity > 0 && (
-            <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">
-              {quantity}
-            </Badge>
-          )}
-        </div>
-        
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-sm mb-2 line-clamp-2 cursor-pointer hover:text-primary transition-colors"
-              onClick={() => handleProductClick(product)}>
-            {product.title}
-          </h3>
+      {/* Top Navigation Bar */}
+      <div className="absolute top-0 left-0 right-0 z-20 bg-black/30 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
+          </div>
           
-          {product.variants && product.variants.length > 1 && (
-            <Select
-              value={selectedVariant || ''}
-              onValueChange={(value) => setSelectedVariants(prev => ({ ...prev, [product.id]: value }))}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:bg-white/10"
+              onClick={() => setShowSearch(!showSearch)}
             >
-              <SelectTrigger className="w-full mb-3 h-8 text-xs">
-                <SelectValue placeholder="Choose variant" />
-              </SelectTrigger>
-              <SelectContent>
-                {product.variants.map(variant => (
-                  <SelectItem key={variant.id} value={variant.id}>
-                    {variant.title} - ${applyMarkup(variant.price).toFixed(2)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-primary">
-              ${displayPrice.toFixed(2)}
-            </span>
-            
-            {quantity > 0 ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onUpdateQuantity(product.id, selectedVariant, quantity - 1)}
-                >
-                  <Minus className="w-3 h-3" />
-                </Button>
-                <span className="min-w-[1.5rem] text-center font-medium">{quantity}</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onUpdateQuantity(product.id, selectedVariant, quantity + 1)}
-                >
-                  <Plus className="w-3 h-3" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                size="sm"
-                onClick={() => handleAddProductToCart(product, selectedVariant)}
-                className="flex items-center gap-1"
+              <Search className="h-4 w-4" />
+            </Button>
+            {cartItemCount > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white hover:bg-white/10 relative"
+                onClick={onOpenCart}
               >
-                <Plus className="w-3 h-3" />
-                Add
+                <ShoppingCart className="h-4 w-4" />
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
+                  {cartItemCount}
+                </Badge>
               </Button>
             )}
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={onProceedToCheckout}
+              disabled={cartItemCount === 0}
+              className="bg-white text-primary hover:bg-white/90"
+            >
+              Checkout
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      {showSearch && (
+        <div className="absolute top-16 left-0 right-0 z-20 bg-black/50 backdrop-blur-sm p-4">
+          <div className="container mx-auto">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10 pr-10 bg-white/90"
+                autoFocus
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setShowSearch(false);
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="relative z-10 h-full flex items-center justify-center text-center px-4">
+        <div className="max-w-4xl mx-auto">
+          {customLogoUrl && (
+            <img 
+              src={customLogoUrl} 
+              alt={customAppName || "Logo"} 
+              className="h-20 md:h-24 w-auto mx-auto mb-6"
+            />
+          )}
+          
+          <TypingIntro
+            text={customHeroHeading || customAppName || "Party On Delivery"}
+            className="text-4xl md:text-6xl font-bold text-white mb-4"
+            speedMs={50}
+          />
+          
+          {customHeroSubheading && (
+            <p className="text-xl md:text-2xl text-white/90 mb-8">
+              {customHeroSubheading}
+            </p>
+          )}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button 
+              size="lg" 
+              className="bg-white text-primary hover:bg-white/90"
+              onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Shop Now
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCategoryTabs = () => {
+    const categories = getCategoryMapping();
+    const isSticky = scrollY > 300;
+    
+    return (
+      <div className={`${isSticky ? 'fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm shadow-md' : 'relative'} transition-all duration-300`}>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                size="sm"
+                className="whitespace-nowrap flex-shrink-0"
+                onClick={() => setSelectedCategory(category.id)}
+              >
+                <span className="mr-2">{category.icon}</span>
+                {category.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSearchSection = () => {
+    if (!searchTerm) return null;
+    
+    const searchResults = products.filter(product =>
+      product.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">
+            Search Results for "{searchTerm}" ({searchResults.length})
+          </h2>
+          <Button variant="outline" onClick={() => setSearchTerm('')}>
+            Clear Search
+          </Button>
+        </div>
+        
+        {/* Enhanced Product Grid: 4 per row mobile, 8 per row desktop */}
+        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 md:gap-4">
+          {searchResults.map((product) => renderProductCard(product))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderProductCard = (product: Product) => {
+    const selectedVariant = selectedVariants[product.id] || (product.variants?.[0]?.id);
+    const variant = product.variants?.find(v => v.id === selectedVariant) || product.variants?.[0];
+    const price = variant?.price || product.price;
+    const cartQuantity = cartItems.find(item => 
+      (item.productId || item.id) === product.id && 
+      item.variant === (variant?.title || 'default')
+    )?.quantity || 0;
+
+    const { cleanTitle } = parseProductTitle(product.title);
+    const optimizedUrls = useImageOptimization(product.image, false);
+
+    return (
+      <Card key={`${product.id}-${selectedVariant}`} className="group hover:shadow-lg transition-all duration-200 h-full flex flex-col">
+        <CardContent className="p-3 flex flex-col h-full">
+          <div className="relative mb-3 flex-shrink-0">
+            <OptimizedImage
+              src={optimizedUrls.src || product.image}
+              alt={cleanTitle}
+              className="w-full h-32 md:h-48 object-cover rounded-lg"
+            />
+          </div>
+          
+          <div className="flex-grow flex flex-col">
+            <h3 className="font-semibold text-xs md:text-sm mb-2 line-clamp-2 flex-grow">
+              {cleanTitle}
+            </h3>
+            
+            {product.variants && product.variants.length > 1 && (
+              <div className="mb-2">
+                <select
+                  value={selectedVariant}
+                  onChange={(e) => setSelectedVariants(prev => ({
+                    ...prev,
+                    [product.id]: e.target.value
+                  }))}
+                  className="w-full text-xs border rounded px-2 py-1"
+                >
+                  {product.variants.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.title} - ${parseFloat(String(v.price)).toFixed(2)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between mt-auto">
+              <span className="font-bold text-primary text-sm">
+                ${parseFloat(String(price)).toFixed(2)}
+              </span>
+              
+              <div className="flex items-center gap-1">
+                {cartQuantity > 0 ? (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 w-7 p-0"
+                      onClick={() => onUpdateQuantity(
+                        product.id, 
+                        variant?.title || 'default', 
+                        cartQuantity - 1
+                      )}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="text-xs font-medium w-6 text-center">
+                      {cartQuantity}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 w-7 p-0"
+                      onClick={() => onUpdateQuantity(
+                        product.id, 
+                        variant?.title || 'default', 
+                        cartQuantity + 1,
+                        {
+                          id: product.id,
+                          title: product.title,
+                          name: product.title,
+                          price: parseFloat(String(price)),
+                          image: product.image,
+                          variant: variant?.title || 'default'
+                        }
+                      )}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => onAddToCart({
+                      id: product.id,
+                      title: product.title,
+                      name: product.title,
+                      price: parseFloat(String(price)),
+                      image: product.image,
+                      variant: variant?.title || 'default'
+                    })}
+                    className="h-7 text-xs px-2"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Add
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -468,93 +483,99 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   };
 
   const renderProductsSection = () => {
-    if (!selectedCollection) {
-      return (
-        <div className="max-w-6xl mx-auto px-4 py-8 text-center">
-          <p className="text-muted-foreground">No products found for this category.</p>
-        </div>
-      );
+    if (searchTerm) {
+      return renderSearchSection();
     }
 
-    const visibleProducts = selectedCollection.products.slice(0, visibleProductCount);
+    const filteredProducts = selectedCategory === 'all' 
+      ? products 
+      : products.filter(product => {
+          const collection = collections.find(c => 
+            c.products.some(p => p.id === product.id)
+          );
+          return collection?.handle === selectedCategory;
+        });
+
+    const displayedProducts = filteredProducts.slice(0, currentPage * productsPerPage);
 
     return (
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        {subheadlineText && (
-          <div className="text-center mb-6">
-            <p className={`${subheadlineFontClass} ${subheadlineSizeClass} text-muted-foreground`}>
-              {subheadlineText}
+      <div id="products" className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">
+            {selectedCategory === 'all' ? 'All Products' : 
+             getCategoryMapping().find(c => c.id === selectedCategory)?.name || 'Products'} 
+            ({filteredProducts.length})
+          </h2>
+        </div>
+
+        {loading && products.length === 0 ? (
+          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+            {Array.from({ length: 32 }).map((_, i) => (
+              <Card key={i} className="h-48 md:h-64">
+                <CardContent className="p-3">
+                  <div className="animate-pulse space-y-2">
+                    <div className="bg-muted h-24 md:h-32 rounded" />
+                    <div className="bg-muted h-3 rounded" />
+                    <div className="bg-muted h-3 rounded w-2/3" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🛍️</div>
+            <h3 className="text-xl font-semibold mb-2">No products found</h3>
+            <p className="text-muted-foreground">
+              {selectedCategory === 'all' 
+                ? "We're loading our products. Please check back soon!" 
+                : "No products in this category yet."
+              }
             </p>
           </div>
-        )}
-        
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {visibleProducts.map(product => renderProductCard(product))}
-        </div>
-        
-        {visibleProductCount < selectedCollection.products.length && (
-          <div className="text-center mt-8">
-            <Button
-              variant="outline"
-              onClick={() => setVisibleProductCount(prev => Math.min(prev + 25, selectedCollection.products.length))}
-            >
-              Load More Products
-            </Button>
-          </div>
+        ) : (
+          <>
+            {/* Enhanced Product Grid: 4 per row mobile, 8 per row desktop */}
+            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 md:gap-4">
+              {displayedProducts.map((product) => renderProductCard(product))}
+            </div>
+            
+            {displayedProducts.length < filteredProducts.length && (
+              <div className="text-center mt-8">
+                <Button 
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={loading}
+                  size="lg"
+                >
+                  {loading ? 'Loading...' : 'Load More'}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     );
   };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p>Loading products...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={refreshCollections} variant="outline">
-            Try Again
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-6 text-center">
+          <h2 className="text-xl font-semibold mb-2">Unable to load products</h2>
+          <p className="text-muted-foreground mb-4">Please try refreshing the page</p>
+          <Button onClick={() => window.location.reload()}>
+            Refresh Page
           </Button>
-        </div>
+        </Card>
       </div>
     );
   }
-
-  // No collections state
-  if (!loading && collections.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <p className="text-muted-foreground mb-4">No product collections found.</p>
-          <Button onClick={refreshCollections} variant="outline">
-            Refresh
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const isSearchTab = Boolean('isSearch' in categoryMapping[selectedCategory] && categoryMapping[selectedCategory].isSearch);
 
   return (
     <div className="min-h-screen bg-background">
       {renderHeroSection()}
       {renderCategoryTabs()}
-      
-      {isSearchTab ? renderSearchSection() : renderProductsSection()}
-      
+      {renderProductsSection()}
     </div>
   );
-};
+}
