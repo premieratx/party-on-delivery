@@ -1,15 +1,13 @@
-// Test 3: Test React rendering
+// Test 4: Test App import and rendering
 import './index.css'
 import { createRoot } from 'react-dom/client'
 import React from 'react'
 
-console.log('Main.tsx with React rendering executing');
+console.log('About to import App component...');
 
-const SimpleComponent = () => (
-  <div style={{ padding: '20px' }}>
-    <h1>React Rendering Test</h1>
-    <p>Testing if React rendering causes the require error</p>
-  </div>
-);
+// This import will tell us if the error is in App.tsx or its dependencies
+import App from './App'
 
-createRoot(document.getElementById("root")!).render(<SimpleComponent />);
+console.log('App imported successfully, about to render...');
+
+createRoot(document.getElementById("root")!).render(<App />);
