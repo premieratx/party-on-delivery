@@ -693,7 +693,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className={`sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b -mt-[10px] relative transition-transform duration-300 ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-full' : 'translate-y-0'}`}>
+      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
         {/* Sticky search bar above tabs */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
           <div className="max-w-2xl mx-auto">
@@ -713,7 +713,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-300 ${hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -918,7 +918,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
         )}
         {/* Product Grid - smaller tiles for spirits, beer, and mixers & n/a, consistent for others */}
-        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''}`}>
+        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
           {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
             // Handle variant selection for products with multiple variants
             const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
@@ -928,13 +928,17 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             return (
                <div 
                  key={product.id} 
-                 className={`bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
+                 className={`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full ${
                    isCocktailsTab ? 'cursor-pointer hover:border-primary/50' : ''
-                 }`}
+                 } ${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md`}
                  onClick={() => handleProductClick(product)}
                >
-                 {/* Product image - smaller for spirits, beer, and mixers & n/a sections */}
-                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'}`}>
+                 {/* Product image - condensed when search focused */}
+                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${
+                   isSearchFocused 
+                     ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-1' : 'mb-2'
+                     : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'
+                 }`}>
                   <img
                     src={product.image}
                     alt={product.title}
@@ -942,8 +946,12 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                   />
                 </div>
                  
-                 {/* Product info with smaller height for spirits, beer, and mixers & n/a */}
-                 <div className={`flex flex-col flex-1 justify-between ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'}`}>
+                 {/* Product info with condensed height when search focused */}
+                 <div className={`flex flex-col flex-1 justify-between ${
+                   isSearchFocused 
+                     ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[4.5rem]' : 'min-h-[6rem]'
+                     : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'
+                 }`}>
                    <div className="flex-1 flex flex-col justify-start">
                     {(() => {
                       // For cocktails, show full title without truncation
@@ -968,15 +976,23 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       }
                       
                       return (
-                        <>
-                          <h4 className={`font-bold leading-tight text-center ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'} line-clamp-2`}>
-                            {displayTitle}
-                          </h4>
-                          {displayPackage && (
-                            <p className={`text-foreground text-center mb-1 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3' : 'text-xs'} whitespace-nowrap overflow-hidden text-ellipsis`}>
-                              {displayPackage}
-                            </p>
-                          )}
+                         <>
+                           <h4 className={`font-bold leading-tight text-center line-clamp-2 ${
+                             isSearchFocused
+                               ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] mb-0.5' : 'text-xs mb-1'
+                               : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'
+                           }`}>
+                             {displayTitle}
+                           </h4>
+                           {displayPackage && (
+                             <p className={`text-foreground text-center whitespace-nowrap overflow-hidden text-ellipsis ${
+                               isSearchFocused
+                                 ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[8px] leading-2 mb-0.5' : 'text-[10px] mb-1'
+                                 : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3 mb-1' : 'text-xs mb-1'
+                             }`}>
+                               {displayPackage}
+                             </p>
+                           )}
                         </>
                       );
                     })()}

@@ -16,26 +16,49 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle search focus with smooth UI transitions
+  // Handle search focus with immediate UI changes and scrolling
   const handleSearchFocus = useCallback(() => {
     setIsSearchFocused(true);
     setHasUserInteracted(true);
     setShouldHideChrome(true);
     options.onSearchFocus?.();
 
-    // Hide browser chrome on mobile
-    if (typeof window !== 'undefined' && 'scrollTo' in window) {
-      // Smooth scroll to ensure browser chrome hides
+    // Immediate scroll to top to bring search bar into view
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Add mobile keyboard optimizations
+    if (typeof window !== 'undefined') {
+      document.body.style.height = '100vh';
+      document.body.style.overflow = 'hidden';
+      
+      // Force viewport adjustment for mobile keyboards
       setTimeout(() => {
-        window.scrollTo({ top: 1, behavior: 'smooth' });
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0');
+        }
       }, 100);
     }
   }, [options]);
 
-  // Handle search blur
+  // Handle search blur with cleanup
   const handleSearchBlur = useCallback(() => {
     setIsSearchFocused(false);
     options.onSearchBlur?.();
+    
+    // Restore body styles
+    if (typeof window !== 'undefined') {
+      document.body.style.height = '';
+      document.body.style.overflow = '';
+      
+      // Restore normal viewport
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no');
+      }
+    }
   }, [options]);
 
   // Handle scroll behavior
