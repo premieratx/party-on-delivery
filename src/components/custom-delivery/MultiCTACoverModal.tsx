@@ -36,6 +36,12 @@ export interface MultiCTACoverModalProps {
   subtitleOffsetY?: number;
   checklistOffsetY?: number;
   buttonsOffsetY?: number;
+  // New layout/spacing controls
+  buttonsBottomOffset?: number;
+  buttonsSpacing?: number;
+  checklistToButtonsOffset?: number;
+  dotSpacing?: number;
+  dotSize?: number;
   logoBgColor?: string;
   logoBgMode?: 'auto' | 'rectangle' | 'none';
 }
@@ -66,6 +72,12 @@ const MultiCTACoverModal: React.FC<MultiCTACoverModalProps> = ({
   subtitleOffsetY,
   checklistOffsetY,
   buttonsOffsetY,
+  // New layout controls
+  buttonsBottomOffset = 0,
+  buttonsSpacing = 12,
+  checklistToButtonsOffset = 30,
+  dotSpacing = 8,
+  dotSize = 14,
   logoBgColor,
   logoBgMode = 'auto',
 }) => {
@@ -218,81 +230,83 @@ React.useEffect(() => {
               <div className="w-full max-w-sm mt-2 mb-0">
                 {/* Auto-shrinking checklist area */}
                 <div className="w-full mx-auto my-5" style={{ marginTop: (checklistOffsetY || 0) }}>
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="flex flex-col items-center">
                     {(checklistItems?.filter(Boolean).slice(0, 5) || defaultChecklist).map((item, idx, arr) => (
                       <React.Fragment key={idx}>
                         <p
-                          className="text-white/90 font-semibold leading-tight animate-fade-in my-1"
-                          style={{ animationDelay: `${idx * 80}ms`, fontSize: checklistSizeProp ? `${checklistSizeProp}px` : 'clamp(12px,2.8vw,16px)' }}
+                          className="text-white/90 font-semibold leading-tight animate-fade-in"
+                          style={{ animationDelay: `${idx * 80}ms`, animationFillMode: 'both', fontSize: checklistSizeProp ? `${checklistSizeProp}px` : 'clamp(12px,2.8vw,16px)', marginTop: (dotSpacing ?? 8) / 2, marginBottom: (dotSpacing ?? 8) / 2 }}
                         >
                           {item}
                         </p>
                         {idx < arr.length - 1 && (
-                          <span className="text-white/60 animate-fade-in" style={{ animationDelay: `${idx * 80 + 40}ms` }} aria-hidden="true">•</span>
+                          <span className="text-white/60 animate-fade-in" style={{ animationDelay: `${idx * 80 + 40}ms`, animationFillMode: 'both', marginTop: (dotSpacing ?? 8) / 2, marginBottom: (dotSpacing ?? 8) / 2, fontSize: `${dotSize ?? 14}px` }} aria-hidden="true">•</span>
                         )}
                       </React.Fragment>
                     ))}
                   </div>
                 </div>
 
-                {/* Required 30px gap between checklist and first button */}
-                <div className="h-[30px]" aria-hidden="true" style={{ marginTop: (buttonsOffsetY || 0) }} />
+                {/* Adjustable gap between checklist and first button */}
+                <div className="h-[30px]" aria-hidden="true" style={{ marginTop: (buttonsOffsetY || 0), height: (checklistToButtonsOffset ?? 30) }} />
 
                 {/* Buttons layout: stack for 1-2, special layout for 3, grid for 4+ */}
-                {buttons.length <= 2 ? (
-<div className="flex flex-col gap-3 animate-fade-in" style={{ animationDelay: '520ms', animationFillMode: 'both' }}>
-  {buttons.map((b, i) => (
-    <Button
-      key={`${b.text}-${i}`}
-      size="lg"
-      className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-      style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-      onClick={(e) => { e.stopPropagation(); b.onClick(); }}
-    >
-      {b.text}
-    </Button>
-  ))}
-</div>
-                ) : buttons.length === 3 ? (
-<div className="flex flex-col gap-2 animate-fade-in" style={{ animationDelay: '520ms', animationFillMode: 'both' }}>
-  <Button
-    key={`${buttons[0].text}-0`}
-    size="lg"
-    className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-    style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined }}
-    onClick={(e) => { e.stopPropagation(); buttons[0].onClick(); }}
-  >
-    {buttons[0].text}
-  </Button>
-  <div className="grid grid-cols-2 gap-2">
-    {buttons.slice(1).map((b, i) => (
-      <Button
-        key={`${b.text}-${i + 1}`}
-        size="lg"
-        className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-        style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-        onClick={(e) => { e.stopPropagation(); b.onClick(); }}
-      >
-        {b.text}
-      </Button>
-    ))}
-  </div>
-</div>
-                ) : (
-<div className="grid grid-cols-2 gap-2 animate-fade-in" style={{ animationDelay: '520ms', animationFillMode: 'both' }}>
-  {buttons.map((b, i) => (
-    <Button
-      key={`${b.text}-${i}`}
-      size="lg"
-      className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg my-5 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-      style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-      onClick={(e) => { e.stopPropagation(); b.onClick(); }}
-    >
-      {b.text}
-    </Button>
-  ))}
-</div>
-                )}
+                <div style={{ marginBottom: buttonsBottomOffset || 0 }}>
+                  {buttons.length <= 2 ? (
+                    <div className="flex flex-col" style={{ rowGap: buttonsSpacing || 12 }}>
+                      {buttons.map((b, i) => (
+                        <Button
+                          key={`${b.text}-${i}`}
+                          size="lg"
+                          className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
+                          style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined, marginTop: (b as any).offsetY || 0, marginBottom: (b as any).spacingBelow || 0 }}
+                          onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+                        >
+                          {b.text}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : buttons.length === 3 ? (
+                    <div className="flex flex-col" style={{ rowGap: buttonsSpacing || 12 }}>
+                      <Button
+                        key={`${buttons[0].text}-0`}
+                        size="lg"
+                        className={`w-full h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${buttons[0].bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]`}
+                        style={{ backgroundColor: buttons[0].bgColor || undefined, color: buttons[0].textColor || undefined, marginTop: (buttons[0] as any).offsetY || 0, marginBottom: (buttons[0] as any).spacingBelow || 0 }}
+                        onClick={(e) => { e.stopPropagation(); buttons[0].onClick(); }}
+                      >
+                        {buttons[0].text}
+                      </Button>
+                      <div className="grid grid-cols-2" style={{ gap: buttonsSpacing || 12 }}>
+                        {buttons.slice(1).map((b, i) => (
+                          <Button
+                            key={`${b.text}-${i + 1}`}
+                            size="lg"
+                            className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
+                            style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined, marginTop: (b as any).offsetY || 0, marginBottom: (b as any).spacingBelow || 0 }}
+                            onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+                          >
+                            {b.text}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2" style={{ gap: buttonsSpacing || 12 }}>
+                      {buttons.map((b, i) => (
+                        <Button
+                          key={`${b.text}-${i}`}
+                          size="lg"
+                          className={`h-11 rounded-full text-base sm:text-lg font-semibold shadow-lg ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
+                          style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined, marginTop: (b as any).offsetY || 0, marginBottom: (b as any).spacingBelow || 0 }}
+                          onClick={(e) => { e.stopPropagation(); b.onClick(); }}
+                        >
+                          {b.text}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -242,6 +242,12 @@ onClick: () => {
           subtitleOffsetY={coverPage.styles?.subtitle_offset_y}
           checklistOffsetY={coverPage.styles?.checklist_offset_y}
           buttonsOffsetY={coverPage.styles?.buttons_offset_y}
+          // Newly wired controls
+          buttonsBottomOffset={coverPage.styles?.buttons_bottom_offset}
+          buttonsSpacing={coverPage.styles?.buttons_spacing}
+          checklistToButtonsOffset={coverPage.styles?.checklist_to_buttons_offset}
+          dotSpacing={coverPage.styles?.dot_spacing}
+          dotSize={coverPage.styles?.dot_size}
           logoBgColor={coverPage.styles?.logo_bg_color || undefined}
           logoBgMode={coverPage.styles?.logo_bg_mode || 'auto'}
         />

@@ -523,7 +523,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                                 <Button
                                   key={`${b.text}-${i}`}
                                   size="sm"
-                                  className={`w-full h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
+                                  className={`w-full h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${(buttons.length === 2 && i === 1) ? 'border-2 border-white/80' : ''} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
                                   style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined, marginTop: (b as any).offset_y || 0, marginBottom: (b as any).spacing_below || 0 }}
                                 >
                                   {b.text}
