@@ -137,6 +137,15 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
       testVideo.removeEventListener('canplaythrough', ready);
     };
   }, [backgroundVideoUrl]);
+  // Animation sequencing setup
+  const visibleChecklist = (checklistItems || []).filter(Boolean).slice(0, 5);
+  const steps = Math.max(visibleChecklist.length - 1, 1);
+  const perStep = visibleChecklist.length > 1 ? 2 / (visibleChecklist.length - 1) : 0; // total 2s flow for list
+  const logoDelay = 0;
+  const titleDelay = 0.2;
+  const subtitleDelay = 0.4;
+  const listStartDelay = 0.6; // start list after subtitle begins
+  const buttonDelay = listStartDelay + (visibleChecklist.length > 1 ? perStep * (visibleChecklist.length - 1) : 0) + 0.2;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-h-[90vh] overflow-y-auto max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
@@ -204,6 +213,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     alt={`${appName} logo`}
                     className="h-24 sm:h-32 md:h-44 w-auto max-h-[32vh] drop-shadow-lg animate-[fade-in_0.625s_ease-out]"
                     loading="eager"
+                    style={{ animationDelay: `${logoDelay}s`, animationFillMode: 'both' }}
                   />
                   {showSparkle && (
                     <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-[fade-in_3s_ease-out]" aria-hidden="true" style={{ width: '600%', height: '600%' }}>
@@ -216,9 +226,20 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     </div>
                   )}
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]" style={{ animationDelay: '104ms', animationFillMode: 'both' }}>
-                  {subtitle || title || appName}
+                <h1
+                  className="text-3xl sm:text-4xl font-bold tracking-tight text-white animate-[fade-in_0.625s_ease-out]"
+                  style={{ animationDelay: `${titleDelay}s`, animationFillMode: 'both' }}
+                >
+                  {title || appName}
                 </h1>
+                {subtitle && (
+                  <p
+                    className="mt-1 text-sm sm:text-base text-white/90 animate-[fade-in_0.625s_ease-out]"
+                    style={{ animationDelay: `${subtitleDelay}s`, animationFillMode: 'both' }}
+                  >
+                    {subtitle}
+                  </p>
+                )}
               </header>
 
               {/* Middle spacer to showcase video */}
@@ -229,48 +250,57 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                 {/* Restored vertical checklist with dot separators */}
                 <div className="w-full mx-auto mb-2 translate-y-[-15%] md:translate-y-[-25%]">
                   <div className="flex flex-col items-center">
-                    {checklistItems.filter(Boolean).slice(0, 5).map((item, idx, arr) => (
-                      <React.Fragment key={idx}>
-                        <p
-                          className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_1.5s_ease-out]"
-                          style={{
-                            animationDelay: `${240 + idx * 120}ms`,
-                            animationFillMode: 'both',
-                            marginTop: (checklistSpacing ?? 8) / 2,
-                            marginBottom: (checklistSpacing ?? 8) / 2
-                          }}
-                        >
-                          {item}
-                        </p>
-                        {idx < arr.length - 1 && (
-                          <span
-                            className="text-white/60"
-                            aria-hidden="true"
+                    {visibleChecklist.map((item, idx) => {
+                      const rowDelay = (listStartDelay + idx * perStep).toFixed(2);
+                      return (
+                        <React.Fragment key={idx}>
+                          <p
+                            className="text-white/90 text-xs md:text-sm font-semibold leading-tight animate-[fade-in_0.4s_ease-out]"
                             style={{
+                              animationDelay: `${rowDelay}s`,
+                              animationFillMode: 'both',
                               marginTop: (checklistSpacing ?? 8) / 2,
                               marginBottom: (checklistSpacing ?? 8) / 2
                             }}
                           >
-                            •
-                          </span>
-                        )}
-                      </React.Fragment>
-                    ))}
+                            {item}
+                          </p>
+                          {idx < visibleChecklist.length - 1 && (
+                            <span
+                              className="text-white/60 animate-[fade-in_0.4s_ease-out]"
+                              aria-hidden="true"
+                              style={{
+                                animationDelay: `${rowDelay}s`,
+                                animationFillMode: 'both',
+                                marginTop: (checklistSpacing ?? 8) / 2,
+                                marginBottom: (checklistSpacing ?? 8) / 2
+                              }}
+                            >
+                              •
+                            </span>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <Button
-                  size="lg"
-                  className={`w-full h-11 sm:h-12 rounded-full text-xl sm:text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.4375s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[fade-in_0.625s_ease-out]'}`}
-                  style={!enablePulse ? { animationDelay: '416ms', animationFillMode: 'both' } : undefined}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenChange(false);
-                    onStartOrder?.();
-                  }}
+                <div
+                  className="animate-[fade-in_0.625s_ease-out]"
+                  style={{ animationDelay: `${buttonDelay}s`, animationFillMode: 'both' }}
                 >
-                  {buttonText}
-                </Button>
+                  <Button
+                    size="lg"
+                    className={`w-full h-11 sm:h-12 rounded-full text-xl sm:text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.4375s_cubic-bezier(0.4,0,0.6,1)_infinite]' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenChange(false);
+                      onStartOrder?.();
+                    }}
+                  >
+                    {buttonText}
+                  </Button>
+                </div>
 
               </div>
             </div>
