@@ -706,7 +706,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
+      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
         {/* Sticky search bar above tabs */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
           <div className="max-w-2xl mx-auto">
@@ -720,13 +720,14 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
               onBlur={handleSearchBlur}
               inputRef={searchInputRef}
               inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
+              isSearchFocused={isSearchFocused}
             />
           </div>
         </div>
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? 'opacity-0 transform -translate-y-full pointer-events-none' : 'opacity-100 transform translate-y-0'}`}>
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;

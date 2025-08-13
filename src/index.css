@@ -174,6 +174,20 @@ All colors MUST be HSL.
     }
   }
 
+  /* Search focused state optimizations */
+  body.search-focused {
+    position: relative !important;
+    min-height: 100vh !important;
+    padding-bottom: 33vh !important; /* Space for condensed keyboard */
+  }
+
+  /* Optimize search input when focused */
+  .search-input-focused {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+  }
+
   /* Performance optimizations */
   img {
     content-visibility: auto;

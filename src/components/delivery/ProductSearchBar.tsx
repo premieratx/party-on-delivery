@@ -37,6 +37,7 @@ interface ProductSearchBarProps {
   onBlur?: () => void;
   inputRef?: React.RefObject<HTMLInputElement>;
   inputClassName?: string;
+  isSearchFocused?: boolean;
 }
 
 export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
@@ -51,7 +52,8 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   onFocus,
   onBlur,
   inputRef,
-  inputClassName
+  inputClassName,
+  isSearchFocused = false
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
@@ -160,7 +162,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
             onFocus={onFocus}
             onBlur={onBlur}
             ref={inputRef as any}
-            className={`pl-10 pr-10 h-12 text-base border-2 border-primary/20 focus:border-primary ${inputClassName || ''}`}
+            className={`pl-10 pr-10 h-12 text-base border-2 border-primary/20 focus:border-primary ${inputClassName || ''} ${isSearchFocused ? 'search-input-focused' : ''}`}
           />
         {searchQuery && (
           <Button
