@@ -128,15 +128,15 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Show cover modal first */}
-      {showCoverModal && homepageApp && (
+      {showCoverModal && (
         <CustomDeliveryCoverModal
           open={showCoverModal}
           onOpenChange={setShowCoverModal}
           onStartOrder={handleStartShopping}
           onSecondaryAction={handleViewApps}
           secondaryButtonText="Browse Apps"
-          appName={homepageApp.app_name || "Party On Delivery"}
-          logoUrl={homepageApp.logo_url}
+          appName={homepageApp?.app_name || "Party On Delivery"}
+          logoUrl={homepageApp?.logo_url}
         />
       )}
 
@@ -185,10 +185,10 @@ const Index = () => {
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}
-        isVisible={getTotalItems() > 0 || !showCoverModal}
+        isVisible={true}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
-        shouldHide={shouldHideBottomMenu || showCoverModal}
+        shouldHide={shouldHideBottomMenu}
         showAdmin={true}
       />
     </div>

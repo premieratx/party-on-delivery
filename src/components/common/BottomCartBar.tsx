@@ -29,8 +29,8 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
 
-  // Hide if not visible or should be hidden due to scroll/search
-  if (!isVisible || shouldHide) {
+  // Hide if should be hidden due to scroll/search, but always show admin button
+  if (shouldHide && !showAdmin) {
     return null;
   }
 
