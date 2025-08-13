@@ -14,7 +14,7 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
   const [shouldHideBottomMenu, setShouldHideBottomMenu] = useState(false);
   
   const lastScrollY = useRef(0);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<number>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Handle search focus with immediate UI changes and instant scrolling
@@ -89,11 +89,11 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
         }
 
         // Stop scrolling state after a brief delay
-        scrollTimeoutRef.current = setTimeout(() => {
+        scrollTimeoutRef.current = window.setTimeout(() => {
           setIsScrolling(false);
           // Keep menus hidden longer when search is focused
           if (!isSearchFocused) {
-            setTimeout(() => {
+            window.setTimeout(() => {
               setShouldHideBottomMenu(false);
               setShouldHideChrome(false);
             }, 1500);
