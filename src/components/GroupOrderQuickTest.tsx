@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Copy, ExternalLink, Users, Package } from 'lucide-react';
+import { CANONICAL_DOMAIN } from '@/utils/links';
 
 export const GroupOrderQuickTest: React.FC = () => {
   const { toast } = useToast();
@@ -71,7 +72,7 @@ export const GroupOrderQuickTest: React.FC = () => {
 
   const copyShareLink = () => {
     if (!shareToken) return;
-    const shareUrl = `${window.location.origin}/?share=${shareToken}`;
+    const shareUrl = `${CANONICAL_DOMAIN}/?share=${shareToken}`;
     navigator.clipboard.writeText(shareUrl);
     toast({
       title: "Share Link Copied! 📋",
@@ -81,13 +82,13 @@ export const GroupOrderQuickTest: React.FC = () => {
 
   const openSharedView = () => {
     if (!shareToken) return;
-    const sharedUrl = `${window.location.origin}/shared-order/${shareToken}`;
+    const sharedUrl = `${CANONICAL_DOMAIN}/shared-order/${shareToken}`;
     window.open(sharedUrl, '_blank');
   };
 
   const openGroupModal = () => {
     if (!shareToken) return;
-    const modalUrl = `${window.location.origin}/?share=${shareToken}`;
+    const modalUrl = `${CANONICAL_DOMAIN}/?share=${shareToken}`;
     window.open(modalUrl, '_blank');
   };
 

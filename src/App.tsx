@@ -34,6 +34,7 @@ const ProductManagement = lazy(() => import("./pages/ProductManagement").then(m 
 const CustomCollectionCreator = lazy(() => import("./pages/CustomCollectionCreator"));
 const DeliveryAppManagerPage = lazy(() => import("./pages/DeliveryAppManager"));
 const CoverPagesAdmin = lazy(() => import("./pages/CoverPagesAdmin"));
+const AdminQuote = lazy(() => import("./pages/AdminQuote"));
 // Customer routes
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
@@ -66,6 +67,7 @@ const PerformanceOptimization = lazy(() => import("./pages/PerformanceOptimizati
 const PerformanceTests = lazy(() => import("./pages/PerformanceTests"));
 const TestSMS = lazy(() => import("./components/TestSMS"));
 const StartScreenPreview = lazy(() => import("./pages/StartScreenPreview"));
+const QuotePreview = lazy(() => import("./pages/QuotePreview"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -142,6 +144,7 @@ const App = () => {
 <Route path="/admin/create-collection" element={<RequireAdmin><CustomCollectionCreator /></RequireAdmin>} />
 <Route path="/admin/delivery-app-manager" element={<RequireAdmin><DeliveryAppManagerPage /></RequireAdmin>} />
 <Route path="/admin/cover-pages" element={<RequireAdmin><CoverPagesAdmin /></RequireAdmin>} />
+<Route path="/admin/quotes" element={<RequireAdmin><AdminQuote /></RequireAdmin>} />
                     
                     {/* Customer Routes */}
                     <Route path="/customer/login" element={<CustomerLogin />} />
@@ -188,8 +191,11 @@ const App = () => {
                     <Route path="/:affiliateSlug/:coverSlug" element={<ShortLinkResolver />} />
                     <Route path="/:shortPath" element={<ShortLinkResolver />} />
 
-                    {/* 404 - MUST be absolute last */}
-                    <Route path="*" element={<NotFound />} />
+                     {/* Quote Routes */}
+                     <Route path="/quote-preview" element={<QuotePreview />} />
+                     
+                     {/* 404 - MUST be absolute last */}
+                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
               </div>

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TestTube, Play, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CANONICAL_DOMAIN } from '@/utils/links';
 
 interface TestResult {
   name: string;
@@ -113,7 +114,7 @@ export const GroupOrderFlowTest: React.FC = () => {
 
       // Test 6: Group Modal Functionality
       updateResult('Group Modal Functionality', 'running');
-      const shareUrl = `${window.location.origin}/shared-order/${createdOrder.share_token}`;
+      const shareUrl = `${CANONICAL_DOMAIN}/shared-order/${createdOrder.share_token}`;
       updateResult('Group Modal Functionality', 'success', `Share URL: ${shareUrl}`);
 
       // Test 7: Free Shipping Application
