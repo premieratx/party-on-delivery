@@ -18,7 +18,7 @@ const Index = () => {
   useWakeLock();
   
   // Use optimized product loading with immediate start
-  const { refreshProducts, loading: productsLoading } = useOptimizedProductLoader();
+  const { refreshProducts } = useOptimizedProductLoader();
   
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
@@ -27,36 +27,24 @@ const Index = () => {
   const [homepageApp, setHomepageApp] = useState<any>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
   const [showAppsGrid, setShowAppsGrid] = useState(false);
-  const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
 
-  // Load the homepage delivery app configuration and start preloading
+  // Load the homepage delivery app configuration
   useEffect(() => {
     const loadHomepageApp = async () => {
       try {
-        setIsPreloading(true);
+        const { data, error } = await supabase
+          .from('delivery_app_variations')
+          .select('*')
+          .eq('is_homepage', true)
+          .eq('is_active', true)
+          .maybeSingle();
         
-        // Load homepage app config in parallel with product preloading
-        const [appResult] = await Promise.allSettled([
-          supabase
-            .from('delivery_app_variations')
-            .select('*')
-            .eq('is_homepage', true)
-            .eq('is_active', true)
-            .maybeSingle(),
-          // Trigger immediate product cache warming
-          supabase.functions.invoke('instant-product-cache', {
-            body: { forceRefresh: false, preload: true }
-          })
-        ]);
-        
-        if (appResult.status === 'fulfilled' && !appResult.value.error && appResult.value.data) {
-          setHomepageApp(appResult.value.data);
+        if (!error && data) {
+          setHomepageApp(data);
         }
       } catch (error) {
         console.error('Error loading homepage app:', error);
-      } finally {
-        setIsPreloading(false);
       }
     };
 

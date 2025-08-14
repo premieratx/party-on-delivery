@@ -160,16 +160,16 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }, [fetchCollections]);
 
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return [];
+    if (!searchQuery.trim() || !collections) return [];
     
     const query = searchQuery.toLowerCase().trim();
-    const allProducts = collections.flatMap(collection => collection.products || []);
+    const allProducts = collections.flatMap(collection => (collection?.products || []));
     
     return allProducts.filter(product => 
-      product.title.toLowerCase().includes(query) ||
-      product.description?.toLowerCase().includes(query) ||
-      product.vendor?.toLowerCase().includes(query) ||
-      product.tags?.some(tag => tag.toLowerCase().includes(query))
+      product?.title?.toLowerCase().includes(query) ||
+      product?.description?.toLowerCase().includes(query) ||
+      product?.vendor?.toLowerCase().includes(query) ||
+      product?.tags?.some(tag => tag?.toLowerCase().includes(query))
     );
   }, [searchQuery, collections]);
 
@@ -180,11 +180,12 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
         title: 'Search Results',
         handle: 'search',
         description: `Showing results for "${searchQuery}"`,
-        products: searchResults
+        products: searchResults || []
       };
     }
     
-    return collections[selectedCategory] || { id: '', title: '', handle: '', products: [] };
+    const collection = collections && collections[selectedCategory];
+    return collection || { id: '', title: '', handle: '', products: [] };
   }, [selectedCategory, collections, searchQuery, searchResults]);
 
   const handleProductClick = (product: Product) => {
@@ -310,20 +311,20 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
           
           {/* Category Tabs */}
           <div className="flex overflow-x-auto scrollbar-hide">
-            {collections.map((collection, index) => (
+            {(collections || []).map((collection, index) => (
               <button
-                key={collection.id}
+                key={collection?.id || index}
                 onClick={() => setSelectedCategory(index)}
                 className={`flex-1 min-w-0 px-1 lg:px-3 py-2 text-xs lg:text-sm font-bold transition-all duration-200 relative ${
                   selectedCategory === index
                     ? 'text-primary border-b-2 border-primary bg-primary/5'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   } ${
-                    collections.length > 6 ? 'min-w-[120px] flex-shrink-0' : ''
+                    (collections?.length || 0) > 6 ? 'min-w-[120px] flex-shrink-0' : ''
                   }`}
               >
-                <span className="truncate block" title={collection.title}>
-                  {collection.title}
+                <span className="truncate block" title={collection?.title || 'Category'}>
+                  {collection?.title || 'Category'}
                 </span>
               </button>
             ))}
@@ -417,7 +418,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </div>
 
               <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
-                {currentCollection.products?.map((product) => {
+                {(currentCollection?.products || []).map((product) => {
                   const cartQuantity = getCartItemQuantity(product.id, product.variants?.[0]?.title);
                   
                   return (
