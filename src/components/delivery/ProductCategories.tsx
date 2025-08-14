@@ -707,11 +707,11 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className={`sticky top-0 z-50 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''} ${shouldHideChrome && (isSearchFocused || isScrolling) ? '-translate-y-0' : 'translate-y-0'}`}>
+      <div className={`bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
         {/* Header with app selector and search */}
         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
-            {/* App Selector */}
+            {/* Delivery App Selector - moved to start, removed home button */}
             <DeliveryAppSelector 
               currentAppSlug={customAppName?.toLowerCase().replace(/\s+/g, '-')}
               className="flex-shrink-0"
@@ -735,8 +735,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
 
 
-        {/* Category Tabs - Only 5 product tabs + checkout (no search tab) */}
-        <div className={`w-full px-1 md:px-4 py-3 transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+        {/* Category Tabs - Only 5 product tabs + checkout (no search tab) - STICKY ON MOBILE */}
+        <div className={`sticky top-0 z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -848,56 +848,57 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </button>
         </div>
 
-        {/* "Choose your..." guide row - shown only initially and when menus are not hidden */}
-        {!hasUserInteracted && !shouldHideMenusCompletely && selectedCollection && (
-          <div className="max-w-7xl mx-auto px-4 pb-2">
-            <div className="bg-muted/50 rounded-lg p-3 mb-4 border border-border/50 animate-fade-in">
-              <p className="text-muted-foreground text-center text-sm">
-                👆 Choose your {stepMapping.find(step => step.handle === selectedCollection?.handle)?.title.toLowerCase() || selectedCollection?.title.toLowerCase()}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Section Heading with functional arrows - hidden during cover/start screens */}
-        {!shouldHideMenusCompletely && selectedCollection && (
-          <div className="max-w-7xl mx-auto px-4 pb-4">
-            <div className="flex items-center justify-center gap-4">
-              {selectedCategory !== 0 && (
-                <button
-                  onClick={() => selectedCategory > 0 && setSelectedCategory(selectedCategory - 1)}
-                  disabled={selectedCategory === 0}
-                  className="p-2 rounded-full transition-colors text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-              )}
-              {selectedCategory === 0 && <div className="w-10"></div>}
-              <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
-                {stepMapping.find(step => step.handle === selectedCollection?.handle)?.pageTitle || selectedCollection?.title}
-              </h2>
-              <button
-                onClick={() => selectedCategory < maxCategoryIndex && setSelectedCategory(selectedCategory + 1)}
-                disabled={selectedCategory === maxCategoryIndex}
-                className={`p-2 rounded-full transition-colors ${
-                  selectedCategory === maxCategoryIndex 
-                    ? 'text-muted-foreground cursor-not-allowed' 
-                    : 'text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]'
-                }`}
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            </div>
-            
-            {/* Add instruction text for cocktails only */}
-            {isCocktailsTab && (
-              <div className="text-center mt-2">
-                <p className="text-sm text-muted-foreground">Click each item to see photos and details</p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* "Choose your..." guide row - shown only initially and when menus are not hidden - NOT STICKY */}
+      {!hasUserInteracted && !shouldHideMenusCompletely && selectedCollection && (
+        <div className="max-w-7xl mx-auto px-4 pb-2">
+          <div className="bg-muted/50 rounded-lg p-3 mb-4 border border-border/50 animate-fade-in">
+            <p className="text-muted-foreground text-center text-sm">
+              👆 Choose your {stepMapping.find(step => step.handle === selectedCollection?.handle)?.title.toLowerCase() || selectedCollection?.title.toLowerCase()}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Section Heading with functional arrows - hidden during cover/start screens - NOT STICKY */}
+      {!shouldHideMenusCompletely && selectedCollection && (
+        <div className="max-w-7xl mx-auto px-4 pb-4">
+          <div className="flex items-center justify-center gap-4">
+            {selectedCategory !== 0 && (
+              <button
+                onClick={() => selectedCategory > 0 && setSelectedCategory(selectedCategory - 1)}
+                disabled={selectedCategory === 0}
+                className="p-2 rounded-full transition-colors text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            )}
+            {selectedCategory === 0 && <div className="w-10"></div>}
+            <h2 className="text-foreground text-xl sm:text-2xl font-bold text-center">
+              {stepMapping.find(step => step.handle === selectedCollection?.handle)?.pageTitle || selectedCollection?.title}
+            </h2>
+            <button
+              onClick={() => selectedCategory < maxCategoryIndex && setSelectedCategory(selectedCategory + 1)}
+              disabled={selectedCategory === maxCategoryIndex}
+              className={`p-2 rounded-full transition-colors ${
+                selectedCategory === maxCategoryIndex 
+                  ? 'text-muted-foreground cursor-not-allowed' 
+                  : 'text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]'
+              }`}
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+          
+          {/* Add instruction text for cocktails only */}
+          {isCocktailsTab && (
+            <div className="text-center mt-2">
+              <p className="text-sm text-muted-foreground">Click each item to see photos and details</p>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="w-full px-1 md:px-4 py-4">
         {showSearch && searchQuery.trim() && (

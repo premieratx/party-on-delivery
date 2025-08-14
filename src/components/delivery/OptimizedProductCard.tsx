@@ -145,38 +145,38 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
           <div className="flex justify-center items-center">
             {cartQty > 0 ? (
               <div 
-                className="flex items-center justify-center bg-muted/80 rounded-full px-0.5 py-0.5 gap-0.5 min-w-[28px] h-6 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[60px] sm:h-8" 
+                className="flex items-center justify-center bg-muted/80 rounded-full px-0.5 py-0.5 gap-0.5 min-w-[24px] h-5 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[60px] sm:h-8" 
                 onClick={(e) => e.stopPropagation()}
               >
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-4 w-4 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center sm:h-6 sm:w-6"
+                  className="h-3.5 w-3.5 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center sm:h-6 sm:w-6"
                   onClick={(e) => {
                     e.stopPropagation();
                     onQuantityChange(product.id, selectedVariant?.id, -1);
                   }}
                 >
-                  <Minus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={2} />
+                  <Minus className="w-2.5 h-2.5 sm:w-4 sm:h-4" strokeWidth={2} />
                 </Button>
-                <span className="text-xs font-bold min-w-[16px] text-center sm:text-sm sm:min-w-[20px]">
+                <span className="text-xs font-bold min-w-[14px] text-center sm:text-sm sm:min-w-[20px]">
                   {cartQty}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-4 w-4 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center sm:h-6 sm:w-6"
+                  className="h-3.5 w-3.5 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center sm:h-6 sm:w-6"
                   onClick={(e) => {
                     e.stopPropagation();
                     onQuantityChange(product.id, selectedVariant?.id, 1);
                   }}
                 >
-                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={2} />
+                  <Plus className="w-2.5 h-2.5 sm:w-4 sm:h-4" strokeWidth={2} />
                 </Button>
               </div>
             ) : (
               <button
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-6 h-6 md:w-8 md:h-8"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-5 h-5 md:w-8 md:h-8"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (selectedVariant) {
@@ -191,7 +191,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   }
                 }}
               >
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4" strokeWidth={3} />
+                <Plus className="w-2.5 h-2.5 md:w-4 md:h-4" strokeWidth={3} />
               </button>
             )}
           </div>
