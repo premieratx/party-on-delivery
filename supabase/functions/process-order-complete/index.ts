@@ -443,9 +443,9 @@ async function sendEmailConfirmations(orderData: StandardOrderData, shopifyOrder
   }
 }
 
-// Send SMS notifications
+// Send SMS notifications via GHL
 async function sendSMSNotifications(orderData: StandardOrderData, shopifyOrder: any, supabase: any): Promise<void> {
-  logStep("Sending SMS notifications");
+  logStep("Sending SMS notifications via GHL");
   
   try {
     // Format customer name properly - handle null/undefined values
@@ -454,28 +454,78 @@ async function sendSMSNotifications(orderData: StandardOrderData, shopifyOrder: 
                           ? `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}` 
                           : 'Customer');
     
-    const { data: smsResult, error: smsError } = await supabase.functions.invoke('send-order-sms', {
+    // Customer SMS notification
+    if (orderData.customerPhone) {
+      const customerMessage = `🎉 ORDER CONFIRMED!
+
+Order #${shopifyOrder.order_number}
+${customerName}
+
+📦 ITEMS:
+${orderData.lineItems.slice(0, 3).map(item => `• ${item.title} (${item.quantity}x)`).join('\n')}${orderData.lineItems.length > 3 ? `\n...and ${orderData.lineItems.length - 3} more items` : ''}
+
+📅 DELIVERY:
+${orderData.deliveryDate} at ${orderData.deliveryTime}
+
+📍 ADDRESS:
+${orderData.deliveryAddress.fullAddress}
+
+💰 TOTAL: $${orderData.totalAmount.toFixed(2)}
+
+Thank you for choosing Party On Delivery! 🚚
+
+Track your order: partyondelivery.com/customer/login`;
+
+      const { data: customerSMS, error: customerSMSError } = await supabase.functions.invoke('send-ghl-sms', {
+        body: {
+          phone: orderData.customerPhone,
+          message: customerMessage,
+          type: 'order_confirmation'
+        }
+      });
+
+      if (customerSMSError) {
+        logStep("Customer SMS error", customerSMSError);
+      } else {
+        logStep("Customer SMS sent via GHL", customerSMS);
+      }
+    }
+
+    // Admin SMS notification
+    const adminPhone = "7373719700";
+    const adminMessage = `🚨 NEW ORDER ALERT!
+
+Order #${shopifyOrder.order_number}
+Customer: ${customerName}
+
+📦 ITEMS:
+${orderData.lineItems.map(item => `• ${item.title} (${item.quantity}x) - $${(item.price * item.quantity).toFixed(2)}`).join('\n')}
+
+💰 TOTAL: $${orderData.totalAmount.toFixed(2)}
+
+📅 DELIVERY:
+${orderData.deliveryDate} at ${orderData.deliveryTime}
+
+📍 ADDRESS:
+${orderData.deliveryAddress.fullAddress}
+
+📞 CUSTOMER PHONE:
+${orderData.customerPhone}
+
+🔗 Admin Dashboard: partyondelivery.com/admin`;
+
+    const { data: adminSMS, error: adminSMSError } = await supabase.functions.invoke('send-ghl-sms', {
       body: {
-        orderData: {
-          orderNumber: shopifyOrder.order_number,
-          customerName: customerName,
-          customerPhone: orderData.customerPhone,
-          deliveryDate: orderData.deliveryDate,
-          deliveryTime: orderData.deliveryTime,
-          deliveryAddress: orderData.deliveryAddress.fullAddress,
-          totalAmount: orderData.totalAmount,
-          lineItems: orderData.lineItems
-        },
-        notifyCustomer: true,
-        notifyAdmin: true,
-        adminPhone: "7373719700" // Customer service phone number
+        phone: adminPhone,
+        message: adminMessage,
+        type: 'admin_notification'
       }
     });
-    
-    if (smsError) {
-      logStep("SMS notifications error", smsError);
+
+    if (adminSMSError) {
+      logStep("Admin SMS error", adminSMSError);
     } else {
-      logStep("SMS notifications sent", smsResult);
+      logStep("Admin SMS sent via GHL", adminSMS);
     }
     
   } catch (error) {
