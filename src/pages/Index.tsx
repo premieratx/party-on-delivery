@@ -5,8 +5,8 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Navigate to the main delivery app instead of search
-    navigate('/app/party-on-delivery', { replace: true });
+    // Navigate directly to DefaultDeliveryApp instead of redirecting
+    navigate('/delivery', { replace: true });
   }, [navigate]);
 
   return <div className="min-h-screen bg-background flex items-center justify-center">

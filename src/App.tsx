@@ -97,7 +97,7 @@ const App = () => {
                 <Suspense fallback={null}>
                   <Routes>
                     {/* Core pages - no lazy loading */}
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<DefaultDeliveryApp />} />
                     <Route path="/app/party-on-delivery" element={<DefaultDeliveryApp />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     <Route path="/voice-chat" element={<VoiceChat />} />

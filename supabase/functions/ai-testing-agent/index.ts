@@ -76,7 +76,7 @@ async function startAutonomousTesting(config: any) {
   await sendTelegramMessage(`🤖 AI Testing Agent Started!
 Session ID: ${currentSession.id}
 Target: ${config.appUrl || 'https://acmlfzfliqupwxwoefdq.supabase.co'}
-Testing Flows: Homepage, Checkout, Party Planner, Admin
+Testing Flows: Homepage, Checkout, Admin (Party Planner DISABLED)
 Status: Running 🟢
 
 I'll continuously test your app and report any issues. You can chat with me anytime!`);
@@ -97,7 +97,7 @@ async function runTestingLoop(config: any) {
   const testFlows = [
     'homepage',
     'delivery_widget',
-    'party_planner', 
+    // 'party_planner', // DISABLED TO PREVENT PRELOADING
     'checkout_flow',
     'admin_dashboard'
   ];

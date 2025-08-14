@@ -33,7 +33,7 @@ const LAUNCH_PLAN = {
       tasks: [
         'Homepage functionality tests',
         'Delivery widget testing',
-        'Party planner flow testing',
+        // 'Party planner flow testing', // DISABLED
         'Checkout process validation',
         'Admin dashboard verification'
       ]

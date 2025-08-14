@@ -1,4 +1,5 @@
-// ULTIMATE NUCLEAR DESTRUCTION v2025_01_14_21_35 - ABSOLUTE ANNIHILATION
+// COMPLETE SYSTEM CLEANUP - Build: 2025_08_14_22_35
+import './utils/systemCleanup'; // CRITICAL: Load system cleanup FIRST
 import './utils/completeSystemBlocker';
 import './utils/disablePreloading';
 import './utils/preloadingTest';

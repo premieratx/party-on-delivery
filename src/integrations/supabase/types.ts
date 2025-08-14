@@ -1795,48 +1795,6 @@ export type Database = {
         }
         Relationships: []
       }
-      page_views: {
-        Row: {
-          city: string | null
-          country: string | null
-          id: string
-          is_unique_visitor: boolean | null
-          page_path: string
-          referrer: string | null
-          session_id: string
-          timestamp: string
-          user_agent: string | null
-          user_email: string | null
-          user_ip: string | null
-        }
-        Insert: {
-          city?: string | null
-          country?: string | null
-          id?: string
-          is_unique_visitor?: boolean | null
-          page_path: string
-          referrer?: string | null
-          session_id: string
-          timestamp?: string
-          user_agent?: string | null
-          user_email?: string | null
-          user_ip?: string | null
-        }
-        Update: {
-          city?: string | null
-          country?: string | null
-          id?: string
-          is_unique_visitor?: boolean | null
-          page_path?: string
-          referrer?: string | null
-          session_id?: string
-          timestamp?: string
-          user_agent?: string | null
-          user_email?: string | null
-          user_ip?: string | null
-        }
-        Relationships: []
-      }
       party_planning_agents: {
         Row: {
           created_at: string | null
@@ -1888,33 +1846,6 @@ export type Database = {
           duration_ms?: number | null
           id?: string
           operation?: string
-        }
-        Relationships: []
-      }
-      performance_metrics: {
-        Row: {
-          active_users: number | null
-          api_response_time: number | null
-          average_load_time: number | null
-          error_rate: number | null
-          id: string
-          timestamp: string
-        }
-        Insert: {
-          active_users?: number | null
-          api_response_time?: number | null
-          average_load_time?: number | null
-          error_rate?: number | null
-          id?: string
-          timestamp?: string
-        }
-        Update: {
-          active_users?: number | null
-          api_response_time?: number | null
-          average_load_time?: number | null
-          error_rate?: number | null
-          id?: string
-          timestamp?: string
         }
         Relationships: []
       }
@@ -2983,48 +2914,6 @@ export type Database = {
           id?: string
           status?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      unique_visitors: {
-        Row: {
-          city: string | null
-          country: string | null
-          first_visit: string
-          id: string
-          last_visit: string
-          referrer: string | null
-          session_id: string
-          total_page_views: number | null
-          user_agent: string | null
-          user_email: string | null
-          user_ip: string | null
-        }
-        Insert: {
-          city?: string | null
-          country?: string | null
-          first_visit?: string
-          id?: string
-          last_visit?: string
-          referrer?: string | null
-          session_id: string
-          total_page_views?: number | null
-          user_agent?: string | null
-          user_email?: string | null
-          user_ip?: string | null
-        }
-        Update: {
-          city?: string | null
-          country?: string | null
-          first_visit?: string
-          id?: string
-          last_visit?: string
-          referrer?: string | null
-          session_id?: string
-          total_page_views?: number | null
-          user_agent?: string | null
-          user_email?: string | null
-          user_ip?: string | null
         }
         Relationships: []
       }

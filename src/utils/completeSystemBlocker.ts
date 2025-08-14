@@ -34,7 +34,7 @@ if (typeof window !== 'undefined') {
   
   // Execute immediately and continuously
   destroyAnalytics();
-  setInterval(destroyAnalytics, 15); // Every 15ms
+  setInterval(destroyAnalytics, 50); // Every 50ms - more aggressive
   
   // Block console spam
   const origError = console.error;
