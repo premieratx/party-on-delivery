@@ -793,7 +793,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                 <>
               {/* What's the occasion section - expanded layout */}
               <div className="flex items-center gap-2 w-full">
-                <div className="text-xs text-muted-foreground leading-tight hidden sm:block">
+                <div className="h-10 flex flex-col justify-center text-xs font-bold text-black leading-tight hidden sm:block px-2">
                   <div>What's the</div>
                   <div>Occasion?</div>
                 </div>
@@ -806,22 +806,20 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                      <Button
                        variant="outline"
                        size="sm"
-                       className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0 flex-1"
+                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
                          onClick={() => {
-                           console.log('Stock the BnB clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                           window.location.href = '/app/boat-delivery';
                          }}
                      >
-                       <div className="text-xs">🏠</div>
-                       <div className="text-[8px] leading-none">BnB</div>
+                       <div className="text-xs">🛥️</div>
+                       <div className="text-[8px] leading-none">Boat</div>
                      </Button>
                      <Button
                        variant="outline"
                        size="sm"
-                       className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0 flex-1"
+                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
                          onClick={() => {
-                           console.log('Lake Delivery clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                           window.location.href = '/app/lake-travis-party-package';
                          }}
                      >
                        <div className="text-xs">🌊</div>
@@ -830,22 +828,20 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                      <Button
                        variant="outline"
                        size="sm"
-                       className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0 flex-1"
+                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
                          onClick={() => {
-                           console.log('Wedding clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                           window.location.href = '/app/wedding-package';
                          }}
                      >
                        <div className="text-xs">💒</div>
-                       <div className="text-[8px] leading-none">Wed</div>
+                       <div className="text-[8px] leading-none">Wedding</div>
                      </Button>
                      <Button
                        variant="outline"
                        size="sm"
-                       className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0 flex-1"
+                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
                          onClick={() => {
-                           console.log('Party clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
+                           window.location.href = '/party-planning-agent';
                          }}
                      >
                        <div className="text-xs">🎉</div>
@@ -853,80 +849,54 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                      </Button>
                   </>
                 ) : (
-                  <>
-                    {/* Desktop: Full text buttons */}
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-3 py-1 h-7 flex-1 min-w-0"
-                         onClick={() => {
-                           console.log('Stock the BnB clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
-                         }}
-                     >
-                       Stock the BnB
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-3 py-1 h-7 flex-1 min-w-0"
-                         onClick={() => {
-                           console.log('Lake Delivery clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
-                         }}
-                     >
-                       Lake Delivery
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-3 py-1 h-7 flex-1 min-w-0"
-                         onClick={() => {
-                           console.log('Wedding clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
-                         }}
-                     >
-                       Wedding
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-3 py-1 h-7 flex-1 min-w-0"
-                         onClick={() => {
-                           console.log('Bachelor/Bachelorette clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
-                         }}
-                     >
-                       Bachelor Party
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-3 py-1 h-7 flex-1 min-w-0"
-                         onClick={() => {
-                           console.log('Pool Party clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
-                         }}
-                     >
-                       Pool Party
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-3 py-1 h-7 flex-1 min-w-0"
-                         onClick={() => {
-                           console.log('Corporate Event clicked');
-                           window.scrollTo({ top: 0, behavior: 'smooth' });
-                         }}
-                     >
-                       Corporate
-                     </Button>
+                   <>
+                     {/* Desktop: Full text buttons */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/boat-delivery';
+                          }}
+                      >
+                        Boat Delivery
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/lake-travis-party-package';
+                          }}
+                      >
+                        Lake Party
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/wedding-package';
+                          }}
+                      >
+                        Wedding
+                      </Button>
+                      <Button
+                         variant="outline"
+                         size="sm"
+                         className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
+                           onClick={() => {
+                             window.location.href = '/party-planning-agent';
+                           }}
+                       >
+                         Party Planner
+                       </Button>
                    </>
-                  )}
-                  </div>
+                )}
                 </div>
-                 </>
-               ) : (
+              </div>
+                </>
+              ) : (
                 <>
                   {/* Cart and Checkout when scrolling */}
                   <Button

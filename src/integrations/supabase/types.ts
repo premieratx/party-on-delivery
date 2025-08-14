@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1795,6 +1795,39 @@ export type Database = {
         }
         Relationships: []
       }
+      party_planning_agents: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          instructions: string | null
+          name: string
+          tone: string
+          updated_at: string | null
+          voice: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          name: string
+          tone?: string
+          updated_at?: string | null
+          voice?: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          instructions?: string | null
+          name?: string
+          tone?: string
+          updated_at?: string | null
+          voice?: string
+        }
+        Relationships: []
+      }
       performance_log_simple: {
         Row: {
           created_at: string | null
@@ -3098,16 +3131,16 @@ export type Database = {
       find_group_order_by_token: {
         Args: { p_share_token: string }
         Returns: {
-          order_id: string
-          order_number: string
+          customer_email: string
+          customer_name: string
+          delivery_address: Json
           delivery_date: string
           delivery_time: string
-          delivery_address: Json
-          customer_name: string
-          customer_email: string
-          total_amount: number
-          is_active: boolean
           group_participants: Json
+          is_active: boolean
+          order_id: string
+          order_number: string
+          total_amount: number
         }[]
       }
       generate_affiliate_code: {
@@ -3123,17 +3156,17 @@ export type Database = {
       }
       get_dashboard_data: {
         Args: {
+          affiliate_code?: string
           dashboard_type: string
           user_email?: string
-          affiliate_code?: string
         }
         Returns: Json
       }
       get_dashboard_data_fixed: {
         Args: {
+          affiliate_code?: string
           dashboard_type: string
           user_email?: string
-          affiliate_code?: string
         }
         Returns: Json
       }
@@ -3159,10 +3192,10 @@ export type Database = {
       }
       join_group_order: {
         Args: {
-          p_share_token: string
           p_customer_email: string
           p_customer_name: string
           p_line_items: Json
+          p_share_token: string
           p_subtotal: number
         }
         Returns: Json
@@ -3188,15 +3221,15 @@ export type Database = {
         Returns: undefined
       }
       log_security_event: {
-        Args: { event_type: string; user_email: string; details?: Json }
+        Args: { details?: Json; event_type: string; user_email: string }
         Returns: undefined
       }
       log_slow_operation: {
-        Args: { p_operation: string; p_duration_ms: number }
+        Args: { p_duration_ms: number; p_operation: string }
         Returns: undefined
       }
       safe_cache_upsert: {
-        Args: { cache_key: string; cache_data: Json; expires_timestamp: number }
+        Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
         Returns: string
       }
       update_daily_analytics: {

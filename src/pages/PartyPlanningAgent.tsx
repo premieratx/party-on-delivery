@@ -60,50 +60,47 @@ export default function PartyPlanningAgent() {
     loadSavedProfiles();
   }, []);
 
-  const loadSavedProfiles = async () => {
+  const loadSavedProfiles = () => {
     try {
-      const { data, error } = await supabase
-        .from('party_planning_agents')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSavedProfiles(data || []);
-      
-      // Set first profile as current if available
-      if (data && data.length > 0) {
-        setCurrentAgent(data[0]);
+      const saved = localStorage.getItem('party_planning_agents');
+      if (saved) {
+        const profiles = JSON.parse(saved);
+        setSavedProfiles(profiles);
+        
+        // Set first profile as current if available
+        if (profiles.length > 0) {
+          setCurrentAgent(profiles[0]);
+        }
       }
     } catch (error) {
       console.error('Error loading profiles:', error);
     }
   };
 
-  const saveProfile = async () => {
+  const saveProfile = () => {
     if (!newProfile.name.trim()) {
       toast.error('Please enter a profile name');
       return;
     }
 
     try {
-      const { data, error } = await supabase
-        .from('party_planning_agents')
-        .insert([{
-          name: newProfile.name,
-          voice: newProfile.voice,
-          tone: newProfile.tone,
-          description: newProfile.description,
-          instructions: newProfile.instructions || getDefaultInstructions(newProfile.tone)
-        }])
-        .select()
-        .single();
+      const profile: AgentProfile = {
+        id: Date.now().toString(),
+        name: newProfile.name,
+        voice: newProfile.voice,
+        tone: newProfile.tone,
+        description: newProfile.description,
+        instructions: newProfile.instructions || getDefaultInstructions(newProfile.tone)
+      };
 
-      if (error) throw error;
-
-      setSavedProfiles(prev => [data, ...prev]);
-      setCurrentAgent(data);
+      const updatedProfiles = [profile, ...savedProfiles];
+      setSavedProfiles(updatedProfiles);
+      setCurrentAgent(profile);
       setIsCreatingProfile(false);
       setNewProfile({ name: '', voice: 'nova', tone: 'enthusiastic', description: '', instructions: '' });
+      
+      // Save to localStorage
+      localStorage.setItem('party_planning_agents', JSON.stringify(updatedProfiles));
       
       toast.success('Agent profile saved!');
     } catch (error) {
@@ -156,33 +153,28 @@ export default function PartyPlanningAgent() {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Generate AI response
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-voice-assistant', {
-        body: {
-          message: text,
-          agent: currentAgent,
-          conversationHistory: messages.slice(-10) // Last 10 messages for context
-        }
-      });
+    // For demo, simulate AI response
+    const responses = [
+      "That sounds like an amazing party! How many people are you expecting?",
+      "Great! What's your budget range for drinks?",
+      "I love helping with parties! What kind of drinks do you usually enjoy?",
+      "Let me help you plan the perfect drink selection. What's the occasion?",
+      "Wonderful! Tell me more about your event - is it indoors or outdoors?"
+    ];
 
-      if (error) throw error;
-
+    setTimeout(() => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: data.response,
+        content: responses[Math.floor(Math.random() * responses.length)],
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Convert to speech
-      await speakText(data.response);
-    } catch (error) {
-      console.error('Error processing voice input:', error);
-      toast.error('Failed to process your request');
-    }
+      
+      // Convert to speech (simulate for demo)
+      speakText(assistantMessage.content);
+    }, 1000);
   };
 
   const speakText = async (text: string) => {
@@ -191,24 +183,12 @@ export default function PartyPlanningAgent() {
     try {
       setIsPlaying(true);
       
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: {
-          text,
-          voice: currentAgent.voice
-        }
-      });
-
-      if (error) throw error;
-
-      // Play the audio
-      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-      audio.onended = () => setIsPlaying(false);
-      audio.onerror = () => {
+      // For demo, just simulate speech duration
+      setTimeout(() => {
         setIsPlaying(false);
-        toast.error('Failed to play audio');
-      };
+      }, 3000);
       
-      await audio.play();
+      toast.success('AI is speaking...');
     } catch (error) {
       console.error('Error converting text to speech:', error);
       setIsPlaying(false);

@@ -115,6 +115,7 @@ const App = () => {
                     
                     <Route path="/" element={<Index />} />
                     <Route path="/voice-chat" element={<VoiceChat />} />
+                    <Route path="/party-planning-agent" element={<PartyPlanningAgent />} />
                     
                     {/* Order completion */}
                     <Route path="/success" element={<Success />} />
