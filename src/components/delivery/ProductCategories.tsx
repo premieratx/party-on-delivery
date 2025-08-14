@@ -11,6 +11,9 @@ import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { OccasionButtons } from '@/components/delivery/OccasionButtons';
+import { useScrollHeader } from '@/hooks/useScrollHeader';
+import { SpeechButton } from '@/components/common/SpeechButton';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 
 interface Product {
@@ -67,7 +70,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   const isMobile = useIsMobile();
-  
+  const { isScrollingDown } = useScrollHeader({ threshold: 100 });
 
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
@@ -400,10 +403,48 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const showNoResults = searchQuery.trim() && searchResults.length === 0;
 
   return (
-    <div className="w-full">
-      <CategoryTabs />
+    <div className="min-h-screen relative">
+      {/* Hero Background Image */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
+        style={{ 
+          backgroundImage: `url(${heroPartyAustin})`,
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className="absolute inset-0 bg-black/60"></div>
+      </div>
+
+      {/* Speech Button */}
+      <SpeechButton />
+
+      {/* Hero Section with Occasion Buttons */}
+      <div className="relative z-10 min-h-[60vh] flex flex-col justify-center px-4 lg:px-8">
+        <div className="text-center space-y-6 max-w-4xl mx-auto">
+          <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
+            Party On Delivery
+          </h1>
+          <p className="text-xl lg:text-2xl text-white/90 font-medium">
+            Austin's Premier Alcohol Delivery Service
+          </p>
+          
+          {/* Occasion Buttons */}
+          <div className="mt-8 lg:mt-12">
+            <OccasionButtons 
+              isMobile={isMobile} 
+              isScrollingDown={isScrollingDown} 
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Category Navigation */}
+      <div className="relative z-20">
+        <CategoryTabs />
+      </div>
       
-      <div className="container mx-auto px-2 lg:px-4 py-4">
+      <div className="relative z-10 bg-background/95 backdrop-blur-sm">
+        <div className="container mx-auto px-2 lg:px-4 py-4">
         {showSearchResults && (
           <div className="mb-6">
             <h2 className="text-xl font-bold mb-4">Search Results for "{searchQuery}"</h2>
@@ -577,6 +618,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };
