@@ -2,38 +2,43 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <title>Party On Delivery & Concierge App</title>
-    <meta name="description" content="Premium alcohol delivery and party concierge services" />
-    <meta name="author" content="Lovable" />
-
-    <meta property="og:title" content="Party On Delivery & Concierge App" />
-    <meta property="og:description" content="Premium alcohol delivery and party concierge services" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Party On Delivery - Austin's Premier Party Supplies & Alcohol Delivery</title>
+    <meta name="description" content="Austin's #1 party supplies and alcohol delivery service. Same-day delivery of beer, wine, spirits, cocktails, and party essentials. Order now!" />
+    <meta name="keywords" content="party supplies austin, alcohol delivery austin, beer delivery, wine delivery, cocktail delivery, party planning austin" />
+    <link rel="canonical" href="https://order.partyondelivery.com" />
+    
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://order.partyondelivery.com" />
+    <meta property="og:title" content="Party On Delivery - Austin's Premier Party Supplies & Alcohol Delivery" />
+    <meta property="og:description" content="Austin's #1 party supplies and alcohol delivery service. Same-day delivery available!" />
+    <meta property="og:image" content="https://order.partyondelivery.com/party-on-delivery-logo.png" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://order.partyondelivery.com" />
+    <meta property="twitter:title" content="Party On Delivery - Austin Party Supplies & Alcohol Delivery" />
+    <meta property="twitter:description" content="Austin's #1 party supplies and alcohol delivery service. Same-day delivery available!" />
+    <meta property="twitter:image" content="https://order.partyondelivery.com/party-on-delivery-logo.png" />
 
-    <!-- FINAL DESTRUCTION v2025_01_14_21_20 -->
     <script>
       (function() {
         'use strict';
         
-        // ULTIMATE NUCLEAR DESTRUCTION - KILL EVERYTHING
-        const nuclearDestroy = () => {
-          // DESTROY POSTHOG
+        // EXTREME NUCLEAR DESTRUCTION - IMMEDIATE AND CONTINUOUS
+        let blockerActive = true;
+        
+        const superNuclearDestroy = () => {
+          if (!blockerActive) return;
+          
+          // DESTROY ALL PRELOADING
           delete window.posthog;
           delete window.PostHog;
           delete window.__posthog;
           delete window.analytics;
           delete window.gtag;
-          
-          // DESTROY ALL PRELOADING FUNCTIONS
           delete window.initializePreloading;
           delete window.preloadApp;
           delete window.loadAppConfig;
@@ -42,12 +47,16 @@
           delete window.preloadManager;
           delete window.preloadEverything;
           delete window.preloadApps;
+          delete window.preloader;
+          delete window.appPreloader;
+          delete window.configLoader;
           
           // SET NUCLEAR BLOCKERS
           window.preloadingDisabled = true;
           window.nuclearMode = true;
+          window.preloadingBlocked = true;
           
-          // OVERRIDE ALL PRELOADING FUNCTIONS
+          // OVERRIDE ALL PRELOADING FUNCTIONS WITH IMMEDIATE BLOCKERS
           window.initializePreloading = () => {
             console.log('🚫🚫🚫 NUCLEAR BLOCKED: initializePreloading');
             return Promise.resolve();
@@ -61,87 +70,156 @@
             return Promise.resolve(null);
           };
           window.ultraFastLoader = {
-            preloadEverything: () => Promise.resolve(),
-            loadProducts: () => Promise.resolve([])
+            preloadEverything: () => {
+              console.log('🚫🚫🚫 NUCLEAR BLOCKED: ultraFastLoader.preloadEverything');
+              return Promise.resolve();
+            },
+            loadProducts: () => {
+              console.log('🚫🚫🚫 NUCLEAR BLOCKED: ultraFastLoader.loadProducts');
+              return Promise.resolve([]);
+            }
           };
           window.instantAppLoader = {
-            preloadApp: () => Promise.resolve(),
-            getConfig: () => Promise.resolve(null)
+            preloadApp: () => {
+              console.log('🚫🚫🚫 NUCLEAR BLOCKED: instantAppLoader.preloadApp');
+              return Promise.resolve();
+            },
+            getConfig: () => {
+              console.log('🚫🚫🚫 NUCLEAR BLOCKED: instantAppLoader.getConfig');
+              return Promise.resolve(null);
+            }
           };
           
-          // Non-configurable blocks
-          try {
-            Object.defineProperty(window, 'posthog', { value: null, writable: false, configurable: false });
-            Object.defineProperty(window, 'PostHog', { value: null, writable: false, configurable: false });
-            Object.defineProperty(window, 'analytics', { value: null, writable: false, configurable: false });
-          } catch(e) {}
-        };
-        
-        // BLOCK ALL PRELOADING AND ANALYTICS NETWORK REQUESTS
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-          const url = args[0];
-          if (typeof url === 'string') {
-            // Block PostHog, analytics, and ALL preloading
-            if (url.includes('posthog') || 
-                url.includes('analytics') ||
-                url.includes('instant-product-cache') ||
-                url.includes('lightning-sync') ||
-                url.includes('delivery_apps') ||
-                url.includes('delivery_app_variations') ||
-                url.includes('party-planner') ||
-                url.includes('standard-delivery') ||
-                url.includes('premier-party-cruises') ||
-                url.includes('5143-4299d8d38aad5d69') ||
-                url.includes('capture') ||
-                url.includes('decide') ||
-                url.includes('batch')) {
-              return Promise.resolve(new Response('{"success":false,"blocked":true}', {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              }));
+          // BLOCK script creation and modification
+          const originalCreateElement = document.createElement;
+          document.createElement = function(tagName) {
+            const element = originalCreateElement.call(this, tagName);
+            if (tagName === 'script') {
+              const originalSetAttribute = element.setAttribute;
+              element.setAttribute = function(name, value) {
+                if (name === 'src' && typeof value === 'string') {
+                  if (value.includes('preload') || 
+                      value.includes('party-planner') || 
+                      value.includes('delivery') ||
+                      value.includes('instant') ||
+                      value.includes('BLxqN-95')) {
+                    console.log('🚫🚫🚫 NUCLEAR SCRIPT BLOCK:', value);
+                    return;
+                  }
+                }
+                return originalSetAttribute.call(this, name, value);
+              };
             }
+            return element;
+          };
+          
+          // EXTREME FETCH BLOCKING
+          if (window.fetch && !window.fetch._nuclearBlocked) {
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+              const url = args[0];
+              if (typeof url === 'string') {
+                // Block EVERYTHING suspicious
+                if (url.includes('delivery_apps') || 
+                    url.includes('party-planner') || 
+                    url.includes('premier-party-cruises') ||
+                    url.includes('standard-delivery') ||
+                    url.includes('instant-product-cache') ||
+                    url.includes('lightning-sync') ||
+                    url.includes('get-all-collections') ||
+                    url.includes('preload') ||
+                    url.includes('fetch-shopify-products') ||
+                    url.includes('fetchShopifyProducts') ||
+                    url.includes('app-config') ||
+                    url.includes('delivery_app_variations')) {
+                  console.log('🚫🚫🚫 NUCLEAR FETCH BLOCK:', url);
+                  return Promise.reject(new Error('NUCLEAR FETCH BLOCKED: ' + url));
+                }
+              }
+              return originalFetch.apply(this, args);
+            };
+            window.fetch._nuclearBlocked = true;
           }
-          return originalFetch.apply(this, args);
+          
+          // AGGRESSIVE CONSOLE BLOCKING
+          if (!window.console._nuclearBlocked) {
+            const originalLog = console.log;
+            const originalError = console.error;
+            const originalWarn = console.warn;
+            
+            console.log = (...args) => {
+              const msg = args.join(' ');
+              if (msg.includes('Preloading') || 
+                  msg.includes('⚡') ||
+                  msg.includes('🚀') ||
+                  msg.includes('party-planner') || 
+                  msg.includes('standard-delivery') ||
+                  msg.includes('premier-party-cruises') ||
+                  msg.includes('✅ App preloaded') ||
+                  msg.includes('✅ Cached products') ||
+                  msg.includes('Initializing instant app loader')) {
+                return; // BLOCKED
+              }
+              originalLog.apply(console, args);
+            };
+            
+            console.error = (...args) => {
+              const msg = args.join(' ');
+              if (msg.includes('party-planner') || 
+                  msg.includes('standard-delivery') ||
+                  msg.includes('premier-party-cruises') ||
+                  msg.includes('delivery_apps') ||
+                  msg.includes('preload') ||
+                  msg.includes('PGRST116')) {
+                return; // BLOCKED
+              }
+              originalError.apply(console, args);
+            };
+            
+            console.warn = (...args) => {
+              const msg = args.join(' ');
+              if (msg.includes('preload') || 
+                  msg.includes('party-planner') ||
+                  msg.includes('delivery')) {
+                return; // BLOCKED
+              }
+              originalWarn.apply(console, args);
+            };
+            
+            window.console._nuclearBlocked = true;
+          }
         };
         
-        // SILENCE ALL SPAM
-        const origError = console.error;
-        const origLog = console.log;
+        // IMMEDIATE EXECUTION
+        superNuclearDestroy();
         
-        console.error = function(...args) {
-          const msg = args.join(' ');
-          if (msg.includes('PostHog') || 
-              msg.includes('capture call') || 
-              msg.includes('rate limit') ||
-              msg.includes('5143-4299d8d38aad5d69') ||
-              msg.includes('preload') ||
-              msg.includes('delivery apps') ||
-              msg.includes('party-planner')) {
-            return;
-          }
-          origError.apply(console, args);
-        };
+        // CONTINUOUS EXECUTION - Every 5ms for maximum aggression
+        const destroyer = setInterval(superNuclearDestroy, 5);
         
-        console.log = function(...args) {
-          const msg = args.join(' ');
-          if (msg.includes('⚡') || 
-              msg.includes('🚀') || 
-              msg.includes('✅') ||
-              msg.includes('Preloading') ||
-              msg.includes('instant app') ||
-              msg.includes('lightning') ||
-              msg.includes('Collections preloaded') ||
-              msg.includes('Apps preloaded') ||
-              msg.includes('delivery apps')) {
-            return;
-          }
-          origLog.apply(console, args);
-        };
+        // WATCH FOR DOM CHANGES
+        if (window.MutationObserver) {
+          const observer = new MutationObserver(() => {
+            superNuclearDestroy();
+          });
+          observer.observe(document, { childList: true, subtree: true });
+        }
         
-        // NUCLEAR DESTRUCTION REPEATEDLY
-        nuclearDestroy();
-        setInterval(nuclearDestroy, 25); // Every 25ms
+        // WATCH FOR PROPERTY CHANGES
+        if (window.Proxy) {
+          window = new Proxy(window, {
+            set(target, property, value) {
+              if (typeof property === 'string' && 
+                  (property.includes('preload') || 
+                   property.includes('instantApp') || 
+                   property.includes('ultraFast'))) {
+                console.log('🚫🚫🚫 NUCLEAR PROPERTY BLOCK:', property);
+                return true; // Block the assignment
+              }
+              target[property] = value;
+              return true;
+            }
+          });
+        }
         
         // Domain redirect
         try {
