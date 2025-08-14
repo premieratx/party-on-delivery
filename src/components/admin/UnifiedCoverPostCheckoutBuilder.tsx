@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Eye, Save, Plus } from 'lucide-react';
+import { Loader2, Eye, Save, Plus, Palette } from 'lucide-react';
+import { VisualCoverPageEditor } from './VisualCoverPageEditor';
 
 interface UnifiedBuilderProps {
   onSuccess?: () => void;
@@ -16,9 +17,10 @@ interface UnifiedBuilderProps {
 
 export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [isCreating, setIsCreating] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [selectedCoverPage, setSelectedCoverPage] = useState<any>(null);
   const [coverPages, setCoverPages] = useState<any[]>([]);
+  const [showVisualEditor, setShowVisualEditor] = useState(false);
   const { toast } = useToast();
 
   // Cover Page Fields
@@ -257,6 +259,13 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
             <Plus className="w-4 h-4 mr-2" />
             Create New
           </Button>
+          <Button
+            variant="default"
+            onClick={() => setShowVisualEditor(true)}
+          >
+            <Palette className="w-4 h-4 mr-2" />
+            Visual Editor
+          </Button>
         </div>
       </div>
 
@@ -467,6 +476,22 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
           {isCreating ? 'Create Cover Page & Post-Checkout' : 'Update Configuration'}
         </Button>
       </div>
+
+      {/* Visual Editor Modal */}
+      <VisualCoverPageEditor
+        isOpen={showVisualEditor}
+        onClose={() => setShowVisualEditor(false)}
+        onSave={(settings) => {
+          setShowVisualEditor(false);
+          loadCoverPages();
+          toast({
+            title: "Success!",
+            description: "Cover page saved successfully with visual editor!",
+          });
+        }}
+        initialData={selectedCoverPage}
+        existingCoverPages={coverPages}
+      />
     </div>
   );
 };
