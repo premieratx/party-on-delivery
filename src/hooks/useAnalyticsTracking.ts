@@ -1,9 +1,6 @@
-// COMPLETELY DISABLED TO PREVENT POSTHOG RATE LIMITING ERRORS
-// DO NOT RESTORE - This was causing continuous PostHog rate limiting errors
-
-console.log('🚫 Analytics tracking DISABLED to prevent PostHog rate limiting');
+// FORCE FRESH BUILD - NO POSTHOG OR PRELOADING
+// Build version: 2025_01_14_20_41_CLEAN
 
 export const useAnalyticsTracking = () => {
-  // All analytics functions disabled
   return null;
 };

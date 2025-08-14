@@ -19,50 +19,44 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-    <!-- COMPLETE SYSTEM BLOCKER: Block ALL preloading, analytics, and tracking -->
+    <!-- FORCE CLEAN BUILD v2025_01_14_20_41 - BLOCK ALL ANALYTICS -->
     <script>
-      // IMMEDIATE BLOCKING - Run before any other scripts
-      window.__SYSTEM_BLOCKED = true;
-      window.console.log = function() {}; // Block all console.log
-      window.console.error = function() {}; // Block console.error
-      window.console.warn = function() {}; // Block console.warn
-      window.console.info = function() {}; // Block console.info
+      // FORCE CLEAN BUILD v2025_01_14_20_41
+      // ULTIMATE BLOCKING - NO POSTHOG OR PRELOADING
       
-      // Block all analytics and tracking
-      window.gtag = function() {};
-      window.analytics = { track: function() {}, capture: function() {}, init: function() {} };
-      window.posthog = { capture: function() {}, init: function() {} };
-      window.PostHog = { capture: function() {}, init: function() {} };
+      // Completely remove PostHog
+      delete window.posthog;
+      delete window.PostHog;
+      delete window.analytics;
+      delete window.gtag;
       
-      // Block all fetch requests to Supabase for preloading
-      var originalFetch = window.fetch;
-      window.fetch = function(url, options) {
-        if (typeof url === 'string') {
-          if (url.includes('delivery_apps') || url.includes('premier-party-cruises') || url.includes('party-planner') || url.includes('standard-delivery')) {
-            return Promise.reject(new Error('BLOCKED: Preloading request intercepted'));
-          }
-        }
-        return originalFetch.apply(this, arguments);
+      // Override any attempt to set PostHog
+      Object.defineProperty(window, 'posthog', {
+        set: function() { /* blocked */ },
+        get: function() { return undefined; }
+      });
+      
+      Object.defineProperty(window, 'PostHog', {
+        set: function() { /* blocked */ },
+        get: function() { return undefined; }
+      });
+      
+      // Block console spam
+      const origLog = console.log;
+      const origError = console.error;
+      
+      console.log = function(...args) {
+        const msg = args.join(' ');
+        if (msg.includes('⚡') || msg.includes('🚀') || msg.includes('✅') || 
+            msg.includes('PostHog') || msg.includes('preload') || 
+            msg.includes('delivery apps')) return;
+        origLog.apply(console, args);
       };
       
-      // Block setTimeout and setInterval for preloading
-      var originalSetTimeout = window.setTimeout;
-      var originalSetInterval = window.setInterval;
-      
-      window.setTimeout = function(fn, delay) {
-        var fnStr = fn.toString();
-        if (fnStr.includes('preload') || fnStr.includes('instant') || fnStr.includes('cache')) {
-          return 0; // Block preloading timers
-        }
-        return originalSetTimeout.apply(this, arguments);
-      };
-      
-      window.setInterval = function(fn, delay) {
-        var fnStr = fn.toString();
-        if (fnStr.includes('preload') || fnStr.includes('instant') || fnStr.includes('cache')) {
-          return 0; // Block preloading intervals
-        }
-        return originalSetInterval.apply(this, arguments);
+      console.error = function(...args) {
+        const msg = args.join(' ');
+        if (msg.includes('PostHog') || msg.includes('rate limit')) return;
+        origError.apply(console, args);
       };
       
       // Canonical domain enforcement

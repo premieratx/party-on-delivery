@@ -1,7 +1,10 @@
-// DISABLED STUB - NO FUNCTIONALITY
-// This file was completely disabled to prevent preloading
+// COMPLETELY DISABLED - FORCE BUILD REFRESH
+export const getInstantProducts = () => {
+  return Promise.resolve({ products: [], collections: [] });
+};
 
-export const getInstantProducts = () => Promise.resolve({ products: [], collections: [] });
-export const getAllCollectionsCached = () => Promise.resolve([]);
+export const getAllCollectionsCached = () => {
+  return Promise.resolve([]);
+};
 
-console.log('🚫 InstantCacheClient DISABLED - No caching');
+// Force build refresh by changing this comment: BUILD_VERSION_2025_01_14_20_41
