@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProductCategories } from '@/components/delivery/ProductCategories';
+import ProductCategories from '@/components/delivery/ProductCategories';
 
 interface CustomDeliveryTabsPageProps {
   appName: string;
@@ -48,19 +48,8 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
   // This ensures identical layout, styling, and functionality
   return (
     <div className="min-h-screen bg-background">
-      <ProductCategories
-        onAddToCart={onAddToCart}
-        cartItemCount={cartItemCount}
-        onOpenCart={onOpenCart}
-        cartItems={cartItems}
-        onUpdateQuantity={onUpdateQuantity}
-        onProceedToCheckout={onProceedToCheckout}
-        customAppName={appName}
-        customHeroHeading={heroHeading}
-        customHeroSubheading={heroSubheading}
-        customLogoUrl={logoUrl}
-        customCollections={collectionsConfig}
-        customHeroScrollingText={heroScrollingText}
+      <ProductCategories 
+        customSiteSlug={appName}
       />
     </div>
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
-import { ProductCategories } from './delivery/ProductCategories';
+import ProductCategories from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
 import { CheckoutFlow } from './delivery/CheckoutFlow';
 import { OrderContinuation } from './OrderContinuation';
@@ -254,16 +254,7 @@ export const DeliveryWidget: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {currentStep === 'products' && (
-        <ProductCategories 
-          onAddToCart={handleAddToCart}
-          cartItemCount={getTotalItems()}
-          onOpenCart={() => setIsCartOpen(true)}
-          cartItems={cartItems}
-          onUpdateQuantity={handleUpdateQuantity}
-          onProceedToCheckout={handleCheckout}
-          onBack={handleBackToOrderContinuation}
-          onBackToStart={() => navigate('/cover')}
-        />
+        <ProductCategories />
       )}
 
       {currentStep === 'checkout' && (

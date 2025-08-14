@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ProductCategories } from '@/components/delivery/ProductCategories';
+import ProductCategories from '@/components/delivery/ProductCategories';
 import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
@@ -178,19 +178,7 @@ const Index = () => {
 
       {/* Show main delivery app when cover is dismissed */}
       {!showCoverModal && !showAppsGrid && (
-        <ProductCategories
-          onAddToCart={handleAddToCart}
-          cartItemCount={getTotalItems()}
-          onOpenCart={() => setIsCartOpen(true)}
-          cartItems={cartItemsForCategories}
-          onUpdateQuantity={handleUpdateQuantity}
-          onProceedToCheckout={handleCheckout}
-          customAppName={homepageApp?.app_name}
-          customHeroHeading={homepageApp?.main_app_config?.hero_heading}
-          customHeroSubheading={homepageApp?.main_app_config?.hero_subheading}
-          customLogoUrl={homepageApp?.logo_url}
-          customCollections={homepageApp?.collections_config}
-        />
+        <ProductCategories />
       )}
 
       {/* Cart sidebar */}

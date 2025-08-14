@@ -198,9 +198,9 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       const cartItem = {
         id: product.id,
         title: product.title,
+        name: product.title,
         price: product.price,
         image: product.image,
-        quantity: 1,
         variant: product.variants?.[0]?.title || 'Default'
       };
       
@@ -218,15 +218,13 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     event.stopPropagation();
     
     try {
-      const cartItem = {
+      updateQuantity(product.id, product.variants?.[0]?.title || 'Default', newQuantity, {
         id: product.id,
         title: product.title,
+        name: product.title,
         price: product.price,
-        image: product.image,
-        variant: product.variants?.[0]?.title || 'Default'
-      };
-      
-      updateQuantity(cartItem, newQuantity);
+        image: product.image
+      });
       
       if (newQuantity === 0) {
         toast.success(`${product.title} removed from cart`);
@@ -463,7 +461,6 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
                             src={product.image}
                             alt={product.title}
                             className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                            loading="lazy"
                           />
                         </div>
                         
