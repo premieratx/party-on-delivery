@@ -9,7 +9,8 @@ const blockedConsoleTerms = [
   'ProductCategories: Fetching', 'DeliveryCart pricing', 'PostHog', 'posthog',
   'Wake lock', 'delivery apps', 'premier-party-cruises', 'standard-delivery',
   'party-planner', 'capture call is ignored', 'rate limiting', 'App preloaded',
-  'premier-party-cruises---official-alcohol-delivery-service'
+  'premier-party-cruises---official-alcohol-delivery-service', 'Failed to load app config for premier-party-cruises',
+  'PGRST116', 'JSON object requested, multiple (or no) rows returned'
 ];
 
 // Override console methods completely
@@ -140,8 +141,13 @@ window.fetch = function(...args) {
       url.includes('delivery_apps?select=*&slug=eq.premier-party-cruises') ||
       url.includes('delivery_apps?select=*&slug=eq.standard-delivery') ||
       url.includes('delivery_apps?select=*&slug=eq.party-planner') ||
-      url.includes('premier-party-cruises---official-alcohol-delivery-service')
+      url.includes('premier-party-cruises---official-alcohol-delivery-service') ||
+      url.includes('delivery_apps?select=*&slug=eq.premier-party-cruises---official-alcohol-delivery-service') ||
+      url.includes('instant-product-cache') ||
+      url.includes('lightning-sync') ||
+      url.includes('fetch-shopify-products')
     ) {
+      console.log('🚫 BLOCKED PRELOADING REQUEST:', url);
       return Promise.resolve(new Response('{"error": "blocked preloading request"}', { status: 404 }));
     }
   }
