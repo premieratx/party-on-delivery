@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
 import { ImageOptimizer } from '@/utils/imageOptimizer';
-import { instantAppLoader } from '@/utils/instantAppLoader';
-import { preloadManager } from '@/utils/preloadManager';
+// Removed imports for disabled preloading systems
+// import { instantAppLoader } from '@/utils/instantAppLoader';
+// import { preloadManager } from '@/utils/preloadManager';
 import { getInstantProducts } from '@/utils/instantCacheClient';
 
 export interface MultiCTAButton {
