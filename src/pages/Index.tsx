@@ -76,6 +76,8 @@ const Index = () => {
     // Mark cover as shown for this session
     sessionStorage.setItem(COVER_SHOWN_SESSION_KEY, 'true');
     setShowCoverModal(false);
+    // Navigate to the main delivery app instead of showing ProductCategories
+    navigate('/app/main-delivery-app');
   };
 
   const handleViewApps = () => {
@@ -182,16 +184,7 @@ const Index = () => {
         />
       )}
 
-      {/* Show main delivery app when cover is dismissed and no app grid */}
-      {!showCoverModal && !showAppsGrid && (
-        <React.Suspense fallback={
-          <div className="min-h-screen bg-background flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        }>
-          <ProductCategories />
-        </React.Suspense>
-      )}
+      {/* Fixed the flow: Cover Modal -> Main App OR Apps Grid */}
 
       {/* Cart sidebar */}
       <DeliveryCart
