@@ -66,7 +66,7 @@ const ConciergeService = lazy(() => import("./pages/ConciergeService"));
 const PerformanceOptimization = lazy(() => import("./pages/PerformanceOptimization"));
 const PerformanceTests = lazy(() => import("./pages/PerformanceTests"));
 const TestSMS = lazy(() => import("./components/TestSMS"));
-const StartScreenPreview = lazy(() => import("./pages/StartScreenPreview"));
+
 const QuotePreview = lazy(() => import("./pages/QuotePreview"));
 
 const queryClient = new QueryClient({
@@ -180,7 +180,6 @@ const App = () => {
                     <Route path="/test-sms" element={<TestSMS />} />
                     
 {/* Utility Routes */}
-<Route path="/start-screen-preview" element={<StartScreenPreview />} />
 <Route path="/concierge" element={<ConciergeService />} />
 <Route path="/performance-optimization" element={<PerformanceOptimization />} />
 <Route path="/performance" element={<PerformanceTests />} />
