@@ -462,7 +462,8 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </div>
 
               <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
-                {currentCollection.products?.map((product) => {
+                {Array.isArray(currentCollection?.products) && currentCollection.products.map((product) => {
+                  if (!product || !product.id) return null;
                   const cartQuantity = getCartItemQuantity(product.id, product.variants?.[0]?.title);
                   
                   return (
