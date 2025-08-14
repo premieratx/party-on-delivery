@@ -125,7 +125,6 @@ ${isAdminMode ?
   3. Always acknowledge what they've told you and build on it
   
   Respond naturally with 2-4 complete sentences. Be helpful and engaging while gathering the information needed.`}`;
-   }
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
