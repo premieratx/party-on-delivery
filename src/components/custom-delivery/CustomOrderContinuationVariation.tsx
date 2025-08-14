@@ -98,7 +98,7 @@ export function CustomOrderContinuation({
                   <Search className="h-4 w-4" />
                   Search
                 </Button>
-                {/* Party Planner removed - replaced by user's better version */}
+                {/* PARTY PLANNER COMPLETELY REMOVED */}
               </div>
             </CardContent>
           </Card>

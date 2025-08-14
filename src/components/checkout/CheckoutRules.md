@@ -10,7 +10,7 @@
 ### 1. New Customers
 - **Flow**: Fresh checkout with empty fields
 - **Behavior**: All fields editable, no pre-fill data
-- **Entry Points**: Main delivery app, custom affiliate sites, party planner
+- **Entry Points**: Main delivery app, custom affiliate sites
 
 ### 2. Returning Customers
 - **Flow**: Pre-filled data from previous orders when available and valid

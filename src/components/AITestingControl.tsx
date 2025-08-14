@@ -21,7 +21,7 @@ const AITestingControl = () => {
           action: 'start_testing',
           data: {
             appUrl: window.location.origin,
-            flows: ['homepage', 'delivery_widget', 'party_planner', 'checkout_flow', 'admin_dashboard']
+            flows: ['homepage', 'delivery_widget', 'checkout_flow', 'admin_dashboard']
           }
         }
       });
