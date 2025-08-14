@@ -54,6 +54,16 @@ export default function PartyPlanningAgent() {
     description: '',
     instructions: ''
   });
+  const [conversation, setConversation] = useState({
+    occasion: '',
+    guestCount: 0,
+    preferences: [],
+    budget: '',
+    eventDate: '',
+    additionalInfo: ''
+  });
+  const [questionCount, setQuestionCount] = useState(0);
+  const [suggestions, setSuggestions] = useState([]);
 
   // Load saved profiles on mount
   useEffect(() => {
@@ -152,29 +162,88 @@ export default function PartyPlanningAgent() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setQuestionCount(prev => prev + 1);
 
-    // For demo, simulate AI response
-    const responses = [
-      "That sounds like an amazing party! How many people are you expecting?",
-      "Great! What's your budget range for drinks?",
-      "I love helping with parties! What kind of drinks do you usually enjoy?",
-      "Let me help you plan the perfect drink selection. What's the occasion?",
-      "Wonderful! Tell me more about your event - is it indoors or outdoors?"
-    ];
+    try {
+      // Call the AI chat assistant with conversation context
+      const { data: aiResponse } = await supabase.functions.invoke('ai-chat-assistant', {
+        body: {
+          message: text,
+          conversation,
+          questionCount,
+          context: {
+            agentTone: currentAgent?.tone || 'enthusiastic',
+            agentInstructions: currentAgent?.instructions || ''
+          }
+        }
+      });
 
-    setTimeout(() => {
-      const assistantMessage: Message = {
+      if (aiResponse?.response) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'assistant',
+          content: aiResponse.response,
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Update conversation state with extracted information
+        if (aiResponse.updatedConversation) {
+          setConversation(aiResponse.updatedConversation);
+        }
+        
+        // Convert to speech
+        speakText(assistantMessage.content);
+
+        // Check if we have enough info to generate suggestions
+        const hasEnoughInfo = aiResponse.updatedConversation?.occasion && 
+                             aiResponse.updatedConversation?.guestCount && 
+                             questionCount >= 3;
+
+        if (hasEnoughInfo) {
+          setTimeout(() => generateSuggestions(aiResponse.updatedConversation), 2000);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing voice input:', error);
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: responses[Math.floor(Math.random() * responses.length)],
+        content: "I'm sorry, I'm having trouble processing that. Could you tell me more about your party plans?",
         timestamp: new Date()
       };
+      setMessages(prev => [...prev, errorMessage]);
+      speakText(errorMessage.content);
+    }
+  };
 
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      // Convert to speech (simulate for demo)
-      speakText(assistantMessage.content);
-    }, 1000);
+  const generateSuggestions = async (conversationData: any) => {
+    try {
+      const { data: suggestionsData } = await supabase.functions.invoke('generate-party-suggestions', {
+        body: {
+          conversation: conversationData,
+          maxSuggestions: 8
+        }
+      });
+
+      if (suggestionsData?.suggestions) {
+        setSuggestions(suggestionsData.suggestions);
+        
+        const suggestionMessage: Message = {
+          id: Date.now().toString(),
+          type: 'assistant',
+          content: `Great! Based on your ${conversationData.occasion} for ${conversationData.guestCount} people, I've found some perfect recommendations. Check out the suggestions below!`,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, suggestionMessage]);
+        speakText(suggestionMessage.content);
+      }
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+      toast.error('Failed to generate suggestions');
+    }
   };
 
   const speakText = async (text: string) => {
@@ -403,6 +472,48 @@ export default function PartyPlanningAgent() {
               )}
             </CardContent>
           </Card>
+
+          {/* Product Suggestions */}
+          {suggestions.length > 0 && (
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardHeader>
+                <CardTitle className="text-white">🎉 Party Recommendations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {suggestions.map((suggestion: any) => (
+                    <div key={suggestion.id} className="bg-white/10 p-4 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <img 
+                          src={suggestion.image || '/placeholder.svg'} 
+                          alt={suggestion.title}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold text-sm">{suggestion.title}</h4>
+                          <p className="text-white/60 text-xs mt-1">{suggestion.description}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-green-400 font-bold">${suggestion.price}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-white/60 text-xs">Qty: {suggestion.recommendedQuantity}</span>
+                              <Button size="sm" className="h-6 px-2 text-xs">
+                                Add to Cart
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 p-3 bg-green-500/20 rounded-lg">
+                  <p className="text-white text-center">
+                    <span className="font-bold">Estimated Total: ${suggestions.reduce((sum: number, item: any) => sum + parseFloat(item.estimatedTotal || 0), 0).toFixed(2)}</span>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Quick Tips */}
