@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import discoBall from '@/assets/disco-ball.gif';
 
 interface SpeechButtonProps {
   className?: string;
@@ -10,6 +10,7 @@ interface SpeechButtonProps {
 export const SpeechButton: React.FC<SpeechButtonProps> = ({ className }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isPressed, setIsPressed] = useState(false);
 
   // Don't show the button on the voice chat page itself
   if (location.pathname === '/voice-chat') {
@@ -23,11 +24,25 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({ className }) => {
   return (
     <Button
       onClick={handleClick}
-      className={`fixed top-32 left-4 z-50 w-1/3 max-w-[120px] h-16 bg-red-500 hover:bg-red-600 text-white font-bold text-sm border-2 border-red-600 shadow-lg transition-all duration-200 hover:scale-105 ${className}`}
+      onMouseDown={() => setIsPressed(true)}
+      onMouseUp={() => setIsPressed(false)}
+      onTouchStart={() => setIsPressed(true)}
+      onTouchEnd={() => setIsPressed(false)}
+      className={`fixed top-32 left-4 z-50 w-1/3 max-w-[120px] h-16 bg-red-500 hover:bg-red-600 text-white font-bold text-xs border-2 border-red-600 shadow-lg transition-all duration-200 hover:scale-105 rounded-full p-1 ${className}`}
       size="lg"
     >
-      <MessageCircle className="w-6 h-6 mr-2" />
-      Just Say It
+      <div className="flex flex-col items-center justify-center h-full">
+        <img 
+          src={discoBall} 
+          alt="Disco Ball" 
+          className={`w-8 h-8 mb-1 ${isPressed ? '' : 'animate-spin'}`}
+          style={{ 
+            animationDuration: isPressed ? '0s' : '2s',
+            filter: 'brightness(1.2) drop-shadow(0 0 8px rgba(255,255,255,0.8))'
+          }}
+        />
+        <span className="text-xs leading-tight">Just Say It</span>
+      </div>
     </Button>
   );
 };

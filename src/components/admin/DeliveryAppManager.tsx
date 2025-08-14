@@ -76,7 +76,8 @@ export function DeliveryAppManager() {
     customPostCheckoutButtonText: '',
     customPostCheckoutButtonUrl: '',
     customPostCheckoutTextColor: '#000000',
-    customPostCheckoutBackgroundColor: '#ffffff'
+    customPostCheckoutBackgroundColor: '#ffffff',
+    occasion: 'party' // Add occasion selector
   });
 
   // Alias deliveryApps as apps for easier reference
@@ -1015,6 +1016,29 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                 onChange={(e) => setAppName(e.target.value)}
                 placeholder="Boat Delivery App"
               />
+            </div>
+
+            {/* What's the occasion? selector */}
+            <div>
+              <Label htmlFor="occasion">What's the occasion?</Label>
+              <Select value={formData.occasion} onValueChange={(value) => setFormData(prev => ({ ...prev, occasion: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose an occasion..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="party">Party</SelectItem>
+                  <SelectItem value="wedding">Wedding</SelectItem>
+                  <SelectItem value="corporate">Corporate Event</SelectItem>
+                  <SelectItem value="birthday">Birthday</SelectItem>
+                  <SelectItem value="holiday">Holiday Celebration</SelectItem>
+                  <SelectItem value="casual">Casual Gathering</SelectItem>
+                  <SelectItem value="formal">Formal Event</SelectItem>
+                  <SelectItem value="outdoor">Outdoor Event</SelectItem>
+                  <SelectItem value="bachelor">Bachelor/Bachelorette</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">This helps customize the app experience for the specific occasion</p>
             </div>
 
             <div>

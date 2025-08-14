@@ -115,6 +115,8 @@ export const CustomThemeCreator: React.FC<CustomThemeCreatorProps> = ({
   const [isEditingPreset, setIsEditingPreset] = useState(false);
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+
+  if (!isOpen) return null;
   
   // Initialize colors state with the selectedPreset colors
   const [colors, setColors] = useState<ThemeColors>(
