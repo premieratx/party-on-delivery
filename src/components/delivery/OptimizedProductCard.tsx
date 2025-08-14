@@ -151,7 +151,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-3.5 w-3.5 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center sm:h-6 sm:w-6"
+                  className="h-2.5 w-2.5 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center sm:h-4 sm:w-4"
                   onClick={(e) => {
                     e.stopPropagation();
                     onQuantityChange(product.id, selectedVariant?.id, -1);
@@ -165,7 +165,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-3.5 w-3.5 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center sm:h-6 sm:w-6"
+                  className="h-2.5 w-2.5 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center sm:h-4 sm:w-4"
                   onClick={(e) => {
                     e.stopPropagation();
                     onQuantityChange(product.id, selectedVariant?.id, 1);

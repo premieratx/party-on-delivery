@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle, Wine, Search } from 'lucide-react';
+import { ShoppingCart, Beer, Martini, Package, Plus, Minus, Loader2, ChevronRight, ArrowLeft, ChevronLeft, CheckCircle, Wine, Search, Palette } from 'lucide-react';
 import { ProductSearchBar } from './ProductSearchBar';
 import { DeliveryAppSelector } from './DeliveryAppSelector';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +29,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { haptic } from '@/utils/hapticFeedback';
 import { MobileBottomNav } from '@/components/common/MobileBottomNav';
-import { UIThemeSelector } from '@/components/admin/UIThemeSelector';
+import { CustomThemeCreator } from '@/components/admin/CustomThemeCreator';
 import { SpeechButton } from '@/components/common';
 interface LocalCartItem extends CartItem {
   productId?: string;
@@ -136,7 +136,7 @@ const [hideAllMenus, setHideAllMenus] = useState(false);
 const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
 const [showMobileCartCheckout, setShowMobileCartCheckout] = useState(false);
-const [showUIThemeSelector, setShowUIThemeSelector] = useState(false);
+const [showCustomThemeCreator, setShowCustomThemeCreator] = useState(false);
 
 // Enhanced search interface with smooth UI transitions
 const {
@@ -145,6 +145,8 @@ const {
   shouldHideChrome,
   isScrolling,
   shouldHideBottomMenu,
+  isScrollingUp,
+  headerCompressed,
   searchInputRef,
   handleSearchFocus,
   handleSearchBlur
@@ -718,11 +720,17 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </button>
         </div>
 
-        {/* UI Theme Selector - Bottom Left of Hero (Temporary Placement) */}
+        {/* Custom Theme Creator Trigger - Bottom Left of Hero */}
         <div className="absolute bottom-4 left-4 z-20">
-          <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg p-2 shadow-lg">
-            <UIThemeSelector />
-          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowCustomThemeCreator(true)}
+            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 shadow-lg"
+          >
+            <Palette className="w-4 h-4 mr-2" />
+            Themes
+          </Button>
         </div>
 
         {/* Hidden - moved to bottom bar */}
@@ -760,9 +768,9 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      {/* What's the Occasion Bar - STICKY when search is focused OR tabs are active */}
-      <div className={`${(isSearchFocused || hasUserInteracted) ? 'sticky top-0' : 'relative'} z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && (isSearchFocused || hasUserInteracted) ? 'shadow-lg' : ''}`}>
-        <div className="w-full px-2 md:px-4 py-2">
+      {/* What's the Occasion Bar - ALWAYS STICKY with dynamic compression */}
+      <div className={`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${headerCompressed && isMobile ? 'py-1' : 'py-2'} ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
+        <div className={`w-full px-2 md:px-4 ${headerCompressed && isMobile ? 'py-1' : ''}`}>
           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
             {/* Occasion Buttons */}
             <div className="flex items-center gap-2">
@@ -885,9 +893,9 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
       </div>
 
-      {/* Category Tabs - STICKY BELOW OCCASION BAR when search is focused OR tabs are active */}
-      <div className={`${(isSearchFocused || hasUserInteracted) ? 'sticky top-[60px]' : 'relative'} z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
-        <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
+      {/* Category Tabs - ALWAYS STICKY with dynamic compression */}
+      <div className={`sticky ${headerCompressed && isMobile ? 'top-[45px]' : 'top-[60px]'} z-40 w-full px-1 md:px-4 ${headerCompressed && isMobile ? 'py-1' : 'py-3'} bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
+        <div className={`flex flex-nowrap justify-center gap-px ${headerCompressed && isMobile ? 'h-8' : 'h-12'} overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
           {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
           {isMobile && showMobileCartCheckout ? (
             <>
@@ -1059,11 +1067,11 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
   <div className="flex justify-center">
                          {cartQty > 0 ? (
                            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-6 w-6' : 'h-6 w-6'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
                                <Minus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
                              </Button>
                              <span className={`text-xs font-bold ${isMobile ? 'px-1 min-w-[1.5rem]' : 'px-2 min-w-[2rem]'} text-center`}>{cartQty}</span>
-                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-6 w-6' : 'h-6 w-6'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
                                <Plus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
                              </Button>
                            </div>
@@ -1380,16 +1388,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         isVisible={true}
       />
 
-      {/* UI Theme Selector */}
-      <UIThemeSelector
-        appId={customAppName}
-        isVisible={showUIThemeSelector}
-        onToggle={() => setShowUIThemeSelector(!showUIThemeSelector)}
-        position="floating"
-        onThemeChange={(theme) => {
-          console.log('Theme changed:', theme);
-          // Could save theme preference here
-        }}
+      {/* Custom Theme Creator */}
+      <CustomThemeCreator
+        isOpen={showCustomThemeCreator}
+        onClose={() => setShowCustomThemeCreator(false)}
       />
       
       {/* Speech Mode Button */}

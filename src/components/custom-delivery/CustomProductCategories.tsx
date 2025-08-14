@@ -419,7 +419,7 @@ const [showSearchModal, setShowSearchModal] = useState(false);
                             e.stopPropagation();
                             handleUpdateQuantity(product.id, -1, variant?.id);
                           }}
-                          className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
+                          className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} p-0 text-purple-600 hover:bg-purple-100`}
                         >
                           <Minus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                         </Button>
@@ -435,7 +435,7 @@ const [showSearchModal, setShowSearchModal] = useState(false);
                             e.stopPropagation();
                             handleUpdateQuantity(product.id, 1, variant?.id);
                           }}
-                          className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
+                          className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} p-0 text-purple-600 hover:bg-purple-100`}
                         >
                           <Plus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                         </Button>

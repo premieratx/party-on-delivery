@@ -283,7 +283,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                           size="sm"
                           variant="outline"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                          className="h-4 w-4 p-0 sm:h-6 sm:w-6"
+                          className="h-3 w-3 p-0 sm:h-4 sm:w-4"
                         >
                           <Minus className="h-3 w-3" />
                         </Button>
@@ -293,7 +293,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                         <Button
                           size="sm"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          className="h-4 w-4 p-0 sm:h-6 sm:w-6"
+                          className="h-3 w-3 p-0 sm:h-4 sm:w-4"
                         >
                           <Plus className="h-3 w-3" />
                         </Button>
