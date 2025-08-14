@@ -19,47 +19,117 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-    <!-- FORCE CLEAN BUILD v2025_01_14_20_41 - BLOCK ALL ANALYTICS -->
+    <!-- NUCLEAR OPTION - COMPLETELY DESTROY POSTHOG -->
     <script>
-      // FORCE CLEAN BUILD v2025_01_14_20_41
-      // ULTIMATE BLOCKING - NO POSTHOG OR PRELOADING
+      // IMMEDIATE EXECUTION - BEFORE ANYTHING ELSE
+      (function() {
+        'use strict';
+        
+        // NUCLEAR DESTRUCTION OF POSTHOG
+        const destroyPostHog = () => {
+          try {
+            // Delete all PostHog variants
+            delete window.posthog;
+            delete window.PostHog;
+            delete window.__posthog;
+            delete window.ph;
+            delete window.analytics;
+            delete window.gtag;
+            
+            // Override with permanent blocking
+            Object.defineProperty(window, 'posthog', { 
+              value: null, writable: false, configurable: false 
+            });
+            Object.defineProperty(window, 'PostHog', { 
+              value: null, writable: false, configurable: false 
+            });
+            Object.defineProperty(window, '__posthog', { 
+              value: null, writable: false, configurable: false 
+            });
+            Object.defineProperty(window, 'analytics', { 
+              value: null, writable: false, configurable: false 
+            });
+          } catch(e) { /* ignore */ }
+        };
+        
+        // BLOCK ALL SCRIPT LOADING
+        const originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+          const element = originalCreateElement.call(this, tagName);
+          if (tagName.toLowerCase() === 'script') {
+            const scriptElement = element;
+            const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src')?.set;
+            if (originalSetSrc) {
+              Object.defineProperty(scriptElement, 'src', {
+                set: function(value) {
+                  // Block PostHog, analytics, and tracking scripts
+                  if (value && (
+                    value.includes('posthog') || 
+                    value.includes('analytics') ||
+                    value.includes('rrweb') ||
+                    value.includes('5143-4299d8d38aad5d69') ||
+                    value.includes('ph_') ||
+                    value.includes('capture')
+                  )) {
+                    return; // Completely block
+                  }
+                  originalSetSrc.call(this, value);
+                },
+                get: function() {
+                  return this.getAttribute('src') || '';
+                }
+              });
+            }
+          }
+          return element;
+        };
+        
+        // BLOCK ALL NETWORK REQUESTS
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+          const url = args[0];
+          if (typeof url === 'string' && (
+            url.includes('posthog') || 
+            url.includes('analytics') ||
+            url.includes('capture') ||
+            url.includes('decide') ||
+            url.includes('batch')
+          )) {
+            return Promise.reject(new Error('BLOCKED'));
+          }
+          return originalFetch.apply(this, args);
+        };
+        
+        // SILENCE CONSOLE SPAM
+        const origError = console.error;
+        console.error = function(...args) {
+          const msg = args.join(' ');
+          if (msg.includes('PostHog') || 
+              msg.includes('capture call') || 
+              msg.includes('rate limit') ||
+              msg.includes('5143-4299d8d38aad5d69')) {
+            return; // Silent block
+          }
+          origError.apply(console, args);
+        };
+        
+        // DESTROY IMMEDIATELY AND REPEATEDLY
+        destroyPostHog();
+        setInterval(destroyPostHog, 100); // Every 100ms
+        
+        // DESTROY ON DOM READY
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', destroyPostHog);
+        } else {
+          destroyPostHog();
+        }
+        
+        // DESTROY ON WINDOW LOAD
+        window.addEventListener('load', destroyPostHog);
+        
+      })();
       
-      // Completely remove PostHog
-      delete window.posthog;
-      delete window.PostHog;
-      delete window.analytics;
-      delete window.gtag;
-      
-      // Override any attempt to set PostHog
-      Object.defineProperty(window, 'posthog', {
-        set: function() { /* blocked */ },
-        get: function() { return undefined; }
-      });
-      
-      Object.defineProperty(window, 'PostHog', {
-        set: function() { /* blocked */ },
-        get: function() { return undefined; }
-      });
-      
-      // Block console spam
-      const origLog = console.log;
-      const origError = console.error;
-      
-      console.log = function(...args) {
-        const msg = args.join(' ');
-        if (msg.includes('⚡') || msg.includes('🚀') || msg.includes('✅') || 
-            msg.includes('PostHog') || msg.includes('preload') || 
-            msg.includes('delivery apps')) return;
-        origLog.apply(console, args);
-      };
-      
-      console.error = function(...args) {
-        const msg = args.join(' ');
-        if (msg.includes('PostHog') || msg.includes('rate limit')) return;
-        origError.apply(console, args);
-      };
-      
-      // Canonical domain enforcement
+      // Domain redirect
       (function() {
         try {
           var canonicalHost = 'order.partyondelivery.com';
@@ -77,7 +147,7 @@
       // Immediate redirect to delivery app if on homepage
       (function() {
         if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-          window.location.replace('/search');
+          window.location.replace('/app/party-on-delivery');
         }
       })();
     </script>
