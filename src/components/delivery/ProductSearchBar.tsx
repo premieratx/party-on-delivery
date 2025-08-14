@@ -6,6 +6,7 @@ import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getAllCollectionsCached } from '@/utils/instantCacheClient';
+import { getContainerDescription } from '@/utils/containerSizeExtractor';
 
 interface ShopifyProduct {
   id: string;
@@ -204,6 +205,11 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                     <div className="font-medium text-sm truncate">
                       {product.title}
                     </div>
+                    {getContainerDescription(product.title) && (
+                      <div className="text-xs text-muted-foreground">
+                        {getContainerDescription(product.title)}
+                      </div>
+                    )}
                     <div className="text-primary font-semibold">
                       ${typeof product.price === 'number' ? applyMarkup(product.price).toFixed(2) : product.price}
                     </div>

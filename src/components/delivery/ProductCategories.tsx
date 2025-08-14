@@ -15,6 +15,7 @@ import { getInstantProducts } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
+import { getContainerDescription } from '@/utils/containerSizeExtractor';
 
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
@@ -581,8 +582,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
   const handleNextTab = () => {
     if (selectedCategory < stepMapping.length - 1) {
       setSelectedCategory(selectedCategory + 1);
-      // Scroll to top when changing tabs
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Remove scroll to top when changing tabs
     } else {
       // On the last tab, go directly to checkout
       onProceedToCheckout();
@@ -773,8 +773,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      {/* What's the Occasion Bar - STICKY BELOW HERO */}
-      <div className={`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
+      {/* What's the Occasion Bar - STICKY BELOW HERO - Only sticky when search is focused */}
+      <div className={`${isSearchFocused ? 'sticky top-0' : 'relative'} z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
         <div className="w-full px-2 md:px-4 py-2">
           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
             {/* Occasion Buttons */}
@@ -794,7 +794,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       variant="outline"
                       size="sm"
                       className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
-                      onClick={() => console.log('Stock the BnB clicked')}
+                        onClick={() => {
+                          console.log('Stock the BnB clicked');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     >
                       <div className="text-xs">🏠</div>
                       <div className="text-[8px] leading-none">BnB</div>
@@ -803,7 +806,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       variant="outline"
                       size="sm"
                       className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
-                      onClick={() => console.log('Lake Delivery clicked')}
+                        onClick={() => {
+                          console.log('Lake Delivery clicked');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     >
                       <div className="text-xs">🌊</div>
                       <div className="text-[8px] leading-none">Lake</div>
@@ -812,7 +818,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       variant="outline"
                       size="sm"
                       className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
-                      onClick={() => console.log('Wedding clicked')}
+                        onClick={() => {
+                          console.log('Wedding clicked');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     >
                       <div className="text-xs">💒</div>
                       <div className="text-[8px] leading-none">Wed</div>
@@ -825,7 +834,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       variant="outline"
                       size="sm"
                       className="text-xs px-2 py-1 h-7"
-                      onClick={() => console.log('Stock the BnB clicked')}
+                        onClick={() => {
+                          console.log('Stock the BnB clicked');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     >
                       Stock the BnB
                     </Button>
@@ -833,7 +845,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       variant="outline"
                       size="sm"
                       className="text-xs px-2 py-1 h-7"
-                      onClick={() => console.log('Lake Delivery clicked')}
+                        onClick={() => {
+                          console.log('Lake Delivery clicked');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     >
                       Lake Delivery
                     </Button>
@@ -841,7 +856,10 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       variant="outline"
                       size="sm"
                       className="text-xs px-2 py-1 h-7"
-                      onClick={() => console.log('Wedding clicked')}
+                        onClick={() => {
+                          console.log('Wedding clicked');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
                     >
                       Wedding
                     </Button>
@@ -880,8 +898,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
       </div>
 
-      {/* Category Tabs - STICKY BELOW OCCASION BAR */}
-      <div className={`sticky top-[60px] z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
+      {/* Category Tabs - STICKY BELOW OCCASION BAR - Only sticky when search is focused */}
+      <div className={`${isSearchFocused ? 'sticky top-[60px]' : 'relative'} z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
         <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
           {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
           {isMobile && showMobileCartCheckout ? (
@@ -927,7 +945,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                     onClick={() => {
                       setSelectedCategory(index);
                       setShowSearch(false);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      // Remove scroll to top from tab clicks
                     }}
                     className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-2 rounded-none first:rounded-l-md last:rounded-r-md ${
                       isActive 
@@ -1043,18 +1061,23 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                     <div className="bg-muted rounded overflow-hidden w-full aspect-square mb-3">
                       <img src={product.image} alt={product.title} className="w-full h-full object-contain" />
                     </div>
-                    <h4 className="font-bold leading-tight text-center text-sm mb-2 line-clamp-2">{product.title}</h4>
+                    <h4 className="font-bold leading-tight text-center text-sm mb-1 line-clamp-2">{product.title}</h4>
+                    {getContainerDescription(product.title) && (
+                      <div className="text-xs text-muted-foreground text-center mb-2">
+                        {getContainerDescription(product.title)}
+                      </div>
+                    )}
 <div className="mt-auto pt-2 flex flex-col items-center gap-2">
   <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${applyMarkup(price).toFixed(2)}</Badge>
   <div className="flex justify-center">
                          {cartQty > 0 ? (
                           <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                              <Minus className="w-4 h-4" />
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                              <Minus className="w-3 h-3" />
                             </Button>
                             <span className="text-sm font-bold px-2 min-w-[2rem] text-center">{cartQty}</span>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                              <Plus className="w-4 h-4" />
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                              <Plus className="w-3 h-3" />
                             </Button>
                           </div>
                         ) : (
