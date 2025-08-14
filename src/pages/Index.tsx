@@ -5,41 +5,41 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useNavigate } from 'react-router-dom';
 import { GlobalNavigation } from '@/components/common/GlobalNavigation';
 import { supabase } from '@/integrations/supabase/client';
-import { OptimizedWhiteLabelApp } from '@/components/delivery/OptimizedWhiteLabelApp';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 const Index = () => {
   const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice } = useUnifiedCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [homepageApp, setHomepageApp] = useState<any>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadHomepageApp();
-  }, []);
-
-  const loadHomepageApp = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('delivery_app_variations')
-        .select('*')
-        .eq('is_homepage', true)
-        .eq('is_active', true)
-        .single();
-
-      if (error) {
-        console.error('Error loading homepage app:', error);
-        return;
-      }
-
-      if (data) {
-        setHomepageApp(data);
-      }
-    } catch (error) {
-      console.error('Failed to load homepage app:', error);
-    } finally {
-      setLoading(false);
+  // Hardcoded Premier Party Cruises delivery app config
+  const homepageApp = {
+    id: 'premier-party-cruises',
+    app_name: 'Premier Party Cruises - Official Alcohol Delivery Service',
+    app_slug: 'premier-party-cruises---official-alcohol-delivery-service',
+    logo_url: null,
+    is_active: true,
+    collections_config: {
+      tab_count: 5,
+      tabs: [
+        { name: 'All Products', collection_handle: 'all', icon: '🎉' },
+        { name: 'Beer', collection_handle: 'beer', icon: '🍺' },
+        { name: 'Wine', collection_handle: 'wine', icon: '🍷' },
+        { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' },
+        { name: 'Mixers', collection_handle: 'mixers-sodas', icon: '🥤' }
+      ]
+    },
+    start_screen_config: {
+      title: 'Premier Party Cruises',
+      subtitle: 'Official Alcohol Delivery Service'
+    },
+    main_app_config: {
+      hero_heading: 'Premium Alcohol Delivery for Your Party',
+      description: 'High-quality spirits, wines, and beers delivered directly to your Austin party location'
+    },
+    post_checkout_config: {
+      heading: 'Order Confirmed!',
+      subheading: 'Your party alcohol will be delivered as scheduled',
+      redirect_url: '/order-complete'
     }
   };
 
@@ -64,24 +64,7 @@ const Index = () => {
     navigate('/checkout');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (!homepageApp) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">No homepage app configured</h1>
-          <p className="text-muted-foreground">Please configure a homepage delivery app in admin settings.</p>
-        </div>
-      </div>
-    );
-  }
+  // No loading screen - render directly
 
   // Convert unified cart items to the format expected by the delivery app
   const cartItemsForDelivery = cartItems.map(item => ({
@@ -106,22 +89,83 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <GlobalNavigation />
       
-      {/* Load the optimized delivery app */}
-      <OptimizedWhiteLabelApp
-        appConfig={{
-          id: homepageApp.id,
-          app_name: homepageApp.app_name,
-          app_slug: homepageApp.app_slug,
-          logo_url: homepageApp.logo_url,
-          collections_config: homepageApp.collections_config,
-          start_screen_config: homepageApp.start_screen_config,
-          main_app_config: homepageApp.main_app_config,
-          post_checkout_config: homepageApp.post_checkout_config,
-          branding: {},
-          is_active: homepageApp.is_active
-        }}
-        onCheckout={handleCheckout}
-      />
+      {/* Simple direct delivery app without preloading */}
+      <div className="min-h-screen">
+        {/* Hero Section */}
+        <div className="relative h-[60vh] bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 overflow-hidden">
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-10 flex items-center justify-center h-full">
+            <div className="text-center text-white px-4">
+              <h1 className="text-4xl md:text-6xl font-bold mb-4">
+                Premier Party Cruises
+              </h1>
+              <p className="text-xl md:text-2xl text-blue-100">
+                Official Alcohol Delivery Service
+              </p>
+              <div className="mt-8">
+                <div className="inline-block bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/30">
+                  <p className="text-lg font-medium">Premium Alcohol Delivery for Your Austin Party</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Products Section */}
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-4">Shop Our Collection</h2>
+            <p className="text-lg text-muted-foreground">High-quality spirits, wines, and beers delivered directly to your party</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div 
+              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
+              onClick={() => window.location.href = '/search?category=beer'}
+            >
+              <div className="text-4xl mb-3">🍺</div>
+              <h3 className="font-semibold">Beer</h3>
+              <p className="text-sm text-muted-foreground">Craft & Premium</p>
+            </div>
+            
+            <div 
+              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
+              onClick={() => window.location.href = '/search?category=wine'}
+            >
+              <div className="text-4xl mb-3">🍷</div>
+              <h3 className="font-semibold">Wine</h3>
+              <p className="text-sm text-muted-foreground">Red & White</p>
+            </div>
+            
+            <div 
+              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
+              onClick={() => window.location.href = '/search?category=spirits'}
+            >
+              <div className="text-4xl mb-3">🥃</div>
+              <h3 className="font-semibold">Spirits</h3>
+              <p className="text-sm text-muted-foreground">Premium Liquor</p>
+            </div>
+            
+            <div 
+              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
+              onClick={() => window.location.href = '/search?category=mixers'}
+            >
+              <div className="text-4xl mb-3">🥤</div>
+              <h3 className="font-semibold">Mixers</h3>
+              <p className="text-sm text-muted-foreground">Sodas & Juices</p>
+            </div>
+            
+            <div 
+              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
+              onClick={() => window.location.href = '/search'}
+            >
+              <div className="text-4xl mb-3">🎉</div>
+              <h3 className="font-semibold">All Products</h3>
+              <p className="text-sm text-muted-foreground">Browse Everything</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Cart sidebar */}
       <DeliveryCart
