@@ -723,9 +723,7 @@ async function executeOptimization(task: OptimizationTask): Promise<Optimization
     case 'validate_checkout_process':
       return await validateCheckoutProcess();
     
-    case 'test_party_planner':
-      console.log('🚫 Party planner testing DISABLED');
-      return { success: true, message: 'Party planner testing disabled', time_saved: '0ms', improvement: 'Disabled' };
+    // REMOVED: test_party_planner case to prevent preloading
     
     case 'test_database_connections':
       return await testDatabaseConnections();
@@ -766,7 +764,7 @@ async function optimizeCodeSplitting(): Promise<OptimizationResult> {
       estimated_bundle_reduction: '30-40%',
       affected_files: [
         'src/App.tsx',
-        'src/pages/PartyPlanner.tsx',
+        // REMOVED: PartyPlanner.tsx reference
         'src/components/delivery/ProductCategories.tsx',
         'vite.config.ts'
       ]
@@ -1192,15 +1190,7 @@ async function validateCheckoutProcess(): Promise<OptimizationResult> {
   };
 }
 
-async function testPartyPlanner(): Promise<OptimizationResult> {
-  console.log('🚫 Party planner testing DISABLED to prevent preloading');
-  return {
-    success: true,
-    message: 'Party planner testing disabled',
-    time_saved: '0ms',
-    improvement: 'Disabled to prevent preloading issues'
-  };
-}
+// REMOVED: testPartyPlanner function completely to prevent preloading
         'Mobile responsiveness verified',
         'Touch interactions optimized',
         'Loading states implemented',
