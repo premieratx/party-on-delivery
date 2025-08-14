@@ -42,22 +42,53 @@ export class InstantAppLoader {
   }
 
   private async loadAppConfig(appSlug: string): Promise<void> {
-    // Implementation would connect to Supabase
     const cacheKey = `app_${appSlug}`;
     
     if (!this.cache.has(cacheKey)) {
-      // Load from API and cache
-      // this.cache.set(cacheKey, appData);
+      try {
+        // Import supabase client dynamically to avoid circular dependencies
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        // Load app config from Supabase
+        const { data, error } = await supabase
+          .from('delivery_apps')
+          .select('*')
+          .eq('slug', appSlug)
+          .single();
+
+        if (error) {
+          console.warn(`Failed to load app config for ${appSlug}:`, error);
+          this.cache.set(cacheKey, null);
+          return;
+        }
+
+        this.cache.set(cacheKey, data);
+        console.log(`✅ Cached app config for ${appSlug}`);
+      } catch (error) {
+        console.error(`Failed to load app config for ${appSlug}:`, error);
+        this.cache.set(cacheKey, null);
+      }
     }
   }
 
   private async loadAppProducts(appSlug: string): Promise<void> {
-    // Implementation would connect to instant product cache
     const cacheKey = `products_${appSlug}`;
     
     if (!this.cache.has(cacheKey)) {
-      // Load from API and cache
-      // this.cache.set(cacheKey, productData);
+      try {
+        // Import instant cache client
+        const { getInstantProducts } = await import('./instantCacheClient');
+        
+        // Load products and filter by app if needed
+        const productData = await getInstantProducts({ forceRefresh: false });
+        
+        // For now, cache all products - in the future we can filter by app-specific collections
+        this.cache.set(cacheKey, productData);
+        console.log(`✅ Cached products for ${appSlug}`);
+      } catch (error) {
+        console.error(`Failed to load products for ${appSlug}:`, error);
+        this.cache.set(cacheKey, null);
+      }
     }
   }
 

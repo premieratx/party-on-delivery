@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
 import { ImageOptimizer } from '@/utils/imageOptimizer';
+import { instantAppLoader } from '@/utils/instantAppLoader';
+import { preloadManager } from '@/utils/preloadManager';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 
 export interface MultiCTAButton {
   text: string;
@@ -13,6 +16,9 @@ export interface MultiCTAButton {
   // Optional layout controls
   offsetY?: number; // extra margin-top in px
   spacingBelow?: number; // extra margin-bottom in px
+  // Preloading
+  appSlug?: string; // App slug for preloading
+  collectionHandle?: string; // Collection handle for preloading
 }
 
 export interface MultiCTACoverModalProps {
@@ -113,6 +119,38 @@ React.useEffect(() => {
     setShowVideo(false);
   }
 }, [backgroundVideoUrl]);
+
+// Preload delivery app data when modal opens
+React.useEffect(() => {
+  if (!open) return;
+
+  const preloadApps = async () => {
+    console.log('🚀 Preloading delivery apps from multi-CTA cover modal...');
+    
+    // Preload general product data first
+    try {
+      await getInstantProducts({ forceRefresh: false });
+      await preloadManager.preloadCriticalData();
+    } catch (error) {
+      console.error('Failed to preload general products:', error);
+    }
+
+    // Preload specific apps for each button
+    for (const button of buttons) {
+      if (button.appSlug) {
+        try {
+          await instantAppLoader.preloadApp(button.appSlug);
+        } catch (error) {
+          console.error(`Failed to preload app ${button.appSlug}:`, error);
+        }
+      }
+    }
+  };
+
+  // Start preloading after a short delay to not block modal opening
+  const timer = setTimeout(preloadApps, 100);
+  return () => clearTimeout(timer);
+}, [open, buttons]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

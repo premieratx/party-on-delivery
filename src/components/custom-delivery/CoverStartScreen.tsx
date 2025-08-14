@@ -2,12 +2,17 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
+import { instantAppLoader } from '@/utils/instantAppLoader';
+import { preloadManager } from '@/utils/preloadManager';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 
 export interface CoverStartButton {
   text: string;
   onClick?: () => void;
   bgColor?: string;
   textColor?: string;
+  appSlug?: string; // App slug for preloading
+  collectionHandle?: string; // Collection handle for preloading
 }
 
 export interface CoverStartScreenProps {
@@ -74,6 +79,36 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
       setShowVideo(false);
     }
   }, [backgroundVideoUrl]);
+
+  // Preload delivery app data for all buttons
+  React.useEffect(() => {
+    const preloadApps = async () => {
+      console.log('🚀 Preloading delivery apps from cover screen...');
+      
+      // Preload general product data first
+      try {
+        await getInstantProducts({ forceRefresh: false });
+        await preloadManager.preloadCriticalData();
+      } catch (error) {
+        console.error('Failed to preload general products:', error);
+      }
+
+      // Preload specific apps for each button
+      for (const button of buttons) {
+        if (button.appSlug) {
+          try {
+            await instantAppLoader.preloadApp(button.appSlug);
+          } catch (error) {
+            console.error(`Failed to preload app ${button.appSlug}:`, error);
+          }
+        }
+      }
+    };
+
+    // Start preloading after a short delay to not block initial render
+    const timer = setTimeout(preloadApps, 100);
+    return () => clearTimeout(timer);
+  }, [buttons]);
 
   return (
     <article className="relative w-full">

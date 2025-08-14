@@ -5,6 +5,9 @@ import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
 import { ImageOptimizer } from '@/utils/imageOptimizer';
 import { haptic } from '@/utils/hapticFeedback';
+import { instantAppLoader } from '@/utils/instantAppLoader';
+import { preloadManager } from '@/utils/preloadManager';
+import { getInstantProducts } from '@/utils/instantCacheClient';
 
 
 interface CoverFeature {
@@ -30,6 +33,9 @@ export interface CustomDeliveryCoverModalProps {
   sms?: string;
   features?: CoverFeature[];
   checklistSpacing?: number;
+  // Preloading props
+  appSlug?: string; // App slug for preloading
+  secondaryAppSlug?: string; // Secondary app slug for preloading
 }
 
 const defaultChecklist = [
@@ -53,6 +59,8 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   backgroundImageUrl,
   backgroundVideoUrl,
   checklistSpacing = 8,
+  appSlug,
+  secondaryAppSlug,
 }) => {
   const [showSparkle, setShowSparkle] = React.useState(true);
   const [enablePulse, setEnablePulse] = React.useState(false);
@@ -143,6 +151,37 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
       testVideo.removeEventListener('canplaythrough', ready);
     };
   }, [backgroundVideoUrl]);
+
+  // Preload delivery app data when modal opens
+  React.useEffect(() => {
+    if (!open) return;
+
+    const preloadApps = async () => {
+      console.log('🚀 Preloading delivery apps from cover modal...');
+      
+      // Preload general product data first
+      try {
+        await getInstantProducts({ forceRefresh: false });
+        await preloadManager.preloadCriticalData();
+      } catch (error) {
+        console.error('Failed to preload general products:', error);
+      }
+
+      // Preload specific apps
+      const appsToPreload = [appSlug, secondaryAppSlug].filter(Boolean);
+      for (const slug of appsToPreload) {
+        try {
+          await instantAppLoader.preloadApp(slug);
+        } catch (error) {
+          console.error(`Failed to preload app ${slug}:`, error);
+        }
+      }
+    };
+
+    // Start preloading after a short delay to not block modal opening
+    const timer = setTimeout(preloadApps, 100);
+    return () => clearTimeout(timer);
+  }, [open, appSlug, secondaryAppSlug]);
   // Animation sequencing setup - faster timing (1/3 speed per line)
   const visibleChecklist = (checklistItems || []).filter(Boolean).slice(0, 5);
   const steps = Math.max(visibleChecklist.length - 1, 1);
