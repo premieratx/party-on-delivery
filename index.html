@@ -24,13 +24,50 @@
       (function() {
         'use strict';
         
-        // COMPLETELY DESTROY POSTHOG
-        const killPostHog = () => {
+        // ULTIMATE NUCLEAR DESTRUCTION - KILL EVERYTHING
+        const nuclearDestroy = () => {
+          // DESTROY POSTHOG
           delete window.posthog;
           delete window.PostHog;
           delete window.__posthog;
           delete window.analytics;
           delete window.gtag;
+          
+          // DESTROY ALL PRELOADING FUNCTIONS
+          delete window.initializePreloading;
+          delete window.preloadApp;
+          delete window.loadAppConfig;
+          delete window.ultraFastLoader;
+          delete window.instantAppLoader;
+          delete window.preloadManager;
+          delete window.preloadEverything;
+          delete window.preloadApps;
+          
+          // SET NUCLEAR BLOCKERS
+          window.preloadingDisabled = true;
+          window.nuclearMode = true;
+          
+          // OVERRIDE ALL PRELOADING FUNCTIONS
+          window.initializePreloading = () => {
+            console.log('🚫🚫🚫 NUCLEAR BLOCKED: initializePreloading');
+            return Promise.resolve();
+          };
+          window.preloadApp = () => {
+            console.log('🚫🚫🚫 NUCLEAR BLOCKED: preloadApp');
+            return Promise.resolve();
+          };
+          window.loadAppConfig = () => {
+            console.log('🚫🚫🚫 NUCLEAR BLOCKED: loadAppConfig');
+            return Promise.resolve(null);
+          };
+          window.ultraFastLoader = {
+            preloadEverything: () => Promise.resolve(),
+            loadProducts: () => Promise.resolve([])
+          };
+          window.instantAppLoader = {
+            preloadApp: () => Promise.resolve(),
+            getConfig: () => Promise.resolve(null)
+          };
           
           // Non-configurable blocks
           try {
@@ -102,9 +139,9 @@
           origLog.apply(console, args);
         };
         
-        // DESTROY REPEATEDLY
-        killPostHog();
-        setInterval(killPostHog, 50);
+        // NUCLEAR DESTRUCTION REPEATEDLY
+        nuclearDestroy();
+        setInterval(nuclearDestroy, 25); // Every 25ms
         
         // Domain redirect
         try {
