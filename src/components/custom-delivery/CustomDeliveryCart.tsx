@@ -178,6 +178,15 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
               </Button>
               
               <Button
+                onClick={onClose}
+                variant="outline"
+                className="w-full"
+                size="sm"
+              >
+                Back to Products
+              </Button>
+              
+              <Button
                 onClick={onEmptyCart}
                 variant="outline"
                 className="w-full text-gray-600 border-gray-300"

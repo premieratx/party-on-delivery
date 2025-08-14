@@ -429,14 +429,23 @@ async function sendEmailConfirmations(orderData: StandardOrderData, shopifyOrder
       }
     };
 
-    const { data: result, error } = await supabase.functions.invoke('send-order-confirmation', {
-      body: emailData
+    // New unified order confirmation automation (SMS + Email via GHL)
+    const { data: automationResult, error: automationError } = await supabase.functions.invoke('send-order-confirmation-automation', {
+      body: {
+        orderId: shopifyOrder.id,
+        orderData: {
+          ...emailData.orderDetails,
+          delivery_address: emailData.deliveryAddress,
+          order_number: emailData.shopifyOrderInfo.orderNumber,
+          line_items: orderData.lineItems || []
+        }
+      }
     });
     
-    if (error) {
-      logStep("Email confirmation error", error);
+    if (automationError) {
+      logStep("Order confirmation automation error", automationError);
     } else {
-      logStep("Email confirmations sent", result);
+      logStep("Order confirmation automation completed", automationResult);
     }
   } catch (error) {
     logStep("Exception in email confirmations", error);

@@ -219,7 +219,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
 
           {/* Fixed Bottom Checkout Bar */}
           {items.length > 0 && (
-            <div className="border-t p-3 bg-background">
+            <div className="border-t p-3 bg-background space-y-2">
               <Button 
                 variant="delivery" 
                 size="lg" 
@@ -231,6 +231,14 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
                 data-checkout-trigger="true"
               >
                 Proceed to Checkout
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full h-10 text-sm"
+                onClick={onClose}
+              >
+                Back to Products
               </Button>
             </div>
           )}

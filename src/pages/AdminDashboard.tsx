@@ -43,6 +43,7 @@ import TestGHLIntegration from '@/components/TestGHLConnection';
 import CleanupUserData from '@/components/CleanupUserData';
 import { SystemTestingSuite } from '@/components/SystemTestingSuite';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
+import { UnifiedCoverPostCheckoutBuilder } from '@/components/admin/UnifiedCoverPostCheckoutBuilder';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 
 export default function AdminDashboard() {
@@ -268,23 +269,19 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid grid-cols-6 lg:grid-cols-12 gap-1">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="upcoming-deliveries">📅 Upcoming</TabsTrigger>
-              <TabsTrigger value="past-deliveries">📋 Past Deliveries</TabsTrigger>
-              <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
-              <TabsTrigger value="orders">Orders</TabsTrigger>
-              <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
-              <TabsTrigger value="vouchers">Affiliate Discount Codes</TabsTrigger>
-              <TabsTrigger value="products" onClick={() => navigate('/admin/create-collection')}>Sort & Sync Products</TabsTrigger>
-              <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
-              <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')}>🎬 Cover Pages</TabsTrigger>
-              <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')}>📋 Quotes</TabsTrigger>
-              <TabsTrigger value="link-validation">🔗 Link Validation</TabsTrigger>
-              <TabsTrigger value="speech-mode">🎤 Speech Mode</TabsTrigger>
-              <TabsTrigger value="performance">⚡ Performance & System Tests</TabsTrigger>
-              <TabsTrigger value="ghl-setup">📱 GHL/SMS Setup</TabsTrigger>
-              <TabsTrigger value="cleanup">🗑️ Cleanup</TabsTrigger>
+            <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-1 w-full h-auto flex-wrap p-2">
+              <TabsTrigger value="overview" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">Overview</TabsTrigger>
+              <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Orders</TabsTrigger>
+              <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">👥 Affiliates</TabsTrigger>
+              <TabsTrigger value="abandoned" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⏰ Abandoned</TabsTrigger>
+              <TabsTrigger value="products" onClick={() => navigate('/admin/create-collection')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📦 Products</TabsTrigger>
+              <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🚚 Apps</TabsTrigger>
+              <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🎬 Cover Pages</TabsTrigger>
+              <TabsTrigger value="post-checkout-builder" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">✅ Post-Checkout</TabsTrigger>
+              <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Quotes</TabsTrigger>
+              <TabsTrigger value="ghl-setup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📱 GHL/SMS</TabsTrigger>
+              <TabsTrigger value="performance" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚡ Performance</TabsTrigger>
+              <TabsTrigger value="cleanup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🗑️ Cleanup</TabsTrigger>
             </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -302,67 +299,100 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="upcoming-deliveries" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Upcoming Deliveries</CardTitle>
-                <p className="text-sm text-muted-foreground">Orders scheduled for future delivery</p>
-              </CardHeader>
-              <CardContent>
-                <RecentOrdersFeed 
-                  orders={recentOrders.filter(order => {
-                    if (!order.delivery_date) return false;
-                    const deliveryDate = new Date(order.delivery_date);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return deliveryDate >= today;
-                  }).sort((a, b) => {
-                    const dateA = new Date(a.delivery_date || 0);
-                    const dateB = new Date(b.delivery_date || 0);
-                    return dateA.getTime() - dateB.getTime();
-                  })} 
-                  title=""
-                  onRefresh={loadDashboardData}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <TabsContent value="orders" className="space-y-4">
+            <Tabs defaultValue="all" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">All Orders</TabsTrigger>
+                <TabsTrigger value="upcoming">Upcoming Deliveries</TabsTrigger>
+                <TabsTrigger value="past">Past Deliveries</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>All Orders</CardTitle>
+                    <p className="text-sm text-muted-foreground">Complete order history</p>
+                  </CardHeader>
+                  <CardContent>
+                    <RecentOrdersFeed 
+                      orders={recentOrders} 
+                      title=""
+                      onRefresh={loadDashboardData}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="upcoming">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Upcoming Deliveries</CardTitle>
+                    <p className="text-sm text-muted-foreground">Orders scheduled for future delivery</p>
+                  </CardHeader>
+                  <CardContent>
+                    <RecentOrdersFeed 
+                      orders={recentOrders.filter(order => {
+                        if (!order.delivery_date) return false;
+                        const deliveryDate = new Date(order.delivery_date);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return deliveryDate >= today;
+                      }).sort((a, b) => {
+                        const dateA = new Date(a.delivery_date || 0);
+                        const dateB = new Date(b.delivery_date || 0);
+                        return dateA.getTime() - dateB.getTime();
+                      })} 
+                      title=""
+                      onRefresh={loadDashboardData}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-          <TabsContent value="past-deliveries" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Past Deliveries</CardTitle>
-                <p className="text-sm text-muted-foreground">Completed and overdue deliveries (most urgent first)</p>
-              </CardHeader>
-              <CardContent>
-                <RecentOrdersFeed 
-                  orders={recentOrders.filter(order => {
-                    if (!order.delivery_date) return false;
-                    const deliveryDate = new Date(order.delivery_date);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return deliveryDate < today;
-                  }).sort((a, b) => {
-                    const dateA = new Date(a.delivery_date || 0);
-                    const dateB = new Date(b.delivery_date || 0);
-                    return dateB.getTime() - dateA.getTime(); // Most recent first
-                  })} 
-                  title=""
-                  onRefresh={loadDashboardData}
-                />
-              </CardContent>
-            </Card>
+              <TabsContent value="past">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Past Deliveries</CardTitle>
+                    <p className="text-sm text-muted-foreground">Completed and overdue deliveries</p>
+                  </CardHeader>
+                  <CardContent>
+                    <RecentOrdersFeed 
+                      orders={recentOrders.filter(order => {
+                        if (!order.delivery_date) return false;
+                        const deliveryDate = new Date(order.delivery_date);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return deliveryDate < today;
+                      }).sort((a, b) => {
+                        const dateA = new Date(a.delivery_date || 0);
+                        const dateB = new Date(b.delivery_date || 0);
+                        return dateB.getTime() - dateA.getTime();
+                      })} 
+                      title=""
+                      onRefresh={loadDashboardData}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
 
           <TabsContent value="affiliates" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-medium">Affiliate Partners</h3>
-                <p className="text-sm text-muted-foreground">View affiliate partners and their custom delivery apps</p>
-              </div>
-              <AffiliateCreator onCreated={loadDashboardData} />
-            </div>
+            <Tabs defaultValue="partners" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="partners">Affiliate Partners</TabsTrigger>
+                <TabsTrigger value="discount-codes">Discount Codes</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="partners">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-lg font-medium">Affiliate Partners</h3>
+                    <p className="text-sm text-muted-foreground">View affiliate partners and their custom delivery apps</p>
+                  </div>
+                  <AffiliateCreator onCreated={loadDashboardData} />
+                </div>
             
             <div className="grid gap-4">
               {affiliates.length === 0 ? (
@@ -485,12 +515,15 @@ export default function AdminDashboard() {
                   </Card>
                 ))
               )}
-            </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="discount-codes">
+                <VoucherManagement />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
-          <TabsContent value="vouchers" className="space-y-4">
-            <VoucherManagement />
-          </TabsContent>
 
           <TabsContent value="products" className="space-y-4">
             <div className="text-center py-8">
@@ -505,6 +538,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="delivery-apps" className="space-y-4">
             <DeliveryAppManager />
+          </TabsContent>
+
+          <TabsContent value="post-checkout-builder" className="space-y-4">
+            <UnifiedCoverPostCheckoutBuilder onSuccess={loadDashboardData} />
           </TabsContent>
 
           <TabsContent value="link-validation" className="space-y-4">
@@ -526,13 +563,6 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
-          <TabsContent value="orders" className="space-y-4">
-            <RecentOrdersFeed 
-              orders={recentOrders} 
-              title="Recent Orders"
-              onRefresh={loadDashboardData}
-            />
-          </TabsContent>
 
           <TabsContent value="abandoned" className="space-y-4">
             <Card>
