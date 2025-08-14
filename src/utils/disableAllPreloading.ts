@@ -15,7 +15,11 @@ console.log = (...args: any[]) => {
     message.includes('Aggressive preloading') ||
     message.includes('Initializing instant app loader') ||
     message.includes('Cached products for') ||
-    message.includes('Failed to load app config')
+    message.includes('Failed to load app config') ||
+    message.includes('Lightning-fast') ||
+    message.includes('Custom site mode') ||
+    message.includes('ProductCategories: Fetching') ||
+    message.includes('DeliveryCart pricing')
   ) {
     return; // Block these messages
   }

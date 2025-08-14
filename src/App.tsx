@@ -11,7 +11,7 @@ import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
-import Index from "./pages/Index";
+import SimpleIndex from "./pages/SimpleIndex";
 import VoiceChat from "./pages/VoiceChat";
 import PartyPlanningAgent from "./pages/PartyPlanningAgent";
 import NotFound from "./pages/NotFound";
@@ -97,7 +97,7 @@ const App = () => {
                   <Routes>
                     {/* Core pages - no lazy loading */}
                     
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<SimpleIndex />} />
                     <Route path="/voice-chat" element={<VoiceChat />} />
                     <Route path="/party-planning-agent" element={<PartyPlanningAgent />} />
                     
