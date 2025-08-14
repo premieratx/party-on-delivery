@@ -3,15 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Search, X, Plus, Minus, ShoppingCart, Loader2, RefreshCw, ChevronDown, Filter } from 'lucide-react';
+import { Search, X, Plus, Minus, ShoppingCart, RefreshCw } from 'lucide-react';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { supabase } from '@/integrations/supabase/client';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 
 interface Product {
   id: string;
@@ -52,16 +49,10 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   hideContent = false
 }) => {
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
-  
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
@@ -70,18 +61,16 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
 
-
-  const fetchCollections = useCallback(async (showRetryMessage = true) => {
+  const fetchCollections = useCallback(async () => {
     setError(null);
     
     try {
-      console.log('ProductCategories: Fetching collections...');
+      console.log('Loading collections with forceRefresh: false');
       
       let functionName = 'get-all-collections';
       let body = {};
       
       if (customSiteSlug) {
-        console.log(`Custom site detected: ${customSiteSlug}`);
         functionName = 'get-custom-site-collections';
         body = { siteSlug: customSiteSlug };
       }
@@ -98,24 +87,32 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
         throw new Error('No collections data received');
       }
 
-      let collectionsToShow = Array.isArray(result.collections) ? result.collections : [];
+      console.log('Collections response:', { data: result, error: null });
+
+      let collectionsToShow = result.collections || [];
       
       if (customSiteSlug && result.customSiteCollections) {
         const customSiteCollections = result.customSiteCollections;
         collectionsToShow = collectionsToShow.filter((collection: any) => 
           customSiteCollections.includes(collection?.handle)
         );
-        console.log(`Filtered to ${collectionsToShow.length} collections for custom site:`, customSiteCollections);
       }
       
-      // Ensure collections have valid structure
-      const validCollections = collectionsToShow.filter((collection: any) => 
-        collection && collection.id && collection.title
-      ).map((collection: any) => ({
-        ...collection,
-        products: Array.isArray(collection.products) ? collection.products : []
-      }));
+      // Ensure all collections and products have valid structure
+      const validCollections = collectionsToShow
+        .filter((collection: any) => collection && collection.id && collection.title)
+        .map((collection: any) => ({
+          id: collection.id || '',
+          title: collection.title || '',
+          handle: collection.handle || '',
+          description: collection.description || '',
+          products: Array.isArray(collection.products) 
+            ? collection.products.filter(p => p && p.id && p.title)
+            : [],
+          image: collection.image
+        }));
       
+      console.log(`Processed collections: ${validCollections.length}`);
       setCollections(validCollections);
       setRetryCount(0);
       
@@ -123,39 +120,53 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.error('Failed to fetch collections:', error);
       setError(error.message || 'Failed to load product collections. Please try again.');
       
-      if (autoRetryEnabled && retryCount < 2) {
+      if (retryCount < 2) {
         const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
-        console.log(`Auto-retry attempt ${retryCount + 1} in ${retryDelay}ms...`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
-          fetchCollections(false);
+          fetchCollections();
         }, retryDelay);
       }
     }
-  }, [customSiteSlug, autoRetryEnabled, retryCount]);
+  }, [customSiteSlug, retryCount]);
 
   useEffect(() => {
     fetchCollections();
   }, [fetchCollections]);
 
+  // Safe search results with proper validation
   const searchResults = useMemo(() => {
-    if (!searchQuery?.trim() || !Array.isArray(collections) || collections.length === 0) return [];
+    if (!searchQuery?.trim()) return [];
+    if (!Array.isArray(collections)) return [];
     
     const query = searchQuery.toLowerCase().trim();
-    const allProducts = collections.flatMap(collection => 
-      collection && Array.isArray(collection.products) ? collection.products : []
-    );
+    const allProducts: Product[] = [];
     
-    return allProducts.filter(product => 
-      product && (
-        product.title?.toLowerCase().includes(query) ||
-        product.description?.toLowerCase().includes(query) ||
-        product.vendor?.toLowerCase().includes(query) ||
-        (Array.isArray(product.tags) && product.tags.some(tag => tag?.toLowerCase().includes(query)))
-      )
-    );
+    for (const collection of collections) {
+      if (collection && Array.isArray(collection.products)) {
+        for (const product of collection.products) {
+          if (product && product.id && product.title) {
+            allProducts.push(product);
+          }
+        }
+      }
+    }
+    
+    return allProducts.filter(product => {
+      if (!product || !product.title) return false;
+      
+      const titleMatch = product.title.toLowerCase().includes(query);
+      const descMatch = product.description?.toLowerCase().includes(query) || false;
+      const vendorMatch = product.vendor?.toLowerCase().includes(query) || false;
+      const tagMatch = Array.isArray(product.tags) 
+        ? product.tags.some(tag => tag?.toLowerCase().includes(query))
+        : false;
+      
+      return titleMatch || descMatch || vendorMatch || tagMatch;
+    });
   }, [searchQuery, collections]);
 
+  // Safe current collection with proper validation
   const currentCollection = useMemo(() => {
     if (searchQuery?.trim()) {
       return {
@@ -163,46 +174,59 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
         title: 'Search Results',
         handle: 'search',
         description: `Showing results for "${searchQuery}"`,
-        products: Array.isArray(searchResults) ? searchResults : []
+        products: searchResults || []
       };
     }
     
     if (!Array.isArray(collections) || collections.length === 0) {
-      return { id: '', title: 'Loading...', handle: '', products: [] };
+      return { 
+        id: 'loading', 
+        title: 'Loading Products...', 
+        handle: 'loading', 
+        description: '',
+        products: [] 
+      };
     }
     
-    const collection = collections[selectedCategory] || collections[0];
+    const index = Math.max(0, Math.min(selectedCategory, collections.length - 1));
+    const collection = collections[index];
+    
     if (!collection) {
-      return { id: '', title: 'No Products', handle: '', products: [] };
+      return { 
+        id: 'empty', 
+        title: 'No Products Available', 
+        handle: 'empty',
+        description: '',
+        products: [] 
+      };
     }
     
     return {
-      ...collection,
+      id: collection.id || '',
+      title: collection.title || 'Products',
+      handle: collection.handle || '',
+      description: collection.description || '',
       products: Array.isArray(collection.products) ? collection.products : []
     };
   }, [selectedCategory, collections, searchQuery, searchResults]);
 
-  const handleProductClick = (product: Product) => {
-    console.log('Product clicked:', product.title);
-  };
-
   const handleAddToCart = useCallback((product: Product, event: React.MouseEvent) => {
     event.stopPropagation();
+    
+    if (!product || !product.id || !product.title) return;
     
     try {
       const cartItem = {
         id: product.id,
         title: product.title,
         name: product.title,
-        price: product.price,
-        image: product.image,
+        price: product.price || 0,
+        image: product.image || '',
         variant: product.variants?.[0]?.title || 'Default'
       };
       
       addToCart(cartItem);
-      toast.success(`${product.title} added to cart!`, {
-        duration: 2000,
-      });
+      toast.success(`${product.title} added to cart!`, { duration: 2000 });
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error('Failed to add item to cart');
@@ -212,13 +236,15 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const handleQuantityChange = useCallback((product: Product, newQuantity: number, event: React.MouseEvent) => {
     event.stopPropagation();
     
+    if (!product || !product.id) return;
+    
     try {
       updateQuantity(product.id, product.variants?.[0]?.title || 'Default', newQuantity, {
         id: product.id,
-        title: product.title,
-        name: product.title,
-        price: product.price,
-        image: product.image
+        title: product.title || '',
+        name: product.title || '',
+        price: product.price || 0,
+        image: product.image || ''
       });
       
       if (newQuantity === 0) {
@@ -229,109 +255,6 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       toast.error('Failed to update cart');
     }
   }, [updateQuantity]);
-
-  const handleSearchSubmit = () => {
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearchSubmit();
-    }
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    setShowSearch(false);
-    setIsSearchFocused(false);
-  };
-
-  const CategoryTabs = () => (
-    <div className="w-full">
-      <div className={`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200`}>
-        <div className={`w-full px-2 md:px-4 py-2`}>
-          {!hideSearch && (
-            <>
-              {/* Mobile Cart/Checkout Row */}
-              <div className="flex lg:hidden items-center justify-between gap-2 mb-2 h-10">
-                <div className="relative flex-1">
-                  <Input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
-                    className="w-full pr-10 h-8 text-sm"
-                  />
-                  {searchQuery && (
-                    <Button
-                      onClick={clearSearch}
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-              
-              {/* Combined Cart/Search Row - Mobile Only */}
-              <div className="flex lg:hidden items-center justify-between gap-2 mb-3">
-                <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto`}>
-                  <button 
-                    onClick={() => {}}
-                    disabled={true}
-                    className={`flex-1 bg-muted hover:bg-muted/70 text-foreground rounded-l-md text-xs font-bold px-3 flex items-center justify-center gap-2 transition-all duration-300 ${false ? 'animate-pulse' : ''}`}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Cart (0)</span>
-                  </button>
-                  <button 
-                    onClick={() => {}}
-                    disabled={true}
-                    className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${false ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
-                  >
-                    <span className="font-bold text-xs">Checkout</span>
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-          
-          {/* Category Tabs */}
-          <div className="flex overflow-x-auto scrollbar-hide">
-            {Array.isArray(collections) && collections.map((collection, index) => (
-              <button
-                key={collection?.id || `collection-${index}`}
-                onClick={() => setSelectedCategory(index)}
-                className={`flex-1 min-w-0 px-1 lg:px-3 py-2 text-xs lg:text-sm font-bold transition-all duration-200 relative ${
-                  selectedCategory === index
-                    ? 'text-primary border-b-2 border-primary bg-primary/5'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  } ${
-                    collections.length > 6 ? 'min-w-[120px] flex-shrink-0' : ''
-                  }`}
-              >
-                <span className="truncate block" title={collection?.title || 'Category'}>
-                  {collection?.title || 'Category'}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (hideContent) {
-    return <CategoryTabs />;
-  }
-
 
   if (error) {
     return (
@@ -344,216 +267,164 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <h3 className="text-lg font-semibold text-foreground mb-2">
               Unable to Load Products
             </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {error}
-            </p>
-            <div className="flex gap-2 justify-center">
-              <Button 
-                onClick={() => fetchCollections()} 
-                variant="outline"
-                size="sm"
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Try Again
-              </Button>
-              <Button 
-                onClick={() => setAutoRetryEnabled(!autoRetryEnabled)}
-                variant="ghost"
-                size="sm"
-              >
-                {autoRetryEnabled ? 'Disable' : 'Enable'} Auto-retry
-              </Button>
-            </div>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button 
+              onClick={fetchCollections} 
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Try Again
+            </Button>
           </div>
         </div>
       </div>
     );
   }
 
-  const showSearchResults = searchQuery.trim() && Array.isArray(searchResults) && searchResults.length > 0;
-  const showNoResults = searchQuery.trim() && (!Array.isArray(searchResults) || searchResults.length === 0);
-
   return (
     <div className="w-full">
-      <CategoryTabs />
-      
-      <div className="container mx-auto px-2 lg:px-4 py-4">
-        {showSearchResults && (
-          <div className="mb-6">
-            <h2 className="text-xl font-bold mb-4">Search Results for "{searchQuery}"</h2>
-            {Array.isArray(searchResults) && searchResults.map(product => (
-              <div key={`container-${product.id}`} className="bg-muted/50 p-3 mx-2 mb-4 rounded-lg border-l-4 border-primary">
-                <h3 className="font-semibold text-foreground text-sm mb-1">{product.title}</h3>
-                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-primary">${product.price?.toFixed(2) || '0.00'}</span>
-                  <Button size="sm" onClick={(e) => handleAddToCart(product, e)}>
-                    Add to Cart
+      {/* Category Navigation */}
+      <div className="sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b">
+        <div className="w-full px-2 md:px-4 py-2">
+          {!hideSearch && (
+            <div className="flex lg:hidden items-center gap-2 mb-2">
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pr-10 h-8 text-sm"
+                />
+                {searchQuery && (
+                  <Button
+                    onClick={() => setSearchQuery('')}
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  >
+                    <X className="h-3 w-3" />
                   </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!showSearchResults && (
-          <>
-            <div className={`px-2 lg:px-0`}>
-              <div className="mb-4">
-                <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
-                  {currentCollection.title}
-                </h2>
-                {currentCollection.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {currentCollection.description}
-                  </p>
                 )}
               </div>
+            </div>
+          )}
+          
+          {/* Category Tabs */}
+          <div className="flex overflow-x-auto scrollbar-hide">
+            {collections.map((collection, index) => (
+              <button
+                key={collection.id || `collection-${index}`}
+                onClick={() => setSelectedCategory(index)}
+                className={`flex-1 min-w-0 px-1 lg:px-3 py-2 text-xs lg:text-sm font-bold transition-all duration-200 ${
+                  selectedCategory === index
+                    ? 'text-primary border-b-2 border-primary bg-primary/5'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                } ${collections.length > 6 ? 'min-w-[120px] flex-shrink-0' : ''}`}
+              >
+                <span className="truncate block" title={collection.title}>
+                  {collection.title}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-              <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
-                {Array.isArray(currentCollection?.products) && currentCollection.products.map((product) => {
-                  const cartQuantity = getCartItemQuantity(product?.id, product?.variants?.[0]?.title);
+      {hideContent && null}
+
+      {/* Products Grid */}
+      <div className="container mx-auto px-2 lg:px-4 py-4">
+        <div className="mb-4">
+          <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
+            {currentCollection.title}
+          </h2>
+          {currentCollection.description && (
+            <p className="text-sm text-muted-foreground">
+              {currentCollection.description}
+            </p>
+          )}
+        </div>
+
+        <div className="grid gap-1.5 lg:gap-3 grid-cols-3 lg:grid-cols-8">
+          {currentCollection.products.map((product) => {
+            if (!product || !product.id || !product.title) return null;
+            
+            const cartQuantity = getCartItemQuantity(product.id, product.variants?.[0]?.title) || 0;
+            
+            return (
+              <Card
+                key={product.id}
+                className="bg-card border rounded-lg transition-all duration-200 flex flex-col h-full hover:shadow-md cursor-pointer p-3"
+              >
+                <CardContent className="p-0 flex flex-col h-full">
+                  <div className="bg-muted rounded overflow-hidden w-full aspect-square mb-2">
+                    <OptimizedImage
+                      src={product.image || ''}
+                      alt={product.title}
+                      className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                    />
+                  </div>
                   
-                  if (!product?.id || !product?.title) return null;
-                  
-                  return (
-                    <Card
-                      key={product.id}
-                      className={`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full ${
-                        !product.available ? 'opacity-50' : 'hover:shadow-md cursor-pointer'
-                      } ${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md`}
-                      onClick={() => handleProductClick(product)}
-                    >
-                      <CardContent className="p-0 flex flex-col h-full">
-                        <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${
-                          isSearchFocused 
-                            ? 'mb-1' 
-                            : 'mb-2'
-                        }`}>
-                          <OptimizedImage
-                            src={product.image}
-                            alt={product.title}
-                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                          />
+                  <div className="flex-1 flex flex-col">
+                    <h3 className="font-semibold text-foreground text-xs lg:text-sm mb-1 line-clamp-2 leading-tight">
+                      {product.title}
+                    </h3>
+                    
+                    <div className="mt-auto">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-primary text-sm lg:text-base">
+                          ${(product.price || 0).toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      {cartQuantity > 0 ? (
+                        <div className="flex items-center justify-between bg-primary/10 rounded-md p-1">
+                          <Button
+                            onClick={(e) => handleQuantityChange(product, cartQuantity - 1, e)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 hover:bg-primary/20"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="text-xs font-semibold px-2">{cartQuantity}</span>
+                          <Button
+                            onClick={(e) => handleQuantityChange(product, cartQuantity + 1, e)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 hover:bg-primary/20"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
                         </div>
-                        
-                        <div className="flex-1 flex flex-col">
-                          <h3 className={`font-semibold text-foreground mb-1 ${isSearchFocused ? 'text-xs leading-tight' : 'text-sm'} line-clamp-2`}>
-                            {product.title}
-                          </h3>
-                          
-                          <div className="mt-auto">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className={`font-bold text-primary ${isSearchFocused ? 'text-xs' : 'text-sm'}`}>
-                                ${product.price.toFixed(2)}
-                              </span>
-                              {product.vendor && (
-                                <Badge variant="secondary" className="text-xs px-1 py-0">
-                                  {product.vendor}
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            {product.available && (
-                              <div className="w-full">
-                                {cartQuantity > 0 ? (
-                                  <div className="flex items-center justify-between gap-1">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={(e) => handleQuantityChange(product, cartQuantity - 1, e)}
-                                      className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full`} 
-                                    >
-                                      <Minus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
-                                    </Button>
-                                    <span className={`text-xs font-bold ${isMobile ? 'px-1 min-w-[1.5rem]' : 'px-2 min-w-[2rem]'} text-center`}>
-                                      {cartQuantity}
-                                    </span>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={(e) => handleQuantityChange(product, cartQuantity + 1, e)}
-                                      className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full`} 
-                                    >
-                                      <Plus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    onClick={(e) => handleAddToCart(product, e)}
-                                    className={`w-full ${isSearchFocused ? 'h-6 text-xs' : 'h-7 text-xs'} font-medium`}
-                                  >
-                                    <Plus className="w-3 h-3 mr-1" />
-                                    Add
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
-        
-        {showNoResults && (
+                      ) : (
+                        <Button
+                          onClick={(e) => handleAddToCart(product, e)}
+                          size="sm"
+                          className="w-full h-7 text-xs"
+                          disabled={!product.available}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {currentCollection.products.length === 0 && !error && (
           <div className="text-center py-12">
-            <div className="space-y-4">
-              <Search className="w-12 h-12 text-muted-foreground mx-auto" />
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">
-                  No Products Found
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {searchQuery.trim() 
-                    ? `No products found for "${searchQuery}". Try a different search term.`
-                    : 'No products available at the moment.'
-                  }
-                </p>
-              </div>
-              {searchQuery.trim() && (
-                <Button
-                  variant="outline"
-                  onClick={clearSearch}
-                  className="mt-4"
-                >
-                  Clear Search
-                </Button>
-              )}
-            </div>
+            <p className="text-muted-foreground">No products available in this category.</p>
           </div>
         )}
       </div>
-
-      <Dialog open={showFilters} onOpenChange={setShowFilters}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Filter Products</DialogTitle>
-            <DialogDescription>
-              Filter products by category, price, or other criteria
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Filter options will be added here
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFilters(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setShowFilters(false)}>
-              Apply Filters
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
