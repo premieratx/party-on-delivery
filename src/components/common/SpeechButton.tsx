@@ -1,32 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic } from 'lucide-react';
-import { AIAgentContainer } from '@/components/ai-agent/AIAgentContainer';
+import { MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export const SpeechButton = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface SpeechButtonProps {
+  className?: string;
+}
 
-  const handleAddToCart = (product: any) => {
-    // TODO: Integrate with existing cart functionality
-    console.log('Adding to cart:', product);
+export const SpeechButton: React.FC<SpeechButtonProps> = ({ className }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate('/voice-chat');
   };
 
   return (
-    <>
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-40 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-purple-600 hover:bg-purple-700"
-        size="lg"
-      >
-        <Mic className="w-4 h-4 mr-2" />
-        Just Say It
-      </Button>
-
-      <AIAgentContainer
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        onAddToCart={handleAddToCart}
-      />
-    </>
+    <Button
+      onClick={handleClick}
+      className={`fixed top-32 left-4 z-50 w-1/3 max-w-[120px] h-16 bg-red-500 hover:bg-red-600 text-white font-bold text-sm border-2 border-red-600 shadow-lg transition-all duration-200 hover:scale-105 ${className}`}
+      size="lg"
+    >
+      <MessageCircle className="w-6 h-6 mr-2" />
+      Just Say It
+    </Button>
   );
 };

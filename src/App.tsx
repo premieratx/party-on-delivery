@@ -12,7 +12,7 @@ import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
 import Index from "./pages/Index";
-
+import VoiceChat from "./pages/VoiceChat";
 import NotFound from "./pages/NotFound";
 import { getInstantProducts } from "@/utils/instantCacheClient";
 
@@ -113,6 +113,7 @@ const App = () => {
                     {/* Core pages - no lazy loading */}
                     
                     <Route path="/" element={<Index />} />
+                    <Route path="/voice-chat" element={<VoiceChat />} />
                     
                     {/* Order completion */}
                     <Route path="/success" element={<Success />} />
