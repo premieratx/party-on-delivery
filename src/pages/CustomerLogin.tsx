@@ -128,7 +128,7 @@ const CustomerLogin = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${CANONICAL_DOMAIN}/customer/login?redirect=dashboard`,
+          redirectTo: `${window.location.origin}/customer/login?redirect=dashboard`,
           queryParams: { 
             access_type: 'offline', 
             prompt: 'consent' // Force account selection to prevent auto-login

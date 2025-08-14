@@ -493,6 +493,48 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_logs: {
+        Row: {
+          automation_type: string
+          created_at: string
+          customer_email: string | null
+          customer_phone: string | null
+          email_error: string | null
+          email_sent: boolean
+          id: string
+          order_id: string
+          sms_error: string | null
+          sms_sent: boolean
+          updated_at: string
+        }
+        Insert: {
+          automation_type?: string
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          email_error?: string | null
+          email_sent?: boolean
+          id?: string
+          order_id: string
+          sms_error?: string | null
+          sms_sent?: boolean
+          updated_at?: string
+        }
+        Update: {
+          automation_type?: string
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          email_error?: string | null
+          email_sent?: boolean
+          id?: string
+          order_id?: string
+          sms_error?: string | null
+          sms_sent?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       automation_sessions: {
         Row: {
           completed_at: string | null
