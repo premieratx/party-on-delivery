@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Palette, Users } from 'lucide-react';
-import { QuoteCreator } from '@/components/admin/QuoteCreator';
+import { ImprovedQuoteCreator } from '@/components/admin/ImprovedQuoteCreator';
 import { DraggableQuoteTemplateBuilder } from '@/components/admin/DraggableQuoteTemplateBuilder';
 
 export default function AdminQuote() {
@@ -37,7 +37,7 @@ export default function AdminQuote() {
           </TabsList>
 
           <TabsContent value="create" className="mt-6">
-            <QuoteCreator />
+            <ImprovedQuoteCreator />
           </TabsContent>
 
           <TabsContent value="design" className="mt-6">

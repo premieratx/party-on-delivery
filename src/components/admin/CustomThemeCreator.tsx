@@ -300,18 +300,18 @@ export const CustomThemeCreator: React.FC<CustomThemeCreatorProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="relative">
-          <DialogTitle className="flex items-center gap-2 pr-10">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <DialogTitle className="flex items-center gap-2">
             <Palette className="w-5 h-5" />
             Custom Theme Creator
           </DialogTitle>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-0 top-0"
+            className="h-6 w-6"
             onClick={onClose}
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
 
