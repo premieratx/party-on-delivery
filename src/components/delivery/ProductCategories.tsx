@@ -29,7 +29,7 @@ import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { haptic } from '@/utils/hapticFeedback';
 import { MobileBottomNav } from '@/components/common/MobileBottomNav';
 import { UIThemeSelector } from '@/components/admin/UIThemeSelector';
-import { SpeechButton } from '@/components/common/SpeechButton';
+import { SpeechButton } from '@/components/common';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
