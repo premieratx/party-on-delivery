@@ -25,10 +25,7 @@ const Index = () => {
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
-  const [showCoverModal, setShowCoverModal] = useState(() => {
-    // Check if cover was already shown in this session
-    return !sessionStorage.getItem(COVER_SHOWN_SESSION_KEY);
-  });
+  const [showCoverModal, setShowCoverModal] = useState(false);
   const [showAppsGrid, setShowAppsGrid] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
@@ -176,8 +173,8 @@ const Index = () => {
         />
       )}
 
-      {/* Show main delivery app when cover is dismissed */}
-      {!showCoverModal && !showAppsGrid && (
+      {/* Show main delivery app content */}
+      {!showAppsGrid && (
         <ProductCategories />
       )}
 
