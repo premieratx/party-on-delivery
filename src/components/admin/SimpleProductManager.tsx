@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Save, Trash2, Search } from 'lucide-react';
+import { Plus, Save, Trash2, Search, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface Product {
   id: string;
@@ -35,6 +36,7 @@ export default function SimpleProductManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -147,9 +149,20 @@ export default function SimpleProductManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Product Categories</h2>
-          <p className="text-muted-foreground">Create custom categories and organize products</p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/admin/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h2 className="text-2xl font-bold">Product Categories</h2>
+            <p className="text-muted-foreground">Create custom categories and organize products</p>
+          </div>
         </div>
         <Button onClick={() => setShowCreateCategory(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />

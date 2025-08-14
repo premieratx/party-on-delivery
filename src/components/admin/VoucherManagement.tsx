@@ -21,8 +21,10 @@ import {
   Percent,
   Users,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@/utils/currency';
 
 interface Voucher {
@@ -66,6 +68,7 @@ export default function VoucherManagement() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [expandedVouchers, setExpandedVouchers] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [form, setForm] = useState<CreateVoucherForm>({
     voucher_name: '',
@@ -303,9 +306,20 @@ export default function VoucherManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-medium">Affiliate Discount Codes</h3>
-          <p className="text-sm text-muted-foreground">Manage affiliate discount codes and their settings</p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/admin/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h3 className="text-lg font-medium">Affiliate Discount Codes</h3>
+            <p className="text-sm text-muted-foreground">Manage affiliate discount codes and their settings</p>
+          </div>
         </div>
       </div>
 

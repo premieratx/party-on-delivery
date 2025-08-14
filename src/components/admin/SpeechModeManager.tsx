@@ -7,10 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, Volume2, MessageSquare, Settings } from 'lucide-react';
+import { Mic, Volume2, MessageSquare, Settings, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const SpeechModeManager = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [config, setConfig] = useState({
     enabled: true,
     buttonText: "Just Say It",
@@ -46,9 +48,20 @@ export const SpeechModeManager = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Speech Mode Configuration</h1>
-          <p className="text-muted-foreground">Configure the AI-powered speech assistant for your delivery apps</p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/admin/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Speech Mode Configuration</h1>
+            <p className="text-muted-foreground">Configure the AI-powered speech assistant for your delivery apps</p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button onClick={testSpeechMode} variant="outline">

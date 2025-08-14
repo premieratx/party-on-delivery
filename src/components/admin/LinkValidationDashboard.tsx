@@ -12,10 +12,12 @@ import {
   RefreshCw,
   Link as LinkIcon,
   Users,
-  Globe
+  Globe,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface ValidationResult {
   type: string;
@@ -48,6 +50,7 @@ export const LinkValidationDashboard: React.FC = () => {
   const [validationRuns, setValidationRuns] = useState<ValidationRun[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchValidationHistory = async () => {
     try {
@@ -174,14 +177,25 @@ export const LinkValidationDashboard: React.FC = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <LinkIcon className="w-5 h-5" />
-                Link Validation Dashboard
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Monitor and validate all affiliate links, app shortcuts, and cover pages
-              </p>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/admin/dashboard')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <LinkIcon className="w-5 h-5" />
+                  Link Validation Dashboard
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Monitor and validate all affiliate links, app shortcuts, and cover pages
+                </p>
+              </div>
             </div>
             <Button 
               onClick={runValidation} 

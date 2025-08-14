@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CustomPostCheckoutEditor } from './CustomPostCheckoutEditor';
 import { CANONICAL_DOMAIN, buildAppUrl, buildShortUrl } from '@/utils/links';
+import { useNavigate } from 'react-router-dom';
 
 interface DeliveryApp {
   id: string;
@@ -55,6 +56,7 @@ export function DeliveryAppManager() {
   const [selectedAppForConfig, setSelectedAppForConfig] = useState<DeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const navigate = useNavigate();
   
   // Form data object for easier management
   const [formData, setFormData] = useState({
@@ -864,9 +866,20 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Delivery App Variations</h2>
-          <p className="text-muted-foreground">Create custom delivery apps with different collection tabs</p>
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/admin/dashboard')}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <div>
+            <h2 className="text-2xl font-bold">Delivery App Variations</h2>
+            <p className="text-muted-foreground">Create custom delivery apps with different collection tabs</p>
+          </div>
         </div>
         <Button 
           onClick={initializeNewApp} 
