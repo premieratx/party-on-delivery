@@ -268,8 +268,10 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList>
+            <TabsList className="grid grid-cols-6 lg:grid-cols-12 gap-1">
               <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="upcoming-deliveries">📅 Upcoming</TabsTrigger>
+              <TabsTrigger value="past-deliveries">📋 Past Deliveries</TabsTrigger>
               <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
               <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="abandoned">Abandoned Orders</TabsTrigger>
@@ -293,6 +295,58 @@ export default function AdminDashboard() {
               <CardContent>
                 <RecentOrdersFeed 
                   orders={recentOrders} 
+                  title=""
+                  onRefresh={loadDashboardData}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="upcoming-deliveries" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Upcoming Deliveries</CardTitle>
+                <p className="text-sm text-muted-foreground">Orders scheduled for future delivery</p>
+              </CardHeader>
+              <CardContent>
+                <RecentOrdersFeed 
+                  orders={recentOrders.filter(order => {
+                    if (!order.delivery_date) return false;
+                    const deliveryDate = new Date(order.delivery_date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return deliveryDate >= today;
+                  }).sort((a, b) => {
+                    const dateA = new Date(a.delivery_date || 0);
+                    const dateB = new Date(b.delivery_date || 0);
+                    return dateA.getTime() - dateB.getTime();
+                  })} 
+                  title=""
+                  onRefresh={loadDashboardData}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="past-deliveries" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Past Deliveries</CardTitle>
+                <p className="text-sm text-muted-foreground">Completed and overdue deliveries (most urgent first)</p>
+              </CardHeader>
+              <CardContent>
+                <RecentOrdersFeed 
+                  orders={recentOrders.filter(order => {
+                    if (!order.delivery_date) return false;
+                    const deliveryDate = new Date(order.delivery_date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return deliveryDate < today;
+                  }).sort((a, b) => {
+                    const dateA = new Date(a.delivery_date || 0);
+                    const dateB = new Date(b.delivery_date || 0);
+                    return dateB.getTime() - dateA.getTime(); // Most recent first
+                  })} 
                   title=""
                   onRefresh={loadDashboardData}
                 />

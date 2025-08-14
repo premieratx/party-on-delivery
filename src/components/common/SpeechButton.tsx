@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SpeechButtonProps {
   className?: string;
@@ -9,6 +9,12 @@ interface SpeechButtonProps {
 
 export const SpeechButton: React.FC<SpeechButtonProps> = ({ className }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Don't show the button on the voice chat page itself
+  if (location.pathname === '/voice-chat') {
+    return null;
+  }
 
   const handleClick = () => {
     navigate('/voice-chat');

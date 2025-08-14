@@ -3,7 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, Package, Clock, MapPin, User } from 'lucide-react';
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Package, 
+  Clock, 
+  MapPin, 
+  User, 
+  Phone, 
+  Mail, 
+  MessageSquare,
+  ExternalLink
+} from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import { format } from 'date-fns';
 import { formatDeliveryDate } from '@/utils/deliveryInfoManager';
@@ -31,6 +42,8 @@ interface RecentOrder {
   line_items: OrderItem[];
   created_at: string;
   affiliate_code?: string;
+  customer_phone?: string;
+  special_instructions?: string;
 }
 
 interface RecentOrdersFeedProps {
@@ -105,6 +118,24 @@ export const RecentOrdersFeed: React.FC<RecentOrdersFeedProps> = ({
     
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}d ago`;
+  };
+
+  const handleCall = (phone: string) => {
+    if (phone && phone !== 'No phone') {
+      window.open(`tel:${phone}`, '_self');
+    }
+  };
+
+  const handleEmail = (email: string) => {
+    if (email && email !== 'No email') {
+      window.open(`mailto:${email}`, '_self');
+    }
+  };
+
+  const handleText = (phone: string) => {
+    if (phone && phone !== 'No phone') {
+      window.open(`sms:${phone}`, '_self');
+    }
   };
 
   if (!orders || orders.length === 0) {
@@ -239,6 +270,48 @@ export const RecentOrdersFeed: React.FC<RecentOrdersFeedProps> = ({
                       </div>
                     )}
                     
+                    {/* Contact Actions */}
+                    {(order.customer_email !== 'No email' || order.customer_phone !== 'No phone') && (
+                      <div className="pt-2 border-t">
+                        <h5 className="font-medium text-sm mb-2">Contact Customer</h5>
+                        <div className="flex gap-2">
+                          {order.customer_phone && order.customer_phone !== 'No phone' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleCall(order.customer_phone!)}
+                                className="flex items-center gap-1 text-xs"
+                              >
+                                <Phone className="w-3 h-3" />
+                                Call
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleText(order.customer_phone!)}
+                                className="flex items-center gap-1 text-xs"
+                              >
+                                <MessageSquare className="w-3 h-3" />
+                                Text
+                              </Button>
+                            </>
+                          )}
+                          {order.customer_email && order.customer_email !== 'No email' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEmail(order.customer_email!)}
+                              className="flex items-center gap-1 text-xs"
+                            >
+                              <Mail className="w-3 h-3" />
+                              Email
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Order Summary */}
                     <div className="pt-2 border-t">
                       <div className="space-y-1 text-sm">
