@@ -31,6 +31,8 @@ import { haptic } from '@/utils/hapticFeedback';
 import { MobileBottomNav } from '@/components/common/MobileBottomNav';
 import { CustomThemeCreator } from '@/components/admin/CustomThemeCreator';
 import { SpeechButton } from '@/components/common';
+import { OccasionButtons } from './OccasionButtons';
+
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -448,490 +450,260 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         collectionsToShow = result.collections.filter((collection: any) => 
           customSiteCollections.includes(collection.handle)
         );
-        console.log(`Custom site: filtered from ${result.collections.length} to ${collectionsToShow.length} collections`);
-        console.log('Custom site collections:', collectionsToShow.map((c: any) => `${c.handle} (${c.title})`));
+        console.log(\`Filtered to \${collectionsToShow.length} collections for custom site:\`, customSiteCollections);
       }
       
-      // DEBUG: Log all collection handles for debugging
-      console.log('=== COLLECTION HANDLES DEBUG ===');
-      collectionsToShow.forEach((collection: any, index: number) => {
-        console.log(`Collection ${index}: ${collection.handle} (${collection.title}) - ${collection.products?.length || 0} products`);
-      });
-      console.log('=== END DEBUG ===');
-      
       setCollections(collectionsToShow);
-      setRetryCount(0); // Reset retry count on success
+      setRetryCount(0);
       
-      // Cache the successful result
-      cacheManager.setShopifyCollections(result.collections);
-      console.log('Collections cached successfully');
+    } catch (error: any) {
+      console.error('Failed to fetch collections:', error);
+      setError(error.message || 'Failed to load product collections. Please try again.');
       
-    } catch (error) {
-      console.error('=== ERROR in fetchCollections ===');
-      console.error('Error details:', error);
-      ErrorHandler.logError(error, 'fetchCollections');
-      
-      // Auto-retry logic with exponential backoff
-      if (autoRetryEnabled && retryCount < 3 && !forceRefresh) {
-        const retryDelay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s delays
-        console.log(`Auto-retry ${retryCount + 1}/3 in ${retryDelay}ms...`);
-        
+      if (autoRetryEnabled && retryCount < 2) {
+        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+        console.log(\`Auto-retry attempt \${retryCount + 1} in \${retryDelay}ms...\`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           fetchCollections(false);
         }, retryDelay);
-        
-        setError(`Connection issue detected. Auto-retry ${retryCount + 1}/3 in progress...`);
-        return;
-      }
-      
-      // Try to use cached data as fallback
-      const cachedCollections = cacheManager.getShopifyCollections();
-      if (cachedCollections && cachedCollections.length > 0) {
-        console.log(`Using cached collections as fallback (${cachedCollections.length} collections)`);
-        setCollections(cachedCollections);
-        setError('Using cached data - connection issues detected. Collections may not be current.');
-      } else {
-        console.log('No cache available - showing full error to user');
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        setError(`Failed to load collections: ${errorMessage}. Click retry or check Shopify connection.`);
       }
     } finally {
       setLoading(false);
-      console.log('=== fetchCollections END ===');
     }
   };
 
   const clearCacheAndRefresh = () => {
-    console.log('=== clearCacheAndRefresh called ===');
-    setRetryCount(0); // Reset retry count
-    setAutoRetryEnabled(true); // Re-enable auto retry
     cacheManager.remove(cacheManager.getCacheKeys().SHOPIFY_COLLECTIONS);
-    // Also clear any local storage cache
-    localStorage.removeItem('shopify-collections-cache');
     fetchCollections(true);
   };
 
-  const selectedCollection = collections.find(c => c.handle === stepMapping[selectedCategory]?.handle);
-
-  // Ensure selected category is valid when collections load or config changes
-  useEffect(() => {
-    if (collections.length > 0 && (selectedCategory >= displayedTabsCount || !selectedCollection)) {
-      console.log('Auto-selecting first collection:', stepMapping[0]?.title);
-      setSelectedCategory(0);
+  // Get the selected collection based on our mappings
+  const selectedCollection = React.useMemo(() => {
+    const currentMapping = stepMapping[selectedCategory];
+    if (!currentMapping) return null;
+    
+    if (currentMapping.isSearch) {
+      // For search, return a synthetic collection with search results
+      return {
+        id: 'search',
+        title: 'Search Results',
+        handle: 'search',
+        description: \`Showing results for "\${searchQuery}"\`,
+        products: searchResults
+      };
     }
-  }, [collections, selectedCategory, selectedCollection, displayedTabsCount, stepMapping]);
+    
+    return collections.find(collection => 
+      collection.handle === currentMapping.handle
+    ) || null;
+  }, [selectedCategory, collections, stepMapping, searchResults, searchQuery]);
 
-  // Apply deep-linking after collections are available
-  useEffect(() => {
-    if (collections.length === 0) return;
-    const params = new URLSearchParams(window.location.search);
-    const cat = (params.get('category') || '').toLowerCase();
-    const prodTitle = params.get('productTitle');
-
-    if (cat) {
-      const idx = stepMapping.findIndex((s) => s.handle.includes(cat));
-      if (idx >= 0) setSelectedCategory(idx);
-    }
-
-    if (prodTitle) {
-      // Give time for selectedCategory state to settle
-      setTimeout(() => {
-        const cocktailsIdx = stepMapping.findIndex((s) => s.handle.includes('cocktail'));
-        const activeIdx = cat ? stepMapping.findIndex((s) => s.handle.includes(cat)) : cocktailsIdx;
-        const coll = collections.find((c) => c.handle === stepMapping[activeIdx]?.handle);
-        const found = coll?.products.find((p) => p.title.toLowerCase().includes(prodTitle.toLowerCase()));
-        if (found) {
-          setLightboxProduct(found as any);
-          setIsLightboxOpen(true);
-        }
-      }, 300);
-    }
-  }, [collections, stepMapping.join ? stepMapping.join(',') : displayedTabsCount]);
-
-  // Removed auto-select on last tab to allow clicking far-right tab
-  // Previously this forced index 4 back to 0 when custom collections exist, which
-  // made the last tab appear unclickable for 5-tab layouts.
-
-  // Helper to get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
-    const cartItem = cartItems.find(item => {
-      const itemId = item.productId || item.id;
-      const itemVariant = item.variant || 'default';
-      const checkVariant = variantId || 'default';
-      return itemId === productId && itemVariant === checkVariant;
-    });
-    return cartItem?.quantity || 0;
+    const cartItem = cartItems.find(item => 
+      item.id === productId && item.variant === variantId
+    );
+    return cartItem ? cartItem.quantity : 0;
   };
 
-  // Trigger cart count animation
-  useEffect(() => {
-    if (cartItemCount > 0) {
-      setCartCountAnimation(true);
-      const timer = setTimeout(() => setCartCountAnimation(false), 300);
-      return () => clearTimeout(timer);
+  const handleQuantityChange = (productId: string, variantId: string | undefined, change: number) => {
+    const currentQty = getCartItemQuantity(productId, variantId);
+    const newQty = Math.max(0, currentQty + change);
+    onUpdateQuantity(productId, variantId, newQty);
+    
+    if (newQty > currentQty) {
+      haptic.vibrate(50);
+      // Flash the tab to show the item was added
+      setFlashIndex(selectedCategory);
+      setTimeout(() => setFlashIndex(null), 300);
     }
-  }, [cartItemCount]);
+  };
 
   const handleAddToCart = (product: ShopifyProduct, variant?: any) => {
-    // Use onAddToCart to ensure product data is provided for CREATE
-    haptic.addToCart(); // Add haptic feedback
-    const item = {
+    const productName = parseProductTitle(product.title);
+    const containerInfo = getContainerDescription(product.title);
+    
+    onAddToCart({
       id: product.id,
-      title: product.title,
-      name: product.title,
-      price: variant ? variant.price : product.price,
+      variant: variant?.id,
+      title: productName.displayName,
+      name: productName.displayName,
+      price: variant?.price || product.price,
       image: product.image,
-      variant: variant ? variant.id : product.variants[0]?.id,
-    };
-    console.log('🛒 ProductCategories: Adding product to cart:', item);
-    onAddToCart(item as any);
+      productId: product.id
+    });
+    
+    haptic.vibrate(100);
+    
+    setCartCountAnimation(true);
+    setTimeout(() => setCartCountAnimation(false), 300);
+    
+    // Flash the tab to show the item was added
+    setFlashIndex(selectedCategory);
+    setTimeout(() => setFlashIndex(null), 300);
   };
 
-  const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
-    const currentQty = getCartItemQuantity(productId, variantId);
-    const newQty = Math.max(0, currentQty + delta);
-    console.log('Updating quantity:', productId, variantId, 'from', currentQty, 'to', newQty);
-    onUpdateQuantity(productId, variantId, newQty);
-  };
-
-  const handleNextTab = () => {
-    if (selectedCategory < stepMapping.length - 1) {
-      setSelectedCategory(selectedCategory + 1);
-      // Remove scroll to top when changing tabs
-    } else {
-      // On the last tab, go directly to checkout
-      onProceedToCheckout();
-    }
-  };
-
-  const confirmCheckout = () => {
-    setShowCheckoutDialog(false);
-    onProceedToCheckout();
-  };
-
-  // Handle product click for cocktails (step 4 now)
   const handleProductClick = (product: ShopifyProduct) => {
-    // Enable lightbox for cocktails collections
     if (isCocktailsTab) {
       setLightboxProduct(product);
       setIsLightboxOpen(true);
     }
   };
 
-  const handleSearchSelect = (product: ShopifyProduct) => {
-    const variantId = product.variants?.[0]?.id;
-    // Use onAddToCart so product data is provided for new cart items
-    onAddToCart({
-      id: product.id,
-      title: product.title,
-      name: product.title,
-      price: product.variants?.[0]?.price || product.price || 0,
-      image: product.image,
-      variant: variantId,
-    });
-  };
-  // Close lightbox
-  const closeLightbox = () => {
-    setIsLightboxOpen(false);
-    setLightboxProduct(null);
-  };
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearch(false);
+      return;
+    }
 
-  // Receive search results from hero search bar
-  const handleSearchResultsChange = (results: ShopifyProduct[], query: string) => {
-    setSearchResults(results);
-    setSearchQuery(query);
-    setIsSearching(false);
+    setIsSearching(true);
     setShowSearch(true);
+    
+    try {
+      // Search across all collections
+      const allProducts = collections.flatMap(collection => collection.products);
+      const filtered = allProducts.filter(product =>
+        product.title.toLowerCase().includes(query.toLowerCase()) ||
+        product.description.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      setSearchResults(filtered);
+      
+      // Switch to search tab if we're not already there
+      const searchTabIndex = stepMapping.findIndex(step => step.isSearch);
+      if (searchTabIndex !== -1 && selectedCategory !== searchTabIndex) {
+        setSelectedCategory(searchTabIndex);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
+  // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading collections from Shopify...</p>
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
+          <div className="space-y-2">
+            <p className="text-lg font-semibold text-foreground">Loading your party essentials...</p>
+            <p className="text-sm text-muted-foreground">
+              {retryCount > 0 ? \`Retry attempt \${retryCount}\` : 'Getting the best products for you'}
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6 flex items-center justify-center">
-        <div className="text-center max-w-md">
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-destructive mb-2">Shopify Connection Error</h3>
-              <p className="text-muted-foreground mb-4">{error}</p>
-              
-              {retryCount > 0 && (
-                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                  <p className="text-sm text-yellow-800">
-                    Auto-retry attempt {retryCount}/3 {retryCount < 3 ? 'in progress...' : 'failed'}
-                  </p>
-                </div>
-              )}
-              
-              <p className="text-sm text-muted-foreground mb-4">
-                Please check that your Shopify credentials are properly configured in the Supabase secrets:
-                <br />• SHOPIFY_STORE_URL
-                <br />• SHOPIFY_STOREFRONT_ACCESS_TOKEN
-                <br />• SHOPIFY_ADMIN_API_ACCESS_TOKEN
-              </p>
-              <div className="flex gap-2 justify-center flex-wrap">
-                <Button onClick={() => fetchCollections(true)} variant="outline">
-                  Manual Retry
-                </Button>
-                <Button onClick={clearCacheAndRefresh} variant="outline">
-                  Clear Cache & Force Refresh
-                </Button>
-                <Button 
-                  onClick={() => setAutoRetryEnabled(!autoRetryEnabled)} 
-                  variant={autoRetryEnabled ? "default" : "secondary"}
-                  size="sm"
-                >
-                  Auto-retry: {autoRetryEnabled ? 'ON' : 'OFF'}
-                </Button>
-              </div>
-            </div>
-        </div>
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-background via-destructive/5 to-background p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-destructive">Connection Issue</CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={() => fetchCollections(true)} 
+              className="w-full"
+              variant="default"
+            >
+              Try Again
+            </Button>
+            <Button 
+              onClick={() => setAutoRetryEnabled(!autoRetryEnabled)} 
+              variant="outline" 
+              className="w-full"
+            >
+              {autoRetryEnabled ? 'Disable' : 'Enable'} Auto-Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If no collections loaded, show empty state
+  if (!collections || collections.length === 0) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/30 to-background p-4">
+        <Card className="max-w-md w-full text-center">
+          <CardHeader>
+            <CardTitle>No Products Available</CardTitle>
+            <CardDescription>We're working on stocking our inventory. Please check back soon!</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => fetchCollections(true)} className="w-full">
+              Refresh
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex flex-col">
-      {/* Hero Section with Austin Background - hidden when search is focused */}
-      <div className={`relative overflow-visible transition-all duration-200 ${isSearchFocused ? 'h-0 opacity-0 pointer-events-none' : 'h-[22rem] lg:h-[34rem]'}`}>
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroPartyAustin})` }}
-        >
-          <div className="absolute inset-0 bg-black/40" />
+    <div className="min-h-screen bg-gradient-to-br from-background to-background relative">
+      {!shouldHideMenusCompletely && (
+        <SpeechButton />
+      )}
+      
+      {showCustomThemeCreator && (
+        <div className="fixed inset-0 z-50">
+          <CustomThemeCreator 
+            onClose={() => setShowCustomThemeCreator(false)}
+          />
         </div>
-        
-        {/* Search App Button - Top Left Corner of Hero (all views) */}
-        <div className="absolute top-4 left-4 z-20">
-          <button
-            onClick={() => navigate('/search')}
-            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg px-3 py-2 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
-            aria-label="Open Search App"
+      )}
+
+      {/* Hero Section - hidden when menus are disabled */}
+      {!shouldHideMenusCompletely && (
+          <div 
+            className="relative bg-cover bg-center min-h-[30vh] flex items-center justify-center" 
+            style={{ 
+              backgroundImage: \`linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.7)), url(\${heroPartyAustin})\`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
           >
-            <Search className="w-5 h-5 text-white" />
-            <span className="hidden sm:inline text-white font-medium">Search</span>
-          </button>
-        </div>
-
-
-        {/* Custom Theme Creator Trigger - Bottom Left of Hero */}
-        <div className="absolute bottom-4 left-4 z-20">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowCustomThemeCreator(true)}
-            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 shadow-lg"
-          >
-            <Palette className="w-4 h-4 mr-2" />
-            Themes
-          </Button>
-        </div>
-
-        {/* Hidden - moved to bottom bar */}
-
-          {/* Centered Content - evenly spaced */}
-          <div className="relative z-10 h-full flex flex-col justify-between text-center px-4 py-6">
-            {/* Top: Logo + Titles */}
-            <div className="flex flex-col items-center gap-2 mt-10 md:mt-14">
-              <img 
-                src={customLogoUrl || partyOnDeliveryLogo}
-                alt={customAppName || "Party on Delivery"} 
-                className="h-16 lg:h-56 object-contain drop-shadow-lg"
-                onError={(e) => {
-                  e.currentTarget.src = partyOnDeliveryLogo;
-                }}
-              />
-              <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
-                {customHeroHeading || (customAppName && customAppName.toLowerCase().includes('premier party cruises') ? "Premier Party Cruises Concierge Service" : customAppName) || "Build Your Party Package"}
+            <div className="text-center text-white space-y-2 px-4">
+              {customLogoUrl && (
+                <img 
+                  src={customLogoUrl}
+                  alt="Logo"
+                  className="h-16 w-auto mx-auto mb-4"
+                />
+              )}
+              <h1 className="text-2xl lg:text-4xl font-bold tracking-tight">
+                {customHeroHeading || (customAppName || 'Party On Delivery')}
               </h1>
-              <p className="text-white/90 text-sm lg:text-base drop-shadow-lg">
-                {customHeroSubheading || "Select from our curated collection of drinks and party supplies"}
+              <p className="text-lg lg:text-xl opacity-90">
+                {customHeroSubheading || 'Premium delivery for your next celebration'}
               </p>
+              {customHeroScrollingText && (
+                <div className="mt-1 mb-2">
+                  <TypingIntro text={customHeroScrollingText} className="text-white text-xl lg:text-3xl" speedMs={65} />
+                </div>
+              )}
             </div>
-
-            {/* Middle: Search removed per request (use sticky search above tabs) */}
-
-            {/* Bottom: Action Buttons - REMOVED per user request */}
-
-            {/* Bottom: Typing Intro (shown only when text provided) */}
-            {customHeroScrollingText && (
-              <div className="mt-1 mb-2">
-                <TypingIntro text={customHeroScrollingText} className="text-white text-xl lg:text-3xl" speedMs={65} />
-              </div>
-            )}
-          </div>
-      </div>
+        </div>
+      )}
 
       {/* Search Bar - ALWAYS STICKY (replaces What's the occasion when scrolling) */}
-      <div className={`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200`}>
-        <div className={`w-full px-2 md:px-4 py-2`}>
+      <div className={\`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200\`}>
+        <div className={\`w-full px-2 md:px-4 py-2\`}>
           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
             
             {/* Left Section: What's the Occasion - Expanded */}
             <div className="flex items-center gap-4 flex-1">
               {!isScrollingDown ? (
-                <>
-              {/* What's the occasion section - expanded into two rows */}
-              <div className="flex items-center gap-4 w-full">
-                <div className="h-16 flex flex-col justify-center text-sm font-bold text-black leading-tight hidden sm:block px-2">
-                  <div className="text-lg">What's the</div>
-                  <div className="text-lg">Occasion?</div>
-                </div>
-                
-                {/* Occasion buttons - expanded into two rows */}
-                <div className="flex flex-col gap-2 flex-1 max-w-2xl">
-                  {isMobile ? (
-                    <>
-                      {/* Mobile: Two rows of compact buttons */}
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                          onClick={() => {
-                            window.location.href = '/app/boat-delivery';
-                          }}
-                        >
-                          <div className="text-xs">🛥️</div>
-                          <div className="text-[8px] leading-none">Boat</div>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                          onClick={() => {
-                            window.location.href = '/app/lake-travis-party-package';
-                          }}
-                        >
-                          <div className="text-xs">🌊</div>
-                          <div className="text-[8px] leading-none">Lake</div>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                          onClick={() => {
-                            window.location.href = '/app/wedding-package';
-                          }}
-                        >
-                          <div className="text-xs">💒</div>
-                          <div className="text-[8px] leading-none">Wedding</div>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                          onClick={() => {
-                            window.location.href = '/party-planning-agent';
-                          }}
-                        >
-                          <div className="text-xs">🎉</div>
-                          <div className="text-[8px] leading-none">Party</div>
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Desktop: Two rows of larger buttons */}
-                      <div className="flex gap-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/app/boat-delivery';
-                          }}
-                        >
-                          🛥️ Boat Delivery
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/app/lake-travis-party-package';
-                          }}
-                        >
-                          🌊 Lake Party
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/app/wedding-package';
-                          }}
-                        >
-                          💒 Wedding
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/party-planning-agent';
-                          }}
-                        >
-                          🎉 Party Planner
-                        </Button>
-                      </div>
-                      
-                      <div className="flex gap-3">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/app/birthday-bash';
-                          }}
-                        >
-                          🎂 Birthday
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/app/graduation-party';
-                          }}
-                        >
-                          🎓 Graduation
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/app/corporate-event';
-                          }}
-                        >
-                          🏢 Corporate
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                          onClick={() => {
-                            window.location.href = '/app/backyard-bbq';
-                          }}
-                        >
-                          🔥 BBQ
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-                </>
+                <OccasionButtons isMobile={isMobile} isScrollingDown={isScrollingDown} />
               ) : (
                 <>
                   {/* Cart and Checkout when scrolling */}
@@ -950,6 +722,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                     )}
                   </Button>
                   <Button
+                    variant="default"
                     size="sm"
                     onClick={onProceedToCheckout}
                     disabled={cartItemCount === 0}
@@ -964,133 +737,107 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             
             {/* Search Bar - moved to right side */}
             <div className="flex items-center gap-2 max-w-md w-full justify-end">
-              <div className="flex-1 max-w-sm">
-                <ProductSearchBar
-                  onProductSelect={handleSearchSelect}
-                  placeholder="Search all products..."
-                  showDropdownResults={false}
-                  onResultsChange={handleSearchResultsChange}
-                  onSearchingChange={setIsSearching}
-                  onFocus={handleSearchFocus}
-                  onBlur={handleSearchBlur}
-                  inputRef={searchInputRef}
-                  inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
-                />
-              </div>
+              <ProductSearchBar
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={setSearchQuery}
+                onSearch={handleSearch}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
+                isLoading={isSearching}
+                placeholder="Search products..."
+                className="w-full"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowCustomThemeCreator(true)}
+                className="flex-shrink-0 hidden lg:flex"
+              >
+                <Palette className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
+
       {/* Category Tabs - ALWAYS STICKY */}
       <div className="sticky top-[60px] z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b">
-        <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto`}>
+        <div className={\`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto\`}>
           {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
           {isMobile && showMobileCartCheckout ? (
             <>
               <button
-                type="button"
                 onClick={onOpenCart}
-                className="flex-1 flex items-center justify-center h-full transition-all duration-300 bg-muted border border-muted-foreground/20 hover:bg-muted/80 rounded-l-md"
-                aria-label="Open Cart"
+                className={\`flex-1 bg-muted hover:bg-muted/70 text-foreground rounded-l-md text-xs font-bold px-3 flex items-center justify-center gap-2 transition-all duration-300 \${cartItemCount > 0 ? 'animate-pulse' : ''}\`}
               >
-                <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Cart</span>
-                  {cartItemCount > 0 && (
-                    <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </span>
+                <ShoppingCart className="w-4 h-4" />
+                <span>Cart ({cartItemCount})</span>
               </button>
               <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+                onClick={onProceedToCheckout}
                 disabled={cartItemCount === 0}
-                className={`flex-1 flex items-center justify-center h-full transition-all duration-300 ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} rounded-r-md`}
+                className={\`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none \${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}\`}
                 aria-label="Checkout"
               >
-                <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
-                  <CheckCircle className="w-4 h-4" />
+                <span className="inline-flex flex-col items-center gap-1 font-bold">
                   <span>Checkout</span>
+                  <CheckCircle className="w-4 h-4" />
                 </span>
               </button>
             </>
           ) : (
             <>
+              {/* Regular tabs */}
               {displayedTabs.map((step, index) => {
                 const isActive = selectedCategory === index;
+                const isSearchTab = step.isSearch;
                 
                 return (
                   <button
-                    type="button"
-                    key={step.handle}
+                    key={index}
                     onClick={() => {
+                      if (isSearchTab) {
+                        setShowSearch(true);
+                      } else {
+                        setShowSearch(false);
+                      }
                       setSelectedCategory(index);
-                      setShowSearch(false);
-                      // Remove scroll to top from tab clicks
+                      haptic.vibrate(50);
                     }}
-                    className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-2 rounded-none first:rounded-l-md last:rounded-r-md ${
-                      isActive 
-                        ? 'bg-primary/10 border-2 border-primary shadow-lg' 
-                        : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
-                    } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
+                    className={\`flex-1 min-w-0 px-1 lg:px-3 py-2 text-xs lg:text-sm font-bold transition-all duration-200 relative \${
+                      isActive
+                        ? 'bg-primary text-primary-foreground shadow-lg'
+                        : 'bg-muted hover:bg-muted/70 text-foreground'
+                    } \${
+                      index === 0 ? 'rounded-l-md' : ''
+                    } \${
+                      index === displayedTabs.length - 1 ? 'rounded-r-md' : ''
+                    } \${
+                      flashIndex === index ? 'animate-pulse bg-success' : ''
+                    }\`}
                   >
-                    <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
-                      {/* Mobile layout: just title */}
-                      <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
-                        <div className={`text-[12px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
-                          isActive ? 'text-primary' : 'text-foreground'
-                        }`}>{step.title}</div>
-                      </div>
-                      
-                      {/* Desktop layout: large title centered */}
-                      <div className="hidden sm:block relative w-full h-full">
-                        <div className="flex items-center justify-center h-full gap-2">
-                          <div className={`font-bold ${scrolled ? 'text-lg' : 'text-xl'} text-center ${
-                            isActive ? 'text-primary' : 'text-foreground'
-                          }`}>{step.title}</div>
-                        </div>
-                      </div>
+                    <div className="flex flex-col items-center justify-center gap-0.5 h-full">
+                      <span className="leading-none line-clamp-1">{step.title}</span>
+                      {isSearchTab && showSearch && (
+                        <Badge variant="secondary" className="text-[10px] px-1 py-0 min-w-0 h-4">
+                          {searchResults.length}
+                        </Badge>
+                      )}
+                      {!isSearchTab && selectedCollection && selectedCategory === index && (
+                        <Badge variant="secondary" className="text-[10px] px-1 py-0 min-w-0 h-4">
+                          {selectedCollection.products.length}
+                        </Badge>
+                      )}
                     </div>
                   </button>
                 );
               })}
-              
-              {/* Desktop: Cart/Checkout as part of tabs */}
-              <button
-                type="button"
-                onClick={onOpenCart}
-                className="hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40"
-                aria-label="Open Cart"
-              >
-                <span className="inline-flex flex-col items-center gap-1 font-bold">
-                  <span className="inline-flex items-center gap-1"><ShoppingCart className="w-4 h-4" /><span>Cart</span></span>
-                  {cartItemCount > 0 && (
-                    <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
-                      {cartItemCount}
-                    </span>
-                  )}
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
-                disabled={cartItemCount === 0}
-                className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
-                aria-label="Checkout"
-              >
-                <span className="inline-flex flex-col items-center gap-1 font-bold">
-                  <span>Checkout</span>
-                  <CheckCircle className="w-4 h-4" />
-                </span>
-              </button>
             </>
           )}
         </div>
       </div>
-
 
       {/* Section Heading - Hidden when sticky mode is active */}
       {!shouldHideMenusCompletely && !hideAllMenus && !(isSearchFocused || hasUserInteracted) && selectedCollection && (
@@ -1112,63 +859,318 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             <button
               onClick={() => selectedCategory < maxCategoryIndex && setSelectedCategory(selectedCategory + 1)}
               disabled={selectedCategory === maxCategoryIndex}
-              className={`p-2 rounded-full transition-colors ${
+              className={\`p-2 rounded-full transition-colors \${
                 selectedCategory === maxCategoryIndex 
                   ? 'text-muted-foreground cursor-not-allowed' 
                   : 'text-primary hover:bg-primary/10 cursor-pointer animate-[pulse_1s_ease-in-out_2]'
-              }`}
+              }\`}
             >
               <ChevronRight className="w-6 h-6" />
             </button>
           </div>
           
-          {/* Add instruction text for cocktails only */}
-          {isCocktailsTab && (
-            <div className="text-center mt-2">
-              <p className="text-sm text-muted-foreground">Click each item to see photos and details</p>
+          {/* Subheadline for current category if configured */}
+          {subText && (
+            <div className={\`mt-3 text-center \${subFontClass} \${subSizeClass} text-muted-foreground leading-relaxed\`}>
+              {subText}
             </div>
           )}
         </div>
       )}
 
-      <div className="w-full px-1 md:px-4 py-4">
-        {showSearch && searchQuery.trim() && (
-          <div className="mb-6">
-            <div className="text-sm text-muted-foreground mb-2">Found {searchResults.length} products</div>
-            <div className="grid gap-1 md:gap-2 grid-cols-3 lg:grid-cols-6">
-              {searchResults.slice(0, 50).map((product) => {
-                const variant = product.variants?.[0];
-                const price = variant?.price ?? product.price;
-                const cartQty = getCartItemQuantity(product.id, variant?.id);
+      {/* Main Content */}
+      <div className="pb-20">
+        {selectedCollection && selectedCollection.products && selectedCollection.products.length > 0 ? (
+          <div className="max-w-7xl mx-auto px-2 lg:px-4">
+            {/* Search Results Header */}
+            {showSearch && searchQuery.trim() && (
+              <div className="mb-4 px-2">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Search results for "{searchQuery}" ({searchResults.length} items)
+                </h3>
+              </div>
+            )}
+            
+            {/* Cocktails Tab - Card Layout */}
+            {isCocktailsTab && !showSearch && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                {selectedCollection.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
+                  const variant = product.variants[0];
+                  const price = variant?.price || product.price;
+                  
+                  return (
+                    <Card 
+                      key={product.id}
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 group bg-card border hover:border-primary/50"
+                      onClick={() => handleProductClick(product)}
+                    >
+                      <div className="aspect-square overflow-hidden rounded-t-lg">
+                        <img
+                          src={product.image}
+                          alt={product.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-sm mb-2 line-clamp-2 text-foreground">
+                          {parseProductTitle(product.title).displayName}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                          {product.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" className="font-semibold">
+                            \${applyMarkup(price).toFixed(2)}
+                          </Badge>
+                          <Button size="sm" variant="default">
+                            View Details
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+            
+            {/* Container description for spirits/beer (non-cocktails) */}
+            {!isCocktailsTab && selectedCollection.products.slice(0, 5).map((product) => {
+              const containerInfo = getContainerDescription(product.title);
+              if (containerInfo) {
                 return (
-                  <div key={product.id} className="bg-card border rounded-lg p-3 hover:shadow-md transition-all duration-200 flex flex-col">
-                    <div className="bg-muted rounded overflow-hidden w-full aspect-square mb-3">
-                      <img src={product.image} alt={product.title} className="w-full h-full object-contain" />
-                    </div>
-                    <h4 className="font-bold leading-tight text-center text-sm mb-1 line-clamp-2">{product.title}</h4>
-                    {getContainerDescription(product.title) && (
-                      <div className="text-xs text-muted-foreground text-center mb-2">
-                        {getContainerDescription(product.title)}
+                  <div key={\`container-\${product.id}\`} className="bg-muted/50 p-3 mx-2 mb-4 rounded-lg border-l-4 border-primary">
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Container Info:</strong> {containerInfo}
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            }).slice(0, 1)}
+
+            {/* Regular Product Grid */}
+            {(!isCocktailsTab || showSearch) && (
+              <div className={\`px-2 lg:px-0\`}>
+                {/* Container size info for spirits/beer */}
+                {!showSearch && (selectedCategory === 0 || selectedCategory === 1) && selectedCollection.products.length > 0 && (
+                  <div className="mb-4">
+                    {getContainerDescription(selectedCollection.products[0].title) && (
+                      <div className="bg-muted/50 p-3 rounded-lg border-l-4 border-primary">
+                        <p className="text-sm text-muted-foreground">
+                          <strong>Container Info:</strong> {getContainerDescription(selectedCollection.products[0].title)}
+                        </p>
                       </div>
                     )}
-<div className="mt-auto pt-2 flex flex-col items-center gap-2">
-  <Badge variant="secondary" className="product-price w-fit font-semibold text-center text-xs bg-primary/10 text-primary border-primary/20">${applyMarkup(price).toFixed(2)}</Badge>
-  <div className="flex justify-center">
-                         {cartQty > 0 ? (
-                           <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                               <Minus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
-                             </Button>
-                             <span className={`text-xs font-bold ${isMobile ? 'px-1 min-w-[1.5rem]' : 'px-2 min-w-[2rem]'} text-center`}>{cartQty}</span>
-                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                               <Plus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
-                             </Button>
-                           </div>
-                        ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center transition-transform hover:scale-110" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus className="w-4 h-4" strokeWidth={3} />
-                          </button>
+                  </div>
+                )}
+                
+                {selectedCollection.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
+                  const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
+                  const variant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
+                  const price = variant?.price || product.price;
+                  const cartQty = getCartItemQuantity(product.id, variant?.id);
+                  
+                  return (
+                    <div 
+                      key={product.id} 
+                      className={\`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full \${
+                        isCocktailsTab ? 'cursor-pointer hover:border-primary/50' : ''
+                      } \${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md\`}
+                      onClick={() => handleProductClick(product)}
+                    >
+                      {/* Product image - condensed when search focused */}
+                      <div className={\`bg-muted rounded overflow-hidden w-full aspect-square \${
+                        isSearchFocused 
+                          ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-1' : 'mb-2'
+                          : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'
+                      }\`}>
+                        <img
+                          src={product.image}
+                          alt={product.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                      
+                      {/* Product details */}
+                      <div className="flex-1 flex flex-col">
+                        <h3 className={\`font-semibold text-foreground mb-1 \${isSearchFocused ? 'text-xs leading-tight' : 'text-sm'} line-clamp-2\`}>
+                          {parseProductTitle(product.title).displayName}
+                        </h3>
+                        
+                        {/* Variant selector for products with multiple variants */}
+                        {!isSearchFocused && product.variants && product.variants.length > 1 && (
+                          <div className="mb-2">
+                            <Select 
+                              value={selectedVariants[product.id] || product.variants[0]?.id} 
+                              onValueChange={(value) => setSelectedVariants(prev => ({ ...prev, [product.id]: value }))}
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {product.variants.map((v) => (
+                                  <SelectItem key={v.id} value={v.id} className="text-xs">
+                                    {v.title} - \${applyMarkup(v.price).toFixed(2)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         )}
+                        
+                        {/* Container description for spirits/beer */}
+                        {!isSearchFocused && !isCocktailsTab && (selectedCategory === 0 || selectedCategory === 1) && (
+                          <div className="text-[10px] text-muted-foreground mb-1 leading-tight">
+                            {getContainerDescription(product.title)}
+                          </div>
+                        )}
+                        
+                        <div className="mt-auto pt-2 flex flex-col items-center gap-2">
+                          <Badge variant="secondary" className="product-price w-fit font-semibold text-center text-xs bg-primary/10 text-primary border-primary/20">
+                            \${applyMarkup(price).toFixed(2)}
+                          </Badge>
+                          <div className="flex justify-center">
+                            {cartQty > 0 ? (
+                              <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className={\`\${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full\`} 
+                                  onClick={() => handleQuantityChange(product.id, variant?.id, -1)}
+                                >
+                                  <Minus className={\`\${isMobile ? 'w-3 h-3' : 'w-3 h-3'}\`} />
+                                </Button>
+                                <span className={\`text-xs font-bold \${isMobile ? 'px-1 min-w-[1.5rem]' : 'px-2 min-w-[2rem]'} text-center\`}>
+                                  {cartQty}
+                                </span>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className={\`\${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full\`} 
+                                  onClick={() => handleQuantityChange(product.id, variant?.id, 1)}
+                                >
+                                  <Plus className={\`\${isMobile ? 'w-3 h-3' : 'w-3 h-3'}\`} />
+                                </Button>
+                              </div>
+                            ) : (
+                              <button 
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center transition-transform hover:scale-110" 
+                                onClick={() => handleAddToCart(product, variant)}
+                              >
+                                <Plus className="w-4 h-4" strokeWidth={3} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            {/* Product Grid - optimized with React.memo and virtualization */}
+            <div className={\`grid gap-1.5 lg:gap-3 \${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} \${showSearch && searchQuery.trim() ? 'hidden' : ''} \${isSearchFocused ? 'condensed-grid' : ''}\`}>
+              {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
+                // Handle variant selection for products with multiple variants
+                const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
+                const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
+                const cartQty = getCartItemQuantity(product.id, selectedVariant?.id);
+                
+                return (
+                  <div 
+                    key={product.id} 
+                    className={\`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full \${
+                      isCocktailsTab ? 'cursor-pointer hover:border-primary/50' : ''
+                    } \${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md\`}
+                    onClick={() => handleProductClick(product)}
+                  >
+                    {/* Product image - condensed when search focused */}
+                    <div className={\`bg-muted rounded overflow-hidden w-full aspect-square \${
+                      isSearchFocused 
+                        ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-1' : 'mb-2'
+                        : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'
+                    }\`}>
+                      <img
+                        src={product.image}
+                        alt={product.title}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
+                    
+                    {/* Product details */}
+                    <div className="flex-1 flex flex-col">
+                      <h3 className={\`font-semibold text-foreground mb-1 \${isSearchFocused ? 'text-xs leading-tight' : 'text-sm'} line-clamp-2\`}>
+                        {parseProductTitle(product.title).displayName}
+                      </h3>
+                      
+                      {/* Variant selector for products with multiple variants */}
+                      {!isSearchFocused && product.variants && product.variants.length > 1 && (
+                        <div className="mb-2">
+                          <Select 
+                            value={selectedVariants[product.id] || product.variants[0]?.id} 
+                            onValueChange={(value) => setSelectedVariants(prev => ({ ...prev, [product.id]: value }))}
+                          >
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {product.variants.map((v) => (
+                                <SelectItem key={v.id} value={v.id} className="text-xs">
+                                  {v.title} - \${applyMarkup(v.price).toFixed(2)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      {/* Container description for spirits/beer */}
+                      {!isSearchFocused && !isCocktailsTab && (selectedCategory === 0 || selectedCategory === 1) && (
+                        <div className="text-[10px] text-muted-foreground mb-1 leading-tight">
+                          {getContainerDescription(product.title)}
+                        </div>
+                      )}
+                      
+                      <div className="mt-auto pt-2 flex flex-col items-center gap-2">
+                        <Badge variant="secondary" className="product-price w-fit font-semibold text-center text-xs bg-primary/10 text-primary border-primary/20">
+                          \${applyMarkup(selectedVariant?.price || product.price).toFixed(2)}
+                        </Badge>
+                        <div className="flex justify-center">
+                          {cartQty > 0 ? (
+                            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className={\`\${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full\`} 
+                                onClick={() => handleQuantityChange(product.id, selectedVariant?.id, -1)}
+                              >
+                                <Minus className={\`\${isMobile ? 'w-3 h-3' : 'w-3 h-3'}\`} />
+                              </Button>
+                              <span className={\`text-xs font-bold \${isMobile ? 'px-1 min-w-[1.5rem]' : 'px-2 min-w-[2rem]'} text-center\`}>
+                                {cartQty}
+                              </span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className={\`\${isMobile ? 'h-4 w-4' : 'h-4 w-4'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full\`} 
+                                onClick={() => handleQuantityChange(product.id, selectedVariant?.id, 1)}
+                              >
+                                <Plus className={\`\${isMobile ? 'w-3 h-3' : 'w-3 h-3'}\`} />
+                              </Button>
+                            </div>
+                          ) : (
+                            <button 
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center transition-transform hover:scale-110" 
+                              onClick={() => handleAddToCart(product, selectedVariant)}
+                            >
+                              <Plus className="w-4 h-4" strokeWidth={3} />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1176,323 +1178,94 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
               })}
             </div>
           </div>
-        )}
-        {/* Product Grid - optimized with React.memo and virtualization */}
-        <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
-          {selectedCollection?.products.slice(0, visibleProductCounts[selectedCategory] || 50).map((product) => {
-            // Handle variant selection for products with multiple variants
-            const selectedVariantId = selectedVariants[product.id] || product.variants[0]?.id;
-            const selectedVariant = product.variants.find(v => v.id === selectedVariantId) || product.variants[0];
-            const cartQty = getCartItemQuantity(product.id, selectedVariant?.id);
-            
-            return (
-               <div 
-                 key={product.id} 
-                 className={`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full ${
-                   isCocktailsTab ? 'cursor-pointer hover:border-primary/50' : ''
-                 } ${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md`}
-                 onClick={() => handleProductClick(product)}
-               >
-                 {/* Product image - condensed when search focused */}
-                 <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${
-                   isSearchFocused 
-                     ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-1' : 'mb-2'
-                     : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'
-                 }`}>
-                  <img
-                    src={product.image}
-                    alt={product.title}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                 
-                 {/* Product info with condensed height when search focused */}
-                 <div className={`flex flex-col flex-1 justify-between ${
-                   isSearchFocused 
-                     ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[4.5rem]' : 'min-h-[6rem]'
-                     : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'
-                 }`}>
-                   <div className="flex-1 flex flex-col justify-start">
-                    {(() => {
-                      // For cocktails, show full title without truncation
-                      if (isCocktailsTab) {
-                        return (
-                          <h4 className="font-bold leading-tight text-center text-sm mb-2">
-                            {product.title}
-                          </h4>
-                        );
-                      }
-                      
-                      // For other categories, use the utility function to parse title and package size
-                      const { cleanTitle, packageSize } = parseProductTitle(product.title);
-                      
-                      // Special handling for ice product
-                      let displayTitle = cleanTitle;
-                      let displayPackage = packageSize;
-                      
-                      if (product.title.toLowerCase().includes('bag of ice')) {
-                        displayTitle = product.title.replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*bs\s*$/gi, '').replace(/[.\u2026\u2022\u2023\u25E6\u00B7\u22C5\u02D9\u0387\u16EB\u2D4F]+\s*$/g, '').trim();
-                        displayPackage = '20 Lbs';
-                      }
-                      
-                      return (
-                         <>
-                           <h4 className={`font-bold leading-tight text-center line-clamp-2 ${
-                             isSearchFocused
-                               ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] mb-0.5' : 'text-xs mb-1'
-                               : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'
-                           }`}>
-                             {displayTitle}
-                           </h4>
-                           {displayPackage && (
-                             <p className={`text-foreground text-center whitespace-nowrap overflow-hidden text-ellipsis ${
-                               isSearchFocused
-                                 ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[8px] leading-2 mb-0.5' : 'text-[10px] mb-1'
-                                 : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3 mb-1' : 'text-xs mb-1'
-                             }`}>
-                               {displayPackage}
-                             </p>
-                           )}
-                        </>
-                      );
-                    })()}
-
-                    {/* Variant selector for products with multiple variants */}
-                    {product.variants.length > 1 ? (
-                      <div className="mb-2">
-                        <Select
-                          value={selectedVariantId}
-                          onValueChange={(variantId) => setSelectedVariants(prev => ({
-                            ...prev,
-                            [product.id]: variantId
-                          }))}
-                        >
-                          <SelectTrigger className="w-full h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {product.variants.map((variant) => (
-                              <SelectItem key={variant.id} value={variant.id} className="text-xs">
-                                {variant.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : null}
-
-                      {/* Cocktail drink count - only show for cocktails */}
-                      {isCocktailsTab && (() => {
-                        const drinkMatch = product.description.match(/(\d+)\s*(?:drinks?|servings?|cocktails?)/i);
-                        if (drinkMatch) {
-                          return (
-                            <p className="text-foreground text-center mb-1 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
-                              {drinkMatch[1]} drinks
-                            </p>
-                          );
-                        }
-                        return null;
-                      })()}
-                  </div>
-                  
-                  {/* Price and cart controls container - always at bottom */}
-                  <div className="mt-auto pt-2 flex flex-col items-center gap-2">
-                    {/* Price row - consistent alignment */}
-                    <div className="flex items-center justify-center h-5">
-<Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
-  ${applyMarkup(selectedVariant?.price || 0).toFixed(2)}
-</Badge>
-                    </div>
-                      
-                     {/* Centered Cart Controls with larger, more visible buttons */}
-                     <div className="flex justify-center items-center">
-                       {cartQty > 0 ? (
-                          <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                             <Button
-                               variant="ghost"
-                               size="sm"
-                               className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'} p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuantityChange(product.id, selectedVariant?.id, -1);
-                              }}
-                            >
-                              <Minus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
-                            </Button>
-                             <span className={`text-xs font-bold ${isMobile ? 'px-1 min-w-[1rem]' : 'px-1.5 min-w-[1.5rem]'} text-center`}>
-                              {cartQty}
-                            </span>
-                             <Button
-                               variant="ghost"
-                               size="sm"
-                               className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'} p-0 rounded-full hover:bg-primary hover:text-primary-foreground`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuantityChange(product.id, selectedVariant?.id, 1);
-                              }}
-                            >
-                              <Plus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
-                            </Button>
-                          </div>
-                       ) : (
-                          <button
-                            className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-6 h-6' : 'w-8 h-8'} flex items-center justify-center transition-transform hover:scale-110 shadow-lg`}
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             if (selectedVariant) {
-                              onAddToCart({
-                                id: product.id,
-                                title: product.title,
-                                name: product.title,
-                                price: selectedVariant.price,
-                                image: product.image,
-                                variant: selectedVariant.id
-                              });
-                             setCartCountAnimation(true);
-                             setTimeout(() => setCartCountAnimation(false), 300);
-                             // Remove scroll to top behavior for add-to-cart
-                            }
-                           }}
-                         >
-                           <Plus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} strokeWidth={3} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {selectedCollection?.products.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">No products found in this collection.</p>
-          </div>
-        )}
-
-        {collections.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground text-lg">Unable to load Shopify collections.</p>
-            <div className="flex gap-2 justify-center">
-              <Button onClick={() => fetchCollections(true)} className="mt-4">
-                Try Again
-              </Button>
-              <Button onClick={clearCacheAndRefresh} variant="outline" className="mt-4">
-                Clear Cache & Retry
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Next Button */}
-        {selectedCollection && (
-          <div className="flex justify-center mt-8 pb-8">
-            <Button 
-              variant="default" 
-              size="xl" 
-              onClick={handleNextTab}
-              className="px-8 py-3"
-            >
-              {selectedCategory < stepMapping.length - 1 ? (
-                <>
-                  Next <ChevronRight className="w-5 h-5 ml-2" />
-                </>
-              ) : (
-                'Proceed to Checkout'
+        ) : (
+          <div className="flex items-center justify-center py-20">
+            <Card className="max-w-md w-full text-center mx-4">
+              <CardHeader>
+                <CardTitle>No Products Found</CardTitle>
+                <CardDescription>
+                  {showSearch && searchQuery.trim() 
+                    ? \`No products found for "\${searchQuery}". Try a different search term.\`
+                    : 'This category is currently empty. More products coming soon!'
+                  }
+                </CardDescription>
+              </CardHeader>
+              {showSearch && searchQuery.trim() && (
+                <CardContent>
+                  <Button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setShowSearch(false);
+                      setSearchResults([]);
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Clear Search
+                  </Button>
+                </CardContent>
               )}
-             </Button>
-           </div>
-         )}
-
-         {/* Show loading indicator when more products are available */}
-         {selectedCollection && (visibleProductCounts[selectedCategory] || 0) < selectedCollection.products.length && (
-           <div className="text-center py-8">
-             <div className="flex items-center justify-center gap-2">
-               <Loader2 className="h-6 w-6 animate-spin" />
-               <p className="text-muted-foreground">
-                 Showing {visibleProductCounts[selectedCategory] || 0} of {selectedCollection.products.length} products
-               </p>
-             </div>
-             <Button 
-               variant="outline" 
-               onClick={loadMoreProducts}
-               className="mt-4"
-             >
-               Load More Products
-             </Button>
-           </div>
-         )}
-       </div>
-
-      
-      {/* Navigation Footer */}
-      {onBack && (
-        <div className="p-4 border-t bg-background/50 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={onBack}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-            <div className="text-sm text-muted-foreground">
-              Step 4 of 6
-            </div>
-            {onBackToStart && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={onBackToStart}
-                className="flex items-center gap-2"
-              >
-                🏠 Back to Start
-              </Button>
-            )}
+            </Card>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Mobile bottom navigation */}
+      {isMobile && !shouldHideMenusCompletely && !hideAllMenus && (
+        <MobileBottomNav
+          currentStep="products"
+          cartItemCount={cartItems.length}
+          onOpenCart={onOpenCart}
+          onProceedToCheckout={onProceedToCheckout}
+          onOpenSearch={() => {}}
+        />
       )}
 
       {/* Product Lightbox for cocktails */}
       <ProductLightbox
         product={lightboxProduct}
         isOpen={isLightboxOpen}
-        onClose={closeLightbox}
+        onClose={() => setIsLightboxOpen(false)}
         onAddToCart={handleAddToCart}
-        onUpdateQuantity={onUpdateQuantity}
-        cartQuantity={lightboxProduct ? getCartItemQuantity(lightboxProduct.id, selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id) : 0}
-        selectedVariant={lightboxProduct ? lightboxProduct.variants.find(v => v.id === (selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id)) || lightboxProduct.variants[0] : undefined}
-        onProceedToCheckout={onProceedToCheckout}
-       />
-
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav
-        cartItemCount={cartItemCount}
-        onOpenCart={onOpenCart}
-        onProceedToCheckout={onProceedToCheckout}
-        onOpenSearch={() => setShowSearch(true)}
-        isVisible={true}
-      />
-
-      {/* Custom Theme Creator */}
-      <CustomThemeCreator
-        isOpen={showCustomThemeCreator}
-        onClose={() => setShowCustomThemeCreator(false)}
       />
       
-      {/* Speech Mode Button */}
-      <SpeechButton />
-      
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav 
-        cartItemCount={cartItems.length}
-        onOpenCart={onOpenCart}
-        onProceedToCheckout={onProceedToCheckout}
-        onOpenSearch={() => {}}
-      />
+      {/* Back to Start button - shown only when showBackToStart is true */}
+      {showBackToStart && onBackToStart && (
+        <div className="fixed bottom-4 left-4 z-50">
+          <Button
+            onClick={onBackToStart}
+            variant="outline"
+            size="sm"
+            className="bg-background/95 backdrop-blur-sm border-2 border-primary/20 hover:border-primary/50 text-foreground hover:bg-primary/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Start
+          </Button>
+        </div>
+      )}
+
+      {/* Checkout Dialog */}
+      <Dialog open={showCheckoutDialog} onOpenChange={setShowCheckoutDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ready to checkout?</DialogTitle>
+            <DialogDescription>
+              You have {cartItemCount} items in your cart.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCheckoutDialog(false)}>
+              Continue Shopping
+            </Button>
+            <Button onClick={() => {
+              setShowCheckoutDialog(false);
+              onProceedToCheckout();
+            }}>
+              Proceed to Checkout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

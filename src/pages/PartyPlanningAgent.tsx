@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Mic, MicOff, Volume2, VolumeX, Sparkles, PartyPopper } from 'lucide-react';
 import { toast } from 'sonner';
-import discoBall from '@/assets/disco-ball.gif';
+import discoBall from '@/assets/disco-ball-realistic.png';
 import { supabase } from '@/integrations/supabase/client';
 import { EnhancedVoiceRecorder, audioToBase64 } from '@/utils/voiceRecording';
 
@@ -675,10 +675,10 @@ export default function PartyPlanningAgent() {
                     <img 
                       src={discoBall} 
                       alt="Disco Ball" 
-                      className={`w-16 h-16 mb-2 ${isRecording ? (isSpeechDetected ? 'animate-spin' : '') : 'animate-spin'}`}
+                      className={`w-16 h-16 mb-2 ${isRecording ? 'animate-spin' : 'animate-spin'}`}
                       style={{ 
-                        animationDuration: isRecording ? (isSpeechDetected ? '1s' : '0s') : '2s',
-                        filter: adminMode 
+                        animationDuration: isRecording ? '0.5s' : '3s',
+                        filter: adminMode
                           ? 'brightness(1.2) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
                           : isRecording
                           ? isSpeechDetected

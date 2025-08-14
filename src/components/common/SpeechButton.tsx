@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
-import discoBall from '@/assets/disco-ball.gif';
+import discoBall from '@/assets/disco-ball-realistic.png';
 
 interface SpeechButtonProps {
   className?: string;
@@ -35,9 +35,9 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({ className }) => {
         <img 
           src={discoBall} 
           alt="Disco Ball" 
-          className={`w-8 h-8 mb-1 ${isPressed ? '' : 'animate-spin'}`}
+          className={`w-8 h-8 mb-1 ${isPressed ? 'animate-spin' : 'animate-spin'}`}
           style={{ 
-            animationDuration: isPressed ? '0s' : '2s',
+            animationDuration: isPressed ? '0.5s' : '3s',
             filter: 'brightness(1.2) drop-shadow(0 0 8px rgba(255,255,255,0.8))'
           }}
         />
