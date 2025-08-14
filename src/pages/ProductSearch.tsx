@@ -52,7 +52,7 @@ export const ProductSearch = () => {
   const [selectedVariants, setSelectedVariants] = useState<{ [productId: string]: ProductVariant }>({});
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [collections, setCollections] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Remove all loading states completely
   const cartHook = useUnifiedCart();
   const { cartItems, addToCart, updateQuantity, getCartItemQuantity, getTotalItems, getTotalPrice } = cartHook;
   const { toast } = useToast();
@@ -78,7 +78,7 @@ export const ProductSearch = () => {
   const startTime = performance.now();
   let loaded = false;
   try {
-    setLoading(true);
+    // Remove all loading spinners - load instantly
 
       // 1) Try instant cache (race with very short timeout)
       const instant = await getInstantProducts();
@@ -102,7 +102,7 @@ export const ProductSearch = () => {
         loaded = true;
         const loadTime = performance.now() - startTime;
         console.log(`⚡ SEARCH PAGE INSTANT-CACHE LOAD: ${Math.round(loadTime)}ms - ${enriched.length} products`);
-        setLoading(false);
+        // No loading state change
         return;
       }
 
@@ -131,7 +131,7 @@ export const ProductSearch = () => {
         loaded = true;
         const loadTime = performance.now() - startTime;
         // Search page ultra-fast load completed
-        setLoading(false);
+        // No loading state change
         return;
       }
 
@@ -201,7 +201,7 @@ export const ProductSearch = () => {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      // Products loaded - no loading states
     }
   };
 
@@ -586,7 +586,7 @@ export const ProductSearch = () => {
           {/* Results Summary */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
-              {loading ? "Loading..." : `${filteredProducts.length} products found`}
+              {`${filteredProducts.length} products found`}
               {searchTerm && ` for "${searchTerm}"`}
               {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
               {selectedCategory === "spirits" && selectedSpiritType !== "all" && ` - ${selectedSpiritType}`}
@@ -622,17 +622,7 @@ export const ProductSearch = () => {
 
       {/* Products Grid - Mobile Optimized */}
       <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6">
-        {loading ? (
-          <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="aspect-[3/2] bg-muted rounded-lg mb-2" />
-                <div className="h-3 sm:h-4 bg-muted rounded mb-1" />
-                <div className="h-2 sm:h-3 bg-muted rounded w-2/3" />
-              </div>
-            ))}
-          </div>
-        ) : filteredProducts.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
             <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No products found</h3>
