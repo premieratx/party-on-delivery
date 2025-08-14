@@ -135,10 +135,12 @@ const [hideTabs, setHideTabs] = useState(false);
 const [hideAllMenus, setHideAllMenus] = useState(false);
 const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
+const [isScrollingDown, setIsScrollingDown] = useState(false);
 const [showMobileCartCheckout, setShowMobileCartCheckout] = useState(false);
 const [showCustomThemeCreator, setShowCustomThemeCreator] = useState(false);
 
 // Enhanced search interface with smooth UI transitions
+// Enhanced search interface with scroll detection
 const {
   isSearchFocused,
   hasUserInteracted,
@@ -150,12 +152,24 @@ const {
   searchInputRef,
   handleSearchFocus,
   handleSearchBlur
-} = useSearchInterface({ 
+} = useSearchInterface({
   hideOnScroll: true,
   onSearchFocus: () => {
     // Additional focus handling can go here
   }
 });
+
+// Enhanced scroll detection for cart/checkout replacement
+useEffect(() => {
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+    const isScrollingNow = currentScrollY > 50; // Show cart when scrolled more than 50px
+    setIsScrollingDown(isScrollingNow);
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
 
 // Apply affiliate markup to displayed prices (session-based)
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
@@ -768,13 +782,15 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      {/* What's the Occasion Bar - ALWAYS STICKY with dynamic compression */}
-      <div className={`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${headerCompressed && isMobile ? 'py-1' : 'py-2'} ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
-        <div className={`w-full px-2 md:px-4 ${headerCompressed && isMobile ? 'py-1' : ''}`}>
+      {/* Search Bar - ALWAYS STICKY (replaces What's the occasion when scrolling) */}
+      <div className={`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200`}>
+        <div className={`w-full px-2 md:px-4 py-2`}>
           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
-            {/* Occasion Buttons */}
+            
+            {/* Left Section: What's the Occasion OR Cart/Checkout */}
             <div className="flex items-center gap-2">
-              {/* What's the Occasion text - split into 2 rows */}
+              {!isScrollingDown ? (
+                <>
               <div className="text-xs text-muted-foreground leading-tight mr-2 hidden sm:block">
                 <div>What's the</div>
                 <div>Occasion?</div>
@@ -860,7 +876,37 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                     </Button>
                   </>
                 )}
-              </div>
+                </div>
+                </>
+              ) : (
+                <>
+                  {/* Cart and Checkout when scrolling */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onOpenCart}
+                    className="flex items-center gap-2"
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    <span className="hidden sm:inline">Cart</span>
+                    {cartItemCount > 0 && (
+                      <Badge variant="secondary" className="ml-1 min-w-[20px] h-5 text-xs">
+                        {cartItemCount}
+                      </Badge>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={onProceedToCheckout}
+                    disabled={cartItemCount === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="hidden sm:inline">Checkout</span>
+                  </Button>
+                </>
+              )}
+            </div>
             </div>
             
             {/* Search Bar and Manage Order */}
@@ -893,9 +939,9 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
       </div>
 
-      {/* Category Tabs - ALWAYS STICKY with dynamic compression */}
-      <div className={`sticky ${headerCompressed && isMobile ? 'top-[45px]' : 'top-[60px]'} z-40 w-full px-1 md:px-4 ${headerCompressed && isMobile ? 'py-1' : 'py-3'} bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
-        <div className={`flex flex-nowrap justify-center gap-px ${headerCompressed && isMobile ? 'h-8' : 'h-12'} overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
+      {/* Category Tabs - ALWAYS STICKY */}
+      <div className="sticky top-[60px] z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b">
+        <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto`}>
           {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
           {isMobile && showMobileCartCheckout ? (
             <>
@@ -1404,6 +1450,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         onProceedToCheckout={onProceedToCheckout}
         onOpenSearch={() => {}}
       />
-     </div>
-   );
- };
+      </div>
+    );
+};
