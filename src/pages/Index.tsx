@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ProductCategories from '@/components/delivery/ProductCategories';
+// Removed ProductCategories import - not used on homepage anymore
 import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
@@ -22,10 +22,7 @@ const Index = () => {
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
-  const [showCoverModal, setShowCoverModal] = useState(() => {
-    // Check if cover was already shown in this session
-    return !sessionStorage.getItem(COVER_SHOWN_SESSION_KEY);
-  });
+  const [showCoverModal, setShowCoverModal] = useState(true); // Always show cover modal on homepage load
   const [showAppsGrid, setShowAppsGrid] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
@@ -184,7 +181,29 @@ const Index = () => {
         />
       )}
 
-      {/* Fixed the flow: Cover Modal -> Main App OR Apps Grid */}
+      {/* Show welcome screen when nothing else is active */}
+      {!showCoverModal && !showAppsGrid && (
+        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+          <div className="text-center space-y-6 max-w-md px-4">
+            <h1 className="text-4xl font-bold text-white">Party On Delivery</h1>
+            <p className="text-xl text-white/90">Choose your experience</p>
+            <div className="space-y-4">
+              <button
+                onClick={() => navigate('/app/main-delivery-app')}
+                className="w-full bg-white text-purple-900 font-bold py-3 px-6 rounded-lg hover:bg-white/90 transition-colors"
+              >
+                Order Now
+              </button>
+              <button
+                onClick={() => setShowAppsGrid(true)}
+                className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 px-6 rounded-lg hover:bg-white/20 transition-colors"
+              >
+                Browse Apps
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cart sidebar */}
       <DeliveryCart
