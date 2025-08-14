@@ -29,6 +29,7 @@ import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { haptic } from '@/utils/hapticFeedback';
 import { MobileBottomNav } from '@/components/common/MobileBottomNav';
 import { UIThemeSelector } from '@/components/admin/UIThemeSelector';
+import { SpeechButton } from '@/components/common/SpeechButton';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -1417,8 +1418,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav 
         cartItemCount={cartItems.length}
-        onOpenCart={() => setShowCartModal(true)}
-        onProceedToCheckout={() => setShowCheckoutModal(true)}
+        onOpenCart={onOpenCart}
+        onProceedToCheckout={onProceedToCheckout}
         onOpenSearch={() => {}}
       />
      </div>

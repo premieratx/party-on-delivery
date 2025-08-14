@@ -13,10 +13,10 @@ serve(async (req) => {
 
   try {
     const { message, conversation, questionCount, context } = await req.json();
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
 
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!openRouterApiKey) {
+      throw new Error('OpenRouter API key not configured');
     }
 
     // Build context for the AI based on current conversation state
@@ -44,14 +44,16 @@ Ask follow-up questions naturally based on what information is still missing. Ke
 
 Be friendly, brief, and focused on gathering the essential details to make great recommendations.`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${openRouterApiKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://order.partyondelivery.com',
+        'X-Title': 'Party On Delivery AI Assistant',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'anthropic/claude-3.5-sonnet',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
