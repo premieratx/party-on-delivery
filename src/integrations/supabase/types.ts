@@ -2113,6 +2113,93 @@ export type Database = {
         }
         Relationships: []
       }
+      quotes: {
+        Row: {
+          affiliate_code: string | null
+          affiliate_id: string | null
+          created_at: string
+          created_by: string
+          customer_company: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          delivery_fee: number
+          event_date: string | null
+          event_description: string | null
+          event_location: string | null
+          event_time: string | null
+          event_type: string
+          expiration_date: string
+          guest_count: number | null
+          id: string
+          items: Json
+          notes: string | null
+          quote_number: string
+          sales_tax: number
+          status: string
+          subtotal: number
+          tip_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          affiliate_code?: string | null
+          affiliate_id?: string | null
+          created_at?: string
+          created_by: string
+          customer_company?: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          delivery_fee?: number
+          event_date?: string | null
+          event_description?: string | null
+          event_location?: string | null
+          event_time?: string | null
+          event_type: string
+          expiration_date: string
+          guest_count?: number | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          quote_number: string
+          sales_tax?: number
+          status?: string
+          subtotal?: number
+          tip_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          affiliate_code?: string | null
+          affiliate_id?: string | null
+          created_at?: string
+          created_by?: string
+          customer_company?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          delivery_fee?: number
+          event_date?: string | null
+          event_description?: string | null
+          event_location?: string | null
+          event_time?: string | null
+          event_type?: string
+          expiration_date?: string
+          guest_count?: number | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          quote_number?: string
+          sales_tax?: number
+          status?: string
+          subtotal?: number
+          tip_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       recent_orders: {
         Row: {
           created_at: string

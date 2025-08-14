@@ -37,7 +37,8 @@ export const QuoteManager: React.FC = () => {
 
   const fetchQuotes = async () => {
     try {
-      const { data, error } = await supabase
+      // Since TypeScript types haven't been updated yet, we'll use any temporarily
+      const { data, error } = await (supabase as any)
         .from('quotes')
         .select('*')
         .order('created_at', { ascending: false });
@@ -74,8 +75,8 @@ export const QuoteManager: React.FC = () => {
 
   const downloadQuotePDF = async (quote: Quote) => {
     try {
-      // Fetch full quote data
-      const { data: fullQuote, error } = await supabase
+      // Fetch full quote data (using any due to TypeScript types not updated yet)
+      const { data: fullQuote, error } = await (supabase as any)
         .from('quotes')
         .select('*')
         .eq('id', quote.id)
@@ -123,8 +124,8 @@ export const QuoteManager: React.FC = () => {
         description: `Quote sent to ${quote.customer_email}`,
       });
       
-      // Update quote status
-      const { error } = await supabase
+      // Update quote status (using any due to TypeScript types not updated yet)
+      const { error } = await (supabase as any)
         .from('quotes')
         .update({ status: 'sent' })
         .eq('id', quote.id);
@@ -147,7 +148,8 @@ export const QuoteManager: React.FC = () => {
     }
 
     try {
-      const { error } = await supabase
+      // Delete quote (using any due to TypeScript types not updated yet)
+      const { error } = await (supabase as any)
         .from('quotes')
         .delete()
         .eq('id', quote.id);

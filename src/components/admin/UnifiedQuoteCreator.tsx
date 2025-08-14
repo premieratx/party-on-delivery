@@ -64,7 +64,7 @@ export const UnifiedQuoteCreator: React.FC<UnifiedQuoteCreatorProps> = ({
   onQuoteGenerated
 }) => {
   const { toast } = useToast();
-  const { items: cartItems, clearCart } = useUnifiedCart();
+  const { cartItems, emptyCart } = useUnifiedCart();
   
   const [step, setStep] = useState<'details' | 'items' | 'review' | 'generated'>('details');
   const [loading, setLoading] = useState(false);
