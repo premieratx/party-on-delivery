@@ -74,16 +74,9 @@ class PerformanceManager {
 
   // INSTANT APP-TO-APP SWITCHING OPTIMIZATION
   async optimizeAppSwitching(): Promise<void> {
-    console.log('⚡ Optimizing app-to-app switching...');
-    
-    // Preload critical app resources
-    this.preloadCriticalApps();
-    
-    // Aggressive cache warming
-    this.warmAppCache();
-    
-    // Background resource preloading
-    this.backgroundPreloadResources();
+    // Disabled to prevent preloading animations
+    // console.log('⚡ Optimizing app-to-app switching...');
+    return;
   }
 
   // Performance optimization methods
@@ -299,8 +292,8 @@ class PerformanceManager {
 // Global performance manager instance
 export const performanceManager = new PerformanceManager();
 
-// Auto-start monitoring
-performanceManager.startMonitoring();
+// Disabled auto-start monitoring to prevent preloading
+// performanceManager.startMonitoring();
 
 // Export utility functions
 export const optimizeApp = async () => {

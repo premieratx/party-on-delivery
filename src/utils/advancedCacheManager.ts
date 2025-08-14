@@ -98,25 +98,10 @@ class AdvancedCacheManager {
     }, 15000); // Every 15 seconds
   }
 
-  // Aggressive preloading on app start
+  // Aggressive preloading on app start - DISABLED to prevent loading animations
   private async startAggressivePreloading(): Promise<void> {
-    if (this.isPreloading) return;
-    
-    this.isPreloading = true;
-    
-    try {
-      // Preload critical data in parallel
-      await Promise.allSettled([
-        this.preloadInstantCache(),
-        this.preloadCollections(),
-        this.preloadImages(),
-        this.preloadCategories()
-      ]);
-    } catch (error) {
-      console.warn('Preloading failed:', error);
-    } finally {
-      this.isPreloading = false;
-    }
+    // Do nothing to prevent loading animations
+    return;
   }
 
   // Preload instant cache with extra optimization
