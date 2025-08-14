@@ -33,8 +33,8 @@ export function EnhancedProductGrid({
   onUpdateQuantity,
   className
 }: EnhancedProductGridProps) {
-      const isMobile = ViewportOptimizer.isMobile;
-      const isTablet = ViewportOptimizer.isTablet;
+  const isMobile = ViewportOptimizer.isMobile();
+  const isTablet = ViewportOptimizer.isTablet();
   
   // Responsive grid configuration
   const getGridConfig = () => {

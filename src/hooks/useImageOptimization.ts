@@ -3,7 +3,7 @@ import { ImageOptimizer } from '@/utils/imageOptimizer';
 import { ViewportOptimizer } from '@/utils/performanceOptimizer';
 
 export function useImageOptimization(imageUrl: string, priority = false) {
-  const isMobile = ViewportOptimizer.isMobile;
+  const isMobile = ViewportOptimizer.isMobile();
   
   const optimizedUrls = useMemo(() => {
     if (!imageUrl) return { src: '', mobile: '', tablet: '', desktop: '' };

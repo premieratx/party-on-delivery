@@ -78,27 +78,11 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
 
     // Start conversation when opened
     if (isOpen && messages.length === 0) {
-      initializeAgent();
+      const welcomeMessage = "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!";
+      setMessages([{ type: 'ai', content: welcomeMessage }]);
+      speakMessage(welcomeMessage);
     }
   }, [isOpen]);
-
-  const [agentConfig, setAgentConfig] = useState<any>(null);
-
-  const initializeAgent = async () => {
-    // Use default configuration - simplified approach
-    const defaultConfig = {
-      name: 'Party Assistant',
-      voice: 'aria',
-      model: 'eleven_multilingual_v2',
-      systemPrompt: 'You are a helpful party planning assistant. Help customers find the perfect drinks and supplies for their events.',
-      greeting: "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!",
-      isDefault: true
-    };
-    
-    setAgentConfig(defaultConfig);
-    setMessages([{ type: 'ai', content: defaultConfig.greeting }]);
-    speakMessageWithVoice(defaultConfig.greeting, defaultConfig.voice, defaultConfig.model);
-  };
 
   const startListening = () => {
     if (recognitionRef.current) {
@@ -121,48 +105,11 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
   };
 
   const speakMessage = (text: string) => {
-    if (agentConfig?.voice && agentConfig?.model) {
-      speakMessageWithVoice(text, agentConfig.voice, agentConfig.model);
-    } else {
-      // Fallback to browser speech synthesis
-      if (synthRef.current) {
-        setIsSpeaking(true);
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.onend = () => setIsSpeaking(false);
-        synthRef.current.speak(utterance);
-      }
-    }
-  };
-
-  const speakMessageWithVoice = async (text: string, voice: string, model: string) => {
-    try {
+    if (synthRef.current) {
       setIsSpeaking(true);
-      
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: {
-          text: text,
-          voice: voice,
-          model: model
-        }
-      });
-
-      if (error) throw error;
-
-      // Play the audio
-      const audio = new Audio(`data:audio/mpeg;base64,${data.audioContent}`);
-      audio.onended = () => setIsSpeaking(false);
-      audio.onerror = () => setIsSpeaking(false);
-      await audio.play();
-      
-    } catch (error) {
-      console.error('TTS Error:', error);
-      setIsSpeaking(false);
-      // Fallback to browser speech synthesis
-      if (synthRef.current) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.onend = () => setIsSpeaking(false);
-        synthRef.current.speak(utterance);
-      }
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => setIsSpeaking(false);
+      synthRef.current.speak(utterance);
     }
   };
 
@@ -196,9 +143,7 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
           message: input,
           conversation,
           questionCount,
-          context: 'party_planning',
-          systemPrompt: agentConfig?.systemPrompt || 'You are a helpful party planning assistant.',
-          agentConfig: agentConfig
+          context: 'party_planning'
         }
       });
 
@@ -236,11 +181,6 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
       const suggestionMessage = `Based on your ${conversation.occasion} for ${conversation.guestCount} people, I've found some great options for you! Take a look at these suggestions.`;
       setMessages(prev => [...prev, { type: 'ai', content: suggestionMessage }]);
       speakMessage(suggestionMessage);
-
-      // Generate formal quote and redirect
-      setTimeout(() => {
-        generateFormalQuote(data.suggestions);
-      }, 2000);
       
     } catch (error) {
       console.error('Suggestion generation error:', error);
@@ -252,43 +192,6 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
     } finally {
       setIsGeneratingQuote(false);
     }
-  };
-
-  const generateFormalQuote = (suggestions: any[]) => {
-    const quoteData = {
-      quoteNumber: `AI-${Date.now()}`,
-      customerName: "AI Suggested Customer",
-      customerEmail: "customer@example.com",
-      customerPhone: "",
-      eventType: conversation.occasion || "Party",
-      guestCount: conversation.guestCount,
-      items: suggestions.map((item, index) => ({
-        id: item.id || `ai-${index}`,
-        title: item.title,
-        price: parseFloat(item.price) || 0,
-        quantity: item.recommendedQuantity || 1,
-        category: item.category || "Beverages",
-        image: item.image,
-        variant: item.variant
-      })),
-      subtotal: suggestions.reduce((total, item) => total + (parseFloat(item.price) || 0) * (item.recommendedQuantity || 1), 0),
-      deliveryFee: 25,
-      salesTax: 0,
-      totalAmount: 0,
-      notes: `AI-generated recommendations for ${conversation.occasion} with ${conversation.guestCount} guests.`,
-      companyInfo: {
-        name: "Party On Delivery",
-        address: "Austin, TX",
-        phone: "(512) 555-0123",
-        email: "hello@partyondelivery.com"
-      }
-    };
-
-    // Navigate to formal quote view
-    const params = new URLSearchParams({
-      quote: JSON.stringify(quoteData)
-    });
-    window.open(`/formal-quote?${params.toString()}`, '_blank');
   };
 
   if (!isOpen) return null;

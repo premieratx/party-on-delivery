@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -73,12 +72,6 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
-        <VisuallyHidden>
-          <DialogTitle>{product?.title || 'Product Details'}</DialogTitle>
-        </VisuallyHidden>
-        <VisuallyHidden>
-          <DialogDescription>Product details and purchase options</DialogDescription>
-        </VisuallyHidden>
         {/* Close button */}
         <Button
           variant="ghost"

@@ -105,51 +105,33 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Check cache first (prioritize cache to avoid throttling)
+    // Check cache first (unless force refresh)
     const cacheKey = `shopify_products_${lightweight ? 'light' : 'full'}_${limit}_${collectionHandle || 'all'}`;
     
-    const now = Date.now();
-    const { data: cachedData, error: cacheError } = await supabase
-      .from('cache')
-      .select('data, created_at')
-      .eq('key', cacheKey)
-      .gte('expires_at', now)
-      .maybeSingle();
-
-    if (!cacheError && cachedData) {
-      console.log(`✅ Returning cached data (${JSON.stringify(cachedData.data).length} bytes)`);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          products: cachedData.data.products || [],
-          count: cachedData.data.count || 0,
-          cached: true,
-          cachedAt: cachedData.created_at
-        }),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200 
-        }
-      );
-    }
-
-    // If no cache and not forcing refresh, return fallback data to avoid throttling
     if (!forceRefresh) {
-      console.log("⚠️ No cache available, returning fallback to avoid throttling");
-      return new Response(
-        JSON.stringify({
-          success: true,
-          products: [],
-          count: 0,
-          cached: false,
-          fallback: true,
-          message: "Products temporarily unavailable due to rate limiting"
-        }),
-        { 
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200 
-        }
-      );
+      const { data: cachedData, error: cacheError } = await supabase
+        .from('cache')
+        .select('data, created_at')
+        .eq('key', cacheKey)
+        .gte('expires_at', new Date().toISOString())
+        .maybeSingle();
+
+      if (!cacheError && cachedData) {
+        console.log(`✅ Returning cached data (${JSON.stringify(cachedData.data).length} bytes)`);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            products: cachedData.data.products || [],
+            count: cachedData.data.count || 0,
+            cached: true,
+            cachedAt: cachedData.created_at
+          }),
+          { 
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200 
+          }
+        );
+      }
     }
 
     const SHOPIFY_STORE = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";
@@ -339,17 +321,17 @@ serve(async (req) => {
       timestamp: new Date().toISOString()
     };
 
-    const expiresAt = Date.now() + (lightweight ? 15 : 10) * 60 * 1000; // 15min for lightweight, 10min for full
+    const expiresAt = new Date(Date.now() + (lightweight ? 15 : 10) * 60 * 1000); // 15min for lightweight, 10min for full
 
     await supabase
       .from('cache')
       .upsert({
         key: cacheKey,
         data: cacheData,
-        expires_at: expiresAt
+        expires_at: expiresAt.toISOString()
       });
 
-    console.log(`💾 Cached results until ${new Date(expiresAt).toISOString()}`);
+    console.log(`💾 Cached results until ${expiresAt.toISOString()}`);
 
     return new Response(
       JSON.stringify({

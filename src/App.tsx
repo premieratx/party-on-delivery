@@ -4,12 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StripeProvider } from "@/components/payment/StripeProvider";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { PerformanceMonitor } from "@/components/common/PerformanceMonitor";
 import { Suspense, lazy, useEffect } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
-import { SimpleErrorBoundary } from "@/components/common/SimpleErrorBoundary";
 
 // Core pages that load immediately
 import Index from "./pages/Index";
@@ -66,7 +65,6 @@ const PerformanceTests = lazy(() => import("./pages/PerformanceTests"));
 const TestSMS = lazy(() => import("./components/TestSMS"));
 
 const QuotePreview = lazy(() => import("./pages/QuotePreview"));
-const FormalQuote = lazy(() => import("./pages/FormalQuote"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -170,13 +168,7 @@ const App = () => {
                     <Route path="/app/party-on-delivery---concierge-/order-complete" element={<CustomPartyOnDeliveryPostCheckout />} />
                     
                     {/* Dynamic delivery app routes */}
-                    <Route path="/app/:appName" element={
-                      <SimpleErrorBoundary>
-                        <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-                          <CustomAppView />
-                        </Suspense>
-                      </SimpleErrorBoundary>
-                    } />
+                    <Route path="/app/:appName" element={<CustomAppView />} />
                     <Route path="/app/:appName/order-complete" element={<CustomAppPostCheckout />} />
                     
                     {/* Test Routes */}
@@ -195,7 +187,6 @@ const App = () => {
 
                      {/* Quote Routes */}
                      <Route path="/quote-preview" element={<QuotePreview />} />
-                     <Route path="/formal-quote" element={<FormalQuote />} />
                      
                      {/* 404 - MUST be absolute last */}
                      <Route path="*" element={<NotFound />} />

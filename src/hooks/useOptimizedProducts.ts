@@ -72,23 +72,20 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
       console.log('⚡ Ultra-fast product loading initiated...');
       const startTime = Date.now();
 
-      // Use reliable collections API with performance optimization
-      console.log('📦 Using get-all-collections API with deduplication');
+      // Use instant cache for maximum speed
+      const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
       
-      const { data: collectionsData, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
-      if (collectionsError) throw collectionsError;
-
-      if (collectionsData?.success && collectionsData?.collections) {
-        console.log(`✅ Collections loaded in ${Date.now() - startTime}ms`);
+      if (instantData?.success && instantData?.data && !forceRefresh) {
+        console.log(`✅ Ultra-fast instant cache load completed in ${Date.now() - startTime}ms`);
         
         // Process collections with initial limit
-        const processedCollections = processCollections(collectionsData.collections, initialLimit);
+        const processedCollections = processCollections(instantData.data.collections, initialLimit);
         
         setCollections(processedCollections);
         setCachedData(processedCollections);
         
         // Check if there are more products to load
-        const hasMoreProducts = collectionsData.collections.some((collection: ShopifyCollection) => 
+        const hasMoreProducts = instantData.data.collections.some((collection: ShopifyCollection) => 
           collection.products.length > initialLimit
         );
         setHasMore(hasMoreProducts);
@@ -97,7 +94,19 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
         return;
       }
 
-      throw new Error('Failed to load collections');
+      // Fallback only if instant cache fails or force refresh
+      console.log('📦 Fallback to collections API');
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      if (error) throw error;
+
+      const processedCollections = processCollections(data.collections, initialLimit);
+      setCollections(processedCollections);
+      setCachedData(processedCollections);
+      
+      const hasMoreProducts = data.collections.some((collection: ShopifyCollection) => 
+        collection.products.length > initialLimit
+      );
+      setHasMore(hasMoreProducts);
 
     } catch (err) {
       console.error('Product loading error:', err);
@@ -114,20 +123,20 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
       setLoadingMore(true);
       
       // Get fresh data and load more products for each collection
-      const { data: moreCollectionsData, error: moreError } = await supabase.functions.invoke('get-all-collections');
-      if (moreError) throw moreError;
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      if (error) throw error;
 
       const currentMaxProducts = Math.max(
         ...collections.map(c => c.products.length)
       );
       const newLimit = currentMaxProducts + loadMoreLimit;
 
-      const processedCollections = processCollections(moreCollectionsData.collections, newLimit);
+      const processedCollections = processCollections(data.collections, newLimit);
       setCollections(processedCollections);
       setCachedData(processedCollections);
 
       // Check if there are still more products
-      const stillHasMore = moreCollectionsData.collections.some((collection: ShopifyCollection) => 
+      const stillHasMore = data.collections.some((collection: ShopifyCollection) => 
         collection.products.length > newLimit
       );
       setHasMore(stillHasMore);

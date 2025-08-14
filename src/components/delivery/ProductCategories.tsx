@@ -11,9 +11,6 @@ import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { OccasionButtons } from '@/components/delivery/OccasionButtons';
-import { useScrollHeader } from '@/hooks/useScrollHeader';
-import { SpeechButton } from '@/components/common/SpeechButton';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 
 interface Product {
@@ -70,7 +67,6 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   const isMobile = useIsMobile();
-  const { isScrollingDown } = useScrollHeader({ threshold: 100 });
 
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
@@ -108,28 +104,35 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     try {
       console.log('ProductCategories: Fetching collections...');
       
-      // Use get-all-collections for reliable data loading
-      const { data: result, error: fetchError } = await supabase.functions.invoke('get-all-collections');
+      let functionName = 'fetch-shopify-products-optimized';
+      let body = {};
+      
+      if (customSiteSlug) {
+        console.log(`Custom site detected: ${customSiteSlug}`);
+        functionName = 'get-custom-site-collections';
+        body = { siteSlug: customSiteSlug };
+      }
+
+      const { data: result, error: fetchError } = await supabase.functions.invoke(functionName, {
+        body
+      });
 
       if (fetchError) {
         throw new Error(fetchError.message || 'Failed to fetch data');
       }
 
-      if (!result?.success || !result?.collections) {
-        // Return empty collections instead of throwing error to avoid retry loops
-        console.warn('No collections data received, using empty collections');
-        setCollections([]);
-        setRetryCount(0);
-        return;
+      if (!result?.collections) {
+        throw new Error('No collections data received');
       }
 
-      // Transform the data to match expected format
-      const collectionsData = Array.isArray(result.collections) ? result.collections : [];
+      let collectionsToShow = result.collections;
       
-      // Filter for custom sites if needed
-      let collectionsToShow = collectionsData;
-      if (customSiteSlug) {
-        console.log(`Custom site mode: ${customSiteSlug} - using all collections`);
+      if (customSiteSlug && result.customSiteCollections) {
+        const customSiteCollections = result.customSiteCollections;
+        collectionsToShow = result.collections.filter((collection: any) => 
+          customSiteCollections.includes(collection.handle)
+        );
+        console.log(`Filtered to ${collectionsToShow.length} collections for custom site:`, customSiteCollections);
       }
       
       setCollections(collectionsToShow);
@@ -139,11 +142,8 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.error('Failed to fetch collections:', error);
       setError(error.message || 'Failed to load product collections. Please try again.');
       
-      // Disable auto-retry to prevent API hammering when throttled
-      setAutoRetryEnabled(false);
-      
-      if (autoRetryEnabled && retryCount < 1) { // Reduced from 2 to 1
-        const retryDelay = Math.min(2000 * Math.pow(2, retryCount), 10000); // Increased delay
+      if (autoRetryEnabled && retryCount < 2) {
+        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
         console.log(`Auto-retry attempt ${retryCount + 1} in ${retryDelay}ms...`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
@@ -163,16 +163,13 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     if (!searchQuery.trim()) return [];
     
     const query = searchQuery.toLowerCase().trim();
-    // Fix the crash: safely handle collections that might be undefined/null
-    const allProducts = (collections || []).flatMap(collection => 
-      Array.isArray(collection?.products) ? collection.products : []
-    );
+    const allProducts = collections.flatMap(collection => collection.products || []);
     
     return allProducts.filter(product => 
-      product?.title?.toLowerCase().includes(query) ||
-      product?.description?.toLowerCase().includes(query) ||
-      product?.vendor?.toLowerCase().includes(query) ||
-      (Array.isArray(product?.tags) && product.tags.some(tag => tag?.toLowerCase().includes(query)))
+      product.title.toLowerCase().includes(query) ||
+      product.description?.toLowerCase().includes(query) ||
+      product.vendor?.toLowerCase().includes(query) ||
+      product.tags?.some(tag => tag.toLowerCase().includes(query))
     );
   }, [searchQuery, collections]);
 
@@ -187,9 +184,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       };
     }
     
-    // Fix the crash: safely access collections array
-    const collection = Array.isArray(collections) && collections[selectedCategory];
-    return collection || { id: '', title: '', handle: '', products: [] };
+    return collections[selectedCategory] || { id: '', title: '', handle: '', products: [] };
   }, [selectedCategory, collections, searchQuery, searchResults]);
 
   const handleProductClick = (product: Product) => {
@@ -342,8 +337,29 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return <CategoryTabs />;
   }
 
-  // Remove the loading state that's causing the issue
-  // Just show the hero section and let collections load in background
+  if (isLoading) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <div 
+            className={`p-2 rounded-full transition-colors ${
+              retryCount > 0 
+                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400' 
+                : 'bg-primary/10 text-primary'
+            }`}
+          >
+            <Loader2 className="w-8 h-8 animate-spin" />
+          </div>
+          <div className={`mt-3 text-center font-medium text-lg text-foreground leading-relaxed`}>
+            {retryCount > 0 ? `Retry attempt ${retryCount}` : 'Getting the best products for you'}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {loadingMessage}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -387,48 +403,10 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const showNoResults = searchQuery.trim() && searchResults.length === 0;
 
   return (
-    <div className="min-h-screen relative">
-      {/* Hero Background Image */}
-      <div 
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat -z-10"
-        style={{ 
-          backgroundImage: `url(${heroPartyAustin})`,
-          backgroundAttachment: 'fixed'
-        }}
-      >
-        <div className="absolute inset-0 bg-black/60"></div>
-      </div>
-
-      {/* Speech Button */}
-      <SpeechButton />
-
-      {/* Hero Section with Occasion Buttons */}
-      <div className="relative z-10 min-h-[60vh] flex flex-col justify-center px-4 lg:px-8">
-        <div className="text-center space-y-6 max-w-4xl mx-auto">
-          <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
-            Party On Delivery
-          </h1>
-          <p className="text-xl lg:text-2xl text-white/90 font-medium">
-            Austin's Premier Alcohol Delivery Service
-          </p>
-          
-          {/* Occasion Buttons */}
-          <div className="mt-8 lg:mt-12">
-            <OccasionButtons 
-              isMobile={isMobile} 
-              isScrollingDown={isScrollingDown} 
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Sticky Category Navigation */}
-      <div className="relative z-20">
-        <CategoryTabs />
-      </div>
+    <div className="w-full">
+      <CategoryTabs />
       
-      <div className="relative z-10 bg-background/95 backdrop-blur-sm">
-        <div className="container mx-auto px-2 lg:px-4 py-4">
+      <div className="container mx-auto px-2 lg:px-4 py-4">
         {showSearchResults && (
           <div className="mb-6">
             <h2 className="text-xl font-bold mb-4">Search Results for "{searchQuery}"</h2>
@@ -462,8 +440,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </div>
 
               <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
-                {Array.isArray(currentCollection?.products) && currentCollection.products.map((product) => {
-                  if (!product || !product.id) return null;
+                {currentCollection.products?.map((product) => {
                   const cartQuantity = getCartItemQuantity(product.id, product.variants?.[0]?.title);
                   
                   return (
@@ -603,7 +580,6 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
     </div>
   );
 };

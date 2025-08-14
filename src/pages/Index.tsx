@@ -4,12 +4,12 @@ import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
 import { CustomDeliveryAppsGrid } from '@/components/custom-delivery/CustomDeliveryAppsGrid';
 import { GlobalNavigation } from '@/components/common/GlobalNavigation';
-import { usePreloader } from '@/hooks/usePreloader';
 
 const COVER_SHOWN_SESSION_KEY = 'homepage_cover_shown_session';
 
@@ -17,64 +17,59 @@ const Index = () => {
   // Enable wake lock to keep screen on during app usage
   useWakeLock();
   
+  // Use optimized product loading with immediate start
+  const { refreshProducts, loading: productsLoading } = useOptimizedProductLoader();
+  
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
-  const [showCoverModal, setShowCoverModal] = useState(false); // Cover modal is optional
+  const [showCoverModal, setShowCoverModal] = useState(() => {
+    // Check if cover was already shown in this session
+    return !sessionStorage.getItem(COVER_SHOWN_SESSION_KEY);
+  });
   const [showAppsGrid, setShowAppsGrid] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
-  const { preloadCriticalData } = usePreloader();
 
-  // Load the homepage delivery app configuration 
+  // Load the homepage delivery app configuration and start preloading
   useEffect(() => {
     const loadHomepageApp = async () => {
       try {
         setIsPreloading(true);
         
-        // Load homepage app config safely with error handling
-        const { data, error } = await supabase
-          .from('delivery_app_variations')
-          .select('*')
-          .eq('is_homepage', true)
-          .eq('is_active', true)
-          .maybeSingle();
+        // Load homepage app config in parallel with product preloading
+        const [appResult] = await Promise.allSettled([
+          supabase
+            .from('delivery_app_variations')
+            .select('*')
+            .eq('is_homepage', true)
+            .eq('is_active', true)
+            .maybeSingle(),
+          // Trigger immediate product cache warming
+          supabase.functions.invoke('instant-product-cache', {
+            body: { forceRefresh: false, preload: true }
+          })
+        ]);
         
-        if (!error && data) {
-          setHomepageApp(data);
-        } else {
-          // Set default if no homepage app found
-          setHomepageApp({
-            app_name: "Party On Delivery",
-            logo_url: null
-          });
+        if (appResult.status === 'fulfilled' && !appResult.value.error && appResult.value.data) {
+          setHomepageApp(appResult.value.data);
         }
       } catch (error) {
         console.error('Error loading homepage app:', error);
-        // Set default fallback
-        setHomepageApp({
-          app_name: "Party On Delivery", 
-          logo_url: null
-        });
       } finally {
         setIsPreloading(false);
       }
     };
 
     loadHomepageApp();
-    
-    // Preload critical data immediately
-    preloadCriticalData();
   }, []);
 
   const handleStartShopping = () => {
     // Mark cover as shown for this session
     sessionStorage.setItem(COVER_SHOWN_SESSION_KEY, 'true');
     setShowCoverModal(false);
-    // Navigate to the main delivery app instead of showing ProductCategories
-    navigate('/app/main-delivery-app');
   };
 
   const handleViewApps = () => {
@@ -154,13 +149,7 @@ const Index = () => {
       {/* Global Navigation */}
       <GlobalNavigation />
       
-      {/* Main content - ProductCategories with default delivery app */}
-      <ProductCategories 
-        customSiteSlug="main-delivery-app"
-        hideContent={false}
-      />
-
-      {/* Optional cover modal */}
+      {/* Show cover modal first */}
       {showCoverModal && (
         <CustomDeliveryCoverModal
           open={showCoverModal}
@@ -179,8 +168,17 @@ const Index = () => {
           onAppSelect={(appSlug) => navigate(`/app/${appSlug}`)}
           onBack={() => {
             setShowAppsGrid(false);
+            // Don't show cover modal again if it was already shown in this session
+            if (!sessionStorage.getItem(COVER_SHOWN_SESSION_KEY)) {
+              setShowCoverModal(true);
+            }
           }}
         />
+      )}
+
+      {/* Show main delivery app when cover is dismissed */}
+      {!showCoverModal && !showAppsGrid && (
+        <ProductCategories />
       )}
 
       {/* Cart sidebar */}
@@ -205,7 +203,7 @@ const Index = () => {
         onCheckout={handleCheckout}
         shouldHide={false}
         showAdmin={true}
-        currentAppSlug="main-delivery-app"
+        currentAppSlug={undefined} // Main app doesn't have a specific slug
       />
     </div>
   );

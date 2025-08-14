@@ -1,6 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
@@ -196,12 +195,6 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-h-[90vh] overflow-y-auto max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none">
-        <VisuallyHidden>
-          <DialogTitle>{title || appName}</DialogTitle>
-        </VisuallyHidden>
-        <VisuallyHidden>
-          <DialogDescription>{subtitle || "Delivery cover modal"}</DialogDescription>
-        </VisuallyHidden>
          <article className="relative w-full" onClick={() => { onOpenChange(false); onStartOrder?.(); }}>
           {/* Background */}
           <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden">
