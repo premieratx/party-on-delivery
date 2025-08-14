@@ -687,6 +687,28 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
             {/* Middle: Search removed per request (use sticky search above tabs) */}
 
+            {/* Bottom: Action Buttons */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFA500] hover:to-[#FFD700] text-black font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                onClick={() => {
+                  const element = document.getElementById('product-categories');
+                  element?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Start Shopping Now
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-white/10 border-white text-white hover:bg-white hover:text-black font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                onClick={onOpenCart}
+              >
+                Manage My Order
+              </Button>
+            </div>
+
             {/* Bottom: Typing Intro (shown only when text provided) */}
             {customHeroScrollingText && (
               <div className="mt-1 mb-2">
@@ -696,52 +718,79 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-         <div className={`bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
+         <div className={`fixed top-0 left-0 right-0 z-30 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
           <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
             <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
               {/* Occasion Buttons */}
               <div className="flex items-center gap-2">
                 {/* What's the Occasion text - split into 2 rows */}
-                <div className="text-xs text-muted-foreground leading-tight mr-2">
+                <div className="text-xs text-muted-foreground leading-tight mr-2 hidden sm:block">
                   <div>What's the</div>
                   <div>Occasion?</div>
                 </div>
                 
-                {/* Occasion buttons */}
+                {/* Occasion buttons - responsive design */}
                 <div className="flex gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs px-2 py-1 h-7"
-                    onClick={() => {
-                      // You can add navigation logic here later
-                      console.log('Stock the BnB clicked');
-                    }}
-                  >
-                    Stock the BnB
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs px-2 py-1 h-7"
-                    onClick={() => {
-                      // You can add navigation logic here later
-                      console.log('Lake Delivery clicked');
-                    }}
-                  >
-                    Lake Delivery
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs px-2 py-1 h-7"
-                    onClick={() => {
-                      // You can add navigation logic here later
-                      console.log('Wedding clicked');
-                    }}
-                  >
-                    Wedding
-                  </Button>
+                  {isMobile ? (
+                    <>
+                      {/* Mobile: Small icon-based buttons */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
+                        onClick={() => console.log('Stock the BnB clicked')}
+                      >
+                        <div className="text-xs">🏠</div>
+                        <div className="text-[8px] leading-none">BnB</div>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
+                        onClick={() => console.log('Lake Delivery clicked')}
+                      >
+                        <div className="text-xs">🌊</div>
+                        <div className="text-[8px] leading-none">Lake</div>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
+                        onClick={() => console.log('Wedding clicked')}
+                      >
+                        <div className="text-xs">💒</div>
+                        <div className="text-[8px] leading-none">Wed</div>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Desktop: Full text buttons */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-2 py-1 h-7"
+                        onClick={() => console.log('Stock the BnB clicked')}
+                      >
+                        Stock the BnB
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-2 py-1 h-7"
+                        onClick={() => console.log('Lake Delivery clicked')}
+                      >
+                        Lake Delivery
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs px-2 py-1 h-7"
+                        onClick={() => console.log('Wedding clicked')}
+                      >
+                        Wedding
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
               
@@ -761,14 +810,13 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                   />
                 </div>
                 
-                {/* Manage My Order Button - Desktop */}
+                {/* Manage Order Button - Desktop */}
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/customer/dashboard')}
-                  className="hidden sm:flex items-center gap-1 whitespace-nowrap"
+                  className="hidden md:flex items-center gap-1 text-xs"
+                  onClick={onOpenCart}
                 >
-                  <Package className="w-4 h-4" />
                   Manage My Order
                 </Button>
               </div>

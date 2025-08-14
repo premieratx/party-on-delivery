@@ -291,3 +291,21 @@ All colors MUST be HSL.
       transform: scale(1.05);
     }
   }
+
+/* Green circle size optimization for mobile */
+@media (max-width: 768px) {
+  .product-grid .text-green-500,
+  .text-green-500 svg {
+    transform: scale(0.7);
+  }
+}
+
+/* Checkout blink animation */
+@keyframes checkout-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.7; }
+}
+
+.animate-checkout-blink {
+  animation: checkout-blink 1.5s infinite;
+}
