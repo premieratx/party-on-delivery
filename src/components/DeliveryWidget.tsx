@@ -11,8 +11,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useReliableStorage } from '@/hooks/useReliableStorage';
 import { useUnifiedCart, UnifiedCartItem } from '@/hooks/useUnifiedCart';
-import { useGroupOrderHandler } from '@/hooks/useGroupOrderHandler';
-import GroupOrderJoinFlow from './GroupOrderJoinFlow';
+// Group order imports removed for cleanup
 import { getActiveDeliveryInfo, formatDeliveryDate, isDeliveryExpired } from '@/utils/deliveryInfoManager';
 
 export type DeliveryStep = 'order-continuation' | 'address-confirmation' | 'products' | 'cart' | 'checkout';
@@ -45,8 +44,7 @@ export const DeliveryWidget: React.FC = () => {
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
-  // Use clean group order handler
-  const { groupOrderData, isJoiningGroup, showJoinFlow, clearGroupOrder, handleJoinConfirmed, handleJoinDeclined } = useGroupOrderHandler();
+  // Group order handler removed for cleanup
   
   // Check for persistent add to order flag
   const addToOrderFlag = localStorage.getItem('partyondelivery_add_to_order') === 'true';
@@ -61,7 +59,7 @@ export const DeliveryWidget: React.FC = () => {
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [lastOrderInfo, setLastOrderInfo] = useLocalStorage<any>('partyondelivery_last_order', null);
-  const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag || isJoiningGroup);
+  const [isAddingToOrder, setIsAddingToOrder] = useState<boolean>(!!addToOrderFlag);
   const [useSameAddress, setUseSameAddress] = useState<boolean>(false);
 
   // State for tracking cart calculations (for cart/checkout sync) - persist discount in localStorage
@@ -100,7 +98,6 @@ export const DeliveryWidget: React.FC = () => {
     // Clear all persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
-    clearGroupOrder(); // Use group order handler to clear
     setCurrentStep('products');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -115,7 +112,6 @@ export const DeliveryWidget: React.FC = () => {
     // Clear persistent flags to start fresh flow
     localStorage.removeItem('partyondelivery_add_to_order');
     localStorage.removeItem('partyondelivery_bundle_ready');
-    clearGroupOrder(); // Use group order handler to clear
     
     setCurrentStep('products');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -241,19 +237,7 @@ export const DeliveryWidget: React.FC = () => {
     }
   };
 
-  // Show group order join flow if needed
-  if (showJoinFlow) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const shareToken = urlParams.get('share') || localStorage.getItem('groupOrderToken') || '';
-    
-    return (
-      <GroupOrderJoinFlow
-        shareToken={shareToken}
-        onJoinConfirmed={handleJoinConfirmed}
-        onJoinDeclined={handleJoinDeclined}
-      />
-    );
-  }
+  // Group order join flow removed for cleanup
 
   if (currentStep === 'order-continuation') {
     return (
