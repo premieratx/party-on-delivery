@@ -13,6 +13,7 @@ import { getInstantProducts } from '@/utils/instantCacheClient';
 import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
@@ -76,6 +77,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
 const [showSearchModal, setShowSearchModal] = useState(false);
+  const isMobile = useIsMobile();
 
   // Apply affiliate markup to displayed prices (session based)
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
@@ -417,9 +419,9 @@ const [showSearchModal, setShowSearchModal] = useState(false);
                             e.stopPropagation();
                             handleUpdateQuantity(product.id, -1, variant?.id);
                           }}
-                          className="h-8 w-8 p-0 text-purple-600 hover:bg-purple-100"
+                          className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
                         >
-                          <Minus className="w-4 h-4" />
+                          <Minus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
                         </Button>
                         
                         <span className="font-medium text-purple-700 min-w-[2rem] text-center">
@@ -433,9 +435,9 @@ const [showSearchModal, setShowSearchModal] = useState(false);
                             e.stopPropagation();
                             handleUpdateQuantity(product.id, 1, variant?.id);
                           }}
-                          className="h-8 w-8 p-0 text-purple-600 hover:bg-purple-100"
+                          className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
                         </Button>
                       </div>
                     )}

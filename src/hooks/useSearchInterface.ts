@@ -17,20 +17,18 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle search focus with immediate UI changes and instant scrolling
+  // Handle search focus with immediate UI changes - NO SCROLL TO TOP
   const handleSearchFocus = useCallback(() => {
     setIsSearchFocused(true);
     setHasUserInteracted(true);
     setShouldHideChrome(true);
     options.onSearchFocus?.();
 
-    // Instant scroll to top - no smooth animation for speed
-    window.scrollTo(0, 0);
+    // Remove scroll to top behavior per user request
 
-    // Add mobile keyboard optimizations
+    // Add mobile keyboard optimizations - but allow scrolling
     if (typeof window !== 'undefined') {
-      document.body.style.height = '100vh';
-      document.body.style.overflow = 'hidden';
+      // Remove body height and overflow restrictions to allow scrolling
       
       // Force viewport adjustment for mobile keyboards
       requestAnimationFrame(() => {
@@ -47,10 +45,9 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
     setIsSearchFocused(false);
     options.onSearchBlur?.();
     
-    // Restore body styles
+    // Restore body styles - but they're already normal since we removed restrictions
     if (typeof window !== 'undefined') {
-      document.body.style.height = '';
-      document.body.style.overflow = '';
+      // No need to restore since we don't set them anymore
       
       // Restore normal viewport
       const viewport = document.querySelector('meta[name="viewport"]');

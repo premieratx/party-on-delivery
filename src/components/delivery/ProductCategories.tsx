@@ -742,27 +742,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
             {/* Middle: Search removed per request (use sticky search above tabs) */}
 
-            {/* Bottom: Action Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-4">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#FFA500] hover:to-[#FFD700] text-black font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                onClick={() => {
-                  const element = document.getElementById('product-categories');
-                  element?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                Start Shopping Now
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-white/10 border-white text-white hover:bg-white hover:text-black font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                onClick={onOpenCart}
-              >
-                Manage My Order
-              </Button>
-            </div>
+            {/* Bottom: Action Buttons - REMOVED per user request */}
 
             {/* Bottom: Typing Intro (shown only when text provided) */}
             {customHeroScrollingText && (
@@ -773,8 +753,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      {/* What's the Occasion Bar - STICKY BELOW HERO - Only sticky when search is focused */}
-      <div className={`${isSearchFocused ? 'sticky top-0' : 'relative'} z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
+      {/* What's the Occasion Bar - STICKY when search is focused OR tabs are active */}
+      <div className={`${(isSearchFocused || hasUserInteracted) ? 'sticky top-0' : 'relative'} z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && (isSearchFocused || hasUserInteracted) ? 'shadow-lg' : ''}`}>
         <div className="w-full px-2 md:px-4 py-2">
           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
             {/* Occasion Buttons */}
@@ -898,8 +878,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
       </div>
 
-      {/* Category Tabs - STICKY BELOW OCCASION BAR - Only sticky when search is focused */}
-      <div className={`${isSearchFocused ? 'sticky top-[60px]' : 'relative'} z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
+      {/* Category Tabs - STICKY BELOW OCCASION BAR when search is focused OR tabs are active */}
+      <div className={`${(isSearchFocused || hasUserInteracted) ? 'sticky top-[60px]' : 'relative'} z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
         <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
           {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
           {isMobile && showMobileCartCheckout ? (
@@ -1008,8 +988,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       </div>
 
 
-      {/* Section Heading - Scrolls away (NOT STICKY) */}
-      {!shouldHideMenusCompletely && !hideAllMenus && selectedCollection && (
+      {/* Section Heading - Hidden when sticky mode is active */}
+      {!shouldHideMenusCompletely && !hideAllMenus && !(isSearchFocused || hasUserInteracted) && selectedCollection && (
         <div className="max-w-7xl mx-auto px-4 pb-4">
           <div className="flex items-center justify-center gap-4">
             {selectedCategory !== 0 && (
@@ -1071,15 +1051,15 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
   <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${applyMarkup(price).toFixed(2)}</Badge>
   <div className="flex justify-center">
                          {cartQty > 0 ? (
-                          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="text-sm font-bold px-2 min-w-[2rem] text-center">{cartQty}</span>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground rounded-full" onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
+                           <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                               <Minus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
+                             </Button>
+                             <span className="text-sm font-bold px-2 min-w-[2rem] text-center">{cartQty}</span>
+                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                               <Plus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
+                             </Button>
+                           </div>
                         ) : (
                           <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center transition-transform hover:scale-110" onClick={() => handleAddToCart(product, variant)}>
                             <Plus className="w-5 h-5" strokeWidth={3} />
@@ -1223,49 +1203,50 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                      {/* Centered Cart Controls with larger, more visible buttons */}
                      <div className="flex justify-center items-center">
                        {cartQty > 0 ? (
-                         <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             className="h-8 w-8 p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleQuantityChange(product.id, selectedVariant?.id, -1);
-                             }}
-                           >
-                             <Minus className="w-4 h-4" />
-                           </Button>
-                           <span className="text-sm font-bold px-2 min-w-[2rem] text-center">
-                             {cartQty}
-                           </span>
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             className="h-8 w-8 p-0 rounded-full hover:bg-primary hover:text-primary-foreground"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleQuantityChange(product.id, selectedVariant?.id, 1);
-                             }}
-                           >
-                             <Plus className="w-4 h-4" />
-                           </Button>
-                         </div>
+                          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuantityChange(product.id, selectedVariant?.id, -1);
+                              }}
+                            >
+                              <Minus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
+                            </Button>
+                            <span className="text-sm font-bold px-2 min-w-[2rem] text-center">
+                              {cartQty}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 rounded-full hover:bg-primary hover:text-primary-foreground`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuantityChange(product.id, selectedVariant?.id, 1);
+                              }}
+                            >
+                              <Plus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
+                            </Button>
+                          </div>
                        ) : (
                          <button
                            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-12 h-12 flex items-center justify-center transition-transform hover:scale-110 shadow-lg"
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
-                               onAddToCart({
-                                 id: product.id,
-                                 title: product.title,
-                                 name: product.title,
-                                 price: selectedVariant.price,
-                                 image: product.image,
-                                 variant: selectedVariant.id
-                               });
-                              setCartCountAnimation(true);
-                              setTimeout(() => setCartCountAnimation(false), 300);
+                              onAddToCart({
+                                id: product.id,
+                                title: product.title,
+                                name: product.title,
+                                price: selectedVariant.price,
+                                image: product.image,
+                                variant: selectedVariant.id
+                              });
+                             setCartCountAnimation(true);
+                             setTimeout(() => setCartCountAnimation(false), 300);
+                             // Remove scroll to top behavior for add-to-cart
                             }
                            }}
                          >
