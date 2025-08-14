@@ -171,12 +171,11 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           {cartItems.length > 0 && (
             <div className="border-t p-4 bg-background">
               <Button 
-                variant="success" 
+                className="w-full checkout-blink bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg py-6"
                 size="lg" 
-                className="w-full checkout-blink"
                 onClick={handleCheckout}
               >
-                Checkout Now - ${finalTotal.toFixed(2)}
+                Proceed to Checkout - ${finalTotal.toFixed(2)}
               </Button>
             </div>
           )}
