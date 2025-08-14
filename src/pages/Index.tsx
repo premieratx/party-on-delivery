@@ -181,29 +181,7 @@ const Index = () => {
         />
       )}
 
-      {/* Show welcome screen when nothing else is active */}
-      {!showCoverModal && !showAppsGrid && (
-        <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-          <div className="text-center space-y-6 max-w-md px-4">
-            <h1 className="text-4xl font-bold text-white">Party On Delivery</h1>
-            <p className="text-xl text-white/90">Choose your experience</p>
-            <div className="space-y-4">
-              <button
-                onClick={() => navigate('/app/main-delivery-app')}
-                className="w-full bg-white text-purple-900 font-bold py-3 px-6 rounded-lg hover:bg-white/90 transition-colors"
-              >
-                Order Now
-              </button>
-              <button
-                onClick={() => setShowAppsGrid(true)}
-                className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 px-6 rounded-lg hover:bg-white/20 transition-colors"
-              >
-                Browse Apps
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Cover modal dismisses -> either shows apps grid OR nothing (direct navigation) */}
 
       {/* Cart sidebar */}
       <DeliveryCart
