@@ -182,7 +182,7 @@ const Index = () => {
         />
       )}
 
-      {/* Show main delivery app when cover is dismissed */}
+      {/* Show main delivery app when cover is dismissed and no app grid */}
       {!showCoverModal && !showAppsGrid && (
         <React.Suspense fallback={
           <div className="min-h-screen bg-background flex items-center justify-center">
