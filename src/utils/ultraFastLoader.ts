@@ -30,9 +30,14 @@ class UltraFastLoader {
   private isProcessingQueue = false;
   private maxConcurrent = 6;
   private activeRequests = 0;
+  private disabled = true; // DISABLED to prevent loading issues
 
   // Lightning-fast product loading with multiple fallbacks
   async loadProducts(options: LoadOptions = {}): Promise<ProductData> {
+    if (this.disabled) {
+      throw new Error('UltraFastLoader is disabled to prevent loading issues');
+    }
+    
     const cacheKey = 'ultra-fast-products';
     const startTime = Date.now();
 

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useProductCache } from './useProductCache';
-import { ultraFastLoader } from '@/utils/ultraFastLoader';
-import { advancedCacheManager } from '@/utils/advancedCacheManager';
+// Removed imports to prevent loading issues
+// import { ultraFastLoader } from '@/utils/ultraFastLoader';
+// import { advancedCacheManager } from '@/utils/advancedCacheManager';
 
 interface ShopifyProduct {
   id: string;

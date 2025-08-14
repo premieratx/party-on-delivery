@@ -20,21 +20,8 @@ export class PreloadManager {
    * Preload critical data when app starts
    */
   public async preloadCriticalData(): Promise<void> {
-    if (this.isPreloading) return;
-    
-    this.isPreloading = true;
-    console.log('Starting critical data preload...');
-
-    try {
-      await Promise.allSettled([
-        this.preloadShopifyCollections(),
-        this.cleanupExpiredCache()
-      ]);
-    } catch (error) {
-      ErrorHandler.logError(error, 'preloadCriticalData');
-    } finally {
-      this.isPreloading = false;
-    }
+    // Completely disabled to prevent loading animations
+    return;
   }
 
   /**

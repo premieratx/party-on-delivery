@@ -92,12 +92,10 @@ export class InstantAppLoader {
     }
   }
 
-  // Initialize preloading for common apps
+  // Initialize preloading for common apps - DISABLED
   async initializePreloading(): Promise<void> {
-    console.log('🚀 Initializing instant app loader...');
-    
-    // No common apps to preload - only load apps when actually needed
-    // This prevents errors from trying to load non-existent delivery apps
+    // Completely disabled to prevent loading animations
+    return;
   }
 
   // Clear cache when needed

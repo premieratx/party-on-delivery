@@ -8,8 +8,9 @@ import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { parseProductTitle } from '@/utils/productUtils';
 import { Input } from '@/components/ui/input';
-import { ultraFastLoader } from '@/utils/ultraFastLoader';
-import { advancedCacheManager } from '@/utils/advancedCacheManager';
+// Removed imports to prevent loading issues
+// import { ultraFastLoader } from '@/utils/ultraFastLoader';
+// import { advancedCacheManager } from '@/utils/advancedCacheManager';
 import { getInstantProducts } from '@/utils/instantCacheClient';
 
 interface CustomProductCategoriesProps {
@@ -167,17 +168,8 @@ export function CustomProductCategories({
       } catch (error) {
         console.error('Lightning-fast loading failed:', error);
         
-        // Emergency fallback
-        const emergencyData = advancedCacheManager.get('emergency-products') as any;
-        if (emergencyData && Array.isArray(emergencyData.collections)) {
-          const relevantCollections = emergencyData.collections.filter((collection: any) =>
-            collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
-          );
-          setCollections(relevantCollections);
-          setError('Using emergency cache');
-        } else {
-          setError('Failed to load delivery app data');
-        }
+        // Emergency fallback - removed emergency cache dependency
+        setError('Failed to load delivery app data');
       }
       
     } catch (error) {

@@ -295,13 +295,10 @@ export const performanceManager = new PerformanceManager();
 // Disabled auto-start monitoring to prevent preloading
 // performanceManager.startMonitoring();
 
-// Export utility functions
+// Export utility functions - DISABLED to prevent preloading
 export const optimizeApp = async () => {
-  await performanceManager.optimizeAppSwitching();
-  await performanceManager.optimizeProductLoading();
-  await performanceManager.optimizeShopifySync();
-  performanceManager.optimizeGroupOrderFlow();
-  performanceManager.performComprehensiveCleanup();
+  // Completely disabled to prevent loading animations
+  return;
 };
 
 export const getPerformanceReport = () => performanceManager.getPerformanceReport();
