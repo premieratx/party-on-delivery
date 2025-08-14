@@ -97,12 +97,7 @@ const App = () => {
                 <Suspense fallback={null}>
                   <Routes>
                     {/* Core Routes - Debug logging */}
-                    <Route path="/" element={
-                      (() => {
-                        console.log('🔄 App.tsx: Loading DefaultDeliveryApp for /');
-                        return <DefaultDeliveryApp />;
-                      })()
-                    } />
+                    <Route path="/" element={<Index />} />
                     <Route path="/app/party-on-delivery" element={<DefaultDeliveryApp />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     <Route path="/voice-chat" element={<VoiceChat />} />

@@ -5,8 +5,8 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Navigate directly to DefaultDeliveryApp instead of redirecting
-    navigate('/delivery', { replace: true });
+    // Load the homepage delivery app (Premier Party Cruises is marked as homepage)
+    navigate('/app/premier-party-cruises---official-alcohol-delivery-service', { replace: true });
   }, [navigate]);
 
   return <div className="min-h-screen bg-background flex items-center justify-center">
