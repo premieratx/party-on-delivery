@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CoverPageEditor, CoverPageConfig } from '@/components/admin/CoverPageEditor';
+import { EnhancedCoverPageBuilder } from '@/components/admin/EnhancedCoverPageBuilder';
 import { Copy, ExternalLink, Plus, RefreshCcw, Edit, Trash } from 'lucide-react';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -16,6 +17,7 @@ const CoverPagesAdmin: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [editorOpen, setEditorOpen] = useState(false);
+  const [enhancedBuilderOpen, setEnhancedBuilderOpen] = useState(false);
   const [editing, setEditing] = useState<CoverPageConfig | null>(null);
 
   const load = async () => {
@@ -63,6 +65,7 @@ const CoverPagesAdmin: React.FC = () => {
   }, [pages, search]);
 
   const openNew = () => { setEditing(null); setEditorOpen(true); };
+  const openNewEnhanced = () => { setEditing(null); setEnhancedBuilderOpen(true); };
   const openEdit = (p: any) => {
     const cfg: CoverPageConfig = {
       id: p.id,
@@ -105,7 +108,8 @@ const CoverPagesAdmin: React.FC = () => {
           <h1 className="text-2xl font-bold">Cover Pages</h1>
           <div className="flex gap-2">
             <Button variant="outline" onClick={load}><RefreshCcw className="h-4 w-4 mr-2" />Refresh</Button>
-            <Button onClick={openNew}><Plus className="h-4 w-4 mr-2" />New Cover Page</Button>
+            <Button onClick={openNew} variant="outline"><Plus className="h-4 w-4 mr-2" />Classic Editor</Button>
+            <Button onClick={openNewEnhanced}><Plus className="h-4 w-4 mr-2" />Enhanced Builder</Button>
           </div>
         </div>
 
@@ -166,6 +170,7 @@ const CoverPagesAdmin: React.FC = () => {
       </div>
 
       <CoverPageEditor open={editorOpen} onOpenChange={setEditorOpen} initial={editing} onSaved={load} />
+      <EnhancedCoverPageBuilder open={enhancedBuilderOpen} onOpenChange={setEnhancedBuilderOpen} initial={editing} onSaved={load} />
     </div>
   );
 };
