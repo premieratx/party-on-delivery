@@ -120,7 +120,7 @@ export function CustomProductCategories({
       setLoading(true);
       setError(null);
       
-      console.log('⚡ Lightning-fast delivery app loading...');
+      // Lightning-fast delivery app loading
       const startTime = Date.now();
 
       try {
@@ -128,7 +128,7 @@ export function CustomProductCategories({
         const { data: lightningData, error: lightningError } = await supabase.functions.invoke('lightning-sync');
         
         if (!lightningError && lightningData?.data?.collections) {
-          console.log(`⚡ Lightning sync loaded in ${Date.now() - startTime}ms`);
+          // Lightning sync loaded
           
           const relevantCollections = lightningData.data.collections.filter((collection: any) =>
             collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
@@ -147,7 +147,7 @@ export function CustomProductCategories({
         // Use instant cache for maximum speed
         const instant = await getInstantProducts();
         if (instant?.collections) {
-          console.log(`✅ Instant cache loaded in ${Date.now() - startTime}ms`);
+          // Instant cache loaded
           const relevantCollections = (instant.collections as any[]).filter((collection: any) =>
             collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
           );

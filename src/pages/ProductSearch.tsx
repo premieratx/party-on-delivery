@@ -130,7 +130,7 @@ export const ProductSearch = () => {
         setAllProducts(enrichedProducts);
         loaded = true;
         const loadTime = performance.now() - startTime;
-        console.log(`⚡ SEARCH PAGE ULTRA-FAST LOAD: ${Math.round(loadTime)}ms - ${enrichedProducts.length} products`);
+        // Search page ultra-fast load completed
         setLoading(false);
         return;
       }

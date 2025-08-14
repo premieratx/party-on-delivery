@@ -9,7 +9,6 @@ import { useReliableStorage } from '@/hooks/useReliableStorage';
 import { useUnifiedCart, UnifiedCartItem } from '@/hooks/useUnifiedCart';
 import { getActiveDeliveryInfo, formatDeliveryDate, isDeliveryExpired } from '@/utils/deliveryInfoManager';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
-import { FastProductLoader } from '@/components/delivery/FastProductLoader';
 
 export type CustomDeliveryStep = 'order-continuation' | 'products' | 'cart' | 'tabs';
 
@@ -191,10 +190,7 @@ export const CustomDeliveryAppWidget: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <FastProductLoader 
-        onProductsLoaded={setProducts}
-        onCollectionsLoaded={setCollections}
-      />
+      {/* Removed FastProductLoader - using instant cache directly */}
       
       {currentStep === 'tabs' && (
         <CustomProductCategories 

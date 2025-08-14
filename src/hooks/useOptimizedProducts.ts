@@ -70,14 +70,14 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
       setLoading(true);
       setError(null);
 
-      console.log('⚡ Ultra-fast product loading initiated...');
+      // Ultra-fast product loading initiated
       const startTime = Date.now();
 
       // Use instant cache for maximum speed
       const { data: instantData } = await supabase.functions.invoke('instant-product-cache');
       
       if (instantData?.success && instantData?.data && !forceRefresh) {
-        console.log(`✅ Ultra-fast instant cache load completed in ${Date.now() - startTime}ms`);
+        // Ultra-fast instant cache load completed
         
         // Process collections with initial limit
         const processedCollections = processCollections(instantData.data.collections, initialLimit);
