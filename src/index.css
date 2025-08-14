@@ -277,8 +277,17 @@ All colors MUST be HSL.
   }
 
   /* Checkout blink animation */
-  @keyframes checkout-blink {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.88; transform: scale(1.02); }
+  .checkout-blink {
+    animation: checkout-pulse 1.5s infinite;
   }
-  .checkout-blink { animation: checkout-blink 1.5s ease-in-out infinite; }
+
+  @keyframes checkout-pulse {
+    0%, 100% { 
+      opacity: 1; 
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 0.8; 
+      transform: scale(1.05);
+    }
+  }

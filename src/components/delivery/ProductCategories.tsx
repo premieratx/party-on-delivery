@@ -651,30 +651,19 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </button>
         </div>
 
-        {/* Cart/Checkout - Top Right of Hero (mobile/tablet only) */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2 lg:hidden">
+        {/* Manage My Order Button - Top Right Corner of Hero */}
+        <div className="absolute top-4 right-4 z-20">
           <button
-            onClick={onOpenCart}
-            onTouchEnd={onOpenCart}
-            className="relative w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center"
-            aria-label="Open Cart"
+            onClick={() => navigate('/customer/dashboard')}
+            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg px-3 py-2 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+            aria-label="Manage My Order"
           >
-            <ShoppingCart className="w-5 h-5 text-white" />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-1 -right-1 rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
-                {cartItemCount}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
-            disabled={cartItemCount === 0}
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center ${cartItemCount > 0 ? 'bg-white/20 border border-white/30 hover:bg-white/30' : 'bg-white/10 border border-white/20 opacity-50 cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-primary animate-pulse' : ''}`}
-            aria-label="Checkout"
-          >
-            <CheckCircle className={`${cartItemCount > 0 ? 'text-white' : 'text-white/60'} w-5 h-5`} />
+            <Package className="w-5 h-5 text-white" />
+            <span className="hidden sm:inline text-white font-medium">Manage My Order</span>
           </button>
         </div>
+
+        {/* Hidden - moved to bottom bar */}
 
           {/* Centered Content - evenly spaced */}
           <div className="relative z-10 h-full flex flex-col justify-between text-center px-4 py-6">
@@ -707,75 +696,88 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-      <div className={`bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
-         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
-           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
-             {/* Occasion Buttons */}
-             <div className="flex items-center gap-2">
-               {/* What's the Occasion text - split into 2 rows */}
-               <div className="text-xs text-muted-foreground leading-tight mr-2">
-                 <div>What's the</div>
-                 <div>Occasion?</div>
-               </div>
-               
-               {/* Occasion buttons */}
-               <div className="flex gap-1">
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   className="text-xs px-2 py-1 h-7"
-                   onClick={() => {
-                     // You can add navigation logic here later
-                     console.log('Stock the BnB clicked');
-                   }}
-                 >
-                   Stock the BnB
-                 </Button>
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   className="text-xs px-2 py-1 h-7"
-                   onClick={() => {
-                     // You can add navigation logic here later
-                     console.log('Lake Delivery clicked');
-                   }}
-                 >
-                   Lake Delivery
-                 </Button>
-                 <Button
-                   variant="outline"
-                   size="sm"
-                   className="text-xs px-2 py-1 h-7"
-                   onClick={() => {
-                     // You can add navigation logic here later
-                     console.log('Wedding clicked');
-                   }}
-                 >
-                   Wedding
-                 </Button>
-               </div>
-             </div>
-             
-             {/* Search Bar */}
-             <div className="flex-1 max-w-lg">
-               <ProductSearchBar
-                 onProductSelect={handleSearchSelect}
-                 placeholder="Search all products..."
-                 showDropdownResults={false}
-                 onResultsChange={handleSearchResultsChange}
-                 onSearchingChange={setIsSearching}
-                 onFocus={handleSearchFocus}
-                 onBlur={handleSearchBlur}
-                 inputRef={searchInputRef}
-                 inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
-               />
-             </div>
-           </div>
-         </div>
+         <div className={`bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
+          <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
+            <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
+              {/* Occasion Buttons */}
+              <div className="flex items-center gap-2">
+                {/* What's the Occasion text - split into 2 rows */}
+                <div className="text-xs text-muted-foreground leading-tight mr-2">
+                  <div>What's the</div>
+                  <div>Occasion?</div>
+                </div>
+                
+                {/* Occasion buttons */}
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs px-2 py-1 h-7"
+                    onClick={() => {
+                      // You can add navigation logic here later
+                      console.log('Stock the BnB clicked');
+                    }}
+                  >
+                    Stock the BnB
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs px-2 py-1 h-7"
+                    onClick={() => {
+                      // You can add navigation logic here later
+                      console.log('Lake Delivery clicked');
+                    }}
+                  >
+                    Lake Delivery
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs px-2 py-1 h-7"
+                    onClick={() => {
+                      // You can add navigation logic here later
+                      console.log('Wedding clicked');
+                    }}
+                  >
+                    Wedding
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Search Bar and Manage Order */}
+              <div className="flex items-center gap-2 flex-1 max-w-lg">
+                <div className="flex-1">
+                  <ProductSearchBar
+                    onProductSelect={handleSearchSelect}
+                    placeholder="Search all products..."
+                    showDropdownResults={false}
+                    onResultsChange={handleSearchResultsChange}
+                    onSearchingChange={setIsSearching}
+                    onFocus={handleSearchFocus}
+                    onBlur={handleSearchBlur}
+                    inputRef={searchInputRef}
+                    inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
+                  />
+                </div>
+                
+                {/* Manage My Order Button - Desktop */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/customer/dashboard')}
+                  className="hidden sm:flex items-center gap-1 whitespace-nowrap"
+                >
+                  <Package className="w-4 h-4" />
+                  Manage My Order
+                </Button>
+              </div>
+            </div>
+          </div>
 
 
-        {/* Category Tabs - Only 5 product tabs + checkout (no search tab) - STICKY ON MOBILE */}
-        <div className={`sticky top-0 z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'opacity-0 transform -translate-y-full pointer-events-none' : hideTabs || (shouldHideChrome && isScrolling) ? 'opacity-0 transform -translate-y-2' : 'opacity-100 transform translate-y-0'}`}>
+        {/* Category Tabs - STICKY ON SCROLL */}
+        <div className={`sticky top-0 z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
           <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
             {displayedTabs.map((step, index) => {
               const isActive = selectedCategory === index;
@@ -844,7 +846,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
             disabled={cartItemCount === 0}
-            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-success' : ''}`}
+            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
             aria-label="Checkout"
           >
             <span className="inline-flex flex-col items-center gap-1 font-bold">
@@ -888,17 +890,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
 
       </div>
-
-      {/* "Choose your..." guide row - shown only initially and when menus are not hidden - NOT STICKY */}
-      {!hasUserInteracted && !shouldHideMenusCompletely && selectedCollection && (
-        <div className="max-w-7xl mx-auto px-4 pb-2">
-          <div className="bg-muted/50 rounded-lg p-3 mb-4 border border-border/50 animate-fade-in">
-            <p className="text-muted-foreground text-center text-sm">
-              👆 Choose your {stepMapping.find(step => step.handle === selectedCollection?.handle)?.title.toLowerCase() || selectedCollection?.title.toLowerCase()}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Section Heading with functional arrows - hidden during cover/start screens - NOT STICKY */}
       {!shouldHideMenusCompletely && selectedCollection && (
