@@ -25,12 +25,12 @@ interface AgentProfile {
 }
 
 const AVAILABLE_VOICES = [
-  { id: 'alloy', name: 'Alloy - Neutral & Professional' },
-  { id: 'echo', name: 'Echo - Warm & Friendly' },
-  { id: 'fable', name: 'Fable - Expressive & Engaging' },
-  { id: 'onyx', name: 'Onyx - Deep & Authoritative' },
-  { id: 'nova', name: 'Nova - Bright & Energetic' },
-  { id: 'shimmer', name: 'Shimmer - Soft & Calming' }
+  { id: 'alloy', name: 'Alloy - Neutral & Professional', description: 'Clear, professional tone' },
+  { id: 'echo', name: 'Echo - Warm & Friendly', description: 'Warm, approachable voice' },
+  { id: 'fable', name: 'Fable - Expressive & Engaging', description: 'Expressive storytelling voice' },
+  { id: 'onyx', name: 'Onyx - Deep & Authoritative', description: 'Deep, confident tone' },
+  { id: 'nova', name: 'Nova - Bright & Energetic', description: 'Bright, enthusiastic voice' },
+  { id: 'shimmer', name: 'Shimmer - Soft & Calming', description: 'Gentle, soothing tone' }
 ];
 
 const TONE_PRESETS = [
@@ -69,7 +69,10 @@ export default function PartyPlanningAgent() {
   const [textInput, setTextInput] = useState('');
   const [voiceRecorder, setVoiceRecorder] = useState<EnhancedVoiceRecorder | null>(null);
   const [isSpeechDetected, setIsSpeechDetected] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState('nova');
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
   const textInputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Load saved profiles on mount
   useEffect(() => {
@@ -254,18 +257,23 @@ export default function PartyPlanningAgent() {
           setAdminMode(true);
         }
         
-        // Convert to speech
-        speakText(assistantMessage.content);
+        // Convert to speech with selected voice
+        await speakText(assistantMessage.content);
 
-        // Check if we have enough info to generate suggestions (only in normal mode)
-        if (!adminMode) {
-          const hasEnoughInfo = aiResponse.updatedConversation?.occasion && 
-                               aiResponse.updatedConversation?.guestCount && 
-                               questionCount >= 3;
+        // Check if we have enough info to generate suggestions (improved logic)
+        const updatedConv = aiResponse.updatedConversation || conversation;
+        const hasOccasion = updatedConv.occasion && updatedConv.occasion !== '';
+        const hasGuestCount = updatedConv.guestCount && updatedConv.guestCount > 0;
+        const hasPreferences = updatedConv.preferences && updatedConv.preferences.length > 0;
+        const hasBudget = updatedConv.budget && updatedConv.budget !== '';
 
-          if (hasEnoughInfo) {
-            setTimeout(() => generateSuggestions(aiResponse.updatedConversation), 2000);
-          }
+        // Generate suggestions if we have at least 3 of the 4 key pieces of info
+        const infoCount = [hasOccasion, hasGuestCount, hasPreferences, hasBudget].filter(Boolean).length;
+        const shouldGenerateSuggestions = infoCount >= 3 && !isGeneratingSuggestions && suggestions.length === 0;
+
+        if (shouldGenerateSuggestions && !adminMode) {
+          console.log('Auto-generating suggestions with info:', { hasOccasion, hasGuestCount, hasPreferences, hasBudget });
+          setTimeout(() => generateSuggestions(updatedConv), 1500);
         }
       }
     } catch (error) {
@@ -282,7 +290,12 @@ export default function PartyPlanningAgent() {
   };
 
   const generateSuggestions = async (conversationData: any) => {
+    if (isGeneratingSuggestions) return; // Prevent duplicate calls
+    
     try {
+      setIsGeneratingSuggestions(true);
+      console.log('Generating party suggestions with data:', conversationData);
+      
       const { data: suggestionsData } = await supabase.functions.invoke('generate-party-suggestions', {
         body: {
           conversation: conversationData,
@@ -296,35 +309,74 @@ export default function PartyPlanningAgent() {
         const suggestionMessage: Message = {
           id: Date.now().toString(),
           type: 'assistant',
-          content: `Great! Based on your ${conversationData.occasion} for ${conversationData.guestCount} people, I've found some perfect recommendations. Check out the suggestions below!`,
+          content: `Perfect! I've found some amazing recommendations for your ${conversationData.occasion} with ${conversationData.guestCount} people. Check out these suggestions below - you can adjust quantities and add them directly to your cart!`,
           timestamp: new Date()
         };
         
         setMessages(prev => [...prev, suggestionMessage]);
-        speakText(suggestionMessage.content);
+        await speakText(suggestionMessage.content);
       }
     } catch (error) {
       console.error('Error generating suggestions:', error);
       toast.error('Failed to generate suggestions');
+    } finally {
+      setIsGeneratingSuggestions(false);
     }
   };
 
   const speakText = async (text: string) => {
-    if (!currentAgent) return;
+    if (!text || text.trim() === '') return;
 
     try {
       setIsPlaying(true);
+      console.log('Converting text to speech with voice:', selectedVoice);
       
-      // For demo, just simulate speech duration
-      setTimeout(() => {
+      // Call our text-to-speech edge function
+      const { data: speechData } = await supabase.functions.invoke('text-to-speech', {
+        body: {
+          text: text,
+          voice: selectedVoice
+        }
+      });
+
+      if (speechData?.audioContent) {
+        // Create audio element and play
+        if (!audioRef.current) {
+          audioRef.current = new Audio();
+        }
+        
+        const audioBlob = new Blob([
+          new Uint8Array(
+            atob(speechData.audioContent)
+              .split('')
+              .map(c => c.charCodeAt(0))
+          )
+        ], { type: 'audio/mp3' });
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioRef.current.src = audioUrl;
+        
+        audioRef.current.onended = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+        audioRef.current.onerror = (error) => {
+          console.error('Audio playback error:', error);
+          setIsPlaying(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+        await audioRef.current.play();
+        console.log('Audio playback started successfully');
+      } else {
+        console.error('No audio content received');
         setIsPlaying(false);
-      }, 3000);
-      
-      toast.success('AI is speaking...');
+      }
     } catch (error) {
       console.error('Error converting text to speech:', error);
       setIsPlaying(false);
-      toast.error('Failed to generate speech');
+      toast.error('Voice synthesis failed');
     }
   };
 
@@ -368,17 +420,53 @@ export default function PartyPlanningAgent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Agent Selection */}
+          {/* Agent & Voice Selection */}
           <Card className="bg-white/10 backdrop-blur-sm border-white/20">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Volume2 className="w-5 h-5" />
-                Choose Your Agent
+                Voice Settings
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Voice Selection */}
+              <div className="mb-4">
+                <label className="text-white text-sm font-medium mb-2 block">
+                  Choose AI Voice
+                </label>
+                <select
+                  className="w-full p-2 rounded bg-white/20 text-white border border-white/30"
+                  value={selectedVoice}
+                  onChange={(e) => setSelectedVoice(e.target.value)}
+                >
+                  {AVAILABLE_VOICES.map(voice => (
+                    <option key={voice.id} value={voice.id} className="text-black bg-white">
+                      {voice.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs text-white/60 mt-1">
+                  {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.description}
+                </div>
+                
+                {/* Voice Test Button */}
+                <Button
+                  onClick={() => speakText("Hi! I'm your party planning assistant. How does my voice sound?")}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-full"
+                  disabled={isPlaying}
+                >
+                  {isPlaying ? 'Testing...' : 'Test Voice'}
+                </Button>
+              </div>
+
+              {/* Agent Profiles */}
               {savedProfiles.length > 0 && (
                 <div className="space-y-2 mb-4">
+                  <label className="text-white text-sm font-medium mb-2 block">
+                    Agent Profiles
+                  </label>
                   {savedProfiles.map((profile) => (
                     <Button
                       key={profile.id}
