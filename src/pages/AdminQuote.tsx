@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Palette, Users } from 'lucide-react';
 import { QuoteCreator } from '@/components/admin/QuoteCreator';
-import { QuoteTemplateDesigner } from '@/components/admin/QuoteTemplateDesigner';
+import { DraggableQuoteTemplateBuilder } from '@/components/admin/DraggableQuoteTemplateBuilder';
 
 export default function AdminQuote() {
   const [activeTab, setActiveTab] = useState('create');
@@ -41,7 +41,7 @@ export default function AdminQuote() {
           </TabsContent>
 
           <TabsContent value="design" className="mt-6">
-            <QuoteTemplateDesigner />
+            <DraggableQuoteTemplateBuilder />
           </TabsContent>
         </Tabs>
       </div>
