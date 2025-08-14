@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Mic, MicOff, Send, ArrowLeft, MessageCircle, Sparkles, PartyPopper } from 'lucide-react';
+import { Mic, MicOff, Send, ArrowLeft, MessageCircle, Sparkles, PartyPopper, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  hasAudio?: boolean;
 }
 
 const VoiceChat = () => {
@@ -21,33 +22,30 @@ const VoiceChat = () => {
   const [inputText, setInputText] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [aiConfig, setAiConfig] = useState<any>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [conversationStarted, setConversationStarted] = useState(false);
+  const [micPermissionGranted, setMicPermissionGranted] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+  
   const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-  // Load AI assistant configuration
+  // Initialize audio context
   useEffect(() => {
-    const loadAiConfig = async () => {
-      try {
-        // For now, use a default config since the table might not exist yet
-        const defaultConfig = {
-          id: 'default',
-          name: 'Party Assistant',
-          prompt: 'You are a helpful AI assistant for Party On Delivery.',
-          voice_settings: { tone: 'friendly', voice: 'alloy' },
-          is_active: true
-        };
-        
-        setAiConfig(defaultConfig);
-        // Start with intro, don't add welcome message yet
-      } catch (error) {
-        console.error('Error loading AI config:', error);
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
       }
     };
-
-    loadAiConfig();
   }, []);
 
   // Auto-scroll to bottom
@@ -55,26 +53,158 @@ const VoiceChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = async (messageText: string) => {
+  // Request microphone permission
+  const requestMicrophonePermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
+      
+      // Permission granted, stop the stream for now
+      stream.getTracks().forEach(track => track.stop());
+      setMicPermissionGranted(true);
+      
+      toast({
+        title: "Microphone Access Granted! 🎤",
+        description: "You can now use voice input by holding the mic button.",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Microphone permission denied:', error);
+      toast({
+        title: "Microphone Access Required",
+        description: "Please allow microphone access to use voice features.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Play audio from base64
+  const playAudio = useCallback(async (base64Audio: string) => {
+    if (!audioEnabled) return;
+    
+    try {
+      setIsSpeaking(true);
+      
+      // Stop any currently playing audio
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
+      }
+      
+      // Convert base64 to blob
+      const binaryString = atob(base64Audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      const audio = new Audio(audioUrl);
+      currentAudioRef.current = audio;
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        currentAudioRef.current = null;
+      };
+      
+      audio.onerror = (error) => {
+        console.error('Audio playback error:', error);
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+        currentAudioRef.current = null;
+      };
+      
+      await audio.play();
+      
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setIsSpeaking(false);
+      toast({
+        title: "Audio Playback Error",
+        description: "Unable to play audio response.",
+        variant: "destructive",
+      });
+    }
+  }, [audioEnabled, toast]);
+
+  // Generate AI response with TTS
+  const generateAIResponse = useCallback(async (userMessage: string) => {
+    try {
+      // Get AI response
+      const { data, error } = await supabase.functions.invoke('ai-voice-assistant', {
+        body: {
+          message: userMessage,
+          conversation: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          context: 'party_planning'
+        }
+      });
+
+      if (error) throw error;
+
+      const aiResponseText = data.reply || "I'm here to help with your party planning!";
+      
+      // Add AI message to chat
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: aiResponseText,
+        timestamp: new Date(),
+        hasAudio: true
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Generate TTS if audio is enabled
+      if (audioEnabled) {
+        const { data: ttsData, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
+          body: {
+            text: aiResponseText,
+            voice: 'nova'
+          }
+        });
+
+        if (!ttsError && ttsData?.audioContent) {
+          await playAudio(ttsData.audioContent);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm having trouble right now, but I'm still here to help you plan an amazing party! What can I help you with?",
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, fallbackMessage]);
+    }
+  }, [messages, audioEnabled, playAudio]);
+
+  // Handle sending messages
+  const handleSendMessage = useCallback(async (messageText: string) => {
     if (!messageText.trim()) return;
 
     // If this is the first message, start the conversation
     if (!conversationStarted) {
       setConversationStarted(true);
       setShowIntro(false);
-      
-      // Add AI's energetic welcome message
-      const welcomeMessage: Message = {
-        id: 'welcome',
-        role: 'assistant',
-        content: `🎉 HELL YEAH! Welcome to Party On Delivery! I'm absolutely pumped to help you throw the most EPIC party EVER! 
-
-Let's get this party planning started! Tell me - what's the vibe you're going for? Is this a birthday bash, graduation celebration, weekend hangout, or just because life's awesome?
-
-And hey, if you're not sure what drinks you want, just say "surprise me" or "put together a good list" and I'll hook you up with some fantastic suggestions based on your crowd and budget! 🍻🥳`,
-        timestamp: new Date()
-      };
-      setMessages([welcomeMessage]);
     }
 
     const userMessage: Message = {
@@ -87,105 +217,167 @@ And hey, if you're not sure what drinks you want, just say "surprise me" or "put
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
 
-    // Enhanced AI responses with party planning logic
-    setTimeout(() => {
-      const responses = [
-        "Awesome! That sounds like it's going to be AMAZING! Tell me more - how many people are we talking about? I want to make sure we get the perfect amount of drinks to keep everyone happy! 🎊",
-        "Oh man, I LOVE that kind of party! Let me guess the vibe and you tell me if I'm right - are we talking cocktails and fancy drinks, or more beer and chill vibes? And what's your budget looking like?",
-        "YES! Now we're cooking with gas! 🔥 Quick question - what type of drinks are you and your crew usually into? Beer? Wine? Cocktails? Or are you wanting me to just put together a killer mix of everything?",
-        "Perfect! I'm already getting excited about this party! So tell me, what's your budget range and how many hours are we talking? That way I can calculate about 2 drinks per person per hour - my go-to formula for epic parties! 🍹",
-        "I can already tell this is going to be legendary! Let me ask - do you want specific stuff or should I just surprise you with some crowd-pleasers? And don't forget to tell me when you need this delivered!"
-      ];
-      
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responses[Math.floor(Math.random() * responses.length)],
-        timestamp: new Date()
-      };
+    // Generate AI response
+    await generateAIResponse(messageText);
+  }, [conversationStarted, generateAIResponse]);
 
-      setMessages(prev => [...prev, aiMessage]);
-    }, 1000);
-  };
-
-  const startConversation = () => {
+  // Start conversation
+  const startConversation = useCallback(async () => {
     setShowIntro(false);
     setConversationStarted(true);
     
-    // Add the energetic welcome message
-    const welcomeMessage: Message = {
-      id: 'welcome',
-      role: 'assistant',
-      content: `🎉 HELL YEAH! Welcome to Party On Delivery! I'm absolutely pumped to help you throw the most EPIC party EVER! 
+    const welcomeText = `🎉 HELL YEAH! Welcome to Party On Delivery! I'm absolutely pumped to help you throw the most EPIC party EVER! 
 
 Let's get this party planning started! Tell me - what's the vibe you're going for? Is this a birthday bash, graduation celebration, weekend hangout, or just because life's awesome?
 
-And hey, if you're not sure what drinks you want, just say "surprise me" or "put together a good list" and I'll hook you up with some fantastic suggestions based on your crowd and budget! 🍻🥳`,
-      timestamp: new Date()
+And hey, if you're not sure what drinks you want, just say "surprise me" or "put together a good list" and I'll hook you up with some fantastic suggestions based on your crowd and budget! 🍻🥳`;
+
+    const welcomeMessage: Message = {
+      id: 'welcome',
+      role: 'assistant',
+      content: welcomeText,
+      timestamp: new Date(),
+      hasAudio: true
     };
+    
     setMessages([welcomeMessage]);
-  };
 
-  const startRecording = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      toast({
-        title: "Speech recognition not supported",
-        description: "Your browser doesn't support speech recognition.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Play welcome audio if enabled
+    if (audioEnabled) {
+      try {
+        const { data: ttsData, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
+          body: {
+            text: welcomeText,
+            voice: 'nova'
+          }
+        });
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      setIsRecording(true);
-    };
-
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+        if (!ttsError && ttsData?.audioContent) {
+          await playAudio(ttsData.audioContent);
         }
+      } catch (error) {
+        console.error('Error playing welcome audio:', error);
       }
-      if (finalTranscript) {
-        // Append to existing text instead of overwriting
-        setInputText(prev => prev + (prev ? ' ' : '') + finalTranscript);
-      }
-    };
+    }
+  }, [audioEnabled, playAudio]);
 
-    recognition.onend = () => {
-      setIsListening(false);
-      setIsRecording(false);
-      // Don't auto-send here - let user decide when to send
-    };
+  // Enhanced voice recording with better error handling
+  const startRecording = useCallback(async () => {
+    if (!micPermissionGranted) {
+      const granted = await requestMicrophonePermission();
+      if (!granted) return;
+    }
 
-    recognition.onerror = (event) => {
-      setIsListening(false);
-      setIsRecording(false);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      audioChunksRef.current = [];
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm'
+      });
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await processAudioRecording(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      setIsListening(true);
+
+    } catch (error) {
+      console.error('Error starting recording:', error);
       toast({
-        title: "Speech recognition error",
-        description: event.error,
+        title: "Recording Error",
+        description: "Unable to start voice recording. Please check microphone permissions.",
         variant: "destructive",
       });
-    };
-
-    recognition.start();
-    recognitionRef.current = recognition;
-  };
-
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
     }
-  };
+  }, [micPermissionGranted, toast]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      setIsListening(false);
+    }
+  }, [isRecording]);
+
+  // Process audio recording and transcribe
+  const processAudioRecording = useCallback(async (audioBlob: Blob) => {
+    try {
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = (reader.result as string).split(',')[1];
+        
+        // Send to voice-to-text service
+        const { data, error } = await supabase.functions.invoke('voice-to-text', {
+          body: { audio: base64Audio }
+        });
+
+        if (error) throw error;
+
+        const transcribedText = data.text || '';
+        
+        if (transcribedText.trim()) {
+          // Append to existing text instead of overwriting
+          setInputText(prev => prev + (prev ? ' ' : '') + transcribedText);
+          
+          toast({
+            title: "Voice Transcribed! 🎤",
+            description: `"${transcribedText}"`,
+          });
+        } else {
+          toast({
+            title: "No Speech Detected",
+            description: "Try speaking clearly and holding the button longer.",
+            variant: "destructive",
+          });
+        }
+      };
+      
+      reader.readAsDataURL(audioBlob);
+      
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      toast({
+        title: "Transcription Error",
+        description: "Unable to convert speech to text.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  // Toggle audio on/off
+  const toggleAudio = useCallback(() => {
+    setAudioEnabled(!audioEnabled);
+    
+    // Stop any currently playing audio if disabling
+    if (audioEnabled && currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+      setIsSpeaking(false);
+    }
+
+    toast({
+      title: audioEnabled ? "Audio Disabled 🔇" : "Audio Enabled 🔊",
+      description: audioEnabled ? "Voice responses are now muted" : "Voice responses are now enabled",
+    });
+  }, [audioEnabled, toast]);
 
   const handleHoldToSpeak = {
     onMouseDown: startRecording,
@@ -234,12 +426,22 @@ And hey, if you're not sure what drinks you want, just say "surprise me" or "put
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <PartyPopper className="w-8 h-8 text-yellow-400" />
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-pink-400 bg-clip-text text-transparent">
             Party Assistant
           </h1>
           <p className="text-sm opacity-90">Let's plan your perfect party! 🎉</p>
         </div>
+        
+        {/* Audio Toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleAudio}
+          className={`text-white hover:bg-white/20 ${isSpeaking ? 'animate-pulse' : ''}`}
+        >
+          {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        </Button>
       </div>
 
       {/* Intro Screen */}
@@ -264,7 +466,7 @@ And hey, if you're not sure what drinks you want, just say "surprise me" or "put
                   Let's Get This Party Started!
                 </Button>
                 <p className="text-sm opacity-75">
-                  Hold the mic button to speak or type your messages
+                  I can both hear you speak and talk back to you! 🗣️🎤
                 </p>
               </div>
             </CardContent>
@@ -288,10 +490,33 @@ And hey, if you're not sure what drinks you want, just say "surprise me" or "put
                     : 'bg-white/90 backdrop-blur-sm text-gray-900 border-white/50'
                 }`}>
                   <CardContent className="p-4">
-                    <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
-                    <p className={`text-xs mt-2 ${message.role === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                        <p className={`text-xs mt-2 ${message.role === 'user' ? 'text-white/70' : 'text-gray-500'}`}>
+                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      {message.hasAudio && message.role === 'assistant' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            // Replay audio for this message
+                            supabase.functions.invoke('text-to-speech', {
+                              body: { text: message.content, voice: 'nova' }
+                            }).then(({ data }) => {
+                              if (data?.audioContent) {
+                                playAudio(data.audioContent);
+                              }
+                            });
+                          }}
+                        >
+                          <Volume2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -356,7 +581,13 @@ And hey, if you're not sure what drinks you want, just say "surprise me" or "put
               
               {isRecording && (
                 <p className="text-center text-sm text-yellow-300 animate-pulse font-bold">
-                  🎤 Listening... Release to send your message!
+                  🎤 Listening... Release to transcribe!
+                </p>
+              )}
+
+              {isSpeaking && (
+                <p className="text-center text-sm text-green-300 animate-pulse font-bold">
+                  🔊 I'm speaking... 
                 </p>
               )}
             </div>
