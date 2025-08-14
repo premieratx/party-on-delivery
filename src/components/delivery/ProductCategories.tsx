@@ -11,6 +11,9 @@ import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { VideoBackground } from '@/components/common/VideoBackground';
+import { OccasionButtons } from '@/components/delivery/OccasionButtons';
+import { useScrollHeader } from '@/hooks/useScrollHeader';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 
 interface Product {
@@ -67,6 +70,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   const isMobile = useIsMobile();
+  const { isScrollingDown } = useScrollHeader({ threshold: 100 });
 
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
@@ -399,8 +403,32 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const showNoResults = searchQuery.trim() && searchResults.length === 0;
 
   return (
-    <div className="w-full">
-      <CategoryTabs />
+    <VideoBackground className="min-h-screen">
+      {/* Hero Section */}
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Main Hero Content */}
+        <div className="flex-1 flex flex-col justify-center px-4 lg:px-8 pb-32">
+          <div className="text-center space-y-6 max-w-4xl mx-auto">
+            <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
+              Party On Delivery
+            </h1>
+            <p className="text-xl lg:text-2xl text-white/90 font-medium">
+              Austin's Premier Alcohol Delivery Service
+            </p>
+            
+            {/* Occasion Buttons */}
+            <div className="mt-8 lg:mt-12">
+              <OccasionButtons 
+                isMobile={isMobile} 
+                isScrollingDown={isScrollingDown} 
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Sticky Category Navigation */}
+        <CategoryTabs />
+      </div>
       
       <div className="container mx-auto px-2 lg:px-4 py-4">
         {showSearchResults && (
@@ -576,7 +604,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </VideoBackground>
   );
 };
 
