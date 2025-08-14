@@ -1,16 +1,18 @@
-// NUCLEAR DESTRUCTION v2025_01_14_21_30_NO_SPINNER
+// COMPLETE POSTHOG ELIMINATION v2025_08_14_22_29
 
 if (typeof window !== 'undefined') {
-  console.log('🚫 NUCLEAR SYSTEM BLOCKER ACTIVATED');
+  console.log('🚫 POSTHOG ELIMINATION ACTIVE');
   
-  // Destroy everything immediately
-  const nuclearDestroy = () => {
-    // Analytics destruction
+  // Total PostHog and analytics annihilation
+  const destroyAnalytics = () => {
+    // Complete analytics destruction
     delete (window as any).posthog;
     delete (window as any).PostHog;
     delete (window as any).__posthog;
     delete (window as any).analytics;
     delete (window as any).gtag;
+    delete (window as any)._analytics;
+    delete (window as any).dataLayer;
     
     // Preloading destruction
     delete (window as any).initializePreloading;
@@ -30,9 +32,9 @@ if (typeof window !== 'undefined') {
     (window as any).loadAppConfig = () => Promise.resolve(null);
   };
   
-  // Execute immediately and repeatedly
-  nuclearDestroy();
-  setInterval(nuclearDestroy, 25); // Every 25ms
+  // Execute immediately and continuously
+  destroyAnalytics();
+  setInterval(destroyAnalytics, 15); // Every 15ms
   
   // Block console spam
   const origError = console.error;

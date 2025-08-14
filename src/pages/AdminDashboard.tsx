@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
-import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
+// Analytics dashboard removed to eliminate PostHog
 import SimpleProductManager from '@/components/admin/SimpleProductManager';
 import VoucherManagement from '@/components/admin/VoucherManagement';
 import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
