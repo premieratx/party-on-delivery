@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// Removed ProductCategories import - not used on homepage anymore
+import ProductCategories from '@/components/delivery/ProductCategories';
 import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
@@ -22,14 +22,11 @@ const Index = () => {
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
-  const [showCoverModal, setShowCoverModal] = useState(true); // Always show cover modal on homepage load
+  const [showCoverModal, setShowCoverModal] = useState(false); // Cover modal is optional
   const [showAppsGrid, setShowAppsGrid] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
   const { preloadCriticalData } = usePreloader();
-  
-  // Debug logging
-  console.log('🏠 Homepage Index.tsx rendering with:', { showCoverModal, showAppsGrid });
 
   // Load the homepage delivery app configuration 
   useEffect(() => {
@@ -157,14 +154,14 @@ const Index = () => {
       {/* Global Navigation */}
       <GlobalNavigation />
       
-      {/* Force clear any session storage that might be interfering */}
-      {(() => {
-        sessionStorage.removeItem(COVER_SHOWN_SESSION_KEY);
-        return null;
-      })()}
-      
-      {/* Show cover modal first */}
-      {showCoverModal ? (
+      {/* Main content - ProductCategories with default delivery app */}
+      <ProductCategories 
+        customSiteSlug="main-delivery-app"
+        hideContent={false}
+      />
+
+      {/* Optional cover modal */}
+      {showCoverModal && (
         <CustomDeliveryCoverModal
           open={showCoverModal}
           onOpenChange={setShowCoverModal}
@@ -174,10 +171,6 @@ const Index = () => {
           appName={homepageApp?.app_name || "Party On Delivery"}
           logoUrl={homepageApp?.logo_url}
         />
-      ) : (
-        <div className="min-h-screen bg-red-500 text-white flex items-center justify-center">
-          <div>Cover modal is NOT showing - this should not happen!</div>
-        </div>
       )}
 
       {/* Show delivery apps grid if selected */}
@@ -186,15 +179,9 @@ const Index = () => {
           onAppSelect={(appSlug) => navigate(`/app/${appSlug}`)}
           onBack={() => {
             setShowAppsGrid(false);
-            // Don't show cover modal again if it was already shown in this session
-            if (!sessionStorage.getItem(COVER_SHOWN_SESSION_KEY)) {
-              setShowCoverModal(true);
-            }
           }}
         />
       )}
-
-      {/* Cover modal dismisses -> either shows apps grid OR nothing (direct navigation) */}
 
       {/* Cart sidebar */}
       <DeliveryCart
@@ -218,7 +205,7 @@ const Index = () => {
         onCheckout={handleCheckout}
         shouldHide={false}
         showAdmin={true}
-        currentAppSlug={undefined} // Main app doesn't have a specific slug
+        currentAppSlug="main-delivery-app"
       />
     </div>
   );
