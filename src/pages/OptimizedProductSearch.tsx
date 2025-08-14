@@ -122,7 +122,7 @@ export default function OptimizedProductSearch() {
       try {
         setLoading(true);
         // Give instant cache a bit more time on first load; then force refresh if empty
-        const instant = await getInstantProducts({ timeoutMs: 1500 });
+        const instant = await getInstantProducts();
         const collections = instant.collections || [];
         const map: Record<string, any> = {};
         const pcMap: Record<string, string[]> = {};
@@ -144,7 +144,7 @@ export default function OptimizedProductSearch() {
 
         // If still empty, try a force refresh
         if (list.length === 0) {
-          const retry = await getInstantProducts({ forceRefresh: true, timeoutMs: 3000 });
+          const retry = await getInstantProducts();
           const retryCollections = retry.collections || [];
           const map2: Record<string, any> = {};
           const pcMap2: Record<string, string[]> = {};

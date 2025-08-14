@@ -144,10 +144,10 @@ export function CustomProductCategories({
           return;
         }
 
-        // Use instant cache for maximum speed
+        // Use fallback (instant cache disabled)
         const instant = await getInstantProducts();
         if (instant?.collections) {
-          // Instant cache loaded
+          // Fallback loaded
           const relevantCollections = (instant.collections as any[]).filter((collection: any) =>
             collectionsConfig.tabs.some(tab => tab.collection_handle === collection.handle)
           );
@@ -163,7 +163,7 @@ export function CustomProductCategories({
         }
 
         // No fallback data available
-        console.log('⚠️ No instant cache available, using emergency fallback');
+        console.log('⚠️ Using emergency fallback');
         throw new Error('No data sources available');
       } catch (error) {
         console.error('Lightning-fast loading failed:', error);

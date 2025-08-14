@@ -81,7 +81,7 @@ export const ProductSearch = () => {
     setLoading(true);
 
       // 1) Try instant cache (race with very short timeout)
-      const instant = await getInstantProducts({ timeoutMs: 1500 });
+      const instant = await getInstantProducts();
       if (instant?.products && instant.products.length > 0) {
         const enriched = instant.products.map((p: any) => {
           const img = p.image || (p.images?.[0] ?? '');
@@ -169,7 +169,7 @@ export const ProductSearch = () => {
     // 4) Last-chance: force refresh instant cache if still empty
     if (!loaded) {
       try {
-        const retry = await getInstantProducts({ forceRefresh: true, timeoutMs: 3000 });
+        const retry = await getInstantProducts();
         if (retry?.products && retry.products.length > 0) {
           const enriched = retry.products.map((p: any) => {
             const img = p.image || (p.images?.[0] ?? '');

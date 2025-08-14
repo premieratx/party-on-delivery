@@ -128,16 +128,16 @@ const [showSearchModal, setShowSearchModal] = useState(false);
   const loadCollections = async () => {
     try {
       setLoading(true);
-      // Custom Delivery App: Loading with instant cache
+      // Custom Delivery App: Loading (instant cache disabled)
 
-      // Load from instant cache helper (fast + normalized)
+      // Load from fallback (instant cache disabled)
       const instant = await getInstantProducts();
       let loadedCollections: ShopifyCollection[] = [];
       if (instant.collections && Array.isArray(instant.collections)) {
         loadedCollections = instant.collections as any;
-        // Custom Delivery App: Loaded collections from instant cache
+        // Custom Delivery App: Loaded collections from fallback
       } else {
-        console.warn('⚠️ No collections found in instant cache data');
+        console.warn('⚠️ No collections found in fallback data');
       }
 
       setCollections(loadedCollections);
