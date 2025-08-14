@@ -773,253 +773,222 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
       </div>
 
-         <div className={`fixed top-0 left-0 right-0 z-30 bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
-          <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
-            <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
-              {/* Occasion Buttons */}
-              <div className="flex items-center gap-2">
-                {/* What's the Occasion text - split into 2 rows */}
-                <div className="text-xs text-muted-foreground leading-tight mr-2 hidden sm:block">
-                  <div>What's the</div>
-                  <div>Occasion?</div>
-                </div>
-                
-                {/* Occasion buttons - responsive design */}
-                <div className="flex gap-1">
-                  {isMobile ? (
-                    <>
-                      {/* Mobile: Small icon-based buttons */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
-                        onClick={() => console.log('Stock the BnB clicked')}
-                      >
-                        <div className="text-xs">🏠</div>
-                        <div className="text-[8px] leading-none">BnB</div>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
-                        onClick={() => console.log('Lake Delivery clicked')}
-                      >
-                        <div className="text-xs">🌊</div>
-                        <div className="text-[8px] leading-none">Lake</div>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
-                        onClick={() => console.log('Wedding clicked')}
-                      >
-                        <div className="text-xs">💒</div>
-                        <div className="text-[8px] leading-none">Wed</div>
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      {/* Desktop: Full text buttons */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-2 py-1 h-7"
-                        onClick={() => console.log('Stock the BnB clicked')}
-                      >
-                        Stock the BnB
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-2 py-1 h-7"
-                        onClick={() => console.log('Lake Delivery clicked')}
-                      >
-                        Lake Delivery
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-2 py-1 h-7"
-                        onClick={() => console.log('Wedding clicked')}
-                      >
-                        Wedding
-                      </Button>
-                    </>
-                  )}
-                </div>
+      {/* What's the Occasion Bar - STICKY BELOW HERO */}
+      <div className={`sticky top-0 z-50 w-full bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
+        <div className="w-full px-2 md:px-4 py-2">
+          <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
+            {/* Occasion Buttons */}
+            <div className="flex items-center gap-2">
+              {/* What's the Occasion text - split into 2 rows */}
+              <div className="text-xs text-muted-foreground leading-tight mr-2 hidden sm:block">
+                <div>What's the</div>
+                <div>Occasion?</div>
               </div>
               
-              {/* Search Bar and Manage Order */}
-              <div className="flex items-center gap-2 flex-1 max-w-lg">
-                <div className="flex-1">
-                  <ProductSearchBar
-                    onProductSelect={handleSearchSelect}
-                    placeholder="Search all products..."
-                    showDropdownResults={false}
-                    onResultsChange={handleSearchResultsChange}
-                    onSearchingChange={setIsSearching}
-                    onFocus={handleSearchFocus}
-                    onBlur={handleSearchBlur}
-                    inputRef={searchInputRef}
-                    inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
-                  />
-                </div>
-                
-                {/* Manage Order Button - Desktop */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hidden md:flex items-center gap-1 text-xs"
-                  onClick={onOpenCart}
-                >
-                  Manage My Order
-                </Button>
+              {/* Occasion buttons - responsive design */}
+              <div className="flex gap-1">
+                {isMobile ? (
+                  <>
+                    {/* Mobile: Small icon-based buttons */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
+                      onClick={() => console.log('Stock the BnB clicked')}
+                    >
+                      <div className="text-xs">🏠</div>
+                      <div className="text-[8px] leading-none">BnB</div>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
+                      onClick={() => console.log('Lake Delivery clicked')}
+                    >
+                      <div className="text-xs">🌊</div>
+                      <div className="text-[8px] leading-none">Lake</div>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-1 py-1 h-8 w-8 flex flex-col items-center justify-center gap-0"
+                      onClick={() => console.log('Wedding clicked')}
+                    >
+                      <div className="text-xs">💒</div>
+                      <div className="text-[8px] leading-none">Wed</div>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {/* Desktop: Full text buttons */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-2 py-1 h-7"
+                      onClick={() => console.log('Stock the BnB clicked')}
+                    >
+                      Stock the BnB
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-2 py-1 h-7"
+                      onClick={() => console.log('Lake Delivery clicked')}
+                    >
+                      Lake Delivery
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs px-2 py-1 h-7"
+                      onClick={() => console.log('Wedding clicked')}
+                    >
+                      Wedding
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
+            
+            {/* Search Bar and Manage Order */}
+            <div className="flex items-center gap-2 flex-1 max-w-lg">
+              <div className="flex-1">
+                <ProductSearchBar
+                  onProductSelect={handleSearchSelect}
+                  placeholder="Search all products..."
+                  showDropdownResults={false}
+                  onResultsChange={handleSearchResultsChange}
+                  onSearchingChange={setIsSearching}
+                  onFocus={handleSearchFocus}
+                  onBlur={handleSearchBlur}
+                  inputRef={searchInputRef}
+                  inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
+                />
+              </div>
+              
+              {/* Manage Order Button - Desktop */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden md:flex items-center gap-1 text-xs"
+                onClick={onOpenCart}
+              >
+                Manage My Order
+              </Button>
+            </div>
           </div>
+        </div>
+      </div>
 
-
-        {/* Category Tabs - STICKY ON SCROLL */}
-        <div className={`sticky top-0 z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
-          <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
-            {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
-            {isMobile && showMobileCartCheckout ? (
-              <>
-                <button
-                  type="button"
-                  onClick={onOpenCart}
-                  className="flex-1 flex items-center justify-center h-full transition-all duration-300 bg-muted border border-muted-foreground/20 hover:bg-muted/80 rounded-l-md"
-                  aria-label="Open Cart"
-                >
-                  <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Cart</span>
-                    {cartItemCount > 0 && (
-                      <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
-                        {cartItemCount}
-                      </span>
-                    )}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
-                  disabled={cartItemCount === 0}
-                  className={`flex-1 flex items-center justify-center h-full transition-all duration-300 ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} rounded-r-md`}
-                  aria-label="Checkout"
-                >
-                  <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Checkout</span>
-                  </span>
-                </button>
-              </>
-            ) : (
-              <>
-                {displayedTabs.map((step, index) => {
-                  const isActive = selectedCategory === index;
-                  
-                  return (
-                    <button
-                      type="button"
-                      key={step.handle}
-                      onClick={() => {
-                        setSelectedCategory(index);
-                        setShowSearch(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-2 rounded-none first:rounded-l-md last:rounded-r-md ${
-                        isActive 
-                          ? 'bg-primary/10 border-2 border-primary shadow-lg' 
-                          : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
-                      } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
-                    >
-                      <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
-                        {/* Mobile layout: just title */}
-                        <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
-                          <div className={`text-[12px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
+      {/* Category Tabs - STICKY BELOW OCCASION BAR */}
+      <div className={`sticky top-[60px] z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
+        <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
+          {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
+          {isMobile && showMobileCartCheckout ? (
+            <>
+              <button
+                type="button"
+                onClick={onOpenCart}
+                className="flex-1 flex items-center justify-center h-full transition-all duration-300 bg-muted border border-muted-foreground/20 hover:bg-muted/80 rounded-l-md"
+                aria-label="Open Cart"
+              >
+                <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Cart</span>
+                  {cartItemCount > 0 && (
+                    <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+                disabled={cartItemCount === 0}
+                className={`flex-1 flex items-center justify-center h-full transition-all duration-300 ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} rounded-r-md`}
+                aria-label="Checkout"
+              >
+                <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Checkout</span>
+                </span>
+              </button>
+            </>
+          ) : (
+            <>
+              {displayedTabs.map((step, index) => {
+                const isActive = selectedCategory === index;
+                
+                return (
+                  <button
+                    type="button"
+                    key={step.handle}
+                    onClick={() => {
+                      setSelectedCategory(index);
+                      setShowSearch(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-2 rounded-none first:rounded-l-md last:rounded-r-md ${
+                      isActive 
+                        ? 'bg-primary/10 border-2 border-primary shadow-lg' 
+                        : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
+                    } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
+                  >
+                    <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
+                      {/* Mobile layout: just title */}
+                      <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
+                        <div className={`text-[12px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
+                          isActive ? 'text-primary' : 'text-foreground'
+                        }`}>{step.title}</div>
+                      </div>
+                      
+                      {/* Desktop layout: large title centered */}
+                      <div className="hidden sm:block relative w-full h-full">
+                        <div className="flex items-center justify-center h-full gap-2">
+                          <div className={`font-bold ${scrolled ? 'text-lg' : 'text-xl'} text-center ${
                             isActive ? 'text-primary' : 'text-foreground'
                           }`}>{step.title}</div>
                         </div>
-                        
-                        {/* Desktop layout: large title centered */}
-                        <div className="hidden sm:block relative w-full h-full">
-                          <div className="flex items-center justify-center h-full gap-2">
-                            <div className={`font-bold ${scrolled ? 'text-lg' : 'text-xl'} text-center ${
-                              isActive ? 'text-primary' : 'text-foreground'
-                            }`}>{step.title}</div>
-                          </div>
-                        </div>
                       </div>
-                    </button>
-                  );
-                })}
-                
-                {/* Desktop: Cart/Checkout as part of tabs */}
-                <button
-                  type="button"
-                  onClick={onOpenCart}
-                  className="hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40"
-                  aria-label="Open Cart"
-                >
-                  <span className="inline-flex flex-col items-center gap-1 font-bold">
-                    <span className="inline-flex items-center gap-1"><ShoppingCart className="w-4 h-4" /><span>Cart</span></span>
-                    {cartItemCount > 0 && (
-                      <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
-                        {cartItemCount}
-                      </span>
-                    )}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
-                  disabled={cartItemCount === 0}
-                  className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
-                  aria-label="Checkout"
-                >
-                  <span className="inline-flex flex-col items-center gap-1 font-bold">
-                    <span>Checkout</span>
-                    <CheckCircle className="w-4 h-4" />
-                  </span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Desktop Cart / Checkout controls inline with tabs */}
-        <div className="hidden">
-          <button
-            onClick={onOpenCart}
-            className={`relative h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 bg-muted border border-muted-foreground/30 hover:bg-muted/80 rounded-none transition-colors`}
-            aria-label="Open Cart"
-          >
-            <span className="inline-flex items-center gap-2 text-sm">
-              <ShoppingCart className="w-4 h-4" />
-              <span>Cart</span>
-              {cartItemCount > 0 && (
-                <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
-                  {cartItemCount}
+                    </div>
+                  </button>
+                );
+              })}
+              
+              {/* Desktop: Cart/Checkout as part of tabs */}
+              <button
+                type="button"
+                onClick={onOpenCart}
+                className="hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40"
+                aria-label="Open Cart"
+              >
+                <span className="inline-flex flex-col items-center gap-1 font-bold">
+                  <span className="inline-flex items-center gap-1"><ShoppingCart className="w-4 h-4" /><span>Cart</span></span>
+                  {cartItemCount > 0 && (
+                    <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                      {cartItemCount}
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
-            disabled={cartItemCount === 0}
-            className={`h-12 ${scrolled ? 'sm:h-16' : 'sm:h-20'} px-4 rounded-r-md rounded-l-none transition-colors ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} ${selectedCategory === maxCategoryIndex && cartItemCount > 0 ? 'ring-2 ring-success' : ''}`}
-            aria-label="Checkout"
-          >
-            <span className="inline-flex flex-col items-center gap-1 text-sm">
-              <span>Checkout</span>
-              <CheckCircle className="w-4 h-4" />
-            </span>
-          </button>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+                disabled={cartItemCount === 0}
+                className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
+                aria-label="Checkout"
+              >
+                <span className="inline-flex flex-col items-center gap-1 font-bold">
+                  <span>Checkout</span>
+                  <CheckCircle className="w-4 h-4" />
+                </span>
+              </button>
+            </>
+          )}
         </div>
-
       </div>
+
 
       {/* Section Heading - Scrolls away (NOT STICKY) */}
       {!shouldHideMenusCompletely && !hideAllMenus && selectedCollection && (
