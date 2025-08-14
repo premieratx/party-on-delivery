@@ -135,7 +135,7 @@ export default function CustomAppView() {
   
   // Force tabs by default, never show cover modal
   const initialStepParam = 'tabs';
-  const [currentStep, setCurrentStep] = useAppStep(initialStepParam);
+  const [currentStep, setCurrentStep] = useAppStep('tabs');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
   
@@ -412,8 +412,8 @@ export default function CustomAppView() {
   return (
     <div className="min-h-screen bg-background">
       {/* COVER MODAL DISABLED - CAUSES POPUP ISSUE */}
-      {/* Start screen enabled above; tabs shown behind/after with blur */}
-      <div className={currentStep === 'start' ? 'pointer-events-none blur-sm' : ''}>
+      {/* Always show tabs page - start screen disabled */}
+      <div>
         <CustomDeliveryTabsPage
           appName={appConfig.app_name}
           heroHeading={appConfig.main_app_config?.hero_heading || `Order ${appConfig.app_name}`}
