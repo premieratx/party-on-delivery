@@ -1,76 +1,45 @@
-// NUCLEAR OPTION - DISABLE EVERYTHING THAT CAUSES PRELOADING AND POSTHOG
-// This file ensures all systems are completely disabled
+// ULTIMATE PRELOADING BLOCKER - STOPS EVERYTHING
+// This file completely blocks all preloading systems and PostHog
 
-// Disable all console.log preloading messages and PostHog
+// Block all console output that we don't want
+const blockedTerms = [
+  '⚡', '🚀', '✅', 'Preloading', 'preload', 'Ultra-fast', 'Collections',
+  'Aggressive', 'Initializing', 'instant app loader', 'Cached products',
+  'Failed to load app config', 'Lightning', 'Custom site mode',
+  'ProductCategories: Fetching', 'DeliveryCart pricing', 'PostHog', 'posthog',
+  'Wake lock', 'delivery apps', 'premier-party-cruises', 'standard-delivery',
+  'party-planner', 'capture call is ignored', 'rate limiting'
+];
+
 const originalConsoleLog = console.log;
 const originalConsoleError = console.error;
 const originalConsoleWarn = console.warn;
 
 console.log = (...args: any[]) => {
   const message = args.join(' ');
-// Block ALL preloading-related and PostHog console messages  
-  if (
-    message.includes('⚡') ||
-    message.includes('🚀') ||
-    message.includes('✅') ||
-    message.includes('Preloading') ||
-    message.includes('preload') ||
-    message.includes('Ultra-fast') ||
-    message.includes('Collections') ||
-    message.includes('Aggressive') ||
-    message.includes('Initializing') ||
-    message.includes('instant app loader') ||
-    message.includes('Cached products') ||
-    message.includes('Failed to load app config') ||
-    message.includes('Lightning') ||
-    message.includes('Custom site mode') ||
-    message.includes('ProductCategories: Fetching') ||
-    message.includes('DeliveryCart pricing') ||
-    message.includes('PostHog') ||
-    message.includes('posthog') ||
-    message.includes('Wake lock') ||
-    message.includes('delivery apps') ||
-    message.includes('premier-party-cruises') ||
-    message.includes('standard-delivery') ||
-    message.includes('party-planner') ||
-    message.includes('capture call is ignored') ||
-    message.includes('rate limiting') ||
-    message.includes('GET https://acmlfzfliqupwxwoefdq.supabase.co')
-  ) {
-    return; // Block these messages
+  if (blockedTerms.some(term => message.includes(term))) {
+    return; // Block this message
   }
   originalConsoleLog.apply(console, args);
 };
 
 console.error = (...args: any[]) => {
   const message = args.join(' ');
-  // Block PostHog and preloading errors
-  if (
-    message.includes('PostHog') ||
-    message.includes('rate limiting') ||
-    message.includes('capture call is ignored') ||
-    message.includes('preload') ||
-    message.includes('instant app loader')
-  ) {
-    return; // Block these error messages
+  if (blockedTerms.some(term => message.includes(term))) {
+    return; // Block this error
   }
   originalConsoleError.apply(console, args);
 };
 
 console.warn = (...args: any[]) => {
   const message = args.join(' ');
-  // Block PostHog and preloading warnings
-  if (
-    message.includes('PostHog') ||
-    message.includes('preload') ||
-    message.includes('instant app')
-  ) {
-    return; // Block these warning messages
+  if (blockedTerms.some(term => message.includes(term))) {
+    return; // Block this warning
   }
   originalConsoleWarn.apply(console, args);
 };
 
-// Override PostHog globally
+// Override PostHog completely
 (window as any).posthog = {
   capture: () => {},
   identify: () => {},
@@ -104,7 +73,7 @@ console.warn = (...args: any[]) => {
   }
 };
 
-// Block PostHog script loading
+// Block PostHog and rrweb script loading
 const originalCreateElement = document.createElement;
 document.createElement = function(tagName: string) {
   const element = originalCreateElement.call(this, tagName);
@@ -115,8 +84,7 @@ document.createElement = function(tagName: string) {
       Object.defineProperty(scriptElement, 'src', {
         set: function(this: HTMLScriptElement, value: string) {
           if (value.includes('posthog') || value.includes('rrweb')) {
-            console.log('🚫 Blocked PostHog script:', value);
-            return;
+            return; // Block script loading
           }
           originalSetSrc.call(this, value);
         },
@@ -129,7 +97,7 @@ document.createElement = function(tagName: string) {
   return element;
 };
 
-// Override ALL preloading and analytics functions globally
+// Override all preloading functions globally
 (window as any).instantAppLoader = {
   preloadApp: () => Promise.resolve(),
   getAppConfig: () => null,
@@ -156,15 +124,18 @@ document.createElement = function(tagName: string) {
   clearCache: () => {},
 };
 
-// Disable all fetch requests to delivery_apps table for preloading
+// Block ALL requests to delivery_apps for preloading
 const originalFetch = window.fetch;
 window.fetch = function(...args) {
   const url = args[0];
-  if (typeof url === 'string' && url.includes('delivery_apps?select=*&slug=eq.')) {
-    console.log('🚫 Blocked preloading request:', url);
-    return Promise.resolve(new Response('{}', { status: 404 }));
+  if (typeof url === 'string') {
+    if (url.includes('delivery_apps?select=*&slug=eq.premier-party-cruises') ||
+        url.includes('delivery_apps?select=*&slug=eq.standard-delivery') ||
+        url.includes('delivery_apps?select=*&slug=eq.party-planner')) {
+      return Promise.resolve(new Response('{"error": "blocked"}', { status: 404 }));
+    }
   }
   return originalFetch.apply(this, args);
 };
 
-console.log('🚫 ALL SYSTEMS COMPLETELY DISABLED - NO PRELOADING OR ANALYTICS');
+console.log('🚫 ALL PRELOADING AND POSTHOG COMPLETELY BLOCKED');
