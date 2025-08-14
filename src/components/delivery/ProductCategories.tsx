@@ -28,6 +28,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { haptic } from '@/utils/hapticFeedback';
 import { MobileBottomNav } from '@/components/common/MobileBottomNav';
+import { UIThemeSelector } from '@/components/admin/UIThemeSelector';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -133,6 +134,7 @@ const [hideAllMenus, setHideAllMenus] = useState(false);
 const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
 const [showMobileCartCheckout, setShowMobileCartCheckout] = useState(false);
+const [showUIThemeSelector, setShowUIThemeSelector] = useState(false);
 
 // Enhanced search interface with smooth UI transitions
 const {
@@ -1395,6 +1397,18 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         onProceedToCheckout={onProceedToCheckout}
         onOpenSearch={() => setShowSearch(true)}
         isVisible={true}
+      />
+
+      {/* UI Theme Selector */}
+      <UIThemeSelector
+        appId={customAppName}
+        isVisible={showUIThemeSelector}
+        onToggle={() => setShowUIThemeSelector(!showUIThemeSelector)}
+        position="floating"
+        onThemeChange={(theme) => {
+          console.log('Theme changed:', theme);
+          // Could save theme preference here
+        }}
       />
      </div>
    );
