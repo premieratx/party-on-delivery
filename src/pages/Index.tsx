@@ -5,13 +5,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load the homepage delivery app (Premier Party Cruises is marked as homepage)
-    console.log('🔄 Index: Loading homepage delivery app');
-    navigate('/app/premier-party-cruises---official-alcohol-delivery-service', { replace: true });
+    // Load the homepage delivery app (Main Delivery App is marked as homepage)
+    console.log('🔄 Index: Loading homepage delivery app - Main Delivery App');
+    navigate('/app/main-delivery-app', { replace: true });
   }, [navigate]);
 
   return <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="text-lg text-muted-foreground">Loading your delivery app...</div>
+    <div className="text-lg text-muted-foreground">Loading Main Delivery App...</div>
   </div>;
 };
 
