@@ -78,11 +78,47 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
 
     // Start conversation when opened
     if (isOpen && messages.length === 0) {
+      initializeAgent();
+    }
+  }, [isOpen]);
+
+  const [agentConfig, setAgentConfig] = useState<any>(null);
+
+  const initializeAgent = async () => {
+    try {
+      // Load default agent configuration
+      const { data, error } = await supabase
+        .from('ai_assistant_configs')
+        .select('*')
+        .eq('is_default', true)
+        .single();
+
+      if (error || !data) {
+        // Fallback to basic configuration
+        const defaultConfig = {
+          name: 'Party Assistant',
+          voice: 'aria',
+          model: 'eleven_multilingual_v2',
+          systemPrompt: 'You are a helpful party planning assistant.',
+          greeting: "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!",
+          isDefault: true
+        };
+        setAgentConfig(defaultConfig);
+        setMessages([{ type: 'ai', content: defaultConfig.greeting }]);
+        speakMessageWithVoice(defaultConfig.greeting, defaultConfig.voice, defaultConfig.model);
+      } else {
+        setAgentConfig(data);
+        setMessages([{ type: 'ai', content: data.greeting }]);
+        speakMessageWithVoice(data.greeting, data.voice, data.model);
+      }
+    } catch (error) {
+      console.error('Error initializing agent:', error);
+      // Fallback
       const welcomeMessage = "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!";
       setMessages([{ type: 'ai', content: welcomeMessage }]);
       speakMessage(welcomeMessage);
     }
-  }, [isOpen]);
+  };
 
   const startListening = () => {
     if (recognitionRef.current) {
@@ -105,11 +141,48 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
   };
 
   const speakMessage = (text: string) => {
-    if (synthRef.current) {
+    if (agentConfig?.voice && agentConfig?.model) {
+      speakMessageWithVoice(text, agentConfig.voice, agentConfig.model);
+    } else {
+      // Fallback to browser speech synthesis
+      if (synthRef.current) {
+        setIsSpeaking(true);
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.onend = () => setIsSpeaking(false);
+        synthRef.current.speak(utterance);
+      }
+    }
+  };
+
+  const speakMessageWithVoice = async (text: string, voice: string, model: string) => {
+    try {
       setIsSpeaking(true);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.onend = () => setIsSpeaking(false);
-      synthRef.current.speak(utterance);
+      
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: {
+          text: text,
+          voice: voice,
+          model: model
+        }
+      });
+
+      if (error) throw error;
+
+      // Play the audio
+      const audio = new Audio(`data:audio/mpeg;base64,${data.audioContent}`);
+      audio.onended = () => setIsSpeaking(false);
+      audio.onerror = () => setIsSpeaking(false);
+      await audio.play();
+      
+    } catch (error) {
+      console.error('TTS Error:', error);
+      setIsSpeaking(false);
+      // Fallback to browser speech synthesis
+      if (synthRef.current) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.onend = () => setIsSpeaking(false);
+        synthRef.current.speak(utterance);
+      }
     }
   };
 
@@ -143,7 +216,9 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
           message: input,
           conversation,
           questionCount,
-          context: 'party_planning'
+          context: 'party_planning',
+          systemPrompt: agentConfig?.systemPrompt || 'You are a helpful party planning assistant.',
+          agentConfig: agentConfig
         }
       });
 
