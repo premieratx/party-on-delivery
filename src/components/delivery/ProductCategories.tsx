@@ -907,7 +907,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                 </>
               )}
             </div>
-            </div>
             
             {/* Search Bar and Manage Order */}
             <div className="flex items-center gap-2 flex-1 max-w-lg">
@@ -1109,7 +1108,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                       </div>
                     )}
 <div className="mt-auto pt-2 flex flex-col items-center gap-2">
-  <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${applyMarkup(price).toFixed(2)}</Badge>
+  <Badge variant="secondary" className="product-price w-fit font-semibold text-center text-xs bg-primary/10 text-primary border-primary/20">${applyMarkup(price).toFixed(2)}</Badge>
   <div className="flex justify-center">
                          {cartQty > 0 ? (
                            <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
@@ -1450,6 +1449,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         onProceedToCheckout={onProceedToCheckout}
         onOpenSearch={() => {}}
       />
-      </div>
-    );
+    </div>
+  );
 };

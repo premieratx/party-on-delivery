@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Palette, 
   X, 
@@ -17,7 +18,10 @@ import {
   Layout,
   PaintBucket,
   Brush,
-  CircleDot
+  CircleDot,
+  Download,
+  Upload,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -39,24 +43,83 @@ interface ThemeColors {
   ring: string;
 }
 
+interface ThemePreset {
+  id: string;
+  name: string;
+  description: string;
+  colors: ThemeColors;
+  editable?: boolean;
+}
+
+const defaultPresets: ThemePreset[] = [
+  {
+    id: 'default',
+    name: 'Default',
+    description: 'Clean and professional default theme',
+    colors: {
+      primary: '222 84% 5%',
+      secondary: '210 40% 98%', 
+      tertiary: '220 14% 96%',
+      background: '0 0% 100%',
+      foreground: '222 84% 5%',
+      muted: '210 40% 98%',
+      accent: '210 40% 98%',
+      destructive: '0 84% 60%',
+      border: '214 32% 91%',
+      ring: '222 84% 5%'
+    }
+  },
+
+  {
+    id: 'dark',
+    name: 'Dark Mode',
+    description: 'Elegant dark theme with high contrast',
+    colors: {
+      primary: '210 40% 98%',
+      secondary: '217 33% 17%',
+      tertiary: '220 14% 96%',
+      background: '222 84% 5%',
+      foreground: '210 40% 98%',
+      muted: '217 33% 17%',
+      accent: '217 33% 17%',
+      destructive: '0 63% 31%',
+      border: '217 33% 17%',
+      ring: '212 95% 68%'
+    }
+  },
+  {
+    id: 'blue',
+    name: 'Ocean Blue',
+    description: 'Calming blue theme for modern interfaces',
+    colors: {
+      primary: '221 83% 53%',
+      secondary: '210 40% 98%',
+      tertiary: '220 14% 96%', 
+      background: '0 0% 100%',
+      foreground: '222 84% 5%',
+      muted: '210 40% 98%',
+      accent: '210 40% 98%',
+      destructive: '0 84% 60%',
+      border: '214 32% 91%',
+      ring: '221 83% 53%'
+    }
+  }
+];
+
 export const CustomThemeCreator: React.FC<CustomThemeCreatorProps> = ({
   isOpen,
   onClose
 }) => {
-  const [colors, setColors] = useState<ThemeColors>({
-    primary: '#3B82F6',
-    secondary: '#64748B', 
-    tertiary: '#8B5CF6',
-    background: '#FFFFFF',
-    foreground: '#0F172A',
-    muted: '#F1F5F9',
-    accent: '#F59E0B',
-    destructive: '#EF4444',
-    border: '#E2E8F0',
-    ring: '#3B82F6'
-  });
-
+  const [selectedPreset, setSelectedPreset] = useState<ThemePreset | null>(defaultPresets[0]);
+  const [customPresets, setCustomPresets] = useState<ThemePreset[]>([]);
+  const [isEditingPreset, setIsEditingPreset] = useState(false);
+  const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
+  
+  // Initialize colors state with the selectedPreset colors
+  const [colors, setColors] = useState<ThemeColors>(
+    selectedPreset?.colors || defaultPresets[0].colors
+  );
 
   const colorDefinitions = [
     {
@@ -169,9 +232,9 @@ export const CustomThemeCreator: React.FC<CustomThemeCreatorProps> = ({
       return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
     };
 
-    // Apply colors to CSS custom properties
+    // Apply colors to CSS custom properties (colors are already in HSL format)
     Object.entries(colors).forEach(([key, value]) => {
-      root.style.setProperty(`--${key}`, hexToHsl(value));
+      root.style.setProperty(`--${key}`, String(value));
     });
 
     toast.success('Theme applied! Check the preview.');

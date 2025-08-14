@@ -98,7 +98,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                         <div className="flex items-start justify-between">
                           <div>
                             <h4 className="font-medium text-xs sm:text-sm line-clamp-2">{item.title}</h4>
-                            <p className="text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
+                            <p className="product-price text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
                           </div>
                           <Button
                             variant="ghost"

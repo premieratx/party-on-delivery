@@ -1,0 +1,46 @@
+// Updated product price styling for better contrast
+.product-price {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.product-title {
+  color: hsl(var(--foreground));
+  font-weight: 500;
+}
+
+.product-description {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Force primary color for all price displays */
+.price-display, 
+[class*="price"], 
+.text-primary {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Ensure proper contrast for product cards */
+.product-card {
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+.product-card .product-price {
+  color: hsl(var(--primary)) !important;
+  font-weight: 600 !important;
+}
+
+/* High contrast mode for better accessibility */
+@media (prefers-contrast: high) {
+  .product-price {
+    color: hsl(var(--primary)) !important;
+    text-shadow: 0 0 2px hsl(var(--background));
+  }
+  
+  .product-title {
+    color: hsl(var(--foreground)) !important;
+    font-weight: 700 !important;
+  }
+}
