@@ -11,38 +11,55 @@ import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDel
 import { CustomDeliveryAppsGrid } from '@/components/custom-delivery/CustomDeliveryAppsGrid';
 import { GlobalNavigation } from '@/components/common/GlobalNavigation';
 
+const COVER_SHOWN_SESSION_KEY = 'homepage_cover_shown_session';
+
 const Index = () => {
   // Enable wake lock to keep screen on during app usage
   useWakeLock();
   
-  // Use optimized product loading
-  const { refreshProducts } = useOptimizedProductLoader();
+  // Use optimized product loading with immediate start
+  const { refreshProducts, loading: productsLoading } = useOptimizedProductLoader();
   
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [homepageApp, setHomepageApp] = useState<any>(null);
-  const [showCoverModal, setShowCoverModal] = useState(true);
+  const [showCoverModal, setShowCoverModal] = useState(() => {
+    // Check if cover was already shown in this session
+    return !sessionStorage.getItem(COVER_SHOWN_SESSION_KEY);
+  });
   const [showAppsGrid, setShowAppsGrid] = useState(false);
+  const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
 
-  // Load the homepage delivery app configuration
+  // Load the homepage delivery app configuration and start preloading
   useEffect(() => {
     const loadHomepageApp = async () => {
       try {
-        const { data, error } = await supabase
-          .from('delivery_app_variations')
-          .select('*')
-          .eq('is_homepage', true)
-          .eq('is_active', true)
-          .maybeSingle();
+        setIsPreloading(true);
         
-        if (!error && data) {
-          setHomepageApp(data);
+        // Load homepage app config in parallel with product preloading
+        const [appResult] = await Promise.allSettled([
+          supabase
+            .from('delivery_app_variations')
+            .select('*')
+            .eq('is_homepage', true)
+            .eq('is_active', true)
+            .maybeSingle(),
+          // Trigger immediate product cache warming
+          supabase.functions.invoke('instant-product-cache', {
+            body: { forceRefresh: false, preload: true }
+          })
+        ]);
+        
+        if (appResult.status === 'fulfilled' && !appResult.value.error && appResult.value.data) {
+          setHomepageApp(appResult.value.data);
         }
       } catch (error) {
         console.error('Error loading homepage app:', error);
+      } finally {
+        setIsPreloading(false);
       }
     };
 
@@ -50,11 +67,14 @@ const Index = () => {
   }, []);
 
   const handleStartShopping = () => {
+    // Mark cover as shown for this session
+    sessionStorage.setItem(COVER_SHOWN_SESSION_KEY, 'true');
     setShowCoverModal(false);
-    // Instead of redirecting, show the main delivery app
   };
 
   const handleViewApps = () => {
+    // Mark cover as shown for this session
+    sessionStorage.setItem(COVER_SHOWN_SESSION_KEY, 'true');
     setShowCoverModal(false);
     setShowAppsGrid(true);
   };
@@ -148,7 +168,10 @@ const Index = () => {
           onAppSelect={(appSlug) => navigate(`/app/${appSlug}`)}
           onBack={() => {
             setShowAppsGrid(false);
-            setShowCoverModal(true);
+            // Don't show cover modal again if it was already shown in this session
+            if (!sessionStorage.getItem(COVER_SHOWN_SESSION_KEY)) {
+              setShowCoverModal(true);
+            }
           }}
         />
       )}
