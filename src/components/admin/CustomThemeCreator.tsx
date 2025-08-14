@@ -195,10 +195,17 @@ export const CustomThemeCreator: React.FC<CustomThemeCreatorProps> = ({
   ];
 
   const handleColorChange = (key: keyof ThemeColors, value: string) => {
-    setColors(prev => ({
-      ...prev,
+    const newColors = {
+      ...colors,
       [key]: value
-    }));
+    };
+    setColors(newColors);
+    
+    // Apply immediately for preview
+    if (previewMode) {
+      const root = document.documentElement;
+      root.style.setProperty(`--${key}`, String(value));
+    }
   };
 
   const applyTheme = () => {
@@ -253,17 +260,38 @@ export const CustomThemeCreator: React.FC<CustomThemeCreatorProps> = ({
   };
 
   const saveTheme = () => {
-    // Save theme to localStorage
-    localStorage.setItem('custom-theme', JSON.stringify(colors));
-    toast.success('Custom theme saved!');
+    // Save theme to localStorage with additional metadata
+    const themeData = {
+      colors,
+      savedAt: new Date().toISOString(),
+      name: `Custom Theme ${new Date().toLocaleDateString()}`
+    };
+    localStorage.setItem('custom-theme', JSON.stringify(themeData));
+    
+    // Also apply the theme immediately
+    applyTheme();
+    toast.success('Custom theme saved and applied!');
   };
 
   const loadSavedTheme = () => {
     const saved = localStorage.getItem('custom-theme');
     if (saved) {
-      const savedColors = JSON.parse(saved);
-      setColors(savedColors);
-      toast.success('Saved theme loaded!');
+      try {
+        const themeData = JSON.parse(saved);
+        const savedColors = themeData.colors || themeData; // Support both old and new format
+        setColors(savedColors);
+        
+        // Apply the loaded theme immediately
+        const root = document.documentElement;
+        Object.entries(savedColors).forEach(([key, value]) => {
+          root.style.setProperty(`--${key}`, String(value));
+        });
+        
+        setPreviewMode(true);
+        toast.success('Saved theme loaded and applied!');
+      } catch (error) {
+        toast.error('Error loading saved theme');
+      }
     } else {
       toast.error('No saved theme found');
     }
@@ -272,15 +300,15 @@ export const CustomThemeCreator: React.FC<CustomThemeCreatorProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+        <DialogHeader className="relative">
+          <DialogTitle className="flex items-center gap-2 pr-10">
             <Palette className="w-5 h-5" />
             Custom Theme Creator
           </DialogTitle>
           <Button
             variant="ghost"
             size="icon"
-            className="absolute right-4 top-4"
+            className="absolute right-0 top-0"
             onClick={onClose}
           >
             <X className="w-4 h-4" />

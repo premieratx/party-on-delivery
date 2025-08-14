@@ -15,8 +15,12 @@
 
 /* Force primary color for all price displays */
 .price-display, 
-[class*="price"], 
 .text-primary {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Style price elements with attribute selectors */
+[class*="price"] {
   color: hsl(var(--primary)) !important;
 }
 
