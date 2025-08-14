@@ -5,11 +5,14 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Direct navigation to the search page (working delivery app)
-    navigate('/search', { replace: true });
+    // Smooth redirect to working delivery app
+    const timer = setTimeout(() => {
+      navigate('/search', { replace: true });
+    }, 10);
+    return () => clearTimeout(timer);
   }, [navigate]);
 
-  return null; // No loading screen
+  return <div></div>; // Brief render before redirect
 };
 
 export default Index;
