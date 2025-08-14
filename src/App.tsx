@@ -7,7 +7,7 @@ import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { PerformanceMonitor } from "@/components/common/PerformanceMonitor";
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
@@ -15,7 +15,6 @@ import Index from "./pages/Index";
 import VoiceChat from "./pages/VoiceChat";
 import PartyPlanningAgent from "./pages/PartyPlanningAgent";
 import NotFound from "./pages/NotFound";
-import { getInstantProducts } from "@/utils/instantCacheClient";
 
 // Lazy load all other components
 const Success = lazy(() => import("./pages/Success"));
@@ -77,30 +76,14 @@ const queryClient = new QueryClient({
   },
 });
 
-// Loading component for suspense
+// Simple loading without spinning animation
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div className="text-lg text-muted-foreground">Loading...</div>
   </div>
 );
 
 const App = () => {
-  useEffect(() => {
-    // Warm the instant product cache on app load for faster /search navigation
-    getInstantProducts({ timeoutMs: 800 }).catch(() => {});
-  }, []);
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const aff = params.get('aff') || params.get('affiliate') || params.get('ref');
-      if (aff) {
-        sessionStorage.setItem('affiliate.code', aff);
-        sessionStorage.setItem('affiliate_code', aff);
-        sessionStorage.setItem('affiliate_source', 'url');
-        localStorage.setItem('affiliate_code', aff);
-      }
-    } catch {}
-  }, []);
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -110,7 +93,7 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <div className="pb-14">
-                <Suspense fallback={<PageLoader />}>
+                <Suspense fallback={null}>
                   <Routes>
                     {/* Core pages - no lazy loading */}
                     

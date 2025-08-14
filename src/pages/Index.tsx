@@ -2,16 +2,12 @@ import React, { useState } from 'react';
 import ProductCategories from '@/components/delivery/ProductCategories';
 import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
-import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useNavigate } from 'react-router-dom';
 import { GlobalNavigation } from '@/components/common/GlobalNavigation';
 import heroPartyAustin from '@/assets/hero-party-austin.jpg';
 
 const Index = () => {
-  // Enable wake lock to keep screen on during app usage
-  useWakeLock();
-  
   // Use unified cart system
   const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice } = useUnifiedCart();
   
