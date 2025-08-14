@@ -3,6 +3,7 @@ import App from './App.tsx'
 import './index.css'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import './utils/disableAllPreloading'
+import './utils/disablePostHog'
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>

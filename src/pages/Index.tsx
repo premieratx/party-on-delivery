@@ -5,41 +5,58 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useNavigate } from 'react-router-dom';
 import { GlobalNavigation } from '@/components/common/GlobalNavigation';
 import { supabase } from '@/integrations/supabase/client';
+import heroImage from '@/assets/hero-party-austin.jpg';
 
 const Index = () => {
   const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice } = useUnifiedCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [deliveryApp, setDeliveryApp] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Hardcoded Premier Party Cruises delivery app config
-  const homepageApp = {
-    id: 'premier-party-cruises',
-    app_name: 'Premier Party Cruises - Official Alcohol Delivery Service',
-    app_slug: 'premier-party-cruises---official-alcohol-delivery-service',
-    logo_url: null,
-    is_active: true,
-    collections_config: {
-      tab_count: 5,
-      tabs: [
-        { name: 'All Products', collection_handle: 'all', icon: '🎉' },
-        { name: 'Beer', collection_handle: 'beer', icon: '🍺' },
-        { name: 'Wine', collection_handle: 'wine', icon: '🍷' },
-        { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' },
-        { name: 'Mixers', collection_handle: 'mixers-sodas', icon: '🥤' }
-      ]
-    },
-    start_screen_config: {
-      title: 'Premier Party Cruises',
-      subtitle: 'Official Alcohol Delivery Service'
-    },
-    main_app_config: {
-      hero_heading: 'Premium Alcohol Delivery for Your Party',
-      description: 'High-quality spirits, wines, and beers delivered directly to your Austin party location'
-    },
-    post_checkout_config: {
-      heading: 'Order Confirmed!',
-      subheading: 'Your party alcohol will be delivered as scheduled',
-      redirect_url: '/order-complete'
+  useEffect(() => {
+    loadDeliveryApp();
+  }, []);
+
+  const loadDeliveryApp = async () => {
+    try {
+      // Load the actual party-on-delivery app from database
+      const { data, error } = await supabase
+        .from('delivery_apps')
+        .select('*')
+        .eq('slug', 'party-on-delivery---concierge-')
+        .eq('active', true)
+        .single();
+
+      if (error || !data) {
+        console.log('Using fallback app config');
+        // Fallback to hardcoded config
+        setDeliveryApp({
+          id: 'party-on-delivery',
+          app_name: 'Party On Delivery - Concierge Service',
+          app_slug: 'party-on-delivery---concierge-',
+          logo_url: null,
+          active: true,
+          collections: ['spirits', 'tailgate-beer', 'seltzer-collection', 'mixers-non-alcoholic', 'cocktail-kits'],
+          main_app_config: {
+            hero_heading: 'Premium Party Alcohol Delivery',
+            description: 'High-quality spirits, wines, and beers delivered directly to your Austin party location'
+          }
+        });
+      } else {
+        setDeliveryApp(data);
+      }
+    } catch (error) {
+      console.error('Error loading delivery app:', error);
+      // Fallback config
+      setDeliveryApp({
+        id: 'party-on-delivery',
+        app_name: 'Party On Delivery - Concierge Service',
+        app_slug: 'party-on-delivery---concierge-',
+        collections: ['spirits', 'tailgate-beer', 'seltzer-collection']
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -58,13 +75,11 @@ const Index = () => {
   const handleCheckout = () => {
     localStorage.setItem('deliveryAppReferrer', '/');
     localStorage.setItem('app-context', JSON.stringify({
-      appSlug: homepageApp?.app_slug || 'main-delivery-app',
-      appName: homepageApp?.app_name || 'Party On Delivery'
+      appSlug: deliveryApp?.app_slug || 'party-on-delivery---concierge-',
+      appName: deliveryApp?.app_name || 'Party On Delivery'
     }));
     navigate('/checkout');
   };
-
-  // No loading screen - render directly
 
   // Convert unified cart items to the format expected by the delivery app
   const cartItemsForDelivery = cartItems.map(item => ({
@@ -85,84 +100,105 @@ const Index = () => {
     instructions: ''
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xl font-semibold text-foreground">Loading Party On Delivery...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <GlobalNavigation />
       
-      {/* Simple direct delivery app without preloading */}
-      <div className="min-h-screen">
-        {/* Hero Section */}
-        <div className="relative h-[60vh] bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 overflow-hidden">
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="relative z-10 flex items-center justify-center h-full">
-            <div className="text-center text-white px-4">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">
-                Premier Party Cruises
-              </h1>
-              <p className="text-xl md:text-2xl text-blue-100">
-                Official Alcohol Delivery Service
-              </p>
-              <div className="mt-8">
-                <div className="inline-block bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/30">
-                  <p className="text-lg font-medium">Premium Alcohol Delivery for Your Austin Party</p>
-                </div>
+      {/* Hero Section with Background Image */}
+      <div className="relative h-[70vh] overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 flex items-center justify-center h-full">
+          <div className="text-center text-white px-4 max-w-4xl">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              {deliveryApp?.app_name || 'Party On Delivery'}
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100 mb-6">
+              {deliveryApp?.main_app_config?.description || 'Premium alcohol delivery for your Austin party'}
+            </p>
+            <div className="mt-8">
+              <div className="inline-block bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3 border border-white/30">
+                <p className="text-lg font-medium">Free delivery on orders over $100</p>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Products Section */}
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Shop Our Collection</h2>
-            <p className="text-lg text-muted-foreground">High-quality spirits, wines, and beers delivered directly to your party</p>
+      {/* Products Section */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-foreground mb-4">Shop Our Collection</h2>
+          <p className="text-lg text-muted-foreground">Browse by category to find exactly what you need</p>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div 
+            className="group p-6 rounded-xl border bg-card text-card-foreground hover:shadow-lg transition-all duration-300 cursor-pointer text-center hover:scale-105"
+            onClick={() => window.location.href = '/search?category=spirits'}
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🥃</div>
+            <h3 className="font-semibold text-lg">Spirits</h3>
+            <p className="text-sm text-muted-foreground">Premium Liquor</p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div 
-              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
-              onClick={() => window.location.href = '/search?category=beer'}
-            >
-              <div className="text-4xl mb-3">🍺</div>
-              <h3 className="font-semibold">Beer</h3>
-              <p className="text-sm text-muted-foreground">Craft & Premium</p>
-            </div>
-            
-            <div 
-              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
-              onClick={() => window.location.href = '/search?category=wine'}
-            >
-              <div className="text-4xl mb-3">🍷</div>
-              <h3 className="font-semibold">Wine</h3>
-              <p className="text-sm text-muted-foreground">Red & White</p>
-            </div>
-            
-            <div 
-              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
-              onClick={() => window.location.href = '/search?category=spirits'}
-            >
-              <div className="text-4xl mb-3">🥃</div>
-              <h3 className="font-semibold">Spirits</h3>
-              <p className="text-sm text-muted-foreground">Premium Liquor</p>
-            </div>
-            
-            <div 
-              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
-              onClick={() => window.location.href = '/search?category=mixers'}
-            >
-              <div className="text-4xl mb-3">🥤</div>
-              <h3 className="font-semibold">Mixers</h3>
-              <p className="text-sm text-muted-foreground">Sodas & Juices</p>
-            </div>
-            
-            <div 
-              className="p-6 rounded-lg border bg-card text-card-foreground hover:shadow-lg transition-shadow cursor-pointer text-center"
-              onClick={() => window.location.href = '/search'}
-            >
-              <div className="text-4xl mb-3">🎉</div>
-              <h3 className="font-semibold">All Products</h3>
-              <p className="text-sm text-muted-foreground">Browse Everything</p>
-            </div>
+          <div 
+            className="group p-6 rounded-xl border bg-card text-card-foreground hover:shadow-lg transition-all duration-300 cursor-pointer text-center hover:scale-105"
+            onClick={() => window.location.href = '/search?category=beer'}
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🍺</div>
+            <h3 className="font-semibold text-lg">Beer</h3>
+            <p className="text-sm text-muted-foreground">Craft & Tailgate</p>
+          </div>
+          
+          <div 
+            className="group p-6 rounded-xl border bg-card text-card-foreground hover:shadow-lg transition-all duration-300 cursor-pointer text-center hover:scale-105"
+            onClick={() => window.location.href = '/search?category=seltzer'}
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🥤</div>
+            <h3 className="font-semibold text-lg">Seltzers</h3>
+            <p className="text-sm text-muted-foreground">Hard Seltzers</p>
+          </div>
+          
+          <div 
+            className="group p-6 rounded-xl border bg-card text-card-foreground hover:shadow-lg transition-all duration-300 cursor-pointer text-center hover:scale-105"
+            onClick={() => window.location.href = '/search?category=mixers'}
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🧊</div>
+            <h3 className="font-semibold text-lg">Mixers</h3>
+            <p className="text-sm text-muted-foreground">Non-Alcoholic</p>
+          </div>
+          
+          <div 
+            className="group p-6 rounded-xl border bg-card text-card-foreground hover:shadow-lg transition-all duration-300 cursor-pointer text-center hover:scale-105"
+            onClick={() => window.location.href = '/search?category=cocktails'}
+          >
+            <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">🍸</div>
+            <h3 className="font-semibold text-lg">Cocktail Kits</h3>
+            <p className="text-sm text-muted-foreground">Ready to Mix</p>
+          </div>
+        </div>
+
+        {/* Browse All Products CTA */}
+        <div className="text-center mt-12">
+          <div 
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold text-lg hover:bg-primary/90 transition-colors cursor-pointer"
+            onClick={() => window.location.href = '/search'}
+          >
+            🎉 Browse All Products
           </div>
         </div>
       </div>
@@ -189,7 +225,7 @@ const Index = () => {
         onCheckout={handleCheckout}
         shouldHide={false}
         showAdmin={true}
-        currentAppSlug={homepageApp.app_slug}
+        currentAppSlug={deliveryApp?.app_slug || 'party-on-delivery---concierge-'}
       />
     </div>
   );

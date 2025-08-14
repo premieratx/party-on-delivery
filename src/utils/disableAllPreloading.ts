@@ -1,11 +1,13 @@
 // COMPLETE PRELOADING DISABLER
 // This file ensures all preloading systems are completely disabled
 
-// Disable all console.log preloading messages
+// Disable all console.log preloading messages and PostHog
 const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+
 console.log = (...args: any[]) => {
   const message = args.join(' ');
-  // Block all preloading-related console messages
+  // Block all preloading-related and PostHog console messages
   if (
     message.includes('⚡') ||
     message.includes('🚀 Preloading') ||
@@ -19,11 +21,26 @@ console.log = (...args: any[]) => {
     message.includes('Lightning-fast') ||
     message.includes('Custom site mode') ||
     message.includes('ProductCategories: Fetching') ||
-    message.includes('DeliveryCart pricing')
+    message.includes('DeliveryCart pricing') ||
+    message.includes('PostHog') ||
+    message.includes('posthog')
   ) {
     return; // Block these messages
   }
   originalConsoleLog.apply(console, args);
+};
+
+console.error = (...args: any[]) => {
+  const message = args.join(' ');
+  // Block PostHog rate limiting errors
+  if (
+    message.includes('PostHog') ||
+    message.includes('rate limiting') ||
+    message.includes('capture call is ignored')
+  ) {
+    return; // Block these error messages
+  }
+  originalConsoleError.apply(console, args);
 };
 
 // Override any remaining preloading functions globally
