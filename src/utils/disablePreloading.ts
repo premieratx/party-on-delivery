@@ -19,4 +19,4 @@ if (typeof window !== 'undefined') {
 }
 
 export const PRELOADING_DISABLED = true;
-export const BUILD_VERSION = '2025_01_14_21_20';
+export const BUILD_VERSION = '2025_01_14_21_30_NO_SPINNER';

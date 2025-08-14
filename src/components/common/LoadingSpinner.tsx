@@ -12,23 +12,12 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   className,
   text 
 }) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8'
-  };
-
+  // NO SPINNING ANIMATION - DISABLED
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2", className)}>
-      <div 
-        className={cn(
-          "animate-spin rounded-full border-2 border-muted border-t-primary",
-          sizeClasses[size]
-        )}
-      />
-      {text && (
-        <p className="text-sm text-muted-foreground">{text}</p>
-      )}
+      <div className="text-sm text-muted-foreground">
+        {text || 'Loading...'}
+      </div>
     </div>
   );
 };

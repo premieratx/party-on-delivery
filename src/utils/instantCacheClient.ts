@@ -17,4 +17,4 @@ export const setCachedCollections = () => {};
 export const clearCachedCollections = () => {};
 
 // Build version to force cache invalidation
-export const BUILD_VERSION = '2025_01_14_21_25_NUCLEAR';
+export const BUILD_VERSION = '2025_01_14_21_30_NO_SPINNER';

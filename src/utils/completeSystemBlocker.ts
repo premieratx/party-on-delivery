@@ -1,4 +1,4 @@
-// NUCLEAR DESTRUCTION v2025_01_14_21_25
+// NUCLEAR DESTRUCTION v2025_01_14_21_30_NO_SPINNER
 
 if (typeof window !== 'undefined') {
   console.log('🚫 NUCLEAR SYSTEM BLOCKER ACTIVATED');
