@@ -156,17 +156,15 @@ And hey, if you're not sure what drinks you want, just say "surprise me" or "put
         }
       }
       if (finalTranscript) {
-        setInputText(finalTranscript);
+        // Append to existing text instead of overwriting
+        setInputText(prev => prev + (prev ? ' ' : '') + finalTranscript);
       }
     };
 
     recognition.onend = () => {
       setIsListening(false);
       setIsRecording(false);
-      // Auto-send the transcribed message
-      if (inputText.trim()) {
-        handleSendMessage(inputText);
-      }
+      // Don't auto-send here - let user decide when to send
     };
 
     recognition.onerror = (event) => {
@@ -309,7 +307,11 @@ And hey, if you're not sure what drinks you want, just say "surprise me" or "put
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Type your message or hold the mic button to speak..."
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputText)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendMessage(inputText);
+                  }
+                }}
                 className="flex-1 bg-white/10 border-white/30 text-white placeholder:text-white/70"
               />
               <Button

@@ -776,112 +776,159 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         <div className={`w-full px-2 md:px-4 py-2`}>
           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
             
-            {/* Left Section: What's the Occasion OR Cart/Checkout */}
-            <div className="flex items-center gap-2">
+            {/* Left Section: What's the Occasion - Expanded */}
+            <div className="flex items-center gap-4 flex-1">
               {!isScrollingDown ? (
                 <>
-              {/* What's the occasion section - expanded layout */}
-              <div className="flex items-center gap-2 w-full">
-                <div className="h-10 flex flex-col justify-center text-xs font-bold text-black leading-tight hidden sm:block px-2">
-                  <div>What's the</div>
-                  <div>Occasion?</div>
+              {/* What's the occasion section - expanded into two rows */}
+              <div className="flex items-center gap-4 w-full">
+                <div className="h-16 flex flex-col justify-center text-sm font-bold text-black leading-tight hidden sm:block px-2">
+                  <div className="text-lg">What's the</div>
+                  <div className="text-lg">Occasion?</div>
                 </div>
                 
-                {/* Occasion buttons - stretch across available space */}
-                <div className="flex gap-1 flex-wrap w-full max-w-md">
-                {isMobile ? (
-                  <>
-                    {/* Mobile: Small icon-based buttons */}
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                         onClick={() => {
-                           window.location.href = '/app/boat-delivery';
-                         }}
-                     >
-                       <div className="text-xs">🛥️</div>
-                       <div className="text-[8px] leading-none">Boat</div>
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                         onClick={() => {
-                           window.location.href = '/app/lake-travis-party-package';
-                         }}
-                     >
-                       <div className="text-xs">🌊</div>
-                       <div className="text-[8px] leading-none">Lake</div>
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                         onClick={() => {
-                           window.location.href = '/app/wedding-package';
-                         }}
-                     >
-                       <div className="text-xs">💒</div>
-                       <div className="text-[8px] leading-none">Wedding</div>
-                     </Button>
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                         onClick={() => {
-                           window.location.href = '/party-planning-agent';
-                         }}
-                     >
-                       <div className="text-xs">🎉</div>
-                       <div className="text-[8px] leading-none">Party</div>
-                     </Button>
-                  </>
-                ) : (
-                   <>
-                     {/* Desktop: Full text buttons */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
+                {/* Occasion buttons - expanded into two rows */}
+                <div className="flex flex-col gap-2 flex-1 max-w-2xl">
+                  {isMobile ? (
+                    <>
+                      {/* Mobile: Two rows of compact buttons */}
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
                           onClick={() => {
                             window.location.href = '/app/boat-delivery';
                           }}
-                      >
-                        Boat Delivery
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
+                        >
+                          <div className="text-xs">🛥️</div>
+                          <div className="text-[8px] leading-none">Boat</div>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
                           onClick={() => {
                             window.location.href = '/app/lake-travis-party-package';
                           }}
-                      >
-                        Lake Party
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
+                        >
+                          <div className="text-xs">🌊</div>
+                          <div className="text-[8px] leading-none">Lake</div>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
                           onClick={() => {
                             window.location.href = '/app/wedding-package';
                           }}
-                      >
-                        Wedding
-                      </Button>
-                      <Button
-                         variant="outline"
-                         size="sm"
-                         className="text-xs px-3 py-1 h-10 font-bold text-black flex-1 min-w-0"
-                           onClick={() => {
-                             window.location.href = '/party-planning-agent';
-                           }}
-                       >
-                         Party Planner
-                       </Button>
-                   </>
-                )}
+                        >
+                          <div className="text-xs">💒</div>
+                          <div className="text-[8px] leading-none">Wedding</div>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
+                          onClick={() => {
+                            window.location.href = '/party-planning-agent';
+                          }}
+                        >
+                          <div className="text-xs">🎉</div>
+                          <div className="text-[8px] leading-none">Party</div>
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Desktop: Two rows of larger buttons */}
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/boat-delivery';
+                          }}
+                        >
+                          🛥️ Boat Delivery
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/lake-travis-party-package';
+                          }}
+                        >
+                          🌊 Lake Party
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/wedding-package';
+                          }}
+                        >
+                          💒 Wedding
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/party-planning-agent';
+                          }}
+                        >
+                          🎉 Party Planner
+                        </Button>
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/birthday-bash';
+                          }}
+                        >
+                          🎂 Birthday
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/graduation-party';
+                          }}
+                        >
+                          🎓 Graduation
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/corporate-event';
+                          }}
+                        >
+                          🏢 Corporate
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                          onClick={() => {
+                            window.location.href = '/app/backyard-bbq';
+                          }}
+                        >
+                          🔥 BBQ
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
                 </>
@@ -915,9 +962,9 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
               )}
             </div>
             
-            {/* Search Bar and Manage Order */}
-            <div className="flex items-center gap-2 flex-1 max-w-lg">
-              <div className="flex-1">
+            {/* Search Bar - moved to right side */}
+            <div className="flex items-center gap-2 max-w-md w-full justify-end">
+              <div className="flex-1 max-w-sm">
                 <ProductSearchBar
                   onProductSelect={handleSearchSelect}
                   placeholder="Search all products..."
@@ -930,16 +977,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                   inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
                 />
               </div>
-              
-              {/* Manage Order Button - Desktop */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden md:flex items-center gap-1 text-xs"
-                onClick={onOpenCart}
-              >
-                Manage My Order
-              </Button>
             </div>
           </div>
         </div>

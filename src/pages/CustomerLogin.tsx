@@ -63,8 +63,10 @@ const CustomerLogin = () => {
         }
         
          console.log('Redirecting to:', redirectTo);
-         // Force hard redirect to avoid landing on cover screens first
-         window.location.replace(redirectTo);
+         // Add a small delay to prevent race conditions then redirect
+         setTimeout(() => {
+           window.location.replace(redirectTo);
+         }, 100);
       } catch (error) {
         console.error('Customer auth processing error:', error);
         setIsLoading(false);
@@ -118,16 +120,22 @@ const CustomerLogin = () => {
     setIsLoading(true);
     console.log('Initiating Google login...');
     
-      try {
-        // Always redirect back to login with dashboard redirect param
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${CANONICAL_DOMAIN}/customer/login`,
-            queryParams: { access_type: 'offline', prompt: 'select_account' },
-            skipBrowserRedirect: false,
+    try {
+      // Clear any existing auth processed flags to prevent stale state
+      sessionStorage.removeItem('customer-auth-processed');
+      
+      // Always redirect back to login with dashboard redirect param
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${CANONICAL_DOMAIN}/customer/login?redirect=dashboard`,
+          queryParams: { 
+            access_type: 'offline', 
+            prompt: 'consent' // Force account selection to prevent auto-login
           },
-        });
+          skipBrowserRedirect: false,
+        },
+      });
 
       if (error) {
         console.error('OAuth initiation error:', error);
