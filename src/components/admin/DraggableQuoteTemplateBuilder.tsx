@@ -333,7 +333,7 @@ export const DraggableQuoteTemplateBuilder: React.FC = () => {
     setDragStart({ x: e.clientX, y: e.clientY });
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: React.MouseEvent | MouseEvent) => {
     if (!dragStart) return;
 
     const deltaX = e.clientX - dragStart.x;
@@ -347,39 +347,48 @@ export const DraggableQuoteTemplateBuilder: React.FC = () => {
       let newSize = { ...element.size };
       let newPosition = { ...element.position };
 
+      // Get canvas bounds for constraining
+      const canvas = canvasRef.current;
+      const canvasBounds = canvas?.getBoundingClientRect();
+      const maxWidth = canvasBounds ? canvasBounds.width - element.position.x : 1000;
+      const maxHeight = canvasBounds ? canvasBounds.height - element.position.y : 1000;
+
       switch (handle) {
         case 'nw':
-          newSize.width = Math.max(50, element.size.width - deltaX);
-          newSize.height = Math.max(20, element.size.height - deltaY);
-          newPosition.x = element.position.x + deltaX;
-          newPosition.y = element.position.y + deltaY;
+          newSize.width = Math.max(50, Math.min(maxWidth + element.position.x, element.size.width - deltaX));
+          newSize.height = Math.max(20, Math.min(maxHeight + element.position.y, element.size.height - deltaY));
+          newPosition.x = Math.max(0, element.position.x + (element.size.width - newSize.width));
+          newPosition.y = Math.max(0, element.position.y + (element.size.height - newSize.height));
           break;
         case 'ne':
-          newSize.width = Math.max(50, element.size.width + deltaX);
-          newSize.height = Math.max(20, element.size.height - deltaY);
-          newPosition.y = element.position.y + deltaY;
+          newSize.width = Math.max(50, Math.min(maxWidth, element.size.width + deltaX));
+          newSize.height = Math.max(20, Math.min(maxHeight + element.position.y, element.size.height - deltaY));
+          newPosition.y = Math.max(0, element.position.y + (element.size.height - newSize.height));
           break;
         case 'sw':
-          newSize.width = Math.max(50, element.size.width - deltaX);
-          newSize.height = Math.max(20, element.size.height + deltaY);
-          newPosition.x = element.position.x + deltaX;
+          newSize.width = Math.max(50, Math.min(maxWidth + element.position.x, element.size.width - deltaX));
+          newSize.height = Math.max(20, Math.min(maxHeight, element.size.height + deltaY));
+          newPosition.x = Math.max(0, element.position.x + (element.size.width - newSize.width));
           break;
         case 'se':
-          newSize.width = Math.max(50, element.size.width + deltaX);
-          newSize.height = Math.max(20, element.size.height + deltaY);
+          newSize.width = Math.max(50, Math.min(maxWidth, element.size.width + deltaX));
+          newSize.height = Math.max(20, Math.min(maxHeight, element.size.height + deltaY));
           break;
       }
 
       updateElement(elementId, { size: newSize, position: newPosition });
     } else if (draggedElement) {
       const element = template.elements.find(el => el.id === draggedElement);
-      if (!element) return;
+      if (!element || !canvasRef.current) return;
+
+      const canvas = canvasRef.current;
+      const canvasBounds = canvas.getBoundingClientRect();
+      
+      const newX = Math.max(0, Math.min(canvasBounds.width - element.size.width, element.position.x + deltaX));
+      const newY = Math.max(0, Math.min(canvasBounds.height - element.size.height, element.position.y + deltaY));
 
       updateElement(draggedElement, {
-        position: {
-          x: Math.max(0, element.position.x + deltaX),
-          y: Math.max(0, element.position.y + deltaY)
-        }
+        position: { x: newX, y: newY }
       });
     }
 
@@ -432,19 +441,42 @@ export const DraggableQuoteTemplateBuilder: React.FC = () => {
   const renderResizeHandles = (element: TemplateElement) => {
     if (selectedElement !== element.id) return null;
 
-    const handles = ['nw', 'ne', 'sw', 'se'];
+    const handles = [
+      { name: 'nw', cursor: 'nw-resize', top: -6, left: -6 },
+      { name: 'ne', cursor: 'ne-resize', top: -6, right: -6 },
+      { name: 'sw', cursor: 'sw-resize', bottom: -6, left: -6 },
+      { name: 'se', cursor: 'se-resize', bottom: -6, right: -6 }
+    ];
     
-    return handles.map(handle => (
-      <div
-        key={handle}
-        className={`absolute w-2 h-2 bg-primary border border-white cursor-${handle}-resize`}
-        style={{
-          top: handle.includes('n') ? -4 : element.size.height - 4,
-          left: handle.includes('w') ? -4 : element.size.width - 4,
-        }}
-        onMouseDown={(e) => handleMouseDown(e, element.id, handle)}
-      />
-    ));
+    return (
+      <>
+        {handles.map(handle => (
+          <div
+            key={handle.name}
+            className="absolute w-3 h-3 bg-primary border-2 border-white rounded-full shadow-md hover:scale-110 transition-transform"
+            style={{
+              top: handle.top,
+              left: handle.left,
+              right: handle.right,
+              bottom: handle.bottom,
+              cursor: handle.cursor,
+              zIndex: 10
+            }}
+            onMouseDown={(e) => handleMouseDown(e, element.id, handle.name)}
+          />
+        ))}
+        {/* Center drag handle indicator */}
+        <div 
+          className="absolute inset-0 border-2 border-dashed border-primary/30 pointer-events-none"
+          style={{ margin: '2px' }}
+        />
+        <div 
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-primary/20 rounded-full flex items-center justify-center pointer-events-none"
+        >
+          <div className="w-2 h-2 bg-primary rounded-full" />
+        </div>
+      </>
+    );
   };
 
   return (
@@ -553,9 +585,11 @@ export const DraggableQuoteTemplateBuilder: React.FC = () => {
             {template.elements.map((element) => (
               <div
                 key={element.id}
-                className={`absolute border-2 ${
-                  selectedElement === element.id ? 'border-primary' : 'border-transparent'
-                } hover:border-primary/50 group`}
+                className={`absolute transition-all duration-200 ${
+                  selectedElement === element.id 
+                    ? 'border-2 border-primary shadow-lg' 
+                    : 'border-2 border-transparent hover:border-primary/30'
+                } group`}
                 style={{
                   left: element.position.x,
                   top: element.position.y,
@@ -564,7 +598,7 @@ export const DraggableQuoteTemplateBuilder: React.FC = () => {
                   fontSize: element.style.fontSize,
                   fontFamily: element.style.fontFamily,
                   color: element.style.color,
-                  backgroundColor: element.style.backgroundColor,
+                  backgroundColor: element.style.backgroundColor || (selectedElement === element.id ? 'rgba(59, 130, 246, 0.05)' : 'transparent'),
                   textAlign: element.style.textAlign,
                   fontWeight: element.style.fontWeight,
                   fontStyle: element.style.fontStyle,
@@ -572,24 +606,46 @@ export const DraggableQuoteTemplateBuilder: React.FC = () => {
                   padding: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  cursor: draggedElement === element.id ? 'grabbing' : 'grab'
+                  cursor: draggedElement === element.id ? 'grabbing' : (selectedElement === element.id ? 'move' : 'pointer'),
+                  borderRadius: '4px',
+                  userSelect: 'none',
+                  zIndex: selectedElement === element.id ? 20 : 1
                 }}
                 onMouseDown={(e) => handleMouseDown(e, element.id)}
               >
                 {element.type === 'logo' ? (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center text-sm border-2 border-dashed border-gray-400">
-                    <Upload className="h-6 w-6 mr-2" />
-                    Logo
+                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-sm border-2 border-dashed border-gray-400 rounded">
+                    <Upload className="h-6 w-6 mr-2 text-gray-500" />
+                    <span className="text-gray-600">Logo</span>
                   </div>
                 ) : element.type === 'divider' ? (
-                  <hr className="w-full border-gray-300" />
+                  <div className="w-full flex items-center">
+                    <hr className="flex-1 border-gray-300" />
+                    {selectedElement === element.id && (
+                      <span className="px-2 text-xs text-gray-400">Divider</span>
+                    )}
+                    <hr className="flex-1 border-gray-300" />
+                  </div>
                 ) : (
-                  <div className="w-full">
+                  <div 
+                    className="w-full h-full flex items-center overflow-hidden"
+                    style={{
+                      wordWrap: 'break-word',
+                      whiteSpace: element.size.height > 30 ? 'normal' : 'nowrap'
+                    }}
+                  >
                     {element.content}
                   </div>
                 )}
                 
                 {renderResizeHandles(element)}
+                
+                {/* Selection indicator */}
+                {selectedElement === element.id && (
+                  <div className="absolute -top-6 left-0 bg-primary text-white text-xs px-2 py-1 rounded text-nowrap">
+                    {element.type.replace('-', ' ')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
