@@ -124,7 +124,7 @@ ${isAdminMode ?
   2. If you have enough details (occasion + guest count + preferences), suggest creating recommendations
   3. Always acknowledge what they've told you and build on it
   
-  Keep responses under 2 sentences and maintain the conversation flow naturally.`}`;
+  Keep responses under 20 words. Be concise and direct.`}`;
   }
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -145,7 +145,7 @@ ${isAdminMode ?
           { role: 'user', content: message }
         ],
         temperature: 0.8,
-        max_tokens: 150
+        max_tokens: 50
       }),
     });
 

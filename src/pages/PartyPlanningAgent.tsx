@@ -25,12 +25,26 @@ interface AgentProfile {
 }
 
 const AVAILABLE_VOICES = [
-  { id: 'alloy', name: 'Alloy - Neutral & Professional', description: 'Clear, professional tone' },
-  { id: 'echo', name: 'Echo - Warm & Friendly', description: 'Warm, approachable voice' },
-  { id: 'fable', name: 'Fable - Expressive & Engaging', description: 'Expressive storytelling voice' },
-  { id: 'onyx', name: 'Onyx - Deep & Authoritative', description: 'Deep, confident tone' },
-  { id: 'nova', name: 'Nova - Bright & Energetic', description: 'Bright, enthusiastic voice' },
-  { id: 'shimmer', name: 'Shimmer - Soft & Calming', description: 'Gentle, soothing tone' }
+  { id: 'alloy', name: 'Homer Simpson', description: 'D\'oh! Classic animated dad voice' },
+  { id: 'echo', name: 'Morgan Freeman', description: 'Wise, deep storytelling voice' },
+  { id: 'fable', name: 'Tom Hanks', description: 'Friendly, trustworthy American voice' },
+  { id: 'onyx', name: 'Darth Vader', description: 'Deep, powerful, commanding presence' },
+  { id: 'nova', name: 'Robin Williams', description: 'Energetic, quick-witted comedian' },
+  { id: 'shimmer', name: 'Marilyn Monroe', description: 'Sultry, breathy Hollywood icon' },
+  { id: 'alloy', name: 'Forrest Gump', description: 'Simple, heartfelt Southern charm' },
+  { id: 'echo', name: 'Samuel L. Jackson', description: 'Smooth, intense, memorable delivery' },
+  { id: 'fable', name: 'Ellen DeGeneres', description: 'Upbeat, friendly talk show host' },
+  { id: 'onyx', name: 'Arnold Schwarzenegger', description: 'Austrian accent, action hero style' },
+  { id: 'nova', name: 'Jim Carrey', description: 'Zany, expressive comedy legend' },
+  { id: 'shimmer', name: 'Oprah Winfrey', description: 'Warm, inspiring, motivational speaker' },
+  { id: 'alloy', name: 'Yoda', description: 'Wise, ancient Jedi master speech' },
+  { id: 'echo', name: 'Sean Connery', description: 'Scottish charm, classic Bond style' },
+  { id: 'fable', name: 'Bugs Bunny', description: 'What\'s up Doc? Classic cartoon rabbit' },
+  { id: 'onyx', name: 'Batman (Christian Bale)', description: 'Gruff, dark knight vigilante voice' },
+  { id: 'nova', name: 'Scarlett Johansson', description: 'Sultry, confident actress voice' },
+  { id: 'shimmer', name: 'Bob Ross', description: 'Calm, peaceful painting instructor' },
+  { id: 'alloy', name: 'Will Smith', description: 'Charismatic, cool Fresh Prince style' },
+  { id: 'echo', name: 'Gordon Ramsay', description: 'Passionate chef with British accent' }
 ];
 
 const TONE_PRESETS = [
