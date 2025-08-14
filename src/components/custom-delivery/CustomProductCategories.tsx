@@ -20,7 +20,7 @@ import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
 import cocktailCategoryBg from '@/assets/cocktail-category-bg.jpg';
 import partySuppliesCategoryBg from '@/assets/party-supplies-category-bg.jpg';
 import spiritsCategoryBg from '@/assets/spirits-category-bg.jpg';
-import heroPartyAustin from '@/assets/hero-party-austin.jpg';
+// Removed missing hero image import
 import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 
 interface ShopifyProduct {

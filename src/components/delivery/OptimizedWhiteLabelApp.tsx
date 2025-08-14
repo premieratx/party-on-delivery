@@ -204,9 +204,12 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
     };
   }, []);
 
-  // Memoized tab data for performance
+  // Memoized tab data for performance - safe null checks
   const tabData = useMemo(() => {
-    if (!appConfig?.collections_config?.tabs) {
+    if (!appConfig?.collections_config?.tabs || !Array.isArray(appConfig.collections_config.tabs)) {
+      return [];
+    }
+    if (!Array.isArray(collections)) {
       return [];
     }
     return appConfig.collections_config.tabs.map((tab, index) => ({

@@ -20,7 +20,13 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <!-- Canonical domain enforcement: redirect any non-canonical host to order.partyondelivery.com before app loads -->
+    <!-- DISABLED ANALYTICS TO PREVENT RATE LIMITING ERRORS -->
     <script>
+      // Disable all analytics tracking to prevent PostHog rate limiting errors
+      window.gtag = function() {}; // Disable gtag
+      window.analytics = { track: function() {}, capture: function() {} }; // Disable analytics
+      console.log('🚫 Analytics disabled to prevent rate limiting errors');
+      
       (function() {
         try {
           var canonicalHost = 'order.partyondelivery.com';

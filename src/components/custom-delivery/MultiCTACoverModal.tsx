@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
@@ -146,6 +146,7 @@ React.useEffect(() => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 max-h-[90vh] overflow-y-auto max-w-md w-[92vw] rounded-2xl border-none bg-transparent shadow-none animate-enter">
+        <DialogTitle className="sr-only">{appName || title || "Delivery App"}</DialogTitle>
         <article className="relative w-full">
           {/* Background */}
           <div className="relative h-[88vh] max-h-[820px] rounded-2xl overflow-hidden" style={{ backgroundColor: backgroundColor || undefined }}>
