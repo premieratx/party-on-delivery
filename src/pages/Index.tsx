@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
 import { CustomDeliveryAppsGrid } from '@/components/custom-delivery/CustomDeliveryAppsGrid';
 import { GlobalNavigation } from '@/components/common/GlobalNavigation';
+import { usePreloader } from '@/hooks/usePreloader';
 
 const COVER_SHOWN_SESSION_KEY = 'homepage_cover_shown_session';
 
@@ -32,6 +33,7 @@ const Index = () => {
   const [showAppsGrid, setShowAppsGrid] = useState(false);
   const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
+  const { preloadCriticalData } = usePreloader();
 
   // Load the homepage delivery app configuration 
   useEffect(() => {
@@ -69,6 +71,9 @@ const Index = () => {
     };
 
     loadHomepageApp();
+    
+    // Preload critical data immediately
+    preloadCriticalData();
   }, []);
 
   const handleStartShopping = () => {

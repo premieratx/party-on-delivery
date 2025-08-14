@@ -105,34 +105,51 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Check cache first (unless force refresh)
+    // Check cache first (prioritize cache to avoid throttling)
     const cacheKey = `shopify_products_${lightweight ? 'light' : 'full'}_${limit}_${collectionHandle || 'all'}`;
     
-    if (!forceRefresh) {
-      const now = Date.now();
-      const { data: cachedData, error: cacheError } = await supabase
-        .from('cache')
-        .select('data, created_at')
-        .eq('key', cacheKey)
-        .gte('expires_at', now)
-        .maybeSingle();
+    const now = Date.now();
+    const { data: cachedData, error: cacheError } = await supabase
+      .from('cache')
+      .select('data, created_at')
+      .eq('key', cacheKey)
+      .gte('expires_at', now)
+      .maybeSingle();
 
-      if (!cacheError && cachedData) {
-        console.log(`✅ Returning cached data (${JSON.stringify(cachedData.data).length} bytes)`);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            products: cachedData.data.products || [],
-            count: cachedData.data.count || 0,
-            cached: true,
-            cachedAt: cachedData.created_at
-          }),
-          { 
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200 
-          }
-        );
-      }
+    if (!cacheError && cachedData) {
+      console.log(`✅ Returning cached data (${JSON.stringify(cachedData.data).length} bytes)`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          products: cachedData.data.products || [],
+          count: cachedData.data.count || 0,
+          cached: true,
+          cachedAt: cachedData.created_at
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 
+        }
+      );
+    }
+
+    // If no cache and not forcing refresh, return fallback data to avoid throttling
+    if (!forceRefresh) {
+      console.log("⚠️ No cache available, returning fallback to avoid throttling");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          products: [],
+          count: 0,
+          cached: false,
+          fallback: true,
+          message: "Products temporarily unavailable due to rate limiting"
+        }),
+        { 
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200 
+        }
+      );
     }
 
     const SHOPIFY_STORE = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";

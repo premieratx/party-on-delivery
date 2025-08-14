@@ -131,8 +131,11 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.error('Failed to fetch collections:', error);
       setError(error.message || 'Failed to load product collections. Please try again.');
       
-      if (autoRetryEnabled && retryCount < 2) {
-        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
+      // Disable auto-retry to prevent API hammering when throttled
+      setAutoRetryEnabled(false);
+      
+      if (autoRetryEnabled && retryCount < 1) { // Reduced from 2 to 1
+        const retryDelay = Math.min(2000 * Math.pow(2, retryCount), 10000); // Increased delay
         console.log(`Auto-retry attempt ${retryCount + 1} in ${retryDelay}ms...`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);

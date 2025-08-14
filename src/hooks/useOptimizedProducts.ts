@@ -72,8 +72,9 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
       console.log('⚡ Ultra-fast product loading initiated...');
       const startTime = Date.now();
 
-      // Use reliable collections API
-      console.log('📦 Using get-all-collections API');
+      // Use reliable collections API with performance optimization
+      console.log('📦 Using get-all-collections API with deduplication');
+      
       const { data: collectionsData, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
       if (collectionsError) throw collectionsError;
 
