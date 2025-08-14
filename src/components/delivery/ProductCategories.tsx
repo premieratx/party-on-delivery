@@ -104,35 +104,24 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     try {
       console.log('ProductCategories: Fetching collections...');
       
-      let functionName = 'fetch-shopify-products-optimized';
-      let body = {};
-      
-      if (customSiteSlug) {
-        console.log(`Custom site detected: ${customSiteSlug}`);
-        functionName = 'get-custom-site-collections';
-        body = { siteSlug: customSiteSlug };
-      }
-
-      const { data: result, error: fetchError } = await supabase.functions.invoke(functionName, {
-        body
-      });
+      // Use get-all-collections for reliable data loading
+      const { data: result, error: fetchError } = await supabase.functions.invoke('get-all-collections');
 
       if (fetchError) {
         throw new Error(fetchError.message || 'Failed to fetch data');
       }
 
-      if (!result?.collections) {
+      if (!result?.success || !result?.collections) {
         throw new Error('No collections data received');
       }
 
-      let collectionsToShow = result.collections;
+      // Transform the data to match expected format
+      const collectionsData = Array.isArray(result.collections) ? result.collections : [];
       
-      if (customSiteSlug && result.customSiteCollections) {
-        const customSiteCollections = result.customSiteCollections;
-        collectionsToShow = result.collections.filter((collection: any) => 
-          customSiteCollections.includes(collection.handle)
-        );
-        console.log(`Filtered to ${collectionsToShow.length} collections for custom site:`, customSiteCollections);
+      // Filter for custom sites if needed
+      let collectionsToShow = collectionsData;
+      if (customSiteSlug) {
+        console.log(`Custom site mode: ${customSiteSlug} - using all collections`);
       }
       
       setCollections(collectionsToShow);

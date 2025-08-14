@@ -65,19 +65,23 @@ interface DeliveryAppConfig {
 const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null> => {
   if (!appName) return null;
 
-  const { data, error } = await supabase
-    .from('delivery_app_variations')
-    .select('*')
-    .eq('app_slug', appName)
-    .eq('is_active', true)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from('delivery_app_variations')
+      .select('*')
+      .eq('app_slug', appName)
+      .eq('is_active', true)
+      .maybeSingle();
 
-  if (error) {
-    console.error('Error loading app config:', error);
-    throw new Error('Failed to load delivery app configuration');
-  }
+    if (error) {
+      console.error('Error loading app config:', error);
+      throw new Error(`Failed to load delivery app: ${error.message}`);
+    }
 
-  if (!data) return null;
+    if (!data) {
+      console.warn(`No active delivery app found for slug: ${appName}`);
+      return null;
+    }
 
     return {
       app_name: data.app_name,
@@ -100,6 +104,10 @@ const fetchAppConfig = async (appName: string): Promise<DeliveryAppConfig | null
         button_text?: string;
       } | undefined
     };
+  } catch (error) {
+    console.error('Failed to fetch app config:', error);
+    throw error;
+  }
 };
 
 // Optimized storage hook
@@ -400,12 +408,20 @@ export default function CustomAppView() {
           <p className="text-muted-foreground mb-4">
             {error?.message || 'The delivery app could not be loaded. Please try again.'}
           </p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            Try Again
-          </button>
+          <div className="flex gap-2 justify-center">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => navigate('/')} 
+              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90"
+            >
+              Go to Home
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -417,7 +433,13 @@ export default function CustomAppView() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Delivery App Not Found</h1>
-          <p className="text-muted-foreground">The requested delivery app could not be found.</p>
+          <p className="text-muted-foreground mb-4">The requested delivery app could not be found.</p>
+          <button 
+            onClick={() => navigate('/')} 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Go to Home
+          </button>
         </div>
       </div>
     );

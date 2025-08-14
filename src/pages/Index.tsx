@@ -39,7 +39,7 @@ const Index = () => {
       try {
         setIsPreloading(true);
         
-        // Load homepage app config safely
+        // Load homepage app config safely with error handling
         const { data, error } = await supabase
           .from('delivery_app_variations')
           .select('*')
@@ -49,9 +49,20 @@ const Index = () => {
         
         if (!error && data) {
           setHomepageApp(data);
+        } else {
+          // Set default if no homepage app found
+          setHomepageApp({
+            app_name: "Party On Delivery",
+            logo_url: null
+          });
         }
       } catch (error) {
         console.error('Error loading homepage app:', error);
+        // Set default fallback
+        setHomepageApp({
+          app_name: "Party On Delivery", 
+          logo_url: null
+        });
       } finally {
         setIsPreloading(false);
       }

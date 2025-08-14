@@ -109,11 +109,12 @@ serve(async (req) => {
     const cacheKey = `shopify_products_${lightweight ? 'light' : 'full'}_${limit}_${collectionHandle || 'all'}`;
     
     if (!forceRefresh) {
+      const now = Date.now();
       const { data: cachedData, error: cacheError } = await supabase
         .from('cache')
         .select('data, created_at')
         .eq('key', cacheKey)
-        .gte('expires_at', new Date().toISOString())
+        .gte('expires_at', now)
         .maybeSingle();
 
       if (!cacheError && cachedData) {
@@ -321,17 +322,17 @@ serve(async (req) => {
       timestamp: new Date().toISOString()
     };
 
-    const expiresAt = new Date(Date.now() + (lightweight ? 15 : 10) * 60 * 1000); // 15min for lightweight, 10min for full
+    const expiresAt = Date.now() + (lightweight ? 15 : 10) * 60 * 1000; // 15min for lightweight, 10min for full
 
     await supabase
       .from('cache')
       .upsert({
         key: cacheKey,
         data: cacheData,
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt
       });
 
-    console.log(`💾 Cached results until ${expiresAt.toISOString()}`);
+    console.log(`💾 Cached results until ${new Date(expiresAt).toISOString()}`);
 
     return new Response(
       JSON.stringify({
