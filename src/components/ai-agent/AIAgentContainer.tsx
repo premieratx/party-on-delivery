@@ -181,6 +181,11 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
       const suggestionMessage = `Based on your ${conversation.occasion} for ${conversation.guestCount} people, I've found some great options for you! Take a look at these suggestions.`;
       setMessages(prev => [...prev, { type: 'ai', content: suggestionMessage }]);
       speakMessage(suggestionMessage);
+
+      // Generate formal quote and redirect
+      setTimeout(() => {
+        generateFormalQuote(data.suggestions);
+      }, 2000);
       
     } catch (error) {
       console.error('Suggestion generation error:', error);
@@ -192,6 +197,43 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
     } finally {
       setIsGeneratingQuote(false);
     }
+  };
+
+  const generateFormalQuote = (suggestions: any[]) => {
+    const quoteData = {
+      quoteNumber: `AI-${Date.now()}`,
+      customerName: "AI Suggested Customer",
+      customerEmail: "customer@example.com",
+      customerPhone: "",
+      eventType: conversation.occasion || "Party",
+      guestCount: conversation.guestCount,
+      items: suggestions.map((item, index) => ({
+        id: item.id || `ai-${index}`,
+        title: item.title,
+        price: parseFloat(item.price) || 0,
+        quantity: item.recommendedQuantity || 1,
+        category: item.category || "Beverages",
+        image: item.image,
+        variant: item.variant
+      })),
+      subtotal: suggestions.reduce((total, item) => total + (parseFloat(item.price) || 0) * (item.recommendedQuantity || 1), 0),
+      deliveryFee: 25,
+      salesTax: 0,
+      totalAmount: 0,
+      notes: `AI-generated recommendations for ${conversation.occasion} with ${conversation.guestCount} guests.`,
+      companyInfo: {
+        name: "Party On Delivery",
+        address: "Austin, TX",
+        phone: "(512) 555-0123",
+        email: "hello@partyondelivery.com"
+      }
+    };
+
+    // Navigate to formal quote view
+    const params = new URLSearchParams({
+      quote: JSON.stringify(quoteData)
+    });
+    window.open(`/formal-quote?${params.toString()}`, '_blank');
   };
 
   if (!isOpen) return null;

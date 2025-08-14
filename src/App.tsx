@@ -65,6 +65,7 @@ const PerformanceTests = lazy(() => import("./pages/PerformanceTests"));
 const TestSMS = lazy(() => import("./components/TestSMS"));
 
 const QuotePreview = lazy(() => import("./pages/QuotePreview"));
+const FormalQuote = lazy(() => import("./pages/FormalQuote"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -187,6 +188,7 @@ const App = () => {
 
                      {/* Quote Routes */}
                      <Route path="/quote-preview" element={<QuotePreview />} />
+                     <Route path="/formal-quote" element={<FormalQuote />} />
                      
                      {/* 404 - MUST be absolute last */}
                      <Route path="*" element={<NotFound />} />
