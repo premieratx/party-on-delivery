@@ -722,17 +722,6 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </button>
         </div>
 
-        {/* Manage My Order Button - Top Right Corner of Hero */}
-        <div className="absolute top-4 right-4 z-20">
-          <button
-            onClick={() => navigate('/customer/dashboard')}
-            className="bg-white/20 backdrop-blur-sm border border-white/30 hover:bg-white/30 rounded-lg px-3 py-2 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
-            aria-label="Manage My Order"
-          >
-            <Package className="w-5 h-5 text-white" />
-            <span className="hidden sm:inline text-white font-medium">Manage My Order</span>
-          </button>
-        </div>
 
         {/* Custom Theme Creator Trigger - Bottom Left of Hero */}
         <div className="absolute bottom-4 left-4 z-20">

@@ -37,6 +37,7 @@ const DeliveryAppManagerPage = lazy(() => import("./pages/DeliveryAppManager"));
 const CoverPagesAdmin = lazy(() => import("./pages/CoverPagesAdmin"));
 const AdminQuote = lazy(() => import("./pages/AdminQuote"));
 // Customer routes
+const CustomerAuth = lazy(() => import("./pages/CustomerAuth"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const OrderContinuation = lazy(() => import("./pages/OrderContinuation"));
@@ -145,10 +146,11 @@ const App = () => {
 <Route path="/admin/quotes" element={<RequireAdmin><AdminQuote /></RequireAdmin>} />
                     
                     {/* Customer Routes */}
+                    <Route path="/customer/auth" element={<CustomerAuth />} />
                     <Route path="/customer/login" element={<CustomerLogin />} />
                     <Route path="/customer/dashboard" element={<CustomerDashboard />} />
                     <Route path="/order-continuation" element={<OrderContinuation />} />
-                    <Route path="/manage-order" element={<CustomerLogin />} />
+                    <Route path="/manage-order" element={<CustomerAuth />} />
                     
                     {/* Shared Order Routes - REMOVED for cleanup */}
                     
