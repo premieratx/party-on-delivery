@@ -172,32 +172,39 @@ class EnhancedCacheManager {
   }
 }
 
-// Global enhanced cache instances
-export const productCache = new EnhancedCacheManager({
-  defaultTTL: 2 * 60 * 1000, // 2 minutes for products (faster refresh)
-  maxSize: 50,
-  compressionEnabled: true
-});
+// DISABLED - These were causing automatic preloading
+export const productCache = {
+  get: () => null,
+  set: () => {},
+  clear: () => {},
+  has: () => false,
+  size: () => 0,
+  getStats: () => ({ size: 0, config: {}, oldestEntry: 0, newestEntry: 0 })
+};
 
-export const shopifyCache = new EnhancedCacheManager({
-  defaultTTL: 1 * 60 * 1000, // 1 minute for Shopify sync (very fast refresh)
-  maxSize: 20,
-  compressionEnabled: true
-});
+export const shopifyCache = {
+  get: () => null,
+  set: () => {},
+  clear: () => {},
+  has: () => false,
+  size: () => 0,
+  getStats: () => ({ size: 0, config: {}, oldestEntry: 0, newestEntry: 0 })
+};
 
-export const generalCache = new EnhancedCacheManager({
-  defaultTTL: 5 * 60 * 1000, // 5 minutes for general use
-  maxSize: 100,
-  compressionEnabled: true
-});
+export const generalCache = {
+  get: () => null,
+  set: () => {},
+  clear: () => {},
+  has: () => false,
+  size: () => 0,
+  getStats: () => ({ size: 0, config: {}, oldestEntry: 0, newestEntry: 0 })
+};
 
-// Utility functions for immediate cache override
+// COMPLETELY DISABLED - These functions were causing preloading issues
 export const forceProductRefresh = () => {
-  productCache.clear();
-  console.log('🔄 Forced product cache refresh');
+  console.log('🚫 forceProductRefresh DISABLED');
 };
 
 export const forceShopifySync = () => {
-  shopifyCache.clear();
-  console.log('🔄 Forced Shopify cache refresh');
+  console.log('🚫 forceShopifySync DISABLED');
 };

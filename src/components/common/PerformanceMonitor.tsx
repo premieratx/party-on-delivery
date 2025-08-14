@@ -25,10 +25,9 @@ export const PerformanceMonitor: React.FC = () => {
   const dragRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef({ x: 0, y: 0 });
 
-  // Check if debug mode is enabled
+  // Check if debug mode is enabled - DISABLED to prevent preloading initialization
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    setIsVisible(urlParams.has('debug') && urlParams.get('debug') === 'true');
+    setIsVisible(false); // Always disabled to prevent any preloading
   }, []);
 
   // Calculate page load time

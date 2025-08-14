@@ -206,12 +206,15 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
 
   // Memoized tab data for performance
   const tabData = useMemo(() => {
+    if (!appConfig?.collections_config?.tabs) {
+      return [];
+    }
     return appConfig.collections_config.tabs.map((tab, index) => ({
       ...tab,
       collection: collections[index] || null,
       hasProducts: (collections[index]?.products?.length || 0) > 0
     }));
-  }, [appConfig.collections_config.tabs, collections]);
+  }, [appConfig?.collections_config?.tabs, collections]);
 
   const handleCheckout = useCallback(() => {
     if (cartItems.length === 0) {

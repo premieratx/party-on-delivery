@@ -292,13 +292,11 @@ class PerformanceManager {
 // Global performance manager instance
 export const performanceManager = new PerformanceManager();
 
-// Disabled auto-start monitoring to prevent preloading
-// performanceManager.startMonitoring();
+// COMPLETELY DISABLED - ALL PRELOADING FUNCTIONS REMOVED
+export const optimizeApp = () => Promise.resolve();
+export const preloadCriticalApps = () => Promise.resolve();
+export const initializePreloading = () => Promise.resolve();
 
-// Export utility functions - DISABLED to prevent preloading
-export const optimizeApp = async () => {
-  // Completely disabled to prevent loading animations
-  return;
-};
+console.log('🚫 PerformanceManager DISABLED - No preloading or optimization');
 
 export const getPerformanceReport = () => performanceManager.getPerformanceReport();
