@@ -56,10 +56,9 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [loadingMessage, setLoadingMessage] = useState('Getting the best products for you');
   const [autoRetryEnabled, setAutoRetryEnabled] = useState(true);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -71,28 +70,6 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
 
-  const loadingMessages = [
-    'Getting the best products for you',
-    'Finding amazing deals',
-    'Loading fresh inventory',
-    'Curating top selections',
-    'Preparing your favorites'
-  ];
-
-  useEffect(() => {
-    let messageInterval: NodeJS.Timeout;
-    
-    if (isLoading) {
-      messageInterval = setInterval(() => {
-        setLoadingMessage(prev => {
-          const currentIndex = loadingMessages.indexOf(prev);
-          return loadingMessages[(currentIndex + 1) % loadingMessages.length];
-        });
-      }, 2000);
-    }
-
-    return () => clearInterval(messageInterval);
-  }, [isLoading]);
 
   const fetchCollections = useCallback(async (showRetryMessage = true) => {
     setError(null);
@@ -162,23 +139,25 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }, [fetchCollections]);
 
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim() || !Array.isArray(collections)) return [];
+    if (!searchQuery?.trim() || !Array.isArray(collections) || collections.length === 0) return [];
     
     const query = searchQuery.toLowerCase().trim();
     const allProducts = collections.flatMap(collection => 
-      Array.isArray(collection?.products) ? collection.products : []
+      collection && Array.isArray(collection.products) ? collection.products : []
     );
     
     return allProducts.filter(product => 
-      product?.title?.toLowerCase().includes(query) ||
-      product?.description?.toLowerCase().includes(query) ||
-      product?.vendor?.toLowerCase().includes(query) ||
-      (Array.isArray(product?.tags) && product.tags.some(tag => tag?.toLowerCase().includes(query)))
+      product && (
+        product.title?.toLowerCase().includes(query) ||
+        product.description?.toLowerCase().includes(query) ||
+        product.vendor?.toLowerCase().includes(query) ||
+        (Array.isArray(product.tags) && product.tags.some(tag => tag?.toLowerCase().includes(query)))
+      )
     );
   }, [searchQuery, collections]);
 
   const currentCollection = useMemo(() => {
-    if (searchQuery.trim()) {
+    if (searchQuery?.trim()) {
       return {
         id: 'search',
         title: 'Search Results',
@@ -189,14 +168,18 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
     
     if (!Array.isArray(collections) || collections.length === 0) {
-      return { id: '', title: '', handle: '', products: [] };
+      return { id: '', title: 'Loading...', handle: '', products: [] };
     }
     
-    const collection = collections[selectedCategory];
-    return collection ? {
+    const collection = collections[selectedCategory] || collections[0];
+    if (!collection) {
+      return { id: '', title: 'No Products', handle: '', products: [] };
+    }
+    
+    return {
       ...collection,
       products: Array.isArray(collection.products) ? collection.products : []
-    } : { id: '', title: '', handle: '', products: [] };
+    };
   }, [selectedCategory, collections, searchQuery, searchResults]);
 
   const handleProductClick = (product: Product) => {
