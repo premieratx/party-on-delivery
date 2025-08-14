@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { Mic, MicOff, Volume2, VolumeX, Sparkles, PartyPopper } from 'lucide-rea
 import { toast } from 'sonner';
 import discoBall from '@/assets/disco-ball.gif';
 import { supabase } from '@/integrations/supabase/client';
+import { EnhancedVoiceRecorder, audioToBase64 } from '@/utils/voiceRecording';
 
 interface Message {
   id: string;
@@ -66,6 +67,9 @@ export default function PartyPlanningAgent() {
   const [suggestions, setSuggestions] = useState([]);
   const [adminMode, setAdminMode] = useState(false);
   const [textInput, setTextInput] = useState('');
+  const [voiceRecorder, setVoiceRecorder] = useState<EnhancedVoiceRecorder | null>(null);
+  const [isSpeechDetected, setIsSpeechDetected] = useState(false);
+  const textInputRef = useRef<HTMLInputElement>(null);
 
   // Load saved profiles on mount
   useEffect(() => {
@@ -127,32 +131,81 @@ export default function PartyPlanningAgent() {
     return baseInstructions;
   };
 
+  // Initialize voice recorder
+  useEffect(() => {
+    const recorder = new EnhancedVoiceRecorder(
+      async (audioBlob) => {
+        console.log('Voice recording completed, processing...');
+        try {
+          // Convert audio to base64 and send to transcription
+          const base64Audio = await audioToBase64(audioBlob);
+          const { data: transcriptionResult } = await supabase.functions.invoke('voice-to-text', {
+            body: { audio: base64Audio }
+          });
+          
+          if (transcriptionResult?.text) {
+            console.log('Transcription result:', transcriptionResult.text);
+            await processVoiceInput(transcriptionResult.text);
+          } else {
+            toast.error('Could not understand speech. Please try again.');
+          }
+        } catch (error) {
+          console.error('Transcription error:', error);
+          toast.error('Voice processing failed. Please try again.');
+        }
+        setIsRecording(false);
+        setIsSpeechDetected(false);
+      },
+      (error) => {
+        console.error('Recording error:', error);
+        toast.error('Recording failed: ' + error.message);
+        setIsRecording(false);
+        setIsSpeechDetected(false);
+      },
+      () => {
+        console.log('Speech started');
+        setIsSpeechDetected(true);
+      },
+      () => {
+        console.log('Speech ended');
+        setIsSpeechDetected(false);
+      }
+    );
+    
+    setVoiceRecorder(recorder);
+    
+    return () => {
+      recorder.stopRecording();
+    };
+  }, []);
+
   const startRecording = async () => {
     if (!currentAgent) {
       toast.error('Please select an agent profile first');
       return;
     }
 
+    if (!voiceRecorder) {
+      toast.error('Voice recorder not initialized');
+      return;
+    }
+
     try {
       setIsRecording(true);
-      // Here you would implement actual recording logic
-      toast.success('Started recording...');
-      
-      // Simulate recording for demo
-      setTimeout(() => {
-        setIsRecording(false);
-        processVoiceInput("I want to plan a birthday party for 20 people");
-      }, 3000);
+      setIsSpeechDetected(false);
+      toast.success('Listening... Start speaking!');
+      await voiceRecorder.startRecording();
     } catch (error) {
       console.error('Error starting recording:', error);
-      toast.error('Failed to start recording');
+      toast.error('Failed to start recording: ' + (error as Error).message);
       setIsRecording(false);
     }
   };
 
   const stopRecording = () => {
-    setIsRecording(false);
-    toast.success('Recording stopped');
+    if (voiceRecorder) {
+      voiceRecorder.stopRecording();
+    }
   };
 
   const processVoiceInput = async (text: string) => {
@@ -444,18 +497,19 @@ export default function PartyPlanningAgent() {
                 )}
               </div>
 
-              {/* Text Input for Admin Mode */}
-              {adminMode && (
+              {/* Text Input for Admin Mode or General Use */}
+              {(adminMode || true) && (
                 <div className="mb-4">
                   <div className="flex gap-2">
                     <input
+                      ref={textInputRef}
                       type="text"
-                      placeholder="Type your question about training data..."
+                      placeholder={adminMode ? "Type your question about training data..." : "Type your message or use voice..."}
                       className="flex-1 p-3 rounded-lg bg-white/20 text-white placeholder-white/60 border border-white/30"
                       value={textInput}
                       onChange={(e) => setTextInput(e.target.value)}
                       onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' && textInput.trim()) {
                           processVoiceInput(textInput);
                           setTextInput('');
                         }
@@ -463,14 +517,35 @@ export default function PartyPlanningAgent() {
                     />
                     <Button
                       onClick={() => {
-                        processVoiceInput(textInput);
-                        setTextInput('');
+                        if (textInput.trim()) {
+                          processVoiceInput(textInput);
+                          setTextInput('');
+                        }
                       }}
                       disabled={!textInput.trim()}
-                      className="bg-red-500 hover:bg-red-600"
+                      className={adminMode ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"}
                     >
                       Send
                     </Button>
+                  </div>
+                  <div className="text-xs text-white/60 mt-1">
+                    💡 Tip: Press Enter to send your message
+                  </div>
+                </div>
+              )}
+
+              {/* Voice Status Indicator */}
+              {isRecording && (
+                <div className="mb-4 text-center">
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                    isSpeechDetected ? 'bg-green-500/30' : 'bg-yellow-500/30'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${
+                      isSpeechDetected ? 'bg-green-400 animate-pulse' : 'bg-yellow-400 animate-pulse'
+                    }`}></div>
+                    <span className="text-white text-sm">
+                      {isSpeechDetected ? '🗣️ Speaking detected...' : '👂 Listening...'}
+                    </span>
                   </div>
                 </div>
               )}
@@ -481,7 +556,9 @@ export default function PartyPlanningAgent() {
                   size="lg"
                   className={`w-32 h-32 rounded-full p-2 transition-all duration-200 ${
                     isRecording 
-                      ? 'bg-red-500 hover:bg-red-600 scale-110' 
+                      ? isSpeechDetected
+                        ? 'bg-green-500 hover:bg-green-600 scale-110 animate-pulse' 
+                        : 'bg-yellow-500 hover:bg-yellow-600 scale-110'
                       : adminMode
                       ? 'bg-gradient-to-br from-red-600 to-red-500 hover:scale-105'
                       : 'bg-gradient-to-br from-gold to-yellow-500 hover:scale-105'
@@ -496,16 +573,27 @@ export default function PartyPlanningAgent() {
                     <img 
                       src={discoBall} 
                       alt="Disco Ball" 
-                      className={`w-16 h-16 mb-2 ${isRecording ? '' : 'animate-spin'}`}
+                      className={`w-16 h-16 mb-2 ${isRecording ? (isSpeechDetected ? 'animate-spin' : '') : 'animate-spin'}`}
                       style={{ 
-                        animationDuration: isRecording ? '0s' : '2s',
+                        animationDuration: isRecording ? (isSpeechDetected ? '1s' : '0s') : '2s',
                         filter: adminMode 
                           ? 'brightness(1.2) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
+                          : isRecording
+                          ? isSpeechDetected
+                            ? 'brightness(1.2) drop-shadow(0 0 12px rgba(0,255,0,0.8))'
+                            : 'brightness(1.2) drop-shadow(0 0 12px rgba(255,255,0,0.8))'
                           : 'brightness(1.2) drop-shadow(0 0 12px rgba(255,255,255,0.8))'
                       }}
                     />
                     <span className="text-xs font-bold text-white">
-                      {isRecording ? 'Recording...' : adminMode ? 'Admin Mode' : 'Hold to Speak'}
+                      {isRecording 
+                        ? isSpeechDetected 
+                          ? 'Speaking!' 
+                          : 'Listening...'
+                        : adminMode 
+                        ? 'Admin Mode' 
+                        : 'Hold to Speak'
+                      }
                     </span>
                   </div>
                 </Button>
