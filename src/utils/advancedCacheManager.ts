@@ -25,9 +25,10 @@ class AdvancedCacheManager {
   private backgroundSyncInterval: NodeJS.Timeout | null = null;
 
   constructor() {
-    this.setupBackgroundSync();
-    this.setupPrefetchStrategies();
-    this.startAggressivePreloading();
+    // Don't auto-start any preloading to prevent loading animations
+    // this.setupBackgroundSync();
+    // this.setupPrefetchStrategies();
+    // this.startAggressivePreloading();
   }
 
   // Ultra-fast get with predictive loading

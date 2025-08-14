@@ -156,31 +156,21 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
   React.useEffect(() => {
     if (!open) return;
 
-    const preloadApps = async () => {
-      console.log('🚀 Preloading delivery apps from cover modal...');
-      
-      // Preload general product data first
-      try {
-        await getInstantProducts({ forceRefresh: false });
-        await preloadManager.preloadCriticalData();
-      } catch (error) {
-        console.error('Failed to preload general products:', error);
-      }
-
-      // Preload specific apps
-      const appsToPreload = [appSlug, secondaryAppSlug].filter(Boolean);
-      for (const slug of appsToPreload) {
-        try {
-          await instantAppLoader.preloadApp(slug);
-        } catch (error) {
-          console.error(`Failed to preload app ${slug}:`, error);
-        }
-      }
-    };
-
-    // Start preloading after a short delay to not block modal opening
-    const timer = setTimeout(preloadApps, 100);
-    return () => clearTimeout(timer);
+    // Disabled all preloading to prevent loading animations
+    // const preloadApps = async () => {
+    //   console.log('🚀 Preloading delivery apps from cover modal...');
+    //   // Preload specific apps
+    //   const appsToPreload = [appSlug, secondaryAppSlug].filter(Boolean);
+    //   for (const slug of appsToPreload) {
+    //     try {
+    //       await instantAppLoader.preloadApp(slug);
+    //     } catch (error) {
+    //       console.error(`Failed to preload app ${slug}:`, error);
+    //     }
+    //   }
+    // };
+    // const timer = setTimeout(preloadApps, 100);
+    // return () => clearTimeout(timer);
   }, [open, appSlug, secondaryAppSlug]);
   // Animation sequencing setup - faster timing (1/3 speed per line)
   const visibleChecklist = (checklistItems || []).filter(Boolean).slice(0, 5);

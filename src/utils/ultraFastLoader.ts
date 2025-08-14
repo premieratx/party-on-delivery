@@ -363,38 +363,10 @@ class UltraFastLoader {
     return categoryProducts;
   }
 
-  // Preload everything for maximum speed
+  // Preload everything for maximum speed - DISABLED to prevent loading animations
   async preloadEverything(): Promise<void> {
-    console.log('🚀 Starting aggressive preloading...');
-    
-    try {
-      // Preload main data with better timeout
-      const loadPromise = this.loadProducts({ priority: 'critical', timeout: 15000 }).catch(err => {
-        console.warn('Main preload failed:', err.message);
-        return null;
-      });
-      
-      // Preload categories with staggered timing to avoid rate limits
-      const categories = ['beer', 'wine', 'spirits'];
-      const categoryPromises = categories.map((cat, index) => 
-        new Promise(resolve => {
-          setTimeout(() => {
-            this.loadProductsByCategory(cat, { priority: 'high', timeout: 15000 })
-              .catch(err => {
-                console.warn(`Category ${cat} preload failed:`, err.message);
-                return null;
-              })
-              .then(resolve);
-          }, index * 1000);
-        })
-      );
-
-      await Promise.allSettled([loadPromise, ...categoryPromises]);
-      
-      console.log('✅ Aggressive preloading completed');
-    } catch (error) {
-      console.warn('Preloading failed:', error);
-    }
+    // Do nothing to prevent loading animations
+    return;
   }
 
   // Utility: Promise with timeout (soft by default: returns null on timeout)

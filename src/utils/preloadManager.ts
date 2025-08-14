@@ -146,13 +146,12 @@ export class PreloadManager {
    * Initialize preloading when app starts
    */
   public initialize(): void {
-    // Start preloading with idle callback for better performance
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => this.preloadCriticalData());
-    } else {
-      // Fallback for browsers without requestIdleCallback
-      setTimeout(() => this.preloadCriticalData(), 100);
-    }
+    // Disabled preloading to prevent loading animations
+    // if ('requestIdleCallback' in window) {
+    //   requestIdleCallback(() => this.preloadCriticalData());
+    // } else {
+    //   setTimeout(() => this.preloadCriticalData(), 100);
+    // }
 
     // Set up intelligent background refresh (every 2 hours, but only refresh if data is 6+ hours old)
     const refreshInterval = setInterval(() => {

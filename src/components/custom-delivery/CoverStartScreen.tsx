@@ -82,32 +82,22 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
 
   // Preload delivery app data for all buttons
   React.useEffect(() => {
-    const preloadApps = async () => {
-      console.log('🚀 Preloading delivery apps from cover screen...');
-      
-      // Preload general product data first
-      try {
-        await getInstantProducts({ forceRefresh: false });
-        await preloadManager.preloadCriticalData();
-      } catch (error) {
-        console.error('Failed to preload general products:', error);
-      }
-
-      // Preload specific apps for each button
-      for (const button of buttons) {
-        if (button.appSlug) {
-          try {
-            await instantAppLoader.preloadApp(button.appSlug);
-          } catch (error) {
-            console.error(`Failed to preload app ${button.appSlug}:`, error);
-          }
-        }
-      }
-    };
-
-    // Start preloading after a short delay to not block initial render
-    const timer = setTimeout(preloadApps, 100);
-    return () => clearTimeout(timer);
+    // Disabled all preloading to prevent loading animations
+    // const preloadApps = async () => {
+    //   console.log('🚀 Preloading delivery apps from cover screen...');
+    //   // Preload specific apps for each button
+    //   for (const button of buttons) {
+    //     if (button.appSlug) {
+    //       try {
+    //         await instantAppLoader.preloadApp(button.appSlug);
+    //       } catch (error) {
+    //         console.error(`Failed to preload app ${button.appSlug}:`, error);
+    //       }
+    //     }
+    //   }
+    // };
+    // const timer = setTimeout(preloadApps, 100);
+    // return () => clearTimeout(timer);
   }, [buttons]);
 
   return (
