@@ -1,4 +1,4 @@
-// FINAL DESTRUCTION - NO POSTHOG OR PRELOADING v2025_01_14_21_00
+// FINAL DESTRUCTION - NO PRELOADING v2025_01_14_21_15
 
 if (typeof window !== 'undefined') {
   // Kill PostHog permanently

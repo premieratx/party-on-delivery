@@ -51,6 +51,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -65,68 +66,17 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     setError(null);
     
     try {
-      console.log('Loading collections with forceRefresh: false');
+      console.log('🚫 Collections loading DISABLED - no preloading');
       
-      let functionName = 'get-all-collections';
-      let body = {};
-      
-      if (customSiteSlug) {
-        functionName = 'get-custom-site-collections';
-        body = { siteSlug: customSiteSlug };
-      }
+      // DISABLED - no automatic collection loading
+      setCollections([]);
+      setLoading(false);
+      return;
 
-      const { data: result, error: fetchError } = await supabase.functions.invoke(functionName, {
-        body
-      });
-
-      if (fetchError) {
-        throw new Error(fetchError.message || 'Failed to fetch data');
-      }
-
-      if (!result?.collections) {
-        throw new Error('No collections data received');
-      }
-
-      console.log('Collections response:', { data: result, error: null });
-
-      let collectionsToShow = result.collections || [];
-      
-      if (customSiteSlug && result.customSiteCollections) {
-        const customSiteCollections = result.customSiteCollections;
-        collectionsToShow = collectionsToShow.filter((collection: any) => 
-          customSiteCollections.includes(collection?.handle)
-        );
-      }
-      
-      // Ensure all collections and products have valid structure
-      const validCollections = collectionsToShow
-        .filter((collection: any) => collection && collection.id && collection.title)
-        .map((collection: any) => ({
-          id: collection.id || '',
-          title: collection.title || '',
-          handle: collection.handle || '',
-          description: collection.description || '',
-          products: Array.isArray(collection.products) 
-            ? collection.products.filter(p => p && p.id && p.title)
-            : [],
-          image: collection.image
-        }));
-      
-      console.log(`Processed collections: ${validCollections.length}`);
-      setCollections(validCollections);
-      setRetryCount(0);
-      
     } catch (error: any) {
       console.error('Failed to fetch collections:', error);
       setError(error.message || 'Failed to load product collections. Please try again.');
-      
-      if (retryCount < 2) {
-        const retryDelay = Math.min(1000 * Math.pow(2, retryCount), 5000);
-        setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-          fetchCollections();
-        }, retryDelay);
-      }
+      setLoading(false);
     }
   }, [customSiteSlug, retryCount]);
 
