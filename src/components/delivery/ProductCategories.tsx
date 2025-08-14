@@ -1410,6 +1410,17 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           // Could save theme preference here
         }}
       />
+      
+      {/* Speech Mode Button */}
+      <SpeechButton />
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav 
+        cartItemCount={cartItems.length}
+        onOpenCart={() => setShowCartModal(true)}
+        onProceedToCheckout={() => setShowCheckoutModal(true)}
+        onOpenSearch={() => {}}
+      />
      </div>
    );
  };

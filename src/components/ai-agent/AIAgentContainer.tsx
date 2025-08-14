@@ -1,144 +1,303 @@
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AITestingControl from '@/components/AITestingControl';
-import { TestTelegramBot } from '@/components/TestTelegramBot';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Mic, MicOff, Volume2, VolumeX, MessageSquare, X, ShoppingCart } from 'lucide-react';
 
-export const AIAgentContainer = () => {
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+  }
+}
+
+interface AIAgentContainerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddToCart?: (product: any) => void;
+}
+
+interface ConversationState {
+  occasion?: string;
+  guestCount?: number;
+  preferences?: string[];
+  budget?: string;
+  eventDate?: string;
+  additionalInfo?: string;
+}
+
+export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
+  isOpen,
+  onClose,
+  onAddToCart
+}) => {
+  const { toast } = useToast();
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [conversation, setConversation] = useState<ConversationState>({});
+  const [messages, setMessages] = useState<Array<{type: 'user' | 'ai', content: string}>>([]);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const synthRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        handleUserInput(transcript);
+      };
+      
+      recognition.onerror = () => {
+        setIsListening(false);
+        toast({
+          title: "Speech Recognition Error",
+          description: "Please try speaking again.",
+          variant: "destructive"
+        });
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      recognitionRef.current = recognition;
+    }
+
+    // Initialize speech synthesis
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      synthRef.current = window.speechSynthesis;
+    }
+
+    // Start conversation when opened
+    if (isOpen && messages.length === 0) {
+      const welcomeMessage = "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!";
+      setMessages([{ type: 'ai', content: welcomeMessage }]);
+      speakMessage(welcomeMessage);
+    }
+  }, [isOpen]);
+
+  const startListening = () => {
+    if (recognitionRef.current) {
+      setIsListening(true);
+      recognitionRef.current.start();
+    } else {
+      toast({
+        title: "Speech Recognition Unavailable",
+        description: "Please type your response instead.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+  };
+
+  const speakMessage = (text: string) => {
+    if (synthRef.current) {
+      setIsSpeaking(true);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => setIsSpeaking(false);
+      synthRef.current.speak(utterance);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (synthRef.current) {
+      synthRef.current.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const handleUserInput = async (input: string) => {
+    setMessages(prev => [...prev, { type: 'user', content: input }]);
+    
+    // Process the input with AI
+    const response = await processWithAI(input);
+    setMessages(prev => [...prev, { type: 'ai', content: response }]);
+    speakMessage(response);
+    
+    setQuestionCount(prev => prev + 1);
+    
+    // Check if we have enough info to generate suggestions
+    if (questionCount >= 4 || hasEnoughInfo()) {
+      generateSuggestions();
+    }
+  };
+
+  const processWithAI = async (input: string): Promise<string> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-chat-assistant', {
+        body: {
+          message: input,
+          conversation,
+          questionCount,
+          context: 'party_planning'
+        }
+      });
+
+      if (error) throw error;
+
+      // Update conversation state based on AI response
+      if (data.updatedConversation) {
+        setConversation(data.updatedConversation);
+      }
+
+      return data.response || "I'm sorry, I didn't catch that. Could you please repeat?";
+    } catch (error) {
+      console.error('AI processing error:', error);
+      return "I'm having trouble understanding. Could you try rephrasing that?";
+    }
+  };
+
+  const hasEnoughInfo = (): boolean => {
+    return !!(conversation.occasion && conversation.guestCount && conversation.budget);
+  };
+
+  const generateSuggestions = async () => {
+    setIsGeneratingQuote(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-party-suggestions', {
+        body: {
+          conversation,
+          maxSuggestions: 8
+        }
+      });
+
+      if (error) throw error;
+      setSuggestions(data.suggestions || []);
+      
+      const suggestionMessage = `Based on your ${conversation.occasion} for ${conversation.guestCount} people, I've found some great options for you! Take a look at these suggestions.`;
+      setMessages(prev => [...prev, { type: 'ai', content: suggestionMessage }]);
+      speakMessage(suggestionMessage);
+      
+    } catch (error) {
+      console.error('Suggestion generation error:', error);
+      toast({
+        title: "Error Generating Suggestions",
+        description: "Please try again or contact support.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingQuote(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold">AI Testing Agent Project</h1>
-          <Badge variant="secondary">In Development</Badge>
-        </div>
-        <p className="text-muted-foreground">
-          Autonomous AI agent for testing web applications with GPT-4 Vision analysis and Telegram notifications
-        </p>
-      </div>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-4xl h-[90vh] flex flex-col">
+        <CardHeader className="flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              AI Party Assistant
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="testing-control">Testing Control</TabsTrigger>
-          <TabsTrigger value="telegram-setup">Telegram Setup</TabsTrigger>
-          <TabsTrigger value="architecture">Architecture</TabsTrigger>
-        </TabsList>
+        <CardContent className="flex-1 flex gap-4 overflow-hidden">
+          {/* Conversation Panel */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-lg ${
+                      message.type === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    {message.content}
+                  </div>
+                </div>
+              ))}
+              
+              {isGeneratingQuote && (
+                <div className="flex justify-start">
+                  <div className="bg-muted p-3 rounded-lg">
+                    <div className="animate-pulse">Generating suggestions...</div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-        <TabsContent value="overview" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Project Status</CardTitle>
-              <CardDescription>Current implementation progress</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">✅ Completed</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• AI Testing Agent Supabase function</li>
-                    <li>• AI Coordinator function</li>
-                    <li>• GPT-4 Vision integration</li>
-                    <li>• Basic testing control UI</li>
-                    <li>• Database schema for sessions/issues</li>
-                  </ul>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-sm">🔄 In Progress</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Telegram bot webhook setup</li>
-                    <li>• Screenshot capture mechanism</li>
-                    <li>• Testing flow optimization</li>
-                    <li>• Error handling improvements</li>
-                  </ul>
-                </div>
+            {/* Voice Controls */}
+            <div className="flex items-center gap-2 p-4 border-t">
+              <Button
+                onClick={isListening ? stopListening : startListening}
+                variant={isListening ? "destructive" : "default"}
+                size="lg"
+              >
+                {isListening ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
+                {isListening ? "Stop Listening" : "Start Speaking"}
+              </Button>
+              
+              <Button
+                onClick={isSpeaking ? stopSpeaking : () => {}}
+                variant="outline"
+                disabled={!isSpeaking}
+              >
+                {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              </Button>
+              
+              {isListening && (
+                <Badge variant="secondary" className="animate-pulse">
+                  Listening...
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Suggestions Panel */}
+          {suggestions.length > 0 && (
+            <div className="w-1/3 border-l pl-4">
+              <h3 className="font-medium mb-4">Suggested Products</h3>
+              <div className="space-y-3 overflow-y-auto">
+                {suggestions.map((product, index) => (
+                  <Card key={index} className="p-3">
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">{product.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {product.description}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">${product.price}</span>
+                        <Button
+                          size="sm"
+                          onClick={() => onAddToCart?.(product)}
+                        >
+                          <ShoppingCart className="w-3 h-3 mr-1" />
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Key Features</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <h5 className="font-medium mb-2">Autonomous Testing</h5>
-                  <p className="text-muted-foreground">AI navigates and tests web apps automatically using predefined flows</p>
-                </div>
-                <div>
-                  <h5 className="font-medium mb-2">GPT-4 Vision Analysis</h5>
-                  <p className="text-muted-foreground">Screenshots analyzed for UI/UX, functionality, and accessibility issues</p>
-                </div>
-                <div>
-                  <h5 className="font-medium mb-2">Real-time Alerts</h5>
-                  <p className="text-muted-foreground">Telegram notifications for critical issues and test results</p>
-                </div>
-                <div>
-                  <h5 className="font-medium mb-2">Auto-fix Generation</h5>
-                  <p className="text-muted-foreground">AI coordinator generates code fixes for identified issues</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="testing-control">
-          <AITestingControl />
-        </TabsContent>
-
-        <TabsContent value="telegram-setup">
-          <TestTelegramBot />
-        </TabsContent>
-
-        <TabsContent value="architecture" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Architecture</CardTitle>
-              <CardDescription>High-level overview of the AI agent system</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="border rounded-lg p-4">
-                    <h5 className="font-semibold mb-2">Testing Agent</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Main agent that captures screenshots, analyzes with GPT-4, and reports issues
-                    </p>
-                    <p className="text-xs mt-2 font-mono">supabase/functions/ai-testing-agent/</p>
-                  </div>
-                  <div className="border rounded-lg p-4">
-                    <h5 className="font-semibold mb-2">AI Coordinator</h5>
-                    <p className="text-sm text-muted-foreground">
-                      Processes fix requests, generates code solutions, monitors system health
-                    </p>
-                    <p className="text-xs mt-2 font-mono">supabase/functions/ai-coordinator/</p>
-                  </div>
-                  <div className="border rounded-lg p-4">
-                    <h5 className="font-semibold mb-2">Control Interface</h5>
-                    <p className="text-sm text-muted-foreground">
-                      React components for starting/stopping tests and monitoring status
-                    </p>
-                    <p className="text-xs mt-2 font-mono">src/components/AITestingControl.tsx</p>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <h5 className="font-semibold mb-3">Database Tables</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                    <code className="bg-muted p-2 rounded">testing_sessions</code>
-                    <code className="bg-muted p-2 rounded">testing_issues</code>
-                    <code className="bg-muted p-2 rounded">ai_fix_requests</code>
-                    <code className="bg-muted p-2 rounded">system_health</code>
-                    <code className="bg-muted p-2 rounded">performance_metrics</code>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

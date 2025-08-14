@@ -10,6 +10,7 @@ import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 import SimpleProductManager from '@/components/admin/SimpleProductManager';
 import VoucherManagement from '@/components/admin/VoucherManagement';
 import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
+import { SpeechModeManager } from '@/components/admin/SpeechModeManager';
 import { PerformanceTestRunner } from '@/components/admin/PerformanceTestRunner';
 import { PerformanceChecklist } from '@/components/admin/PerformanceChecklist';
 import { PerformanceOptimizationSummary } from '@/components/admin/PerformanceOptimizationSummary';
@@ -275,6 +276,8 @@ export default function AdminDashboard() {
               <TabsTrigger value="products" onClick={() => navigate('/admin/create-collection')}>Sort & Sync Products</TabsTrigger>
               <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')}>🎬 Cover Pages</TabsTrigger>
+              <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')}>📋 Quotes</TabsTrigger>
+              <TabsTrigger value="speech-mode">🎤 Speech Mode</TabsTrigger>
               <TabsTrigger value="performance">⚡ Performance & System Tests</TabsTrigger>
               <TabsTrigger value="ghl-setup">📱 GHL/SMS Setup</TabsTrigger>
               <TabsTrigger value="cleanup">🗑️ Cleanup</TabsTrigger>
@@ -534,6 +537,10 @@ export default function AdminDashboard() {
           </TabsContent>
 
 
+
+          <TabsContent value="speech-mode" className="space-y-4">
+            <SpeechModeManager />
+          </TabsContent>
 
           <TabsContent value="ghl-setup" className="space-y-4">
             <div className="space-y-6">

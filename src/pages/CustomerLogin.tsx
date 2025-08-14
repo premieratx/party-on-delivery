@@ -123,7 +123,7 @@ const CustomerLogin = () => {
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${CANONICAL_DOMAIN}/customer/login?redirect=dashboard`,
+            redirectTo: `${CANONICAL_DOMAIN}/customer/login`,
             queryParams: { access_type: 'offline', prompt: 'select_account' },
             skipBrowserRedirect: false,
           },
