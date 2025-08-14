@@ -718,6 +718,13 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </button>
         </div>
 
+        {/* UI Theme Selector - Bottom Left of Hero (Temporary Placement) */}
+        <div className="absolute bottom-4 left-4 z-20">
+          <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg p-2 shadow-lg">
+            <UIThemeSelector />
+          </div>
+        </div>
+
         {/* Hidden - moved to bottom bar */}
 
           {/* Centered Content - evenly spaced */}
@@ -1051,18 +1058,18 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
   <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">${applyMarkup(price).toFixed(2)}</Badge>
   <div className="flex justify-center">
                          {cartQty > 0 ? (
-                           <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
-                               <Minus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
+                           <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-6 w-6' : 'h-6 w-6'} p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, -1)}>
+                               <Minus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
                              </Button>
-                             <span className="text-sm font-bold px-2 min-w-[2rem] text-center">{cartQty}</span>
-                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-4 w-4' : 'h-6 w-6'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
-                               <Plus className={`${isMobile ? 'w-2 h-2' : 'w-3 h-3'}`} />
+                             <span className={`text-xs font-bold ${isMobile ? 'px-1 min-w-[1.5rem]' : 'px-2 min-w-[2rem]'} text-center`}>{cartQty}</span>
+                             <Button variant="ghost" size="sm" className={`${isMobile ? 'h-6 w-6' : 'h-6 w-6'} p-0 hover:bg-primary hover:text-primary-foreground rounded-full`} onClick={() => handleQuantityChange(product.id, variant?.id, 1)}>
+                               <Plus className={`${isMobile ? 'w-3 h-3' : 'w-3 h-3'}`} />
                              </Button>
                            </div>
                         ) : (
-                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center transition-transform hover:scale-110" onClick={() => handleAddToCart(product, variant)}>
-                            <Plus className="w-5 h-5" strokeWidth={3} />
+                          <button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center transition-transform hover:scale-110" onClick={() => handleAddToCart(product, variant)}>
+                            <Plus className="w-4 h-4" strokeWidth={3} />
                           </button>
                         )}
                       </div>
@@ -1203,36 +1210,36 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                      {/* Centered Cart Controls with larger, more visible buttons */}
                      <div className="flex justify-center items-center">
                        {cartQty > 0 ? (
-                          <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                          <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground`}
+                              className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleQuantityChange(product.id, selectedVariant?.id, -1);
                               }}
                             >
-                              <Minus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
+                              <Minus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                             </Button>
-                            <span className="text-sm font-bold px-2 min-w-[2rem] text-center">
+                            <span className={`text-xs font-bold ${isMobile ? 'px-1 min-w-[1.5rem]' : 'px-2 min-w-[2rem]'} text-center`}>
                               {cartQty}
                             </span>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 rounded-full hover:bg-primary hover:text-primary-foreground`}
+                              className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 rounded-full hover:bg-primary hover:text-primary-foreground`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleQuantityChange(product.id, selectedVariant?.id, 1);
                               }}
                             >
-                              <Plus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
+                              <Plus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                             </Button>
                           </div>
                        ) : (
                          <button
-                           className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-12 h-12 flex items-center justify-center transition-transform hover:scale-110 shadow-lg"
+                           className={`bg-primary hover:bg-primary/90 text-primary-foreground rounded-full ${isMobile ? 'w-8 h-8' : 'w-12 h-12'} flex items-center justify-center transition-transform hover:scale-110 shadow-lg`}
                            onClick={(e) => {
                              e.stopPropagation();
                              if (selectedVariant) {
@@ -1250,7 +1257,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                             }
                            }}
                          >
-                           <Plus className="w-6 h-6" strokeWidth={3} />
+                           <Plus className={`${isMobile ? 'w-4 h-4' : 'w-6 h-6'}`} strokeWidth={3} />
                         </button>
                       )}
                     </div>

@@ -419,12 +419,12 @@ const [showSearchModal, setShowSearchModal] = useState(false);
                             e.stopPropagation();
                             handleUpdateQuantity(product.id, -1, variant?.id);
                           }}
-                          className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
+                          className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
                         >
-                          <Minus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
+                          <Minus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                         </Button>
                         
-                        <span className="font-medium text-purple-700 min-w-[2rem] text-center">
+                        <span className={`font-medium text-purple-700 ${isMobile ? 'min-w-[1.5rem] px-1' : 'min-w-[2rem] px-2'} text-center text-xs`}>
                           {cartQuantity}
                         </span>
                         
@@ -435,9 +435,9 @@ const [showSearchModal, setShowSearchModal] = useState(false);
                             e.stopPropagation();
                             handleUpdateQuantity(product.id, 1, variant?.id);
                           }}
-                          className={`${isMobile ? 'h-4 w-4' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
+                          className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 text-purple-600 hover:bg-purple-100`}
                         >
-                          <Plus className={`${isMobile ? 'w-2 h-2' : 'w-4 h-4'}`} />
+                          <Plus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
                         </Button>
                       </div>
                     )}
