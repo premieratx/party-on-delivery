@@ -133,8 +133,8 @@ export default function CustomAppView() {
   const [searchParams] = useSearchParams();
   useWakeLock();
   
-  // Determine initial step from URL (force 'start' to avoid flicker)
-  const initialStepParam = (searchParams.get('step') as CustomDeliveryStep) || 'tabs';
+  // Force tabs by default, never show cover modal
+  const initialStepParam = 'tabs';
   const [currentStep, setCurrentStep] = useAppStep(initialStepParam);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [coverOpen, setCoverOpen] = useState(false);
@@ -258,16 +258,16 @@ export default function CustomAppView() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-show Start screen once per app if enabled and not seen
-  useEffect(() => {
-    if (!appConfig) return;
-    const enabled = (appConfig.start_screen_config as any)?.enabled === true;
-    const seenKey = `startSeen_${appConfig.app_slug}`;
-    const seen = sessionStorage.getItem(seenKey);
-    if (enabled && !seen) {
-      setCurrentStep('start');
-    }
-  }, [appConfig]);
+  // DISABLED AUTO-SHOW START SCREEN TO PREVENT POPUP
+  // useEffect(() => {
+  //   if (!appConfig) return;
+  //   const enabled = (appConfig.start_screen_config as any)?.enabled === true;
+  //   const seenKey = `startSeen_${appConfig.app_slug}`;
+  //   const seen = sessionStorage.getItem(seenKey);
+  //   if (enabled && !seen) {
+  //     setCurrentStep('start');
+  //   }
+  // }, [appConfig]);
 
   // Ensure returning 'Home' or revisiting app within the same session skips cover
   useEffect(() => {
@@ -411,22 +411,7 @@ export default function CustomAppView() {
 
   return (
     <div className="min-h-screen bg-background">
-      {currentStep === 'start' && (
-        <CustomDeliveryCoverModal
-          open={true}
-          onOpenChange={() => {}}
-          onStartOrder={goToAppTabs}
-          appName={appConfig.app_name}
-          logoUrl={resolved.logoUrl}
-          title={resolved.title}
-          subtitle={resolved.subtitle}
-          buttonText={resolved.buttonText}
-          checklistItems={resolved.checklist}
-          backgroundImageUrl={bgImage}
-          backgroundVideoUrl={startBgVideo}
-          checklistSpacing={(appConfig.start_screen_config as any)?.checklist_spacing ?? 8}
-        />
-      )}
+      {/* COVER MODAL DISABLED - CAUSES POPUP ISSUE */}
       {/* Start screen enabled above; tabs shown behind/after with blur */}
       <div className={currentStep === 'start' ? 'pointer-events-none blur-sm' : ''}>
         <CustomDeliveryTabsPage
