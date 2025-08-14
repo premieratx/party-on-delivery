@@ -8,9 +8,13 @@ import { DeliveryAppSelector } from '@/components/delivery/DeliveryAppSelector';
 import heroImage from '@/assets/hero-party-austin.jpg';
 
 const DefaultDeliveryApp = () => {
+  console.log('🏠 DefaultDeliveryApp: Component started loading');
+  
   const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice } = useUnifiedCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const navigate = useNavigate();
+  
+  console.log('🏠 DefaultDeliveryApp: Hooks initialized, cartItems:', cartItems.length);
 
   const handleUpdateQuantity = (productId: string, variantId: string | undefined, quantity: number) => {
     updateQuantity(productId, variantId, quantity);
@@ -52,6 +56,8 @@ const DefaultDeliveryApp = () => {
     instructions: ''
   };
 
+  console.log('🏠 DefaultDeliveryApp: About to render');
+  
   return (
     <div className="min-h-screen bg-background">
       <GlobalNavigation />
