@@ -56,7 +56,7 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('Getting the best products for you');
@@ -337,29 +337,6 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return <CategoryTabs />;
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center p-8">
-        <div className="text-center space-y-4">
-          <div 
-            className={`p-2 rounded-full transition-colors ${
-              retryCount > 0 
-                ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400' 
-                : 'bg-primary/10 text-primary'
-            }`}
-          >
-            <Loader2 className="w-8 h-8 animate-spin" />
-          </div>
-          <div className={`mt-3 text-center font-medium text-lg text-foreground leading-relaxed`}>
-            {retryCount > 0 ? `Retry attempt ${retryCount}` : 'Getting the best products for you'}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {loadingMessage}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (
