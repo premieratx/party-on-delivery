@@ -19,136 +19,108 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-    <!-- NUCLEAR OPTION - COMPLETELY DESTROY POSTHOG -->
+    <!-- FINAL DESTRUCTION OF POSTHOG AND PRELOADING v2025_01_14_21_00 -->
     <script>
-      // IMMEDIATE EXECUTION - BEFORE ANYTHING ELSE
       (function() {
         'use strict';
         
-        // NUCLEAR DESTRUCTION OF POSTHOG
-        const destroyPostHog = () => {
+        // COMPLETELY DESTROY POSTHOG
+        const killPostHog = () => {
+          delete window.posthog;
+          delete window.PostHog;
+          delete window.__posthog;
+          delete window.analytics;
+          delete window.gtag;
+          
+          // Non-configurable blocks
           try {
-            // Delete all PostHog variants
-            delete window.posthog;
-            delete window.PostHog;
-            delete window.__posthog;
-            delete window.ph;
-            delete window.analytics;
-            delete window.gtag;
-            
-            // Override with permanent blocking
-            Object.defineProperty(window, 'posthog', { 
-              value: null, writable: false, configurable: false 
-            });
-            Object.defineProperty(window, 'PostHog', { 
-              value: null, writable: false, configurable: false 
-            });
-            Object.defineProperty(window, '__posthog', { 
-              value: null, writable: false, configurable: false 
-            });
-            Object.defineProperty(window, 'analytics', { 
-              value: null, writable: false, configurable: false 
-            });
-          } catch(e) { /* ignore */ }
+            Object.defineProperty(window, 'posthog', { value: null, writable: false, configurable: false });
+            Object.defineProperty(window, 'PostHog', { value: null, writable: false, configurable: false });
+            Object.defineProperty(window, 'analytics', { value: null, writable: false, configurable: false });
+          } catch(e) {}
         };
         
-        // BLOCK ALL SCRIPT LOADING
-        const originalCreateElement = document.createElement;
-        document.createElement = function(tagName) {
-          const element = originalCreateElement.call(this, tagName);
-          if (tagName.toLowerCase() === 'script') {
-            const scriptElement = element;
-            const originalSetSrc = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src')?.set;
-            if (originalSetSrc) {
-              Object.defineProperty(scriptElement, 'src', {
-                set: function(value) {
-                  // Block PostHog, analytics, and tracking scripts
-                  if (value && (
-                    value.includes('posthog') || 
-                    value.includes('analytics') ||
-                    value.includes('rrweb') ||
-                    value.includes('5143-4299d8d38aad5d69') ||
-                    value.includes('ph_') ||
-                    value.includes('capture')
-                  )) {
-                    return; // Completely block
-                  }
-                  originalSetSrc.call(this, value);
-                },
-                get: function() {
-                  return this.getAttribute('src') || '';
-                }
-              });
-            }
-          }
-          return element;
-        };
-        
-        // BLOCK ALL NETWORK REQUESTS
+        // BLOCK ALL PRELOADING AND ANALYTICS NETWORK REQUESTS
         const originalFetch = window.fetch;
         window.fetch = function(...args) {
           const url = args[0];
-          if (typeof url === 'string' && (
-            url.includes('posthog') || 
-            url.includes('analytics') ||
-            url.includes('capture') ||
-            url.includes('decide') ||
-            url.includes('batch')
-          )) {
-            return Promise.reject(new Error('BLOCKED'));
+          if (typeof url === 'string') {
+            // Block PostHog, analytics, and ALL preloading
+            if (url.includes('posthog') || 
+                url.includes('analytics') ||
+                url.includes('instant-product-cache') ||
+                url.includes('lightning-sync') ||
+                url.includes('delivery_apps') ||
+                url.includes('delivery_app_variations') ||
+                url.includes('party-planner') ||
+                url.includes('standard-delivery') ||
+                url.includes('premier-party-cruises') ||
+                url.includes('5143-4299d8d38aad5d69') ||
+                url.includes('capture') ||
+                url.includes('decide') ||
+                url.includes('batch')) {
+              return Promise.resolve(new Response('{"success":false,"blocked":true}', {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              }));
+            }
           }
           return originalFetch.apply(this, args);
         };
         
-        // SILENCE CONSOLE SPAM
+        // SILENCE ALL SPAM
         const origError = console.error;
+        const origLog = console.log;
+        
         console.error = function(...args) {
           const msg = args.join(' ');
           if (msg.includes('PostHog') || 
               msg.includes('capture call') || 
               msg.includes('rate limit') ||
-              msg.includes('5143-4299d8d38aad5d69')) {
-            return; // Silent block
+              msg.includes('5143-4299d8d38aad5d69') ||
+              msg.includes('preload') ||
+              msg.includes('delivery apps') ||
+              msg.includes('party-planner')) {
+            return;
           }
           origError.apply(console, args);
         };
         
-        // DESTROY IMMEDIATELY AND REPEATEDLY
-        destroyPostHog();
-        setInterval(destroyPostHog, 100); // Every 100ms
+        console.log = function(...args) {
+          const msg = args.join(' ');
+          if (msg.includes('⚡') || 
+              msg.includes('🚀') || 
+              msg.includes('✅') ||
+              msg.includes('Preloading') ||
+              msg.includes('instant app') ||
+              msg.includes('lightning') ||
+              msg.includes('Collections preloaded') ||
+              msg.includes('Apps preloaded') ||
+              msg.includes('delivery apps')) {
+            return;
+          }
+          origLog.apply(console, args);
+        };
         
-        // DESTROY ON DOM READY
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', destroyPostHog);
-        } else {
-          destroyPostHog();
-        }
+        // DESTROY REPEATEDLY
+        killPostHog();
+        setInterval(killPostHog, 50);
         
-        // DESTROY ON WINDOW LOAD
-        window.addEventListener('load', destroyPostHog);
-        
-      })();
-      
-      // Domain redirect
-      (function() {
+        // Domain redirect
         try {
           var canonicalHost = 'order.partyondelivery.com';
           var host = window.location.hostname;
           var isLocal = host === 'localhost' || host === '127.0.0.1';
           if (!isLocal && host !== canonicalHost) {
-            var target = 'https://' + canonicalHost + window.location.pathname + window.location.search + window.location.hash;
-            window.location.replace(target);
+            window.location.replace('https://' + canonicalHost + window.location.pathname + window.location.search + window.location.hash);
           }
-        } catch (e) {
-          console.warn('Canonical redirect check failed', e);
-        }
-      })();
-      
-      // Immediate redirect to delivery app if on homepage
-      (function() {
+        } catch (e) {}
+        
+        // Homepage redirect
         if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-          window.location.replace('/app/party-on-delivery');
+          window.location.replace('/search');
         }
+        
       })();
     </script>
   </head>

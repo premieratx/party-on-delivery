@@ -5,8 +5,8 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Direct navigation to the default delivery app
-    navigate('/app/party-on-delivery', { replace: true });
+    // Direct navigation to the search page (working delivery app)
+    navigate('/search', { replace: true });
   }, [navigate]);
 
   return null; // No loading screen
