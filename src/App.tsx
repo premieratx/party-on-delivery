@@ -6,12 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
-import { PerformanceMonitor } from "@/components/common/PerformanceMonitor";
+// import { PerformanceMonitor } from "@/components/common/PerformanceMonitor"; // DISABLED
 import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
-import SimpleIndex from "./pages/SimpleIndex";
+import Index from "./pages/Index";
 import VoiceChat from "./pages/VoiceChat";
 import PartyPlanningAgent from "./pages/PartyPlanningAgent";
 import NotFound from "./pages/NotFound";
@@ -97,7 +97,7 @@ const App = () => {
                   <Routes>
                     {/* Core pages - no lazy loading */}
                     
-                    <Route path="/" element={<SimpleIndex />} />
+                    <Route path="/" element={<Index />} />
                     <Route path="/voice-chat" element={<VoiceChat />} />
                     <Route path="/party-planning-agent" element={<PartyPlanningAgent />} />
                     
@@ -176,7 +176,7 @@ const App = () => {
                   </Routes>
                 </Suspense>
               </div>
-              <PerformanceMonitor />
+              {/* <PerformanceMonitor /> DISABLED */}
               <GlobalNavigation />
             </BrowserRouter>
           </TooltipProvider>
