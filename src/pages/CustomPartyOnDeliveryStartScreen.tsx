@@ -24,48 +24,17 @@ const CustomPartyOnDeliveryStartScreen = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadAppConfig = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('delivery_app_variations')
-          .select('app_name, app_slug, start_screen_config')
-          .eq('app_slug', 'party-on-delivery---concierge-')
-          .single();
-
-        if (error) {
-          console.error('Error loading app config:', error);
-          // Use default config if not found
-          setAppConfig({
-            app_name: 'Party On Delivery & Concierge',
-            app_slug: 'party-on-delivery---concierge-',
-            start_screen_config: {
-              title: 'Party On Delivery & Concierge',
-              subtitle: 'Premium party supplies and alcohol delivered to your door'
-            }
-          });
-        } else {
-          setAppConfig({
-            ...data,
-            start_screen_config: data.start_screen_config as { title?: string; subtitle?: string; logo_url?: string } | undefined
-          });
-        }
-      } catch (err) {
-        console.error('Error:', err);
-        // Use default config on error
-        setAppConfig({
-          app_name: 'Party On Delivery & Concierge',
-          app_slug: 'party-on-delivery---concierge-',
-          start_screen_config: {
-            title: 'Party On Delivery & Concierge',
-            subtitle: 'Premium party supplies and alcohol delivered to your door'
-          }
-        });
-      } finally {
-        setLoading(false);
+    // DISABLED TO PREVENT PRELOADING
+    console.log('🚫 CustomPartyOnDeliveryStartScreen loadAppConfig DISABLED');
+    setLoading(false);
+    setAppConfig({
+      app_name: 'Party On Delivery & Concierge',
+      app_slug: 'party-on-delivery---concierge-',
+      start_screen_config: {
+        title: 'Party On Delivery & Concierge',
+        subtitle: 'Premium party supplies and alcohol delivered to your door'
       }
-    };
-
-    loadAppConfig();
+    });
   }, []);
 
   const handleStartOrder = () => {

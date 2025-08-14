@@ -68,45 +68,21 @@ export function DeliveryAppVariationWidget({ appSlug }: DeliveryAppVariationWidg
 
   // Load app configuration
   useEffect(() => {
-    const loadAppConfig = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('delivery_app_variations')
-          .select('*')
-          .eq('app_slug', appSlug)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error loading app config:', error);
-          toast.error('Delivery app not found');
-          return;
-        }
-
-        if (data) {
-          // Type cast the data to match our interface
-          const typedConfig = {
-            app_name: data.app_name,
-            collections_config: data.collections_config as {
-              tab_count: number;
-              tabs: Array<{
-                name: string;
-                collection_handle: string;
-                icon?: string;
-              }>;
-            }
-          };
-          setAppConfig(typedConfig);
-        }
-      } catch (error) {
-        console.error('Error loading app config:', error);
-        toast.error('Failed to load delivery app');
-      } finally {
-        setLoading(false);
+    // DISABLED TO PREVENT PRELOADING
+    console.log('🚫 DeliveryAppVariationWidget loadAppConfig DISABLED');
+    setLoading(false);
+    setAppConfig({
+      app_name: 'Party On Delivery',
+      collections_config: {
+        tab_count: 4,
+        tabs: [
+          { name: 'Beer', collection_handle: 'beer' },
+          { name: 'Wine', collection_handle: 'wine' },
+          { name: 'Spirits', collection_handle: 'spirits' },
+          { name: 'Cocktails', collection_handle: 'cocktails' }
+        ]
       }
-    };
-
-    loadAppConfig();
+    });
   }, [appSlug]);
 
   const handleStartOrder = () => {
