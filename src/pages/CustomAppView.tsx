@@ -156,6 +156,7 @@ export default function CustomAppView() {
     gcTime: 30 * 60 * 1000, // 30 minutes cache (updated from cacheTime)
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: false
   });
 
   // Memoized app context to prevent unnecessary re-renders

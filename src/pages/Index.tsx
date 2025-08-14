@@ -33,28 +33,22 @@ const Index = () => {
   const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
 
-  // Load the homepage delivery app configuration and start preloading
+  // Load the homepage delivery app configuration 
   useEffect(() => {
     const loadHomepageApp = async () => {
       try {
         setIsPreloading(true);
         
-        // Load homepage app config in parallel with product preloading
-        const [appResult] = await Promise.allSettled([
-          supabase
-            .from('delivery_app_variations')
-            .select('*')
-            .eq('is_homepage', true)
-            .eq('is_active', true)
-            .maybeSingle(),
-          // Trigger immediate product cache warming
-          supabase.functions.invoke('instant-product-cache', {
-            body: { forceRefresh: false, preload: true }
-          })
-        ]);
+        // Load homepage app config safely
+        const { data, error } = await supabase
+          .from('delivery_app_variations')
+          .select('*')
+          .eq('is_homepage', true)
+          .eq('is_active', true)
+          .maybeSingle();
         
-        if (appResult.status === 'fulfilled' && !appResult.value.error && appResult.value.data) {
-          setHomepageApp(appResult.value.data);
+        if (!error && data) {
+          setHomepageApp(data);
         }
       } catch (error) {
         console.error('Error loading homepage app:', error);
@@ -178,7 +172,13 @@ const Index = () => {
 
       {/* Show main delivery app when cover is dismissed */}
       {!showCoverModal && !showAppsGrid && (
-        <ProductCategories />
+        <React.Suspense fallback={
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        }>
+          <ProductCategories />
+        </React.Suspense>
       )}
 
       {/* Cart sidebar */}
