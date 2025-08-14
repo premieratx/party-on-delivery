@@ -44,12 +44,32 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
   onGoHome,
   heroScrollingText,
 }) => {
-  // Use the exact same ProductCategories component as the main delivery app
-  // This ensures identical layout, styling, and functionality
+  // Don't render ProductCategories hero section - delivery apps have their own
   return (
     <div className="min-h-screen bg-background">
+      {/* Custom delivery app hero section here (not ProductCategories hero) */}
+      <div className="relative min-h-[60vh] flex flex-col justify-center px-4 lg:px-8 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+        <div className="text-center space-y-6 max-w-4xl mx-auto">
+          <h1 className="text-4xl lg:text-6xl font-bold text-white leading-tight">
+            {heroHeading || appName}
+          </h1>
+          {heroSubheading && (
+            <p className="text-xl lg:text-2xl text-white/90 font-medium">
+              {heroSubheading}
+            </p>
+          )}
+          {heroScrollingText && (
+            <p className="text-lg text-white/80">
+              {heroScrollingText}
+            </p>
+          )}
+        </div>
+      </div>
+      
+      {/* Use ProductCategories ONLY for the products/tabs, not the hero */}
       <ProductCategories 
         customSiteSlug={appName}
+        hideContent={false}
       />
     </div>
   );

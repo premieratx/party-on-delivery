@@ -163,13 +163,16 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     if (!searchQuery.trim()) return [];
     
     const query = searchQuery.toLowerCase().trim();
-    const allProducts = collections.flatMap(collection => collection.products || []);
+    // Fix the crash: safely handle collections that might be undefined/null
+    const allProducts = (collections || []).flatMap(collection => 
+      Array.isArray(collection?.products) ? collection.products : []
+    );
     
     return allProducts.filter(product => 
-      product.title.toLowerCase().includes(query) ||
-      product.description?.toLowerCase().includes(query) ||
-      product.vendor?.toLowerCase().includes(query) ||
-      product.tags?.some(tag => tag.toLowerCase().includes(query))
+      product?.title?.toLowerCase().includes(query) ||
+      product?.description?.toLowerCase().includes(query) ||
+      product?.vendor?.toLowerCase().includes(query) ||
+      (Array.isArray(product?.tags) && product.tags.some(tag => tag?.toLowerCase().includes(query)))
     );
   }, [searchQuery, collections]);
 
@@ -184,7 +187,9 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       };
     }
     
-    return collections[selectedCategory] || { id: '', title: '', handle: '', products: [] };
+    // Fix the crash: safely access collections array
+    const collection = Array.isArray(collections) && collections[selectedCategory];
+    return collection || { id: '', title: '', handle: '', products: [] };
   }, [selectedCategory, collections, searchQuery, searchResults]);
 
   const handleProductClick = (product: Product) => {
