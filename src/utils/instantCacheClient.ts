@@ -1,5 +1,5 @@
-// COMPLETELY DISABLED - FORCE BUILD REFRESH v2025_01_14_21_10
-// NO PRELOADING - CLEAN DELIVERY APP ONLY
+// COMPLETE SYSTEM SHUTDOWN v2025_01_14_21_25
+// ALL PRELOADING DISABLED
 
 export const getInstantProducts = () => {
   console.log('🚫 Instant products DISABLED');
@@ -11,4 +11,10 @@ export const getAllCollectionsCached = () => {
   return Promise.resolve([]);
 };
 
-// Force build refresh: BUILD_VERSION_2025_01_14_21_10_FINAL
+// Force disable all cache functions
+export const getCachedCollections = () => Promise.resolve([]);
+export const setCachedCollections = () => {};
+export const clearCachedCollections = () => {};
+
+// Build version to force cache invalidation
+export const BUILD_VERSION = '2025_01_14_21_25_NUCLEAR';

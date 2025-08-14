@@ -1,17 +1,49 @@
-// FINAL DESTRUCTION - NO PRELOADING v2025_01_14_21_15
+// NUCLEAR DESTRUCTION v2025_01_14_21_25
 
 if (typeof window !== 'undefined') {
-  // Kill PostHog permanently
-  (window as any).posthog = null;
-  (window as any).PostHog = null;
-  (window as any).analytics = null;
-  (window as any).gtag = null;
+  console.log('🚫 NUCLEAR SYSTEM BLOCKER ACTIVATED');
+  
+  // Destroy everything immediately
+  const nuclearDestroy = () => {
+    // Analytics destruction
+    delete (window as any).posthog;
+    delete (window as any).PostHog;
+    delete (window as any).__posthog;
+    delete (window as any).analytics;
+    delete (window as any).gtag;
+    
+    // Preloading destruction
+    delete (window as any).initializePreloading;
+    delete (window as any).preloadApp;
+    delete (window as any).loadAppConfig;
+    delete (window as any).ultraFastLoader;
+    delete (window as any).instantAppLoader;
+    delete (window as any).preloadManager;
+    
+    // Set blockers
+    (window as any).preloadingDisabled = true;
+    (window as any).nuclearMode = true;
+    
+    // Override functions
+    (window as any).initializePreloading = () => console.log('🚫 NUCLEAR BLOCKED');
+    (window as any).preloadApp = () => console.log('🚫 NUCLEAR BLOCKED');
+    (window as any).loadAppConfig = () => Promise.resolve(null);
+  };
+  
+  // Execute immediately and repeatedly
+  nuclearDestroy();
+  setInterval(nuclearDestroy, 25); // Every 25ms
   
   // Block console spam
   const origError = console.error;
   console.error = (...args) => {
     const msg = args.join(' ');
-    if (msg.includes('PostHog') || msg.includes('capture call') || msg.includes('rate limit')) {
+    if (msg.includes('PostHog') || 
+        msg.includes('party-planner') || 
+        msg.includes('standard-delivery') ||
+        msg.includes('delivery_apps') ||
+        msg.includes('preload') ||
+        msg.includes('rate limit')) {
       return;
     }
     origError.apply(console, args);
