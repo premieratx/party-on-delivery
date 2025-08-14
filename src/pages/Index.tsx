@@ -27,6 +27,9 @@ const Index = () => {
   const [isPreloading, setIsPreloading] = useState(false);
   const navigate = useNavigate();
   const { preloadCriticalData } = usePreloader();
+  
+  // Debug logging
+  console.log('🏠 Homepage Index.tsx rendering with:', { showCoverModal, showAppsGrid });
 
   // Load the homepage delivery app configuration 
   useEffect(() => {
@@ -154,8 +157,14 @@ const Index = () => {
       {/* Global Navigation */}
       <GlobalNavigation />
       
+      {/* Force clear any session storage that might be interfering */}
+      {(() => {
+        sessionStorage.removeItem(COVER_SHOWN_SESSION_KEY);
+        return null;
+      })()}
+      
       {/* Show cover modal first */}
-      {showCoverModal && (
+      {showCoverModal ? (
         <CustomDeliveryCoverModal
           open={showCoverModal}
           onOpenChange={setShowCoverModal}
@@ -165,6 +174,10 @@ const Index = () => {
           appName={homepageApp?.app_name || "Party On Delivery"}
           logoUrl={homepageApp?.logo_url}
         />
+      ) : (
+        <div className="min-h-screen bg-red-500 text-white flex items-center justify-center">
+          <div>Cover modal is NOT showing - this should not happen!</div>
+        </div>
       )}
 
       {/* Show delivery apps grid if selected */}
