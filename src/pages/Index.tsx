@@ -5,8 +5,8 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Load the homepage delivery app (Main Delivery App is marked as homepage)
-    console.log('🔄 Index: Loading homepage delivery app - Main Delivery App');
+    // Load the Main Delivery App as the homepage (database shows it's marked as homepage)
+    console.log('🔄 Index: Navigating to Main Delivery App (homepage)');
     navigate('/app/main-delivery-app', { replace: true });
   }, [navigate]);
 
