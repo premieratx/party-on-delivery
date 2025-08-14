@@ -708,31 +708,70 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       </div>
 
       <div className={`bg-background/98 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''} ${shouldHideChrome && isSearchFocused ? 'shadow-lg' : ''}`}>
-        {/* Header with app selector and search */}
-        <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
-          <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
-            {/* Delivery App Selector - moved to start, removed home button */}
-            <DeliveryAppSelector 
-              currentAppSlug={customAppName?.toLowerCase().replace(/\s+/g, '-')}
-              className="flex-shrink-0"
-            />
-            
-            {/* Search Bar */}
-            <div className="flex-1 max-w-lg">
-              <ProductSearchBar
-                onProductSelect={handleSearchSelect}
-                placeholder="Search all products..."
-                showDropdownResults={false}
-                onResultsChange={handleSearchResultsChange}
-                onSearchingChange={setIsSearching}
-                onFocus={handleSearchFocus}
-                onBlur={handleSearchBlur}
-                inputRef={searchInputRef}
-                inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
-              />
-            </div>
-          </div>
-        </div>
+         <div className="w-full px-2 md:px-4 py-2 border-b bg-background/95 backdrop-blur-md">
+           <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
+             {/* Occasion Buttons */}
+             <div className="flex items-center gap-2">
+               {/* What's the Occasion text - split into 2 rows */}
+               <div className="text-xs text-muted-foreground leading-tight mr-2">
+                 <div>What's the</div>
+                 <div>Occasion?</div>
+               </div>
+               
+               {/* Occasion buttons */}
+               <div className="flex gap-1">
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   className="text-xs px-2 py-1 h-7"
+                   onClick={() => {
+                     // You can add navigation logic here later
+                     console.log('Stock the BnB clicked');
+                   }}
+                 >
+                   Stock the BnB
+                 </Button>
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   className="text-xs px-2 py-1 h-7"
+                   onClick={() => {
+                     // You can add navigation logic here later
+                     console.log('Lake Delivery clicked');
+                   }}
+                 >
+                   Lake Delivery
+                 </Button>
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   className="text-xs px-2 py-1 h-7"
+                   onClick={() => {
+                     // You can add navigation logic here later
+                     console.log('Wedding clicked');
+                   }}
+                 >
+                   Wedding
+                 </Button>
+               </div>
+             </div>
+             
+             {/* Search Bar */}
+             <div className="flex-1 max-w-lg">
+               <ProductSearchBar
+                 onProductSelect={handleSearchSelect}
+                 placeholder="Search all products..."
+                 showDropdownResults={false}
+                 onResultsChange={handleSearchResultsChange}
+                 onSearchingChange={setIsSearching}
+                 onFocus={handleSearchFocus}
+                 onBlur={handleSearchBlur}
+                 inputRef={searchInputRef}
+                 inputClassName={`${isSearchFocused ? 'border-primary shadow-lg' : ''}`}
+               />
+             </div>
+           </div>
+         </div>
 
 
         {/* Category Tabs - Only 5 product tabs + checkout (no search tab) - STICKY ON MOBILE */}

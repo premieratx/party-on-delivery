@@ -718,6 +718,7 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Mai
           isVisible={true}
           onOpenCart={() => setIsCartOpen(true)}
           onCheckout={handleCheckout}
+          currentAppSlug={undefined} // Admin page doesn't have a specific app
         />
       )}
     </div>

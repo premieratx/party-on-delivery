@@ -483,6 +483,7 @@ export default function OptimizedProductSearch() {
         isVisible={true}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={() => navigate('/checkout')}
+        currentAppSlug={undefined} // Search page doesn't have a specific app
       />
     </div>
   );

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, CreditCard } from 'lucide-react';
 import { UnifiedCartItem } from '@/hooks/useUnifiedCart';
+import { DeliveryAppSelector } from '@/components/delivery/DeliveryAppSelector';
 
 interface BottomCartBarProps {
   items: UnifiedCartItem[];
@@ -12,6 +13,7 @@ interface BottomCartBarProps {
   onCheckout: () => void;
   shouldHide?: boolean;
   showAdmin?: boolean;
+  currentAppSlug?: string;
 }
 
 export const BottomCartBar: React.FC<BottomCartBarProps> = ({
@@ -21,7 +23,8 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   onOpenCart,
   onCheckout,
   shouldHide = false,
-  showAdmin = false
+  showAdmin = false,
+  currentAppSlug
 }) => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   // Apply affiliate/delivery-app markup to totals consistently
@@ -37,14 +40,23 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   return (
     <div className={`fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3 transition-transform duration-200 ${shouldHide ? 'translate-y-full' : 'translate-y-0'}`}>
       <div className="max-w-4xl mx-auto flex items-center justify-between">
-        {showAdmin && (
-          <Link 
-            to="/admin/dashboard"
-            className="text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            Admin
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          {showAdmin && (
+            <Link 
+              to="/admin/dashboard"
+              className="text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              Admin
+            </Link>
+          )}
+          {/* Delivery App Selector moved here */}
+          <div className="scale-75 origin-left">
+            <DeliveryAppSelector 
+              currentAppSlug={currentAppSlug}
+              className="flex-shrink-0"
+            />
+          </div>
+        </div>
         
         {/* Actions on the right: Cart, Subtotal, Checkout */}
         <div className="flex items-center gap-1 sm:gap-3 ml-auto">

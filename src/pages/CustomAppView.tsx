@@ -484,6 +484,7 @@ export default function CustomAppView() {
         isVisible={true}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
+        currentAppSlug={appConfig?.app_slug}
       />
     </div>
   );

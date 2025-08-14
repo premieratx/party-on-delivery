@@ -241,6 +241,7 @@ export const CustomDeliveryAppWidget: React.FC = () => {
         isVisible={currentStep === 'products' || currentStep === 'cart' || currentStep === 'tabs'}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
+        currentAppSlug={undefined} // Generic delivery widget
       />
     </div>
   );

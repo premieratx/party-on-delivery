@@ -192,6 +192,7 @@ const Index = () => {
         onCheckout={handleCheckout}
         shouldHide={false}
         showAdmin={true}
+        currentAppSlug={undefined} // Main app doesn't have a specific slug
       />
     </div>
   );
