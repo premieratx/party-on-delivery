@@ -16,6 +16,7 @@ import { PerformanceChecklist } from '@/components/admin/PerformanceChecklist';
 import { PerformanceOptimizationSummary } from '@/components/admin/PerformanceOptimizationSummary';
 import { DatabaseOptimizationTester } from '@/components/admin/DatabaseOptimizationTester';
 import { PerformanceReportGenerator } from '@/components/admin/PerformanceReportGenerator';
+import { LinkValidationDashboard } from '@/components/admin/LinkValidationDashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -172,7 +173,7 @@ export default function AdminDashboard() {
   };
 
   const copyAffiliateLink = (affiliateCode: string) => {
-    const url = `${CANONICAL_DOMAIN}/a/${affiliateCode}`;
+    const url = `${CANONICAL_DOMAIN}/${affiliateCode}`;
     navigator.clipboard.writeText(url);
     toast({
       title: "Copied!",
@@ -277,6 +278,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="delivery-apps">🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')}>🎬 Cover Pages</TabsTrigger>
               <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')}>📋 Quotes</TabsTrigger>
+              <TabsTrigger value="link-validation">🔗 Link Validation</TabsTrigger>
               <TabsTrigger value="speech-mode">🎤 Speech Mode</TabsTrigger>
               <TabsTrigger value="performance">⚡ Performance & System Tests</TabsTrigger>
               <TabsTrigger value="ghl-setup">📱 GHL/SMS Setup</TabsTrigger>
@@ -419,7 +421,7 @@ export default function AdminDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(`${window.location.origin}/a/${affiliate.affiliate_code}`, '_blank')}
+                          onClick={() => window.open(`${CANONICAL_DOMAIN}/${affiliate.affiliate_code}`, '_blank')}
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
                           Visit
@@ -449,6 +451,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="delivery-apps" className="space-y-4">
             <DeliveryAppManager />
+          </TabsContent>
+
+          <TabsContent value="link-validation" className="space-y-4">
+            <LinkValidationDashboard />
           </TabsContent>
 
           <TabsContent value="performance" className="space-y-4">

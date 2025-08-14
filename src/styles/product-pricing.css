@@ -1,4 +1,4 @@
-// Updated product price styling for better contrast
+/* Updated product price styling for better contrast */
 .product-price {
   color: hsl(var(--primary));
   font-weight: 600;
@@ -14,12 +14,6 @@
 }
 
 /* Force primary color for all price displays */
-.price-display, 
-.text-primary {
-  color: hsl(var(--primary)) !important;
-}
-
-/* Style price elements with CSS attribute selectors */
 .price-display,
 .product-price,
 .text-primary {
