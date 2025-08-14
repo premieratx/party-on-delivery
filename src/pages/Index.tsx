@@ -5,14 +5,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Smooth redirect to working delivery app
-    const timer = setTimeout(() => {
-      navigate('/search', { replace: true });
-    }, 10);
-    return () => clearTimeout(timer);
+    // Navigate to the main delivery app instead of search
+    navigate('/app/party-on-delivery', { replace: true });
   }, [navigate]);
 
-  return <div></div>; // Brief render before redirect
+  return <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="text-lg text-muted-foreground">Loading your delivery app...</div>
+  </div>;
 };
 
 export default Index;
