@@ -64,6 +64,8 @@ export default function PartyPlanningAgent() {
   });
   const [questionCount, setQuestionCount] = useState(0);
   const [suggestions, setSuggestions] = useState([]);
+  const [adminMode, setAdminMode] = useState(false);
+  const [textInput, setTextInput] = useState('');
 
   // Load saved profiles on mount
   useEffect(() => {
@@ -171,6 +173,7 @@ export default function PartyPlanningAgent() {
           message: text,
           conversation,
           questionCount,
+          adminMode,
           context: {
             agentTone: currentAgent?.tone || 'enthusiastic',
             agentInstructions: currentAgent?.instructions || ''
@@ -193,16 +196,23 @@ export default function PartyPlanningAgent() {
           setConversation(aiResponse.updatedConversation);
         }
         
+        // Handle admin mode activation
+        if (aiResponse.adminMode) {
+          setAdminMode(true);
+        }
+        
         // Convert to speech
         speakText(assistantMessage.content);
 
-        // Check if we have enough info to generate suggestions
-        const hasEnoughInfo = aiResponse.updatedConversation?.occasion && 
-                             aiResponse.updatedConversation?.guestCount && 
-                             questionCount >= 3;
+        // Check if we have enough info to generate suggestions (only in normal mode)
+        if (!adminMode) {
+          const hasEnoughInfo = aiResponse.updatedConversation?.occasion && 
+                               aiResponse.updatedConversation?.guestCount && 
+                               questionCount >= 3;
 
-        if (hasEnoughInfo) {
-          setTimeout(() => generateSuggestions(aiResponse.updatedConversation), 2000);
+          if (hasEnoughInfo) {
+            setTimeout(() => generateSuggestions(aiResponse.updatedConversation), 2000);
+          }
         }
       }
     } catch (error) {
@@ -401,9 +411,19 @@ export default function PartyPlanningAgent() {
             <CardContent>
               {/* Chat messages */}
               <div className="h-64 overflow-y-auto mb-6 space-y-3">
+                {adminMode && (
+                  <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+                    <div className="text-red-200 text-sm font-medium">🔒 ADMIN MODE ACTIVE</div>
+                    <div className="text-red-100 text-xs">You can now query training data and product knowledge</div>
+                  </div>
+                )}
+                
                 {messages.length === 0 ? (
                   <div className="text-center text-white/60 py-8">
-                    Press and hold the disco ball to start talking!
+                    {adminMode ? 
+                      'Ask me about my training data, product knowledge, or how to improve responses!' :
+                      'Press and hold the disco ball to start talking!'
+                    }
                   </div>
                 ) : (
                   messages.map((message) => (
@@ -412,10 +432,10 @@ export default function PartyPlanningAgent() {
                       className={`p-3 rounded-lg ${
                         message.type === 'user'
                           ? 'bg-blue-500/30 ml-8'
-                          : 'bg-purple-500/30 mr-8'
+                          : adminMode ? 'bg-red-500/30 mr-8' : 'bg-purple-500/30 mr-8'
                       }`}
                     >
-                      <div className="text-white">{message.content}</div>
+                      <div className="text-white whitespace-pre-wrap">{message.content}</div>
                       <div className="text-xs text-white/60 mt-1">
                         {message.timestamp.toLocaleTimeString()}
                       </div>
@@ -424,6 +444,37 @@ export default function PartyPlanningAgent() {
                 )}
               </div>
 
+              {/* Text Input for Admin Mode */}
+              {adminMode && (
+                <div className="mb-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Type your question about training data..."
+                      className="flex-1 p-3 rounded-lg bg-white/20 text-white placeholder-white/60 border border-white/30"
+                      value={textInput}
+                      onChange={(e) => setTextInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          processVoiceInput(textInput);
+                          setTextInput('');
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={() => {
+                        processVoiceInput(textInput);
+                        setTextInput('');
+                      }}
+                      disabled={!textInput.trim()}
+                      className="bg-red-500 hover:bg-red-600"
+                    >
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Disco Ball Control */}
               <div className="text-center">
                 <Button
@@ -431,6 +482,8 @@ export default function PartyPlanningAgent() {
                   className={`w-32 h-32 rounded-full p-2 transition-all duration-200 ${
                     isRecording 
                       ? 'bg-red-500 hover:bg-red-600 scale-110' 
+                      : adminMode
+                      ? 'bg-gradient-to-br from-red-600 to-red-500 hover:scale-105'
                       : 'bg-gradient-to-br from-gold to-yellow-500 hover:scale-105'
                   }`}
                   onMouseDown={!isRecording ? startRecording : undefined}
@@ -446,11 +499,13 @@ export default function PartyPlanningAgent() {
                       className={`w-16 h-16 mb-2 ${isRecording ? '' : 'animate-spin'}`}
                       style={{ 
                         animationDuration: isRecording ? '0s' : '2s',
-                        filter: 'brightness(1.2) drop-shadow(0 0 12px rgba(255,255,255,0.8))'
+                        filter: adminMode 
+                          ? 'brightness(1.2) drop-shadow(0 0 12px rgba(255,0,0,0.8))'
+                          : 'brightness(1.2) drop-shadow(0 0 12px rgba(255,255,255,0.8))'
                       }}
                     />
                     <span className="text-xs font-bold text-white">
-                      {isRecording ? 'Recording...' : 'Hold to Speak'}
+                      {isRecording ? 'Recording...' : adminMode ? 'Admin Mode' : 'Hold to Speak'}
                     </span>
                   </div>
                 </Button>

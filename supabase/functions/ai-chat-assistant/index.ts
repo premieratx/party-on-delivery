@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
@@ -12,15 +13,54 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversation, questionCount, context } = await req.json();
-    const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
-
-    if (!openRouterApiKey) {
-      throw new Error('OpenRouter API key not configured');
+    const { message, conversation, questionCount, context, adminMode = false } = await req.json();
+    
+    // Initialize Supabase client for product data access
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Check for admin mode activation
+    const isAdminActivation = message.toLowerCase().includes('schwing');
+    const isAdminMode = adminMode || isAdminActivation;
+    
+    // If schwing is detected, switch to admin mode
+    if (isAdminActivation && !adminMode) {
+      return new Response(JSON.stringify({
+        response: "🔓 Admin mode activated! You can now ask me about:\n• Product knowledge and training data\n• What I know about specific categories\n• How to improve my responses\n• Training data gaps\n\nWhat would you like to know about my training?",
+        updatedConversation: conversation,
+        adminMode: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Enhanced system prompt with comprehensive product knowledge and business context
-    const systemPrompt = `You are an expert AI party planning assistant for Party On Delivery, Austin's premier alcohol delivery service. You specialize in curating the perfect drink selection for any occasion.
+    const systemPrompt = isAdminMode ? 
+      `You are in ADMIN MODE for Party On Delivery's AI assistant. Your role is to help the admin understand and improve your training data and knowledge base.
+
+ADMIN CAPABILITIES:
+- Explain your knowledge about products, categories, and training data
+- Identify gaps in your knowledge that could be improved
+- Suggest training improvements based on questions
+- Be transparent about what you know and don't know
+- Help optimize the conversation flow and product recommendations
+
+CURRENT TRAINING DATA SUMMARY:
+- Product Categories: Craft Beer (1000+ local/national), Wine (500+ bottles), Premium Spirits (800+ bottles), Mixers & Garnishes, Party Supplies, Non-Alcoholic
+- Austin Local Focus: Lazarus Brewing, Austin Beerworks, ABGB, local distilleries  
+- Event Types: Birthday, wedding, corporate, graduation, holiday, BBQ, cocktail parties, housewarming
+- Guest Count Handling: 1-500+ people with scalable recommendations
+- Budget Ranges: Low ($50-150), Medium ($150-400), High ($400-1000+)
+- Conversation Flow: Occasion → Guest Count → Preferences → Budget → Recommendations
+
+REAL PRODUCT DATA ACCESS:
+- I have access to live Shopify product data including names, prices, descriptions, categories
+- I can recommend specific brands and products from our actual inventory
+- Product data includes: ${await getProductDataSummary(supabase)}
+
+Answer admin questions about training data, knowledge gaps, and improvement suggestions.` :
+      `You are an expert AI party planning assistant for Party On Delivery, Austin's premier alcohol delivery service. You specialize in curating the perfect drink selection for any occasion.
 
 BUSINESS CONTEXT:
 - Party On Delivery serves Austin, TX with same-day alcohol delivery
@@ -45,6 +85,9 @@ PRODUCT CATEGORIES WE OFFER:
 - Party Supplies: Ice, cups, napkins, bottle openers
 - Non-Alcoholic: Sodas, sparkling water, energy drinks
 
+LIVE PRODUCT KNOWLEDGE:
+${await getProductSamples(supabase)}`
+
 GATHERING STRATEGY:
 1. Identify the EXACT occasion (birthday, wedding, corporate, casual hangout, etc.)
 2. Determine precise guest count (affects quantities and variety)
@@ -54,24 +97,34 @@ GATHERING STRATEGY:
 6. Ask about timing and delivery logistics
 
 CONVERSATION RULES:
-- Remember ALL previous information shared (maintain perfect context)
-- Ask ONE focused question at a time
-- Use their name/details they've shared to personalize responses
-- Show expertise by suggesting specific products when appropriate
-- If they mention specific brands/types, remember and reference them
-- When you have 4+ key details, offer to create recommendations
+${isAdminMode ? 
+  `- Answer questions about training data and knowledge base
+  - Explain what you know about specific product categories
+  - Suggest improvements to conversation flow or product knowledge
+  - Be detailed and technical when explaining your capabilities
+  - Help identify knowledge gaps and training opportunities` :
+  `- Remember ALL previous information shared (maintain perfect context)
+  - Ask ONE focused question at a time
+  - Use their name/details they've shared to personalize responses
+  - Show expertise by suggesting specific products when appropriate
+  - If they mention specific brands/types, remember and reference them
+  - When you have 4+ key details, offer to create recommendations`}
 
-PERSONALITY: ${context?.agentTone === 'professional' ? 'Professional and knowledgeable' : 
+PERSONALITY: ${isAdminMode ? 'Detailed technical assistant focused on training analysis' :
+               context?.agentTone === 'professional' ? 'Professional and knowledgeable' : 
                context?.agentTone === 'casual' ? 'Friendly and laid-back' :
                context?.agentTone === 'luxury' ? 'Sophisticated and refined' :
-               'Enthusiastic and energetic'} party planning expert.
+               'Enthusiastic and energetic'} ${isAdminMode ? 'system analyst' : 'party planning expert'}.
 
-Based on their message, either:
-1. Extract new information and ask the next logical question
-2. If you have enough details (occasion + guest count + preferences), suggest creating recommendations
-3. Always acknowledge what they've told you and build on it
-
-Keep responses under 2 sentences and maintain the conversation flow naturally.`;
+${isAdminMode ? 
+  'Provide detailed analysis about training data, knowledge gaps, and suggestions for improvement.' :
+  `Based on their message, either:
+  1. Extract new information and ask the next logical question
+  2. If you have enough details (occasion + guest count + preferences), suggest creating recommendations
+  3. Always acknowledge what they've told you and build on it
+  
+  Keep responses under 2 sentences and maintain the conversation flow naturally.`}`;
+  }
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -211,7 +264,8 @@ Keep responses under 2 sentences and maintain the conversation flow naturally.`;
 
     return new Response(JSON.stringify({
       response: aiResponse,
-      updatedConversation
+      updatedConversation: isAdminMode ? conversation : updatedConversation,
+      adminMode: isAdminMode
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -227,3 +281,65 @@ Keep responses under 2 sentences and maintain the conversation flow naturally.`;
     });
   }
 });
+
+// Helper function to get product data summary for admin mode
+async function getProductDataSummary(supabase: any): Promise<string> {
+  try {
+    const { data: products, error } = await supabase
+      .from('shopify_products_cache')
+      .select('title, data')
+      .limit(10);
+    
+    if (error || !products) return 'Unable to access product data';
+    
+    return `${products.length} sample products loaded, including: ${products.map((p: any) => p.title).slice(0, 3).join(', ')}...`;
+  } catch (error) {
+    return 'Product data access error';
+  }
+}
+
+// Helper function to get product samples for conversation context
+async function getProductSamples(supabase: any): Promise<string> {
+  try {
+    const { data: products, error } = await supabase
+      .from('shopify_products_cache')
+      .select('title, data')
+      .limit(20);
+    
+    if (error || !products) return 'No products available';
+    
+    const beerProducts = products.filter((p: any) => 
+      p.title.toLowerCase().includes('beer') || 
+      p.title.toLowerCase().includes('ipa') ||
+      p.title.toLowerCase().includes('lager')
+    );
+    
+    const wineProducts = products.filter((p: any) => 
+      p.title.toLowerCase().includes('wine') || 
+      p.title.toLowerCase().includes('chardonnay') ||
+      p.title.toLowerCase().includes('cabernet')
+    );
+    
+    const spiritProducts = products.filter((p: any) => 
+      p.title.toLowerCase().includes('whiskey') || 
+      p.title.toLowerCase().includes('vodka') ||
+      p.title.toLowerCase().includes('tequila') ||
+      p.title.toLowerCase().includes('gin')
+    );
+    
+    let productSummary = '';
+    if (beerProducts.length > 0) {
+      productSummary += `\n- BEER: ${beerProducts.slice(0, 3).map((p: any) => p.title).join(', ')}`;
+    }
+    if (wineProducts.length > 0) {
+      productSummary += `\n- WINE: ${wineProducts.slice(0, 3).map((p: any) => p.title).join(', ')}`;
+    }
+    if (spiritProducts.length > 0) {
+      productSummary += `\n- SPIRITS: ${spiritProducts.slice(0, 3).map((p: any) => p.title).join(', ')}`;
+    }
+    
+    return productSummary || 'Loading product data...';
+  } catch (error) {
+    return 'Product data unavailable';
+  }
+}
