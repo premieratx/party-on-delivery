@@ -86,7 +86,7 @@ PRODUCT CATEGORIES WE OFFER:
 - Non-Alcoholic: Sodas, sparkling water, energy drinks
 
 LIVE PRODUCT KNOWLEDGE:
-${await getProductSamples(supabase)}`
+${await getProductSamples(supabase)}
 
 GATHERING STRATEGY (BE EFFICIENT):
 1. If they mention MULTIPLE pieces of info in one message, extract ALL of it
