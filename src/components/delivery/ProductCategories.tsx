@@ -95,16 +95,12 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }, [isLoading]);
 
   const fetchCollections = useCallback(async (showRetryMessage = true) => {
-    if (!isLoading && showRetryMessage) {
-      setIsLoading(true);
-    }
-    
     setError(null);
     
     try {
       console.log('ProductCategories: Fetching collections...');
       
-      let functionName = 'fetch-shopify-products-optimized';
+      let functionName = 'get-all-collections';
       let body = {};
       
       if (customSiteSlug) {
@@ -125,17 +121,25 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
         throw new Error('No collections data received');
       }
 
-      let collectionsToShow = result.collections;
+      let collectionsToShow = Array.isArray(result.collections) ? result.collections : [];
       
       if (customSiteSlug && result.customSiteCollections) {
         const customSiteCollections = result.customSiteCollections;
-        collectionsToShow = result.collections.filter((collection: any) => 
-          customSiteCollections.includes(collection.handle)
+        collectionsToShow = collectionsToShow.filter((collection: any) => 
+          customSiteCollections.includes(collection?.handle)
         );
         console.log(`Filtered to ${collectionsToShow.length} collections for custom site:`, customSiteCollections);
       }
       
-      setCollections(collectionsToShow);
+      // Ensure collections have valid structure
+      const validCollections = collectionsToShow.filter((collection: any) => 
+        collection && collection.id && collection.title
+      ).map((collection: any) => ({
+        ...collection,
+        products: Array.isArray(collection.products) ? collection.products : []
+      }));
+      
+      setCollections(validCollections);
       setRetryCount(0);
       
     } catch (error: any) {
@@ -150,8 +154,6 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
           fetchCollections(false);
         }, retryDelay);
       }
-    } finally {
-      setIsLoading(false);
     }
   }, [customSiteSlug, autoRetryEnabled, retryCount]);
 
@@ -160,16 +162,18 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }, [fetchCollections]);
 
   const searchResults = useMemo(() => {
-    if (!searchQuery.trim() || !collections) return [];
+    if (!searchQuery.trim() || !Array.isArray(collections)) return [];
     
     const query = searchQuery.toLowerCase().trim();
-    const allProducts = collections.flatMap(collection => (collection?.products || []));
+    const allProducts = collections.flatMap(collection => 
+      Array.isArray(collection?.products) ? collection.products : []
+    );
     
     return allProducts.filter(product => 
       product?.title?.toLowerCase().includes(query) ||
       product?.description?.toLowerCase().includes(query) ||
       product?.vendor?.toLowerCase().includes(query) ||
-      product?.tags?.some(tag => tag?.toLowerCase().includes(query))
+      (Array.isArray(product?.tags) && product.tags.some(tag => tag?.toLowerCase().includes(query)))
     );
   }, [searchQuery, collections]);
 
@@ -180,12 +184,19 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
         title: 'Search Results',
         handle: 'search',
         description: `Showing results for "${searchQuery}"`,
-        products: searchResults || []
+        products: Array.isArray(searchResults) ? searchResults : []
       };
     }
     
-    const collection = collections && collections[selectedCategory];
-    return collection || { id: '', title: '', handle: '', products: [] };
+    if (!Array.isArray(collections) || collections.length === 0) {
+      return { id: '', title: '', handle: '', products: [] };
+    }
+    
+    const collection = collections[selectedCategory];
+    return collection ? {
+      ...collection,
+      products: Array.isArray(collection.products) ? collection.products : []
+    } : { id: '', title: '', handle: '', products: [] };
   }, [selectedCategory, collections, searchQuery, searchResults]);
 
   const handleProductClick = (product: Product) => {
@@ -311,16 +322,16 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
           
           {/* Category Tabs */}
           <div className="flex overflow-x-auto scrollbar-hide">
-            {(collections || []).map((collection, index) => (
+            {Array.isArray(collections) && collections.map((collection, index) => (
               <button
-                key={collection?.id || index}
+                key={collection?.id || `collection-${index}`}
                 onClick={() => setSelectedCategory(index)}
                 className={`flex-1 min-w-0 px-1 lg:px-3 py-2 text-xs lg:text-sm font-bold transition-all duration-200 relative ${
                   selectedCategory === index
                     ? 'text-primary border-b-2 border-primary bg-primary/5'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   } ${
-                    (collections?.length || 0) > 6 ? 'min-w-[120px] flex-shrink-0' : ''
+                    collections.length > 6 ? 'min-w-[120px] flex-shrink-0' : ''
                   }`}
               >
                 <span className="truncate block" title={collection?.title || 'Category'}>
@@ -377,8 +388,8 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
     );
   }
 
-  const showSearchResults = searchQuery.trim() && searchResults.length > 0;
-  const showNoResults = searchQuery.trim() && searchResults.length === 0;
+  const showSearchResults = searchQuery.trim() && Array.isArray(searchResults) && searchResults.length > 0;
+  const showNoResults = searchQuery.trim() && (!Array.isArray(searchResults) || searchResults.length === 0);
 
   return (
     <div className="w-full">
@@ -388,12 +399,12 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {showSearchResults && (
           <div className="mb-6">
             <h2 className="text-xl font-bold mb-4">Search Results for "{searchQuery}"</h2>
-            {searchResults.map(product => (
+            {Array.isArray(searchResults) && searchResults.map(product => (
               <div key={`container-${product.id}`} className="bg-muted/50 p-3 mx-2 mb-4 rounded-lg border-l-4 border-primary">
                 <h3 className="font-semibold text-foreground text-sm mb-1">{product.title}</h3>
                 <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{product.description}</p>
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-primary">${product.price.toFixed(2)}</span>
+                  <span className="font-bold text-primary">${product.price?.toFixed(2) || '0.00'}</span>
                   <Button size="sm" onClick={(e) => handleAddToCart(product, e)}>
                     Add to Cart
                   </Button>
@@ -418,8 +429,10 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </div>
 
               <div className={`grid gap-1.5 lg:gap-3 ${(selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'grid-cols-3 lg:grid-cols-8' : 'grid-cols-3 lg:grid-cols-6'} ${showSearch && searchQuery.trim() ? 'hidden' : ''} ${isSearchFocused ? 'condensed-grid' : ''}`}>
-                {(currentCollection?.products || []).map((product) => {
-                  const cartQuantity = getCartItemQuantity(product.id, product.variants?.[0]?.title);
+                {Array.isArray(currentCollection?.products) && currentCollection.products.map((product) => {
+                  const cartQuantity = getCartItemQuantity(product?.id, product?.variants?.[0]?.title);
+                  
+                  if (!product?.id || !product?.title) return null;
                   
                   return (
                     <Card
