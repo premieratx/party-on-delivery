@@ -124,8 +124,8 @@ ${isAdminMode ?
   2. If you have enough details (occasion + guest count + preferences), suggest creating recommendations
   3. Always acknowledge what they've told you and build on it
   
-  Keep responses under 20 words. Be concise and direct.`}`;
-  }
+  Respond naturally with 2-4 complete sentences. Be helpful and engaging while gathering the information needed.`}`;
+   }
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openaiApiKey) {
@@ -144,8 +144,8 @@ ${isAdminMode ?
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        temperature: 0.8,
-        max_tokens: 50
+        temperature: 0.7,
+        max_tokens: 800
       }),
     });
 
