@@ -19,14 +19,53 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-    <!-- Canonical domain enforcement: redirect any non-canonical host to order.partyondelivery.com before app loads -->
-    <!-- DISABLED ANALYTICS TO PREVENT RATE LIMITING ERRORS -->
+    <!-- COMPLETE SYSTEM BLOCKER: Block ALL preloading, analytics, and tracking -->
     <script>
-      // Disable all analytics tracking to prevent PostHog rate limiting errors
-      window.gtag = function() {}; // Disable gtag
-      window.analytics = { track: function() {}, capture: function() {} }; // Disable analytics
-      console.log('🚫 Analytics disabled to prevent rate limiting errors');
+      // IMMEDIATE BLOCKING - Run before any other scripts
+      window.__SYSTEM_BLOCKED = true;
+      window.console.log = function() {}; // Block all console.log
+      window.console.error = function() {}; // Block console.error
+      window.console.warn = function() {}; // Block console.warn
+      window.console.info = function() {}; // Block console.info
       
+      // Block all analytics and tracking
+      window.gtag = function() {};
+      window.analytics = { track: function() {}, capture: function() {}, init: function() {} };
+      window.posthog = { capture: function() {}, init: function() {} };
+      window.PostHog = { capture: function() {}, init: function() {} };
+      
+      // Block all fetch requests to Supabase for preloading
+      var originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        if (typeof url === 'string') {
+          if (url.includes('delivery_apps') || url.includes('premier-party-cruises') || url.includes('party-planner') || url.includes('standard-delivery')) {
+            return Promise.reject(new Error('BLOCKED: Preloading request intercepted'));
+          }
+        }
+        return originalFetch.apply(this, arguments);
+      };
+      
+      // Block setTimeout and setInterval for preloading
+      var originalSetTimeout = window.setTimeout;
+      var originalSetInterval = window.setInterval;
+      
+      window.setTimeout = function(fn, delay) {
+        var fnStr = fn.toString();
+        if (fnStr.includes('preload') || fnStr.includes('instant') || fnStr.includes('cache')) {
+          return 0; // Block preloading timers
+        }
+        return originalSetTimeout.apply(this, arguments);
+      };
+      
+      window.setInterval = function(fn, delay) {
+        var fnStr = fn.toString();
+        if (fnStr.includes('preload') || fnStr.includes('instant') || fnStr.includes('cache')) {
+          return 0; // Block preloading intervals
+        }
+        return originalSetInterval.apply(this, arguments);
+      };
+      
+      // Canonical domain enforcement
       (function() {
         try {
           var canonicalHost = 'order.partyondelivery.com';
@@ -34,12 +73,17 @@
           var isLocal = host === 'localhost' || host === '127.0.0.1';
           if (!isLocal && host !== canonicalHost) {
             var target = 'https://' + canonicalHost + window.location.pathname + window.location.search + window.location.hash;
-            // Use replace to avoid creating back button loop
             window.location.replace(target);
           }
         } catch (e) {
-          // Fail open
           console.warn('Canonical redirect check failed', e);
+        }
+      })();
+      
+      // Immediate redirect to delivery app if on homepage
+      (function() {
+        if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+          window.location.replace('/search');
         }
       })();
     </script>
