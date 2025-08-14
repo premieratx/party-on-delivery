@@ -13,6 +13,7 @@ import RequireAdmin from "@/components/admin/RequireAdmin";
 // Core pages that load immediately
 import Index from "./pages/Index";
 import VoiceChat from "./pages/VoiceChat";
+import PartyPlanningAgent from "./pages/PartyPlanningAgent";
 import NotFound from "./pages/NotFound";
 import { getInstantProducts } from "@/utils/instantCacheClient";
 
