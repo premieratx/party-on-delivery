@@ -96,18 +96,8 @@ export class InstantAppLoader {
   async initializePreloading(): Promise<void> {
     console.log('🚀 Initializing instant app loader...');
     
-    // Preload common apps in background
-    const commonApps = [
-      'premier-party-cruises---official-alcohol-delivery-service',
-      'standard-delivery',
-      'party-planner'
-    ];
-
-    // Preload one at a time to avoid overwhelming the system
-    for (const app of commonApps) {
-      await this.preloadApp(app);
-      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
-    }
+    // No common apps to preload - only load apps when actually needed
+    // This prevents errors from trying to load non-existent delivery apps
   }
 
   // Clear cache when needed
@@ -121,10 +111,5 @@ export class InstantAppLoader {
 // Initialize on app load
 export const instantAppLoader = InstantAppLoader.getInstance();
 
-// Auto-initialize when imported
-if (typeof window !== 'undefined') {
-  // Initialize after a short delay to not block initial app load
-  setTimeout(() => {
-    instantAppLoader.initializePreloading();
-  }, 1000);
-}
+// Don't auto-initialize to prevent loading errors
+// Only load apps when actually needed

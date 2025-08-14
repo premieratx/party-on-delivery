@@ -130,16 +130,8 @@ class PerformanceManager {
   private preloadCriticalApps(): void {
     console.log('🚀 Preloading critical delivery apps...');
     
-    // Preload common delivery app configurations
-    const criticalApps = [
-      'premier-party-cruises---official-alcohol-delivery-service',
-      'standard-delivery',
-      'party-planner'
-    ];
-    
-    criticalApps.forEach(appSlug => {
-      this.preloadAppData(appSlug);
-    });
+    // No critical apps to preload - only load apps when actually needed
+    // This prevents errors from trying to load non-existent delivery apps
   }
 
   private async preloadAppData(appSlug: string): Promise<void> {
