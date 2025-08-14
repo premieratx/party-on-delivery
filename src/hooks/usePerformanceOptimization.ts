@@ -12,8 +12,8 @@ export function usePerformanceOptimization() {
   }, []);
 
   const optimizeElement = useCallback((element: HTMLElement) => {
-    if (ViewportOptimizer.isMobile()) {
-      TouchOptimizer.optimizeTouch(element);
+    if (ViewportOptimizer.isMobile) {
+      TouchOptimizer.optimizeTouch();
     }
   }, []);
 
@@ -24,8 +24,8 @@ export function usePerformanceOptimization() {
   return {
     optimizeElement,
     scheduleCleanup,
-    isMobile: ViewportOptimizer.isMobile(),
-    isTablet: ViewportOptimizer.isTablet(),
-    isDesktop: ViewportOptimizer.isDesktop()
+    isMobile: ViewportOptimizer.isMobile,
+    isTablet: ViewportOptimizer.isTablet,
+    isDesktop: ViewportOptimizer.isDesktop
   };
 }

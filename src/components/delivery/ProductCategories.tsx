@@ -112,7 +112,11 @@ const ProductCategories: React.FC<ProductCategoriesProps> = ({
       }
 
       if (!result?.success || !result?.collections) {
-        throw new Error('No collections data received');
+        // Return empty collections instead of throwing error to avoid retry loops
+        console.warn('No collections data received, using empty collections');
+        setCollections([]);
+        setRetryCount(0);
+        return;
       }
 
       // Transform the data to match expected format

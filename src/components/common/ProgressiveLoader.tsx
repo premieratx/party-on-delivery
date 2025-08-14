@@ -22,7 +22,7 @@ export function ProgressiveLoader({
     if (delay === 0) return;
 
     // Adjust delay based on network speed
-    const networkDelay = NetworkOptimizer.isSlowConnection() ? delay * 1.5 : delay;
+    const networkDelay = NetworkOptimizer.isSlowConnection ? delay * 1.5 : delay;
     
     const timer = setTimeout(() => {
       setIsReady(true);

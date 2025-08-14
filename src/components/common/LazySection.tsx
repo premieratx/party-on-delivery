@@ -23,9 +23,11 @@ export const LazySection: React.FC<LazySectionProps> = ({
     threshold
   });
 
+  const divRef = elementRef as React.MutableRefObject<HTMLDivElement>;
+
   return (
     <div 
-      ref={elementRef} 
+      ref={divRef} 
       className={className}
       style={{ minHeight }}
     >
@@ -51,8 +53,10 @@ export function withLazyLoading<T extends object>(
       threshold: 0.1
     });
 
+    const divRef = elementRef as React.MutableRefObject<HTMLDivElement>;
+
     return (
-      <div ref={elementRef}>
+      <div ref={divRef}>
         {isIntersecting ? (
           <Component {...(props as T)} ref={ref} />
         ) : (
