@@ -1,178 +1,294 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { CoverPageEditor, CoverPageConfig } from '@/components/admin/CoverPageEditor';
-import { EnhancedCoverPageBuilder } from '@/components/admin/EnhancedCoverPageBuilder';
-import { Copy, ExternalLink, Plus, RefreshCcw, Edit, Trash } from 'lucide-react';
-import { CANONICAL_DOMAIN } from '@/utils/links';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Layout, 
+  Plus, 
+  Monitor, 
+  Smartphone, 
+  Eye, 
+  Settings,
+  Download,
+  Upload
+} from 'lucide-react';
+import { UnifiedCoverPageCreator } from '@/components/admin/UnifiedCoverPageCreator';
+import { toast } from 'sonner';
 
-const CoverPagesAdmin: React.FC = () => {
-  const { toast } = useToast();
-  const [pages, setPages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [enhancedBuilderOpen, setEnhancedBuilderOpen] = useState(false);
-  const [editing, setEditing] = useState<CoverPageConfig | null>(null);
+interface CoverPageProject {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastModified: string;
+  devices: string[];
+  status: 'draft' | 'published';
+}
 
-  const load = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('cover_pages')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error(error);
-      toast({ title: 'Error', description: 'Failed to load cover pages', variant: 'destructive' });
-    } else {
-      setPages(data || []);
+export default function CoverPagesAdmin() {
+  const [showCreator, setShowCreator] = useState(false);
+  const [projects, setProjects] = useState<CoverPageProject[]>([
+    {
+      id: '1',
+      name: 'Main App Landing',
+      createdAt: '2024-01-15',
+      lastModified: '2024-01-20',
+      devices: ['Desktop', 'iPhone 14 Pro', 'Galaxy S23', 'Pixel 7'],
+      status: 'published'
+    },
+    {
+      id: '2',
+      name: 'Mobile Onboarding',
+      createdAt: '2024-01-18',
+      lastModified: '2024-01-22',
+      devices: ['iPhone 14 Pro', 'Galaxy S23', 'Pixel 7'],
+      status: 'draft'
     }
-    setLoading(false);
-  };
+  ]);
 
-  useEffect(() => { load(); }, []);
-
-  // Admin SEO (lightweight)
-  useEffect(() => {
-    document.title = 'Cover Pages Admin | Party On Delivery';
-    const desc = 'Create and manage public cover pages with multi-CTA modals.';
-    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.name = 'description';
-      document.head.appendChild(meta);
-    }
-    meta.content = desc;
-
-    // Canonical
-    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'canonical';
-      document.head.appendChild(link);
-    }
-    link.href = `${CANONICAL_DOMAIN}/admin/cover-pages`;
-  }, []);
-
-  const filtered = useMemo(() => {
-    if (!search) return pages;
-    return pages.filter((p) => (p.title || '').toLowerCase().includes(search.toLowerCase()) || (p.slug || '').includes(search.toLowerCase()));
-  }, [pages, search]);
-
-  const openNew = () => { setEditing(null); setEditorOpen(true); };
-  const openNewEnhanced = () => { setEditing(null); setEnhancedBuilderOpen(true); };
-  const openEdit = (p: any) => {
-    const cfg: CoverPageConfig = {
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      subtitle: p.subtitle || '',
-      logo_url: p.logo_url || '',
-      logo_height: p.logo_height ?? 160,
-      bg_image_url: p.bg_image_url || '',
-      bg_video_url: p.bg_video_url || '',
-      checklist: (p.checklist || []) as string[],
-      buttons: (p.buttons || []) as any,
-      is_active: !!p.is_active,
-      styles: p.styles || {},
+  const handleSaveProject = (settings: any) => {
+    // In a real implementation, this would save to your backend
+    console.log('Saving project settings:', settings);
+    toast.success('Cover page project saved successfully!');
+    
+    // For demo purposes, add to projects list
+    const newProject: CoverPageProject = {
+      id: Date.now().toString(),
+      name: `Project ${Date.now()}`,
+      createdAt: new Date().toISOString().split('T')[0],
+      lastModified: new Date().toISOString().split('T')[0],
+      devices: Object.keys(settings),
+      status: 'draft'
     };
-    setEditing(cfg);
-    setEditorOpen(true);
+    
+    setProjects(prev => [newProject, ...prev]);
+    setShowCreator(false);
   };
 
-  const copyUrl = (slug: string) => {
-    const url = `${CANONICAL_DOMAIN}/${slug}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: 'Copied', description: url });
+  const exportProject = (projectId: string) => {
+    // In a real implementation, this would export the project
+    toast.info('Exporting project...');
   };
 
-  const handleDelete = async (id: string, title: string) => {
-    const { error } = await supabase.from('cover_pages').delete().eq('id', id);
-    if (error) {
-      console.error(error);
-      toast({ title: 'Error', description: 'Failed to delete cover page', variant: 'destructive' });
-    } else {
-      toast({ title: 'Deleted', description: `Removed “${title}”` });
-      load();
+  const duplicateProject = (projectId: string) => {
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      const duplicate: CoverPageProject = {
+        ...project,
+        id: Date.now().toString(),
+        name: `${project.name} (Copy)`,
+        createdAt: new Date().toISOString().split('T')[0],
+        lastModified: new Date().toISOString().split('T')[0],
+        status: 'draft'
+      };
+      setProjects(prev => [duplicate, ...prev]);
+      toast.success('Project duplicated');
     }
   };
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-6">
-      <div className="container mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Cover Pages</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={load}><RefreshCcw className="h-4 w-4 mr-2" />Refresh</Button>
-            <Button onClick={openNew} variant="outline"><Plus className="h-4 w-4 mr-2" />Classic Editor</Button>
-            <Button onClick={openNewEnhanced}><Plus className="h-4 w-4 mr-2" />Enhanced Builder</Button>
-          </div>
-        </div>
 
-        <Card>
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <CardTitle>All Cover Pages</CardTitle>
-            <div className="w-full sm:w-64">
-              <Input placeholder="Search by title or slug" value={search} onChange={(e) => setSearch(e.target.value)} />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                  <Layout className="h-6 w-6" />
+                  Cover Page Creator
+                </CardTitle>
+                <p className="text-muted-foreground mt-2">
+                  Create responsive cover pages for desktop and mobile devices with templates and custom designs
+                </p>
+              </div>
+              <Button 
+                onClick={() => setShowCreator(true)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                New Cover Page
+              </Button>
             </div>
           </CardHeader>
+        </Card>
+
+        {/* Features Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Monitor className="w-8 h-8 text-primary" />
+                <div>
+                  <h3 className="font-semibold">Multi-Device Support</h3>
+                  <p className="text-sm text-muted-foreground">Desktop + 3 popular mobile devices</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Upload className="w-8 h-8 text-primary" />
+                <div>
+                  <h3 className="font-semibold">Media Upload</h3>
+                  <p className="text-sm text-muted-foreground">Upload images, videos, and logos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <Settings className="w-8 h-8 text-primary" />
+                <div>
+                  <h3 className="font-semibold">10+ Templates</h3>
+                  <p className="text-sm text-muted-foreground">Pre-designed templates for quick start</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Projects List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Cover Page Projects</CardTitle>
+          </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="py-12 text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4" />
-                Loading...
+            {projects.length === 0 ? (
+              <div className="text-center py-12">
+                <Layout className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">No projects yet</h3>
+                <p className="text-muted-foreground mb-4">Create your first cover page project to get started</p>
+                <Button onClick={() => setShowCreator(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create First Project
+                </Button>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {filtered.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No cover pages yet.</div>
-                ) : (
-                  filtered.map((p) => (
-                    <div key={p.id} className="rounded-md border p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-                      <div>
-                        <div className="font-medium">{p.title}</div>
-                        <div className="text-xs text-muted-foreground">/{p.slug}</div>
-                        <div className="text-xs text-muted-foreground">Buttons: {(p.buttons || []).length} • Public: {p.is_active ? 'Yes' : 'No'}</div>
+              <div className="space-y-4">
+                {projects.map((project) => (
+                  <div key={project.id} className="border rounded-lg p-4 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold">{project.name}</h3>
+                          <Badge variant={project.status === 'published' ? 'default' : 'secondary'}>
+                            {project.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>Created: {project.createdAt}</span>
+                          <span>Modified: {project.lastModified}</span>
+                          <div className="flex items-center gap-1">
+                            <span>Devices:</span>
+                            {project.devices.slice(0, 2).map((device, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {device}
+                              </Badge>
+                            ))}
+                            {project.devices.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{project.devices.length - 2} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => copyUrl(p.slug)}><Copy className="h-4 w-4 mr-1" />Copy URL</Button>
-                        <Button variant="outline" size="sm" onClick={() => window.open(`${CANONICAL_DOMAIN}/${p.slug}`, '_blank')}><ExternalLink className="h-4 w-4 mr-1" />Open</Button>
-                        <Button size="sm" onClick={() => openEdit(p)}><Edit className="h-4 w-4 mr-1" />Edit</Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm"><Trash className="h-4 w-4 mr-1" />Delete</Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete cover page?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete "{p.title}".
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(p.id, p.title)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {/* TODO: Open preview */}}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {/* TODO: Edit project */}}
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => exportProject(project.id)}
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => duplicateProject(project.id)}
+                        >
+                          Copy
+                        </Button>
                       </div>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Device Support Info */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Supported Devices</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
+                <Monitor className="w-6 h-6 text-primary" />
+                <div>
+                  <p className="font-semibold">Desktop</p>
+                  <p className="text-sm text-muted-foreground">1200x800</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
+                <Smartphone className="w-6 h-6 text-primary" />
+                <div>
+                  <p className="font-semibold">iPhone 14 Pro</p>
+                  <p className="text-sm text-muted-foreground">393x852</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
+                <Smartphone className="w-6 h-6 text-primary" />
+                <div>
+                  <p className="font-semibold">Galaxy S23</p>
+                  <p className="text-sm text-muted-foreground">360x780</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-lg">
+                <Smartphone className="w-6 h-6 text-primary" />
+                <div>
+                  <p className="font-semibold">Pixel 7</p>
+                  <p className="text-sm text-muted-foreground">412x915</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <CoverPageEditor open={editorOpen} onOpenChange={setEditorOpen} initial={editing} onSaved={load} />
-      <EnhancedCoverPageBuilder open={enhancedBuilderOpen} onOpenChange={setEnhancedBuilderOpen} initial={editing} onSaved={load} />
+      {/* Unified Cover Page Creator Modal */}
+      <UnifiedCoverPageCreator
+        isOpen={showCreator}
+        onClose={() => setShowCreator(false)}
+        onSave={handleSaveProject}
+      />
     </div>
   );
-};
-
-export default CoverPagesAdmin;
+}

@@ -19,8 +19,10 @@
   color: hsl(var(--primary)) !important;
 }
 
-/* Style price elements with attribute selectors */
-[class*="price"] {
+/* Style price elements with CSS attribute selectors */
+.price-display,
+.product-price,
+.text-primary {
   color: hsl(var(--primary)) !important;
 }
 
