@@ -4,7 +4,6 @@ import { DeliveryCart } from '@/components/delivery/DeliveryCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { CustomDeliveryCoverModal } from '@/components/custom-delivery/CustomDeliveryCoverModal';
@@ -17,9 +16,6 @@ const COVER_SHOWN_SESSION_KEY = 'homepage_cover_shown_session';
 const Index = () => {
   // Enable wake lock to keep screen on during app usage
   useWakeLock();
-  
-  // Use optimized product loading with immediate start
-  const { refreshProducts, loading: productsLoading } = useOptimizedProductLoader();
   
   // Use unified cart system
   const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();

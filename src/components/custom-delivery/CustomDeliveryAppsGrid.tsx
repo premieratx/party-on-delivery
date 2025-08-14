@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Grid3X3, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,7 +78,7 @@ export const CustomDeliveryAppsGrid: React.FC<CustomDeliveryAppsGridProps> = ({
 
         {/* Apps Grid */}
         <div className={`grid gap-4 ${
-          isMobile ? 'grid-cols-3' : 'grid-cols-4 sm:grid-cols-6 lg:grid-cols-8'
+          isMobile ? 'grid-cols-2' : 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6'
         }`}>
           {apps.map((app) => (
             <Card
