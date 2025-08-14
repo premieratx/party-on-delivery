@@ -39,11 +39,12 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import AITestingControl from '@/components/AITestingControl';
-import TestGHLIntegration from '@/components/TestGHLConnection';
+import TestGHLConnection from '@/components/TestGHLConnection';
 import CleanupUserData from '@/components/CleanupUserData';
 import { SystemTestingSuite } from '@/components/SystemTestingSuite';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { UnifiedCoverPostCheckoutBuilder } from '@/components/admin/UnifiedCoverPostCheckoutBuilder';
+import { EnhancedQuoteBuilder } from '@/components/quote/EnhancedQuoteBuilder';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 
 export default function AdminDashboard() {
@@ -633,34 +634,22 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="ghl-setup" className="space-y-4">
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium">GoHighLevel/SMS Integration Setup</h3>
-                <p className="text-sm text-muted-foreground">Configure SMS and email notifications through GoHighLevel</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium">GoHighLevel/SMS Integration</h3>
+                  <p className="text-sm text-muted-foreground">Test GHL connection and confirm it's working</p>
+                </div>
+                <TestGHLConnection />
               </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>GHL API Configuration</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    To enable SMS and email notifications, you need to configure your GoHighLevel API key.
-                  </p>
-                  
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Setup Instructions:</h4>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      <li>Log in to your GoHighLevel account</li>
-                      <li>Go to Settings → Integrations → API</li>
-                      <li>Generate a new API key with SMS permissions</li>
-                      <li>Enter the API key below to enable the integration</li>
-                    </ol>
-                  </div>
-                  
-                  <TestGHLIntegration />
-                </CardContent>
-              </Card>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium">Enhanced Quote Builder</h3>
+                  <p className="text-sm text-muted-foreground">Advanced quote system with toggles, quantities, and categories</p>
+                </div>
+                <EnhancedQuoteBuilder eventType="Wedding Package Quote" />
+              </div>
             </div>
           </TabsContent>
 

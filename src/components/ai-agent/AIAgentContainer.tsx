@@ -85,39 +85,19 @@ export const AIAgentContainer: React.FC<AIAgentContainerProps> = ({
   const [agentConfig, setAgentConfig] = useState<any>(null);
 
   const initializeAgent = async () => {
-    try {
-      // Load default agent configuration
-      const { data, error } = await supabase
-        .from('ai_assistant_configs')
-        .select('*')
-        .eq('is_default', true)
-        .single();
-
-      if (error || !data) {
-        // Fallback to basic configuration
-        const defaultConfig = {
-          name: 'Party Assistant',
-          voice: 'aria',
-          model: 'eleven_multilingual_v2',
-          systemPrompt: 'You are a helpful party planning assistant.',
-          greeting: "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!",
-          isDefault: true
-        };
-        setAgentConfig(defaultConfig);
-        setMessages([{ type: 'ai', content: defaultConfig.greeting }]);
-        speakMessageWithVoice(defaultConfig.greeting, defaultConfig.voice, defaultConfig.model);
-      } else {
-        setAgentConfig(data);
-        setMessages([{ type: 'ai', content: data.greeting }]);
-        speakMessageWithVoice(data.greeting, data.voice, data.model);
-      }
-    } catch (error) {
-      console.error('Error initializing agent:', error);
-      // Fallback
-      const welcomeMessage = "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!";
-      setMessages([{ type: 'ai', content: welcomeMessage }]);
-      speakMessage(welcomeMessage);
-    }
+    // Use default configuration - simplified approach
+    const defaultConfig = {
+      name: 'Party Assistant',
+      voice: 'aria',
+      model: 'eleven_multilingual_v2',
+      systemPrompt: 'You are a helpful party planning assistant. Help customers find the perfect drinks and supplies for their events.',
+      greeting: "Hi! I'm here to help you find the perfect drinks for your occasion. Tell me about your event!",
+      isDefault: true
+    };
+    
+    setAgentConfig(defaultConfig);
+    setMessages([{ type: 'ai', content: defaultConfig.greeting }]);
+    speakMessageWithVoice(defaultConfig.greeting, defaultConfig.voice, defaultConfig.model);
   };
 
   const startListening = () => {
