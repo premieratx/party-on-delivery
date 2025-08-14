@@ -26,6 +26,8 @@ import partyOnDeliveryLogo from '@/assets/party-on-delivery-logo.png';
 import { TypingIntro } from '@/components/common/TypingIntro';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
+import { haptic } from '@/utils/hapticFeedback';
+import { MobileBottomNav } from '@/components/common/MobileBottomNav';
 interface LocalCartItem extends CartItem {
   productId?: string;
 }
@@ -127,8 +129,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 const [flashIndex, setFlashIndex] = useState<number | null>(null);
 const isMobile = useIsMobile();
 const [hideTabs, setHideTabs] = useState(false);
+const [hideAllMenus, setHideAllMenus] = useState(false);
 const lastYRef = useRef(0);
 const [scrolled, setScrolled] = useState(false);
+const [showMobileCartCheckout, setShowMobileCartCheckout] = useState(false);
 
 // Enhanced search interface with smooth UI transitions
 const {
@@ -241,21 +245,68 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     };
   }, []);
 
-  // Mobile: enhanced tab hiding with smooth transitions
+  // Mobile: enhanced scroll behavior with menu hiding
   useEffect(() => {
     if (!isMobile) return;
+    
+    let startY = 0;
+    let isScrolling = false;
+    
+    const onTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].clientY;
+      isScrolling = false;
+    };
+    
+    const onTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0].clientY;
+      const deltaY = Math.abs(currentY - startY);
+      
+      // If movement is more than half screen height, consider it scrolling
+      if (deltaY > window.innerHeight * 0.5) {
+        isScrolling = true;
+        setHideAllMenus(true);
+      }
+    };
+    
+    const onTouchEnd = () => {
+      if (!isScrolling) {
+        setHideAllMenus(false);
+      }
+    };
+    
     const onScroll = () => {
       const y = window.scrollY;
       const last = lastYRef.current;
+      
+      // Show cart/checkout in tab area when past search bar
+      if (y > 200) {
+        setShowMobileCartCheckout(true);
+      } else {
+        setShowMobileCartCheckout(false);
+      }
+      
+      // Hide/show tabs based on scroll direction
       if (y > last + 10) {
         setHideTabs(true);
       } else if (y < last - 10 || y < 40) {
         setHideTabs(false);
+        setHideAllMenus(false);
       }
+      
       lastYRef.current = y;
     };
+    
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
     window.addEventListener('scroll', onScroll as any, { passive: true } as any);
-    return () => window.removeEventListener('scroll', onScroll as any);
+    
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('scroll', onScroll as any);
+    };
   }, [isMobile]);
 
   // Re-fetch collections when custom site data changes
@@ -504,6 +555,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
   const handleAddToCart = (product: ShopifyProduct, variant?: any) => {
     // Use onAddToCart to ensure product data is provided for CREATE
+    haptic.addToCart(); // Add haptic feedback
     const item = {
       id: product.id,
       title: product.title,
@@ -825,84 +877,111 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
 
         {/* Category Tabs - STICKY ON SCROLL */}
-        <div className={`sticky top-0 z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
-          <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`} >
-            {displayedTabs.map((step, index) => {
-              const isActive = selectedCategory === index;
-              const IconComponent = step.step === 0 ? Wine : step.step === 1 ? Beer : step.step === 2 ? Martini : step.step === 3 ? Package : Martini;
-              
-              return (
+        <div className={`sticky top-0 z-40 w-full px-1 md:px-4 py-3 bg-background/95 backdrop-blur-md border-b transition-all duration-200 ${shouldHideMenusCompletely || hideAllMenus ? 'opacity-0 pointer-events-none -translate-y-full' : ''}`}>
+          <div className={`flex flex-nowrap justify-center gap-px h-12 overflow-x-auto ${scrolled ? 'sm:h-16' : 'sm:h-20'}`}>
+            {/* Mobile: Show cart/checkout when scrolled, otherwise show tabs */}
+            {isMobile && showMobileCartCheckout ? (
+              <>
                 <button
                   type="button"
-                  key={step.handle}
-                  onClick={() => {
-                    setSelectedCategory(index);
-                    // When switching tabs, hide search results until user focuses search again
-                    setShowSearch(false);
-                    const targetCollection = collections.find(c => c.handle === step.handle);
-                    if (targetCollection) {
-                      // No need to fetch, collection already loaded
-                    }
-                    // Scroll to top for a clean view of the selected tab
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-2 rounded-none first:rounded-l-md last:rounded-r-md ${
-                    isActive 
-                      ? 'bg-primary/10 border-2 border-primary shadow-lg' 
-                      : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
-                  } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
-
+                  onClick={onOpenCart}
+                  className="flex-1 flex items-center justify-center h-full transition-all duration-300 bg-muted border border-muted-foreground/20 hover:bg-muted/80 rounded-l-md"
+                  aria-label="Open Cart"
                 >
-                  <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
-                    {/* Mobile layout: just title */}
-                    <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
-                      <div className={`text-[12px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
-                        isActive ? 'text-primary' : 'text-foreground'
-                      }`}>{step.title}</div>
-                    </div>
-                    
-                    {/* Desktop layout: large title centered */}
-                    <div className="hidden sm:block relative w-full h-full">
-                      <div className="flex items-center justify-center h-full gap-2">
-                        <div className={`font-bold ${scrolled ? 'text-lg' : 'text-xl'} text-center ${
-                          isActive ? 'text-primary' : 'text-foreground'
-                        }`}>{step.title}</div>
-                      </div>
-                    </div>
-                  </div>
+                  <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Cart</span>
+                    {cartItemCount > 0 && (
+                      <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </span>
                 </button>
-              );
-            })}
-            
-          {/* Append Cart/Checkout as part of tabs (desktop) */}
-          <button
-            type="button"
-            onClick={onOpenCart}
-            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40`}
-            aria-label="Open Cart"
-          >
-            <span className="inline-flex flex-col items-center gap-1 font-bold">
-              <span className="inline-flex items-center gap-1"><ShoppingCart className="w-4 h-4" /><span>Cart</span></span>
-              {cartItemCount > 0 && (
-                <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
-                  {cartItemCount}
-                </span>
-              )}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
-            disabled={cartItemCount === 0}
-            className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
-            aria-label="Checkout"
-          >
-            <span className="inline-flex flex-col items-center gap-1 font-bold">
-              <span>Checkout</span>
-              <CheckCircle className="w-4 h-4" />
-            </span>
-          </button>
-
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+                  disabled={cartItemCount === 0}
+                  className={`flex-1 flex items-center justify-center h-full transition-all duration-300 ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'} rounded-r-md`}
+                  aria-label="Checkout"
+                >
+                  <span className="inline-flex flex-col items-center gap-1 font-bold text-xs">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Checkout</span>
+                  </span>
+                </button>
+              </>
+            ) : (
+              <>
+                {displayedTabs.map((step, index) => {
+                  const isActive = selectedCategory === index;
+                  
+                  return (
+                    <button
+                      type="button"
+                      key={step.handle}
+                      onClick={() => {
+                        setSelectedCategory(index);
+                        setShowSearch(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={`relative overflow-hidden h-full transition-all duration-300 group flex-[0_1_auto] shrink min-w-[56px] px-2 rounded-none first:rounded-l-md last:rounded-r-md ${
+                        isActive 
+                          ? 'bg-primary/10 border-2 border-primary shadow-lg' 
+                          : 'bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40'
+                      } ${flashIndex === index ? 'ring-2 ring-primary animate-[pulse_0.6s_ease-in-out]' : ''}`}
+                    >
+                      <div className="relative z-10 h-full flex flex-col justify-center items-center text-center p-2">
+                        {/* Mobile layout: just title */}
+                        <div className="sm:hidden flex flex-col items-center justify-center h-full px-1">
+                          <div className={`text-[12px] font-bold leading-[1rem] tracking-tight text-center whitespace-normal break-words ${
+                            isActive ? 'text-primary' : 'text-foreground'
+                          }`}>{step.title}</div>
+                        </div>
+                        
+                        {/* Desktop layout: large title centered */}
+                        <div className="hidden sm:block relative w-full h-full">
+                          <div className="flex items-center justify-center h-full gap-2">
+                            <div className={`font-bold ${scrolled ? 'text-lg' : 'text-xl'} text-center ${
+                              isActive ? 'text-primary' : 'text-foreground'
+                            }`}>{step.title}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+                
+                {/* Desktop: Cart/Checkout as part of tabs */}
+                <button
+                  type="button"
+                  onClick={onOpenCart}
+                  className="hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-none bg-muted border border-muted-foreground/20 hover:bg-muted/80 hover:border-muted-foreground/40"
+                  aria-label="Open Cart"
+                >
+                  <span className="inline-flex flex-col items-center gap-1 font-bold">
+                    <span className="inline-flex items-center gap-1"><ShoppingCart className="w-4 h-4" /><span>Cart</span></span>
+                    {cartItemCount > 0 && (
+                      <span className="rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none">
+                        {cartItemCount}
+                      </span>
+                    )}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (cartItemCount > 0) { onProceedToCheckout(); } }}
+                  disabled={cartItemCount === 0}
+                  className={`hidden sm:flex items-center justify-center h-full transition-all duration-300 group flex-none sm:basis-20 px-2 rounded-r-md rounded-l-none ${cartItemCount > 0 ? 'bg-success text-success-foreground hover:bg-success/90 checkout-blink' : 'bg-muted text-muted-foreground cursor-not-allowed'}`}
+                  aria-label="Checkout"
+                >
+                  <span className="inline-flex flex-col items-center gap-1 font-bold">
+                    <span>Checkout</span>
+                    <CheckCircle className="w-4 h-4" />
+                  </span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -939,8 +1018,8 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
 
       </div>
 
-      {/* Section Heading with functional arrows - hidden during cover/start screens - NOT STICKY */}
-      {!shouldHideMenusCompletely && selectedCollection && (
+      {/* Section Heading - Scrolls away (NOT STICKY) */}
+      {!shouldHideMenusCompletely && !hideAllMenus && selectedCollection && (
         <div className="max-w-7xl mx-auto px-4 pb-4">
           <div className="flex items-center justify-center gap-4">
             {selectedCategory !== 0 && (
@@ -1308,6 +1387,15 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         selectedVariant={lightboxProduct ? lightboxProduct.variants.find(v => v.id === (selectedVariants[lightboxProduct.id] || lightboxProduct.variants[0]?.id)) || lightboxProduct.variants[0] : undefined}
         onProceedToCheckout={onProceedToCheckout}
        />
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav
+        cartItemCount={cartItemCount}
+        onOpenCart={onOpenCart}
+        onProceedToCheckout={onProceedToCheckout}
+        onOpenSearch={() => setShowSearch(true)}
+        isVisible={true}
+      />
      </div>
    );
  };

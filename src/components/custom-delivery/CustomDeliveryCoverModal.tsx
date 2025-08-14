@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import partyLogo from '@/assets/party-on-delivery-logo.svg';
 import backgroundImage from '@/assets/old-fashioned-bg.jpg';
 import { ImageOptimizer } from '@/utils/imageOptimizer';
+import { haptic } from '@/utils/hapticFeedback';
 
 
 interface CoverFeature {
@@ -71,15 +72,20 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
     }));
     setSparkles(items);
   }, []);
-  // control sparkle and CTA animations
+  // control sparkle and CTA animations + haptic feedback
   React.useEffect(() => {
+    // Trigger haptic feedback when cover loads
+    if (open) {
+      haptic.vibrate(50);
+    }
+    
     const t = setTimeout(() => setShowSparkle(false), 2000);
     const p = setTimeout(() => setEnablePulse(true), 1000); // start pulse after initial sequence
     return () => {
       clearTimeout(t);
       clearTimeout(p);
     };
-  }, []);
+  }, [open]);
 
   // slow-motion playback for background video
   React.useEffect(() => {
@@ -137,10 +143,10 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
       testVideo.removeEventListener('canplaythrough', ready);
     };
   }, [backgroundVideoUrl]);
-  // Animation sequencing setup
+  // Animation sequencing setup - faster timing (1/3 speed per line)
   const visibleChecklist = (checklistItems || []).filter(Boolean).slice(0, 5);
   const steps = Math.max(visibleChecklist.length - 1, 1);
-  const perStep = visibleChecklist.length > 1 ? 2 / (visibleChecklist.length - 1) : 0; // total 2s flow for list
+  const perStep = visibleChecklist.length > 1 ? 0.33 : 0; // 1/3 second per line
   const logoDelay = 0;
   const titleDelay = 0.2;
   const subtitleDelay = 0.4;
@@ -295,6 +301,7 @@ export const CustomDeliveryCoverModal: React.FC<CustomDeliveryCoverModalProps> =
                     className={`w-full h-11 sm:h-12 rounded-full text-xl sm:text-2xl font-semibold shadow-lg bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90 ${enablePulse ? 'animate-[pulse_1.4375s_cubic-bezier(0.4,0,0.6,1)_infinite]' : ''}`}
                     onClick={(e) => {
                       e.stopPropagation();
+                      haptic.vibrate(50); // Add haptic feedback
                       onOpenChange(false);
                       onStartOrder?.();
                     }}

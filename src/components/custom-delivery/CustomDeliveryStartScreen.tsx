@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Search } from 'lucide-react';
+import { haptic } from '@/utils/hapticFeedback';
 interface CustomDeliveryStartScreenProps {
   appName: string;
   title?: string;
@@ -74,7 +75,10 @@ export function CustomDeliveryStartScreen({
         <CardContent className="space-y-3 pb-4">
           {/* Start Order button */}
           <Button 
-            onClick={onStartOrder}
+            onClick={() => {
+              haptic.vibrate(50);
+              onStartOrder();
+            }}
             className="w-full h-12 text-base"
             variant="default"
             style={{ backgroundColor: primaryColor || undefined }}
@@ -85,7 +89,10 @@ export function CustomDeliveryStartScreen({
 
           {/* Search Products button */}
           <Button 
-            onClick={onSearchProducts}
+            onClick={() => {
+              haptic.vibrate(50);
+              onSearchProducts();
+            }}
             className="w-full h-12 text-base"
             variant="secondary"
           >
@@ -95,7 +102,10 @@ export function CustomDeliveryStartScreen({
           
           {/* Go Home button */}
           <Button 
-            onClick={onGoHome}
+            onClick={() => {
+              haptic.vibrate(50);
+              onGoHome();
+            }}
             className="w-full h-12 text-base"
             variant="outline"
           >

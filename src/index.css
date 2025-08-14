@@ -300,12 +300,26 @@ All colors MUST be HSL.
   }
 }
 
-/* Checkout blink animation */
-@keyframes checkout-blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0.7; }
+/* Checkout button blink animation */
+.checkout-blink {
+  animation: checkout-pulse 1.5s ease-in-out infinite;
 }
 
-.animate-checkout-blink {
-  animation: checkout-blink 1.5s infinite;
+@keyframes checkout-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+  }
+}
+
+/* Mobile green circle size reduction */
+@media (max-width: 768px) {
+  .grid-cols-3 .bg-primary:not(.badge):not(.button) {
+    transform: scale(0.7);
+  }
 }
