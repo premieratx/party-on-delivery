@@ -113,33 +113,7 @@
             return element;
           };
           
-          // EXTREME FETCH BLOCKING
-          if (window.fetch && !window.fetch._nuclearBlocked) {
-            const originalFetch = window.fetch;
-            window.fetch = function(...args) {
-              const url = args[0];
-              if (typeof url === 'string') {
-                // Block EVERYTHING suspicious
-                if (url.includes('delivery_apps') || 
-                    url.includes('party-planner') || 
-                    url.includes('premier-party-cruises') ||
-                    url.includes('standard-delivery') ||
-                    url.includes('instant-product-cache') ||
-                    url.includes('lightning-sync') ||
-                    url.includes('get-all-collections') ||
-                    url.includes('preload') ||
-                    url.includes('fetch-shopify-products') ||
-                    url.includes('fetchShopifyProducts') ||
-                    url.includes('app-config') ||
-                    url.includes('delivery_app_variations')) {
-                  console.log('🚫🚫🚫 NUCLEAR FETCH BLOCK:', url);
-                  return Promise.reject(new Error('NUCLEAR FETCH BLOCKED: ' + url));
-                }
-              }
-              return originalFetch.apply(this, args);
-            };
-            window.fetch._nuclearBlocked = true;
-          }
+          // FETCH BLOCKING REMOVED - ALLOWING NORMAL APP OPERATION
           
           // AGGRESSIVE CONSOLE BLOCKING
           if (!window.console._nuclearBlocked) {

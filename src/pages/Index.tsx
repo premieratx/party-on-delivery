@@ -6,6 +6,7 @@ const Index = () => {
 
   useEffect(() => {
     // Load the homepage delivery app (Premier Party Cruises is marked as homepage)
+    console.log('🔄 Index: Loading homepage delivery app');
     navigate('/app/premier-party-cruises---official-alcohol-delivery-service', { replace: true });
   }, [navigate]);
 
