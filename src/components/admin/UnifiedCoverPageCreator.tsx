@@ -333,7 +333,7 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
       opacity: settings.opacity / 100
     };
 
-    const containerClass = `relative ${device.className} h-full min-h-[400px] flex flex-col justify-center items-center text-center p-8 overflow-hidden`;
+    const containerClass = `relative ${device.className} flex flex-col justify-center items-center text-center p-8 overflow-hidden`;
     const alignmentClass = settings.layout === 'left' ? 'items-start text-left' :
                           settings.layout === 'right' ? 'items-end text-right' :
                           'items-center text-center';
