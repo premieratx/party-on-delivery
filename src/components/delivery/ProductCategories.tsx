@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus } from 'lucide-react';
 import { VideoBackground } from '@/components/common/VideoBackground';
 import { TypingIntro } from '@/components/common/TypingIntro';
+import { DeliveryAppDropdown } from '@/components/admin/DeliveryAppDropdown';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface Collection {
@@ -156,6 +157,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         style={{ backgroundImage: `url(${bgImage})` }}
       >
         <div className="absolute inset-0 bg-black/50" />
+        
+        {/* Delivery App Dropdown */}
+        <div className="absolute top-4 left-4 z-20">
+          <DeliveryAppDropdown />
+        </div>
+        
         <div className="relative z-10 flex items-center justify-center h-full">
           <div className="text-center text-white px-4 max-w-4xl">
             {logoUrl && (
