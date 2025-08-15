@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { OptimizedWhiteLabelApp } from '@/components/delivery/OptimizedWhiteLabelApp';
+import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -112,9 +112,14 @@ const Index = () => {
   }
 
   return (
-    <OptimizedWhiteLabelApp
-      appConfig={appConfig}
-      onCheckout={handleCheckout}
+    <ProductCategories
+      appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
+      heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
+      heroSubheading="Satisfaction Guaranteed, On-Time Delivery"
+      heroScrollingText="Let's Get It"
+      logoUrl={appConfig?.logo_url}
+      collectionsConfig={appConfig?.collections_config}
+      cartItemCount={cartItems.length}
     />
   );
 };

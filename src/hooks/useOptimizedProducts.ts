@@ -35,32 +35,49 @@ export function useOptimizedProducts(options: UseOptimizedProductsOptions = {}) 
   const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchCollections = useCallback(async () => {
-    console.log('🚫 Collections loading DISABLED - no preloading');
-    setCollections([]);
-    setProducts([]);
-    setLoading(false);
+    console.log('🔄 Loading collections and products...');
+    setLoading(true);
     setError(null);
-    setHasMore(false);
+    
+    try {
+      // Use instant cache for fast loading
+      const response = await fetch('/api/instant-product-cache');
+      if (!response.ok) throw new Error('Failed to fetch products');
+      
+      const data = await response.json();
+      setCollections(data.collections || []);
+      setProducts(data.products || []);
+      setHasMore(false);
+    } catch (err) {
+      console.error('Error loading collections:', err);
+      setError('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const searchProducts = useCallback(async () => {
-    console.log('🚫 Product search DISABLED');
-    return [];
-  }, []);
+  const searchProducts = useCallback(async (query: string) => {
+    console.log('🔍 Searching products for:', query);
+    return products.filter(p => 
+      p.title.toLowerCase().includes(query.toLowerCase()) ||
+      p.description?.toLowerCase().includes(query.toLowerCase())
+    );
+  }, [products]);
 
-  const getProductsByCollection = useCallback(async () => {
-    console.log('🚫 Products by collection DISABLED');
-    return [];
-  }, []);
+  const getProductsByCollection = useCallback(async (handle: string) => {
+    console.log('📦 Getting products for collection:', handle);
+    const collection = collections.find(c => c.handle === handle);
+    return collection?.products || [];
+  }, [collections]);
 
   const loadMore = useCallback(async () => {
-    console.log('🚫 Load more DISABLED');
+    console.log('📄 Load more requested');
+    // Implement pagination if needed
   }, []);
 
   useEffect(() => {
-    // Do nothing - all loading disabled
-    setError('Collections loading disabled to prevent preloading issues');
-  }, []);
+    fetchCollections();
+  }, [fetchCollections]);
 
   return {
     products,

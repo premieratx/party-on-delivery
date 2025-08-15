@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { Button } from '@/components/ui/button';
@@ -79,15 +80,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   showSearch = true,
   maxProducts = 50
 }) => {
-  const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSearchTab, setIsSearchTab] = useState(false);
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  const { products, collections, loading, error } = useOptimizedProductLoader();
 
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
@@ -106,30 +105,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return DEFAULT_COLLECTIONS;
   }, [collectionsConfig]);
 
-  // Mock products for now (would normally fetch from Shopify)
-  const mockProducts = useMemo(() => [
-    {
-      id: 'mock-1',
-      title: 'Premium Whiskey',
-      price: 45.99,
-      image: bgImage,
-      variants: [{ id: 'var-1', title: 'Default' }]
-    },
-    {
-      id: 'mock-2', 
-      title: 'Craft Beer Pack',
-      price: 24.99,
-      image: bgImage,
-      variants: [{ id: 'var-2', title: 'Default' }]
-    },
-    {
-      id: 'mock-3',
-      title: 'Hard Seltzer Mix',
-      price: 18.99,
-      image: bgImage,
-      variants: [{ id: 'var-3', title: 'Default' }]
-    }
-  ], []);
+  // Get products for current tab
+  const currentTabProducts = useMemo(() => {
+    const currentTab = tabs[selectedCategory];
+    if (!currentTab || currentTab.isSearch) return [];
+    
+    // Find collection by handle
+    const collection = collections.find(c => c.handle === currentTab.handle);
+    return collection?.products || [];
+  }, [collections, tabs, selectedCategory]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;
@@ -268,7 +252,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {mockProducts.map((product) => {
+            {currentTabProducts.slice(0, maxProducts).map((product) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
               return (
