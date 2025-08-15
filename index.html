@@ -27,19 +27,8 @@
       (function() {
         'use strict';
         
-        // SIMPLE CLEANUP - NO AGGRESSIVE BLOCKING
-        console.log('🧹 Simple page cleanup active');
-        
-        // Basic cleanup of analytics objects
-        try {
-          delete window.posthog;
-          delete window.PostHog;
-          delete window.__posthog;
-          delete window.analytics;
-          delete window.gtag;
-        } catch (e) {
-          // Silent cleanup
-        }
+        // MINIMAL CLEANUP - ONLY WHAT'S NECESSARY
+        console.log('🧹 Minimal cleanup active');
         
         // Domain redirect only
         try {
