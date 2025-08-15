@@ -96,7 +96,7 @@ const App = () => {
               <div className="pb-14">
                 <Suspense fallback={null}>
                   <Routes>
-                    {/* Core Routes - Debug logging */}
+                    {/* Core Routes - Main Delivery App as homepage */}
                     <Route path="/" element={<Index />} />
                     <Route path="/app/party-on-delivery" element={<DefaultDeliveryApp />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />

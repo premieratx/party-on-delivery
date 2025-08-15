@@ -1,18 +1,45 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { ProductCategories } from '@/components/delivery/ProductCategories';
+import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 
 const Index = () => {
-  const navigate = useNavigate();
+  console.log('🏠 Index: Loading Main Delivery App as homepage');
+  
+  const { addToCart, cartItems, updateQuantity, getTotalPrice } = useUnifiedCart();
 
-  useEffect(() => {
-    // Load the Main Delivery App as the homepage (database shows it's marked as homepage)
-    console.log('🔄 Index: Navigating to Main Delivery App (homepage)');
-    navigate('/app/main-delivery-app', { replace: true });
-  }, [navigate]);
+  const handleAddToCart = (item: any) => {
+    addToCart(item);
+  };
 
-  return <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="text-lg text-muted-foreground">Loading Main Delivery App...</div>
-  </div>;
+  const handleOpenCart = () => {
+    // Will be handled by BottomCartBar
+  };
+
+  const handleProceedToCheckout = () => {
+    window.location.href = '/checkout';
+  };
+
+  const handleGoHome = () => {
+    window.location.href = '/';
+  };
+
+  return (
+    <ProductCategories
+      appName="Austin's Premier Party Supply Delivery"
+      heroHeading="Austin's Premier Party Supply Delivery"
+      heroSubheading="Satisfaction Guaranteed, On-Time Delivery"
+      heroScrollingText="Let's Get It"
+      onAddToCart={handleAddToCart}
+      cartItemCount={cartItems.length}
+      onOpenCart={handleOpenCart}
+      cartItems={cartItems}
+      onUpdateQuantity={updateQuantity}
+      onProceedToCheckout={handleProceedToCheckout}
+      onGoHome={handleGoHome}
+      showSearch={true}
+      maxProducts={50}
+    />
+  );
 };
 
 export default Index;
