@@ -10,6 +10,7 @@ import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
+  console.log('🏠 Index: Component rendering - ManualSync should be visible');
   
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);

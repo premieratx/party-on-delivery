@@ -39,6 +39,7 @@ export const useOptimizedProductLoader = () => {
 
   const loadProducts = useCallback(async (forceRefresh = false) => {
     try {
+      console.log('🔍 useOptimizedProductLoader: Starting product load, forceRefresh:', forceRefresh);
       setLoading(true);
       setError(null);
 
@@ -72,12 +73,14 @@ export const useOptimizedProductLoader = () => {
 
         if (data?.success && data?.data) {
           const productData: CachedProductData = data.data;
+          console.log('✅ useOptimizedProductLoader: Loaded', productData.products?.length || 0, 'products and', productData.collections?.length || 0, 'collections');
           __memoryCache = productData;
           __memoryCacheAt = Date.now();
           setProducts(productData.products || []);
           setCollections(productData.collections || []);
           setCategories(productData.categories || []);
         } else {
+          console.error('❌ useOptimizedProductLoader: No data returned from cache', data);
           throw new Error('Failed to load product data');
         }
       })();

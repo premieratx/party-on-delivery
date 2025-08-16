@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Database, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const ManualSync = () => {
+  console.log('🔧 ManualSync: Component rendering');
   const [syncing, setSyncing] = useState(false);
   const [caching, setCaching] = useState(false);
   const { toast } = useToast();
@@ -111,13 +112,16 @@ export const ManualSync = () => {
   };
 
   return (
-    <div className="fixed top-16 right-4 z-50 space-y-2">
+    <div className="fixed top-16 right-4 z-[60] space-y-2">
+      <div className="bg-red-500 text-white px-2 py-1 text-xs rounded">
+        DEBUG: ManualSync Visible
+      </div>
       <Button 
         onClick={testInstantCache} 
         disabled={caching}
-        variant="outline"
+        variant="default"
         size="sm"
-        className="bg-background/90 backdrop-blur-sm"
+        className="bg-blue-600 text-white hover:bg-blue-700"
       >
         {caching ? (
           <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -130,9 +134,9 @@ export const ManualSync = () => {
       <Button 
         onClick={forceBulkSync} 
         disabled={syncing}
-        variant="outline"
+        variant="default"
         size="sm"
-        className="bg-background/90 backdrop-blur-sm"
+        className="bg-green-600 text-white hover:bg-green-700"
       >
         {syncing ? (
           <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
