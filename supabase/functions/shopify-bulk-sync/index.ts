@@ -1,16 +1,8 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-interface BulkSyncRequest {
-  operations: Array<{
-    type: 'add' | 'remove'
-    collection_handle: string
-    product_ids: string[]
-  }>
 }
 
 Deno.serve(async (req) => {
@@ -19,148 +11,116 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('🔄 Starting bulk product sync from Shopify...')
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { operations }: BulkSyncRequest = await req.json()
-    console.log(`🚀 Processing ${operations.length} bulk operations`)
-
-    // Process operations in parallel for speed
-    const results = await Promise.allSettled(
-      operations.map(async (op) => {
-        const { type, collection_handle, product_ids } = op
+    // Start background task to sync products
+    const syncTask = async () => {
+      try {
+        console.log('📦 Fetching fresh products from Shopify...')
         
-        // First, get the collection ID from handle
-        const collectionQuery = await fetch(
-          `${Deno.env.get('SHOPIFY_STORE_URL')}/admin/api/2024-01/collections.json?handle=${collection_handle}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Shopify-Access-Token': Deno.env.get('SHOPIFY_ADMIN_API_ACCESS_TOKEN') ?? '',
-            }
-          }
-        )
+        // Invoke the fetch function to get latest products
+        const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
+          body: { forceRefresh: true }
+        })
 
-        if (!collectionQuery.ok) {
-          throw new Error(`Failed to find collection: ${collectionQuery.status}`)
+        if (shopifyError) {
+          console.error('Error fetching from Shopify:', shopifyError)
+          return
         }
 
-        const collectionData = await collectionQuery.json()
-        if (!collectionData.collections?.length) {
-          throw new Error(`Collection not found: ${collection_handle}`)
+        const products = shopifyData?.products || []
+        console.log(`✅ Fetched ${products.length} products from Shopify`)
+
+        if (products.length === 0) {
+          console.warn('No products to sync')
+          return
         }
 
-        const collectionId = collectionData.collections[0].id
+        // Clear existing cache
+        console.log('🗑️ Clearing existing product cache...')
+        await supabase.from('shopify_products_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000')
 
-        // Use REST API for immediate updates - faster and more reliable
-        if (type === 'add') {
-          // Add products to collection
-          const addPromises = product_ids.map(productId => 
-            fetch(
-              `${Deno.env.get('SHOPIFY_STORE_URL')}/admin/api/2024-01/collects.json`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-Shopify-Access-Token': Deno.env.get('SHOPIFY_ADMIN_API_ACCESS_TOKEN') ?? '',
-                },
-                body: JSON.stringify({
-                  collect: {
-                    collection_id: collectionId,
-                    product_id: productId
-                  }
-                })
-              }
-            )
-          )
+        // Batch insert products
+        const batchSize = 100
+        for (let i = 0; i < products.length; i += batchSize) {
+          const batch = products.slice(i, i + batchSize)
           
-          const results = await Promise.allSettled(addPromises)
-          const successful = results.filter(r => r.status === 'fulfilled').length
-          console.log(`✅ Added ${successful}/${product_ids.length} products to ${collection_handle}`)
-          
-        } else {
-          // Remove products from collection
-          // First get existing collects
-          const collectsResponse = await fetch(
-            `${Deno.env.get('SHOPIFY_STORE_URL')}/admin/api/2024-01/collects.json?collection_id=${collectionId}`,
-            {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Shopify-Access-Token': Deno.env.get('SHOPIFY_ADMIN_API_ACCESS_TOKEN') ?? '',
-              }
-            }
-          )
+          const cacheItems = batch.map((product: any) => ({
+            id: product.id,
+            title: product.title,
+            price: product.price,
+            image: product.image,
+            description: product.description || '',
+            vendor: product.vendor || '',
+            category: product.category || 'other',
+            collection_handles: product.collections?.map((c: any) => c.handle) || [],
+            variants: product.variants || [],
+            data: product
+          }))
 
-          if (collectsResponse.ok) {
-            const collectsData = await collectsResponse.json()
-            const collectsToDelete = collectsData.collects.filter((collect: any) => 
-              product_ids.includes(collect.product_id.toString())
-            )
+          const { error: insertError } = await supabase
+            .from('shopify_products_cache')
+            .insert(cacheItems)
 
-            const deletePromises = collectsToDelete.map((collect: any) => 
-              fetch(
-                `${Deno.env.get('SHOPIFY_STORE_URL')}/admin/api/2024-01/collects/${collect.id}.json`,
-                {
-                  method: 'DELETE',
-                  headers: {
-                    'X-Shopify-Access-Token': Deno.env.get('SHOPIFY_ADMIN_API_ACCESS_TOKEN') ?? '',
-                  }
-                }
-              )
-            )
-
-            const results = await Promise.allSettled(deletePromises)
-            const successful = results.filter(r => r.status === 'fulfilled').length
-            console.log(`✅ Removed ${successful}/${collectsToDelete.length} products from ${collection_handle}`)
+          if (insertError) {
+            console.error(`Error inserting batch ${Math.floor(i / batchSize) + 1}:`, insertError)
+          } else {
+            console.log(`✅ Inserted batch ${Math.floor(i / batchSize) + 1} (${cacheItems.length} products)`)
           }
         }
 
-        console.log(`✅ ${type} operation completed for ${collection_handle}`)
+        // Update category mappings
+        console.log('🏷️ Updating category mappings...')
+        const categoryMappings = [
+          { collection_handle: 'spirits', app_category: 'spirits' },
+          { collection_handle: 'beer', app_category: 'beer' },
+          { collection_handle: 'wine', app_category: 'wine' },
+          { collection_handle: 'cocktails', app_category: 'cocktails' },
+          { collection_handle: 'mixers', app_category: 'mixers' },
+          { collection_handle: 'party-supplies', app_category: 'party-supplies' }
+        ]
+
+        for (const mapping of categoryMappings) {
+          await supabase
+            .from('category_mappings_simple')
+            .upsert(mapping)
+        }
+
+        console.log('🎉 Bulk sync completed successfully!')
         
-        return { collection_handle, type, success: true }
-      })
-    )
+      } catch (error) {
+        console.error('❌ Error in background sync task:', error)
+      }
+    }
 
-    // Update database with results
-    const successful = results.filter(r => r.status === 'fulfilled').length
-    const failed = results.filter(r => r.status === 'rejected').length
+    // Use background task for long-running sync
+    EdgeRuntime.waitUntil(syncTask())
 
-    // Clear cache for updated collections
-    const collection_handles = operations.map(op => op.collection_handle)
-    await supabase
-      .from('cache')
-      .delete()
-      .in('key', collection_handles.map(h => `shopify_collection_${h}`))
-
-    console.log(`📊 Bulk sync completed: ${successful} successful, ${failed} failed`)
-
+    // Return immediate response
     return new Response(
       JSON.stringify({
         success: true,
-        processed: operations.length,
-        successful,
-        failed,
-        results: results.map(r => r.status === 'fulfilled' ? r.value : { error: r.reason })
+        message: 'Product sync started in background',
+        status: 'processing'
       }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('❌ Bulk sync error:', error)
+    console.error('❌ Error in shopify-bulk-sync:', error)
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: error.message
       }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
   }

@@ -21,7 +21,15 @@ export const getInstantProducts = async () => {
 export const getAllCollectionsCached = async () => {
   console.log('📚 Loading collections...');
   try {
-    return [];
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data, error } = await supabase.functions.invoke('instant-product-cache');
+    
+    if (error) {
+      console.error('Collections cache error:', error);
+      return [];
+    }
+    
+    return data?.data?.collections || [];
   } catch (error) {
     console.error('getAllCollectionsCached error:', error);
     return [];
