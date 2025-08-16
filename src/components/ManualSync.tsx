@@ -1,150 +1,110 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Database, ShoppingCart } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 export const ManualSync = () => {
-  console.log('🔧 ManualSync: Component rendering');
   const [syncing, setSyncing] = useState(false);
-  const [caching, setCaching] = useState(false);
-  const { toast } = useToast();
+  const [testing, setTesting] = useState(false);
   
-  const testInstantCache = async () => {
-    setCaching(true);
+  console.log('🔧 ManualSync: Component rendering');
+  
+  const testCache = async () => {
+    setTesting(true);
+    console.log('🧪 Starting cache test...');
+    
     try {
-      console.log('🧪 Testing instant cache...');
+      alert('Testing cache - check console');
+      console.log('📞 Calling instant-product-cache...');
       
-      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
+      const result = await supabase.functions.invoke('instant-product-cache', {
         body: { forceRefresh: true }
       });
       
-      if (error) {
-        console.error('Cache test failed:', error);
-        toast({
-          title: 'Cache Test Failed',
-          description: error.message,
-          variant: 'destructive'
-        });
-        return;
-      }
+      console.log('📞 Cache result:', result);
+      alert(`Cache result: ${JSON.stringify(result)}`);
       
-      console.log('✅ Cache test result:', data);
-      
-      if (data?.success && data?.data) {
-        const productCount = data.data.products?.length || 0;
-        const collectionCount = data.data.collections?.length || 0;
-        
-        toast({
-          title: 'Cache Test Success!',
-          description: `Found ${productCount} products in ${collectionCount} collections`,
-        });
-      } else {
-        toast({
-          title: 'Cache Test Warning',
-          description: 'No product data returned',
-          variant: 'destructive'
-        });
-      }
-      
-    } catch (err: any) {
-      console.error('❌ Cache test error:', err);
-      toast({
-        title: 'Cache Test Error',
-        description: err.message,
-        variant: 'destructive'
-      });
+    } catch (error) {
+      console.error('❌ Cache test error:', error);
+      alert(`Cache error: ${error.message}`);
     } finally {
-      setCaching(false);
+      setTesting(false);
     }
   };
 
   const forceBulkSync = async () => {
     setSyncing(true);
+    console.log('🚀 Starting bulk sync...');
+    
     try {
-      console.log('🚀 Starting forced bulk sync...');
+      alert('Starting bulk sync - check console');
+      console.log('📞 Calling shopify-bulk-sync...');
       
-      // Step 1: Shopify bulk sync
-      const { data: bulkData, error: bulkError } = await supabase.functions.invoke('shopify-bulk-sync', {
+      const result = await supabase.functions.invoke('shopify-bulk-sync', {
         body: { forceRefresh: true }
       });
       
-      if (bulkError) {
-        throw new Error(`Bulk sync failed: ${bulkError.message}`);
-      }
+      console.log('📞 Sync result:', result);
+      alert(`Sync result: ${JSON.stringify(result)}`);
       
-      console.log('✅ Bulk sync result:', bulkData);
-      
-      // Step 2: Test cache immediately
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-      
-      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
-        body: { forceRefresh: true }
-      });
-      
-      if (cacheError) {
-        throw new Error(`Cache refresh failed: ${cacheError.message}`);
-      }
-      
-      const productCount = cacheData?.data?.products?.length || 0;
-      const collectionCount = cacheData?.data?.collections?.length || 0;
-      
-      toast({
-        title: 'Sync Complete!',
-        description: `Synced ${productCount} products in ${collectionCount} collections`,
-      });
-      
-      // Reload page after successful sync
-      setTimeout(() => {
+      if (result.data?.success) {
+        alert('Sync completed! Reloading page...');
         window.location.reload();
-      }, 2000);
+      }
       
-    } catch (err: any) {
-      console.error('❌ Sync failed:', err);
-      toast({
-        title: 'Sync Failed',
-        description: err.message,
-        variant: 'destructive'
-      });
+    } catch (error) {
+      console.error('❌ Sync error:', error);
+      alert(`Sync error: ${error.message}`);
     } finally {
       setSyncing(false);
     }
   };
 
   return (
-    <div className="fixed top-16 right-4 z-[60] space-y-2">
-      <div className="bg-red-500 text-white px-2 py-1 text-xs rounded">
-        DEBUG: ManualSync Visible
+    <div className="fixed top-4 right-4 z-[9999] space-y-2 bg-white p-4 rounded-lg shadow-lg border-4 border-red-500">
+      <div className="text-red-600 font-bold text-center mb-2">
+        MANUAL SYNC CONTROLS
       </div>
+      
       <Button 
-        onClick={testInstantCache} 
-        disabled={caching}
-        variant="default"
-        size="sm"
-        className="bg-blue-600 text-white hover:bg-blue-700"
+        onClick={testCache}
+        disabled={testing}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
       >
-        {caching ? (
-          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+        {testing ? (
+          <>
+            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            Testing...
+          </>
         ) : (
-          <Database className="w-4 h-4 mr-2" />
+          <>
+            <Database className="w-4 h-4 mr-2" />
+            Test Cache
+          </>
         )}
-        Test Cache
       </Button>
       
       <Button 
-        onClick={forceBulkSync} 
+        onClick={forceBulkSync}
         disabled={syncing}
-        variant="default"
-        size="sm"
-        className="bg-green-600 text-white hover:bg-green-700"
+        className="w-full bg-green-600 hover:bg-green-700 text-white"
       >
         {syncing ? (
-          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+          <>
+            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            Syncing...
+          </>
         ) : (
-          <ShoppingCart className="w-4 h-4 mr-2" />
+          <>
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Force Sync
+          </>
         )}
-        Force Sync
       </Button>
+      
+      <div className="text-xs text-gray-600 text-center">
+        Check browser console (F12) for logs
+      </div>
     </div>
   );
 };
