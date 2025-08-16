@@ -99,7 +99,7 @@ export const DeliveryAppDropdown: React.FC = () => {
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 bg-background/95 backdrop-blur-sm border border-border/50">
+      <DropdownMenuContent align="start" className="w-64 bg-background backdrop-blur-sm border border-border/50 z-50">
         {apps.map((app) => (
           <DropdownMenuItem
             key={app.id}

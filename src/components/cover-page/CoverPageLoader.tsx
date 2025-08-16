@@ -100,12 +100,13 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
       }
       
       if (coverPageData && !forceShow) {
-        // Check if user has seen this cover page recently
+        // Check if user has seen this cover page recently (reduced to 4 hours for testing)
         const lastSeen = localStorage.getItem(`cover-page-${coverPageData.id}-seen`);
-        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+        const fourHoursAgo = Date.now() - (4 * 60 * 60 * 1000);
         
-        if (lastSeen && parseInt(lastSeen) > oneDayAgo) {
+        if (lastSeen && parseInt(lastSeen) > fourHoursAgo) {
           console.log('🎨 Cover page seen recently, skipping');
+          onClose?.();
           return;
         }
       }

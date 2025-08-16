@@ -11,13 +11,17 @@ export const QuickSync = () => {
       console.log('🚀 Starting product sync...');
       
       // First try the bulk sync for comprehensive update
-      const { data: bulkData, error: bulkError } = await supabase.functions.invoke('shopify-bulk-sync', {});
+      const { data: bulkData, error: bulkError } = await supabase.functions.invoke('shopify-bulk-sync', {
+        body: { forceRefresh: true }
+      });
       
       if (bulkError) {
         console.warn('Bulk sync failed, trying trigger sync:', bulkError);
         
         // Fallback to trigger sync
-        const { data, error } = await supabase.functions.invoke('trigger-shopify-sync', {});
+        const { data, error } = await supabase.functions.invoke('trigger-shopify-sync', {
+          body: { forceRefresh: true }
+        });
         if (error) {
           console.error('Sync error:', error);
           throw error;
