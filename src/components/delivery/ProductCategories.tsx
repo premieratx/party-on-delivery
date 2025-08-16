@@ -4,6 +4,7 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { ForceAddToCartButton } from '@/components/common/ForceAddToCartButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus } from 'lucide-react';
@@ -283,7 +284,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {currentTabProducts.slice(0, maxProducts).map((product) => {
-              const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+              console.log('🛒 ProductCategories: Rendering product', product.id, product.title);
               
               return (
                 <div key={product.id} className="bg-card rounded-lg border shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
@@ -298,34 +299,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.title}</h3>
                     <p className="text-2xl font-bold text-primary mb-4">${product.price}</p>
                     
-                    {quantity > 0 ? (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <span className="font-semibold min-w-[2rem] text-center">{quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={() => handleAddToCart(product)}
-                        className="w-full"
-                      >
-                        Add to Cart
-                      </Button>
-                    )}
+                    {/* Force Add to Cart Button */}
+                    <ForceAddToCartButton
+                      product={{
+                        id: product.id,
+                        title: product.title,
+                        price: product.price,
+                        image: product.image,
+                        variants: product.variants
+                      }}
+                      variant="default"
+                      showQuantity={true}
+                    />
                   </div>
                 </div>
               );

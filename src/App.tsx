@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
+import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 // import { PerformanceMonitor } from "@/components/common/PerformanceMonitor"; // DISABLED
 import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
@@ -90,10 +91,11 @@ const App = () => {
       <QueryClientProvider client={queryClient}>
         <StripeProvider>
           <TooltipProvider>
-            <Toaster />
-            <Sonner />
             <BrowserRouter>
-              <div className="pb-14">
+              <GlobalCartProvider>
+                <Toaster />
+                <Sonner />
+                <div className="pb-14">
                 <Suspense fallback={null}>
                   <Routes>
                     {/* Core Routes - Main Delivery App as homepage */}
@@ -180,6 +182,7 @@ const App = () => {
               </div>
               {/* <PerformanceMonitor /> DISABLED */}
               <GlobalNavigation />
+              </GlobalCartProvider>
             </BrowserRouter>
           </TooltipProvider>
         </StripeProvider>
