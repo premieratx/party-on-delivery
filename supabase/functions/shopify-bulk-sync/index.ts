@@ -18,95 +18,105 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Start background task to sync products
-    const syncTask = async () => {
-      try {
-        console.log('📦 Fetching fresh products from Shopify...')
-        
-        // Invoke the fetch function to get latest products
-        const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
-          body: { forceRefresh: true }
-        })
+    console.log('📦 Fetching fresh products from Shopify...')
+    
+    // Invoke the fetch function to get latest products
+    const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
+      body: { forceRefresh: true }
+    })
 
-        if (shopifyError) {
-          console.error('Error fetching from Shopify:', shopifyError)
-          return
-        }
+    if (shopifyError) {
+      console.error('Error fetching from Shopify:', shopifyError)
+      throw new Error(`Failed to fetch from Shopify: ${shopifyError.message}`)
+    }
 
-        const products = shopifyData?.products || []
-        console.log(`✅ Fetched ${products.length} products from Shopify`)
+    const products = shopifyData?.products || []
+    console.log(`✅ Fetched ${products.length} products from Shopify`)
 
-        if (products.length === 0) {
-          console.warn('No products to sync')
-          return
-        }
+    if (products.length === 0) {
+      console.warn('No products to sync')
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'No products returned from Shopify',
+          productCount: 0
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-        // Clear existing cache
-        console.log('🗑️ Clearing existing product cache...')
-        await supabase.from('shopify_products_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000')
+    // Clear existing cache
+    console.log('🗑️ Clearing existing product cache...')
+    const { error: deleteError } = await supabase
+      .from('shopify_products_cache')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000')
+    
+    if (deleteError) {
+      console.error('Error clearing cache:', deleteError)
+    }
 
-        // Batch insert products
-        const batchSize = 100
-        for (let i = 0; i < products.length; i += batchSize) {
-          const batch = products.slice(i, i + batchSize)
-          
-          const cacheItems = batch.map((product: any) => ({
-            id: product.id,
-            title: product.title,
-            price: product.price,
-            image: product.image,
-            description: product.description || '',
-            vendor: product.vendor || '',
-            category: product.category || 'other',
-            collection_handles: product.collections?.map((c: any) => c.handle) || [],
-            variants: product.variants || [],
-            data: product
-          }))
+    // Batch insert products
+    const batchSize = 50
+    let totalInserted = 0
+    
+    for (let i = 0; i < products.length; i += batchSize) {
+      const batch = products.slice(i, i + batchSize)
+      
+      const cacheItems = batch.map((product: any) => ({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        description: product.description || '',
+        vendor: product.vendor || '',
+        category: product.category || 'other',
+        collection_handles: product.collections?.map((c: any) => c.handle) || [],
+        variants: product.variants || [],
+        data: product
+      }))
 
-          const { error: insertError } = await supabase
-            .from('shopify_products_cache')
-            .insert(cacheItems)
+      const { data: insertData, error: insertError } = await supabase
+        .from('shopify_products_cache')
+        .insert(cacheItems)
 
-          if (insertError) {
-            console.error(`Error inserting batch ${Math.floor(i / batchSize) + 1}:`, insertError)
-          } else {
-            console.log(`✅ Inserted batch ${Math.floor(i / batchSize) + 1} (${cacheItems.length} products)`)
-          }
-        }
-
-        // Update category mappings
-        console.log('🏷️ Updating category mappings...')
-        const categoryMappings = [
-          { collection_handle: 'spirits', app_category: 'spirits' },
-          { collection_handle: 'beer', app_category: 'beer' },
-          { collection_handle: 'wine', app_category: 'wine' },
-          { collection_handle: 'cocktails', app_category: 'cocktails' },
-          { collection_handle: 'mixers', app_category: 'mixers' },
-          { collection_handle: 'party-supplies', app_category: 'party-supplies' }
-        ]
-
-        for (const mapping of categoryMappings) {
-          await supabase
-            .from('category_mappings_simple')
-            .upsert(mapping)
-        }
-
-        console.log('🎉 Bulk sync completed successfully!')
-        
-      } catch (error) {
-        console.error('❌ Error in background sync task:', error)
+      if (insertError) {
+        console.error(`Error inserting batch ${Math.floor(i / batchSize) + 1}:`, insertError)
+      } else {
+        totalInserted += cacheItems.length
+        console.log(`✅ Inserted batch ${Math.floor(i / batchSize) + 1} (${cacheItems.length} products)`)
       }
     }
 
-    // Use background task for long-running sync
-    EdgeRuntime.waitUntil(syncTask())
+    // Update category mappings
+    console.log('🏷️ Updating category mappings...')
+    const categoryMappings = [
+      { collection_handle: 'spirits', app_category: 'spirits' },
+      { collection_handle: 'beer', app_category: 'beer' },
+      { collection_handle: 'wine', app_category: 'wine' },
+      { collection_handle: 'cocktails', app_category: 'cocktails' },
+      { collection_handle: 'mixers', app_category: 'mixers' },
+      { collection_handle: 'party-supplies', app_category: 'party-supplies' }
+    ]
 
-    // Return immediate response
+    for (const mapping of categoryMappings) {
+      const { error: mappingError } = await supabase
+        .from('category_mappings_simple')
+        .upsert(mapping)
+      
+      if (mappingError) {
+        console.error('Error updating category mapping:', mappingError)
+      }
+    }
+
+    console.log(`🎉 Bulk sync completed! Inserted ${totalInserted} products`)
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Product sync started in background',
-        status: 'processing'
+        message: 'Bulk sync completed successfully',
+        productCount: totalInserted,
+        originalProductCount: products.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
@@ -116,7 +126,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message
+        error: error.message || 'Unknown error occurred',
+        details: error.toString()
       }),
       { 
         status: 500,
