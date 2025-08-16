@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { QuickSync } from '@/components/QuickSync';
+import { ManualSync } from '@/components/ManualSync';
 import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
 
 const Index = () => {
@@ -103,6 +104,7 @@ const Index = () => {
   return (
     <>
       <QuickSync />
+      <ManualSync />
       
       {/* Cover Page Modal */}
       {showCoverPage && (
