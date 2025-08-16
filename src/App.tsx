@@ -7,6 +7,8 @@ import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
+import { ManualSync } from "./components/ManualSync";
+import { SystemStatus } from "./components/SystemStatus";
 // import { PerformanceMonitor } from "@/components/common/PerformanceMonitor"; // DISABLED
 import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
@@ -179,10 +181,12 @@ const App = () => {
                      <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
-              </div>
-              {/* <PerformanceMonitor /> DISABLED */}
-              <GlobalNavigation />
-              </GlobalCartProvider>
+               </div>
+               {/* <PerformanceMonitor /> DISABLED */}
+               <GlobalNavigation />
+               <ManualSync />
+               <SystemStatus />
+               </GlobalCartProvider>
             </BrowserRouter>
           </TooltipProvider>
         </StripeProvider>
