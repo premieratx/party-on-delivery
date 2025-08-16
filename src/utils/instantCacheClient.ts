@@ -3,11 +3,15 @@
 export const getInstantProducts = async () => {
   console.log('📦 Loading instant products...');
   try {
-    // Return mock data for now to avoid TypeScript issues
-    return { 
-      products: [], 
-      collections: [] 
-    };
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data, error } = await supabase.functions.invoke('instant-product-cache');
+    
+    if (error) {
+      console.error('Instant cache error:', error);
+      return { products: [], collections: [] };
+    }
+    
+    return data?.data || { products: [], collections: [] };
   } catch (error) {
     console.error('getInstantProducts error:', error);
     return { products: [], collections: [] };

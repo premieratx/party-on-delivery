@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus } from 'lucide-react';
 import { VideoBackground } from '@/components/common/VideoBackground';
 import { TypingIntro } from '@/components/common/TypingIntro';
-import { DeliveryAppDropdown } from '@/components/admin/DeliveryAppDropdown';
+import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
@@ -187,24 +187,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               </div>
             )}
             
-            {/* Search Button in Hero */}
+            {/* Search Button in Hero - Links to Search Page */}
             <div className="mt-8">
-              <div className="flex max-w-md mx-auto">
-                <Input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="rounded-r-none bg-white/90 text-black"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <Button 
-                  onClick={handleSearch}
-                  className="rounded-l-none bg-primary hover:bg-primary/90"
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
-              </div>
+              <Button 
+                onClick={handleSearch}
+                className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                Search Products
+              </Button>
             </div>
           </div>
         </div>
@@ -216,6 +207,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <OccasionButtons isMobile={false} isScrollingDown={false} />
         </div>
       </div>
+
+      {/* Search Bar Above Tabs */}
+      {showSearch && (
+        <div className="bg-background border-b py-4">
+          <div className="container mx-auto px-4">
+            <div className="flex max-w-md mx-auto">
+              <Input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="rounded-r-none"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button 
+                onClick={handleSearch}
+                className="rounded-l-none"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Category Tabs */}
       <div className="sticky top-0 z-40 bg-background border-b">

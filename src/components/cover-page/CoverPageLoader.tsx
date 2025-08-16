@@ -38,7 +38,7 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
         console.log('🎨 Looking for cover page for app:', appSlug);
         
         // Check if there's a direct assignment
-        const { data: assignment } = await supabase
+        const { data: assignment, error: assignmentError } = await supabase
           .from('cover_page_affiliate_assignments')
           .select(`
             *, 
@@ -46,9 +46,9 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
           `)
           .eq('share_slug', appSlug)
           .eq('cover_pages.is_active', true)
-          .single();
+          .maybeSingle();
           
-        if (assignment) {
+        if (!assignmentError && assignment?.cover_pages) {
           coverPageData = assignment.cover_pages;
         }
       }
@@ -57,7 +57,7 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
       if (!coverPageData && affiliateCode) {
         console.log('🎨 Looking for cover page for affiliate:', affiliateCode);
         
-        const { data: affiliateAssignment } = await supabase
+        const { data: affiliateAssignment, error: affiliateError } = await supabase
           .from('cover_page_affiliate_assignments')
           .select(`
             *, 
@@ -66,9 +66,9 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
           `)
           .eq('affiliates.affiliate_code', affiliateCode)
           .eq('cover_pages.is_active', true)
-          .single();
+          .maybeSingle();
           
-        if (affiliateAssignment) {
+        if (!affiliateError && affiliateAssignment?.cover_pages) {
           coverPageData = affiliateAssignment.cover_pages;
         }
       }
@@ -77,23 +77,36 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
       if (!coverPageData && (!appSlug || appSlug === 'main-delivery-app')) {
         console.log('🎨 Looking for default cover page with multiple buttons');
         
-        const { data: defaultCoverPages } = await supabase
+        const { data: defaultCoverPages, error: pagesError } = await supabase
           .from('cover_pages')
           .select('*')
           .eq('is_active', true)
           .order('created_at', { ascending: false });
           
-        // Find one with 2 buttons pointing to different delivery apps
-        const multiButtonPage = defaultCoverPages?.find(page => 
-          page.buttons && 
-          Array.isArray(page.buttons) && 
-          page.buttons.length >= 2 &&
-          page.buttons.some((btn: any) => btn.type === 'delivery_app')
-        );
+        if (!pagesError && defaultCoverPages) {
+          // Find one with 2 buttons pointing to different delivery apps
+          const multiButtonPage = defaultCoverPages.find(page => 
+            page.buttons && 
+            Array.isArray(page.buttons) && 
+            page.buttons.length >= 2 &&
+            page.buttons.some((btn: any) => btn.type === 'delivery_app')
+          );
+          
+          if (multiButtonPage) {
+            coverPageData = multiButtonPage;
+            console.log('🎨 Found multi-button cover page:', multiButtonPage.title);
+          }
+        }
+      }
+      
+      if (coverPageData && !forceShow) {
+        // Check if user has seen this cover page recently
+        const lastSeen = localStorage.getItem(`cover-page-${coverPageData.id}-seen`);
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
         
-        if (multiButtonPage) {
-          coverPageData = multiButtonPage;
-          console.log('🎨 Found multi-button cover page:', multiButtonPage.title);
+        if (lastSeen && parseInt(lastSeen) > oneDayAgo) {
+          console.log('🎨 Cover page seen recently, skipping');
+          return;
         }
       }
       
@@ -101,6 +114,9 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
         setCoverPage(coverPageData);
         setShowModal(true);
         console.log('🎨 Loaded cover page:', coverPageData.title);
+        
+        // Mark as seen
+        localStorage.setItem(`cover-page-${coverPageData.id}-seen`, Date.now().toString());
       } else {
         console.log('🎨 No cover page found');
       }
