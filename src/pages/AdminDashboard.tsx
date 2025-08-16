@@ -45,6 +45,7 @@ import { SystemTestingSuite } from '@/components/SystemTestingSuite';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { UnifiedCoverPostCheckoutBuilder } from '@/components/admin/UnifiedCoverPostCheckoutBuilder';
 import { CANONICAL_DOMAIN } from '@/utils/links';
+import { TriggerShopifySync } from '@/components/admin/TriggerShopifySync';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -658,7 +659,8 @@ export default function AdminDashboard() {
                     </ol>
                   </div>
                   
-                  <TestGHLIntegration />
+                   <TriggerShopifySync />
+                   <TestGHLIntegration />
                 </CardContent>
               </Card>
             </div>
