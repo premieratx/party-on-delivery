@@ -46,47 +46,21 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Got ${shopifyData.products.length} products from Shopify`)
 
-    // Now populate the shopify_products_cache table
-    console.log('💾 Populating shopify_products_cache...')
+    // Now update the instant cache
+    console.log('💾 Updating instant cache...')
     
-    // Clear existing cache first
-    const { error: clearError } = await supabase
-      .from('shopify_products_cache')
-      .delete()
-      .neq('id', '')
+    const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
+      body: { 
+        forceRefresh: true,
+        products: shopifyData.products
+      }
+    })
 
-    if (clearError) {
-      console.warn('⚠️ Error clearing existing cache:', clearError)
+    if (cacheError) {
+      console.warn('⚠️ Error updating instant cache:', cacheError)
+    } else {
+      console.log('✅ Successfully updated instant cache')
     }
-
-    // Insert new products
-    const productsToInsert = shopifyData.products.map((product: any) => ({
-      id: product.id,
-      title: product.title,
-      handle: product.handle,
-      price: parseFloat(product.price) || 0,
-      image: product.image || '/placeholder.svg',
-      description: product.description || '',
-      vendor: product.vendor || '',
-      product_type: product.productType || '',
-      tags: product.tags || [],
-      variants: product.variants || [],
-      collection_handles: product.collections?.map((c: any) => c.handle) || [],
-      data: product,
-      updated_at: new Date().toISOString()
-    }))
-
-    const { data: insertData, error: insertError } = await supabase
-      .from('shopify_products_cache')
-      .insert(productsToInsert)
-      .select('id')
-
-    if (insertError) {
-      console.error('❌ Error inserting into cache:', insertError)
-      throw insertError
-    }
-
-    console.log(`✅ Successfully cached ${insertData?.length || 0} products`)
 
     // Update category mappings if needed
     console.log('🏷️ Updating category mappings...')
@@ -121,7 +95,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         message: 'Shopify sync completed successfully',
-        productsCount: insertData?.length || 0,
+        productsCount: shopifyData.products.length || 0,
         categoriesMapped: categories.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

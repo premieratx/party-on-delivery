@@ -10,6 +10,7 @@ import { Search, Plus, Minus } from 'lucide-react';
 import { VideoBackground } from '@/components/common/VideoBackground';
 import { TypingIntro } from '@/components/common/TypingIntro';
 import { DeliveryAppDropdown } from '@/components/admin/DeliveryAppDropdown';
+import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface Collection {
@@ -209,6 +210,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
+      {/* Occasion Buttons - What's the Occasion */}
+      <div className="bg-background border-b py-4">
+        <div className="container mx-auto px-4">
+          <OccasionButtons isMobile={false} isScrollingDown={false} />
+        </div>
+      </div>
+
       {/* Category Tabs */}
       <div className="sticky top-0 z-40 bg-background border-b">
         <div className="container mx-auto px-4">
@@ -258,7 +266,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {currentTabProducts.slice(0, maxProducts).map((product) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
