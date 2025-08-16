@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { QuickSync } from '@/components/QuickSync';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -34,35 +35,16 @@ const Index = () => {
         }
 
         if (!apps || apps.length === 0) {
-          // Create default config if no apps exist
-          const defaultConfig = {
-            id: 'default',
-            app_name: "Austin's Premier Party Supply Delivery",
-            app_slug: 'party-on-delivery',
-            collections_config: {
-              tab_count: 5,
-              tabs: [
-                { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' },
-                { name: 'Beer', collection_handle: 'beer', icon: '🍺' },
-                { name: 'Seltzers', collection_handle: 'seltzer', icon: '🥤' },
-                { name: 'Mixers', collection_handle: 'mixers', icon: '🧊' },
-                { name: 'Cocktails', collection_handle: 'cocktails', icon: '🍸' }
-              ]
-            },
-            main_app_config: {
-              hero_heading: "Austin's Premier Party Supply Delivery"
-            },
-            is_active: true
-          };
-          setAppConfig(defaultConfig);
-        } else {
-          setAppConfig(apps[0]);
-        }
+          throw new Error('No delivery apps found - please create one in admin dashboard');
+        } 
+
+        // Always use the real delivery app from database
+        setAppConfig(apps[0]);
+        console.log('🏠 Index: Loaded delivery app:', apps[0].app_name);
         
-        console.log('🏠 Index: App config loaded successfully');
       } catch (err) {
         console.error('Error loading delivery app:', err);
-        setError('Failed to load delivery app');
+        setError('Failed to load delivery app: ' + err.message);
       } finally {
         setLoading(false);
       }
@@ -112,15 +94,18 @@ const Index = () => {
   }
 
   return (
-    <ProductCategories
-      appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
-      heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
-      heroSubheading="Satisfaction Guaranteed, On-Time Delivery"
-      heroScrollingText="Let's Get It"
-      logoUrl={appConfig?.logo_url}
-      collectionsConfig={appConfig?.collections_config}
-      cartItemCount={cartItems.length}
-    />
+    <>
+      <QuickSync />
+      <ProductCategories
+        appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
+        heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
+        heroSubheading={appConfig?.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
+        heroScrollingText={appConfig?.main_app_config?.hero_scrolling_text || "Let's Get It"}
+        logoUrl={appConfig?.logo_url}
+        collectionsConfig={appConfig?.collections_config}
+        cartItemCount={cartItems.length}
+      />
+    </>
   );
 };
 
