@@ -20,11 +20,10 @@ Deno.serve(async (req) => {
 
     // First, fetch products from Shopify and populate cache
     console.log('📦 Fetching products from Shopify...')
-    const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
+    const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
       body: { 
         forceRefresh: true,
-        limit: 100,
-        includeImages: true 
+        limit: 100
       }
     })
 

@@ -8,13 +8,21 @@ export const QuickSync = () => {
   const syncProducts = async () => {
     setSyncing(true);
     try {
+      console.log('🚀 Starting product sync...');
       const { data, error } = await supabase.functions.invoke('trigger-shopify-sync', {});
-      if (error) throw error;
-      console.log('Sync triggered:', data);
-      // Reload page after sync
-      setTimeout(() => window.location.reload(), 2000);
+      if (error) {
+        console.error('Sync error:', error);
+        throw error;
+      }
+      console.log('✅ Sync completed:', data);
+      // Reload page after successful sync
+      setTimeout(() => {
+        console.log('🔄 Reloading page to show new products...');
+        window.location.reload();
+      }, 3000);
     } catch (err) {
-      console.error('Sync failed:', err);
+      console.error('❌ Sync failed:', err);
+      alert('Sync failed: ' + err.message);
     } finally {
       setSyncing(false);
     }
