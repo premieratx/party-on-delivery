@@ -12,7 +12,7 @@ import RequireAdmin from "@/components/admin/RequireAdmin";
 
 // Core pages that load immediately
 import Index from "./pages/Index";
-import DefaultDeliveryApp from "./pages/DefaultDeliveryApp";
+
 import VoiceChat from "./pages/VoiceChat";
 // PARTY PLANNER COMPLETELY REMOVED
 import NotFound from "./pages/NotFound";
@@ -98,7 +98,7 @@ const App = () => {
                   <Routes>
                     {/* Core Routes - Main Delivery App as homepage */}
                     <Route path="/" element={<Index />} />
-                    <Route path="/app/party-on-delivery" element={<DefaultDeliveryApp />} />
+                    
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     <Route path="/voice-chat" element={<VoiceChat />} />
                     {/* PARTY PLANNER ROUTE REMOVED */}
