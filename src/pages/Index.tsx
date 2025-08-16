@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { QuickSync } from '@/components/QuickSync';
+import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -12,8 +13,11 @@ const Index = () => {
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCoverPage, setShowCoverPage] = useState(false);
   const navigate = useNavigate();
   const { cartItems } = useUnifiedCart();
+  const [searchParams] = useSearchParams();
+  const affiliateCode = searchParams.get('ref');
 
   useEffect(() => {
     const loadDefaultDeliveryApp = async () => {
@@ -41,6 +45,9 @@ const Index = () => {
         // Always use the real delivery app from database
         setAppConfig(apps[0]);
         console.log('🏠 Index: Loaded delivery app:', apps[0].app_name);
+        
+        // Show cover page for main app after loading
+        setShowCoverPage(true);
         
       } catch (err) {
         console.error('Error loading delivery app:', err);
@@ -96,6 +103,16 @@ const Index = () => {
   return (
     <>
       <QuickSync />
+      
+      {/* Cover Page Modal */}
+      {showCoverPage && (
+        <CoverPageLoader
+          appSlug="main-delivery-app"
+          affiliateCode={affiliateCode}
+          onClose={() => setShowCoverPage(false)}
+        />
+      )}
+      
       <ProductCategories
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
         heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
