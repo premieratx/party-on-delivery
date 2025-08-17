@@ -9,6 +9,7 @@ import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { ManualSync } from "./components/ManualSync";
 import { SystemStatus } from "./components/SystemStatus";
+import { DirectBulkSync } from "./components/DirectBulkSync";
 // import { PerformanceMonitor } from "@/components/common/PerformanceMonitor"; // DISABLED
 import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
@@ -186,6 +187,7 @@ const App = () => {
                <GlobalNavigation />
                <ManualSync />
                <SystemStatus />
+               <DirectBulkSync />
                </GlobalCartProvider>
             </BrowserRouter>
           </TooltipProvider>
