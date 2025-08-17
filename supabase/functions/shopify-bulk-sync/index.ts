@@ -64,16 +64,11 @@ Deno.serve(async (req) => {
       const batch = products.slice(i, i + batchSize)
       
       const cacheItems = batch.map((product: any) => ({
-        id: product.id,
+        shopify_id: product.id,
         title: product.title,
-        price: product.price,
-        image: product.image,
-        description: product.description || '',
-        vendor: product.vendor || '',
-        category: product.category || 'other',
-        collection_handles: product.collections?.map((c: any) => c.handle) || [],
-        variants: product.variants || [],
-        data: product
+        handle: product.handle || '',
+        data: product,
+        collection_id: product.collection_id || null
       }))
 
       const { data: insertData, error: insertError } = await supabase
