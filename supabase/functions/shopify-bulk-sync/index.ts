@@ -21,11 +21,11 @@ Deno.serve(async (req) => {
     console.log('📦 Fetching fresh products from Shopify...')
     
     // Invoke the fetch function to get latest products
-    const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
+    const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
       body: { forceRefresh: true }
     })
     
-    console.log('Response from fetch-shopify-products-optimized:', { shopifyData, shopifyError })
+    console.log('Response from fetch-shopify-products:', { shopifyData, shopifyError })
 
     if (shopifyError) {
       console.error('Error fetching from Shopify:', shopifyError)
