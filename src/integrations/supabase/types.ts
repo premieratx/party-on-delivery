@@ -3250,6 +3250,10 @@ export type Database = {
         Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
         Returns: string
       }
+      trigger_shopify_bulk_sync: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       update_daily_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined

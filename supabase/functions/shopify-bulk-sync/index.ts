@@ -24,6 +24,8 @@ Deno.serve(async (req) => {
     const { data: shopifyData, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
       body: { forceRefresh: true }
     })
+    
+    console.log('Response from fetch-shopify-products-optimized:', { shopifyData, shopifyError })
 
     if (shopifyError) {
       console.error('Error fetching from Shopify:', shopifyError)
