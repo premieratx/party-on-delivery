@@ -32,15 +32,18 @@ export const DirectBulkSync = () => {
     
     try {
       console.log('🚀 Starting direct bulk sync...');
+      console.log('📡 Calling supabase.functions.invoke with shopify-bulk-sync');
       
       // Call the bulk sync function directly
       const { data, error } = await supabase.functions.invoke('shopify-bulk-sync', {
         body: { forceRefresh: true }
       });
       
+      console.log('📥 Received response:', { data, error });
+      
       if (error) {
         console.error('❌ Bulk sync error:', error);
-        setResult({ success: false, error: error.message });
+        setResult({ success: false, error: error.message || JSON.stringify(error) });
       } else {
         console.log('✅ Bulk sync completed:', data);
         setResult(data);

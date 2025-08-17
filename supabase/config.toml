@@ -105,3 +105,6 @@ verify_jwt = false
 
 [functions.sync-shopify-orders-recent]
 verify_jwt = false
+
+[functions.shopify-bulk-sync]
+verify_jwt = false
