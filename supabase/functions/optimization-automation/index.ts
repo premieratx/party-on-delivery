@@ -1191,19 +1191,6 @@ async function validateCheckoutProcess(): Promise<OptimizationResult> {
 }
 
 // REMOVED: testPartyPlanner function completely to prevent preloading
-        'Mobile responsiveness verified',
-        'Touch interactions optimized',
-        'Loading states implemented',
-        'Error messages clear and helpful'
-      ]
-    },
-    performance_impact: {
-      recommendation_accuracy: '87% user satisfaction',
-      conversion_rate: '34% planner to purchase',
-      mobile_usability_score: '92/100'
-    }
-  };
-}
 
 async function testDatabaseConnections(): Promise<OptimizationResult> {
   console.log('🗄️ Testing database connections and performance');
