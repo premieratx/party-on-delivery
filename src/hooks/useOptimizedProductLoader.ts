@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Product {
@@ -94,9 +94,14 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     return loadProducts(true);
   }, [loadProducts]);
 
+  // Load products once on mount - FIXED: using useRef to prevent infinite loops
+  const hasMounted = useRef(false);
   useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      loadProducts();
+    }
+  }, []); // Empty dependency array to run only once
 
   // Auto-refresh every 5 minutes if enabled (but not during active retry attempts)
   useEffect(() => {

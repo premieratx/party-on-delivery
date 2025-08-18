@@ -8,6 +8,7 @@ import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
 import { ForceProductSync } from '@/components/emergency/ForceProductSync';
 import { InstantProductLoader } from '@/components/emergency/InstantProductLoader';
 import { CriticalProductSync } from '@/components/emergency/CriticalProductSync';
+import { DirectProductSync } from '@/components/emergency/DirectProductSync';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -127,7 +128,7 @@ const Index = () => {
               Product cache is empty. Loading all products now...
             </p>
           </div>
-          <CriticalProductSync />
+          <DirectProductSync />
         </div>
       </div>
     );

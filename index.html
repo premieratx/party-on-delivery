@@ -5,11 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Content Security Policy - Allow Google Fonts -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' https:">
+    <!-- Content Security Policy - Fixed for all resources -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https: blob:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self';">
     
-    <!-- Permissions Policy - Allow payment features -->
-    <meta http-equiv="Permissions-Policy" content="payment=*, geolocation=*, camera=*, microphone=()">
+    <!-- Permissions Policy - Fixed payment permissions -->
+    <meta http-equiv="Permissions-Policy" content="payment=self, geolocation=self, camera=(), microphone=()">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
