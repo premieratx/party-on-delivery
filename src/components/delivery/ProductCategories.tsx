@@ -143,19 +143,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     // First try to match collections by mapped handles
     let categoryProducts = [];
-    collections.forEach(collection => {
-      if (mappedHandles.some(h => 
-        collection.handle?.toLowerCase().includes(h.toLowerCase()) ||
-        h.toLowerCase().includes(collection.handle?.toLowerCase())
-      )) {
-        if (Array.isArray(collection.products)) {
-          categoryProducts.push(...collection.products);
+    if (collections && collections.length > 0) {
+      collections.forEach(collection => {
+        if (mappedHandles.some(h => 
+          collection.handle?.toLowerCase().includes(h.toLowerCase()) ||
+          h.toLowerCase().includes(collection.handle?.toLowerCase())
+        )) {
+          if (Array.isArray(collection.products)) {
+            categoryProducts.push(...collection.products);
+          }
         }
-      }
-    });
+      });
+    }
     
     // If no products found from collections, try direct product filtering
-    if (categoryProducts.length === 0) {
+    if (categoryProducts.length === 0 && products && products.length > 0) {
       categoryProducts = products.filter((product: any) => {
         if (!product) return false;
         return mappedHandles.some(handle => 
@@ -171,7 +173,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products using enhanced mapping`);
     return categoryProducts;
-  }, [collections, tabs, selectedCategory, products]);
+  }, [tabs, selectedCategory, products?.length, collections?.length]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;
