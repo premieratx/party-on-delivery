@@ -39,16 +39,25 @@ const Index = () => {
         console.log('🚨 CRITICAL: Insufficient products in cache, showing force sync option...');
         setShowForceSync(true);
         
-        // Auto-trigger emergency sync
+        // Try triggering unified sync instead of emergency sync
         try {
-          console.log('🔄 Auto-triggering emergency sync...');
-          const { data: syncResult } = await supabase.functions.invoke('emergency-product-sync');
+          console.log('🔄 Triggering unified Shopify sync...');
+          const { data: syncResult } = await supabase.functions.invoke('unified-shopify-sync');
           if (syncResult?.success) {
-            console.log(`✅ Auto-sync completed: ${syncResult.products_synced} products`);
-            setShowForceSync(false);
+            console.log(`✅ Sync result:`, syncResult);
+            // Wait a moment for cache to update, then recheck
+            setTimeout(async () => {
+              const { count: newCount } = await supabase
+                .from('shopify_products_cache')
+                .select('*', { count: 'exact', head: true });
+              console.log(`📊 Updated product count: ${newCount || 0}`);
+              if (newCount && newCount > 100) {
+                setShowForceSync(false);
+              }
+            }, 2000);
           }
         } catch (syncError) {
-          console.error('Auto-sync failed:', syncError);
+          console.error('Unified sync failed:', syncError);
         }
       } else {
         console.log(`✅ Product cache healthy: ${count} products available`);
@@ -157,7 +166,7 @@ const Index = () => {
   return (
     <>
       <SimpleForceSync />
-      <QuickSyncTrigger />
+      {/* Removed QuickSyncTrigger - using SimpleForceSync instead */}
       <ProductCategories
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
         heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}

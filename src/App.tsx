@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { StripeProvider } from "@/components/payment/StripeProvider";
+// Removed Stripe integration
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
@@ -91,7 +91,7 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <StripeProvider>
+        {/* Removed StripeProvider */}
           <TooltipProvider>
             <BrowserRouter>
               <GlobalCartProvider>
@@ -185,7 +185,7 @@ const App = () => {
                </GlobalCartProvider>
             </BrowserRouter>
           </TooltipProvider>
-        </StripeProvider>
+        {/* Removed StripeProvider closing tag */}
       </QueryClientProvider>
     </ErrorBoundary>
   );
