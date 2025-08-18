@@ -173,7 +173,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products using enhanced mapping`);
     return categoryProducts;
-  }, [tabs, selectedCategory, products?.length, collections?.length]);
+  }, [tabs, selectedCategory, products, collections]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;
