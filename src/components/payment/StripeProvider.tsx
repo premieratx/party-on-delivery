@@ -21,7 +21,14 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
         }
         const key = data?.key as string | undefined;
         if (key && mounted) {
-          setStripePromise(loadStripe(key));
+          try {
+            const stripe = await loadStripe(key);
+            if (stripe && mounted) {
+              setStripePromise(Promise.resolve(stripe));
+            }
+          } catch (loadError) {
+            console.warn('Failed to load Stripe.js:', loadError);
+          }
         }
       } catch (e) {
         console.warn('Stripe not configured, skipping initialization:', e);

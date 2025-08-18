@@ -165,8 +165,8 @@ const Index = () => {
 
   return (
     <>
-      <SimpleForceSync />
-      {/* Emergency sync components disabled to prevent auto-triggering */}
+      {/* Show sync option only when needed */}
+      {showForceSync && <SimpleForceSync />}
       <ProductCategories
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
         heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
