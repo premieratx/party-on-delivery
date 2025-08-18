@@ -48,8 +48,11 @@ Deno.serve(async (req) => {
 
     console.log('📦 Fetching products from Shopify...')
     
+    // Ensure proper URL format
+    const shopifyUrl = shopifyStore.startsWith('http') ? shopifyStore : `https://${shopifyStore}`
+    
     // Fetch products from Shopify
-    const response = await fetch(`${shopifyStore}/admin/api/2023-10/products.json?limit=250`, {
+    const response = await fetch(`${shopifyUrl}/admin/api/2023-10/products.json?limit=250`, {
       headers: {
         'X-Shopify-Access-Token': shopifyToken,
         'Content-Type': 'application/json'

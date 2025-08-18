@@ -15,19 +15,22 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke('get-stripe-publishable-key');
-        if (error) throw error;
+        if (error) {
+          console.warn('Stripe key not available:', error);
+          return;
+        }
         const key = data?.key as string | undefined;
         if (key && mounted) {
           setStripePromise(loadStripe(key));
         }
       } catch (e) {
-        console.error('Failed to load Stripe publishable key:', e);
+        console.warn('Stripe not configured, skipping initialization:', e);
       }
     })();
     return () => { mounted = false; };
   }, []);
 
-  if (!stripePromise) return null;
+  if (!stripePromise) return <>{children}</>;
 
   return (
     <Elements stripe={stripePromise}>
