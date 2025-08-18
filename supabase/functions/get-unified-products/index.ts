@@ -24,12 +24,14 @@ Deno.serve(async (req) => {
       app_slug, 
       category, 
       collection_handle,
+      search_category, // For search functionality (uses productType)
+      use_type = 'delivery', // 'search' or 'delivery' - determines filtering method
       lightweight = true, 
       force_refresh = false,
       limit = 100
     } = await req.json().catch(() => ({}))
 
-    console.log(`🔍 Loading unified products - category: ${category}, collection: ${collection_handle}, lightweight: ${lightweight}`)
+    console.log(`🔍 Loading unified products - use_type: ${use_type}, category: ${category}, collection: ${collection_handle}, search_category: ${search_category}, lightweight: ${lightweight}`)
 
     // Check if we need to refresh cache
     if (force_refresh || await needsCacheRefresh(supabase)) {
@@ -43,18 +45,26 @@ Deno.serve(async (req) => {
     let productsQuery = supabase
       .from('shopify_products_cache')
       .select(lightweight ? 
-        'id, title, price, image, category, category_title, vendor, handle' : 
+        'id, title, price, image, category, category_title, vendor, handle, product_type, search_category, collection_handles' : 
         '*'
       )
       .order('updated_at', { ascending: false })
 
-    // Apply filters
-    if (category && category !== 'all') {
-      productsQuery = productsQuery.eq('category', category)
-    }
+    // Apply filters based on use type
+    if (use_type === 'search') {
+      // For search: use search_category (normalized productType)
+      if (search_category && search_category !== 'all') {
+        productsQuery = productsQuery.eq('search_category', search_category)
+      }
+    } else {
+      // For delivery apps: use collections and category
+      if (category && category !== 'all') {
+        productsQuery = productsQuery.eq('category', category)
+      }
 
-    if (collection_handle && collection_handle !== 'all') {
-      productsQuery = productsQuery.contains('collection_handles', [collection_handle])
+      if (collection_handle && collection_handle !== 'all') {
+        productsQuery = productsQuery.contains('collection_handles', [collection_handle])
+      }
     }
 
     if (limit) {
@@ -78,14 +88,38 @@ Deno.serve(async (req) => {
       console.error('Error fetching collections:', collectionsError)
     }
 
-    // Transform to unified format
-    const collections = collectionsData?.map(col => ({
-      id: col.handle,
-      title: col.title,
-      handle: col.handle,
-      product_count: col.products_count,
-      products: products?.filter(p => p.category === col.handle) || []
-    })) || []
+    // Transform to unified format based on use type
+    let collections: any[] = []
+    
+    if (use_type === 'search') {
+      // For search: group by search_category (productType-based)
+      const searchCategories = new Map()
+      products?.forEach(product => {
+        const searchCat = product.search_category || 'other'
+        if (!searchCategories.has(searchCat)) {
+          searchCategories.set(searchCat, {
+            id: searchCat,
+            title: formatCategoryTitle(searchCat),
+            handle: searchCat,
+            product_count: 0,
+            products: []
+          })
+        }
+        const category = searchCategories.get(searchCat)
+        category.products.push(product)
+        category.product_count++
+      })
+      collections = Array.from(searchCategories.values())
+    } else {
+      // For delivery apps: use collections
+      collections = collectionsData?.map(col => ({
+        id: col.handle,
+        title: col.title,
+        handle: col.handle,
+        product_count: col.products_count,
+        products: products?.filter(p => p.category === col.handle) || []
+      })) || []
+    }
 
     // Get cache metadata
     const { data: cacheData } = await supabase
@@ -98,11 +132,12 @@ Deno.serve(async (req) => {
       success: true,
       products: products || [],
       collections,
-      categories: collections, // Categories and collections are now unified
+      categories: collections, // Categories and collections based on use_type
       total_products: products?.length || 0,
       total_collections: collections.length,
       cached: true,
       lightweight,
+      use_type,
       last_sync: cacheData?.updated_at || null,
       cache_info: cacheData?.data || null
     }
@@ -171,4 +206,19 @@ async function needsCacheRefresh(supabase: any): Promise<boolean> {
     console.error('Error checking cache freshness:', error)
     return true // Refresh on error
   }
+}
+
+function formatCategoryTitle(category: string): string {
+  const titleMap: Record<string, string> = {
+    'beer': 'Beer',
+    'wine': 'Wine & Champagne',
+    'spirits': 'Spirits',
+    'cocktails': 'Cocktails',
+    'mixers': 'Mixers & N/A',
+    'party-supplies': 'Party Supplies',
+    'snacks': 'Snacks',
+    'other': 'Other'
+  }
+  
+  return titleMap[category] || category.charAt(0).toUpperCase() + category.slice(1)
 }

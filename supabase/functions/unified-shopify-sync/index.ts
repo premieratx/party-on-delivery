@@ -371,10 +371,11 @@ async function updateCaches(
         category_title: primaryCategoryTitle,
         vendor: product.vendor,
         description: product.description,
-        product_type: product.productType,
+        product_type: product.productType, // Used for search categorization
+        search_category: normalizeProductType(product.productType), // Normalized for search
         tags: product.tags,
         variants: product.variants,
-        collection_handles: product.collections.map(c => c.handle),
+        collection_handles: product.collections.map(c => c.handle), // Used for delivery app tabs
         data: product,
         updated_at: new Date().toISOString()
       }
@@ -467,4 +468,46 @@ async function updateCategoryMappings(supabase: any, collections: Map<string, Un
   } else {
     console.log(`✅ Updated ${mappings.length} category mappings`)
   }
+}
+
+function normalizeProductType(productType: string): string {
+  if (!productType) return 'other'
+  
+  const normalized = productType.toLowerCase().trim()
+  
+  // Map Shopify productTypes to search categories
+  const typeMapping: Record<string, string> = {
+    'beer': 'beer',
+    'wine': 'wine',
+    'spirits': 'spirits',
+    'whiskey': 'spirits',
+    'vodka': 'spirits',
+    'rum': 'spirits',
+    'gin': 'spirits',
+    'tequila': 'spirits',
+    'cocktail': 'cocktails',
+    'mixer': 'mixers',
+    'soda': 'mixers',
+    'juice': 'mixers',
+    'water': 'mixers',
+    'party supplies': 'party-supplies',
+    'ice': 'party-supplies',
+    'cups': 'party-supplies',
+    'snacks': 'snacks',
+    'food': 'snacks'
+  }
+  
+  // Find exact match first
+  if (typeMapping[normalized]) {
+    return typeMapping[normalized]
+  }
+  
+  // Find partial match
+  for (const [key, value] of Object.entries(typeMapping)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return value
+    }
+  }
+  
+  return 'other'
 }

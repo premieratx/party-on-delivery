@@ -11,6 +11,8 @@ interface Product {
   description?: string;
   variants?: any[];
   collection_handles?: string[];
+  product_type?: string; // Shopify productType for search
+  search_category?: string; // Normalized category for search
 }
 
 interface Collection {
@@ -24,6 +26,10 @@ interface LoaderOptions {
   app_slug?: string;
   lightweight?: boolean;
   auto_refresh?: boolean;
+  use_type?: 'search' | 'delivery'; // Determines filtering method
+  search_category?: string; // For search functionality
+  category?: string; // For delivery app tabs
+  collection_handle?: string; // For delivery app tabs
 }
 
 export function useOptimizedProductLoader(options: LoaderOptions = {}) {
@@ -34,7 +40,15 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
   const [cached, setCached] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  const { app_slug, lightweight = true, auto_refresh = true } = options;
+  const { 
+    app_slug, 
+    lightweight = true, 
+    auto_refresh = true,
+    use_type = 'delivery',
+    search_category,
+    category,
+    collection_handle
+  } = options;
 
   const loadProducts = useCallback(async (force_refresh = false) => {
     try {
@@ -47,7 +61,11 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
         body: { 
           app_slug, 
           lightweight, 
-          force_refresh 
+          force_refresh,
+          use_type,
+          search_category,
+          category,
+          collection_handle
         }
       });
 
@@ -87,7 +105,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [app_slug, lightweight, retryCount]);
+  }, [app_slug, lightweight, use_type, search_category, category, collection_handle, retryCount]);
 
   const refresh = useCallback(() => {
     setRetryCount(0); // Reset retry count on manual refresh
