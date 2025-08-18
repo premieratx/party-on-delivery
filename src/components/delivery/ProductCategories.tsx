@@ -139,25 +139,39 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       'party-supplies': ['party-supplies', 'decorations']
     };
     
-    const mappedHandles = collectionMappings[currentTab.handle] || [currentTab.handle];
     
-    // First try to match collections by mapped handles
-    let categoryProducts = [];
+    console.log(`📦 ${currentTab.handle}: Looking for products with collection handle: ${currentTab.handle}`);
+    
+    // First priority: Use exact collection handle match from delivery app config
+    let categoryProducts = []
+    
+    // Try to find products from the specific collection configured for this tab
     if (collections && collections.length > 0) {
-      collections.forEach(collection => {
-        if (mappedHandles.some(h => 
-          collection.handle?.toLowerCase().includes(h.toLowerCase()) ||
-          h.toLowerCase().includes(collection.handle?.toLowerCase())
-        )) {
-          if (Array.isArray(collection.products)) {
-            categoryProducts.push(...collection.products);
-          }
-        }
-      });
+      const targetCollection = collections.find(collection => 
+        collection.handle === currentTab.handle
+      );
+      
+      if (targetCollection && Array.isArray(targetCollection.products)) {
+        categoryProducts = targetCollection.products;
+        console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products from configured collection`);
+      }
     }
     
-    // If no products found from collections, try direct product filtering
+    // Fallback: If no exact collection match, try product filtering with collection_handles
     if (categoryProducts.length === 0 && products && products.length > 0) {
+      // Enhanced collection matching for backward compatibility
+      const collectionMappings = {
+        'spirits': ['spirits', 'gin-rum', 'tequila-mezcal', 'whiskey'],
+        'beer': ['tailgate-beer', 'texas-beer-collection', 'beer'],
+        'seltzers': ['seltzer-collection', 'seltzers'],
+        'cocktails': ['cocktail-kits', 'ready-to-drink-cocktails'],
+        'mixers': ['mixers-non-alcoholic', 'mixers'],
+        'wine': ['champagne', 'wine'],
+        'party-supplies': ['party-supplies', 'decorations']
+      };
+      
+      const mappedHandles = collectionMappings[currentTab.handle] || [currentTab.handle];
+      
       categoryProducts = products.filter((product: any) => {
         if (!product) return false;
         return mappedHandles.some(handle => 
@@ -169,9 +183,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                product.category.toLowerCase() === handle.toLowerCase())
         );
       });
+      
+      console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products using enhanced mapping`);
     }
     
-    console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products using enhanced mapping`);
     return categoryProducts;
   }, [tabs, selectedCategory, products, collections]);
 

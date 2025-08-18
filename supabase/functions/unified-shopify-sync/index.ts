@@ -395,7 +395,10 @@ async function updateCaches(
 
   console.log('💾 Inserting collections cache...')
   
-  // Insert unified collections
+  // Insert ALL collections, not just unified ones
+  const allCollections = []
+  
+  // First add the unified collections
   const collectionItems = Array.from(collections.values()).map(collection => ({
     shopify_collection_id: collection.shopify_collection_id || collection.id,
     handle: collection.handle,
@@ -413,14 +416,53 @@ async function updateCaches(
     },
     updated_at: new Date().toISOString()
   }))
-
+  
+  // Also add individual Shopify collections for direct access
+  const shopifyCollections = []
+  const processedHandles = new Set(Array.from(collections.keys()))
+  
+  for (const product of products) {
+    for (const collection of product.collections) {
+      if (!processedHandles.has(collection.handle)) {
+        processedHandles.add(collection.handle)
+        
+        const collectionProducts = products.filter(p => 
+          p.collections.some(c => c.handle === collection.handle)
+        )
+        
+        shopifyCollections.push({
+          shopify_collection_id: collection.id,
+          handle: collection.handle,
+          title: collection.title,
+          description: '',
+          products_count: collectionProducts.length,
+          data: {
+            handle: collection.handle,
+            title: collection.title,
+            products: collectionProducts.map(p => ({
+              id: p.id,
+              title: p.title,
+              price: parseFloat(p.variants[0]?.price || '0'),
+              image: p.images[0]?.url || '/placeholder.svg'
+            }))
+          },
+          updated_at: new Date().toISOString()
+        })
+      }
+    }
+  }
+  
+  allCollections.push(...collectionItems, ...shopifyCollections)
+  
   const { error: collectionsError } = await supabase
     .from('shopify_collections_cache')
-    .insert(collectionItems)
+    .insert(allCollections)
 
   if (collectionsError) {
     console.error('Error inserting collections:', collectionsError)
   }
+
+  console.log(`💾 Collections inserted: ${collectionItems.length} unified + ${shopifyCollections.length} individual = ${allCollections.length} total`)
 
   // Create unified cache entry
   const unifiedCacheData = {
@@ -443,7 +485,7 @@ async function updateCaches(
     updated_at: new Date().toISOString()
   })
 
-  console.log(`💾 Cache updated: ${totalInserted} products, ${collectionItems.length} collections`)
+  console.log(`💾 Cache updated: ${totalInserted} products, ${allCollections.length} collections`)
 }
 
 async function updateCategoryMappings(supabase: any, collections: Map<string, UnifiedCollection>) {
