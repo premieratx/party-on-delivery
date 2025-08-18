@@ -282,8 +282,8 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
       if (isDefaultHomepage) {
         await supabase
           .from('cover_pages')
-          .update({ is_default_homepage: false })
-          .eq('is_default_homepage', true);
+          .update({ is_default_homepage: false } as any)
+          .neq('id', initial?.id || 'none');
       }
 
       if (isEditing && initial?.id) {

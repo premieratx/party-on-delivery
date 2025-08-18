@@ -83,18 +83,136 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Fetch fresh products from Shopify
+    // Fetch fresh products from Shopify directly
     console.log('📦 Fetching fresh products...')
-    const { data: shopifyResponse, error: shopifyError } = await supabase.functions.invoke('fetch-shopify-products', {
-      body: { forceRefresh: true }
-    })
-
-    if (shopifyError) {
-      console.error('Error fetching from Shopify:', shopifyError)
-      throw shopifyError
+    
+    const SHOPIFY_STORE = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";
+    const SHOPIFY_ACCESS_TOKEN = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
+    
+    if (!SHOPIFY_ACCESS_TOKEN) {
+      throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not set");
     }
 
-    const shopifyProducts = shopifyResponse?.products || []
+    const query = `
+      query {
+        products(first: 250, query: "status:active") {
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+          edges {
+            node {
+              id
+              title
+              handle
+              description
+              productType
+              vendor
+              tags
+              collections(first: 20) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                  }
+                }
+              }
+              images(first: 1) {
+                edges {
+                  node {
+                    url
+                    altText
+                  }
+                }
+              }
+              variants(first: 3) {
+                edges {
+                  node {
+                    id
+                    title
+                    price
+                    availableForSale
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const response = await fetch(`https://${SHOPIFY_STORE}/admin/api/2025-01/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Shopify API error:", errorText);
+      throw new Error(`Shopify API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.errors) {
+      console.error("GraphQL errors:", data.errors);
+      throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
+    }
+
+    if (!data.data?.products) {
+      console.error("No products data in response");
+      throw new Error("No products data returned from Shopify");
+    }
+
+    // Transform products
+    const shopifyProducts = data.data.products.edges.map(({ node: product }: any) => {
+      const variant = product.variants.edges[0]?.node;
+      const image = product.images.edges[0]?.node;
+      
+      let category = product.productType || 'other';
+      const categoryTags = product.tags?.filter((tag: string) => 
+        tag.toLowerCase().includes('spirits') ||
+        tag.toLowerCase().includes('beer') ||
+        tag.toLowerCase().includes('wine') ||
+        tag.toLowerCase().includes('cocktail') ||
+        tag.toLowerCase().includes('party') ||
+        tag.toLowerCase().includes('supplies')
+      );
+      
+      if (categoryTags?.length > 0) {
+        category = categoryTags[0];
+      }
+
+      return {
+        id: product.id,
+        title: product.title,
+        handle: product.handle,
+        description: product.description || '',
+        price: variant ? variant.price : '0',
+        image: image?.url || '/placeholder.svg',
+        vendor: product.vendor || '',
+        category: category,
+        productType: product.productType || '',
+        tags: product.tags || [],
+        collections: product.collections.edges.map(({ node }: any) => ({
+          id: node.id,
+          title: node.title,
+          handle: node.handle
+        })),
+        variants: product.variants.edges.map(({ node: v }: any) => ({
+          id: v.id,
+          title: v.title,
+          price: parseFloat(v.price),
+          available: v.availableForSale
+        }))
+      };
+    });
+
     console.log(`✅ Successfully fetched ${shopifyProducts.length} products`)
 
     if (shopifyProducts.length === 0) {
