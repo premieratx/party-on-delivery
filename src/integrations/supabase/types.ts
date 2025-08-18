@@ -2601,11 +2601,14 @@ export type Database = {
           image: string | null
           image_url: string | null
           price: number | null
+          product_type: string | null
           shopify_id: string | null
           shopify_product_id: string
+          tags: string[] | null
           title: string
           updated_at: string
           variants: Json | null
+          vendor: string | null
         }
         Insert: {
           category?: string | null
@@ -2619,11 +2622,14 @@ export type Database = {
           image?: string | null
           image_url?: string | null
           price?: number | null
+          product_type?: string | null
           shopify_id?: string | null
           shopify_product_id: string
+          tags?: string[] | null
           title: string
           updated_at?: string
           variants?: Json | null
+          vendor?: string | null
         }
         Update: {
           category?: string | null
@@ -2637,11 +2643,14 @@ export type Database = {
           image?: string | null
           image_url?: string | null
           price?: number | null
+          product_type?: string | null
           shopify_id?: string | null
           shopify_product_id?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string
           variants?: Json | null
+          vendor?: string | null
         }
         Relationships: [
           {
@@ -3280,9 +3289,17 @@ export type Database = {
         Args: { p_duration_ms: number; p_operation: string }
         Returns: undefined
       }
+      optimized_cache_cleanup: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       safe_cache_upsert: {
         Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
         Returns: string
+      }
+      safe_timestamp_to_bigint: {
+        Args: { ts: string }
+        Returns: number
       }
       trigger_shopify_bulk_sync: {
         Args: Record<PropertyKey, never>
