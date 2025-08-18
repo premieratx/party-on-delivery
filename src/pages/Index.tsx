@@ -114,17 +114,6 @@ const Index = () => {
         cartItemCount={cartItems.length}
       />
       
-      {/* Minimal Sync Controls - Bottom Right Corner */}
-      <div className="fixed bottom-2 right-2 z-30">
-        <div className="bg-background/90 backdrop-blur-sm border rounded-md p-2 shadow-sm space-y-1 max-w-[120px]">
-          <div className="text-[9px] font-medium text-muted-foreground text-center">Sync</div>
-          <div className="flex flex-col gap-1">
-            <TriggerProductSync />
-            <QuickSync />
-            <ManualSync />
-          </div>
-        </div>
-      </div>
     </>
   );
 };

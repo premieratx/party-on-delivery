@@ -47,6 +47,7 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
   const handleOccasionClick = (appSlug: string) => {
     console.log(`🎉 OccasionButtons: Navigating to delivery app: ${appSlug}`);
     console.log(`🔄 Current URL will change to: /app/${appSlug}`);
+    // Use the correct route format 
     navigate(`/app/${appSlug}`);
   };
 

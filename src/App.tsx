@@ -158,9 +158,7 @@ const App = () => {
                     <Route path="/app/party-on-delivery---concierge-" element={<CustomPartyOnDeliveryStartScreen />} />
                     <Route path="/app/party-on-delivery---concierge-/order-complete" element={<CustomPartyOnDeliveryPostCheckout />} />
                     
-                    {/* Dynamic delivery app routes */}
-                    <Route path="/app/:appName" element={<CustomAppView />} />
-                    <Route path="/app/:appName/order-complete" element={<CustomAppPostCheckout />} />
+                    {/* Dynamic delivery app routes - removed duplicate */}
                     
                     {/* Test Routes */}
                     <Route path="/test-sms" element={<TestSMS />} />

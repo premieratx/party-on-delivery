@@ -27,8 +27,7 @@ const CATEGORY_TABS = [
   { id: 'beer', title: 'Beer', handle: 'beer' },
   { id: 'seltzers', title: 'Seltzers', handle: 'seltzers' },
   { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers' },
-  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails' },
-  { id: 'search', title: 'Search', handle: 'search', isSearch: true }
+  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails' }
 ];
 
 export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProps> = ({
@@ -49,7 +48,7 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
   const { getCollectionProducts, searchProducts } = useOptimizedShopify();
   
 const currentTab = CATEGORY_TABS[selectedCategory];
-const isSearchTab = currentTab?.isSearch;
+const isSearchTab = false; // No search tab anymore
 
 // Apply affiliate markup to displayed prices
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
@@ -221,7 +220,7 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
                 onClick={() => setSelectedCategory(index)}
                 className="flex-1 basis-0 min-w-0 px-0 py-1 h-auto min-h-10 max-h-12 text-[6.5px] tracking-tight leading-[0.85rem] whitespace-normal break-words text-center overflow-hidden rounded-none first:rounded-l-md last:rounded-r-md"
               >
-                {tab.isSearch && <Search className="h-2.5 w-2.5 mr-1 inline-block align-[-2px]" />}
+                
                 {tab.title}
               </Button>
             ))}

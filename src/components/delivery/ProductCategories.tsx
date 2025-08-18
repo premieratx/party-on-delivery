@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
@@ -7,7 +8,7 @@ import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { ForceAddToCartButton } from '@/components/common/ForceAddToCartButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Minus } from 'lucide-react';
+import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { VideoBackground } from '@/components/common/VideoBackground';
 import { TypingIntro } from '@/components/common/TypingIntro';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
@@ -58,8 +59,7 @@ const DEFAULT_COLLECTIONS = [
   { id: 'beer', title: 'Beer', handle: 'beer', isSearch: false, icon: '🍺' },
   { id: 'seltzers', title: 'Seltzers', handle: 'seltzers', isSearch: false, icon: '🥤' },
   { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers', isSearch: false, icon: '🧊' },
-  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails', isSearch: false, icon: '🍸' },
-  { id: 'search', title: 'Search', handle: 'search', isSearch: true, icon: '🔍' }
+  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails', isSearch: false, icon: '🍸' }
 ];
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
@@ -86,7 +86,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
-  const [isSearchTab, setIsSearchTab] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchProducts, setSearchProducts] = useState<any[]>([]);
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
@@ -103,7 +104,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
 
-  // Use collections from config or defaults
+  // Use collections from config or defaults (without search tab)
   const tabs = useMemo(() => {
     if (collectionsConfig?.tabs) {
       return collectionsConfig.tabs.map((tab, index) => ({
@@ -112,7 +113,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         handle: tab.collection_handle,
         icon: tab.icon || '📦',
         isSearch: false
-      })).concat([{ id: 'search', title: 'Search', handle: 'search', isSearch: true, icon: '🔍' }]);
+      }));
     }
     return DEFAULT_COLLECTIONS;
   }, [collectionsConfig]);
@@ -201,9 +202,34 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   };
 
-  const handleSearch = () => {
-    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-  };
+  const handleSearch = useCallback(async () => {
+    if (!searchQuery?.trim()) {
+      setSearchProducts([]);
+      return;
+    }
+    
+    console.log('🔍 Instant search for:', searchQuery);
+    try {
+      setIsSearching(true);
+      
+      // Use smart cache for instant search
+      const { data: cacheData } = await supabase.functions.invoke('instant-product-cache', {
+        body: { forceRefresh: false }
+      });
+      
+      if (cacheData?.success && cacheData?.data?.products) {
+        const filtered = cacheData.data.products.filter((product: any) =>
+          product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setSearchProducts(filtered);
+      }
+    } catch (err) {
+      console.error('Search error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -263,18 +289,29 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
-      {/* Search Bar Above Tabs */}
+      {/* Search Bar Above Tabs - Sticky */}
       {showSearch && (
-        <div className="bg-background border-b py-4">
+        <div className="sticky top-0 z-50 bg-background border-b py-4">
           <div className="container mx-auto px-4">
             <div className="flex max-w-md mx-auto">
               <Input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                   setSearchQuery(e.target.value);
+                   // Instant search as user types with debounce
+                   const query = e.target.value.trim();
+                   if (query) {
+                     setTimeout(() => handleSearch(), 300);
+                   } else {
+                     setSearchProducts([]);
+                   }
+                }}
                 className="rounded-r-none"
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onFocus={() => setIsSearching(true)}
+                onBlur={() => setTimeout(() => setIsSearching(false), 100)}
               />
               <Button 
                 onClick={handleSearch}
@@ -287,54 +324,94 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       )}
 
-      {/* Category Tabs */}
-      <div className="sticky top-0 z-40 bg-background border-b">
+      {/* Category Tabs with Cart on Desktop */}
+      <div className="sticky top-[72px] z-40 bg-background border-b">
         <div className="container mx-auto px-4">
-          <div className="flex space-x-1 overflow-x-auto py-2 scrollbar-hide">
-            {tabs.map((tab, index) => (
-              <Button
-                key={tab.id}
-                variant={selectedCategory === index ? "default" : "ghost"}
-                className="whitespace-nowrap min-w-fit"
-                onClick={() => {
-                  setSelectedCategory(index);
-                  setIsSearchTab(tab.isSearch || false);
-                }}
+          <div className="flex items-center justify-between py-2">
+            <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
+              {tabs.map((tab, index) => (
+                <Button
+                  key={tab.id}
+                  variant={selectedCategory === index ? "default" : "ghost"}
+                  className="whitespace-nowrap min-w-fit"
+                  onClick={() => {
+                    setSelectedCategory(index);
+                  }}
+                >
+                  {tab.icon && <span className="mr-2">{tab.icon}</span>}
+                  {tab.title}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Cart/Checkout on Desktop */}
+            <div className="hidden lg:flex ml-4">
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/checkout')}
+                className="whitespace-nowrap"
               >
-                {tab.icon && <span className="mr-2">{tab.icon}</span>}
-                {tab.title}
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Cart ({cartItemCount})
               </Button>
-            ))}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8">
-        {isCurrentlySearchTab ? (
-          <div className="text-center py-12">
-            <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-xl font-semibold mb-2">Search Products</h3>
-            <p className="text-muted-foreground mb-6">
-              Enter a search term above to find products
-            </p>
-            <div className="flex max-w-md mx-auto">
-              <Input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="rounded-r-none"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button 
-                onClick={handleSearch}
-                className="rounded-l-none"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
+        {/* Show search results when searching */}
+        {isSearching && searchProducts.length > 0 ? (
+          <>
+            <h3 className="text-lg font-semibold mb-4">Search Results ({searchProducts.length})</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {searchProducts.map((product) => {
+                const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+                return (
+                  <div key={product.id} className="bg-card border rounded-lg p-4 hover:shadow-lg transition-shadow">
+                    <OptimizedImage
+                      src={product.image}
+                      alt={product.title}
+                      className="w-full h-48 object-cover rounded-lg mb-3"
+                    />
+                    <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.title}</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-bold text-primary">${product.price}</span>
+                    </div>
+                    {quantity > 0 ? (
+                      <div className="flex items-center justify-between">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="font-medium">{quantity}</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddToCart(product)}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add to Cart
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          </>
         ) : loading ? (
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner />
