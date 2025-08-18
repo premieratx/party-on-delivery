@@ -2605,6 +2605,7 @@ export type Database = {
           shopify_product_id: string
           title: string
           updated_at: string
+          variants: Json | null
         }
         Insert: {
           category?: string | null
@@ -2622,6 +2623,7 @@ export type Database = {
           shopify_product_id: string
           title: string
           updated_at?: string
+          variants?: Json | null
         }
         Update: {
           category?: string | null
@@ -2639,6 +2641,7 @@ export type Database = {
           shopify_product_id?: string
           title?: string
           updated_at?: string
+          variants?: Json | null
         }
         Relationships: [
           {
