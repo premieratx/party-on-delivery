@@ -1,5 +1,5 @@
 import React from 'react';
-import austinBackground from '@/assets/austin-party-background.jpg';
+import austinBackground from '@/assets/austin-rooftop-party.jpg';
 
 interface VideoBackgroundProps {
   children: React.ReactNode;
