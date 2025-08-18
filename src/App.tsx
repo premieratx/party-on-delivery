@@ -7,9 +7,7 @@ import { StripeProvider } from "@/components/payment/StripeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
-import { ManualSync } from "./components/ManualSync";
-import { SystemStatus } from "./components/SystemStatus";
-import { DirectBulkSync } from "./components/DirectBulkSync";
+// Removed sync components from global app - moved to admin dashboard
 // import { PerformanceMonitor } from "@/components/common/PerformanceMonitor"; // DISABLED
 import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
@@ -182,11 +180,8 @@ const App = () => {
                   </Routes>
                 </Suspense>
                </div>
-               {/* <PerformanceMonitor /> DISABLED */}
-               <GlobalNavigation />
-               <ManualSync />
-               <SystemStatus />
-               <DirectBulkSync />
+                {/* <PerformanceMonitor /> DISABLED */}
+                <GlobalNavigation />
                </GlobalCartProvider>
             </BrowserRouter>
           </TooltipProvider>

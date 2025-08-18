@@ -4,14 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { QuickSync } from '@/components/QuickSync';
-import { ManualSync } from '@/components/ManualSync';
-import { TriggerProductSync } from '@/components/TriggerProductSync';
+// Removed sync components from home page - moved to admin dashboard
 import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
-  console.log('🏠 Index: Component rendering - ManualSync should be visible');
   
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);

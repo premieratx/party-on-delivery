@@ -47,6 +47,8 @@ import { UnifiedCoverPostCheckoutBuilder } from '@/components/admin/UnifiedCover
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import { TriggerShopifySync } from '@/components/admin/TriggerShopifySync';
 import { CoverPageToggle } from '@/components/admin/CoverPageToggle';
+import { SecuritySyncDashboard } from '@/components/admin/SecuritySyncDashboard';
+import { EnhancedCacheManager } from '@/components/admin/EnhancedCacheManager';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -271,7 +273,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-1 w-full h-auto flex-wrap p-2">
+            <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-11 gap-1 w-full h-auto flex-wrap p-2">
               <TabsTrigger value="overview" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">Overview</TabsTrigger>
               <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Orders</TabsTrigger>
               <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">👥 Affiliates</TabsTrigger>
@@ -281,9 +283,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🎬 Cover Pages</TabsTrigger>
               <TabsTrigger value="post-checkout-builder" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">✅ Post-Checkout</TabsTrigger>
               <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Quotes</TabsTrigger>
+              <TabsTrigger value="security-sync" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🛡️ Security & Sync</TabsTrigger>
+              <TabsTrigger value="performance" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚡ Performance & Optimization</TabsTrigger>
               <TabsTrigger value="ghl-setup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📱 GHL/SMS</TabsTrigger>
               <TabsTrigger value="settings" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚙️ Settings</TabsTrigger>
-              <TabsTrigger value="performance" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚡ Performance</TabsTrigger>
               <TabsTrigger value="cleanup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🗑️ Cleanup</TabsTrigger>
             </TabsList>
 
@@ -551,18 +554,48 @@ export default function AdminDashboard() {
             <LinkValidationDashboard />
           </TabsContent>
 
+          <TabsContent value="security-sync" className="space-y-4">
+            <SecuritySyncDashboard />
+          </TabsContent>
+
           <TabsContent value="performance" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <PerformanceOptimizationSummary />
-                <PerformanceChecklist />
-                <SystemTestingSuite />
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Performance Optimization & Testing</h3>
+                <p className="text-sm text-muted-foreground">Comprehensive performance monitoring, testing, and optimization tools</p>
               </div>
-              <div className="space-y-4">
-                <PerformanceTestRunner />
-                <PerformanceReportGenerator />
-                <DatabaseOptimizationTester />
-              </div>
+              
+              <Tabs defaultValue="optimization" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="optimization">Optimization</TabsTrigger>
+                  <TabsTrigger value="testing">Testing</TabsTrigger>
+                  <TabsTrigger value="database">Database</TabsTrigger>
+                  <TabsTrigger value="reports">Reports</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="optimization" className="space-y-4">
+                  <div className="grid gap-4">
+                    <EnhancedCacheManager />
+                    <PerformanceOptimizationSummary />
+                    <PerformanceChecklist />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="testing" className="space-y-4">
+                  <div className="grid gap-4">
+                    <PerformanceTestRunner />
+                    <SystemTestingSuite />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="database" className="space-y-4">
+                  <DatabaseOptimizationTester />
+                </TabsContent>
+                
+                <TabsContent value="reports" className="space-y-4">
+                  <PerformanceReportGenerator />
+                </TabsContent>
+              </Tabs>
             </div>
           </TabsContent>
 
@@ -661,7 +694,6 @@ export default function AdminDashboard() {
                     </ol>
                   </div>
                   
-                   <TriggerShopifySync />
                    <TestGHLIntegration />
                 </CardContent>
               </Card>
