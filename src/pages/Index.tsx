@@ -6,6 +6,8 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
 import { ForceProductSync } from '@/components/emergency/ForceProductSync';
+import { InstantProductLoader } from '@/components/emergency/InstantProductLoader';
+import { CriticalProductSync } from '@/components/emergency/CriticalProductSync';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -114,29 +116,18 @@ const Index = () => {
     );
   }
 
-  // Show force sync interface if products are missing
+  // Show instant product loader if products are missing
   if (showForceSync) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-2xl space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-red-600">⚠️ Products Not Loaded</h2>
+            <h2 className="text-2xl font-bold text-red-600">🚨 Loading Products</h2>
             <p className="text-muted-foreground">
-              The Shopify product cache is empty or incomplete. Please force sync to load all 1000+ products.
+              Product cache is empty. Loading all products now...
             </p>
           </div>
-          <ForceProductSync />
-          <div className="text-center">
-            <button 
-              onClick={() => {
-                setShowForceSync(false);
-                window.location.reload();
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground underline"
-            >
-              Continue anyway (products may not load)
-            </button>
-          </div>
+          <CriticalProductSync />
         </div>
       </div>
     );
