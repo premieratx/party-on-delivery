@@ -41,9 +41,9 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       setLoading(true);
       setError(null);
 
-      console.log('🔄 Loading optimized products...');
+      console.log('🔄 Loading unified products...');
 
-      const { data, error: functionError } = await supabase.functions.invoke('optimized-product-loader', {
+      const { data, error: functionError } = await supabase.functions.invoke('get-unified-products', {
         body: { 
           app_slug, 
           lightweight, 

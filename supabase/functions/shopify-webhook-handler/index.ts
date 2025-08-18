@@ -60,39 +60,61 @@ switch (topic) {
 })
 
 async function handleCollectionUpdate(supabase: any, collection: any) {
-  console.log(`🔄 Updating collection cache: ${collection.handle}`)
+  console.log(`🔄 Collection updated: ${collection.handle}`)
   
-  // Clear collection cache
-  await supabase
-    .from('cache')
-    .delete()
-    .eq('key', `shopify_collection_${collection.handle}`)
+  // Clear unified caches
+  await supabase.from('cache').delete().like('key', 'shopify%')
+  await supabase.from('cache').delete().like('key', 'products%')
     
-  // Trigger app refresh for this collection
-  await supabase.functions.invoke('sync-products-to-app', {
-    body: { collection_handle: collection.handle, incremental: true }
+  // Trigger unified sync to refresh everything
+  await supabase.functions.invoke('unified-shopify-sync', {
+    body: { forceRefresh: true, trigger: 'webhook' }
   })
 }
 
 async function handleProductUpdate(supabase: any, product: any) {
-  console.log(`🔄 Updating product cache: ${product.id}`)
+  console.log(`🔄 Product updated: ${product.id}`)
   
+  // For product updates, we can be more targeted
   // Clear product-related caches
-  await supabase
-    .from('cache')
-    .delete()
-    .like('key', '%product%')
+  await supabase.from('cache').delete().like('key', 'shopify%')
+  await supabase.from('cache').delete().like('key', 'products%')
     
-  // Update product in our cache
+  // Update individual product in cache
+  const productData = {
+    shopify_id: product.id.toString(),
+    title: product.title,
+    handle: product.handle,
+    price: parseFloat(product.variants?.[0]?.price || '0'),
+    image: product.images?.[0]?.src || '/placeholder.svg',
+    category: determineCategoryFromProduct(product),
+    vendor: product.vendor || '',
+    description: product.body_html || '',
+    product_type: product.product_type || '',
+    tags: product.tags?.split(',').map((tag: string) => tag.trim()) || [],
+    data: product,
+    updated_at: new Date().toISOString()
+  }
+
   await supabase
     .from('shopify_products_cache')
-    .upsert({
-      shopify_id: product.id.toString(),
-      title: product.title,
-      handle: product.handle,
-      data: product,
-      updated_at: new Date().toISOString()
-    })
+    .upsert(productData, { onConflict: 'shopify_id' })
+}
+
+function determineCategoryFromProduct(product: any): string {
+  const productInfo = `${product.product_type || ''} ${product.tags || ''}`.toLowerCase()
+  
+  if (productInfo.includes('spirits') || productInfo.includes('whiskey') || productInfo.includes('vodka') || 
+      productInfo.includes('gin') || productInfo.includes('rum') || productInfo.includes('tequila')) {
+    return 'spirits'
+  }
+  if (productInfo.includes('beer')) return 'beer'
+  if (productInfo.includes('wine') || productInfo.includes('champagne')) return 'wine'
+  if (productInfo.includes('cocktail')) return 'cocktails'
+  if (productInfo.includes('mixer') || productInfo.includes('non-alcoholic')) return 'mixers'
+  if (productInfo.includes('party') || productInfo.includes('supplies')) return 'party-supplies'
+  
+  return 'other'
 }
 
 async function handleOrderUpdate(supabase: any, order: any) {
