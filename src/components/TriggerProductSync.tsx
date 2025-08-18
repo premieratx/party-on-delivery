@@ -12,7 +12,7 @@ export const TriggerProductSync = () => {
     try {
       console.log('🚀 Triggering product sync...');
       
-      const { data, error } = await supabase.functions.invoke('shopify-bulk-sync', {
+      const { data, error } = await supabase.functions.invoke('trigger-shopify-sync', {
         body: { forceRefresh: true }
       });
 
