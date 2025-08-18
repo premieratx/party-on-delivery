@@ -11,7 +11,7 @@ import { CriticalProductSync } from '@/components/emergency/CriticalProductSync'
 import { DirectProductSync } from '@/components/emergency/DirectProductSync';
 import { InstantProductSync } from '@/components/emergency/InstantProductSync';
 import { QuickSyncTrigger } from '@/components/emergency/QuickSyncTrigger';
-import { EmergencyForceSync } from '@/components/emergency/EmergencyForceSync';
+import { SimpleForceSync } from '@/components/emergency/SimpleForceSync';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -157,7 +157,7 @@ const Index = () => {
 
   return (
     <>
-      <EmergencyForceSync />
+      <SimpleForceSync />
       <QuickSyncTrigger />
       <ProductCategories
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}

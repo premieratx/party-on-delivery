@@ -2594,6 +2594,7 @@ export type Database = {
       shopify_products_cache: {
         Row: {
           category: string | null
+          category_title: string | null
           collection_handles: string[] | null
           collection_id: string | null
           created_at: string
@@ -2616,6 +2617,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          category_title?: string | null
           collection_handles?: string[] | null
           collection_id?: string | null
           created_at?: string
@@ -2638,6 +2640,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          category_title?: string | null
           collection_handles?: string[] | null
           collection_id?: string | null
           created_at?: string
