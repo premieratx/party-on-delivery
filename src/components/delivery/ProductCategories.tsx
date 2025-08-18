@@ -213,23 +213,40 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       setIsSearching(true);
       
       // Use smart cache for instant search
-      const { data: cacheData } = await supabase.functions.invoke('instant-product-cache', {
+      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
         body: { forceRefresh: false }
       });
       
-      if (cacheData?.success && cacheData?.data?.products) {
+      console.log('🔍 Search cache response:', { cacheData, cacheError });
+      
+      if (!cacheError && cacheData?.success && cacheData?.data?.products) {
         const filtered = cacheData.data.products.filter((product: any) =>
           product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.description?.toLowerCase().includes(searchQuery.toLowerCase())
         );
+        console.log(`🔍 Found ${filtered.length} search results`);
         setSearchProducts(filtered);
+      } else {
+        console.warn('Search cache failed, using fallback search');
+        // Fallback: search in current loaded products
+        const fallbackFiltered = products.filter((product: any) =>
+          product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setSearchProducts(fallbackFiltered);
       }
     } catch (err) {
       console.error('Search error:', err);
+      // Fallback: search in current loaded products
+      const fallbackFiltered = products.filter((product: any) =>
+        product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setSearchProducts(fallbackFiltered);
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, products]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -416,6 +433,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner />
             <span className="ml-2">Loading products...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 text-destructive">⚠️</div>
+            <h3 className="text-xl font-semibold mb-2 text-destructive">Error Loading Products</h3>
+            <p className="text-muted-foreground mb-6">{error}</p>
+            <Button onClick={refreshProducts} variant="outline">
+              Try Again
+            </Button>
           </div>
         ) : currentTabProducts.length === 0 ? (
           <div className="text-center py-12">

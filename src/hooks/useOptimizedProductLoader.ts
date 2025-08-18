@@ -55,6 +55,8 @@ export const useOptimizedProductLoader = () => {
         body: { forceRefresh: false }
       });
 
+      console.log('📦 Cache response:', { cacheData, cacheError });
+
       if (!cacheError && cacheData?.success && cacheData?.data) {
         const { products: cachedProducts, collections: cachedCollections } = cacheData.data;
         
@@ -70,6 +72,8 @@ export const useOptimizedProductLoader = () => {
       // Fallback 1: Try get-all-collections with products
       console.log('📦 Trying collections API...');
       const { data: collectionsData, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
+      
+      console.log('📦 Collections response:', { collectionsData, collectionsError });
       
       if (!collectionsError && collectionsData?.success && collectionsData?.collections) {
         const collections = Array.isArray(collectionsData.collections) ? collectionsData.collections : [];
@@ -95,6 +99,8 @@ export const useOptimizedProductLoader = () => {
         body: { lightweight: true, includeImages: true, limit: 200 }
       });
 
+      console.log('📦 Optimized response:', { optimizedData, optimizedError });
+
       if (!optimizedError && optimizedData?.success && optimizedData?.products) {
         const products = Array.isArray(optimizedData.products) ? optimizedData.products : [];
         console.log(`✅ Optimized API: ${products.length} products`);
@@ -104,11 +110,26 @@ export const useOptimizedProductLoader = () => {
         return;
       }
 
+      // Final fallback: Try direct product fetch
+      console.log('📦 Trying direct product fetch...');
+      const { data: directData, error: directError } = await supabase.functions.invoke('fetch-shopify-products');
+      
+      console.log('📦 Direct response:', { directData, directError });
+      
+      if (!directError && Array.isArray(directData)) {
+        console.log(`✅ Direct fetch: ${directData.length} products`);
+        setProducts(directData);
+        setCollections([]);
+        setLoading(false);
+        return;
+      }
+
       throw new Error('All product loading methods failed');
 
     } catch (err) {
       console.error('❌ Product loading failed:', err);
-      setError('Failed to load products. Please try refreshing.');
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(`Failed to load products: ${errorMessage}`);
       setProducts([]);
       setCollections([]);
     } finally {
