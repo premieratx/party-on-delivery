@@ -110,21 +110,29 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Get products for current tab
   const currentTabProducts = useMemo(() => {
+    // Safety checks for arrays
+    if (!Array.isArray(tabs) || !Array.isArray(products) || !Array.isArray(collections)) {
+      return [];
+    }
+    
     const currentTab = tabs[selectedCategory];
     if (!currentTab || currentTab.isSearch) return [];
     
     // Find collection by handle or filter products by category
     const collection = collections.find(c => c.handle === currentTab.handle);
-    if (collection?.products?.length) {
+    if (collection?.products && Array.isArray(collection.products) && collection.products.length > 0) {
       return collection.products;
     }
     
     // Fallback: filter all products by category match
     return products.filter((product: any) => {
+      if (!product || !currentTab) return false;
       return product.collection_handles?.some((handle: string) => 
-        handle.toLowerCase().includes(currentTab.handle.toLowerCase()) ||
-        currentTab.handle.toLowerCase().includes(handle.toLowerCase())
-      ) || product.category?.toLowerCase() === currentTab.handle.toLowerCase();
+        handle && typeof handle === 'string' && currentTab.handle && 
+        (handle.toLowerCase().includes(currentTab.handle.toLowerCase()) ||
+        currentTab.handle.toLowerCase().includes(handle.toLowerCase()))
+      ) || (product.category && currentTab.handle && 
+           product.category.toLowerCase() === currentTab.handle.toLowerCase());
     });
   }, [collections, tabs, selectedCategory, products]);
 
@@ -290,6 +298,19 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 <Search className="w-4 h-4" />
               </Button>
             </div>
+          </div>
+        ) : loading ? (
+          <div className="flex justify-center items-center py-12">
+            <LoadingSpinner />
+            <span className="ml-2">Loading products...</span>
+          </div>
+        ) : currentTabProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 text-muted-foreground">📦</div>
+            <h3 className="text-xl font-semibold mb-2">No Products Found</h3>
+            <p className="text-muted-foreground mb-6">
+              No products available in this category yet. Try using the sync buttons below to load products.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">

@@ -47,18 +47,18 @@ export const useOptimizedProductLoader = () => {
 
       const now = Date.now();
       if (!forceRefresh && __memoryCache && (now - __memoryCacheAt) < __CACHE_TTL_MS) {
-        setProducts(__memoryCache.products || []);
-        setCollections(__memoryCache.collections || []);
-        setCategories(__memoryCache.categories || []);
+        setProducts(Array.isArray(__memoryCache.products) ? __memoryCache.products : []);
+        setCollections(Array.isArray(__memoryCache.collections) ? __memoryCache.collections : []);
+        setCategories(Array.isArray(__memoryCache.categories) ? __memoryCache.categories : []);
         return;
       }
 
       if (!forceRefresh && __inflightPromise) {
         await __inflightPromise;
         if (__memoryCache) {
-          setProducts(__memoryCache.products || []);
-          setCollections(__memoryCache.collections || []);
-          setCategories(__memoryCache.categories || []);
+          setProducts(Array.isArray(__memoryCache.products) ? __memoryCache.products : []);
+          setCollections(Array.isArray(__memoryCache.collections) ? __memoryCache.collections : []);
+          setCategories(Array.isArray(__memoryCache.categories) ? __memoryCache.categories : []);
         }
         return;
       }
@@ -78,12 +78,14 @@ export const useOptimizedProductLoader = () => {
           console.log('✅ useOptimizedProductLoader: Loaded', productData.products?.length || 0, 'products and', productData.collections?.length || 0, 'collections');
           __memoryCache = productData;
           __memoryCacheAt = Date.now();
-          setProducts(productData.products || []);
-          setCollections(productData.collections || []);
-          setCategories(productData.categories || []);
+          setProducts(Array.isArray(productData.products) ? productData.products : []);
+          setCollections(Array.isArray(productData.collections) ? productData.collections : []);
+          setCategories(Array.isArray(productData.categories) ? productData.categories : []);
         } else {
-          console.error('❌ useOptimizedProductLoader: No data returned from cache', data);
-          throw new Error('Failed to load product data');
+          console.log('⚠️ useOptimizedProductLoader: No data returned from cache, using empty arrays', data);
+          setProducts([]);
+          setCollections([]);
+          setCategories([]);
         }
       })();
 
