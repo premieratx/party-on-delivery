@@ -62,18 +62,15 @@ Deno.serve(async (req) => {
       throw new Error('No products returned from Shopify - check API credentials')
     }
 
-    // Step 2: Build unified collections that represent both categories and collections
-    const unifiedCollections = await buildUnifiedCollections(products)
-    console.log(`🏷️ Created ${unifiedCollections.size} unified collections`)
+    // Step 2: Build collections from all product collections
+    const allCollections = await buildAllCollections(products)
+    console.log(`🏷️ Found ${allCollections.length} total collections`)
 
     // Step 3: Clear and update all caches atomically
-    await updateCaches(supabase, products, unifiedCollections, forceRefresh)
-
-    // Step 4: Update category mappings for consistency
-    await updateCategoryMappings(supabase, unifiedCollections)
+    await updateCaches(supabase, products, allCollections, forceRefresh)
 
     const totalProducts = products.length
-    const totalCollections = unifiedCollections.size
+    const totalCollections = allCollections.length
 
     console.log(`✅ Unified sync completed: ${totalProducts} products, ${totalCollections} collections`)
 
@@ -229,102 +226,53 @@ async function fetchAllProductsWithCollections(): Promise<ShopifyProduct[]> {
   return allProducts
 }
 
-async function buildUnifiedCollections(products: ShopifyProduct[]): Promise<Map<string, UnifiedCollection>> {
-  const collections = new Map<string, UnifiedCollection>()
+async function buildAllCollections(products: ShopifyProduct[]) {
+  const collectionsMap = new Map()
   
-  // Define priority categories (these map to both collections and categories)
-  const priorityMappings = [
-    { handle: 'spirits', title: 'Spirits', app_category: 'spirits', priority: 1 },
-    { handle: 'beer', title: 'Beer', app_category: 'beer', priority: 2 },
-    { handle: 'wine', title: 'Wine & Champagne', app_category: 'wine', priority: 3 },
-    { handle: 'cocktails', title: 'Cocktails', app_category: 'cocktails', priority: 4 },
-    { handle: 'mixers', title: 'Mixers & N/A', app_category: 'mixers', priority: 5 },
-    { handle: 'party-supplies', title: 'Party Supplies', app_category: 'party-supplies', priority: 6 }
-  ]
-
-  // Initialize priority collections
-  for (const mapping of priorityMappings) {
-    collections.set(mapping.handle, {
-      id: `unified-${mapping.handle}`,
-      title: mapping.title,
-      handle: mapping.handle,
-      description: `${mapping.title} products`,
-      app_category: mapping.app_category,
-      product_count: 0,
-      products: [],
-      shopify_collection_id: '',
-      priority: mapping.priority
-    })
-  }
-
-  // Process all products and assign to unified collections
+  // Build all collections that have products
   for (const product of products) {
-    const assignedCollections = new Set<string>()
-
-    // First, try to match by Shopify collections
     for (const collection of product.collections) {
-      const collectionHandle = collection.handle.toLowerCase()
-      
-      // Find matching priority mapping
-      const mapping = priorityMappings.find(m => 
-        collectionHandle.includes(m.handle) || 
-        m.handle.includes(collectionHandle) ||
-        collectionHandle.includes(m.app_category)
-      )
-      
-      if (mapping && !assignedCollections.has(mapping.handle)) {
-        const unifiedCollection = collections.get(mapping.handle)!
-        unifiedCollection.products.push(product)
-        unifiedCollection.product_count++
-        unifiedCollection.shopify_collection_id = collection.id
-        assignedCollections.add(mapping.handle)
-      }
-    }
-
-    // If not assigned by collection, try by product type and tags
-    if (assignedCollections.size === 0) {
-      const productInfo = `${product.productType} ${product.tags.join(' ')}`.toLowerCase()
-      
-      for (const mapping of priorityMappings) {
-        if (productInfo.includes(mapping.app_category) || 
-            productInfo.includes(mapping.handle)) {
-          const unifiedCollection = collections.get(mapping.handle)!
-          unifiedCollection.products.push(product)
-          unifiedCollection.product_count++
-          assignedCollections.add(mapping.handle)
-          break // Only assign to one category
-        }
-      }
-    }
-
-    // Fallback: assign to 'other' category
-    if (assignedCollections.size === 0) {
-      if (!collections.has('other')) {
-        collections.set('other', {
-          id: 'unified-other',
-          title: 'Other',
-          handle: 'other',
-          description: 'Other products',
-          app_category: 'other',
-          product_count: 0,
-          products: [],
-          shopify_collection_id: '',
-          priority: 99
+      if (!collectionsMap.has(collection.handle)) {
+        collectionsMap.set(collection.handle, {
+          handle: collection.handle,
+          title: collection.title,
+          id: collection.id,
+          products: []
         })
       }
-      const otherCollection = collections.get('other')!
-      otherCollection.products.push(product)
-      otherCollection.product_count++
+      collectionsMap.get(collection.handle).products.push(product)
     }
   }
-
-  return collections
+  
+  // Convert to array and add product counts
+  const allCollections = Array.from(collectionsMap.values()).map(collection => ({
+    shopify_collection_id: collection.id,
+    handle: collection.handle,
+    title: collection.title,
+    description: '',
+    products_count: collection.products.length,
+    data: {
+      handle: collection.handle,
+      title: collection.title,
+      products: collection.products.map(p => ({
+        id: p.id,
+        title: p.title,
+        price: parseFloat(p.variants[0]?.price || '0'),
+        image: p.images[0]?.url || '/placeholder.svg'
+      }))
+    },
+    updated_at: new Date().toISOString()
+  }))
+  
+  console.log(`📦 Built ${allCollections.length} collections from products`)
+  
+  return allCollections
 }
 
 async function updateCaches(
   supabase: any, 
   products: ShopifyProduct[], 
-  collections: Map<string, UnifiedCollection>,
+  collections: any[],
   forceRefresh: boolean
 ) {
   console.log('🗑️ Clearing existing caches...')
@@ -347,39 +295,24 @@ async function updateCaches(
   for (let i = 0; i < products.length; i += batchSize) {
     const batch = products.slice(i, i + batchSize)
     
-    // Determine primary category for each product
-    const cacheItems = batch.map(product => {
-      let primaryCategory = 'other'
-      let primaryCategoryTitle = 'Other'
-      
-      // Find which collection this product belongs to
-      for (const [handle, collection] of collections) {
-        if (collection.products.some(p => p.id === product.id)) {
-          primaryCategory = collection.app_category
-          primaryCategoryTitle = collection.title
-          break
-        }
-      }
-
-      return {
-        shopify_product_id: product.id,
-        title: product.title,
-        handle: product.handle,
-        price: parseFloat(product.variants[0]?.price || '0'),
-        image: product.images[0]?.url || '/placeholder.svg',
-        category: primaryCategory,
-        category_title: primaryCategoryTitle,
-        vendor: product.vendor,
-        description: product.description,
-        product_type: product.productType,
-        search_category: normalizeProductType(product.productType),
-        tags: product.tags,
-        variants: product.variants,
-        collection_handles: product.collections.map(c => c.handle),
-        data: product,
-        updated_at: new Date().toISOString()
-      }
-    })
+    const cacheItems = batch.map(product => ({
+      shopify_product_id: product.id,
+      title: product.title,
+      handle: product.handle,
+      price: parseFloat(product.variants[0]?.price || '0'),
+      image: product.images[0]?.url || '/placeholder.svg',
+      category: getProductCategory(product),
+      category_title: formatCategoryTitle(getProductCategory(product)),
+      vendor: product.vendor,
+      description: product.description,
+      product_type: product.productType,
+      search_category: normalizeProductType(product.productType),
+      tags: product.tags,
+      variants: product.variants,
+      collection_handles: product.collections.map(c => c.handle),
+      data: product,
+      updated_at: new Date().toISOString()
+    }))
 
     const { error: insertError } = await supabase
       .from('shopify_products_cache')
@@ -395,86 +328,26 @@ async function updateCaches(
 
   console.log('💾 Inserting collections cache...')
   
-  // Insert ALL collections, not just unified ones
-  const allCollections = []
-  
-  // First add the unified collections
-  const collectionItems = Array.from(collections.values()).map(collection => ({
-    shopify_collection_id: collection.shopify_collection_id || collection.id,
-    handle: collection.handle,
-    title: collection.title,
-    description: collection.description,
-    products_count: collection.product_count,
-    data: {
-      ...collection,
-      products: collection.products.map(p => ({
-        id: p.id,
-        title: p.title,
-        price: parseFloat(p.variants[0]?.price || '0'),
-        image: p.images[0]?.url || '/placeholder.svg'
-      }))
-    },
-    updated_at: new Date().toISOString()
-  }))
-  
-  // Also add individual Shopify collections for direct access
-  const shopifyCollections = []
-  const processedHandles = new Set(Array.from(collections.keys()))
-  
-  for (const product of products) {
-    for (const collection of product.collections) {
-      if (!processedHandles.has(collection.handle)) {
-        processedHandles.add(collection.handle)
-        
-        const collectionProducts = products.filter(p => 
-          p.collections.some(c => c.handle === collection.handle)
-        )
-        
-        shopifyCollections.push({
-          shopify_collection_id: collection.id,
-          handle: collection.handle,
-          title: collection.title,
-          description: '',
-          products_count: collectionProducts.length,
-          data: {
-            handle: collection.handle,
-            title: collection.title,
-            products: collectionProducts.map(p => ({
-              id: p.id,
-              title: p.title,
-              price: parseFloat(p.variants[0]?.price || '0'),
-              image: p.images[0]?.url || '/placeholder.svg'
-            }))
-          },
-          updated_at: new Date().toISOString()
-        })
-      }
-    }
-  }
-  
-  allCollections.push(...collectionItems, ...shopifyCollections)
-  
   const { error: collectionsError } = await supabase
     .from('shopify_collections_cache')
-    .insert(allCollections)
+    .insert(collections)
 
   if (collectionsError) {
     console.error('Error inserting collections:', collectionsError)
+  } else {
+    console.log(`✅ Inserted ${collections.length} collections`)
   }
-
-  console.log(`💾 Collections inserted: ${collectionItems.length} unified + ${shopifyCollections.length} individual = ${allCollections.length} total`)
 
   // Create unified cache entry
   const unifiedCacheData = {
     products: products.length,
-    collections: collections.size,
+    collections: collections.length,
     last_sync: new Date().toISOString(),
     sync_type: 'unified',
-    collection_list: Array.from(collections.values()).map(c => ({
+    collection_list: collections.map(c => ({
       handle: c.handle,
       title: c.title,
-      product_count: c.product_count,
-      priority: c.priority
+      product_count: c.products_count
     }))
   }
 
@@ -485,31 +358,44 @@ async function updateCaches(
     updated_at: new Date().toISOString()
   })
 
-  console.log(`💾 Cache updated: ${totalInserted} products, ${allCollections.length} collections`)
+  console.log(`💾 Cache updated: ${totalInserted} products, ${collections.length} collections`)
 }
 
-async function updateCategoryMappings(supabase: any, collections: Map<string, UnifiedCollection>) {
-  console.log('🏷️ Updating category mappings...')
-  
-  // Clear existing mappings
-  await supabase.from('category_mappings_simple').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-  
-  // Insert unified mappings
-  const mappings = Array.from(collections.values()).map(collection => ({
-    collection_handle: collection.handle,
-    app_category: collection.app_category,
-    created_at: new Date().toISOString()
-  }))
-
-  const { error: mappingError } = await supabase
-    .from('category_mappings_simple')
-    .insert(mappings)
-
-  if (mappingError) {
-    console.error('Error updating category mappings:', mappingError)
-  } else {
-    console.log(`✅ Updated ${mappings.length} category mappings`)
+function getProductCategory(product: ShopifyProduct): string {
+  // Check collections first
+  for (const collection of product.collections) {
+    const handle = collection.handle.toLowerCase()
+    if (handle.includes('beer')) return 'beer'
+    if (handle.includes('wine') || handle.includes('champagne')) return 'wine'
+    if (handle.includes('spirit') || handle.includes('whiskey') || handle.includes('vodka') || handle.includes('gin') || handle.includes('rum') || handle.includes('tequila')) return 'spirits'
+    if (handle.includes('cocktail')) return 'cocktails'
+    if (handle.includes('mixer') || handle.includes('soda') || handle.includes('juice')) return 'mixers'
+    if (handle.includes('party') || handle.includes('supplies')) return 'party-supplies'
   }
+  
+  // Check product type
+  const productType = product.productType.toLowerCase()
+  if (productType.includes('beer')) return 'beer'
+  if (productType.includes('wine')) return 'wine'
+  if (productType.includes('spirit') || productType.includes('whiskey') || productType.includes('vodka')) return 'spirits'
+  if (productType.includes('cocktail')) return 'cocktails'
+  if (productType.includes('mixer')) return 'mixers'
+  
+  return 'other'
+}
+
+function formatCategoryTitle(category: string): string {
+  const titleMap: Record<string, string> = {
+    'beer': 'Beer',
+    'wine': 'Wine & Champagne',
+    'spirits': 'Spirits',
+    'cocktails': 'Cocktails',
+    'mixers': 'Mixers & N/A',
+    'party-supplies': 'Party Supplies',
+    'other': 'Other'
+  }
+  
+  return titleMap[category] || category.charAt(0).toUpperCase() + category.slice(1)
 }
 
 function normalizeProductType(productType: string): string {
