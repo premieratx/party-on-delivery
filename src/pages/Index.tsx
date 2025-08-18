@@ -10,6 +10,7 @@ import { InstantProductLoader } from '@/components/emergency/InstantProductLoade
 import { CriticalProductSync } from '@/components/emergency/CriticalProductSync';
 import { DirectProductSync } from '@/components/emergency/DirectProductSync';
 import { InstantProductSync } from '@/components/emergency/InstantProductSync';
+import { QuickSyncTrigger } from '@/components/emergency/QuickSyncTrigger';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -155,6 +156,7 @@ const Index = () => {
 
   return (
     <>
+      <QuickSyncTrigger />
       <ProductCategories
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
         heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
