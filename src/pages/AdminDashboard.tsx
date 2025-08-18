@@ -46,6 +46,7 @@ import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { UnifiedCoverPostCheckoutBuilder } from '@/components/admin/UnifiedCoverPostCheckoutBuilder';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import { TriggerShopifySync } from '@/components/admin/TriggerShopifySync';
+import { CoverPageToggle } from '@/components/admin/CoverPageToggle';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -281,6 +282,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="post-checkout-builder" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">✅ Post-Checkout</TabsTrigger>
               <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Quotes</TabsTrigger>
               <TabsTrigger value="ghl-setup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📱 GHL/SMS</TabsTrigger>
+              <TabsTrigger value="settings" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚙️ Settings</TabsTrigger>
               <TabsTrigger value="performance" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚡ Performance</TabsTrigger>
               <TabsTrigger value="cleanup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🗑️ Cleanup</TabsTrigger>
             </TabsList>
@@ -663,6 +665,17 @@ export default function AdminDashboard() {
                    <TestGHLIntegration />
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium">App Settings</h3>
+                <p className="text-sm text-muted-foreground">Configure global app behavior and features</p>
+              </div>
+              
+              <CoverPageToggle />
             </div>
           </TabsContent>
 

@@ -47,18 +47,21 @@ export const TriggerProductSync = () => {
   };
 
   return (
-    <div className="p-4 border rounded-lg bg-background">
-      <h3 className="font-semibold mb-2">Product Sync Control</h3>
-      <p className="text-sm text-muted-foreground mb-4">
-        Sync all products from Shopify to the database
-      </p>
-      <Button 
-        onClick={triggerSync} 
-        disabled={loading}
-        className="w-full"
-      >
-        {loading ? 'Syncing Products...' : 'Sync Products Now'}
-      </Button>
+    <div className="bg-background border rounded-lg shadow-lg max-w-xs">
+      <div className="p-3">
+        <h3 className="font-semibold text-sm mb-1">Product Sync</h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          Sync products from Shopify
+        </p>
+        <Button 
+          onClick={triggerSync} 
+          disabled={loading}
+          size="sm"
+          className="w-full text-xs"
+        >
+          {loading ? 'Syncing...' : 'Sync Now'}
+        </Button>
+      </div>
     </div>
   );
 };

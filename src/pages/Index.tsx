@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { QuickSync } from '@/components/QuickSync';
 import { ManualSync } from '@/components/ManualSync';
+import { TriggerProductSync } from '@/components/TriggerProductSync';
 import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
 
 const Index = () => {
@@ -48,8 +49,7 @@ const Index = () => {
         setAppConfig(apps[0]);
         console.log('🏠 Index: Loaded delivery app:', apps[0].app_name);
         
-        // Show cover page for main app after loading
-        setShowCoverPage(true);
+        // Cover pages are now disabled by default
         
       } catch (err) {
         console.error('Error loading delivery app:', err);
@@ -104,18 +104,6 @@ const Index = () => {
 
   return (
     <>
-      <QuickSync />
-      <ManualSync />
-      
-      {/* Cover Page Modal */}
-      {showCoverPage && (
-        <CoverPageLoader
-          appSlug="main-delivery-app"
-          affiliateCode={affiliateCode}
-          onClose={() => setShowCoverPage(false)}
-        />
-      )}
-      
       <ProductCategories
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
         heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
@@ -125,6 +113,13 @@ const Index = () => {
         collectionsConfig={appConfig?.collections_config}
         cartItemCount={cartItems.length}
       />
+      
+      {/* Admin controls moved to bottom */}
+      <div className="fixed bottom-20 right-4 z-40 space-y-2">
+        <TriggerProductSync />
+        <QuickSync />
+        <ManualSync />
+      </div>
     </>
   );
 };

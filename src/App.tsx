@@ -99,9 +99,6 @@ const App = () => {
               <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
-                <div className="fixed top-4 right-4 z-50">
-                  <TriggerProductSync />
-                </div>
                 <div className="pb-14">
                 <Suspense fallback={null}>
                   <Routes>
