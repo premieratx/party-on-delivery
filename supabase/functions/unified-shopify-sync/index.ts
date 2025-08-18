@@ -362,7 +362,7 @@ async function updateCaches(
       }
 
       return {
-        shopify_id: product.id,
+        shopify_product_id: product.id,
         title: product.title,
         handle: product.handle,
         price: parseFloat(product.variants[0]?.price || '0'),
@@ -371,11 +371,11 @@ async function updateCaches(
         category_title: primaryCategoryTitle,
         vendor: product.vendor,
         description: product.description,
-        product_type: product.productType, // Used for search categorization
-        search_category: normalizeProductType(product.productType), // Normalized for search
+        product_type: product.productType,
+        search_category: normalizeProductType(product.productType),
         tags: product.tags,
         variants: product.variants,
-        collection_handles: product.collections.map(c => c.handle), // Used for delivery app tabs
+        collection_handles: product.collections.map(c => c.handle),
         data: product,
         updated_at: new Date().toISOString()
       }
