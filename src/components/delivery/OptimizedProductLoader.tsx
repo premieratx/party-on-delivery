@@ -74,14 +74,15 @@ export const OptimizedProductLoader: React.FC<OptimizedProductLoaderProps> = ({
             key={product.id}
             product={product}
             isSearchFocused={false}
-            selectedCategory=""
+            selectedCategory={0}
             isCocktailsTab={false}
             selectedVariant={null}
+            cartQty={0}
+            onProductClick={onProductSelect || (() => {})}
             onAddToCart={() => {}}
-            onSelectVariant={() => {}}
-            isInCart={false}
-            cartQuantity={0}
-            onViewDetails={() => {}}
+            onQuantityChange={() => {}}
+            onVariantChange={() => {}}
+            applyMarkup={(price: number) => price}
           />
         ))}
       </div>
