@@ -892,6 +892,7 @@ export type Database = {
           created_by: string | null
           id: string
           is_active: boolean
+          is_default_homepage: boolean | null
           logo_height: number | null
           logo_url: string | null
           slug: string
@@ -909,6 +910,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
+          is_default_homepage?: boolean | null
           logo_height?: number | null
           logo_url?: string | null
           slug: string
@@ -926,6 +928,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_active?: boolean
+          is_default_homepage?: boolean | null
           logo_height?: number | null
           logo_url?: string | null
           slug?: string
@@ -2602,6 +2605,7 @@ export type Database = {
           image_url: string | null
           price: number | null
           product_type: string | null
+          search_category: string | null
           shopify_id: string | null
           shopify_product_id: string
           tags: string[] | null
@@ -2623,6 +2627,7 @@ export type Database = {
           image_url?: string | null
           price?: number | null
           product_type?: string | null
+          search_category?: string | null
           shopify_id?: string | null
           shopify_product_id: string
           tags?: string[] | null
@@ -2644,6 +2649,7 @@ export type Database = {
           image_url?: string | null
           price?: number | null
           product_type?: string | null
+          search_category?: string | null
           shopify_id?: string | null
           shopify_product_id?: string
           tags?: string[] | null
