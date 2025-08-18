@@ -103,6 +103,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [checklist, setChecklist] = useState<string[]>(initial?.checklist || ["", "", "", "", ""]);
   const [buttons, setButtons] = useState<CoverButtonConfig[]>(initial?.buttons || []);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
+  const [isDefaultHomepage, setIsDefaultHomepage] = useState<boolean>((initial as any)?.is_default_homepage ?? false);
   const [titleSize, setTitleSize] = useState<number>((initial as any)?.styles?.title_size ?? 32);
   const [subtitleSize, setSubtitleSize] = useState<number>((initial as any)?.styles?.subtitle_size ?? 18);
   const [checklistSize, setChecklistSize] = useState<number>((initial as any)?.styles?.checklist_size ?? 14);
@@ -168,6 +169,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
     setChecklist(initial?.checklist && initial.checklist.length ? initial.checklist : ["", "", "", "", ""]);
     setButtons(initial?.buttons || []);
     setIsActive(initial?.is_active ?? true);
+    setIsDefaultHomepage((initial as any)?.is_default_homepage ?? false);
     setSlugOk(true);
     setTitleSize((initial as any)?.styles?.title_size ?? 32);
     setSubtitleSize((initial as any)?.styles?.subtitle_size ?? 18);
@@ -253,27 +255,36 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
         checklist: (checklist || []).filter(Boolean).slice(0, 5),
         buttons: buttons as any,
         is_active: isActive,
-          styles: { 
-            title_size: titleSize, 
-            subtitle_size: subtitleSize, 
-            checklist_size: checklistSize, 
-            spacing_y: 20,
-            title_offset_y: titleOffsetY,
-            subtitle_offset_y: subtitleOffsetY,
-            checklist_offset_y: checklistOffsetY,
-            buttons_offset_y: buttonsOffsetY,
-            // New layout controls
-            buttons_bottom_offset: buttonsBottomOffset,
-            buttons_spacing: buttonsSpacing,
-            checklist_to_buttons_offset: checklistToButtonsOffset,
-            dot_spacing: dotSpacing,
-            dot_size: dotSize,
-            logo_offset_y: logoOffsetY,
-            background_color: backgroundColor || null,
-            logo_bg_color: logoBgColor || null,
-            logo_bg_mode: logoBgMode,
-          },
+        is_default_homepage: isDefaultHomepage,
+        styles: { 
+          title_size: titleSize, 
+          subtitle_size: subtitleSize, 
+          checklist_size: checklistSize, 
+          spacing_y: 20,
+          title_offset_y: titleOffsetY,
+          subtitle_offset_y: subtitleOffsetY,
+          checklist_offset_y: checklistOffsetY,
+          buttons_offset_y: buttonsOffsetY,
+          // New layout controls
+          buttons_bottom_offset: buttonsBottomOffset,
+          buttons_spacing: buttonsSpacing,
+          checklist_to_buttons_offset: checklistToButtonsOffset,
+          dot_spacing: dotSpacing,
+          dot_size: dotSize,
+          logo_offset_y: logoOffsetY,
+          background_color: backgroundColor || null,
+          logo_bg_color: logoBgColor || null,
+          logo_bg_mode: logoBgMode,
+        },
       };
+
+      // If setting as default homepage, clear other default homepages first
+      if (isDefaultHomepage) {
+        await supabase
+          .from('cover_pages')
+          .update({ is_default_homepage: false })
+          .eq('is_default_homepage', true);
+      }
 
       if (isEditing && initial?.id) {
         const { error } = await supabase.from('cover_pages').update(payload as any).eq('id', initial.id);
@@ -283,7 +294,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
         if (error) throw error;
       }
 
-      toast({ title: 'Saved', description: 'Cover page saved successfully' });
+      toast({ title: 'Saved', description: `Cover page saved successfully${isDefaultHomepage ? ' and set as default homepage' : ''}` });
       onSaved?.();
       onOpenChange(false);
     } catch (e: any) {
@@ -441,6 +452,13 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                 <div className="flex items-center justify-between py-1">
                   <Label htmlFor="active">Public</Label>
                   <Switch id="active" checked={isActive} onCheckedChange={setIsActive} />
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <Label htmlFor="defaultHomepage">Set as Default Homepage</Label>
+                  <Switch id="defaultHomepage" checked={isDefaultHomepage} onCheckedChange={setIsDefaultHomepage} />
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  When enabled, this cover page will be shown when users visit the home page (/) instead of the default delivery app.
                 </div>
               </CardContent>
             </Card>
