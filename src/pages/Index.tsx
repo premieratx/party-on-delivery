@@ -20,6 +20,23 @@ const Index = () => {
   const affiliateCode = searchParams.get('ref');
 
   useEffect(() => {
+    const checkAndSyncProducts = async () => {
+      // Check if products exist in cache
+      const { count, error: countError } = await supabase
+        .from('shopify_products_cache')
+        .select('*', { count: 'exact', head: true });
+
+      if (!countError && (!count || count === 0)) {
+        console.log('🚨 No products in cache, triggering emergency sync...');
+        try {
+          await supabase.functions.invoke('emergency-product-sync');
+          console.log('✅ Emergency sync completed');
+        } catch (syncError) {
+          console.error('Emergency sync failed:', syncError);
+        }
+      }
+    };
+
     const loadDefaultDeliveryApp = async () => {
       try {
         console.log('🏠 Index: Loading default delivery app config...');
@@ -56,8 +73,10 @@ const Index = () => {
       }
     };
 
+    // Run both checks
+    checkAndSyncProducts();
     loadDefaultDeliveryApp();
-  }, []);
+  }, [navigate]);
 
   const handleCheckout = (items: any[]) => {
     localStorage.setItem('deliveryAppReferrer', '/');

@@ -57,12 +57,67 @@ Deno.serve(async (req) => {
     }
 
     if (!products || products.length === 0) {
-      console.log('No cached products found, triggering fresh fetch...')
+      console.log('❌ No cached products found, triggering emergency sync...')
       
-      // Trigger background refresh but return empty for now
-      supabase.functions.invoke('instant-product-cache', {
-        body: { forceRefresh: true }
-      }).catch(console.error)
+      // Trigger emergency product sync
+      try {
+        console.log('🚨 Calling emergency-product-sync...')
+        const syncResult = await supabase.functions.invoke('emergency-product-sync')
+        console.log('Emergency sync result:', syncResult)
+        
+        if (syncResult.data?.success) {
+          console.log('✅ Emergency sync completed, retrying product load...')
+          // Retry getting products after sync
+          const { data: freshProducts } = await supabase
+            .from('shopify_products_cache')
+            .select(lightweight ? 'id, title, price, image, category, vendor' : '*')
+            .order('updated_at', { ascending: false })
+            .limit(150)
+          
+          if (freshProducts && freshProducts.length > 0) {
+            console.log(`🎉 Found ${freshProducts.length} products after emergency sync`)
+            const transformedProducts = freshProducts.map(product => ({
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              image: product.image,
+              category: product.category || 'other',
+              vendor: product.vendor,
+              ...(lightweight ? {} : {
+                description: product.description,
+                variants: product.variants || [],
+                collection_handles: product.collection_handles || []
+              })
+            }))
+
+            const { data: categories } = await supabase.rpc('get_categories_with_counts')
+            const collections = categories?.map(cat => ({
+              id: cat.category,
+              title: cat.category.charAt(0).toUpperCase() + cat.category.slice(1),
+              handle: cat.category,
+              products: transformedProducts.filter(p => p.category === cat.category)
+            })) || []
+
+            const result = {
+              products: transformedProducts,
+              collections,
+              categories: categories || [],
+              cached: false,
+              lightweight
+            }
+
+            return new Response(
+              JSON.stringify({
+                success: true,
+                ...result
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+        }
+      } catch (syncError) {
+        console.error('Emergency sync failed:', syncError)
+      }
       
       return new Response(
         JSON.stringify({
@@ -70,7 +125,8 @@ Deno.serve(async (req) => {
           products: [],
           collections: [],
           cached: false,
-          refreshing: true
+          refreshing: false,
+          message: 'No products available - emergency sync attempted'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

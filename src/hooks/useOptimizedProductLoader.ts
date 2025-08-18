@@ -69,12 +69,15 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       // Reset retry count on successful load (even if 0 products)
       setRetryCount(0);
 
-      // Only retry if refreshing AND we haven't exceeded retry limit
+      // TEMPORARILY DISABLED: Only retry if refreshing AND we haven't exceeded retry limit
+      // Commenting out to stop infinite loops
+      /*
       if (data.refreshing && data.products?.length === 0 && retryCount < 3) {
         console.log(`🔄 Retrying product load (attempt ${retryCount + 1}/3)`);
         setRetryCount(prev => prev + 1);
         setTimeout(() => loadProducts(false), 3000 + (retryCount * 2000)); // Exponential backoff
       }
+      */
 
     } catch (err) {
       console.error('Error loading products:', err);
