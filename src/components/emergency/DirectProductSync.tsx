@@ -67,12 +67,7 @@ export const DirectProductSync: React.FC = () => {
 
   useEffect(() => {
     checkProducts();
-    
-    // Auto-sync if no products
-    if (productCount === 0) {
-      console.log('🔄 Auto-starting sync (no products found)');
-      setTimeout(syncProducts, 1000);
-    }
+    // Disabled auto-sync - using SimpleForceSync instead
   }, []);
 
   return (

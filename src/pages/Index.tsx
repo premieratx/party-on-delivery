@@ -131,8 +131,7 @@ const Index = () => {
               Product cache is empty. Loading all products now...
             </p>
           </div>
-        <InstantProductSync />
-        <DirectProductSync />
+        {/* Using SimpleForceSync instead of old broken sync components */}
         </div>
       </div>
     );
