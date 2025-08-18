@@ -13,8 +13,10 @@ interface ShopifyProduct {
   title: string;
   price: number;
   image: string;
-  description: string;
-  handle: string;
+  description?: string;
+  handle?: string;
+  vendor?: string;
+  category?: string;
   variants?: Array<{
     id: string;
     title: string;
@@ -76,17 +78,40 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
   const loadAllProducts = async () => {
     try {
-      const collections = await getAllCollectionsCached();
-      const products = (collections || []).flatMap((collection: any) => collection.products || []);
-      setAllProducts(products);
-      // Pre-index for faster search
-      const indexed = products.map((p: ShopifyProduct) => ({
-        p,
-        t: `${p.title} ${p.description || ''} ${p.handle || ''}`.toLowerCase()
-      }));
-      setIndexedProducts(indexed);
+      console.log('🔍 ProductSearchBar: Loading products for search...');
+      
+      // Use the optimized product loader to get real products from cache
+      const { data, error } = await supabase.functions.invoke('optimized-product-loader', {
+        body: { 
+          lightweight: false, // Get full product data for search
+          force_refresh: false 
+        }
+      });
+
+      if (error) {
+        console.error('Error loading products for search:', error);
+        return;
+      }
+
+      if (data?.success && data.products) {
+        console.log(`🔍 Loaded ${data.products.length} products for search`);
+        setAllProducts(data.products);
+        
+        // Pre-index for faster search
+        const indexed = data.products.map((p: ShopifyProduct) => ({
+          p,
+          t: `${p.title} ${p.description || ''} ${p.handle || ''} ${p.vendor || ''} ${p.category || ''}`.toLowerCase()
+        }));
+        setIndexedProducts(indexed);
+      } else {
+        console.warn('No products returned from optimized loader');
+        setAllProducts([]);
+        setIndexedProducts([]);
+      }
     } catch (error) {
-      console.error('Error loading all products:', error);
+      console.error('Error loading products for search:', error);
+      setAllProducts([]);
+      setIndexedProducts([]);
     }
   };
 

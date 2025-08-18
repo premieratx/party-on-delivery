@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-// Removed sync components from home page - moved to admin dashboard
 import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
+import { ForceProductSync } from '@/components/emergency/ForceProductSync';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -14,6 +14,7 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCoverPage, setShowCoverPage] = useState(false);
+  const [showForceSync, setShowForceSync] = useState(false);
   const navigate = useNavigate();
   const { cartItems } = useUnifiedCart();
   const [searchParams] = useSearchParams();
@@ -26,14 +27,26 @@ const Index = () => {
         .from('shopify_products_cache')
         .select('*', { count: 'exact', head: true });
 
-      if (!countError && (!count || count === 0)) {
-        console.log('🚨 No products in cache, triggering emergency sync...');
+      console.log(`📊 Current product count in cache: ${count || 0}`);
+
+      if (!countError && (!count || count < 100)) {
+        console.log('🚨 CRITICAL: Insufficient products in cache, showing force sync option...');
+        setShowForceSync(true);
+        
+        // Auto-trigger emergency sync
         try {
-          await supabase.functions.invoke('emergency-product-sync');
-          console.log('✅ Emergency sync completed');
+          console.log('🔄 Auto-triggering emergency sync...');
+          const { data: syncResult } = await supabase.functions.invoke('emergency-product-sync');
+          if (syncResult?.success) {
+            console.log(`✅ Auto-sync completed: ${syncResult.products_synced} products`);
+            setShowForceSync(false);
+          }
         } catch (syncError) {
-          console.error('Emergency sync failed:', syncError);
+          console.error('Auto-sync failed:', syncError);
         }
+      } else {
+        console.log(`✅ Product cache healthy: ${count} products available`);
+        setShowForceSync(false);
       }
     };
 
@@ -95,6 +108,34 @@ const Index = () => {
           <div>
             <h3 className="text-lg font-semibold">Loading Main Delivery App</h3>
             <p className="text-muted-foreground">Setting up your party experience...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show force sync interface if products are missing
+  if (showForceSync) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-2xl space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-red-600">⚠️ Products Not Loaded</h2>
+            <p className="text-muted-foreground">
+              The Shopify product cache is empty or incomplete. Please force sync to load all 1000+ products.
+            </p>
+          </div>
+          <ForceProductSync />
+          <div className="text-center">
+            <button 
+              onClick={() => {
+                setShowForceSync(false);
+                window.location.reload();
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground underline"
+            >
+              Continue anyway (products may not load)
+            </button>
           </div>
         </div>
       </div>
