@@ -13,6 +13,7 @@ import { DirectBulkSync } from "./components/DirectBulkSync";
 // import { PerformanceMonitor } from "@/components/common/PerformanceMonitor"; // DISABLED
 import { Suspense, lazy } from "react";
 import RequireAdmin from "@/components/admin/RequireAdmin";
+import { TriggerProductSync } from "@/components/TriggerProductSync";
 
 // Core pages that load immediately
 import Index from "./pages/Index";
@@ -98,6 +99,9 @@ const App = () => {
               <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
+                <div className="fixed top-4 right-4 z-50">
+                  <TriggerProductSync />
+                </div>
                 <div className="pb-14">
                 <Suspense fallback={null}>
                   <Routes>
