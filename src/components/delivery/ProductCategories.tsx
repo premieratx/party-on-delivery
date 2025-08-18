@@ -118,77 +118,31 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return DEFAULT_COLLECTIONS;
   }, [collectionsConfig]);
 
-  // Get products for current tab with enhanced collection mapping
+  // Get products for current tab using configured collection handles
   const currentTabProducts = useMemo(() => {
     // Safety checks for arrays
-    if (!Array.isArray(tabs) || !Array.isArray(products) || !Array.isArray(collections)) {
+    if (!Array.isArray(tabs) || !Array.isArray(collections)) {
       return [];
     }
     
     const currentTab = tabs[selectedCategory];
     if (!currentTab || currentTab.isSearch) return [];
     
-    // Enhanced collection matching for proper category assignment
-    const collectionMappings = {
-      'spirits': ['spirits', 'gin-rum', 'tequila-mezcal', 'whiskey'],
-      'beer': ['tailgate-beer', 'texas-beer-collection', 'beer'],
-      'seltzers': ['seltzer-collection', 'seltzers'],
-      'cocktails': ['cocktail-kits', 'ready-to-drink-cocktails'],
-      'mixers': ['mixers-non-alcoholic', 'mixers'],
-      'wine': ['champagne', 'wine'],
-      'party-supplies': ['party-supplies', 'decorations']
-    };
+    console.log(`📦 Tab ${currentTab.title}: Looking for collection handle: ${currentTab.handle}`);
     
+    // Find the exact collection that matches the configured collection handle
+    const targetCollection = collections.find(collection => 
+      collection.handle === currentTab.handle
+    );
     
-    console.log(`📦 ${currentTab.handle}: Looking for products with collection handle: ${currentTab.handle}`);
-    
-    // First priority: Use exact collection handle match from delivery app config
-    let categoryProducts = []
-    
-    // Try to find products from the specific collection configured for this tab
-    if (collections && collections.length > 0) {
-      const targetCollection = collections.find(collection => 
-        collection.handle === currentTab.handle
-      );
-      
-      if (targetCollection && Array.isArray(targetCollection.products)) {
-        categoryProducts = targetCollection.products;
-        console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products from configured collection`);
-      }
+    if (targetCollection && Array.isArray(targetCollection.products)) {
+      console.log(`📦 ${currentTab.handle}: Found ${targetCollection.products.length} products from collection`);
+      return targetCollection.products;
     }
     
-    // Fallback: If no exact collection match, try product filtering with collection_handles
-    if (categoryProducts.length === 0 && products && products.length > 0) {
-      // Enhanced collection matching for backward compatibility
-      const collectionMappings = {
-        'spirits': ['spirits', 'gin-rum', 'tequila-mezcal', 'whiskey'],
-        'beer': ['tailgate-beer', 'texas-beer-collection', 'beer'],
-        'seltzers': ['seltzer-collection', 'seltzers'],
-        'cocktails': ['cocktail-kits', 'ready-to-drink-cocktails'],
-        'mixers': ['mixers-non-alcoholic', 'mixers'],
-        'wine': ['champagne', 'wine'],
-        'party-supplies': ['party-supplies', 'decorations']
-      };
-      
-      const mappedHandles = collectionMappings[currentTab.handle] || [currentTab.handle];
-      
-      categoryProducts = products.filter((product: any) => {
-        if (!product) return false;
-        return mappedHandles.some(handle => 
-          product.collection_handles?.some((ph: string) => 
-            ph && typeof ph === 'string' && 
-            (ph.toLowerCase().includes(handle.toLowerCase()) ||
-             handle.toLowerCase().includes(ph.toLowerCase()))
-          ) || (product.category && 
-               product.category.toLowerCase() === handle.toLowerCase())
-        );
-      });
-      
-      console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products using enhanced mapping`);
-    }
-    
-    return categoryProducts;
-  }, [tabs, selectedCategory, products, collections]);
+    console.log(`📦 ${currentTab.handle}: No collection found with this handle`);
+    return [];
+  }, [tabs, selectedCategory, collections]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;

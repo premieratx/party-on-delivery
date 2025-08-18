@@ -111,14 +111,24 @@ Deno.serve(async (req) => {
       })
       collections = Array.from(searchCategories.values())
     } else {
-      // For delivery apps: use collections
-      collections = collectionsData?.map(col => ({
-        id: col.handle,
-        title: col.title,
-        handle: col.handle,
-        product_count: col.products_count,
-        products: products?.filter(p => p.category === col.handle) || []
-      })) || []
+      // For delivery apps: use actual Shopify collections with their products
+      collections = collectionsData?.map(col => {
+        // Filter products by collection_handles array (exact match)
+        const collectionProducts = products?.filter(p => 
+          p.collection_handles && Array.isArray(p.collection_handles) && 
+          p.collection_handles.includes(col.handle)
+        ) || []
+        
+        console.log(`📦 Collection ${col.handle}: ${collectionProducts.length} products found`)
+        
+        return {
+          id: col.handle,
+          title: col.title,
+          handle: col.handle,
+          product_count: collectionProducts.length,
+          products: collectionProducts
+        }
+      }) || []
     }
 
     // Get cache metadata
