@@ -171,9 +171,14 @@ Deno.serve(async (req) => {
 async function needsCacheRefresh(supabase: any): Promise<boolean> {
   try {
     // Check if products cache is empty
-    const { count: productCount } = await supabase
+    const { count: productCount, error: countError } = await supabase
       .from('shopify_products_cache')
       .select('*', { count: 'exact', head: true })
+
+    if (countError) {
+      console.error('Error checking product count:', countError)
+      return true
+    }
 
     if (!productCount || productCount < 50) {
       console.log(`🚨 Product cache too small: ${productCount} products`)
@@ -181,11 +186,16 @@ async function needsCacheRefresh(supabase: any): Promise<boolean> {
     }
 
     // Check if cache is stale (older than 30 minutes)
-    const { data: cacheData } = await supabase
+    const { data: cacheData, error: cacheError } = await supabase
       .from('cache')
       .select('updated_at')
       .eq('key', 'shopify-unified-sync')
-      .single()
+      .maybeSingle()
+
+    if (cacheError) {
+      console.error('Error checking cache:', cacheError)
+      return true
+    }
 
     if (!cacheData) {
       console.log('🚨 No unified sync cache found')

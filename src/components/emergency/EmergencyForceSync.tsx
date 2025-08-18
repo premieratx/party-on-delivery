@@ -10,20 +10,21 @@ export function EmergencyForceSync() {
   const forceSync = async () => {
     setLoading(true);
     try {
-      console.log('🚨 EMERGENCY FORCE SYNC - Starting...');
+      console.log('🚨 IMMEDIATE SYNC - Starting...');
       
-      const { data, error } = await supabase.functions.invoke('emergency-force-sync');
+      // Try immediate sync first (no auth required)
+      const { data, error } = await supabase.functions.invoke('immediate-sync');
 
       if (error) {
-        console.error('❌ Sync error:', error);
+        console.error('❌ Immediate sync error:', error);
         throw error;
       }
 
-      console.log('✅ Emergency sync result:', data);
+      console.log('✅ Immediate sync result:', data);
       
       toast({
-        title: "🚨 EMERGENCY SYNC COMPLETE",
-        description: `Synced ${data.products_synced} products from Shopify`,
+        title: "🚨 IMMEDIATE SYNC COMPLETE",
+        description: `Synced ${data.products_synced || data.products_count} products from Shopify`,
       });
 
       // Force page reload to see new products
@@ -32,10 +33,10 @@ export function EmergencyForceSync() {
       }, 2000);
 
     } catch (error) {
-      console.error('❌ Emergency sync failed:', error);
+      console.error('❌ Immediate sync failed:', error);
       toast({
         variant: "destructive",
-        title: "Emergency Sync Failed",
+        title: "Immediate Sync Failed",
         description: error.message || 'Failed to sync products from Shopify',
       });
     } finally {
