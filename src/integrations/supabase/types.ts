@@ -3136,9 +3136,28 @@ export type Database = {
           },
         ]
       }
+      instant_products_view: {
+        Row: {
+          app_category: string | null
+          category: string | null
+          collection_handles: string[] | null
+          handle: string | null
+          id: string | null
+          image: string | null
+          price: number | null
+          title: string | null
+          updated_at: string | null
+          variants: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_cache_optimized: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
@@ -3269,6 +3288,14 @@ export type Database = {
       update_daily_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      upsert_cache_entry: {
+        Args: {
+          cache_data_param: Json
+          cache_key_param: string
+          expires_timestamp_param: number
+        }
+        Returns: string
       }
       verify_admin_password: {
         Args: { input_email: string; input_password: string }
