@@ -57,9 +57,9 @@ export const QuickSync = () => {
       disabled={syncing}
       variant="outline"
       size="sm"
-      className="text-xs whitespace-nowrap"
+      className="text-[9px] h-6 py-0 px-2 w-full"
     >
-      {syncing ? 'Syncing...' : 'Quick Sync'}
+      {syncing ? 'Sync...' : 'Quick'}
     </Button>
   );
 };

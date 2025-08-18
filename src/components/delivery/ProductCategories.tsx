@@ -108,7 +108,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return DEFAULT_COLLECTIONS;
   }, [collectionsConfig]);
 
-  // Get products for current tab
+  // Get products for current tab with enhanced collection mapping
   const currentTabProducts = useMemo(() => {
     // Safety checks for arrays
     if (!Array.isArray(tabs) || !Array.isArray(products) || !Array.isArray(collections)) {
@@ -118,22 +118,49 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     const currentTab = tabs[selectedCategory];
     if (!currentTab || currentTab.isSearch) return [];
     
-    // Find collection by handle or filter products by category
-    const collection = collections.find(c => c.handle === currentTab.handle);
-    if (collection?.products && Array.isArray(collection.products) && collection.products.length > 0) {
-      return collection.products;
+    // Enhanced collection matching for proper category assignment
+    const collectionMappings = {
+      'spirits': ['spirits', 'gin-rum', 'tequila-mezcal', 'whiskey'],
+      'beer': ['tailgate-beer', 'texas-beer-collection', 'beer'],
+      'seltzers': ['seltzer-collection', 'seltzers'],
+      'cocktails': ['cocktail-kits', 'ready-to-drink-cocktails'],
+      'mixers': ['mixers-non-alcoholic', 'mixers'],
+      'wine': ['champagne', 'wine'],
+      'party-supplies': ['party-supplies', 'decorations']
+    };
+    
+    const mappedHandles = collectionMappings[currentTab.handle] || [currentTab.handle];
+    
+    // First try to match collections by mapped handles
+    let categoryProducts = [];
+    collections.forEach(collection => {
+      if (mappedHandles.some(h => 
+        collection.handle?.toLowerCase().includes(h.toLowerCase()) ||
+        h.toLowerCase().includes(collection.handle?.toLowerCase())
+      )) {
+        if (Array.isArray(collection.products)) {
+          categoryProducts.push(...collection.products);
+        }
+      }
+    });
+    
+    // If no products found from collections, try direct product filtering
+    if (categoryProducts.length === 0) {
+      categoryProducts = products.filter((product: any) => {
+        if (!product) return false;
+        return mappedHandles.some(handle => 
+          product.collection_handles?.some((ph: string) => 
+            ph && typeof ph === 'string' && 
+            (ph.toLowerCase().includes(handle.toLowerCase()) ||
+             handle.toLowerCase().includes(ph.toLowerCase()))
+          ) || (product.category && 
+               product.category.toLowerCase() === handle.toLowerCase())
+        );
+      });
     }
     
-    // Fallback: filter all products by category match
-    return products.filter((product: any) => {
-      if (!product || !currentTab) return false;
-      return product.collection_handles?.some((handle: string) => 
-        handle && typeof handle === 'string' && currentTab.handle && 
-        (handle.toLowerCase().includes(currentTab.handle.toLowerCase()) ||
-        currentTab.handle.toLowerCase().includes(handle.toLowerCase()))
-      ) || (product.category && currentTab.handle && 
-           product.category.toLowerCase() === currentTab.handle.toLowerCase());
-    });
+    console.log(`📦 ${currentTab.handle}: Found ${categoryProducts.length} products using enhanced mapping`);
+    return categoryProducts;
   }, [collections, tabs, selectedCategory, products]);
 
   const currentTab = tabs[selectedCategory];

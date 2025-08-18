@@ -46,9 +46,9 @@ export const ForceAddToCartButton: React.FC<ForceAddToCartButtonProps> = ({
       category: product.category
     };
 
-    addToCart(cartItem);
+    updateQuantity(product.id, variantId, currentQuantity + 1, cartItem);
     
-    // Force show cart briefly
+    // Force show cart briefly  
     setTimeout(() => {
       forceShowCart();
     }, 100);

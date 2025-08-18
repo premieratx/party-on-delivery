@@ -52,9 +52,9 @@ export const TriggerProductSync = () => {
       disabled={loading}
       variant="outline"
       size="sm"
-      className="text-xs whitespace-nowrap"
+      className="text-[9px] h-6 py-0 px-2 w-full"
     >
-      {loading ? 'Syncing...' : 'Product Sync'}
+      {loading ? 'Sync...' : 'Trigger'}
     </Button>
   );
 };

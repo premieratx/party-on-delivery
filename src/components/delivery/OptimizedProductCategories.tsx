@@ -134,20 +134,20 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
   };
 
   const handleAddToCart = (product: any) => {
+    const variantId = product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined;
     const cartItem = {
       id: product.id,
       title: product.title,
       name: product.title,
       price: product.price,
       image: product.image,
-      variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined
+      variant: variantId
     };
     
     console.log('🛒 OptimizedProductCategories: Adding product to cart:', cartItem);
-    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = getCartItemQuantity(product.id, cartItem.variant);
+    const currentQty = getCartItemQuantity(product.id, variantId);
     
-    onUpdateQuantity(product.id, cartItem.variant, currentQty + 1);
+    onUpdateQuantity(product.id, variantId, currentQty + 1);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
@@ -282,37 +282,38 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
   </span>
 </div>
 
-                    {quantity > 0 ? (
-                      <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1.5">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                          className="h-3 w-3 p-0 sm:h-4 sm:w-4"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        
-                        <span className="font-medium px-1.5">{quantity}</span>
-                        
-                        <Button
-                          size="sm"
-                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          className="h-3 w-3 p-0 sm:h-4 sm:w-4"
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddToCart(product)}
-                        className="w-full h-8 text-xs"
-                      >
-                        <Plus className="h-3.5 w-3.5 mr-1.5" />
-                        Add
-                      </Button>
-                    )}
+                     {quantity > 0 ? (
+                       <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-1.5">
+                         <Button
+                           size="sm"
+                           variant="ghost"
+                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined, -1)}
+                           className="h-6 w-6 p-0 hover:bg-primary-foreground/20"
+                         >
+                           <Minus className="h-3 w-3" />
+                         </Button>
+                         
+                         <span className="font-medium px-2 text-primary-foreground">{quantity}</span>
+                         
+                         <Button
+                           size="sm"
+                           variant="ghost"
+                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined, 1)}
+                           className="h-6 w-6 p-0 hover:bg-primary-foreground/20"
+                         >
+                           <Plus className="h-3 w-3" />
+                         </Button>
+                       </div>
+                     ) : (
+                       <Button
+                         size="sm"
+                         onClick={() => handleAddToCart(product)}
+                         className="w-full h-8 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
+                       >
+                         <Plus className="h-3.5 w-3.5 mr-1.5" />
+                         Add to Cart
+                       </Button>
+                     )}
                   </CardContent>
                 </Card>
               );
