@@ -114,11 +114,15 @@ const Index = () => {
         cartItemCount={cartItems.length}
       />
       
-      {/* Admin controls moved to bottom */}
-      <div className="fixed bottom-20 right-4 z-40 space-y-2">
-        <TriggerProductSync />
-        <QuickSync />
-        <ManualSync />
+      {/* Admin sync controls moved below product grid */}
+      <div className="bg-background border-t py-6 mt-8">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap gap-3 justify-center items-center">
+            <TriggerProductSync />
+            <QuickSync />
+            <ManualSync />
+          </div>
+        </div>
       </div>
     </>
   );

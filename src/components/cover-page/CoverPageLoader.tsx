@@ -99,6 +99,15 @@ export const CoverPageLoader: React.FC<CoverPageLoaderProps> = ({
         }
       }
       
+      // Cover pages are now disabled by default - check localStorage setting
+      const coverPagesEnabled = localStorage.getItem('admin-cover-pages-enabled') === 'true';
+      
+      if (!coverPagesEnabled && !forceShow) {
+        console.log('🎨 Cover pages disabled by admin setting');
+        onClose?.();
+        return;
+      }
+
       if (coverPageData && !forceShow) {
         // Check if user has seen this cover page recently (reduced to 4 hours for testing)
         const lastSeen = localStorage.getItem(`cover-page-${coverPageData.id}-seen`);

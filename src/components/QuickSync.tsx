@@ -52,15 +52,14 @@ export const QuickSync = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50">
-      <Button 
-        onClick={syncProducts} 
-        disabled={syncing}
-        variant="outline"
-        size="sm"
-      >
-        {syncing ? 'Syncing...' : 'Sync Products'}
-      </Button>
-    </div>
+    <Button 
+      onClick={syncProducts} 
+      disabled={syncing}
+      variant="outline"
+      size="sm"
+      className="text-xs whitespace-nowrap"
+    >
+      {syncing ? 'Syncing...' : 'Quick Sync'}
+    </Button>
   );
 };
