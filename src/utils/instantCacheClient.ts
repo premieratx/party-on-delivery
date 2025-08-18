@@ -4,6 +4,7 @@ export const getInstantProducts = async (category?: string, forceRefresh = false
   console.log('🚀 Loading products via smart cache...', { category, forceRefresh });
   try {
     const { supabase } = await import('@/integrations/supabase/client');
+    const { getProductsWithFallback } = await import('./emergencyFallback');
     
     // Use new smart cache manager
     const { data, error } = await supabase.functions.invoke('smart-cache-manager', {
@@ -15,12 +16,20 @@ export const getInstantProducts = async (category?: string, forceRefresh = false
     });
     
     if (error) {
-      console.error('Smart cache error:', error);
+      console.error('Smart cache error, using fallback:', error);
       
-      // Fallback to bulk sync
-      console.log('🔄 Fallback: Triggering bulk sync...');
-      await supabase.functions.invoke('bulk-product-sync', { body: {} });
-      return { products: [], collections: [], categories: [] };
+      // Use emergency fallback when edge function fails
+      try {
+        const fallbackProducts = await getProductsWithFallback(category, 30);
+        return { 
+          products: fallbackProducts, 
+          collections: [], 
+          categories: [] 
+        };
+      } catch (fallbackError) {
+        console.error('Emergency fallback also failed:', fallbackError);
+        return { products: [], collections: [], categories: [] };
+      }
     }
     
     if (data?.success && data?.data) {
