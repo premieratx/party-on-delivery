@@ -8,6 +8,8 @@ interface Product {
   image: string;
   handle: string;
   variants?: any[];
+  collection_handles?: string[];
+  category?: string;
 }
 
 interface Collection {

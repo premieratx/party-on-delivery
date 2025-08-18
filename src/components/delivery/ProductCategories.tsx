@@ -55,10 +55,10 @@ interface ProductCategoriesProps {
 
 const DEFAULT_COLLECTIONS = [
   { id: 'spirits', title: 'Spirits', handle: 'spirits', isSearch: false, icon: '🥃' },
-  { id: 'beer', title: 'Beer', handle: 'tailgate-beer', isSearch: false, icon: '🍺' },
-  { id: 'seltzers', title: 'Seltzers', handle: 'seltzer-collection', isSearch: false, icon: '🥤' },
-  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', isSearch: false, icon: '🧊' },
-  { id: 'cocktails', title: 'Cocktails', handle: 'cocktail-kits', isSearch: false, icon: '🍸' },
+  { id: 'beer', title: 'Beer', handle: 'beer', isSearch: false, icon: '🍺' },
+  { id: 'seltzers', title: 'Seltzers', handle: 'seltzers', isSearch: false, icon: '🥤' },
+  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers', isSearch: false, icon: '🧊' },
+  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails', isSearch: false, icon: '🍸' },
   { id: 'search', title: 'Search', handle: 'search', isSearch: true, icon: '🔍' }
 ];
 
@@ -113,10 +113,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     const currentTab = tabs[selectedCategory];
     if (!currentTab || currentTab.isSearch) return [];
     
-    // Find collection by handle
+    // Find collection by handle or filter products by category
     const collection = collections.find(c => c.handle === currentTab.handle);
-    return collection?.products || [];
-  }, [collections, tabs, selectedCategory]);
+    if (collection?.products?.length) {
+      return collection.products;
+    }
+    
+    // Fallback: filter all products by category match
+    return products.filter((product: any) => {
+      return product.collection_handles?.some((handle: string) => 
+        handle.toLowerCase().includes(currentTab.handle.toLowerCase()) ||
+        currentTab.handle.toLowerCase().includes(handle.toLowerCase())
+      ) || product.category?.toLowerCase() === currentTab.handle.toLowerCase();
+    });
+  }, [collections, tabs, selectedCategory, products]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;

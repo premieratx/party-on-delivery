@@ -24,10 +24,10 @@ interface OptimizedProductCategoriesProps {
 
 const CATEGORY_TABS = [
   { id: 'spirits', title: 'Spirits', handle: 'spirits' },
-  { id: 'beer', title: 'Beer', handle: 'tailgate-beer' },
-  { id: 'seltzers', title: 'Seltzers', handle: 'seltzer-collection' },
-  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers-non-alcoholic' },
-  { id: 'cocktails', title: 'Cocktails', handle: 'cocktail-kits' },
+  { id: 'beer', title: 'Beer', handle: 'beer' },
+  { id: 'seltzers', title: 'Seltzers', handle: 'seltzers' },
+  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers' },
+  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails' },
   { id: 'search', title: 'Search', handle: 'search', isSearch: true }
 ];
 
@@ -68,23 +68,28 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       setLoading(true);
       setError(null);
       
-      console.log(`Loading products for collection: ${handle} with optimized system`);
+      console.log(`Loading products for collection: ${handle} with instant cache system`);
       
-      // Use optimized fetch with collection filter for maximum speed
-      const { data: optimizedData, error: optimizedError } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
-        body: { 
-          lightweight: true,
-          includeImages: false,
-          limit: 50,
-          collectionHandle: handle
-        }
+      // Use instant-product-cache to get products with category filtering
+      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
+        body: { forceRefresh: false }
       });
       
-      if (!optimizedError && optimizedData?.products) {
-        console.log(`✅ Loaded ${optimizedData.products.length} products for ${handle} via optimized system`);
-        setProducts(optimizedData.products);
+      if (!cacheError && cacheData?.success && cacheData?.data) {
+        // Filter products by category from the cache
+        const allProducts = cacheData.data.products || [];
+        const filteredProducts = allProducts.filter((product: any) => {
+          // Match by collection handles or category
+          return product.collection_handles?.some((collectionHandle: string) => 
+            collectionHandle.toLowerCase().includes(handle.toLowerCase()) ||
+            handle.toLowerCase().includes(collectionHandle.toLowerCase())
+          ) || product.category?.toLowerCase() === handle.toLowerCase();
+        });
+        
+        console.log(`✅ Loaded ${filteredProducts.length} products for ${handle} from instant cache`);
+        setProducts(filteredProducts);
       } else {
-        // Fallback to original method
+        // Fallback to optimized shopify client
         console.log('Using fallback method for collection products');
         const categoryProducts = await getCollectionProducts(handle);
         setProducts(categoryProducts);

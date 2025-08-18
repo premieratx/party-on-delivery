@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { ProductSearchBar } from '@/components/delivery/ProductSearchBar';
 import { TypingIntro } from '@/components/common/TypingIntro';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WhiteLabelAppConfig {
   id: string;
@@ -144,25 +145,55 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('🔄 Loading collections for app:', appConfig.app_name);
 
-      // Get all collections
-      const allCollections = await getCollections(true); // Include products
+      // Use instant-product-cache to get all products and organize by collections
+      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
+        body: { forceRefresh: false }
+      });
 
-      // Filter collections based on app config
-      const appCollectionHandles = appConfig.collections_config.tabs.map(tab => tab.collection_handle);
-      const filteredCollections = allCollections.filter(collection => 
-        appCollectionHandles.includes(collection.handle)
-      );
+      if (!cacheError && cacheData?.success && cacheData?.data) {
+        const allProducts = cacheData.data.products || [];
+        console.log('✅ Loaded', allProducts.length, 'products from cache');
+        
+        // Create collections based on app config with filtered products
+        const appCollections: Collection[] = appConfig.collections_config.tabs.map(tab => {
+          const collectionProducts = allProducts.filter((product: any) => {
+            // Match by collection handles or category
+            return product.collection_handles?.some((handle: string) => 
+              handle.toLowerCase().includes(tab.collection_handle.toLowerCase()) ||
+              tab.collection_handle.toLowerCase().includes(handle.toLowerCase())
+            ) || product.category?.toLowerCase() === tab.collection_handle.toLowerCase();
+          });
+          
+          console.log(`📦 Collection "${tab.name}" (${tab.collection_handle}): ${collectionProducts.length} products`);
+          
+          return {
+            id: tab.collection_handle,
+            handle: tab.collection_handle,
+            title: tab.name,
+            products: collectionProducts
+          };
+        });
 
-      // Sort collections to match tab order
-      const sortedCollections = appConfig.collections_config.tabs.map(tab => 
-        filteredCollections.find(collection => collection.handle === tab.collection_handle)
-      ).filter(Boolean) as Collection[];
+        setCollections(appCollections);
 
-      setCollections(sortedCollections);
-
-      if (sortedCollections.length === 0) {
-        setError('No collections found for this app configuration');
+        if (appCollections.every(col => col.products.length === 0)) {
+          setError('No products found for any configured collections');
+        }
+      } else {
+        // Fallback to original method
+        console.log('Cache failed, using fallback method');
+        const allCollections = await getCollections(true);
+        const appCollectionHandles = appConfig.collections_config.tabs.map(tab => tab.collection_handle);
+        const filteredCollections = allCollections.filter(collection => 
+          appCollectionHandles.includes(collection.handle)
+        );
+        const sortedCollections = appConfig.collections_config.tabs.map(tab => 
+          filteredCollections.find(collection => collection.handle === tab.collection_handle)
+        ).filter(Boolean) as Collection[];
+        setCollections(sortedCollections);
       }
     } catch (err) {
       console.error('Error loading app collections:', err);
@@ -175,7 +206,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
     } finally {
       setLoading(false);
     }
-  }, [appConfig.collections_config.tabs, getCollections, toast]);
+  }, [appConfig.collections_config.tabs, appConfig.app_name, getCollections, toast]);
 
   useEffect(() => {
     loadAppCollections();
