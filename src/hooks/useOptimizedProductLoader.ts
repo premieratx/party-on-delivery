@@ -32,6 +32,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cached, setCached] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const { app_slug, lightweight = true, auto_refresh = true } = options;
 
@@ -65,9 +66,14 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
 
       console.log(`✅ Loaded ${data.products?.length || 0} products from ${data.cached ? 'cache' : 'API'}`);
 
-      // If we got empty results but refreshing is in progress, check again in a moment
-      if (data.refreshing && data.products?.length === 0) {
-        setTimeout(() => loadProducts(false), 2000);
+      // Reset retry count on successful load (even if 0 products)
+      setRetryCount(0);
+
+      // Only retry if refreshing AND we haven't exceeded retry limit
+      if (data.refreshing && data.products?.length === 0 && retryCount < 3) {
+        console.log(`🔄 Retrying product load (attempt ${retryCount + 1}/3)`);
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => loadProducts(false), 3000 + (retryCount * 2000)); // Exponential backoff
       }
 
     } catch (err) {
@@ -78,9 +84,10 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [app_slug, lightweight]);
+  }, [app_slug, lightweight, retryCount]);
 
   const refresh = useCallback(() => {
+    setRetryCount(0); // Reset retry count on manual refresh
     return loadProducts(true);
   }, [loadProducts]);
 
@@ -88,18 +95,19 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     loadProducts();
   }, [loadProducts]);
 
-  // Auto-refresh every 5 minutes if enabled
+  // Auto-refresh every 5 minutes if enabled (but not during active retry attempts)
   useEffect(() => {
-    if (!auto_refresh) return;
+    if (!auto_refresh || retryCount > 0) return;
 
     const interval = setInterval(() => {
-      if (!loading) {
+      if (!loading && retryCount === 0) {
+        console.log('🔄 Auto-refreshing products...');
         loadProducts();
       }
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, [auto_refresh, loading, loadProducts]);
+  }, [auto_refresh, loading, loadProducts, retryCount]);
 
   return {
     products,
