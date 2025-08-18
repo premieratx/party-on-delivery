@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +19,7 @@ interface OccasionButtonsProps {
 export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isScrollingDown }) => {
   const [deliveryApps, setDeliveryApps] = useState<DeliveryApp[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadDeliveryApps();
@@ -40,6 +42,11 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOccasionClick = (appSlug: string) => {
+    console.log(`🎉 OccasionButtons: Navigating to delivery app: ${appSlug}`);
+    navigate(`/app/${appSlug}`);
   };
 
   const getIcon = (appName: string) => {
@@ -97,9 +104,7 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
                   variant="outline"
                   size="sm"
                   className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                  onClick={() => {
-                    window.location.href = `/app/${app.app_slug}`;
-                  }}
+                  onClick={() => handleOccasionClick(app.app_slug)}
                 >
                   <div className="text-xs">{getIcon(app.app_name)}</div>
                   <div className="text-[8px] leading-none">{getShortName(app.app_name)}</div>
@@ -114,9 +119,7 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
                     variant="outline"
                     size="sm"
                     className="text-xs px-2 py-2 h-10 flex flex-col items-center justify-center gap-0 flex-1"
-                    onClick={() => {
-                      window.location.href = `/app/${app.app_slug}`;
-                    }}
+                    onClick={() => handleOccasionClick(app.app_slug)}
                   >
                     <div className="text-xs">{getIcon(app.app_name)}</div>
                     <div className="text-[8px] leading-none">{getShortName(app.app_name)}</div>
@@ -135,9 +138,7 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
                   variant="outline"
                   size="sm"
                   className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                  onClick={() => {
-                    window.location.href = `/app/${app.app_slug}`;
-                  }}
+                  onClick={() => handleOccasionClick(app.app_slug)}
                 >
                   {getIcon(app.app_name)} {app.app_name}
                 </Button>
@@ -152,9 +153,7 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
                     variant="outline"
                     size="sm"
                     className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
-                    onClick={() => {
-                      window.location.href = `/app/${app.app_slug}`;
-                    }}
+                    onClick={() => handleOccasionClick(app.app_slug)}
                   >
                     {getIcon(app.app_name)} {app.app_name}
                   </Button>

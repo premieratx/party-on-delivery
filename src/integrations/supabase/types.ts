@@ -2590,40 +2590,52 @@ export type Database = {
       }
       shopify_products_cache: {
         Row: {
+          category: string | null
+          collection_handles: string[] | null
           collection_id: string | null
           created_at: string
           data: Json
           description: string | null
           handle: string
           id: string
+          image: string | null
           image_url: string | null
           price: number | null
+          shopify_id: string | null
           shopify_product_id: string
           title: string
           updated_at: string
         }
         Insert: {
+          category?: string | null
+          collection_handles?: string[] | null
           collection_id?: string | null
           created_at?: string
           data: Json
           description?: string | null
           handle: string
           id?: string
+          image?: string | null
           image_url?: string | null
           price?: number | null
+          shopify_id?: string | null
           shopify_product_id: string
           title: string
           updated_at?: string
         }
         Update: {
+          category?: string | null
+          collection_handles?: string[] | null
           collection_id?: string | null
           created_at?: string
           data?: Json
           description?: string | null
           handle?: string
           id?: string
+          image?: string | null
           image_url?: string | null
           price?: number | null
+          shopify_id?: string | null
           shopify_product_id?: string
           title?: string
           updated_at?: string

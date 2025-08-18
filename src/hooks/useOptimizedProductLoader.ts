@@ -39,80 +39,116 @@ export const useOptimizedProductLoader = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadProducts = useCallback(async (forceRefresh = false) => {
-    try {
-      console.log('🔍 useOptimizedProductLoader: Starting product load, forceRefresh:', forceRefresh);
-      setLoading(true);
-      setError(null);
-
-      const now = Date.now();
-      if (!forceRefresh && __memoryCache && (now - __memoryCacheAt) < __CACHE_TTL_MS) {
-        setProducts(Array.isArray(__memoryCache.products) ? __memoryCache.products : []);
-        setCollections(Array.isArray(__memoryCache.collections) ? __memoryCache.collections : []);
-        setCategories(Array.isArray(__memoryCache.categories) ? __memoryCache.categories : []);
-        return;
-      }
-
-      if (!forceRefresh && __inflightPromise) {
-        await __inflightPromise;
-        if (__memoryCache) {
-          setProducts(Array.isArray(__memoryCache.products) ? __memoryCache.products : []);
-          setCollections(Array.isArray(__memoryCache.collections) ? __memoryCache.collections : []);
-          setCategories(Array.isArray(__memoryCache.categories) ? __memoryCache.categories : []);
-        }
-        return;
-      }
-
-      __inflightPromise = (async () => {
-        const { data, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
-          body: { forceRefresh }
-        });
-
-        if (cacheError) {
-          console.error('Cache error:', cacheError);
-          throw cacheError;
-        }
-
-        if (data?.success && data?.data) {
-          const productData: CachedProductData = data.data;
-          console.log('✅ useOptimizedProductLoader: Loaded', productData.products?.length || 0, 'products and', productData.collections?.length || 0, 'collections');
-          __memoryCache = productData;
-          __memoryCacheAt = Date.now();
-          setProducts(Array.isArray(productData.products) ? productData.products : []);
-          setCollections(Array.isArray(productData.collections) ? productData.collections : []);
-          setCategories(Array.isArray(productData.categories) ? productData.categories : []);
-        } else {
-          console.log('⚠️ useOptimizedProductLoader: No data returned from cache, using empty arrays', data);
-          setProducts([]);
-          setCollections([]);
-          setCategories([]);
-        }
-      })();
-
-      await __inflightPromise;
-    } catch (err: any) {
-      console.error('Product loading error:', err);
-      setError(err.message || 'Failed to load products');
-    } finally {
-      __inflightPromise = null;
-      setLoading(false);
-    }
+  useEffect(() => {
+    loadProducts();
   }, []);
 
-  const refreshProducts = useCallback(() => {
-    loadProducts(true);
-  }, [loadProducts]);
+  const loadProducts = async () => {
+    console.log('🔄 useOptimizedProductLoader: Starting product load...');
+    setLoading(true);
+    setError(null);
 
-  useEffect(() => {
-    loadProducts(false);
-  }, [loadProducts]);
+    try {
+      // Try instant-product-cache first for ultra-fast loading
+      console.log('📦 Trying instant cache...');
+      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
+        body: { forceRefresh: false }
+      });
+
+      if (!cacheError && cacheData?.success && cacheData?.data) {
+        const { products: cachedProducts, collections: cachedCollections } = cacheData.data;
+        
+        if (Array.isArray(cachedProducts) && cachedProducts.length > 0) {
+          console.log(`✅ Instant cache hit: ${cachedProducts.length} products, ${cachedCollections?.length || 0} collections`);
+          setProducts(cachedProducts);
+          setCollections(Array.isArray(cachedCollections) ? cachedCollections : []);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback 1: Try get-all-collections with products
+      console.log('📦 Trying collections API...');
+      const { data: collectionsData, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
+      
+      if (!collectionsError && collectionsData?.success && collectionsData?.collections) {
+        const collections = Array.isArray(collectionsData.collections) ? collectionsData.collections : [];
+        const allProducts = collections.reduce((acc, collection) => {
+          if (Array.isArray(collection.products)) {
+            acc.push(...collection.products);
+          }
+          return acc;
+        }, []);
+
+        if (allProducts.length > 0) {
+          console.log(`✅ Collections API: ${allProducts.length} products from ${collections.length} collections`);
+          setProducts(allProducts);
+          setCollections(collections);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fallback 2: Try optimized products endpoint
+      console.log('📦 Trying optimized products...');
+      const { data: optimizedData, error: optimizedError } = await supabase.functions.invoke('fetch-shopify-products-optimized', {
+        body: { lightweight: true, includeImages: true, limit: 200 }
+      });
+
+      if (!optimizedError && optimizedData?.success && optimizedData?.products) {
+        const products = Array.isArray(optimizedData.products) ? optimizedData.products : [];
+        console.log(`✅ Optimized API: ${products.length} products`);
+        setProducts(products);
+        setCollections([]);
+        setLoading(false);
+        return;
+      }
+
+      throw new Error('All product loading methods failed');
+
+    } catch (err) {
+      console.error('❌ Product loading failed:', err);
+      setError('Failed to load products. Please try refreshing.');
+      setProducts([]);
+      setCollections([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
-    products,
-    collections,
-    categories,
+    products: Array.isArray(products) ? products : [],
+    collections: Array.isArray(collections) ? collections : [],
     loading,
     error,
-    refreshProducts
+    refreshProducts: loadProducts,
+    // Enhanced collection matching for search app categories
+    getProductsByCollection: (handle: string) => {
+      if (!Array.isArray(collections)) return [];
+      
+      // Map collection handles to search app categories
+      const collectionMappings = {
+        'spirits': ['spirits', 'gin-rum', 'tequila-mezcal', 'whiskey'],
+        'beer': ['tailgate-beer', 'texas-beer-collection', 'beer'],
+        'seltzers': ['seltzer-collection', 'seltzers'],
+        'cocktails': ['cocktail-kits', 'ready-to-drink-cocktails'],
+        'mixers': ['mixers-non-alcoholic', 'mixers'],
+        'wine': ['champagne', 'wine'],
+        'party-supplies': ['party-supplies', 'decorations']
+      };
+      
+      const mappedHandles = collectionMappings[handle] || [handle];
+      
+      return collections.reduce((acc, collection) => {
+        if (mappedHandles.some(h => 
+          collection.handle?.toLowerCase().includes(h.toLowerCase()) ||
+          h.toLowerCase().includes(collection.handle?.toLowerCase())
+        )) {
+          acc.push(...(Array.isArray(collection.products) ? collection.products : []));
+        }
+        return acc;
+      }, []);
+    }
   };
+
 };

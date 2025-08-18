@@ -81,7 +81,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   externalSearchQuery = '',
   customSiteSlug,
   showSearch = true,
-  maxProducts = 50
+  maxProducts = 50,
+  forceRefresh = false
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
@@ -89,7 +90,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
-  const { products, collections, loading, error } = useOptimizedProductLoader();
+  const { products, collections, loading, error, refreshProducts } = useOptimizedProductLoader();
+
+  // Force refresh products if requested
+  useEffect(() => {
+    if (forceRefresh) {
+      console.log('🔄 ProductCategories: Force refreshing products');
+      refreshProducts();
+    }
+  }, [forceRefresh, refreshProducts]);
 
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
