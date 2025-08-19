@@ -658,146 +658,101 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-4 pb-3 border-b bg-gradient-to-r from-primary/5 to-secondary/5 flex-shrink-0">
-          <DialogTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              Cover Page Creator - Mobile First Design
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setFullscreenPreview(!fullscreenPreview)}
-                className="hidden md:flex"
-              >
-                {fullscreenPreview ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                {fullscreenPreview ? 'Normal' : 'Expand'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setControlsExpanded(!controlsExpanded)}
-                className="md:hidden"
-              >
-                {controlsExpanded ? 'Hide Controls' : 'Show Controls'}
-              </Button>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Controls Panel */}
-          <div className={`${
-            controlsExpanded ? 'w-full md:w-80' : 'w-0 md:w-80'
-          } border-r flex flex-col transition-all duration-300 ${
-            controlsExpanded ? 'block' : 'hidden md:flex'
-          }`}>
-            <div className="p-4 overflow-y-auto flex-1 space-y-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-              {/* Quick Theme Selection */}
-              <div className="space-y-3 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
-                <div className="flex items-center gap-2">
-                  <Wand2 className="w-4 h-4 text-primary" />
-                  <Label className="text-sm font-semibold">Premium Themes</Label>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {Object.entries(COVER_THEMES).map(([key, theme]) => (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedTheme(key as keyof typeof COVER_THEMES)}
-                      className={`p-3 rounded-lg border text-sm font-medium transition-all group ${
-                        selectedTheme === key 
-                          ? 'border-primary bg-primary/10 shadow-md ring-2 ring-primary/30' 
-                          : 'border-border hover:bg-muted hover:border-primary/50'
-                      }`}
-                    >
-                      <div 
-                        className="w-full h-6 rounded mb-2 shadow-sm"
-                        style={{ background: theme.background }}
-                      />
-                      <div className="text-left">
-                        <div className="font-semibold">{theme.name}</div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {key === 'gold' && '✨ Premium Luxury Design'}
-                          {key === 'platinum' && '💎 Elegant Professional'}
-                          {key === 'original' && '🎨 Modern Classic'}
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0">
+        <div className="h-full flex flex-col">
+          {/* Header */}
+          <DialogHeader className="p-4 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                {isEditing ? `Edit: ${initial?.title}` : 'Create Cover Page'}
               </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewMode(!previewMode)}
+                >
+                  <Eye className="w-4 h-4" />
+                  {previewMode ? 'Edit' : 'Preview'}
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving || !title}
+                  size="sm"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
 
-              {/* Device Selection */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">Device Preview</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
-                    const Icon = device.icon;
-                    return (
+          {/* Main Content */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Controls Panel */}
+            <div className="w-80 border-r flex flex-col">
+              <div className="p-4 overflow-y-auto flex-1 space-y-6 custom-scrollbar">
+                {/* Theme Selection */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Theme</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(COVER_THEMES).map(([key, theme]) => (
                       <button
                         key={key}
-                        onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
-                        className={`p-3 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
-                          activeDevice === key 
-                            ? 'border-primary bg-primary/10' 
+                        onClick={() => setSelectedTheme(key as keyof typeof COVER_THEMES)}
+                        className={`p-3 rounded-lg border text-sm font-medium transition-all ${
+                          selectedTheme === key 
+                            ? 'border-primary bg-primary/10 ring-2 ring-primary/20' 
                             : 'border-border hover:bg-muted'
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <div 
+                          className="w-full h-4 rounded mb-2"
+                          style={{ background: theme.background }}
+                        />
                         <div className="text-left">
-                          <div>{device.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {device.previewWidth}×{device.previewHeight}
-                          </div>
+                          <div className="font-semibold">{theme.name}</div>
                         </div>
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Mode Controls */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">Editor Mode</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={!previewMode && !dragMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => { setPreviewMode(false); setDragMode(false); }}
-                  >
-                    <Settings className="w-4 h-4" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant={dragMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => { setDragMode(!dragMode); setPreviewMode(false); }}
-                  >
-                    <Move className="w-4 h-4" />
-                    Position
-                  </Button>
-                  <Button
-                    variant={previewMode ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => { setPreviewMode(!previewMode); setDragMode(false); }}
-                  >
-                    <Eye className="w-4 h-4" />
-                    Preview
-                  </Button>
+                {/* Device Selection */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Device Preview</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
+                      const Icon = device.icon;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
+                          className={`p-2 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
+                            activeDevice === key 
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border hover:bg-muted'
+                          }`}
+                        >
+                          <Icon className="w-4 h-4" />
+                          <div className="text-left">
+                            <div>{device.name}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              <Tabs defaultValue="content" className="flex-1">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="content">Content</TabsTrigger>
-                  <TabsTrigger value="design">Design</TabsTrigger>
-                  <TabsTrigger value="buttons">Buttons</TabsTrigger>
-                </TabsList>
+                <Tabs defaultValue="content" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="content">Content</TabsTrigger>
+                    <TabsTrigger value="design">Design</TabsTrigger>
+                    <TabsTrigger value="buttons">Buttons</TabsTrigger>
+                  </TabsList>
 
-                <TabsContent value="content" className="space-y-4 mt-4">
-                  <div className="space-y-4">
+                  <TabsContent value="content" className="space-y-4">
                     <div>
                       <Label>Page Slug</Label>
                       <Input
@@ -805,10 +760,13 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                         onChange={(e) => setSlug(e.target.value)}
                         placeholder="page-slug"
                       />
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Preview URL: {CANONICAL_DOMAIN}/cover/{computedSlug}
+                      </div>
                     </div>
                     
                     <div>
-                      <Label>Title</Label>
+                      <Label>Title *</Label>
                       <Input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
@@ -827,44 +785,54 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
                     <div>
                       <Label>Features List</Label>
-                      {checklist.map((item, idx) => (
-                        <div key={idx} className="flex gap-2 mt-2">
-                          <Input
-                            value={item}
-                            onChange={(e) => {
-                              const newChecklist = [...checklist];
-                              newChecklist[idx] = e.target.value;
-                              setChecklist(newChecklist);
-                            }}
-                            placeholder={`Feature ${idx + 1}`}
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setChecklist(checklist.filter((_, i) => i !== idx))}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {checklist.map((item, idx) => (
+                          <div key={idx} className="flex gap-2">
+                            <Input
+                              value={item}
+                              onChange={(e) => {
+                                const newChecklist = [...checklist];
+                                newChecklist[idx] = e.target.value;
+                                setChecklist(newChecklist);
+                              }}
+                              placeholder={`Feature ${idx + 1}`}
+                              className="text-sm"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setChecklist(checklist.filter((_, i) => i !== idx))}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setChecklist([...checklist, ""])}
                         className="mt-2"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4 mr-2" />
                         Add Feature
                       </Button>
                     </div>
-                  </div>
-                </TabsContent>
 
-                <TabsContent value="design" className="space-y-4 mt-4">
-                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="is-active"
+                        checked={isActive}
+                        onCheckedChange={setIsActive}
+                      />
+                      <Label htmlFor="is-active">Page Active</Label>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="design" className="space-y-4">
                     <div>
                       <Label>Logo</Label>
-                      <div className="flex gap-2 mt-2">
+                      <div className="space-y-2">
                         <Input
                           value={logoUrl}
                           onChange={(e) => setLogoUrl(e.target.value)}
@@ -874,15 +842,29 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => handleFileUpload('logo')}
+                          className="w-full"
                         >
-                          <Upload className="w-4 h-4" />
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Logo
                         </Button>
                       </div>
                     </div>
 
                     <div>
-                      <Label>Background Image/Video</Label>
-                      <div className="flex gap-2 mt-2">
+                      <Label>Logo Height: {logoHeight}px</Label>
+                      <Slider
+                        value={[logoHeight]}
+                        onValueChange={([value]) => setLogoHeight(value)}
+                        min={50}
+                        max={300}
+                        step={10}
+                        className="mt-2"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Background</Label>
+                      <div className="space-y-2">
                         <Input
                           value={bgImageUrl || bgVideoUrl}
                           onChange={(e) => {
@@ -900,136 +882,128 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                           variant="outline"
                           size="sm"
                           onClick={() => handleFileUpload('background')}
+                          className="w-full"
                         >
-                          <Upload className="w-4 h-4" />
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Background
                         </Button>
                       </div>
                     </div>
+                  </TabsContent>
 
-                    <div>
-                      <Label>Logo Height: {logoHeight}px</Label>
-                      <Slider
-                        value={[logoHeight]}
-                        onValueChange={([value]) => setLogoHeight(value)}
-                        min={50}
-                        max={300}
-                        step={10}
-                        className="mt-2"
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
+                  <TabsContent value="buttons" className="space-y-4">
+                    <div className="space-y-4 max-h-60 overflow-y-auto">
+                      {buttons.map((button, idx) => (
+                        <Card key={idx} className="p-3">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <Label className="font-semibold text-sm">Button {idx + 1}</Label>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeButton(idx)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            
+                            <div>
+                              <Label className="text-xs">Button Text</Label>
+                              <Input
+                                value={button.text}
+                                onChange={(e) => updateButton(idx, { text: e.target.value })}
+                                placeholder="Button Text"
+                                className="text-sm"
+                              />
+                            </div>
 
-                <TabsContent value="buttons" className="space-y-4 mt-4">
-                  <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {buttons.map((button, idx) => (
-                      <Card key={idx} className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <Label className="font-semibold">Button {idx + 1}</Label>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeButton(idx)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div>
+                              <Label className="text-xs">Button Style</Label>
+                              <Select
+                                value={button.style || 'filled'}
+                                onValueChange={(value: 'filled' | 'outline') => updateButton(idx, { style: value })}
+                              >
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="filled">Filled</SelectItem>
+                                  <SelectItem value="outline">Outline</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div>
+                              <Label className="text-xs">Action Type</Label>
+                              <Select
+                                value={button.type}
+                                onValueChange={(value: CoverButtonType) => updateButton(idx, { type: value })}
+                              >
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="delivery_app">Delivery App</SelectItem>
+                                  <SelectItem value="checkout">Checkout</SelectItem>
+                                  <SelectItem value="url">Custom URL</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {button.type === 'delivery_app' && (
+                              <div>
+                                <Label className="text-xs">App</Label>
+                                <Select
+                                  value={button.app_slug || ''}
+                                  onValueChange={(value) => updateButton(idx, { app_slug: value })}
+                                >
+                                  <SelectTrigger className="text-sm">
+                                    <SelectValue placeholder="Select App" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {apps.map((app) => (
+                                      <SelectItem key={app.app_slug} value={app.app_slug}>
+                                        {app.app_name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
+
+                            {button.type === 'url' && (
+                              <div>
+                                <Label className="text-xs">URL</Label>
+                                <Input
+                                  value={button.url || ''}
+                                  onChange={(e) => updateButton(idx, { url: e.target.value })}
+                                  placeholder="https://example.com"
+                                  className="text-sm"
+                                />
+                              </div>
+                            )}
                           </div>
-                          
-                          <Input
-                            value={button.text}
-                            onChange={(e) => updateButton(idx, { text: e.target.value })}
-                            placeholder="Button Text"
-                          />
-                          
-                          <Select
-                            value={button.style || 'filled'}
-                            onValueChange={(value) => updateButton(idx, { style: value as 'filled' | 'outline' })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="filled">Filled</SelectItem>
-                              <SelectItem value="outline">Outline</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <Select
-                            value={button.type}
-                            onValueChange={(value) => updateButton(idx, { type: value as CoverButtonType })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="delivery_app">Delivery App</SelectItem>
-                              <SelectItem value="checkout">Checkout</SelectItem>
-                              <SelectItem value="url">Custom URL</SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          {button.type === 'delivery_app' && (
-                            <Select
-                              value={button.app_slug}
-                              onValueChange={(value) => updateButton(idx, { app_slug: value })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select App" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {apps.map((app) => (
-                                  <SelectItem key={app.app_slug} value={app.app_slug}>
-                                    {app.app_name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-
-                          {button.type === 'url' && (
-                            <Input
-                              value={button.url}
-                              onChange={(e) => updateButton(idx, { url: e.target.value })}
-                              placeholder="https://example.com"
-                            />
-                          )}
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      ))}
+                    </div>
                     
                     <Button
                       variant="outline"
                       onClick={addButton}
                       className="w-full"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-4 h-4 mr-2" />
                       Add Button
                     </Button>
-                  </div>
-                </TabsContent>
-              </Tabs>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
-            
-            {/* Save Button - Fixed at bottom */}
-            <div className="p-4 border-t bg-background flex-shrink-0">
-              <Button
-                onClick={handleSave}
-                disabled={saving || !title || !slugOk}
-                className="w-full h-12 text-base font-semibold"
-                size="lg"
-              >
-                <Save className="w-5 h-5 mr-2" />
-                {saving ? 'Saving...' : isEditing ? 'Update Cover Page' : 'Create Cover Page'}
-              </Button>
-            </div>
-          </div>
 
-          {/* Preview Area - Enhanced */}
-          <div className={`flex-1 overflow-auto ${
-            !controlsExpanded ? 'w-full' : 'w-0 md:flex-1'
-          } transition-all duration-300`}>
-            {renderPreview()}
+            {/* Preview Panel */}
+            <div className="flex-1 overflow-auto bg-gray-50">
+              {renderPreview()}
+            </div>
           </div>
         </div>
 
@@ -1038,15 +1012,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
           ref={fileInputRef}
           type="file"
           accept="image/*,video/*"
-          className="hidden"
           onChange={(e) => handleFileChange(e, 'background')}
+          className="hidden"
         />
         <input
           ref={logoInputRef}
           type="file"
           accept="image/*"
-          className="hidden"
           onChange={(e) => handleFileChange(e, 'logo')}
+          className="hidden"
         />
       </DialogContent>
     </Dialog>
