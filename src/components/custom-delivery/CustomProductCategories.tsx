@@ -15,7 +15,7 @@ import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
-import '@/utils/fixProductOrdering'; // Auto-fix product ordering
+import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
@@ -289,8 +289,27 @@ const [showSearchModal, setShowSearchModal] = useState(false);
         </div>
       </div>
 
-      {/* Category Tabs */}
-      <div className="bg-white border-b">
+      {/* Search Bar - STICKY WHEN MODAL ACTIVE */}
+      {showSearchModal && (
+        <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
+          <div className="max-w-md mx-auto px-4 py-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                autoFocus
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Tabs - ALWAYS STICKY */}
+      <div className={`sticky ${showSearchModal ? 'top-[76px]' : 'top-0'} z-40 bg-white border-b shadow-sm`}>
         <div className="max-w-md mx-auto">
           <div className="flex overflow-x-auto scrollbar-hide">
             {categories.map((category) => {
@@ -302,17 +321,17 @@ const [showSearchModal, setShowSearchModal] = useState(false);
                 <button
                   key={category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  className={`flex-shrink-0 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
                     activeCategory === category.id
                       ? 'border-purple-500 text-purple-600 bg-purple-50'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <category.icon className="w-4 h-4" />
-                    <span>{category.name}</span>
+                  <div className="flex items-center gap-1">
+                    <category.icon className="w-3 h-3" />
+                    <span className="whitespace-nowrap">{category.name}</span>
                     {categoryProducts.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs ml-1">
                         {categoryProducts.length}
                       </Badge>
                     )}
@@ -517,6 +536,13 @@ const [showSearchModal, setShowSearchModal] = useState(false);
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* What's the Occasion? - Bottom Section */}
+      <div className="max-w-md mx-auto px-4 mt-16 mb-24">
+        <div className="bg-muted/20 rounded-lg p-6">
+          <OccasionButtons isMobile={true} isScrollingDown={false} />
+        </div>
+      </div>
     </div>
   );
 };

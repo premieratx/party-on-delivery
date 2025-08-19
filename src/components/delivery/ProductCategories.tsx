@@ -343,52 +343,38 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
-      {/* Combined Row: Occasion Buttons + Search Bar - STICKY WITH MOBILE HIDE */}
-      <div className={`sticky top-0 z-50 bg-background border-b shadow-sm transition-transform duration-300 ${isScrollingDown ? 'lg:translate-y-0 md:translate-y-0 -translate-y-full' : 'translate-y-0'}`}>
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Occasion Buttons */}
-            <div className="flex-1">
-              <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={isScrollingDown} />
+      {/* Search Bar - STICKY WHEN ACTIVE */}
+      {showSearch && (isSearchActive || searchQuery) && (
+        <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
+          <div className="container mx-auto px-4 py-3">
+            <div className="flex">
+              <Input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => {
+                   setSearchQuery(e.target.value);
+                   setIsSearchActive(!!e.target.value.trim());
+                }}
+                onBlur={() => {
+                  if (!searchQuery.trim()) setIsSearchActive(false);
+                }}
+                className="rounded-r-none"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button 
+                onClick={handleSearch}
+                className="rounded-l-none"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
             </div>
-            
-            {/* Search Bar */}
-            {showSearch && (
-              <div className="flex-shrink-0 lg:max-w-md lg:w-full">
-                <div className="flex">
-                  <Input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => {
-                       setSearchQuery(e.target.value);
-                       setIsSearchActive(!!e.target.value.trim());
-                    }}
-                    onFocus={() => {
-                      // Restore previous search if user clicks back into search bar
-                      if (savedSearchQuery && !searchQuery) {
-                        setSearchQuery(savedSearchQuery);
-                        setTimeout(() => handleSearch(), 100);
-                      }
-                    }}
-                    className="rounded-r-none"
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                  <Button 
-                    onClick={handleSearch}
-                    className="rounded-l-none"
-                  >
-                    <Search className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
-      </div>
+      )}
 
       {/* Category Tabs - ALWAYS STICKY */}
-      <div className={`sticky ${isScrollingDown ? 'top-0' : 'top-[88px]'} z-40 bg-background border-b shadow-sm transition-all duration-300`}>
+      <div className={`sticky ${(isSearchActive || searchQuery) ? 'top-[76px]' : 'top-0'} z-40 bg-background border-b shadow-sm transition-all duration-300`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-2">
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
@@ -396,30 +382,38 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 <Button
                   key={tab.id}
                   variant={selectedCategory === index ? "default" : "ghost"}
-                  className="whitespace-nowrap min-w-fit transition-all duration-200"
+                  className="whitespace-nowrap text-xs px-3 py-1 h-8 min-w-fit flex-shrink-0 transition-all duration-200"
                   onClick={() => {
                     const currentTab = collectionsConfig?.tabs?.[index];
                     console.log(`🔄 SWITCHING TO TAB ${index}: ${currentTab?.name || tab.title} (${currentTab?.collection_handle || tab.handle})`);
                     setSelectedCategory(index);
-                    // When user clicks tab, clear search results but preserve search query
                     setSearchProducts([]);
                     setIsSearchActive(false);
-                    // DO NOT clear search query - keep it for when user returns to search
-                    // NO AUTO-SCROLL - User stays at current position
                   }}
                 >
-                  {tab.icon && <span className="mr-2">{tab.icon}</span>}
-                  {tab.title}
+                  {tab.icon && <span className="mr-1 text-xs">{tab.icon}</span>}
+                  <span className="text-xs">{tab.title}</span>
                 </Button>
               ))}
             </div>
             
+            {/* Mobile Search Icon */}
+            {showSearch && !isSearchActive && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSearchActive(true)}
+                className="ml-2 lg:hidden"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Products Grid */}
-      <div className="container mx-auto px-4 py-8 pb-20 lg:pb-8">
+      <div className="container mx-auto px-4 py-8 pb-32 lg:pb-24">
         {/* Show search results when user is actively searching, otherwise show tab products */}
         {isSearchActive && searchQuery && searchProducts.length > 0 ? (
           <>
@@ -593,6 +587,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           cartItemCount={cartItemCount}
           onOpenCart={() => onOpenCart && onOpenCart()}
         />
+        
+        {/* What's the Occasion? - Bottom Section */}
+        <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
+          <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
+        </div>
       </div>
     </div>
   );

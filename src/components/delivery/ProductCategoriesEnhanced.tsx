@@ -394,12 +394,9 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
       </div>
 
       {/* Combined Row: Occasion Buttons + Search Bar */}
-      <div className={`sticky top-0 z-50 bg-background border-b shadow-sm transition-transform duration-300 ${isScrollingDown ? 'lg:translate-y-0 md:translate-y-0 -translate-y-full' : 'translate-y-0'}`}>
+      <div className={`sticky top-0 z-50 bg-background border-b shadow-sm transition-transform duration-300 ${isScrollingDown && !searchQuery ? 'lg:translate-y-0 md:translate-y-0 -translate-y-full' : 'translate-y-0'}`}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex-1">
-              <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={isScrollingDown} />
-            </div>
             
             {showSearch && (
               <div className="flex-shrink-0 lg:max-w-md lg:w-full">
@@ -434,7 +431,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
       </div>
 
       {/* Category Tabs */}
-      <div className={`sticky ${isScrollingDown ? 'top-0' : 'top-[88px]'} z-40 bg-background border-b shadow-sm transition-all duration-300`}>
+      <div className={`sticky ${searchQuery ? 'top-[76px]' : isScrollingDown ? 'top-0' : 'top-[88px]'} z-40 bg-background border-b shadow-sm transition-all duration-300`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-2">
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
@@ -442,24 +439,36 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
                 <Button
                   key={tab.id}
                   variant={selectedCategory === index ? "default" : "ghost"}
-                  className="whitespace-nowrap min-w-fit transition-all duration-200"
+                  className="whitespace-nowrap text-xs px-3 py-1 h-8 min-w-fit flex-shrink-0 transition-all duration-200"
                   onClick={() => {
                     console.log(`🔄 Enhanced: Switching to tab ${index}: ${tab.title} (${tab.handle})`);
                     setSelectedCategory(index);
                     setSearchProducts([]);
                   }}
                 >
-                  {tab.icon && <span className="mr-2">{tab.icon}</span>}
-                  {tab.title}
+                  {tab.icon && <span className="mr-1 text-xs">{tab.icon}</span>}
+                  <span className="text-xs">{tab.title}</span>
                 </Button>
               ))}
             </div>
+            
+            {/* Mobile Search Icon */}
+            {showSearch && !searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery('_activate')}
+                className="ml-2 lg:hidden"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Products Grid */}
-      <div className="container mx-auto px-4 py-8 pb-20 lg:pb-8">
+      <div className="container mx-auto px-4 py-8 pb-32 lg:pb-24">
         {loading && (
           <div className="flex justify-center py-8">
             <LoadingSpinner />
@@ -523,6 +532,11 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
         cartItemCount={cartItemCount}
         onOpenCart={onOpenCart}
       />
+      
+      {/* What's the Occasion? - Bottom Section */}
+      <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
+        <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
+      </div>
     </div>
   );
 };

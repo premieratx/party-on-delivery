@@ -84,22 +84,16 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
     return null;
   }
 
-  // Don't show when scrolled down on mobile
-  if (isScrollingDown) {
-    return null;
-  }
-
   return (
-    <div className="flex items-center gap-4 w-full">
-      <div className="h-16 flex flex-col justify-center text-sm font-bold text-black leading-tight hidden sm:block px-2">
-        <div className="text-lg">What's the</div>
-        <div className="text-lg">Occasion?</div>
+    <div className="flex flex-col items-center gap-4 w-full">
+      <div className="text-center">
+        <h3 className="text-xl font-bold text-foreground mb-2">What's the Occasion?</h3>
+        <p className="text-sm text-muted-foreground">Choose your perfect party delivery experience</p>
       </div>
       
       {/* Mobile: Dropdown Selector */}
       {isMobile ? (
-        <div className="flex items-center gap-2 w-full">
-          <span className="text-sm font-medium text-foreground whitespace-nowrap">Occasion:</span>
+        <div className="w-full">
           <Select onValueChange={(value) => handleOccasionClick(value)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Choose your event..." />
@@ -118,32 +112,38 @@ export const OccasionButtons: React.FC<OccasionButtonsProps> = ({ isMobile, isSc
         </div>
       ) : (
         /* Desktop: Button Grid */
-        <div className="flex flex-col gap-2 flex-1 max-w-2xl">
-          <div className="flex gap-3">
+        <div className="w-full max-w-4xl">
+          <div className="grid grid-cols-2 gap-3 mb-3">
             {deliveryApps.slice(0, 4).map((app) => (
               <Button
                 key={app.id}
                 variant="outline"
                 size="sm"
-                className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                className="text-sm px-4 py-3 h-auto font-medium text-foreground flex-1 min-w-0"
                 onClick={() => handleOccasionClick(app.app_slug)}
               >
-                {getIcon(app.app_name)} {app.app_name}
+                <div className="flex items-center gap-2">
+                  <span>{getIcon(app.app_name)}</span>
+                  <span>{app.app_name}</span>
+                </div>
               </Button>
             ))}
           </div>
           
           {deliveryApps.length > 4 && (
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {deliveryApps.slice(4, 8).map((app) => (
                 <Button
                   key={app.id}
                   variant="outline"
                   size="sm"
-                  className="text-xs px-4 py-2 h-10 font-bold text-black flex-1 min-w-0"
+                  className="text-sm px-4 py-3 h-auto font-medium text-foreground flex-1 min-w-0"
                   onClick={() => handleOccasionClick(app.app_slug)}
                 >
-                  {getIcon(app.app_name)} {app.app_name}
+                  <div className="flex items-center gap-2">
+                    <span>{getIcon(app.app_name)}</span>
+                    <span>{app.app_name}</span>
+                  </div>
                 </Button>
               ))}
             </div>
