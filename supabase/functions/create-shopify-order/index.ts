@@ -72,7 +72,7 @@ serve(async (req) => {
     let cartItems = [];
     
     // First try to get cart data from order_drafts if referenced
-    if (metadata?.cart_data_id) {
+    if (metadata?.order_draft_id) {
       try {
         const supabaseClient = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
@@ -83,13 +83,13 @@ serve(async (req) => {
         const { data: orderDraft, error } = await supabaseClient
           .from('order_drafts')
           .select('draft_data')
-          .eq('id', metadata.cart_data_id)
+          .eq('id', metadata.order_draft_id)
           .single();
           
-        if (!error && orderDraft?.draft_data?.cartItems) {
-          cartItems = orderDraft.draft_data.cartItems;
+        if (!error && orderDraft?.draft_data?.cart_items) {
+          cartItems = orderDraft.draft_data.cart_items;
           logStep("Cart items loaded from order_drafts", { 
-            cartDataId: metadata.cart_data_id,
+            orderDraftId: metadata.order_draft_id,
             itemCount: cartItems.length 
           });
         }
@@ -114,7 +114,7 @@ serve(async (req) => {
     if (!cartItems || cartItems.length === 0) {
       logStep("CRITICAL: No cart items found anywhere", { 
         availableMetadataKeys: Object.keys(metadata || {}),
-        cartDataId: metadata?.cart_data_id,
+        orderDraftId: metadata?.order_draft_id,
         isGroupOrder: !!groupOrderToken,
         groupOrderToken
       });
@@ -123,7 +123,7 @@ serve(async (req) => {
     
     logStep("Cart items successfully loaded", { 
       itemCount: cartItems.length,
-      source: metadata?.cart_data_id ? 'order_drafts' : 'metadata'
+      source: metadata?.order_draft_id ? 'order_drafts' : 'metadata'
     });
     
     const deliveryDate = metadata?.delivery_date;
@@ -138,7 +138,7 @@ serve(async (req) => {
     const discountCode = metadata?.discount_code;
     const discountAmount = metadata?.discount_amount;
     const subtotal = parseFloat(metadata?.subtotal || '0');
-    const shippingFee = parseFloat(metadata?.shipping_fee || '0');
+    const shippingFee = parseFloat(metadata?.delivery_fee || '0');
     const salesTax = parseFloat(metadata?.sales_tax || '0');
     const tipAmount = parseFloat(metadata?.tip_amount || '0');
     const totalAmount = parseFloat(metadata?.total_amount || '0');

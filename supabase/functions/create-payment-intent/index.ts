@@ -45,20 +45,22 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Store order draft
+    // Store order draft with correct column structure
     const orderDraft = {
-      amount: amount,
-      currency: currency,
-      cart_items: cartItems,
-      customer_info: customerInfo,
-      delivery_info: deliveryInfo,
-      applied_discount: appliedDiscount,
-      tip_amount: tipAmount,
-      subtotal: subtotal,
-      delivery_fee: deliveryFee,
-      sales_tax: salesTax,
-      affiliate_code: affiliateCode,
-      created_at: new Date().toISOString(),
+      draft_data: {
+        currency: currency,
+        cart_items: cartItems,
+        customer_info: customerInfo,
+        delivery_info: deliveryInfo,
+        applied_discount: appliedDiscount,
+        tip_amount: tipAmount,
+        subtotal: subtotal,
+        delivery_fee: deliveryFee,
+        sales_tax: salesTax,
+        affiliate_code: affiliateCode
+      },
+      total_amount: amount / 100, // Convert cents to dollars for storage
+      customer_email: customerInfo?.email || null,
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     };
 
@@ -85,6 +87,16 @@ serve(async (req) => {
         customer_email: customerInfo?.email || '',
         delivery_date: deliveryInfo?.date || '',
         delivery_time: deliveryInfo?.timeSlot || '',
+        cart_items: JSON.stringify(cartItems),
+        subtotal: (subtotal / 100).toFixed(2),
+        delivery_fee: (deliveryFee / 100).toFixed(2),
+        sales_tax: (salesTax / 100).toFixed(2),
+        tip_amount: (tipAmount / 100).toFixed(2),
+        total_amount: (amount / 100).toFixed(2),
+        customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim(),
+        customer_phone: customerInfo?.phone || '',
+        delivery_address: `${deliveryInfo?.address || ''}, ${deliveryInfo?.city || ''}, ${deliveryInfo?.state || ''} ${deliveryInfo?.zipCode || ''}`.trim(),
+        delivery_instructions: deliveryInfo?.instructions || ''
       }
     });
 

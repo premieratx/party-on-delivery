@@ -36,9 +36,9 @@ serve(async (req) => {
     let event: Stripe.Event;
 
     if (webhookSecret && signature) {
-      // Verify webhook signature in production
+      // Verify webhook signature in production using async method for Deno
       try {
-        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
       } catch (err) {
         console.error('Webhook signature verification failed:', err);
         return new Response('Webhook signature verification failed', { status: 400 });
@@ -58,14 +58,12 @@ serve(async (req) => {
         
         // Try to process successful payment
         try {
-          await supabase.functions.invoke('process-order-complete', {
+          await supabase.functions.invoke('create-shopify-order', {
             body: {
-              payment_intent_id: paymentIntent.id,
-              order_draft_id: paymentIntent.metadata.order_draft_id,
-              customer_email: paymentIntent.metadata.customer_email,
-              affiliate_code: paymentIntent.metadata.affiliate_code
+              paymentIntentId: paymentIntent.id
             }
           });
+          console.log('✅ Shopify order created successfully');
         } catch (processError) {
           console.log('Order processing failed, but payment succeeded:', processError);
         }
