@@ -29,6 +29,7 @@ export const CartQuantityManager: React.FC<CartQuantityManagerProps> = ({
   const quantity = getCartItemQuantity(productId, variant);
   
   const handleQuantityChange = (newQuantity: number) => {
+    console.log('🛒 CartQuantityManager: handleQuantityChange', { productId, variant, newQuantity });
     updateQuantity(productId, variant, newQuantity, {
       id: productId,
       title: product.title,
@@ -38,8 +39,9 @@ export const CartQuantityManager: React.FC<CartQuantityManagerProps> = ({
       variant: variant
     });
   };
-  
+
   const handleAddToCart = () => {
+    console.log('🛒 CartQuantityManager: handleAddToCart called');
     handleQuantityChange(1);
   };
   

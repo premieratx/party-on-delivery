@@ -37,17 +37,22 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
   };
 
   const handleIncrease = () => {
+    console.log('🔢 QuantityControls: Increase clicked', { productId, variant, quantity, disabled });
     if (disabled) return;
     
     if (quantity === 0 && onAddToCart) {
+      console.log('🔢 QuantityControls: Calling onAddToCart');
       onAddToCart();
     } else {
+      console.log('🔢 QuantityControls: Calling onQuantityChange with', quantity + 1);
       onQuantityChange(quantity + 1);
     }
   };
 
   const handleDecrease = () => {
+    console.log('🔢 QuantityControls: Decrease clicked', { productId, variant, quantity, disabled });
     if (disabled || quantity === 0) return;
+    console.log('🔢 QuantityControls: Calling onQuantityChange with', Math.max(0, quantity - 1));
     onQuantityChange(Math.max(0, quantity - 1));
   };
 

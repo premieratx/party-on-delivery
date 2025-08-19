@@ -138,7 +138,10 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => { console.log('BottomCartBar: Cart button clicked'); onOpenCart(); }}
+              onClick={() => { 
+                console.log('🛒 BottomCartBar: Cart button clicked, items:', totalItems); 
+                onOpenCart(); 
+              }}
               aria-label="Open cart"
               className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3 touch-manipulation"
               data-cart-trigger="true"
