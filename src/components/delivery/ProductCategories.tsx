@@ -235,16 +235,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     updateQuantity(normalizedProductId, normalizedVariantId, newQty, cartItem);
   };
 
-  // EXACT Real-time search with exact matching 
+  // Real-time hierarchical search using SearchOptimizer
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) {
       setSearchProducts([]);
       setIsSearching(false);
+      setIsSearchActive(false);
       return;
     }
 
     setIsSearching(true);
-    const q = searchQuery.trim().toLowerCase();
+    setIsSearchActive(true);
     
     try {
       // Get all products for search using instant cache
@@ -259,65 +260,28 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       const allProducts = response?.products || [];
       
-        // HIERARCHICAL SEARCH with priority: Product Name > Collection > Category > Product Type
-        const filtered = allProducts.filter(product => {
-          const title = String(product.title || '').toLowerCase();
-          const productType = String(product.product_type || '').toLowerCase();
-          const category = String(product.category || '').toLowerCase();
-          
-          // Get collection handles
-          let collections = '';
-          if (product.collection_handles) {
-            if (Array.isArray(product.collection_handles)) {
-              collections = product.collection_handles.join(' ').toLowerCase();
-            } else if (typeof product.collection_handles === 'string') {
-              collections = product.collection_handles.toLowerCase();
-            }
-          }
-          
-          // Match in hierarchical order: Name > Collection > Category > Product Type
-          return title.includes(q) || 
-                 collections.includes(q) || 
-                 category.includes(q) || 
-                 productType.includes(q);
-        }).sort((a, b) => {
-          // Sort by match priority: Product Name > Collection > Category > Product Type
-          const getScore = (product: any) => {
-            const title = String(product.title || '').toLowerCase();
-            const collections = Array.isArray(product.collection_handles) 
-              ? product.collection_handles.join(' ').toLowerCase()
-              : String(product.collection_handles || '').toLowerCase();
-            const category = String(product.category || '').toLowerCase();
-            const productType = String(product.product_type || '').toLowerCase();
-            
-            if (title.includes(q)) {
-              return title.startsWith(q) ? 1500 : title === q ? 2000 : 1000;
-            }
-            if (collections.includes(q)) return 750;
-            if (category.includes(q)) return 500;
-            if (productType.includes(q)) return 250;
-            return 0;
-          };
-          
-          return getScore(b) - getScore(a);
-        });
+      // Use SearchOptimizer for hierarchical search: Product Name > Collection > Category > Product Type
+      const searchIndex = allProducts.length > 0 
+        ? SearchOptimizer.buildSearchIndex(allProducts, 'delivery-search')
+        : [];
+        
+      const results = searchIndex.length > 0
+        ? SearchOptimizer.searchProductsWithHierarchy(searchQuery, searchIndex, 50)
+        : [];
 
-        console.log(`🔍 DELIVERY HIERARCHICAL SEARCH: Found ${filtered.length} products for "${searchQuery}" (Name > Collection > Category > Type)`);
-      setSearchProducts(filtered);
+      console.log(`🔍 DELIVERY HIERARCHICAL SEARCH: Found ${results.length} products for "${searchQuery}" (Name > Collection > Category > Type)`);
+      setSearchProducts(results);
     } catch (error) {
       console.error('Search error:', error);
       setSearchProducts([]);
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, supabase]);
-  // Search timer for delayed execution
+  }, [searchQuery]);
+  // Real-time search - no delay for instant results
   useEffect(() => {
     if (searchQuery?.trim()) {
-      const timer = setTimeout(() => {
-        handleSearch();
-      }, 200);
-      return () => clearTimeout(timer);
+      handleSearch();
     } else {
       setSearchProducts([]);
       setIsSearchActive(false);
@@ -396,14 +360,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     value={searchQuery}
                     onChange={(e) => {
                        setSearchQuery(e.target.value);
-                       // Instant search as user types with debounce
-                       const query = e.target.value.trim();
-                       if (query) {
-                         setTimeout(() => handleSearch(), 300);
-                       } else {
-                         setSearchProducts([]);
-                         setIsSearchActive(false);
-                       }
+                       setIsSearchActive(!!e.target.value.trim());
                     }}
                     onFocus={() => {
                       // Restore previous search if user clicks back into search bar

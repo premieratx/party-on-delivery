@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
           sort_order: sortOrder,
           updated_at: new Date().toISOString()
         })
-        .eq('shopify_id', shopifyProduct.id.toString())
+        .eq('shopify_product_id', `gid://shopify/Product/${shopifyProduct.id}`)
       
       if (updateError) {
         console.error(`❌ Failed to update sort order for product ${shopifyProduct.id}:`, updateError)
