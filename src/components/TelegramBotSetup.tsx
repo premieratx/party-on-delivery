@@ -35,7 +35,7 @@ const TelegramBotSetup: React.FC = () => {
     });
   };
 
-  const webhookUrl = 'https://acmlfzfliqupwxwoefdq.supabase.co/functions/v1/telegram-bot';
+  const webhookUrl = 'https://order.partyondelivery.com/functions/v1/telegram-bot';
   
   const botCommands = [
     'start - Start using the AI testing bot',

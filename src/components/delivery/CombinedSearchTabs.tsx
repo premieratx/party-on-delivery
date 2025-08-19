@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, ShoppingCart, CreditCard } from 'lucide-react';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 
 interface Tab {
@@ -22,6 +22,11 @@ interface CombinedSearchTabsProps {
   isSearchActive?: boolean;
   onSearchActiveChange?: (active: boolean) => void;
   isSearching?: boolean;
+  // Cart and checkout functionality
+  cartItemCount?: number;
+  totalAmount?: number;
+  onOpenCart?: () => void;
+  onCheckout?: () => void;
 }
 
 export const CombinedSearchTabs = ({
@@ -34,7 +39,11 @@ export const CombinedSearchTabs = ({
   showSearch = true,
   isSearchActive = false,
   onSearchActiveChange,
-  isSearching = false
+  isSearching = false,
+  cartItemCount = 0,
+  totalAmount = 0,
+  onOpenCart,
+  onCheckout
 }: CombinedSearchTabsProps) => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const { headerCompressed } = useSearchInterface();
@@ -68,7 +77,7 @@ export const CombinedSearchTabs = ({
 
   return (
     <div className="sticky top-0 z-40 bg-background border-b shadow-sm transition-all duration-300">
-      {/* Desktop Layout - Side by side */}
+      {/* Desktop Layout - Side by side with cart and checkout */}
       <div className="hidden md:block">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
@@ -87,33 +96,64 @@ export const CombinedSearchTabs = ({
               ))}
             </div>
             
-            {/* Search Bar */}
+            {/* Search Bar with Running Total */}
             {showSearch && (
-              <div className="flex w-80">
-                <Input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onFocus={handleSearchFocus}
-                  onBlur={handleSearchBlur}
-                  className="rounded-r-none"
-                  onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
-                />
-                <Button 
-                  onClick={onSearchSubmit}
-                  className="rounded-l-none px-3"
-                  disabled={isSearching}
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
+              <div className="flex items-center gap-2">
+                {/* Running Total */}
+                {totalAmount > 0 && (
+                  <div className="text-lg font-bold text-primary whitespace-nowrap">
+                    ${totalAmount.toFixed(2)}
+                  </div>
+                )}
+                
+                {/* Search Input */}
+                <div className="flex w-80">
+                  <Input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    onFocus={handleSearchFocus}
+                    onBlur={handleSearchBlur}
+                    className="rounded-r-none"
+                    onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
+                  />
+                  <Button 
+                    onClick={onSearchSubmit}
+                    className="rounded-l-none px-3"
+                    disabled={isSearching}
+                  >
+                    <Search className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             )}
+            
+            {/* Cart and Checkout Buttons */}
+            <div className="flex items-center gap-2 ml-2">
+              <Button
+                variant="outline"
+                onClick={onOpenCart}
+                className="flex items-center gap-2 h-10"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span>Cart ({cartItemCount})</span>
+              </Button>
+              
+              <Button
+                onClick={onCheckout}
+                className="flex items-center gap-2 h-10 checkout-blink"
+                variant="default"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Checkout</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Layout */}
+      {/* Mobile Layout with stacked cart and checkout */}
       <div className="block md:hidden">
         {/* First Row - Tabs and Search Icon */}
         <div className="container mx-auto px-4 py-2">
@@ -147,7 +187,34 @@ export const CombinedSearchTabs = ({
           </div>
         </div>
 
-        {/* Second Row - Expanded Search Bar (Mobile only) */}
+        {/* Second Row - Cart and Checkout (Mobile Split Layout) */}
+        <div className="container mx-auto px-4 pb-2">
+          <div className="grid grid-cols-2 gap-2">
+            {/* Cart Button - Top */}
+            <Button
+              variant="outline"
+              onClick={onOpenCart}
+              className="flex items-center justify-center gap-2 h-9 text-sm"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>Cart ({cartItemCount})</span>
+              {totalAmount > 0 && (
+                <span className="font-bold">${totalAmount.toFixed(2)}</span>
+              )}
+            </Button>
+            
+            {/* Checkout Button - Bottom */}
+            <Button
+              onClick={onCheckout}
+              className="flex items-center justify-center gap-2 h-9 text-sm checkout-blink"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>Checkout</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Third Row - Expanded Search Bar (Mobile only) */}
         {showSearch && isSearchExpanded && (
           <div className="container mx-auto px-4 pb-3">
             <div className="flex">

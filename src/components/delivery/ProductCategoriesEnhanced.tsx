@@ -100,7 +100,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const navigate = useNavigate();
-  const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice } = useUnifiedCart();
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
   const { preloadCollection, getFromCache, preloadMultipleCollections } = useProductPreloader();
   
@@ -398,29 +398,33 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
         </div>
       </div>
 
-      {/* Combined Search and Tabs */}
-      <CombinedSearchTabs
-        tabs={tabs}
-        selectedCategory={selectedCategory}
-        onTabSelect={(index) => {
-          console.log(`🔄 Enhanced: Switching to tab ${index}: ${tabs[index].title} (${tabs[index].handle})`);
-          setSelectedCategory(index);
-          setSearchProducts([]);
-        }}
-        searchQuery={searchQuery}
-        onSearchChange={(query) => {
-          setSearchQuery(query);
-          if (query.trim()) {
-            setTimeout(() => handleSearch(), 300);
-          } else {
+        {/* Combined Search and Tabs with Cart & Checkout */}
+        <CombinedSearchTabs
+          tabs={tabs}
+          selectedCategory={selectedCategory}
+          onTabSelect={(index) => {
+            console.log(`🔄 Enhanced: Switching to tab ${index}: ${tabs[index].title} (${tabs[index].handle})`);
+            setSelectedCategory(index);
             setSearchProducts([]);
-          }
-        }}
-        onSearchSubmit={handleSearch}
-        showSearch={showSearch}
-        isSearchActive={!!searchQuery}
-        isSearching={loading}
-      />
+          }}
+          searchQuery={searchQuery}
+          onSearchChange={(query) => {
+            setSearchQuery(query);
+            if (query.trim()) {
+              setTimeout(() => handleSearch(), 300);
+            } else {
+              setSearchProducts([]);
+            }
+          }}
+          onSearchSubmit={handleSearch}
+          showSearch={showSearch}
+          isSearchActive={!!searchQuery}
+          isSearching={loading}
+          cartItemCount={cartItemCount}
+          totalAmount={getTotalPrice()}
+          onOpenCart={onOpenCart}
+          onCheckout={onCheckout}
+        />
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8 pb-32 lg:pb-24">
@@ -484,11 +488,8 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
         )}
       </div>
 
-      {/* Mobile Bottom Cart Bar */}
-      <MobileBottomCartBar 
-        cartItemCount={cartItemCount}
-        onOpenCart={onOpenCart}
-      />
+      {/* Remove Mobile Bottom Cart Bar since cart is now in tabs */}
+      {/* MobileBottomCartBar removed - cart and checkout are now in CombinedSearchTabs */}
       
       {/* What's the Occasion? - Bottom Section */}
       <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">

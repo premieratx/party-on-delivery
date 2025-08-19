@@ -85,7 +85,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const navigate = useNavigate();
-  const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice } = useUnifiedCart();
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
   const { preloadMultipleCollections } = useProductPreloader();
   
@@ -348,7 +348,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
-      {/* Combined Search and Tabs */}
+      {/* Combined Search and Tabs with Cart & Checkout */}
       <CombinedSearchTabs
         tabs={tabs}
         selectedCategory={selectedCategory}
@@ -369,6 +369,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         isSearchActive={isSearchActive}
         onSearchActiveChange={setIsSearchActive}
         isSearching={isSearching}
+        cartItemCount={cartItemCount}
+        totalAmount={getTotalPrice()}
+        onOpenCart={onOpenCart}
+        onCheckout={onCheckout}
       />
 
       {/* Products Grid */}
@@ -567,11 +571,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         )}
 
-        {/* Mobile Bottom Cart Bar */}
-        <MobileBottomCartBar 
-          cartItemCount={cartItemCount}
-          onOpenCart={() => onOpenCart && onOpenCart()}
-        />
+        {/* Remove Mobile Bottom Cart Bar since cart is now in tabs */}
+        {/* MobileBottomCartBar removed - cart and checkout are now in CombinedSearchTabs */}
         
         {/* What's the Occasion? - Bottom Section */}
         <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
