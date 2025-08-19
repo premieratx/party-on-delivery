@@ -55,11 +55,10 @@ export default function DynamicHomepage() {
 
   const loadHomepageApp = async () => {
     console.log('🏠 Loading homepage app...');
-    console.log('🏠 Initial state - Loading:', loading, 'Error:', error, 'App:', !!homepageApp);
     
     try {
       // Get the homepage app
-      console.log('🔍 Querying delivery_app_variations...');
+      console.log('🔍 Querying delivery_app_variations table...');
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .select('*')
@@ -71,7 +70,7 @@ export default function DynamicHomepage() {
 
       if (error) {
         console.error('❌ Database error:', error);
-        setError('Unable to load homepage configuration');
+        setError(`Database error: ${error.message}`);
         setHomepageApp(null);
       } else if (!data) {
         console.log('⚠️ No homepage app configured');
@@ -96,7 +95,7 @@ export default function DynamicHomepage() {
       }
     } catch (err: any) {
       console.error('❌ Unexpected error:', err);
-      setError('System error occurred');
+      setError(`System error: ${err.message}`);
       setHomepageApp(null);
     } finally {
       console.log('🔄 Setting loading to false');
