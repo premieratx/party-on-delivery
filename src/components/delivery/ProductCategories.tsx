@@ -259,30 +259,50 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       const allProducts = response?.products || [];
       
-      // EXACT MATCHING ONLY - no assumptions, no related words
-      const filtered = allProducts.filter((product: any) => {
-        const title = String(product.title || '').toLowerCase();
-        const productType = String(product.product_type || '').toLowerCase();
-        const category = String(product.category || '').toLowerCase();
-        
-        // Get collection handles
-        let collections = '';
-        if (product.collection_handles) {
-          if (Array.isArray(product.collection_handles)) {
-            collections = product.collection_handles.join(' ').toLowerCase();
-          } else if (typeof product.collection_handles === 'string') {
-            collections = product.collection_handles.toLowerCase();
+        // HIERARCHICAL SEARCH with priority: Product Name > Collection > Category > Product Type
+        const filtered = allProducts.filter(product => {
+          const title = String(product.title || '').toLowerCase();
+          const productType = String(product.product_type || '').toLowerCase();
+          const category = String(product.category || '').toLowerCase();
+          
+          // Get collection handles
+          let collections = '';
+          if (product.collection_handles) {
+            if (Array.isArray(product.collection_handles)) {
+              collections = product.collection_handles.join(' ').toLowerCase();
+            } else if (typeof product.collection_handles === 'string') {
+              collections = product.collection_handles.toLowerCase();
+            }
           }
-        }
-        
-        // ONLY match these 4 criteria - EXACT substring matching
-        return title.includes(q) || 
-               productType.includes(q) || 
-               category.includes(q) || 
-               collections.includes(q);
-      });
+          
+          // Match in hierarchical order: Name > Collection > Category > Product Type
+          return title.includes(q) || 
+                 collections.includes(q) || 
+                 category.includes(q) || 
+                 productType.includes(q);
+        }).sort((a, b) => {
+          // Sort by match priority: Product Name > Collection > Category > Product Type
+          const getScore = (product: any) => {
+            const title = String(product.title || '').toLowerCase();
+            const collections = Array.isArray(product.collection_handles) 
+              ? product.collection_handles.join(' ').toLowerCase()
+              : String(product.collection_handles || '').toLowerCase();
+            const category = String(product.category || '').toLowerCase();
+            const productType = String(product.product_type || '').toLowerCase();
+            
+            if (title.includes(q)) {
+              return title.startsWith(q) ? 1500 : title === q ? 2000 : 1000;
+            }
+            if (collections.includes(q)) return 750;
+            if (category.includes(q)) return 500;
+            if (productType.includes(q)) return 250;
+            return 0;
+          };
+          
+          return getScore(b) - getScore(a);
+        });
 
-      console.log(`🔍 DELIVERY SEARCH: Found ${filtered.length} products with "${searchQuery}" in title/type/category/collection`);
+        console.log(`🔍 DELIVERY HIERARCHICAL SEARCH: Found ${filtered.length} products for "${searchQuery}" (Name > Collection > Category > Type)`);
       setSearchProducts(filtered);
     } catch (error) {
       console.error('Search error:', error);

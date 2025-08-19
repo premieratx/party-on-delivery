@@ -127,8 +127,8 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     setIsSearching(true);
     onSearchingChange?.(true);
     
-    // Use SearchOptimizer with priority scoring: Name > Category > Collection > Product Type
-    const results = SearchOptimizer.searchProducts(q, indexedProducts, 50);
+      // Use SearchOptimizer with hierarchical priority scoring: Product Name > Collection > Category > Product Type
+      const results = SearchOptimizer.searchProductsWithHierarchy(q, indexedProducts, 50);
 
     setSearchResults(results);
     setShowResults(!!showDropdownResults);

@@ -186,11 +186,31 @@ const [showSearchModal, setShowSearchModal] = useState(false);
     }))
   );
 
-  // Filter products by search term - ONLY by title for consistency
+  // Filter products by search term - HIERARCHICAL SEARCH with priority order (using collectionHandle)
   const searchFilteredProducts = searchTerm 
-    ? allProducts.filter(product => 
-        product.title.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    ? allProducts.filter(product => {
+        const title = String(product.title || '').toLowerCase();
+        const collectionHandle = String(product.collectionHandle || '').toLowerCase();
+        
+        // Match in hierarchical order: Name > Collection for this simplified component
+        const q = searchTerm.toLowerCase();
+        return title.includes(q) || collectionHandle.includes(q);
+      }).sort((a, b) => {
+        // Sort by match priority: Product Name > Collection
+        const q = searchTerm.toLowerCase();
+        const getScore = (product: any) => {
+          const title = String(product.title || '').toLowerCase();
+          const collectionHandle = String(product.collectionHandle || '').toLowerCase();
+          
+          if (title.includes(q)) {
+            return title.startsWith(q) ? 1500 : title === q ? 2000 : 1000;
+          }
+          if (collectionHandle.includes(q)) return 750;
+          return 0;
+        };
+        
+        return getScore(b) - getScore(a);
+      })
     : allProducts;
 
   const getCartQuantity = (productId: string, variant?: string): number => {

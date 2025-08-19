@@ -159,13 +159,13 @@ export default function OptimizedProductSearch() {
   useEffect(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      // IMMEDIATE SEARCH - no timeout delay
+      // HIERARCHICAL SEARCH with specified priority order: Product Name > Collection > Category > Product Type
       const filtered = allProducts.filter((p) => {
         const title = String(p.title || '').toLowerCase();
         const productType = String(p.product_type || '').toLowerCase();
         const category = String(p.category || '').toLowerCase();
         
-        // Get collection handles if they exist
+        // Get collection handles
         let collections = '';
         if (p.collection_handles) {
           if (Array.isArray(p.collection_handles)) {
@@ -175,13 +175,48 @@ export default function OptimizedProductSearch() {
           }
         }
         
-        // ONLY match these 4 criteria - EXACT substring matching only
+        // Match in hierarchical order: Name > Collection > Category > Product Type
         return title.includes(q) || 
-               productType.includes(q) || 
+               collections.includes(q) || 
                category.includes(q) || 
-               collections.includes(q);
+               productType.includes(q);
+      }).sort((a, b) => {
+        // Sort by match priority: Product Name > Collection > Category > Product Type
+        const aTitle = String(a.title || '').toLowerCase();
+        const bTitle = String(b.title || '').toLowerCase();
+        const aCollections = Array.isArray(a.collection_handles) 
+          ? a.collection_handles.join(' ').toLowerCase()
+          : String(a.collection_handles || '').toLowerCase();
+        const bCollections = Array.isArray(b.collection_handles) 
+          ? b.collection_handles.join(' ').toLowerCase()
+          : String(b.collection_handles || '').toLowerCase();
+        const aCategory = String(a.category || '').toLowerCase();
+        const bCategory = String(b.category || '').toLowerCase();
+        const aProductType = String(a.product_type || '').toLowerCase();
+        const bProductType = String(b.product_type || '').toLowerCase();
+        
+        // Priority scoring: Product Name (1000) > Collection (750) > Category (500) > Product Type (250)
+        const getScore = (product: any) => {
+          const title = String(product.title || '').toLowerCase();
+          const collections = Array.isArray(product.collection_handles) 
+            ? product.collection_handles.join(' ').toLowerCase()
+            : String(product.collection_handles || '').toLowerCase();
+          const category = String(product.category || '').toLowerCase();
+          const productType = String(product.product_type || '').toLowerCase();
+          
+          if (title.includes(q)) {
+            return title.startsWith(q) ? 1500 : title === q ? 2000 : 1000;
+          }
+          if (collections.includes(q)) return 750;
+          if (category.includes(q)) return 500;
+          if (productType.includes(q)) return 250;
+          return 0;
+        };
+        
+        return getScore(b) - getScore(a);
       });
-      console.log(`🔍 IMMEDIATE SEARCH: Found ${filtered.length} products with "${searchQuery}" in title/type/category/collection`);
+
+      console.log(`🔍 HIERARCHICAL SEARCH: Found ${filtered.length} products for "${searchQuery}" (Name > Collection > Category > Type)`);
       setProducts(filtered);
     } else {
       // No query: show category view from full catalog

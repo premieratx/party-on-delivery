@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '../utils/forceCollectionOrderSync'; // This will force proper Shopify collection order sync
+import '../utils/forceTailgateBeerSync'; // Force tailgate beer collection order sync
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';

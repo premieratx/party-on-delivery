@@ -52,6 +52,68 @@ export class SearchOptimizer {
     return index;
   }
 
+  // Hierarchical search with specified priority: Product Name > Collection > Category > Product Type
+  static searchProductsWithHierarchy(query: string, index: any[], maxResults: number = 50) {
+    const cacheKey = `hierarchy_${query.toLowerCase()}_${maxResults}`;
+    
+    if (this.searchCache.has(cacheKey)) {
+      return this.searchCache.get(cacheKey)!;
+    }
+
+    const startTime = performance.now();
+    const searchTerm = query.toLowerCase().trim();
+    
+    if (!searchTerm) {
+      return [];
+    }
+
+    // Score matches with specified hierarchy: Product Name > Collection > Category > Product Type
+    const scoredResults = index
+      .map(item => {
+        let score = 0;
+        let matchedField = '';
+        
+        // Priority 1: Product name/title (highest score)
+        if (item.title.includes(searchTerm)) {
+          score = 1000;
+          matchedField = 'title';
+          // Bonus for exact match or starts with
+          if (item.title === searchTerm) score += 500;
+          else if (item.title.startsWith(searchTerm)) score += 250;
+        }
+        // Priority 2: Product collection (second priority)
+        else if (item.collections.includes(searchTerm)) {
+          score = 750;
+          matchedField = 'collections';
+        }
+        // Priority 3: Category (third priority)
+        else if (item.category.includes(searchTerm)) {
+          score = 500;
+          matchedField = 'category';
+        }
+        // Priority 4: Product type (lowest priority)
+        else if (item.productType.includes(searchTerm)) {
+          score = 250;
+          matchedField = 'productType';
+        }
+        
+        return score > 0 ? { ...item, score, matchedField } : null;
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => b.score - a.score)
+      .slice(0, maxResults)
+      .map((item: any) => item.p);
+
+    this.searchCache.set(cacheKey, scoredResults);
+    
+    const duration = performance.now() - startTime;
+    if (duration > 10) {
+      console.warn(`Hierarchical search took ${duration.toFixed(2)}ms for query "${query}"`);
+    }
+
+    return scoredResults;
+  }
+
   // Optimized search with priority scoring
   static searchProducts(query: string, index: any[], maxResults: number = 50) {
     const cacheKey = `${query.toLowerCase()}_${maxResults}`;
