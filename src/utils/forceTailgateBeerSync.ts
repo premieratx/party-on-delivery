@@ -35,5 +35,5 @@ export const forceTailgateBeerSync = async () => {
   }
 };
 
-// Execute immediately when imported
-forceTailgateBeerSync();
+// Function ready to be called manually when needed
+// forceTailgateBeerSync(); // Commented out to prevent automatic execution
