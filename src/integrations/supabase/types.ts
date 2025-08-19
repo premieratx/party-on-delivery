@@ -1700,6 +1700,51 @@ export type Database = {
         }
         Relationships: []
       }
+      failed_order_processing: {
+        Row: {
+          created_at: string
+          customer_email: string | null
+          error_message: string
+          id: string
+          payment_amount: number
+          payment_intent_id: string
+          requires_manual_review: boolean | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          retry_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_email?: string | null
+          error_message: string
+          id?: string
+          payment_amount: number
+          payment_intent_id: string
+          requires_manual_review?: boolean | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          retry_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_email?: string | null
+          error_message?: string
+          id?: string
+          payment_amount?: number
+          payment_intent_id?: string
+          requires_manual_review?: boolean | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          retry_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       integration_health_logs: {
         Row: {
           checked_at: string
