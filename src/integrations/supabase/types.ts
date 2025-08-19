@@ -2177,6 +2177,48 @@ export type Database = {
           },
         ]
       }
+      processed_products: {
+        Row: {
+          clean_title: string
+          created_at: string | null
+          display_subtitle: string
+          id: string
+          original_title: string
+          package_count: number | null
+          package_description: string | null
+          shopify_product_id: string
+          unit_size: string | null
+          unit_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          clean_title: string
+          created_at?: string | null
+          display_subtitle: string
+          id?: string
+          original_title: string
+          package_count?: number | null
+          package_description?: string | null
+          shopify_product_id: string
+          unit_size?: string | null
+          unit_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          clean_title?: string
+          created_at?: string | null
+          display_subtitle?: string
+          id?: string
+          original_title?: string
+          package_count?: number | null
+          package_description?: string | null
+          shopify_product_id?: string
+          unit_size?: string | null
+          unit_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       product_categories: {
         Row: {
           assigned_category: string
