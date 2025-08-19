@@ -171,7 +171,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
 
           {/* Sticky Checkout Button */}
           {cartItems.length > 0 && (
-            <div className="border-t p-4 bg-background">
+            <div className="sticky bottom-0 border-t p-4 bg-background shadow-lg">
               <Button 
                 className="w-full checkout-blink bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg py-6"
                 size="lg" 
