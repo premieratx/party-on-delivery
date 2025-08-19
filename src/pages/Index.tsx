@@ -73,18 +73,18 @@ const Index = () => {
       console.log(`📊 Current product count in cache: ${count || 0}`);
 
       if (!countError && (!count || count < 10)) {
-        console.log('🚨 CRITICAL: No products in cache, triggering immediate fix...');
+        console.log('🚨 CRITICAL: No products in cache, triggering collection sync...');
         
         try {
-          console.log('🔄 Auto-triggering immediate fix...');
-          const { data: syncResult } = await supabase.functions.invoke('immediate-products-fix');
+          console.log('🔄 Auto-triggering collection sync...');
+          const { data: syncResult } = await supabase.functions.invoke('shopify-collection-sync');
           if (syncResult?.success) {
-            console.log(`✅ Immediate fix completed: ${syncResult.products_synced} products`);
-            // Reload the page to show products
-            setTimeout(() => window.location.reload(), 1000);
+            console.log(`✅ Collection sync completed: ${syncResult.collections_synced} collections, ${syncResult.products_synced} products`);
+            // Reload the page to show properly mapped products
+            setTimeout(() => window.location.reload(), 2000);
           }
         } catch (syncError) {
-          console.error('Immediate fix failed:', syncError);
+          console.error('Collection sync failed:', syncError);
         }
       } else {
         console.log(`✅ Product cache healthy: ${count} products available`);

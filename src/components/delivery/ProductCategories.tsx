@@ -5,24 +5,12 @@ import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
-import { ForceAddToCartButton } from '@/components/common/ForceAddToCartButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
-import { VideoBackground } from '@/components/common/VideoBackground';
-import { TypingIntro } from '@/components/common/TypingIntro';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
-
-interface Collection {
-  id: string;
-  title: string;
-  handle: string;
-  description?: string;
-  products: any[];
-  image?: string;
-}
 
 interface ProductCategoriesProps {
   appName?: string;
@@ -92,14 +80,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   
-  // Get current tab collection handle for filtering
-  const currentTabCollectionHandle = useMemo(() => {
-    const currentTab = collectionsConfig?.tabs?.[selectedCategory];
-    return currentTab?.collection_handle || null;
-  }, [collectionsConfig, selectedCategory]);
+  // Set up search variables
+  const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
+  const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
+
+  // Use collections from config or defaults
+  const tabs = useMemo(() => {
+    if (collectionsConfig?.tabs) {
+      return collectionsConfig.tabs.map((tab, index) => ({
+        id: tab.collection_handle,
+        title: tab.name,
+        handle: tab.collection_handle,
+        icon: tab.icon || '📦',
+        isSearch: false
+      }));
+    }
+    return DEFAULT_COLLECTIONS;
+  }, [collectionsConfig]);
+
+  // Get current tab config
+  const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];
+  const currentCollectionHandle = currentTabConfig?.collection_handle;
   
+  // Load products from optimized loader (gets ALL products)
   const { products, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
-    collection_handle: currentTabCollectionHandle,
     use_type: 'delivery'
   });
 
@@ -122,49 +126,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [forceRefresh, refreshProducts]);
 
-  const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
-  const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
-
-  // Use collections from config or defaults (without search tab)
-  const tabs = useMemo(() => {
-    if (collectionsConfig?.tabs) {
-      return collectionsConfig.tabs.map((tab, index) => ({
-        id: tab.collection_handle,
-        title: tab.name,
-        handle: tab.collection_handle,
-        icon: tab.icon || '📦',
-        isSearch: false
-      }));
-    }
-    return DEFAULT_COLLECTIONS;
-  }, [collectionsConfig]);
-
-  // Get products for current tab using configured collection handles
+  // Filter products by collection handle for current tab - SIMPLIFIED
   const currentTabProducts = useMemo(() => {
-    if (!Array.isArray(collections) || !collectionsConfig?.tabs) {
+    if (!currentCollectionHandle || !products?.length) {
+      console.log(`❌ No collection handle (${currentCollectionHandle}) or no products (${products?.length})`);
       return [];
     }
-    
-    const currentTab = collectionsConfig.tabs[selectedCategory];
-    if (!currentTab?.collection_handle) {
-      return [];
-    }
-    
-    console.log(`📦 Tab ${currentTab.name}: Looking for collection handle: ${currentTab.collection_handle}`);
-    
-    // Find the exact collection that matches the configured collection handle
-    const targetCollection = collections.find(collection => 
-      collection.handle === currentTab.collection_handle
+
+    // Filter products that belong to the current collection
+    const filtered = products.filter(product => 
+      product.collection_handles?.includes(currentCollectionHandle)
     );
     
-    if (targetCollection?.products) {
-      console.log(`📦 ${currentTab.collection_handle}: Found ${targetCollection.products.length} products from collection`);
-      return targetCollection.products;
-    }
-    
-    console.log(`📦 ${currentTab.collection_handle}: No collection found with this handle`);
-    return [];
-  }, [collections, collectionsConfig, selectedCategory]);
+    console.log(`📦 ${currentCollectionHandle}: Found ${filtered.length} products out of ${products.length} total`);
+    return filtered.slice(0, maxProducts);
+  }, [products, currentCollectionHandle, maxProducts]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;
@@ -205,37 +181,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     try {
       setIsSearching(true);
       
-      // Use smart cache for instant search
-      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
-        body: { forceRefresh: false }
-      });
-      
-      console.log('🔍 Search cache response:', { cacheData, cacheError });
-      
-      if (!cacheError && cacheData?.success && cacheData?.data?.products) {
-        const filtered = cacheData.data.products.filter((product: any) =>
-          product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        console.log(`🔍 Found ${filtered.length} search results`);
-        setSearchProducts(filtered);
-      } else {
-        console.warn('Search cache failed, using fallback search');
-        // Fallback: search in current loaded products
-        const fallbackFiltered = products.filter((product: any) =>
-          product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setSearchProducts(fallbackFiltered);
-      }
-    } catch (err) {
-      console.error('Search error:', err);
-      // Fallback: search in current loaded products
-      const fallbackFiltered = products.filter((product: any) =>
+      // Simple search in loaded products
+      const filtered = products.filter((product: any) =>
         product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      setSearchProducts(fallbackFiltered);
+      console.log(`🔍 Found ${filtered.length} search results`);
+      setSearchProducts(filtered);
+    } catch (err) {
+      console.error('Search error:', err);
+      setSearchProducts([]);
     } finally {
       setIsSearching(false);
     }
@@ -281,7 +236,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             {/* Search Button in Hero - Links to Search Page */}
             <div className="mt-8">
               <Button 
-                onClick={handleSearch}
+                onClick={() => navigate('/search')}
                 className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg"
               >
                 <Search className="w-5 h-5 mr-2" />
@@ -320,8 +275,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 }}
                 className="rounded-r-none"
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                onFocus={() => setIsSearching(true)}
-                onBlur={() => setTimeout(() => setIsSearching(false), 100)}
               />
               <Button 
                 onClick={handleSearch}
@@ -443,13 +396,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <div className="w-16 h-16 mx-auto mb-4 text-muted-foreground">📦</div>
             <h3 className="text-xl font-semibold mb-2">No Products Found</h3>
             <p className="text-muted-foreground mb-6">
-              No products available in this category yet. Try using the sync buttons below to load products.
+              Collection "{currentCollectionHandle}" has no products yet.
             </p>
+            <Button onClick={refreshProducts} variant="outline">
+              Refresh Products
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {currentTabProducts.slice(0, maxProducts).map((product) => {
-              console.log('🛒 ProductCategories: Rendering product', product.id, product.title);
+            {currentTabProducts.map((product) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
               return (
