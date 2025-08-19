@@ -111,30 +111,37 @@ Deno.serve(async (req) => {
       })
       collections = Array.from(searchCategories.values())
     } else {
-      // For delivery apps: use actual Shopify collections with their products
-      collections = collectionsData?.map(col => {
-        // Filter products by collection_handles array (exact match)
-        const collectionProducts = products?.filter(p => {
-          // Check if product has collection_handles and contains this collection
-          if (!p.collection_handles || !Array.isArray(p.collection_handles)) {
-            return false;
-          }
-          return p.collection_handles.includes(col.handle);
-        }) || [];
-        
-        console.log(`📦 Collection ${col.handle}: ${collectionProducts.length} products found from ${products?.length || 0} total products`);
-        console.log(`📦 Collection ${col.handle}: First few product collection_handles:`, 
-          collectionProducts.slice(0, 3).map(p => ({ id: p.id, title: p.title, collection_handles: p.collection_handles }))
-        );
-        
-        return {
-          id: col.handle,
-          title: col.title,
-          handle: col.handle,
-          product_count: collectionProducts.length,
-          products: collectionProducts
-        };
-      }).filter(col => col.product_count > 0) || []; // Only return collections with products
+      // For delivery apps: Create collections from products grouped by their collection_handles
+      const collectionsMap = new Map()
+      
+      // First, group products by each collection handle they belong to
+      products?.forEach(product => {
+        if (product.collection_handles && Array.isArray(product.collection_handles)) {
+          product.collection_handles.forEach(handle => {
+            if (!collectionsMap.has(handle)) {
+              // Find collection title from collectionsData or use handle
+              const collectionData = collectionsData?.find(col => col.handle === handle)
+              collectionsMap.set(handle, {
+                id: handle,
+                title: collectionData?.title || handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                handle: handle,
+                product_count: 0,
+                products: []
+              })
+            }
+            const collection = collectionsMap.get(handle)
+            collection.products.push(product)
+            collection.product_count++
+          })
+        }
+      })
+      
+      collections = Array.from(collectionsMap.values())
+      
+      console.log(`📦 Created ${collections.length} collections from products:`)
+      collections.forEach(col => {
+        console.log(`📦 Collection "${col.handle}": ${col.product_count} products`)
+      })
     }
 
     // Get cache metadata
