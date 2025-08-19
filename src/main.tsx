@@ -1,13 +1,14 @@
-// CLEAN MAIN ENTRY - Build: 2025_08_14_22_40
+// CLEAN MAIN ENTRY - Build: 2025_08_19_STABLE
 import './utils/systemCleanup'; // Safe cleanup first
+import './utils/tokenCleanup'; // Remove interfering tokens
 
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { ErrorBoundary } from './components/common/ErrorBoundary'
+import { RobustErrorBoundary } from './components/common/RobustErrorBoundary'
 
 createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
+  <RobustErrorBoundary>
     <App />
-  </ErrorBoundary>
+  </RobustErrorBoundary>
 );

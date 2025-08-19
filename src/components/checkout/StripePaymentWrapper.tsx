@@ -30,6 +30,13 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
   useEffect(() => {
     let mounted = true;
     
+    // Clean lovable token from URL if present to prevent interference
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('__lovable_token')) {
+      url.searchParams.delete('__lovable_token');
+      window.history.replaceState({}, document.title, url.toString());
+    }
+    
     // If Stripe is disabled, don't try to initialize it
     if (!config.stripePaymentsEnabled) {
       setIsLoading(false);

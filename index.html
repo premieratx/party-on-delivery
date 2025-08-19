@@ -5,11 +5,11 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Content Security Policy - Fixed for all resources -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; img-src 'self' data: https: blob:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; frame-src https://js.stripe.com https://hooks.stripe.com;">
+    <!-- Content Security Policy - Enhanced for payments and resources -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; img-src 'self' data: https: blob:; connect-src 'self' https: wss: https://*.supabase.co https://*.stripe.com; object-src 'none'; base-uri 'self'; frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com;">
     
-    <!-- Permissions Policy - Fixed payment permissions -->
-    <meta http-equiv="Permissions-Policy" content="payment=*, geolocation=self, camera=(), microphone=()">
+    <!-- Permissions Policy - Allow payments globally -->
+    <meta http-equiv="Permissions-Policy" content="payment=*, geolocation=(self), camera=(), microphone=()">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,8 +39,30 @@
       (function() {
         'use strict';
         
-        // MINIMAL CLEANUP - ONLY WHAT'S NECESSARY
-        console.log('🧹 Minimal cleanup active');
+        // CLEAN STARTUP - REMOVE PROBLEMATIC TOKENS
+        console.log('🧹 Clean startup - removing problematic tokens');
+        
+        // Clean URL tokens immediately
+        try {
+          const url = new URL(window.location.href);
+          let urlChanged = false;
+          
+          // Remove problematic parameters
+          const problematicParams = ['__lovable_token', 'token', 'auth_token', 'session_token'];
+          problematicParams.forEach(param => {
+            if (url.searchParams.has(param)) {
+              url.searchParams.delete(param);
+              urlChanged = true;
+            }
+          });
+          
+          if (urlChanged) {
+            window.history.replaceState({}, document.title, url.toString());
+            console.log('🧹 Cleaned problematic URL parameters');
+          }
+        } catch (e) {
+          console.warn('URL cleanup failed:', e);
+        }
         
         // Domain redirect only
         try {
@@ -52,6 +74,7 @@
           }
         } catch (e) {}
         
+        console.log('✅ Clean startup complete');
       })();
     </script>
   </head>

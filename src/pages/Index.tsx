@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -68,14 +68,14 @@ const Index = () => {
     loadDefaultDeliveryApp();
   }, []);
 
-  const handleCheckout = (items: any[]) => {
+  const handleCheckout = useCallback((items: any[]) => {
     localStorage.setItem('deliveryAppReferrer', '/');
     localStorage.setItem('app-context', JSON.stringify({
       appSlug: appConfig?.app_slug || 'party-on-delivery',
       appName: appConfig?.app_name || "Austin's Premier Party Supply Delivery"
     }));
     navigate('/checkout');
-  };
+  }, [appConfig?.app_slug, appConfig?.app_name, navigate]);
 
   if (loading) {
     return (
@@ -111,25 +111,46 @@ const Index = () => {
     );
   }
 
-  // Ensure stable props to prevent React error #310
-  const stableAppConfig = useMemo(() => ({
-    app_name: appConfig?.app_name || "Austin's Premier Party Supply Delivery",
-    main_app_config: appConfig?.main_app_config || {},
-    logo_url: appConfig?.logo_url,
-    collections_config: appConfig?.collections_config,
-    app_slug: appConfig?.app_slug || 'party-on-delivery'
-  }), [appConfig]);
+  // Stabilize config to prevent React #310 error
+  const stableAppConfig = React.useMemo(() => {
+    if (!appConfig) return null;
+    return {
+      app_name: appConfig.app_name || "Austin's Premier Party Supply Delivery",
+      main_app_config: appConfig.main_app_config || {},
+      logo_url: appConfig.logo_url || null,
+      collections_config: appConfig.collections_config || null,
+      app_slug: appConfig.app_slug || 'party-on-delivery'
+    };
+  }, [
+    appConfig?.app_name,
+    appConfig?.main_app_config,
+    appConfig?.logo_url, 
+    appConfig?.collections_config,
+    appConfig?.app_slug
+  ]);
+
+  // Don't render if config is not stable
+  if (!stableAppConfig) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <LoadingSpinner />
+          <div>
+            <h3 className="text-lg font-semibold">Loading Main Delivery App</h3>
+            <p className="text-muted-foreground">Setting up your party experience...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      {/* Disabled auto-reload component that was causing infinite loops */}
-      {/* <RestoreShopifyOrder /> */}
-      
       <ProductCategories
         appName={stableAppConfig.app_name}
         heroHeading={stableAppConfig.main_app_config?.hero_heading || stableAppConfig.app_name}
         heroSubheading={stableAppConfig.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
-        heroScrollingText="" // COMPLETELY DISABLED: All scrolling text removed
+        heroScrollingText=""
         logoUrl={stableAppConfig.logo_url}
         collectionsConfig={stableAppConfig.collections_config}
         cartItemCount={getTotalItems()}

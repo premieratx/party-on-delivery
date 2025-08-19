@@ -1,3 +1,4 @@
+// FIXED DELIVERY APP MODULE - Build: 2025_08_19_STABLE
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,11 +39,7 @@ export const DeliveryAppModule: React.FC<DeliveryAppModuleProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadDeliveryApps();
-  }, [showOnlyActive]);
-
-  const loadDeliveryApps = async () => {
+  const loadDeliveryApps = React.useCallback(async () => {
     try {
       setLoading(true);
       
@@ -61,21 +58,31 @@ export const DeliveryAppModule: React.FC<DeliveryAppModuleProps> = ({
       setDeliveryApps(data || []);
     } catch (error) {
       console.error('Error loading delivery apps:', error);
-      toast({ title: 'Error loading delivery apps', description: 'Please try again', variant: 'destructive' });
+      toast({ 
+        title: 'Error loading delivery apps', 
+        description: 'Please try again', 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [showOnlyActive, toast]);
 
-  const filteredApps = deliveryApps.filter(app =>
-    app.app_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    app.app_slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (app.business_name && app.business_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  useEffect(() => {
+    loadDeliveryApps();
+  }, [loadDeliveryApps]);
+
+  const filteredApps = React.useMemo(() => 
+    deliveryApps.filter(app =>
+      app.app_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      app.app_slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (app.business_name && app.business_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    ), [deliveryApps, searchTerm]
   );
 
-  const handleAppClick = (app: DeliveryApp) => {
+  const handleAppClick = React.useCallback((app: DeliveryApp) => {
     onAppSelect?.(app);
-  };
+  }, [onAppSelect]);
 
   if (loading) {
     return (
@@ -122,10 +129,10 @@ export const DeliveryAppModule: React.FC<DeliveryAppModuleProps> = ({
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{app.app_name}</h3>
-                            <p className="text-sm text-muted-foreground">{app.business_name || 'No business name'}</p>
-                          </div>
+                        <div className="space-y-1">
+                          <h3 className="font-semibold">{app.app_name}</h3>
+                          <p className="text-sm text-muted-foreground">{app.business_name || 'No business name'}</p>
+                        </div>
                         <Badge variant={app.is_active ? 'default' : 'secondary'}>
                           {app.is_active ? 'Active' : 'Inactive'}
                         </Badge>
