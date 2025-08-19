@@ -3719,6 +3719,10 @@ export type Database = {
         Args: { p_duration_ms: number; p_operation: string }
         Returns: undefined
       }
+      monitor_security_status: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       optimized_cache_cleanup: {
         Args: Record<PropertyKey, never>
         Returns: undefined
