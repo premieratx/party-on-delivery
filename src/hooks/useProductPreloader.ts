@@ -17,13 +17,16 @@ export const useProductPreloader = () => {
   const [cache, setCache] = useState<ProductCache>(globalProductCache);
 
   const preloadCollection = useCallback(async (collectionHandle: string) => {
-    // Check if already cached and fresh
+    console.log(`⚡ INSTANT: Preloading collection: ${collectionHandle}`);
+    
+    // Check if already cached and not expired
     const existing = globalProductCache[collectionHandle];
-    if (existing && !existing.loading && (Date.now() - existing.lastUpdated) < CACHE_DURATION) {
+    if (existing && Date.now() - existing.lastUpdated < CACHE_DURATION) {
+      console.log(`✅ INSTANT HIT: Using cached data for ${collectionHandle}`);
       return existing.products;
     }
-
-    // Set loading state
+    
+    // Mark as loading
     globalProductCache[collectionHandle] = {
       products: existing?.products || [],
       lastUpdated: existing?.lastUpdated || 0,
@@ -32,19 +35,18 @@ export const useProductPreloader = () => {
     setCache({ ...globalProductCache });
 
     try {
-      console.log(`🚀 Preloading collection: ${collectionHandle}`);
-      const { data: response, error } = await supabase.functions.invoke('get-unified-products', {
-        body: { 
+      // Use instant cache for 0.2s loading
+      const { data, error } = await supabase.functions.invoke('instant-product-cache', {
+        body: {
           collection_handle: collectionHandle,
-          use_type: 'delivery',
-          lightweight: true,
-          preserve_order: true
+          force_refresh: false
         }
       });
 
       if (error) throw error;
 
-      const products = response?.products || [];
+      const products = data?.products || [];
+      console.log(`⚡ INSTANT: Loaded ${products.length} products for ${collectionHandle} in ${data?.load_time || 'fast'}`);
       
       // Update cache
       globalProductCache[collectionHandle] = {
@@ -54,17 +56,46 @@ export const useProductPreloader = () => {
       };
       setCache({ ...globalProductCache });
 
-      console.log(`✅ Preloaded ${products.length} products for ${collectionHandle}`);
       return products;
     } catch (error) {
-      console.error(`❌ Failed to preload ${collectionHandle}:`, error);
+      console.error(`❌ INSTANT FAILED for ${collectionHandle}:`, error);
       
-      // Clear loading state
-      if (globalProductCache[collectionHandle]) {
-        globalProductCache[collectionHandle].loading = false;
+      // Fallback to original function
+      try {
+        const { data, error: fallbackError } = await supabase.functions.invoke('get-unified-products', {
+          body: {
+            collection_handle: collectionHandle,
+            use_type: 'delivery',
+            lightweight: true,
+            preserve_order: true
+          }
+        });
+
+        if (fallbackError) throw fallbackError;
+
+        const products = data?.products || [];
+        console.log(`🔄 FALLBACK: Loaded ${products.length} products for ${collectionHandle}`);
+        
+        // Update cache
+        globalProductCache[collectionHandle] = {
+          products,
+          lastUpdated: Date.now(),
+          loading: false
+        };
         setCache({ ...globalProductCache });
+
+        return products;
+      } catch (fallbackError) {
+        console.error(`❌ Complete failure for ${collectionHandle}:`, fallbackError);
+        
+        // Mark as not loading
+        if (globalProductCache[collectionHandle]) {
+          globalProductCache[collectionHandle].loading = false;
+          setCache({ ...globalProductCache });
+        }
+        
+        throw fallbackError;
       }
-      return [];
     }
   }, []);
 

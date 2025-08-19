@@ -183,6 +183,51 @@ export type Database = {
           },
         ]
       }
+      affiliate_flows: {
+        Row: {
+          affiliate_id: string
+          cover_page_id: string | null
+          created_at: string | null
+          delivery_app_configs: Json | null
+          flow_description: string | null
+          flow_name: string
+          flow_slug: string
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          post_checkout_screen_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          cover_page_id?: string | null
+          created_at?: string | null
+          delivery_app_configs?: Json | null
+          flow_description?: string | null
+          flow_name: string
+          flow_slug: string
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          post_checkout_screen_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          cover_page_id?: string | null
+          created_at?: string | null
+          delivery_app_configs?: Json | null
+          flow_description?: string | null
+          flow_name?: string
+          flow_slug?: string
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          post_checkout_screen_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       affiliate_order_tracking: {
         Row: {
           affiliate_id: string
@@ -308,6 +353,8 @@ export type Database = {
           commission_value: number | null
           company_name: string
           created_at: string | null
+          custom_handle: string | null
+          default_flow_id: string | null
           discount_type: string | null
           discount_value: number | null
           email: string
@@ -331,6 +378,8 @@ export type Database = {
           commission_value?: number | null
           company_name: string
           created_at?: string | null
+          custom_handle?: string | null
+          default_flow_id?: string | null
           discount_type?: string | null
           discount_value?: number | null
           email: string
@@ -354,6 +403,8 @@ export type Database = {
           commission_value?: number | null
           company_name?: string
           created_at?: string | null
+          custom_handle?: string | null
+          default_flow_id?: string | null
           discount_type?: string | null
           discount_value?: number | null
           email?: string
@@ -953,6 +1004,7 @@ export type Database = {
       }
       cover_pages: {
         Row: {
+          affiliate_assigned_slug: string | null
           affiliate_id: string | null
           affiliate_slug: string | null
           bg_image_url: string | null
@@ -961,9 +1013,12 @@ export type Database = {
           checklist: Json
           created_at: string
           created_by: string | null
+          flow_description: string | null
+          flow_name: string | null
           id: string
           is_active: boolean
           is_default_homepage: boolean | null
+          is_multi_flow: boolean | null
           logo_height: number | null
           logo_url: string | null
           slug: string
@@ -973,6 +1028,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          affiliate_assigned_slug?: string | null
           affiliate_id?: string | null
           affiliate_slug?: string | null
           bg_image_url?: string | null
@@ -981,9 +1037,12 @@ export type Database = {
           checklist?: Json
           created_at?: string
           created_by?: string | null
+          flow_description?: string | null
+          flow_name?: string | null
           id?: string
           is_active?: boolean
           is_default_homepage?: boolean | null
+          is_multi_flow?: boolean | null
           logo_height?: number | null
           logo_url?: string | null
           slug: string
@@ -993,6 +1052,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          affiliate_assigned_slug?: string | null
           affiliate_id?: string | null
           affiliate_slug?: string | null
           bg_image_url?: string | null
@@ -1001,9 +1061,12 @@ export type Database = {
           checklist?: Json
           created_at?: string
           created_by?: string | null
+          flow_description?: string | null
+          flow_name?: string | null
           id?: string
           is_active?: boolean
           is_default_homepage?: boolean | null
+          is_multi_flow?: boolean | null
           logo_height?: number | null
           logo_url?: string | null
           slug?: string
@@ -2055,7 +2118,9 @@ export type Database = {
           button_2_url: string | null
           cover_page_id: string
           created_at: string | null
+          flow_id: string | null
           id: string
+          is_template: boolean | null
           logo_url: string | null
           styles: Json | null
           subtitle: string | null
@@ -2072,7 +2137,9 @@ export type Database = {
           button_2_url?: string | null
           cover_page_id: string
           created_at?: string | null
+          flow_id?: string | null
           id?: string
+          is_template?: boolean | null
           logo_url?: string | null
           styles?: Json | null
           subtitle?: string | null
@@ -2089,7 +2156,9 @@ export type Database = {
           button_2_url?: string | null
           cover_page_id?: string
           created_at?: string | null
+          flow_id?: string | null
           id?: string
+          is_template?: boolean | null
           logo_url?: string | null
           styles?: Json | null
           subtitle?: string | null
@@ -3410,6 +3479,10 @@ export type Database = {
         }[]
       }
       generate_affiliate_code: {
+        Args: { company_name: string }
+        Returns: string
+      }
+      generate_affiliate_handle: {
         Args: { company_name: string }
         Returns: string
       }
