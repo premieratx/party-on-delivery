@@ -24,8 +24,6 @@ import {
   SUBCATEGORIES 
 } from '@/utils/hierarchicalSearchOptimizer';
 import { supabase } from '@/integrations/supabase/client';
-import { groupProductsByBaseName } from '@/utils/productGrouper';
-import { GroupedProductCard } from '@/components/delivery/GroupedProductCard';
 import { parseProductTitle } from '@/utils/productUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -133,24 +131,20 @@ export default function SearchPage() {
       }
     }
 
-    // Group identical products by base name (for variants)
-    const groupedProducts = groupProductsByBaseName(products);
-    
-    console.log(`📊 Search Results: ${products.length} products → ${groupedProducts.length} grouped cards`);
-    return groupedProducts;
+    console.log(`📊 Search Results: ${products.length} products`);
+    return products;
   }, [allProducts, searchQuery, selectedCategory, selectedSpirit]);
 
   // Handle add to cart
-  const handleAddToCart = (product: any) => {
-    const actualProduct = product.originalProduct || product;
-    const firstVariantId = actualProduct.variants?.[0]?.id;
+  const handleAddToCart = (product: Product) => {
+    const firstVariantId = product.variants?.[0]?.id;
     
     const cartItem = {
-      id: String(actualProduct.id),
-      title: actualProduct.title,
-      name: actualProduct.title,
-      price: typeof actualProduct.price === 'string' ? parseFloat(actualProduct.price) : actualProduct.price,
-      image: actualProduct.image,
+      id: String(product.id),
+      title: product.title,
+      name: product.title,
+      price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+      image: product.image,
       variant: firstVariantId ? String(firstVariantId) : 'default',
     };
     
@@ -319,15 +313,77 @@ export default function SearchPage() {
         {/* Products Grid */}
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {filteredProducts.map((groupedProduct) => (
-              <GroupedProductCard
-                key={groupedProduct.id}
-                groupedProduct={groupedProduct}
-                getCartItemQuantity={getCartItemQuantity}
-                onAddToCart={handleAddToCart}
-                onQuantityChange={handleQuantityChange}
-              />
-            ))}
+            {filteredProducts.map((product) => {
+              const { cleanTitle } = parseProductTitle(product.title);
+              const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+              const firstVariantId = product.variants?.[0]?.id;
+              const variantKey = firstVariantId ? String(firstVariantId) : 'default';
+              const quantity = getCartItemQuantity(String(product.id), variantKey);
+
+              return (
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full">
+                  <div className="aspect-square relative overflow-hidden">
+                    <OptimizedImage
+                      src={product.image}
+                      alt={cleanTitle}
+                      className="w-full h-full object-cover hover-scale"
+                    />
+                  </div>
+                  
+                  <CardContent className="p-3 flex flex-col flex-1 justify-between space-y-3">
+                    {/* Title */}
+                    <div className="text-center">
+                      <h3 className="font-medium text-sm line-clamp-2 leading-tight">
+                        {cleanTitle}
+                      </h3>
+                    </div>
+
+                    {/* Price and Cart Controls */}
+                    <div className="flex flex-col items-center space-y-2 mt-auto">
+                      <div className="flex items-center justify-center">
+                        <span className="font-bold text-primary text-lg">
+                          ${price.toFixed(2)}
+                        </span>
+                        {quantity > 0 && (
+                          <Badge variant="secondary" className="ml-2 text-xs">
+                            {quantity}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {quantity > 0 ? (
+                        <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleQuantityChange(String(product.id), variantKey, -1)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <span className="font-medium px-2">{quantity}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleQuantityChange(String(product.id), variantKey, 1)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleAddToCart(product)}
+                          className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
