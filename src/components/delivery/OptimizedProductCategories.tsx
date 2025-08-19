@@ -22,13 +22,7 @@ interface OptimizedProductCategoriesProps {
   onBack?: () => void;
 }
 
-const CATEGORY_TABS = [
-  { id: 'spirits', title: 'Spirits', handle: 'spirits' },
-  { id: 'beer', title: 'Beer', handle: 'beer' },
-  { id: 'seltzers', title: 'Seltzers', handle: 'seltzers' },
-  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers' },
-  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails' }
-];
+// Dynamic collections loaded from Shopify - no hardcoded tabs
 
 export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProps> = ({
   onAddToCart,
@@ -39,66 +33,88 @@ export const OptimizedProductCategories: React.FC<OptimizedProductCategoriesProp
   onProceedToCheckout,
   onBack
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState(0);
+  const [selectedCollectionHandle, setSelectedCollectionHandle] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState<any[]>([]);
+  const [collections, setCollections] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const { getCollectionProducts, searchProducts } = useOptimizedShopify();
   
-const currentTab = CATEGORY_TABS[selectedCategory];
-const isSearchTab = false; // No search tab anymore
+// Use actual Shopify collections instead of hardcoded categories
 
 // Apply affiliate markup to displayed prices
 const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
 const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
 
 
-  // Load products for current category
+  // Load all collections on component mount
   useEffect(() => {
-    if (!isSearchTab && currentTab?.handle) {
-      loadCategoryProducts(currentTab.handle);
+    loadShopifyCollections();
+  }, []);
+
+  // Load products when collection changes
+  useEffect(() => {
+    if (selectedCollectionHandle) {
+      loadCategoryProducts(selectedCollectionHandle);
     }
-  }, [selectedCategory, isSearchTab, currentTab?.handle]);
+  }, [selectedCollectionHandle]);
+
+  const loadShopifyCollections = async () => {
+    try {
+      setLoading(true);
+      console.log('Loading Shopify collections from get-all-collections...');
+      
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      
+      if (error) throw error;
+      
+      if (data?.success && data?.collections) {
+        const filteredCollections = data.collections.filter((col: any) => 
+          col.products && col.products.length > 0
+        );
+        
+        console.log(`✅ Loaded ${filteredCollections.length} collections with products`);
+        setCollections(filteredCollections);
+        
+        // Set first collection as default
+        if (filteredCollections.length > 0 && !selectedCollectionHandle) {
+          setSelectedCollectionHandle(filteredCollections[0].handle);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading collections:', err);
+      setError('Failed to load collections');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadCategoryProducts = async (handle: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log(`Loading products for collection: ${handle} with instant cache system`);
+      console.log(`Loading products for collection: ${handle} using Shopify order`);
       
-      // Use instant-product-cache to get products with category filtering
-      const { data: cacheData, error: cacheError } = await supabase.functions.invoke('instant-product-cache', {
-        body: { forceRefresh: false }
-      });
+      // Get products for this specific collection using get-all-collections
+      const selectedCollection = collections.find(col => col.handle === handle);
       
-      if (!cacheError && cacheData?.success && cacheData?.data) {
-        // Filter products by category from the cache
-        const allProducts = cacheData.data.products || [];
-        const filteredProducts = allProducts
-          .filter((product: any) => {
-            // Match by collection handles or category
-            return product.collection_handles?.some((collectionHandle: string) => 
-              collectionHandle.toLowerCase().includes(handle.toLowerCase()) ||
-              handle.toLowerCase().includes(collectionHandle.toLowerCase())
-            ) || product.category?.toLowerCase() === handle.toLowerCase();
-          })
-          .sort((a: any, b: any) => {
-            // Sort by sort_order if available, otherwise by position or id
-            const sortA = a.sort_order || a.position || 0;
-            const sortB = b.sort_order || b.position || 0;
-            return sortA - sortB;
-          });
+      if (selectedCollection && selectedCollection.products) {
+        // Use products directly from collection with their Shopify sort order
+        const sortedProducts = selectedCollection.products.sort((a: any, b: any) => {
+          // Use Shopify sort_order if available, otherwise use position
+          const sortA = a.sort_order ?? a.position ?? 0;
+          const sortB = b.sort_order ?? b.position ?? 0;
+          return sortA - sortB;
+        });
         
-        console.log(`✅ Loaded ${filteredProducts.length} products for ${handle} from instant cache`);
-        setProducts(filteredProducts);
+        console.log(`✅ Loaded ${sortedProducts.length} products for ${handle} in Shopify order`);
+        setProducts(sortedProducts);
       } else {
-        // Fallback to optimized shopify client
-        console.log('Using fallback method for collection products');
-        const categoryProducts = await getCollectionProducts(handle);
-        setProducts(categoryProducts);
+        console.log('Collection not found, loading empty products');
+        setProducts([]);
       }
     } catch (err) {
       setError('Failed to load products');
@@ -163,18 +179,26 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
     onUpdateQuantity(productId, variantId, newQty);
   };
 
-  // Debounced search
+  // Debounced search - filter current collection's products
   useEffect(() => {
-    if (isSearchTab && searchQuery.trim()) {
+    if (searchQuery.trim()) {
       const timer = setTimeout(() => {
-        handleSearch(searchQuery);
-      }, 500);
+        const selectedCollection = collections.find(col => col.handle === selectedCollectionHandle);
+        if (selectedCollection) {
+          const filtered = selectedCollection.products.filter((product: any) =>
+            product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          setProducts(filtered);
+        }
+      }, 300);
       
       return () => clearTimeout(timer);
-    } else if (isSearchTab && !searchQuery.trim()) {
-      setProducts([]);
+    } else if (selectedCollectionHandle) {
+      // Reset to full collection when search is cleared
+      loadCategoryProducts(selectedCollectionHandle);
     }
-  }, [searchQuery, isSearchTab]);
+  }, [searchQuery, selectedCollectionHandle, collections]);
 
   if (loading) {
     return (
@@ -215,43 +239,41 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         </div>
       </div>
 
-      {/* Category Tabs */}
-<div className="border-b">
+      {/* Collection Tabs - Using actual Shopify collections */}
+      <div className="border-b">
         <div className="w-full">
-          <div className="flex w-full items-stretch gap-px py-1 overflow-hidden flex-nowrap px-0">
-            {CATEGORY_TABS.map((tab, index) => (
+          <div className="flex w-full items-stretch gap-px py-1 overflow-x-auto flex-nowrap px-0">
+            {collections.map((collection) => (
               <Button
-                key={tab.id}
-                variant={selectedCategory === index ? 'default' : 'outline'}
+                key={collection.handle}
+                variant={selectedCollectionHandle === collection.handle ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setSelectedCategory(index)}
-                className="flex-1 basis-0 min-w-0 px-0 py-1 h-auto min-h-10 max-h-12 text-[6.5px] tracking-tight leading-[0.85rem] whitespace-normal break-words text-center overflow-hidden rounded-none first:rounded-l-md last:rounded-r-md"
+                onClick={() => setSelectedCollectionHandle(collection.handle)}
+                className="flex-shrink-0 px-2 py-1 h-auto min-h-10 max-h-12 text-[7px] tracking-tight leading-[0.85rem] whitespace-normal break-words text-center overflow-hidden rounded-none first:rounded-l-md last:rounded-r-md"
               >
-                
-                {tab.title}
+                {collection.title}
+                <span className="ml-1 text-[6px] opacity-60">({collection.products?.length || 0})</span>
               </Button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Search Input */}
-      {isSearchTab && (
-        <div className="w-full px-1 md:px-3 py-4">
-          <div className="max-w-md mx-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+      {/* Search Input - Always available */}
+      <div className="w-full px-1 md:px-3 py-4">
+        <div className="max-w-md mx-auto">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
           </div>
         </div>
-      )}
+      </div>
 
       {/* Products Grid */}
       <div className="w-full px-1 md:px-3 py-6">
@@ -327,9 +349,9 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
           </div>
         )}
 
-        {!isSearchTab && products.length === 0 && !loading && (
+        {products.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No products found in this category.</p>
+            <p className="text-muted-foreground">No products found in this collection.</p>
           </div>
         )}
       </div>

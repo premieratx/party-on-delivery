@@ -102,25 +102,9 @@ export default function ShortLinkResolver() {
           if (affErr) throw affErr;
 
           if (affiliate?.id) {
-            const { data: assign } = await supabase
-              .from('affiliate_app_assignments')
-              .select('app_variation_id')
-              .eq('affiliate_id', affiliate.id)
-              .eq('_df', true)
-              .maybeSingle();
-
-            if (assign?.app_variation_id) {
-              const { data: app2 } = await supabase
-                .from('delivery_app_variations')
-                .select('app_slug')
-                .eq('id', assign.app_variation_id)
-                .maybeSingle();
-
-              if (app2?.app_slug) {
-                navigate(`/app/${app2.app_slug}?aff=${encodeURIComponent(affiliate.affiliate_code)}`, { replace: true });
-                return;
-              }
-            }
+            // Note: App assignments are no longer used - delivery apps are not linked to specific affiliates
+            // Affiliates now work through cover pages and flows, not direct app assignments
+            // For now, redirect to default homepage or their cover page
             navigate(`/?aff=${encodeURIComponent(affiliate.affiliate_code)}`, { replace: true });
             return;
           }

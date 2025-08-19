@@ -103,13 +103,8 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
           delivery_app_id: form.delivery_app_id
         });
 
-        // Create an assignment and mark as default for this affiliate
-        await supabase.from('affiliate_app_assignments').insert({
-          affiliate_id: affiliate.id,
-          app_variation_id: form.delivery_app_id,
-          assigned_by: 'admin',
-          _df: true
-        });
+        // Note: App assignments are no longer used - delivery apps are not linked to specific affiliates
+        // Affiliates now work through cover pages and flows, not direct app assignments
       }
 
       toast({ title: 'Affiliate created', description: `Code: ${affiliate_code}` });

@@ -138,48 +138,6 @@ export type Database = {
         }
         Relationships: []
       }
-      affiliate_app_assignments: {
-        Row: {
-          _df: boolean | null
-          affiliate_id: string
-          app_variation_id: string
-          assigned_at: string
-          assigned_by: string | null
-          id: string
-        }
-        Insert: {
-          _df?: boolean | null
-          affiliate_id: string
-          app_variation_id: string
-          assigned_at?: string
-          assigned_by?: string | null
-          id?: string
-        }
-        Update: {
-          _df?: boolean | null
-          affiliate_id?: string
-          app_variation_id?: string
-          assigned_at?: string
-          assigned_by?: string | null
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_affiliate"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_app_variation"
-            columns: ["app_variation_id"]
-            isOneToOne: false
-            referencedRelation: "delivery_app_variations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       affiliate_flows: {
         Row: {
           affiliate_id: string
@@ -3431,33 +3389,6 @@ export type Database = {
       }
     }
     Views: {
-      affiliate_app_links: {
-        Row: {
-          affiliate_code: string | null
-          affiliate_email: string | null
-          affiliate_id: string | null
-          app_name: string | null
-          app_slug: string | null
-          app_variation_id: string | null
-          share_link: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_affiliate"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_app_variation"
-            columns: ["app_variation_id"]
-            isOneToOne: false
-            referencedRelation: "delivery_app_variations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       instant_products_view: {
         Row: {
           app_category: string | null
