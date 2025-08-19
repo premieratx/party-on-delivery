@@ -3628,6 +3628,10 @@ export type Database = {
           total_amount: number
         }[]
       }
+      fix_function_search_paths: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       generate_affiliate_code: {
         Args: { company_name: string }
         Returns: string
