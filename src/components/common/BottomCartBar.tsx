@@ -81,19 +81,21 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
               </div>
             </div>
 
-            {/* Right side: Cart and Checkout */}
+            {/* Right side: Cart, Total, and Checkout */}
             <div className="flex items-center gap-1">
-              {totalItems > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onOpenCart}
-                  className="flex items-center gap-1 px-2 h-9"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span className="text-xs">({totalItems})</span>
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenCart}
+                className="flex items-center gap-1 px-2 h-9"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span className="text-xs">({totalItems})</span>
+              </Button>
+              
+              <span className="font-semibold text-xs text-primary px-1">
+                ${adjustedTotal.toFixed(2)}
+              </span>
               
               <Button
                 onClick={onCheckout}
@@ -132,29 +134,25 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
           
           {/* Actions on the right: Cart, Subtotal, Checkout */}
           <div className="flex items-center gap-1 sm:gap-3 ml-auto">
-            {/* Cart button (only show if items exist) */}
-            {totalItems > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { console.log('BottomCartBar: Cart button clicked'); onOpenCart(); }}
-                aria-label="Open cart"
-                className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3 touch-manipulation"
-                data-cart-trigger="true"
-                type="button"
-              >
-                <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Cart</span>
-                <span className="text-xs">({totalItems})</span>
-              </Button>
-            )}
+            {/* Cart button - always visible */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { console.log('BottomCartBar: Cart button clicked'); onOpenCart(); }}
+              aria-label="Open cart"
+              className="flex items-center gap-1 sm:gap-2 h-9 sm:h-9 px-3 sm:px-3 touch-manipulation"
+              data-cart-trigger="true"
+              type="button"
+            >
+              <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Cart</span>
+              <span className="text-xs">({totalItems})</span>
+            </Button>
             
-            {/* Total price */}
-            {totalItems > 0 && (
-              <span className="font-semibold text-sm sm:text-lg text-primary">
-                ${adjustedTotal.toFixed(2)}
-              </span>
-            )}
+            {/* Total price - always visible */}
+            <span className="font-semibold text-sm sm:text-lg text-primary">
+              ${adjustedTotal.toFixed(2)}
+            </span>
             
             {/* Checkout button */}
             <Button
