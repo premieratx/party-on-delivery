@@ -3457,6 +3457,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      configure_auth_security: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       execute_automation_template: {
         Args: { template_name_param: string }
         Returns: Json
@@ -3521,6 +3525,10 @@ export type Database = {
       }
       get_products_cached: {
         Args: { p_category?: string; p_limit?: number }
+        Returns: Json
+      }
+      get_security_status: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       is_admin_user: {
