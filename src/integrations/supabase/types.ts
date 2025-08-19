@@ -853,6 +853,51 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_flow_documentation: {
+        Row: {
+          component_name: string
+          component_type: string
+          created_at: string | null
+          dependencies: Json | null
+          file_path: string
+          functionality: string
+          id: string
+          is_critical: boolean | null
+          last_verified: string | null
+          notes: string | null
+          stripe_related: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          component_name: string
+          component_type: string
+          created_at?: string | null
+          dependencies?: Json | null
+          file_path: string
+          functionality: string
+          id?: string
+          is_critical?: boolean | null
+          last_verified?: string | null
+          notes?: string | null
+          stripe_related?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          component_name?: string
+          component_type?: string
+          created_at?: string | null
+          dependencies?: Json | null
+          file_path?: string
+          functionality?: string
+          id?: string
+          is_critical?: boolean | null
+          last_verified?: string | null
+          notes?: string | null
+          stripe_related?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       collection_drafts: {
         Row: {
           created_at: string
