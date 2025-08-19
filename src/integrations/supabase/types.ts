@@ -3541,6 +3541,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_admin_user_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       join_group_order: {
         Args: {
           p_customer_email: string
