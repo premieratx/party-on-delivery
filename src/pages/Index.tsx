@@ -13,6 +13,7 @@ import { DirectProductSync } from '@/components/emergency/DirectProductSync';
 import { InstantProductSync } from '@/components/emergency/InstantProductSync';
 import { QuickSyncTrigger } from '@/components/emergency/QuickSyncTrigger';
 import { SimpleForceSync } from '@/components/emergency/SimpleForceSync';
+import { ForceCollectionOrderSync } from '@/components/ForceCollectionOrderSync';
 import { syncCollectionOrder } from '@/utils/productSync';
 
 const Index = () => {
@@ -201,17 +202,20 @@ const Index = () => {
         onClose={() => setIsCartOpen(false)}
       />
       
-      {/* Bottom Menu Bar with Admin Button */}
+      {/* Bottom Menu Bar with Admin Button and Sync */}
       <div className="fixed bottom-4 left-4 right-4 z-50 lg:hidden">
         <div className="flex items-center justify-between">
-          <Button 
-            onClick={() => navigate('/admin')}
-            variant="outline"
-            size="sm"
-            className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors"
-          >
-            Admin
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate('/admin')}
+              variant="outline"
+              size="sm"
+              className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors"
+            >
+              Admin
+            </Button>
+            <ForceCollectionOrderSync />
+          </div>
           
           <div className="ml-4">
             <DeliveryAppDropdown />
@@ -219,8 +223,9 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Desktop Admin Button - Bottom Right */}
-      <div className="hidden lg:block fixed bottom-4 right-4 z-50">
+      {/* Desktop Admin Button and Sync - Bottom Right */}
+      <div className="hidden lg:flex lg:gap-2 fixed bottom-4 right-4 z-50">
+        <ForceCollectionOrderSync />
         <Button 
           onClick={() => navigate('/admin')}
           variant="outline"
