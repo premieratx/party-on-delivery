@@ -15,6 +15,7 @@ import { parseProductTitle } from '@/utils/productUtils';
 import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
+import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesEnhancedProps {
@@ -46,6 +47,7 @@ interface ProductCategoriesEnhancedProps {
   cartItems?: any[];
   onUpdateQuantity?: (id: string, variant: string | undefined, quantity: number) => void;
   onProceedToCheckout?: () => void;
+  onCheckout?: () => void;
   onBack?: () => void;
   onGoHome?: () => void;
   onSearchQueryChange?: (query: string) => void;
@@ -78,6 +80,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
   cartItems = [],
   onUpdateQuantity,
   onProceedToCheckout,
+  onCheckout,
   onBack,
   onGoHome,
   onSearchQueryChange,
@@ -94,6 +97,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
   const [displayProducts, setDisplayProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
@@ -444,6 +448,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
                   onAddToCart={handleAddToCart}
                   onQuantityChange={handleQuantityChange}
                   quantity={getCartItemQuantity(product.id, product.variants?.[0]?.id)}
+                  onProductClick={() => setSelectedProduct(product)}
                 />
               ))}
             </div>
@@ -471,6 +476,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
                   onAddToCart={handleAddToCart}
                   onQuantityChange={handleQuantityChange}
                   quantity={getCartItemQuantity(product.id, product.variants?.[0]?.id)}
+                  onProductClick={() => setSelectedProduct(product)}
                 />
               ))}
             </div>
@@ -488,6 +494,20 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
       <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
         <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
       </div>
+
+      {/* Product Lightbox */}
+      {selectedProduct && (
+        <ProductLightbox
+          product={selectedProduct}
+          isOpen={!!selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={handleAddToCart}
+          selectedVariant={selectedProduct.variants?.[0]}
+          onUpdateQuantity={handleQuantityChange}
+          cartQuantity={getCartItemQuantity(selectedProduct.id, selectedProduct.variants?.[0]?.id)}
+          onProceedToCheckout={onCheckout}
+        />
+      )}
     </div>
   );
 };
@@ -498,13 +518,15 @@ interface EnhancedProductCardProps {
   onAddToCart: (product: any) => void;
   onQuantityChange: (id: string, variant: string | undefined, delta: number) => void;
   quantity: number;
+  onProductClick: () => void;
 }
 
 const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
   product,
   onAddToCart,
   onQuantityChange,
-  quantity
+  quantity,
+  onProductClick
 }) => {
   const optimizedImages = useImageOptimization(product.image);
   const parsedTitle = parseProductTitle(product.title);
@@ -512,7 +534,10 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
   const variantId = firstVariant?.id ? String(firstVariant.id) : 'default';
 
   return (
-    <div className="group relative bg-card rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div 
+      className="group relative bg-card rounded-lg border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer"
+      onClick={onProductClick}
+    >
       {/* Product Image */}
       <div className="aspect-square relative overflow-hidden bg-muted">
         <OptimizedImage
@@ -559,13 +584,16 @@ const EnhancedProductCard: React.FC<EnhancedProductCardProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onAddToCart(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToCart(product);
+              }}
               className="h-8 text-xs"
             >
               Add
             </Button>
           ) : (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
               <Button
                 size="sm"
                 variant="outline"

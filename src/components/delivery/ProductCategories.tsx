@@ -16,6 +16,7 @@ import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useProductPreloader } from '@/hooks/useProductPreloader';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
+import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import '@/utils/fixProductOrdering'; // Auto-fix product ordering
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
@@ -47,6 +48,7 @@ interface ProductCategoriesProps {
   showSearch?: boolean;
   maxProducts?: number;
   forceRefresh?: boolean;
+  onCheckout?: () => void;
 }
 
 // NO DEFAULT COLLECTIONS - Only use actual Shopify collections from delivery app config
@@ -71,7 +73,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   customSiteSlug,
   showSearch = true,
   maxProducts = 50,
-  forceRefresh = false
+  forceRefresh = false,
+  onCheckout
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
@@ -79,6 +82,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [searchProducts, setSearchProducts] = useState<any[]>([]);
   const [isSearchActive, setIsSearchActive] = useState(false); // Track if user is actively searching
   const [savedSearchQuery, setSavedSearchQuery] = useState(''); // Persist search across tab switches
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
@@ -377,8 +381,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               {searchProducts.map((product) => {
                 const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
                 const { cleanTitle, packageSize } = parseProductTitle(product.title);
-                return (
-                  <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full">
+                 return (
+                   <div 
+                     key={product.id} 
+                     className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full cursor-pointer"
+                     onClick={() => setSelectedProduct(product)}
+                   >
                     <div className="aspect-square relative overflow-hidden">
                       <OptimizedImage
                         src={product.image}
@@ -406,29 +414,38 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         
                         {quantity > 0 ? (
                           <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                              className="h-8 w-8 p-0"
-                            >
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
+                             }}
+                             className="h-8 w-8 p-0"
+                           >
                               <Minus className="w-4 h-4" />
                             </Button>
                             <span className="font-medium px-2">{quantity}</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                              className="h-8 w-8 p-0"
-                            >
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
+                             }}
+                             className="h-8 w-8 p-0"
+                           >
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
-                        ) : (
-                          <Button
-                            onClick={() => handleAddToCart(product)}
-                            className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
-                          >
+                         ) : (
+                           <Button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleAddToCart(product);
+                             }}
+                             className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
+                           >
                             <Plus className="w-5 h-5" />
                           </Button>
                         )}
@@ -470,8 +487,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               const { cleanTitle, packageSize } = parseProductTitle(product.title);
               
-              return (
-                <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full">
+               return (
+                 <div 
+                   key={product.id} 
+                   className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full cursor-pointer"
+                   onClick={() => setSelectedProduct(product)}
+                 >
                   <div className="aspect-square relative overflow-hidden">
                     <OptimizedImage
                       src={product.image}
@@ -500,32 +521,41 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       </span>
                       
                       {quantity > 0 ? (
-                        <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                          >
+                         <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]" onClick={(e) => e.stopPropagation()}>
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             className="h-8 w-8"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
+                             }}
+                           >
                             <Minus className="w-4 h-4" />
                           </Button>
                           <span className="font-semibold min-w-[2rem] text-center">
                             {quantity}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          >
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             className="h-8 w-8"
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
+                             }}
+                           >
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
-                      ) : (
-                        <Button
-                          onClick={() => handleAddToCart(product)}
-                          className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
-                        >
+                       ) : (
+                         <Button
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handleAddToCart(product);
+                           }}
+                           className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
+                         >
                           <Plus className="w-5 h-5" />
                         </Button>
                       )}
@@ -548,6 +578,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
         </div>
       </div>
+
+      {/* Product Lightbox */}
+      {selectedProduct && (
+        <ProductLightbox
+          product={selectedProduct}
+          isOpen={!!selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={handleAddToCart}
+          selectedVariant={selectedProduct.variants?.[0]}
+          onUpdateQuantity={handleQuantityChange}
+          cartQuantity={getCartItemQuantity(selectedProduct.id, selectedProduct.variants?.[0]?.id)}
+          onProceedToCheckout={onCheckout}
+        />
+      )}
     </div>
   );
 };

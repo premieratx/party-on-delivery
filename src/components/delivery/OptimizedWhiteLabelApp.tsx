@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { ProductSearchBar } from '@/components/delivery/ProductSearchBar';
 import { TypingIntro } from '@/components/common/TypingIntro';
+import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { supabase } from '@/integrations/supabase/client';
 
 interface WhiteLabelAppConfig {
@@ -119,6 +120,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   const [activeTab, setActiveTab] = useState(0);
   const [showCart, setShowCart] = useState(false);
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // Apply custom branding
   useEffect(() => {
@@ -461,6 +463,7 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
                 collection={tab.collection}
                 tabName={tab.name}
                 isActive={activeTab === index}
+                onProductClick={(product) => setSelectedProduct(product)}
               />
             </TabsContent>
           ))}
@@ -497,6 +500,30 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
         isOpen={showCart}
         onClose={() => setShowCart(false)}
       />
+
+      {/* Product Lightbox */}
+      {selectedProduct && (
+        <ProductLightbox
+          product={selectedProduct}
+          isOpen={!!selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={(product) => {
+            const variant = product.variants?.[0];
+            if (variant) {
+              updateQuantity(product.id, variant.id, 1);
+              toast({
+                description: `Added ${product.title} to cart`,
+              });
+            }
+          }}
+          selectedVariant={selectedProduct.variants?.[0]}
+          onUpdateQuantity={(id, variantId, quantity) => {
+            updateQuantity(id, variantId || 'default', quantity);
+          }}
+          cartQuantity={getCartItemQuantity(selectedProduct.id, selectedProduct.variants?.[0]?.id)}
+          onProceedToCheckout={handleCheckout}
+        />
+      )}
     </div>
   );
 });
