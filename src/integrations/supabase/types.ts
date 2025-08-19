@@ -3577,6 +3577,10 @@ export type Database = {
       }
     }
     Functions: {
+      auto_fix_all_security_issues: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       cleanup_expired_cache: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -3661,6 +3665,10 @@ export type Database = {
           dashboard_type: string
           user_email?: string
         }
+        Returns: Json
+      }
+      get_final_security_summary: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       get_group_order_details: {
