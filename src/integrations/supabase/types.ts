@@ -1357,6 +1357,44 @@ export type Database = {
           },
         ]
       }
+      delivery_app_collection_mappings: {
+        Row: {
+          created_at: string | null
+          delivery_app_id: string | null
+          id: string
+          shopify_collection_handle: string
+          tab_index: number
+          tab_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_app_id?: string | null
+          id?: string
+          shopify_collection_handle: string
+          tab_index: number
+          tab_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivery_app_id?: string | null
+          id?: string
+          shopify_collection_handle?: string
+          tab_index?: number
+          tab_name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_app_collection_mappings_delivery_app_id_fkey"
+            columns: ["delivery_app_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_app_variations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_app_variations: {
         Row: {
           app_name: string

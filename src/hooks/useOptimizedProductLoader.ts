@@ -55,17 +55,15 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       setLoading(true);
       setError(null);
 
-      console.log('🔄 Loading unified products...');
+      console.log(`🔄 Loading products for collection: ${collection_handle}`);
 
-      const { data, error: functionError } = await supabase.functions.invoke('get-unified-products', {
+      // Use new unified collection manager for fast, reliable collection filtering
+      const { data, error: functionError } = await supabase.functions.invoke('unified-collection-manager', {
         body: { 
-          app_slug, 
-          lightweight, 
+          action: 'get_products',
+          collection_handle,
           force_refresh,
-          use_type,
-          search_category,
-          category,
-          collection_handle
+          lightweight
         }
       });
 
@@ -78,24 +76,24 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
         throw new Error(data?.error || 'Failed to load products');
       }
 
-      setProducts(data.products || []);
-      setCollections(data.collections || []);
+      const products = data.products || [];
+      
+      // Create a single collection object for the loaded products
+      const collection = {
+        id: collection_handle || 'unknown',
+        title: collection_handle ? collection_handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown',
+        handle: collection_handle || 'unknown',
+        products: products
+      };
+
+      setProducts(products);
+      setCollections([collection]);
       setCached(data.cached || false);
 
-      console.log(`✅ Loaded ${data.products?.length || 0} products from ${data.cached ? 'cache' : 'API'}`);
+      console.log(`✅ Loaded ${products.length} products for collection: ${collection_handle}`);
 
-      // Reset retry count on successful load (even if 0 products)
+      // Reset retry count on successful load
       setRetryCount(0);
-
-      // TEMPORARILY DISABLED: Only retry if refreshing AND we haven't exceeded retry limit
-      // Commenting out to stop infinite loops
-      /*
-      if (data.refreshing && data.products?.length === 0 && retryCount < 3) {
-        console.log(`🔄 Retrying product load (attempt ${retryCount + 1}/3)`);
-        setRetryCount(prev => prev + 1);
-        setTimeout(() => loadProducts(false), 3000 + (retryCount * 2000)); // Exponential backoff
-      }
-      */
 
     } catch (err) {
       console.error('Error loading products:', err);
@@ -105,7 +103,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [app_slug, lightweight, use_type, search_category, category, collection_handle, retryCount]);
+  }, [collection_handle, lightweight, retryCount]);
 
   const refresh = useCallback(() => {
     setRetryCount(0); // Reset retry count on manual refresh
