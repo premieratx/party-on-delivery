@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
@@ -29,6 +30,7 @@ interface HomepageDeliveryApp {
 }
 
 export default function DynamicHomepage() {
+  const navigate = useNavigate();
   const [homepageApp, setHomepageApp] = useState<HomepageDeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +106,10 @@ export default function DynamicHomepage() {
   };
 
   const handleProceedToCheckout = () => {
-    window.location.href = '/checkout';
+    console.log('🛒 Navigating to checkout from homepage');
+    // Store current delivery app referrer for back navigation
+    localStorage.setItem('deliveryAppReferrer', window.location.pathname);
+    navigate('/checkout');
   };
 
   const handleGoHome = () => {

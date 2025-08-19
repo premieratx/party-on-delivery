@@ -16,6 +16,7 @@ const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const TestCheckout = lazy(() => import("./pages/TestCheckout"));
 const VoiceChat = lazy(() => import("./pages/VoiceChat"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
 import { AffiliateIntro } from "./pages/AffiliateIntro";
@@ -63,6 +64,7 @@ const App = () => {
                 {/* DYNAMIC HOMEPAGE ROUTE */}
                 <Route path="/" element={<DynamicHomepage />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/search" element={<SearchPage />} />
                 <Route path="/app/:appSlug" element={<CustomAppView />} />
                 
                 {/* Conditionally render Voice Chat */}
