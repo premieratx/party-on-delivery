@@ -43,16 +43,23 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
         setHasError(false);
         
         console.log('[STRIPE-WRAPPER] Attempting to get publishable key...');
+        console.log('[STRIPE-WRAPPER] Supabase client ready, invoking function...');
+        
         const { data, error } = await supabase.functions.invoke('get-stripe-publishable-key');
         
-        console.log('[STRIPE-WRAPPER] Response:', { data, error });
+        console.log('[STRIPE-WRAPPER] Response received:', { 
+          hasData: !!data, 
+          hasError: !!error, 
+          data: data ? { hasKey: !!data.key, keyLength: data.key?.length } : null,
+          error 
+        });
         
         // Additional debug logging
         if (error) {
-          console.error('[STRIPE-WRAPPER] Error details:', error);
+          console.error('[STRIPE-WRAPPER] Function invocation error:', error);
         }
         if (data?.key) {
-          console.log('[STRIPE-WRAPPER] Key received, length:', data.key.length);
+          console.log('[STRIPE-WRAPPER] Key received successfully, initializing Stripe...');
         }
         
         if (error || !data?.key) {
