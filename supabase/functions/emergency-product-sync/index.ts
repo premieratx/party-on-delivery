@@ -115,16 +115,17 @@ Deno.serve(async (req) => {
         }
 
         return {
-          id: product.id,
+          shopify_id: product.id,
           title: product.title,
           handle: product.handle,
           vendor: product.vendor,
           price: parseFloat(price),
           image: image,
           category: category,
+          category_title: category.charAt(0).toUpperCase() + category.slice(1),
           product_type: product.product_type,
-          tags: product.tags,
-          status: product.status,
+          search_category: category,
+          tags: product.tags?.split(',') || [],
           data: product,
           collection_handles: [], // Will be populated later if needed
           variants: product.variants || [],
