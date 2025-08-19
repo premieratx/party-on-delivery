@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Loader2, User, ShoppingBag } from 'lucide-react';
+import { CANONICAL_DOMAIN } from '@/utils/domain';
 
 const CustomerAuth = () => {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ const CustomerAuth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/customer/auth?redirect=${redirectTo}`,
+          redirectTo: `${CANONICAL_DOMAIN}/customer/auth?redirect=${redirectTo}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,10 +86,47 @@ export const DeliveryAppCreator = () => {
   const [selectedAppId, setSelectedAppId] = useState<string>('');
   const { toast } = useToast();
 
+  // File upload refs
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bgImageInputRef = useRef<HTMLInputElement>(null);
+  const bgVideoInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     loadCollections();
     loadExistingApps();
   }, []);
+
+  // Upload asset function (similar to cover page editor)
+  const uploadAsset = async (file: File, kind: 'logo' | 'bg'): Promise<string | null> => {
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const base = (config.app_slug || 'delivery-app').slice(0, 60);
+      const fileName = `delivery-${base}-${kind}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('cover-assets')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('cover-assets')
+        .getPublicUrl(fileName);
+      
+      toast({
+        title: "Upload successful",
+        description: `${kind === 'logo' ? 'Logo' : 'Background image'} uploaded successfully`,
+      });
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed", 
+        description: "Failed to upload file. Please try again.",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
 
   const loadCollections = async () => {
     try {
@@ -424,13 +461,27 @@ export const DeliveryAppCreator = () => {
               </div>
 
               <div>
-                <Label htmlFor="logo_url">Logo URL</Label>
-                <Input
-                  id="logo_url"
-                  value={config.logo_url || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
-                  placeholder="https://example.com/logo.png"
-                />
+                <Label htmlFor="logo_url">Logo</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="logo_url"
+                    value={config.logo_url || ''}
+                    onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
+                    placeholder="https://example.com/logo.png"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload a logo file or enter a URL to an existing image
+                </p>
               </div>
 
               <div className="flex gap-4">
@@ -515,34 +566,62 @@ export const DeliveryAppCreator = () => {
                   
                   <TabsContent value="image" className="space-y-3">
                     <div>
-                      <Label htmlFor="hero_bg_image">Background Image URL</Label>
-                      <Input
-                        id="hero_bg_image"
-                        value={config.hero_background_image || ''}
-                        onChange={(e) => setConfig(prev => ({ 
-                          ...prev, 
-                          hero_background_image: e.target.value,
-                          hero_background_type: 'image' 
-                        }))}
-                        placeholder="https://example.com/hero-bg.jpg (or .gif)"
-                      />
+                      <Label htmlFor="hero_bg_image">Background Image</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="hero_bg_image"
+                          value={config.hero_background_image || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            hero_background_image: e.target.value,
+                            hero_background_type: 'image' 
+                          }))}
+                          placeholder="https://example.com/hero-bg.jpg (or .gif)"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => bgImageInputRef.current?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Upload an image file or enter a URL to an existing image
+                      </p>
                     </div>
                   </TabsContent>
                   
                   <TabsContent value="video" className="space-y-3">
                     <div>
-                      <Label htmlFor="hero_bg_video">Background Video URL</Label>
-                      <Input
-                        id="hero_bg_video"
-                        value={(config as any).hero_background_video || ''}
-                        onChange={(e) => setConfig(prev => ({ 
-                          ...prev, 
-                          hero_background_video: e.target.value,
-                          hero_background_type: 'video',
-                          hero_background_image: undefined
-                        }))}
-                        placeholder="https://example.com/hero-bg.mp4"
-                      />
+                      <Label htmlFor="hero_bg_video">Background Video</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="hero_bg_video"
+                          value={(config as any).hero_background_video || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            hero_background_video: e.target.value,
+                            hero_background_type: 'video',
+                            hero_background_image: undefined
+                          }))}
+                          placeholder="https://example.com/hero-bg.mp4"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => bgVideoInputRef.current?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Upload a video file or enter a URL to an existing video
+                      </p>
                     </div>
                   </TabsContent>
                   
@@ -835,6 +914,53 @@ export const DeliveryAppCreator = () => {
           )}
         </Button>
       </div>
+
+      {/* Hidden file inputs */}
+      <input
+        ref={logoInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const url = await uploadAsset(file, 'logo');
+          if (url) setConfig(prev => ({ ...prev, logo_url: url }));
+        }}
+      />
+      <input
+        ref={bgImageInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const url = await uploadAsset(file, 'bg');
+          if (url) setConfig(prev => ({ 
+            ...prev, 
+            hero_background_image: url,
+            hero_background_type: 'image'
+          }));
+        }}
+      />
+      <input
+        ref={bgVideoInputRef}
+        type="file"
+        accept="video/*"
+        style={{ display: 'none' }}
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const url = await uploadAsset(file, 'bg');
+          if (url) setConfig(prev => ({ 
+            ...prev, 
+            hero_background_video: url,
+            hero_background_type: 'video',
+            hero_background_image: undefined
+          }));
+        }}
+      />
     </div>
   );
 };

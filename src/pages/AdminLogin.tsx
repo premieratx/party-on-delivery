@@ -111,7 +111,7 @@ export const AdminLogin: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/affiliate/admin-login`,
+          redirectTo: `${CANONICAL_DOMAIN}/affiliate/admin-login`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
