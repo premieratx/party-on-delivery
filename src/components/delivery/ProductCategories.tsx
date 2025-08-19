@@ -46,13 +46,7 @@ interface ProductCategoriesProps {
   forceRefresh?: boolean;
 }
 
-const DEFAULT_COLLECTIONS = [
-  { id: 'spirits', title: 'Spirits', handle: 'spirits', isSearch: false, icon: '🥃' },
-  { id: 'beer', title: 'Beer', handle: 'beer', isSearch: false, icon: '🍺' },
-  { id: 'seltzers', title: 'Seltzers', handle: 'seltzers', isSearch: false, icon: '🥤' },
-  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', isSearch: false, icon: '🧊' },
-  { id: 'cocktails', title: 'Cocktails', handle: 'cocktails', isSearch: false, icon: '🍸' }
-];
+// NO DEFAULT COLLECTIONS - Only use actual Shopify collections from delivery app config
 
 export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   appName = "Austin's Premier Party Supply Delivery",
@@ -92,18 +86,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
 
-  // Use collections from config or defaults
+  // ONLY use Shopify collections from delivery app config - NO defaults
   const tabs = useMemo(() => {
-    if (collectionsConfig?.tabs) {
+    if (collectionsConfig?.tabs && collectionsConfig.tabs.length > 0) {
+      console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
       return collectionsConfig.tabs.map((tab, index) => ({
-        id: tab.collection_handle,
-        title: tab.name,
+        id: tab.collection_handle || `tab-${index}`,
+        title: tab.name || `Tab ${index + 1}`,
         handle: tab.collection_handle,
         icon: tab.icon || '📦',
         isSearch: false
       }));
     }
-    return DEFAULT_COLLECTIONS;
+    
+    console.log('❌ No delivery app configuration found - cannot load tabs');
+    return [];
   }, [collectionsConfig]);
 
   // Preload all collections on mount for instant switching
