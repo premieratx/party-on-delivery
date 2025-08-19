@@ -46,14 +46,9 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [stripeReady, setStripeReady] = useState(false);
 
-  // Check if Stripe is ready
-  React.useEffect(() => {
-    if (stripe && elements) {
-      setStripeReady(true);
-    }
-  }, [stripe, elements]);
+  // Check if Stripe is available (will be null if not configured)
+  const stripeAvailable = stripe !== null;
   
   // Tip management
   const [tipAmount, setTipAmount] = useState(subtotal * 0.10); // Default 10%
@@ -237,19 +232,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         </div>
 
         {/* Payment Form */}
-        {!stripeReady ? (
-          <div className="space-y-4">
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                Payment system is loading. Please wait...
-              </p>
-            </div>
-            <div className="animate-pulse">
-              <div className="h-12 bg-gray-200 rounded-lg mb-4"></div>
-              <div className="h-12 bg-gray-200 rounded-lg"></div>
-            </div>
-          </div>
-        ) : !stripe ? (
+        {!stripeAvailable ? (
           <div className="space-y-4">
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-600">
@@ -293,7 +276,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
             <Button 
               type="submit"
               className="w-full h-12 text-lg font-semibold"
-              disabled={!stripe || isProcessing}
+              disabled={!stripe || !elements || isProcessing}
             >
               {isProcessing 
                 ? 'Processing...' 
