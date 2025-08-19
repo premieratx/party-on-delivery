@@ -93,31 +93,53 @@ Deno.serve(async (req) => {
 
     console.log(`📊 Loaded ${products?.length || 0} products for collection processing`)
     
-    // If filtering by specific collection, return products directly without collection grouping
+    // If filtering by specific collection, get EXACT Shopify collection order
     if (collection_handle && collection_handle !== 'all') {
-      console.log(`🎯 DIRECT COLLECTION FILTER: Returning ${products?.length || 0} products from ${collection_handle}`)
+      console.log(`🎯 Getting exact Shopify collection: ${collection_handle}`)
+      
+      // Get collection data directly from Shopify collections cache (already in correct order)
+      const { data: collectionData, error: collectionError } = await supabase
+        .from('shopify_collections_cache')
+        .select('*')
+        .eq('handle', collection_handle)
+        .single()
+      
+      if (collectionError || !collectionData) {
+        console.error('Collection not found:', collectionError)
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: `Collection '${collection_handle}' not found`,
+            products: [], 
+            collections: [] 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      
+      // Use products directly from collection data (preserves Shopify sort order)
+      const collectionProducts = collectionData.data?.products || []
+      console.log(`✅ Found ${collectionProducts.length} products in exact Shopify order for ${collection_handle}`)
       
       const result = {
         success: true,
-        products: processLimit ? (products || []).slice(0, processLimit) : (products || []),
+        products: processLimit ? collectionProducts.slice(0, processLimit) : collectionProducts,
         collections: [{
           id: collection_handle,
-          title: collection_handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          title: collectionData.title || collection_handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
           handle: collection_handle,
-          product_count: products?.length || 0,
-          products: products || []
+          product_count: collectionProducts.length,
+          products: collectionProducts
         }],
         categories: [],
-        total_products: products?.length || 0,
+        total_products: collectionProducts.length,
         total_collections: 1,
         cached: true,
         lightweight,
         use_type,
-        last_sync: null,
-        cache_info: null
+        last_sync: collectionData.updated_at,
+        cache_info: { source: 'shopify_collections_cache', preserves_order: true }
       }
-      
-      console.log(`✅ COLLECTION FILTER RESULT: ${result.products.length} products for ${collection_handle}`)
       
       return new Response(
         JSON.stringify(result),
