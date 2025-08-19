@@ -156,7 +156,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   onClick={(e) => {
                     e.stopPropagation();
                     const variantId = selectedVariant?.id || product.variants[0]?.id;
-                    console.log('🛒 Decrement quantity for product:', product.id, 'variant:', variantId);
+                    console.log('🛒 OptimizedProductCard: Decrement quantity for product:', String(product.id), 'variant:', variantId ? String(variantId) : 'default');
                     onQuantityChange(String(product.id), variantId ? String(variantId) : undefined, -1);
                   }}
                 >
@@ -172,7 +172,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   onClick={(e) => {
                     e.stopPropagation();
                     const variantId = selectedVariant?.id || product.variants[0]?.id;
-                    console.log('🛒 Increment quantity for product:', product.id, 'variant:', variantId);
+                    console.log('🛒 OptimizedProductCard: Increment quantity for product:', String(product.id), 'variant:', variantId ? String(variantId) : 'default');
                     onQuantityChange(String(product.id), variantId ? String(variantId) : undefined, 1);
                   }}
                 >
@@ -186,13 +186,13 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   e.stopPropagation();
                   const variant = selectedVariant || product.variants[0];
                   if (variant) {
-                    console.log('🛒 Adding to cart - Product:', product.id, 'Variant:', variant.id);
+                    console.log('🛒 OptimizedProductCard: Adding to cart - Product:', String(product.id), 'Variant:', String(variant.id));
                     onAddToCart({
                       id: String(product.id),
                       title: product.title,
                       name: product.title,
                       price: applyMarkup(variant.price),
-                      image: product.image,
+                      image: product.image || '',
                       variant: String(variant.id)
                     });
                   }

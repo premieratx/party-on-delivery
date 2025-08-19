@@ -176,14 +176,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const isCurrentlySearchTab = currentTab?.isSearch;
 
   const handleAddToCart = (product: any) => {
+    // Normalize IDs and ensure consistency
+    const normalizedProductId = String(product.id);
     const firstVariant = product.variants?.[0];
+    const normalizedVariantId = firstVariant?.id ? String(firstVariant.id) : 'default';
+    
     const cartItem = {
-      id: String(product.id),
+      id: normalizedProductId,
       title: product.title,
       name: product.title,
       price: firstVariant?.price || product.price || 0,
-      image: product.image,
-      variant: firstVariant?.id ? String(firstVariant.id) : 'default'
+      image: product.image || '',
+      variant: normalizedVariantId
     };
     
     console.log('🛒 ProductCategories: Adding to cart:', cartItem);
@@ -191,25 +195,44 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
-    const currentQty = getCartItemQuantity(productId, variantId);
+    // Normalize IDs to ensure consistency
+    const normalizedProductId = String(productId);
+    const normalizedVariantId = variantId ? String(variantId) : undefined;
+    
+    const currentQty = getCartItemQuantity(normalizedProductId, normalizedVariantId);
     const newQty = Math.max(0, currentQty + delta);
     
-    const product = displayProducts.find(p => p.id === productId) || 
-                   searchProducts.find(p => p.id === productId);
-    const variant = product?.variants?.find((v: any) => v.id === variantId) || product?.variants?.[0];
+    console.log('🛒 ProductCategories: handleQuantityChange', {
+      productId: normalizedProductId,
+      variantId: normalizedVariantId,
+      currentQty,
+      delta,
+      newQty
+    });
     
-    if (newQty === 0) {
-      updateQuantity(productId, variantId || 'default', 0);
-    } else {
-      updateQuantity(productId, variantId || 'default', newQty, {
-        id: String(productId),
-        title: product?.title || '',
-        name: product?.title || '',
-        price: variant?.price || product?.price || 0,
-        image: product?.image || '',
-        variant: variantId || 'default'
-      });
+    // Find product from current display (either tab products or search results)
+    const product = [...displayProducts, ...searchProducts].find(p => String(p.id) === normalizedProductId);
+    
+    if (!product) {
+      console.error('🚫 Product not found for quantity change:', normalizedProductId);
+      return;
     }
+    
+    const variant = normalizedVariantId 
+      ? product.variants?.find((v: any) => String(v.id) === normalizedVariantId)
+      : product.variants?.[0];
+    
+    const cartItem = {
+      id: normalizedProductId,
+      title: product.title,
+      name: product.title,
+      price: variant?.price || product.price || 0,
+      image: product.image || '',
+      variant: normalizedVariantId || 'default'
+    };
+    
+    console.log('🛒 ProductCategories: Updating cart with:', cartItem);
+    updateQuantity(normalizedProductId, normalizedVariantId, newQty, cartItem);
   };
 
   // EXACT Real-time search with exact matching 
