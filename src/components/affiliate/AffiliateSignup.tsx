@@ -121,10 +121,13 @@ export const AffiliateSignup: React.FC<AffiliateSignupProps> = ({ onSuccess, ini
     console.log('Google auth clicked');
     setLoading(true);
     try {
+      const redirectUrl = `${CANONICAL_DOMAIN}/affiliate/intro`;
+      console.log('Using redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${CANONICAL_DOMAIN}/affiliate/intro`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',

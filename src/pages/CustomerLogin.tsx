@@ -125,10 +125,13 @@ const CustomerLogin = () => {
       sessionStorage.removeItem('customer-auth-processed');
       
       // Always redirect back to login with dashboard redirect param
+      const redirectUrl = `${CANONICAL_DOMAIN}/customer/login?redirect=dashboard`;
+      console.log('Customer login redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${CANONICAL_DOMAIN}/customer/login?redirect=dashboard`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline', 
             prompt: 'consent' // Force account selection to prevent auto-login

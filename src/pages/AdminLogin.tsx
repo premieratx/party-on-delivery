@@ -108,9 +108,9 @@ export const AdminLogin: React.FC = () => {
     console.log('Initiating admin Google login...');
     
     try {
-      // Use window.location.origin to ensure it works in any environment
-      const redirectUrl = window.location.origin + '/affiliate/admin-login';
-      console.log('Using redirect URL:', redirectUrl);
+      // Use canonical domain for admin login
+      const redirectUrl = `${CANONICAL_DOMAIN}/affiliate/admin-login`;
+      console.log('Admin login redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

@@ -111,10 +111,13 @@ const CustomerAuth = () => {
     console.log('Starting Google OAuth...');
     
     try {
+      const redirectUrl = `${CANONICAL_DOMAIN}/customer/auth?redirect=${redirectTo}`;
+      console.log('Using redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${CANONICAL_DOMAIN}/customer/auth?redirect=${redirectTo}`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account'
