@@ -8,7 +8,7 @@ import { useAppConfig } from '@/hooks/useAppConfig';
 import RequireAdmin from "./components/admin/RequireAdmin";
 
 // Core pages
-import SimplePage from "./pages/SimplePage";
+import CleanHomepage from "./pages/CleanHomepage";
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -61,7 +61,7 @@ const App = () => {
             }>
               <Routes>
                 {/* Core Routes - Clean home page routing */}
-                <Route path="/" element={<SimplePage />} />
+                <Route path="/" element={<CleanHomepage />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/app/:appSlug" element={<CustomAppView />} />
                 
