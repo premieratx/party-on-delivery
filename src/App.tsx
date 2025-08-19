@@ -7,8 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAppConfig } from '@/hooks/useAppConfig';
 import RequireAdmin from "./components/admin/RequireAdmin";
 
-// Core pages
-import SafeHomepage from "./pages/SafeHomepage";
+// Simple, bulletproof homepage
+import SimpleDeliveryApp from "./pages/SimpleDeliveryApp";
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -60,8 +60,8 @@ const App = () => {
               </div>
             }>
               <Routes>
-                {/* Core Routes - Safe home page routing */}
-                <Route path="/" element={<SafeHomepage />} />
+                {/* BULLETPROOF ROOT ROUTE */}
+                <Route path="/" element={<SimpleDeliveryApp />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/app/:appSlug" element={<CustomAppView />} />
                 
