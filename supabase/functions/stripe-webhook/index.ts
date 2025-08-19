@@ -56,13 +56,9 @@ serve(async (req) => {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log('✅ Payment succeeded:', paymentIntent.id);
         
-        // Try to process successful payment
+        // Try to process successful payment with retry logic
         try {
-          await supabase.functions.invoke('create-shopify-order', {
-            body: {
-              paymentIntentId: paymentIntent.id
-            }
-          });
+          await processOrderWithRetry(paymentIntent.id);
           console.log('✅ Shopify order created successfully');
           
           // 🔒 SECURITY: Clean up payment data after successful processing
@@ -75,7 +71,20 @@ serve(async (req) => {
             console.log('⚠️ Warning: Failed to sanitize payment data:', sanitizeError);
           }
         } catch (processError) {
-          console.log('Order processing failed, but payment succeeded:', processError);
+          console.log('🚨 Order processing failed after retries, but payment succeeded:', processError);
+          
+          // Store failed order for manual review
+          await supabase.from('failed_order_processing').insert({
+            payment_intent_id: paymentIntent.id,
+            error_message: processError instanceof Error ? processError.message : String(processError),
+            payment_amount: paymentIntent.amount,
+            customer_email: paymentIntent.metadata?.customer_email || 'unknown',
+            retry_count: 3,
+            requires_manual_review: true,
+            created_at: new Date().toISOString()
+          }).catch(dbError => {
+            console.log('Failed to log failed order:', dbError);
+          });
         }
         
         break;
@@ -108,3 +117,52 @@ serve(async (req) => {
     );
   }
 });
+
+// Retry logic for order processing with exponential backoff
+async function processOrderWithRetry(paymentIntentId: string, maxRetries = 3) {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Order processing attempt ${attempt}/${maxRetries} for payment ${paymentIntentId}`);
+      
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+      
+      await supabase.functions.invoke('create-shopify-order', {
+        body: {
+          paymentIntentId: paymentIntentId,
+          retryAttempt: attempt
+        }
+      });
+      
+      console.log(`✅ Order processing succeeded on attempt ${attempt}`);
+      return; // Success!
+      
+    } catch (error) {
+      lastError = error;
+      console.log(`❌ Attempt ${attempt} failed:`, error instanceof Error ? error.message : String(error));
+      
+      // Don't retry on certain fatal errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Payment not completed') || 
+          errorMessage.includes('Invalid amount') ||
+          errorMessage.includes('No cart items found')) {
+        console.log('🚨 Fatal error detected, not retrying:', errorMessage);
+        throw error;
+      }
+      
+      // Wait before retry with exponential backoff
+      if (attempt < maxRetries) {
+        const delayMs = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+        console.log(`⏳ Waiting ${delayMs}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  
+  throw lastError || new Error('Order processing failed after all retries');
+}

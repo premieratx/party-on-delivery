@@ -1700,6 +1700,33 @@ export type Database = {
         }
         Relationships: []
       }
+      integration_health_logs: {
+        Row: {
+          checked_at: string
+          checks: Json
+          created_at: string
+          id: string
+          overall_status: string
+          recommendations: Json | null
+        }
+        Insert: {
+          checked_at?: string
+          checks?: Json
+          created_at?: string
+          id?: string
+          overall_status: string
+          recommendations?: Json | null
+        }
+        Update: {
+          checked_at?: string
+          checks?: Json
+          created_at?: string
+          id?: string
+          overall_status?: string
+          recommendations?: Json | null
+        }
+        Relationships: []
+      }
       launch_phases: {
         Row: {
           actual_completion: string | null
@@ -3613,6 +3640,10 @@ export type Database = {
         Returns: undefined
       }
       cleanup_expired_progress: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_integration_health_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
