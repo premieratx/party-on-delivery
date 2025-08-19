@@ -73,6 +73,6 @@ export const fixProductOrdering = async () => {
   return results;
 };
 
-// Auto-execute on import to fix ordering - triggered manually now
-console.log('🎯 Manually triggering spirits collection ordering fix...');
-fixProductOrdering().catch(console.error);
+// Function ready to be called manually when needed
+// console.log('🎯 Manually triggering spirits collection ordering fix...');
+// fixProductOrdering().catch(console.error); // Commented out to prevent automatic execution

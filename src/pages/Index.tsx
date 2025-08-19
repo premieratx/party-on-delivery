@@ -6,16 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
-import { ForceProductSync } from '@/components/emergency/ForceProductSync';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
-import { CriticalProductSync } from '@/components/emergency/CriticalProductSync';
-import { DirectProductSync } from '@/components/emergency/DirectProductSync';
-import { InstantProductSync } from '@/components/emergency/InstantProductSync';
-import { QuickSyncTrigger } from '@/components/emergency/QuickSyncTrigger';
-import { SimpleForceSync } from '@/components/emergency/SimpleForceSync';
-import { ForceCollectionOrderSync } from '@/components/ForceCollectionOrderSync';
-import { syncCollectionOrder } from '@/utils/productSync';
-import { RestoreShopifyOrder } from '@/components/emergency/RestoreShopifyOrder';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -23,8 +14,6 @@ const Index = () => {
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCoverPage, setShowCoverPage] = useState(false);
-  const [showForceSync, setShowForceSync] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   // Simplified initialization - no automatic syncing
@@ -118,8 +107,6 @@ const Index = () => {
       {/* Disabled auto-reload component that was causing infinite loops */}
       {/* <RestoreShopifyOrder /> */}
       
-      {/* Show sync option only when needed */}
-      {showForceSync && <SimpleForceSync />}
       <ProductCategories
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
         heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
@@ -137,7 +124,7 @@ const Index = () => {
         onClose={() => setIsCartOpen(false)}
       />
       
-      {/* Bottom Menu Bar with Admin Button and Sync */}
+      {/* Bottom Menu Bar with Admin Button */}
       <div className="fixed bottom-4 left-4 right-4 z-50 lg:hidden">
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
@@ -149,7 +136,6 @@ const Index = () => {
             >
               Admin
             </Button>
-            <ForceCollectionOrderSync />
           </div>
           
           <div className="ml-4">
@@ -158,9 +144,8 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Desktop Admin Button and Sync - Bottom Right */}
+      {/* Desktop Admin Button - Bottom Right */}
       <div className="hidden lg:flex lg:gap-2 fixed bottom-4 right-4 z-50">
-        <ForceCollectionOrderSync />
         <Button 
           onClick={() => navigate('/admin')}
           variant="outline"

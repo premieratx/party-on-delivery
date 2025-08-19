@@ -56,5 +56,5 @@ export const forceDirectSync = async () => {
   }
 };
 
-// Auto-execute on import
-forceDirectSync();
+// Function ready to be called manually when needed
+// forceDirectSync(); // Commented out to prevent automatic execution

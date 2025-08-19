@@ -17,7 +17,6 @@ import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useProductPreloader } from '@/hooks/useProductPreloader';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
-import '@/utils/fixProductOrdering'; // Auto-fix product ordering
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
