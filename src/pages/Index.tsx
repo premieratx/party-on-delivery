@@ -111,7 +111,7 @@ const Index = () => {
         appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
         heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
         heroSubheading={appConfig?.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
-        heroScrollingText={appConfig?.main_app_config?.hero_scrolling_text || "Let's Get It"}
+        heroScrollingText="" // DISABLED: Scrolling text animation
         logoUrl={appConfig?.logo_url}
         collectionsConfig={appConfig?.collections_config}
         cartItemCount={cartItems.length}

@@ -160,18 +160,24 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
     
     // STRICT filtering - only products that belong to this exact collection
+    // FIX: Safe JSON parsing to prevent React error #310
     const strictlyFilteredProducts = currentTabProducts.filter(product => {
-      const handles = Array.isArray(product.collection_handles) 
-        ? product.collection_handles 
-        : typeof product.collection_handles === 'string' 
-          ? JSON.parse(product.collection_handles || '[]')
-          : [];
-      
-      const belongsToCollection = handles.includes(currentCollectionHandle);
-      if (belongsToCollection) {
-        console.log(`✅ Product "${product.title}" belongs to collection "${currentCollectionHandle}"`);
+      try {
+        const handles = Array.isArray(product.collection_handles) 
+          ? product.collection_handles 
+          : typeof product.collection_handles === 'string' 
+            ? JSON.parse(product.collection_handles || '[]')
+            : [];
+        
+        const belongsToCollection = handles.includes(currentCollectionHandle);
+        if (belongsToCollection) {
+          console.log(`✅ Product "${product.title}" belongs to collection "${currentCollectionHandle}"`);
+        }
+        return belongsToCollection;
+      } catch (error) {
+        console.error(`❌ Failed to parse collection handles for product ${product.title}:`, error);
+        return false;
       }
-      return belongsToCollection;
     });
     
     console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total)`);
@@ -336,13 +342,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 {heroSubheading}
               </p>
             )}
-            {heroScrollingText && (
+            {/* DISABLED: Scrolling text animation causing issues */}
+            {/* {heroScrollingText && (
               <div className="mb-8">
                 <div className="text-2xl md:text-3xl font-bold text-yellow-300">
                   {heroScrollingText}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </div>

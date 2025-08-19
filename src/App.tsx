@@ -60,7 +60,7 @@ const App = () => {
               </div>
             }>
               <Routes>
-                {/* Core Routes */}
+                {/* Core Routes - Clean home page routing */}
                 <Route path="/" element={<Index />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/app/:appSlug" element={<CustomAppView />} />
