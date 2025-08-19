@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { GooglePlacesAutocomplete } from '@/components/ui/google-places-autocomplete';
+import { SimpleAddressInput } from '@/components/ui/SimpleAddressInput';
+import { useAppConfig } from '@/hooks/useAppConfig';
 import { MapPin, CheckCircle } from 'lucide-react';
 import { AddressInfo } from '@/hooks/useCustomerInfo';
 
@@ -22,6 +24,7 @@ export const AddressStep: React.FC<AddressStepProps> = ({
   isConfirmed
 }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { config } = useAppConfig();
 
   const handleAddressChange = (field: keyof AddressInfo, value: string) => {
     setAddressInfo({ ...addressInfo, [field]: value });
@@ -123,13 +126,22 @@ export const AddressStep: React.FC<AddressStepProps> = ({
         {/* Address Autocomplete */}
         <div>
           <Label htmlFor="address-autocomplete">Address</Label>
-          <GooglePlacesAutocomplete
-            value={addressInfo.street}
-            onChange={(value) => handleAddressChange('street', value)}
-            onPlaceSelect={handlePlaceSelect}
-            placeholder="Start typing your address..."
-            className="w-full"
-          />
+          {config.googleMapsEnabled ? (
+            <GooglePlacesAutocomplete
+              value={addressInfo.street}
+              onChange={(value) => handleAddressChange('street', value)}
+              onPlaceSelect={handlePlaceSelect}
+              placeholder="Start typing your address..."
+              className="w-full"
+            />
+          ) : (
+            <SimpleAddressInput
+              value={addressInfo.street}
+              onChange={(value) => handleAddressChange('street', value)}
+              placeholder="Enter your street address..."
+              className="w-full"
+            />
+          )}
           {errors.street && <p className="text-sm text-red-500 mt-1">{errors.street}</p>}
         </div>
 

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAppConfig } from '@/hooks/useAppConfig';
 
 interface AbandonedOrderTrackerProps {
   cartItems: any[];
@@ -19,9 +20,14 @@ export function AbandonedOrderTracker({
   subtotal, 
   sessionId 
 }: AbandonedOrderTrackerProps) {
+  const { config } = useAppConfig();
   
   useEffect(() => {
-    // Only track if we have meaningful customer data and cart items
+    // Only track if feature is enabled and we have meaningful customer data and cart items
+    if (!config.abandonedOrderTrackingEnabled) {
+      return;
+    }
+    
     if (cartItems.length > 0 && (customerInfo.email || customerInfo.phone)) {
       const trackAbandonedOrder = async () => {
         try {
@@ -56,7 +62,7 @@ export function AbandonedOrderTracker({
         clearTimeout(abandonTimer);
       };
     }
-  }, [cartItems, customerInfo, subtotal, sessionId]);
+  }, [cartItems, customerInfo, subtotal, sessionId, config.abandonedOrderTrackingEnabled]);
 
   return null; // This is a tracking component, no UI
 }

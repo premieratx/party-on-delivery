@@ -51,6 +51,7 @@ import { CoverPageToggle } from '@/components/admin/CoverPageToggle';
 import { SecuritySyncDashboard } from '@/components/admin/SecuritySyncDashboard';
 import { EnhancedCacheManager } from '@/components/admin/EnhancedCacheManager';
 import SearchAppConfig from '@/components/admin/SearchAppConfig';
+import { AppConfigManager } from '@/components/admin/AppConfigManager';
 import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
 
 export default function AdminDashboard() {
@@ -726,6 +727,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-muted-foreground">Configure global app behavior and features</p>
               </div>
               
+              <AppConfigManager />
               <CoverPageToggle />
             </div>
           </TabsContent>
