@@ -27,105 +27,14 @@ const Index = () => {
   const [showCoverPage, setShowCoverPage] = useState(false);
   const [showForceSync, setShowForceSync] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  // Force complete sync with collection order preservation
-  useEffect(() => {
-    const forceShopifyCollectionSync = async () => {
-      console.log('🔄 FORCING SHOPIFY COLLECTION SYNC WITH EXACT ORDER...');
-      
-      try {
-        // 1. First force unified sync to get all products and collections
-        console.log('🔄 Step 1: Unified Shopify sync...');
-        const { data: unifiedResult, error: unifiedError } = await supabase.functions.invoke('unified-shopify-sync', {
-          body: { forceRefresh: true }
-        });
-        
-        if (unifiedError) {
-          console.error('❌ Unified sync failed:', unifiedError);
-          return;
-        }
-        
-        console.log('✅ Unified sync completed:', unifiedResult);
-        
-        // 2. Wait for sync to complete then sync collection orders
-        setTimeout(async () => {
-          console.log('🔄 Step 2: Syncing collection orders for all collections...');
-          
-          // Get all collections from delivery apps
-          const collectionsToSync = [
-            'tailgate-beer', 'seltzer-collection', 'cocktail-kits', 
-            'mixers-non-alcoholic', 'spirits', 'bourbon-rye', 'gin-rum',
-            'tequila-mezcal', 'decorations', 'drinkware-bartending-tools',
-            'party-supplies', 'bachelorette-supplies'
-          ];
-          
-          for (const collection of collectionsToSync) {
-            try {
-              console.log(`🎯 Syncing order for collection: ${collection}`);
-              const { data: orderResult, error: orderError } = await supabase.functions.invoke('shopify-collection-order', {
-                body: { collection_handle: collection }
-              });
-              
-              if (orderError) {
-                console.warn(`⚠️ Failed to sync order for ${collection}:`, orderError);
-              } else {
-                console.log(`✅ Synced order for ${collection}:`, orderResult);
-              }
-            } catch (error) {
-              console.warn(`⚠️ Error syncing ${collection}:`, error);
-            }
-          }
-          
-          console.log('🎉 ALL COLLECTION ORDERS SYNCED - Products now in exact Shopify order');
-          
-          // Clear browser caches to force fresh data
-          localStorage.removeItem('products-cache');
-          localStorage.removeItem('collections-cache');
-          
-          // Trigger a refresh event for components
-          window.dispatchEvent(new CustomEvent('collectionsUpdated'));
-          
-        }, 3000);
-        
-      } catch (error) {
-        console.error('❌ Complete sync error:', error);
-      }
-    };
-    
-    forceShopifyCollectionSync();
-  }, []);
+  
+  // Simplified initialization - no automatic syncing
   const navigate = useNavigate();
   const { cartItems } = useUnifiedCart();
   const [searchParams] = useSearchParams();
   const affiliateCode = searchParams.get('ref');
 
   useEffect(() => {
-    const checkAndSyncProducts = async () => {
-      // Check if products exist in cache
-      const { count, error: countError } = await supabase
-        .from('shopify_products_cache')
-        .select('*', { count: 'exact', head: true });
-
-      console.log(`📊 Current product count in cache: ${count || 0}`);
-
-      if (!countError && (!count || count < 10)) {
-        console.log('🚨 CRITICAL: No products in cache, triggering collection sync...');
-        
-        try {
-          console.log('🔄 Auto-triggering collection sync...');
-          const { data: syncResult } = await supabase.functions.invoke('shopify-collection-sync');
-          if (syncResult?.success) {
-            console.log(`✅ Collection sync completed: ${syncResult.collections_synced} collections, ${syncResult.products_synced} products`);
-            // Reload the page to show properly mapped products
-            setTimeout(() => window.location.reload(), 2000);
-          }
-        } catch (syncError) {
-          console.error('Collection sync failed:', syncError);
-        }
-      } else {
-        console.log(`✅ Product cache healthy: ${count} products available`);
-      }
-    };
-
     const loadDefaultDeliveryApp = async () => {
       try {
         console.log('🏠 Index: Loading default delivery app config...');
@@ -152,8 +61,6 @@ const Index = () => {
         setAppConfig(apps[0]);
         console.log('🏠 Index: Loaded delivery app:', apps[0].app_name);
         
-        // Cover pages are now disabled by default
-        
       } catch (err) {
         console.error('Error loading delivery app:', err);
         setError('Failed to load delivery app: ' + err.message);
@@ -162,8 +69,6 @@ const Index = () => {
       }
     };
 
-    // Run both checks
-    checkAndSyncProducts();
     loadDefaultDeliveryApp();
   }, [navigate]);
 
@@ -211,8 +116,8 @@ const Index = () => {
 
   return (
     <>
-      {/* Restore exact Shopify order immediately */}
-      <RestoreShopifyOrder />
+      {/* Disabled auto-reload component that was causing infinite loops */}
+      {/* <RestoreShopifyOrder /> */}
       
       {/* Show sync option only when needed */}
       {showForceSync && <SimpleForceSync />}
