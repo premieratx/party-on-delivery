@@ -3,6 +3,8 @@ import { RefactoredCheckoutFlow } from '@/components/checkout/RefactoredCheckout
 import { CartItem, DeliveryInfo } from '@/components/DeliveryWidget';
 import { checkoutTester } from '@/utils/checkoutTestUtil';
 import { StripeStatusCheck } from '@/components/StripeStatusCheck';
+import { StripeCheckoutTest } from '@/components/StripeCheckoutTest';
+import { AdminFunctionalityTest } from '@/components/AdminFunctionalityTest';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -65,7 +67,17 @@ const TestCheckout = () => {
           <StripeStatusCheck />
         </div>
         
-        {/* Test Controls */}
+        {/* Checkout Flow Test */}
+        <div className="mb-6">
+          <StripeCheckoutTest />
+        </div>
+        
+        {/* Admin Functionality Test */}
+        <div className="mb-6">
+          <AdminFunctionalityTest />
+        </div>
+        
+        {/* Advanced Test Controls */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>🧪 Checkout Flow Testing</CardTitle>
