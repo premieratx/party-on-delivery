@@ -438,7 +438,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
                 const { cleanTitle, packageSize } = parseProductTitle(product.title);
                 return (
-                  <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in">
+                  <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full">
                     <div className="aspect-square relative overflow-hidden">
                       <OptimizedImage
                         src={product.image}
@@ -446,7 +446,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         className="w-full h-full object-cover hover-scale"
                       />
                     </div>
-                    <div className="p-3 space-y-3">
+                    <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
                       <div className="space-y-1 text-center">
                         <h3 className="font-medium text-sm line-clamp-2 leading-tight">
                           {cleanTitle}
@@ -458,8 +458,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         )}
                       </div>
                       
-                      {/* Price and Add to Cart - Centered */}
-                      <div className="flex flex-col items-center space-y-2">
+                      {/* Price and Add to Cart - Fixed at bottom */}
+                      <div className="flex flex-col items-center space-y-2 mt-auto">
                         <span className="font-bold text-primary text-lg">
                           ${(parseFloat(String(product.price)) || 0).toFixed(2)}
                         </span>
@@ -531,7 +531,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               const { cleanTitle, packageSize } = parseProductTitle(product.title);
               
               return (
-                <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in">
+                <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full">
                   <div className="aspect-square relative overflow-hidden">
                     <OptimizedImage
                       src={product.image}
@@ -540,7 +540,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     />
                   </div>
                   
-                  <div className="p-3 space-y-3">
+                  <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
                     {/* Product Title */}
                     <div className="space-y-1 text-center">
                       <h3 className="font-medium text-sm line-clamp-2 leading-tight">
@@ -553,8 +553,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       )}
                     </div>
 
-                    {/* Price and Add to Cart - Centered */}
-                    <div className="flex flex-col items-center space-y-2">
+                    {/* Price and Add to Cart - Fixed at bottom */}
+                    <div className="flex flex-col items-center space-y-2 mt-auto">
                       <span className="font-bold text-primary text-lg">
                         ${(parseFloat(String(product.price)) || 0).toFixed(2)}
                       </span>
