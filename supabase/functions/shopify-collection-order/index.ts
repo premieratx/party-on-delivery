@@ -31,14 +31,39 @@ Deno.serve(async (req) => {
       throw new Error('Missing Shopify configuration')
     }
 
-    // Get collection by handle from Shopify
+    // Use GraphQL to find collection by handle
+    const graphqlQuery = {
+      query: `
+        query getCollectionByHandle($handle: String!) {
+          collectionByHandle(handle: $handle) {
+            id
+            handle
+            title
+            products(first: 250, sortKey: COLLECTION_DEFAULT) {
+              edges {
+                node {
+                  id
+                  title
+                }
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        handle: collection_handle
+      }
+    };
+
     const collectionsResponse = await fetch(
-      `https://${shopifyUrl}/admin/api/2023-10/collections.json?handle=${collection_handle}`,
+      `https://${shopifyUrl}/admin/api/2024-10/graphql.json`,
       {
+        method: 'POST',
         headers: {
           'X-Shopify-Access-Token': shopifyToken,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(graphqlQuery)
       }
     )
 
@@ -47,7 +72,7 @@ Deno.serve(async (req) => {
     }
 
     const collectionsData = await collectionsResponse.json()
-    const collection = collectionsData.collections?.[0]
+    const collection = collectionsData.data?.collectionByHandle
     
     if (!collection) {
       console.log(`❌ Collection not found in Shopify: ${collection_handle}`)
@@ -57,23 +82,12 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get products in collection with their correct order from Shopify
-    const productsResponse = await fetch(
-      `https://${shopifyUrl}/admin/api/2023-10/collections/${collection.id}/products.json?limit=250`,
-      {
-        headers: {
-          'X-Shopify-Access-Token': shopifyToken,
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-
-    if (!productsResponse.ok) {
-      throw new Error(`Failed to fetch products from Shopify: ${productsResponse.statusText}`)
-    }
-
-    const productsData = await productsResponse.json()
-    const orderedProducts = productsData.products || []
+    // Extract products from GraphQL response
+    const orderedProducts = collection.products.edges.map((edge: any, index: number) => ({
+      id: edge.node.id.replace('gid://shopify/Product/', ''),
+      title: edge.node.title,
+      position: index + 1
+    }))
     
     console.log(`📋 Found ${orderedProducts.length} products in Shopify collection ${collection_handle}`)
 

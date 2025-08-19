@@ -77,13 +77,20 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       if (!cacheError && cacheData?.success && cacheData?.data) {
         // Filter products by category from the cache
         const allProducts = cacheData.data.products || [];
-        const filteredProducts = allProducts.filter((product: any) => {
-          // Match by collection handles or category
-          return product.collection_handles?.some((collectionHandle: string) => 
-            collectionHandle.toLowerCase().includes(handle.toLowerCase()) ||
-            handle.toLowerCase().includes(collectionHandle.toLowerCase())
-          ) || product.category?.toLowerCase() === handle.toLowerCase();
-        });
+        const filteredProducts = allProducts
+          .filter((product: any) => {
+            // Match by collection handles or category
+            return product.collection_handles?.some((collectionHandle: string) => 
+              collectionHandle.toLowerCase().includes(handle.toLowerCase()) ||
+              handle.toLowerCase().includes(collectionHandle.toLowerCase())
+            ) || product.category?.toLowerCase() === handle.toLowerCase();
+          })
+          .sort((a: any, b: any) => {
+            // Sort by sort_order if available, otherwise by position or id
+            const sortA = a.sort_order || a.position || 0;
+            const sortB = b.sort_order || b.position || 0;
+            return sortA - sortB;
+          });
         
         console.log(`✅ Loaded ${filteredProducts.length} products for ${handle} from instant cache`);
         setProducts(filteredProducts);

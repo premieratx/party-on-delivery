@@ -4,9 +4,11 @@ export const triggerShopifySync = async () => {
   console.log('🔄 Triggering Shopify collection order sync...');
   
   const collections = [
-    'beer', 'wine', 'spirits', 'mixers', 'party-supplies', 
-    'tailgate-beer', 'bachelorette-supplies', 'disco-collection',
-    'seltzer-collection', 'cocktail-kits'
+    'spirits', 'tailgate-beer', 'seltzer-collection', 'cocktail-kits',
+    'party-supplies', 'champagne', 'disco-collection', 
+    'liqueurs-cordials-cocktail-ingredients', 'mixers-non-alcoholic',
+    'hats-sunglasses', 'tequila-mezcal', 'gin-rum', 'decorations',
+    'bourbon-rye', 'bachelorette-supplies', 'drinkware-bartending-tools'
   ];
   
   for (const collection of collections) {
