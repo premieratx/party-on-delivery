@@ -13,6 +13,7 @@ import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import { parseProductTitle } from '@/utils/productUtils';
 import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
+import { useProductPreloader } from '@/hooks/useProductPreloader';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -85,6 +86,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
+  const { preloadMultipleCollections } = useProductPreloader();
   
   // Set up search variables
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
@@ -103,6 +105,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
     return DEFAULT_COLLECTIONS;
   }, [collectionsConfig]);
+
+  // Preload all collections on mount for instant switching
+  useEffect(() => {
+    const collectionHandles = tabs.map(tab => tab.handle);
+    console.log('🚀 Preloading all collections:', collectionHandles);
+    preloadMultipleCollections(collectionHandles);
+  }, [tabs, preloadMultipleCollections]);
 
   // Get current tab config
   const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];

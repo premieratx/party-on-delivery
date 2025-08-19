@@ -133,70 +133,71 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
           })()}
         </div>
         
-        {/* Price and cart controls container */}
-        <div className="mt-auto pt-2 flex flex-col items-center gap-2">
-          <div className="flex items-center justify-center h-5">
-            <Badge variant="secondary" className="w-fit font-semibold text-center text-xs">
+        {/* Price and cart controls container - FIXED HORIZONTAL ALIGNMENT */}
+        <div className="mt-auto pt-2 flex items-center justify-between h-8">
+          {/* Price aligned left */}
+          <div className="flex items-center">
+            <Badge variant="secondary" className="font-semibold text-xs">
               ${applyMarkup(selectedVariant?.price || 0).toFixed(2)}
             </Badge>
           </div>
             
-          {/* Cart Controls */}
-          <div className="flex justify-center items-center">
+          {/* Cart Controls aligned right */}
+          <div className="flex items-center">
             {cartQty > 0 ? (
               <div 
-                className="flex items-center justify-center bg-muted/80 rounded-full px-0.5 py-0.5 gap-0.5 min-w-[24px] h-5 border border-border/50 sm:px-2 sm:py-1 sm:gap-2 sm:min-w-[60px] sm:h-8" 
+                className="flex items-center bg-muted/80 rounded-md px-1 py-0.5 gap-1 border border-border/50" 
                 onClick={(e) => e.stopPropagation()}
               >
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-2.5 w-2.5 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center sm:h-4 sm:w-4"
+                  className="h-6 w-6 p-0 rounded-sm hover:bg-destructive/20 hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
                     const variantId = selectedVariant?.id || product.variants[0]?.id;
-                    console.log('🛒 Decrement quantity:', product.id, variantId, cartQty - 1);
-                    onQuantityChange(product.id, variantId, -1);
+                    console.log('🛒 Decrement quantity:', product.id, variantId);
+                    onQuantityChange(String(product.id), variantId ? String(variantId) : undefined, -1);
                   }}
                 >
-                  <Minus className="w-2.5 h-2.5 sm:w-4 sm:h-4" strokeWidth={2} />
+                  <Minus className="w-3 h-3" strokeWidth={2} />
                 </Button>
-                <span className="text-xs font-bold min-w-[14px] text-center sm:text-sm sm:min-w-[20px]">
+                <span className="text-xs font-bold min-w-[16px] text-center">
                   {cartQty}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-2.5 w-2.5 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center sm:h-4 sm:w-4"
+                  className="h-6 w-6 p-0 rounded-sm hover:bg-primary/20 hover:text-primary"
                   onClick={(e) => {
                     e.stopPropagation();
                     const variantId = selectedVariant?.id || product.variants[0]?.id;
-                    console.log('🛒 Increment quantity:', product.id, variantId, cartQty + 1);
-                    onQuantityChange(product.id, variantId, 1);
+                    console.log('🛒 Increment quantity:', product.id, variantId);
+                    onQuantityChange(String(product.id), variantId ? String(variantId) : undefined, 1);
                   }}
                 >
-                  <Plus className="w-2.5 h-2.5 sm:w-4 sm:h-4" strokeWidth={2} />
+                  <Plus className="w-3 h-3" strokeWidth={2} />
                 </Button>
               </div>
             ) : (
               <button
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-5 h-5 md:w-8 md:h-8"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-8 h-8"
                 onClick={(e) => {
                   e.stopPropagation();
                   const variant = selectedVariant || product.variants[0];
                   if (variant) {
                     onAddToCart({
-                      id: product.id,
+                      id: String(product.id),
                       title: product.title,
                       name: product.title,
                       price: applyMarkup(variant.price),
                       image: product.image,
-                      variant: variant.id
+                      variant: String(variant.id)
                     });
                   }
                 }}
               >
-                <Plus className="w-2.5 h-2.5 md:w-4 md:h-4" strokeWidth={3} />
+                <Plus className="w-4 h-4" strokeWidth={3} />
               </button>
             )}
           </div>

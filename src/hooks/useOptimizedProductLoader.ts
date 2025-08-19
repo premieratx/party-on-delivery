@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useProductPreloader } from './useProductPreloader';
 
 interface Product {
   id: string;
@@ -39,6 +40,8 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
   const [error, setError] = useState<string | null>(null);
   const [cached, setCached] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const lastRequestRef = useRef<string>('');
+  const { getFromCache, preloadCollection } = useProductPreloader();
 
   const { 
     app_slug, 
@@ -51,57 +54,57 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
   } = options;
 
   const loadProducts = useCallback(async (force_refresh = false) => {
+    if (!collection_handle) return;
+
+    const requestKey = `${collection_handle}-${use_type}`;
+    lastRequestRef.current = requestKey;
+
+    // Try cache first (unless forcing refresh)
+    if (!force_refresh) {
+      const cached = getFromCache(collection_handle);
+      if (cached) {
+        console.log(`📦 Using cached products for ${collection_handle}: ${cached.length} items`);
+        setProducts(cached);
+        setLoading(false);
+        setCached(true);
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       setError(null);
 
-      console.log(`🔄 Loading products for collection: ${collection_handle || 'ALL'} with caching`);
+      console.log(`🔄 Loading products for collection: ${collection_handle} with caching`);
 
       // Clear products immediately to prevent mixing between collections
       setProducts([]);
       
-      const { data, error: functionError } = await supabase.functions.invoke('get-unified-products', {
-        body: { 
-          collection_handle,
-          force_refresh,
-          lightweight,
-          use_type: 'delivery',
-          preserve_order: true // Maintain Shopify collection order
-        }
-      });
-
-      if (functionError) {
-        console.error('Function error:', functionError);
-        throw functionError;
+      const loadedProducts = await preloadCollection(collection_handle);
+      
+      // Check if this is still the latest request
+      if (lastRequestRef.current === requestKey) {
+        setProducts(loadedProducts);
+        setCollections([]); // Collections not needed for individual collection loading
+        setCached(false);
+        setRetryCount(0);
       }
-
-      if (!data?.success) {
-        throw new Error(data?.error || 'Failed to load products');
-      }
-
-      // Ensure products maintain Shopify collection order
-      const orderedProducts = data.products || [];
-      console.log(`✅ Loaded ${orderedProducts.length} products for collection: ${collection_handle || 'ALL'} in Shopify order`);
-
-      setProducts(orderedProducts);
-      setCollections(data.collections || []);
-      setCached(data.cached || false);
-
-      // Reset retry count on successful load
-      setRetryCount(0);
-
     } catch (err) {
-      console.error('Error loading products:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load products');
-      setProducts([]);
-      setCollections([]);
+      if (lastRequestRef.current === requestKey) {
+        console.error('Error loading products:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load products');
+        setProducts([]);
+        setCollections([]);
+      }
     } finally {
-      setLoading(false);
+      if (lastRequestRef.current === requestKey) {
+        setLoading(false);
+      }
     }
-  }, [collection_handle, lightweight, retryCount]);
+  }, [collection_handle, getFromCache, preloadCollection, use_type]);
 
   const refresh = useCallback(() => {
-    setRetryCount(0); // Reset retry count on manual refresh
+    setRetryCount(0);
     return loadProducts(true);
   }, [loadProducts]);
 
