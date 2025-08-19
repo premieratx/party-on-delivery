@@ -3,6 +3,9 @@ project_id = "acmlfzfliqupwxwoefdq"
 [functions.get-google-maps-key]
 verify_jwt = false
 
+[functions.get-stripe-publishable-key]
+verify_jwt = false
+
 [functions.create-payment-intent]
 verify_jwt = true
 
