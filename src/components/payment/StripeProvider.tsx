@@ -9,34 +9,37 @@ interface StripeProviderProps {
 
 export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    
+    const initStripe = async () => {
       try {
         const { data, error } = await supabase.functions.invoke('get-stripe-publishable-key');
-        if (error) {
-          console.warn('Stripe key not available:', error);
+        if (error || !data?.key) {
+          if (mounted) setInitialized(true);
           return;
         }
-        const key = data?.key as string | undefined;
-        if (key && mounted) {
-          try {
-            const stripe = await loadStripe(key);
-            if (stripe && mounted) {
-              setStripePromise(Promise.resolve(stripe));
-            }
-          } catch (loadError) {
-            console.warn('Failed to load Stripe.js:', loadError);
-          }
+        
+        const stripe = await loadStripe(data.key);
+        if (mounted && stripe) {
+          setStripePromise(Promise.resolve(stripe));
         }
       } catch (e) {
-        console.warn('Stripe not configured, skipping initialization:', e);
+        // Silently fail for missing Stripe configuration
+      } finally {
+        if (mounted) setInitialized(true);
       }
-    })();
+    };
+
+    initStripe();
     return () => { mounted = false; };
   }, []);
 
+  // Always render children, with or without Stripe
+  if (!initialized) return <>{children}</>;
+  
   if (!stripePromise) return <>{children}</>;
 
   return (

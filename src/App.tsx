@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GlobalNavigation } from "@/components/common/GlobalNavigation";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
+import { StripeProvider } from "@/components/payment/StripeProvider";
 // Removed sync components from global app - moved to admin dashboard
 // import { PerformanceMonitor } from "@/components/common/PerformanceMonitor"; // DISABLED
 import { Suspense, lazy } from "react";
@@ -91,7 +92,7 @@ const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        {/* Removed StripeProvider */}
+        <StripeProvider>
           <TooltipProvider>
             <BrowserRouter>
               <GlobalCartProvider>
@@ -185,7 +186,7 @@ const App = () => {
                </GlobalCartProvider>
             </BrowserRouter>
           </TooltipProvider>
-        {/* Removed StripeProvider closing tag */}
+        </StripeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
