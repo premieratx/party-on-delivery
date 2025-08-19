@@ -112,9 +112,9 @@ export default function SearchPage() {
     ...SUBCATEGORIES.filter(sub => sub.parentCategory === 'spirits')
   ], []);
 
-  // Apply search and filtering
+  // Apply search and filtering while preserving Shopify order
   const filteredProducts = useMemo(() => {
-    let products = allProducts;
+    let products = [...allProducts]; // Preserve original array order
 
     // Apply search if query exists
     if (searchQuery.trim()) {
@@ -122,16 +122,23 @@ export default function SearchPage() {
     } else {
       // Apply category filtering when no search query
       if (selectedCategory !== 'all') {
-        products = HierarchicalSearchOptimizer.filterByCategory(products, selectedCategory);
-        
-        // Apply spirit subcategory filtering
-        if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
-          products = HierarchicalSearchOptimizer.filterSpiritsBySubcategory(products, selectedSpirit);
-        }
+        // Filter while maintaining original order
+        products = products.filter(product => {
+          const categoryProducts = HierarchicalSearchOptimizer.filterByCategory([product], selectedCategory);
+          if (categoryProducts.length === 0) return false;
+          
+          // Apply spirit subcategory filtering if needed
+          if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
+            const spiritProducts = HierarchicalSearchOptimizer.filterSpiritsBySubcategory([product], selectedSpirit);
+            return spiritProducts.length > 0;
+          }
+          return true;
+        });
       }
+      // If no category selected, keep original Shopify order
     }
 
-    console.log(`📊 Search Results: ${products.length} products`);
+    console.log(`📊 Search Results: ${products.length} products (original Shopify order preserved)`);
     return products;
   }, [allProducts, searchQuery, selectedCategory, selectedSpirit]);
 
