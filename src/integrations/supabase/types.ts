@@ -3434,7 +3434,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      security_monitoring: {
+        Row: {
+          affected_row_id: string | null
+          created_at: string | null
+          details: Json | null
+          event_type: string | null
+          table_name: string | null
+          user_email: string | null
+        }
+        Insert: {
+          affected_row_id?: never
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string | null
+          table_name?: never
+          user_email?: string | null
+        }
+        Update: {
+          affected_row_id?: never
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string | null
+          table_name?: never
+          user_email?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_cache: {
@@ -3620,6 +3646,15 @@ export type Database = {
           expires_timestamp_param: number
         }
         Returns: string
+      }
+      validate_security_setup: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          has_policies: boolean
+          rls_enabled: boolean
+          security_status: string
+          table_name: string
+        }[]
       }
       verify_admin_password: {
         Args: { input_email: string; input_password: string }
