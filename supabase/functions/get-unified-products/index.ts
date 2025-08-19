@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       use_type = 'delivery', // 'search' or 'delivery' - determines filtering method
       lightweight = true, 
       force_refresh = false,
-      limit = 100
+      limit = null // Remove default limit to process ALL products for collections
     } = await req.json().catch(() => ({}))
 
     console.log(`🔍 Loading unified products - use_type: ${use_type}, category: ${category}, collection: ${collection_handle}, search_category: ${search_category}, lightweight: ${lightweight}`)
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Get products from unified cache - FOR NOW, GET ALL TO DEBUG
+    // Get ALL products from unified cache - no limits for proper collection mapping
     let productsQuery = supabase
       .from('shopify_products_cache')
       .select(lightweight ? 
@@ -62,12 +62,10 @@ Deno.serve(async (req) => {
       )
       .order('updated_at', { ascending: false })
 
-    // Don't apply filters for now - we need to see what data we actually have
-    console.log('🔍 Loading ALL products to debug collection mapping...')
+    console.log('🔍 Loading ALL products for proper collection mapping...')
 
-    if (limit) {
-      productsQuery = productsQuery.limit(limit)
-    }
+    // Only apply limit for final result display, not for collection processing
+    const processLimit = limit && limit > 0 ? limit : null
 
     const { data: products, error: productsError } = await productsQuery
 
@@ -75,6 +73,8 @@ Deno.serve(async (req) => {
       console.error('Error fetching products:', productsError)
       throw productsError
     }
+
+    console.log(`📊 Loaded ${products?.length || 0} products for collection processing`)
 
     // Get collections/categories
     const { data: collectionsData, error: collectionsError } = await supabase
@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
 
     const result = {
       success: true,
-      products: products || [],
+      products: processLimit ? (products || []).slice(0, processLimit) : (products || []),
       collections,
       categories: collections, // Categories and collections based on use_type
       total_products: products?.length || 0,
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
       cache_info: cacheData?.data || null
     }
 
-    console.log(`✅ Returning ${result.total_products} products in ${result.total_collections} collections`)
+    console.log(`✅ Returning ${result.products.length} products (from ${result.total_products} total) in ${result.total_collections} collections`)
 
     return new Response(
       JSON.stringify(result),
