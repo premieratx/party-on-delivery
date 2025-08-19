@@ -53,6 +53,11 @@ export const ForceShopifySync: React.FC = () => {
         // Dispatch custom event to refresh product components
         window.dispatchEvent(new CustomEvent('forceProductRefresh'));
         
+        // Force page reload to see new data with fixed collection_handles
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        
       } else {
         throw new Error(data?.error || 'Sync failed');
       }

@@ -309,7 +309,7 @@ async function updateCaches(
       search_category: normalizeProductType(product.productType),
       tags: product.tags,
       variants: product.variants,
-      collection_handles: product.collections.map(c => c.handle),
+      collection_handles: product.collections?.map(c => c.handle) || [],
       data: product,
       updated_at: new Date().toISOString()
     }))
