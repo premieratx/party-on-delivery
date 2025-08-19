@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
-import { OccasionButtons } from '@/components/delivery/OccasionButtons';
+
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { parseProductTitle } from '@/utils/productUtils';
 import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
@@ -483,11 +483,6 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
         cartItemCount={cartItemCount}
         onOpenCart={onOpenCart}
       />
-      
-      {/* What's the Occasion? - Bottom Section */}
-      <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
-        <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
-      </div>
     </div>
   );
 };
