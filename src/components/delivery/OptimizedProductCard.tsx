@@ -154,7 +154,9 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   className="h-2.5 w-2.5 p-0 rounded-full hover:bg-destructive/20 hover:text-destructive flex items-center justify-center sm:h-4 sm:w-4"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onQuantityChange(product.id, selectedVariant?.id, -1);
+                    const variantId = selectedVariant?.id || product.variants[0]?.id;
+                    console.log('🛒 Decrement quantity:', product.id, variantId, cartQty - 1);
+                    onQuantityChange(product.id, variantId, -1);
                   }}
                 >
                   <Minus className="w-2.5 h-2.5 sm:w-4 sm:h-4" strokeWidth={2} />
@@ -168,7 +170,9 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   className="h-2.5 w-2.5 p-0 rounded-full hover:bg-primary/20 hover:text-primary flex items-center justify-center sm:h-4 sm:w-4"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onQuantityChange(product.id, selectedVariant?.id, 1);
+                    const variantId = selectedVariant?.id || product.variants[0]?.id;
+                    console.log('🛒 Increment quantity:', product.id, variantId, cartQty + 1);
+                    onQuantityChange(product.id, variantId, 1);
                   }}
                 >
                   <Plus className="w-2.5 h-2.5 sm:w-4 sm:h-4" strokeWidth={2} />
