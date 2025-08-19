@@ -226,8 +226,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       >
         <div className="absolute inset-0 bg-black/50" />
         
-        {/* Delivery App Dropdown */}
+        {/* Search App Button - Top Left */}
         <div className="absolute top-4 left-4 z-20">
+          <Button 
+            onClick={() => navigate('/search')}
+            variant="outline"
+            size="sm"
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Search
+          </Button>
+        </div>
+
+        {/* Delivery App Dropdown - Top Right */}
+        <div className="absolute top-4 right-4 z-20">
           <DeliveryAppDropdown />
         </div>
         
@@ -253,63 +266,55 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Combined Row: Occasion Buttons + Search Bar - STICKY */}
+      <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            {/* Occasion Buttons */}
+            <div className="flex-1">
+              <OccasionButtons isMobile={false} isScrollingDown={false} />
+            </div>
             
-            {/* Search Button in Hero - Links to Search Page */}
-            <div className="mt-8">
-              <Button 
-                onClick={() => navigate('/search')}
-                className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg"
-              >
-                <Search className="w-5 h-5 mr-2" />
-                Search Products
-              </Button>
-            </div>
+            {/* Search Bar */}
+            {showSearch && (
+              <div className="flex-shrink-0 lg:max-w-md lg:w-full">
+                <div className="flex">
+                  <Input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                       setSearchQuery(e.target.value);
+                       // Instant search as user types with debounce
+                       const query = e.target.value.trim();
+                       if (query) {
+                         setTimeout(() => handleSearch(), 300);
+                       } else {
+                         setSearchProducts([]);
+                       }
+                    }}
+                    className="rounded-r-none"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <Button 
+                    onClick={handleSearch}
+                    className="rounded-l-none"
+                  >
+                    <Search className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Occasion Buttons - What's the Occasion */}
-      <div className="bg-background border-b py-4">
-        <div className="container mx-auto px-4">
-          <OccasionButtons isMobile={false} isScrollingDown={false} />
-        </div>
-      </div>
-
-      {/* Search Bar Above Tabs - Sticky */}
-      {showSearch && (
-        <div className="sticky top-0 z-50 bg-background border-b py-4">
-          <div className="container mx-auto px-4">
-            <div className="flex max-w-md mx-auto">
-              <Input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => {
-                   setSearchQuery(e.target.value);
-                   // Instant search as user types with debounce
-                   const query = e.target.value.trim();
-                   if (query) {
-                     setTimeout(() => handleSearch(), 300);
-                   } else {
-                     setSearchProducts([]);
-                   }
-                }}
-                className="rounded-r-none"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button 
-                onClick={handleSearch}
-                className="rounded-l-none"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Category Tabs with Cart on Desktop - ALWAYS STICKY */}
-      <div className="sticky top-[72px] z-40 bg-background border-b shadow-sm">
+      {/* Category Tabs - STICKY BELOW COMBINED ROW */}
+      <div className="sticky top-[88px] z-40 bg-background border-b shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-2">
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">

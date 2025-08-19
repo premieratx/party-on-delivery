@@ -189,12 +189,13 @@ const Index = () => {
         cartItemCount={cartItems.length}
       />
       
-      {/* Admin Button */}
+      {/* Admin Button - Bottom Right */}
       <div className="fixed bottom-4 right-4 z-50">
         <Button 
           onClick={() => navigate('/admin')}
           variant="outline"
-          className="bg-background/90 backdrop-blur-sm"
+          size="sm"
+          className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors"
         >
           Admin
         </Button>
