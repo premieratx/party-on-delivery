@@ -182,27 +182,27 @@ export default function OptimizedProductSearch() {
     return () => { mounted = false; };
   }, []);
 
-  // Real-time search with enhanced filtering (fast, uses full catalog)
+  // IMPROVED Real-time search with EXACT matching - only 4 criteria  
   useEffect(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       const timer = setTimeout(() => {
-        // Enhanced search by product name, type, category, or collection
+        // EXACT MATCHING search - only these 4 criteria, no description
         const filtered = allProducts.filter((p) => {
           const title = String(p.title || '').toLowerCase();
           const productType = String(p.product_type || '').toLowerCase();
           const category = String(p.category || '').toLowerCase();
-          const description = String(p.description || '').toLowerCase();
           
           // Check collection handles
           const collections = (productCollectionsRef.current[p.id] || []).join(' ').toLowerCase();
           
+          // ONLY match these 4 criteria: product name, product type, category, collection
           return title.includes(q) || 
                  productType.includes(q) || 
                  category.includes(q) || 
-                 collections.includes(q) ||
-                 description.includes(q);
+                 collections.includes(q);
         });
+        console.log(`🔍 SEARCH APP: Found ${filtered.length} products matching "${searchQuery}"`);
         setProducts(filtered);
       }, 100);
       return () => clearTimeout(timer);

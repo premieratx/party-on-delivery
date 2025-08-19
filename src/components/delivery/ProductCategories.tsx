@@ -78,6 +78,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchProducts, setSearchProducts] = useState<any[]>([]);
+  const [isSearchActive, setIsSearchActive] = useState(false); // Track if user is actively searching
+  const [savedSearchQuery, setSavedSearchQuery] = useState(''); // Persist search across tab switches
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
@@ -192,14 +194,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   };
 
-  // Real-time search across ALL products, not just current tab
+  // IMPROVED Real-time search with exact matching 
   const handleSearch = useCallback(async () => {
     if (!searchQuery?.trim()) {
       setSearchProducts([]);
+      setIsSearchActive(false);
       return;
     }
     
-    console.log('🔍 Real-time search across all products for:', searchQuery);
+    console.log('🔍 EXACT MATCH search for:', searchQuery);
+    setIsSearchActive(true);
+    setSavedSearchQuery(searchQuery); // Save current search
+    
     try {
       setIsSearching(true);
       
@@ -215,12 +221,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       if (data?.success && data.products) {
         const query = searchQuery.toLowerCase();
         const filtered = data.products.filter((product: any) => {
+          // EXACT MATCHING ONLY - no guessing
           const title = product.title?.toLowerCase() || '';
           const productType = product.product_type?.toLowerCase() || '';
           const category = product.category?.toLowerCase() || '';
-          const description = product.description?.toLowerCase() || '';
           
-          // Check collection handles
+          // Check collection handles  
           const collectionHandles = Array.isArray(product.collection_handles) 
             ? product.collection_handles 
             : typeof product.collection_handles === 'string' 
@@ -228,14 +234,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               : [];
           const collections = collectionHandles.join(' ').toLowerCase();
           
+          // ONLY match these 4 criteria: product name, product type, category, collection
           return title.includes(query) || 
                  productType.includes(query) || 
                  category.includes(query) || 
-                 collections.includes(query) ||
-                 description.includes(query);
+                 collections.includes(query);
         });
         
-        console.log(`🔍 Found ${filtered.length} search results from all products`);
+        console.log(`🔍 EXACT MATCH: Found ${filtered.length} products matching "${searchQuery}"`);
         setSearchProducts(filtered);
       } else {
         setSearchProducts([]);
@@ -326,7 +332,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                          setTimeout(() => handleSearch(), 300);
                        } else {
                          setSearchProducts([]);
+                         setIsSearchActive(false);
                        }
+                    }}
+                    onFocus={() => {
+                      // Restore previous search if user clicks back into search bar
+                      if (savedSearchQuery && !searchQuery) {
+                        setSearchQuery(savedSearchQuery);
+                        setTimeout(() => handleSearch(), 100);
+                      }
                     }}
                     className="rounded-r-none"
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -358,9 +372,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     const currentTab = collectionsConfig?.tabs?.[index];
                     console.log(`🔄 SWITCHING TO TAB ${index}: ${currentTab?.name || tab.title} (${currentTab?.collection_handle || tab.handle})`);
                     setSelectedCategory(index);
-                    // Clear search when switching tabs
+                    // When user clicks tab, clear search results but preserve search query
                     setSearchProducts([]);
-                    setSearchQuery('');
+                    setIsSearchActive(false);
+                    // DO NOT clear search query - keep it for when user returns to search
                     // NO AUTO-SCROLL - User stays at current position
                   }}
                 >
@@ -387,8 +402,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8 pb-20 lg:pb-8">
-        {/* Show search results when searching */}
-        {searchQuery && searchProducts.length > 0 ? (
+        {/* Show search results when user is actively searching, otherwise show tab products */}
+        {isSearchActive && searchQuery && searchProducts.length > 0 ? (
           <>
             <h3 className="text-lg font-semibold mb-4">Search Results ({searchProducts.length})</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
