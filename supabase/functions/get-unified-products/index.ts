@@ -109,27 +109,54 @@ Deno.serve(async (req) => {
       })
       collections = Array.from(searchCategories.values())
     } else {
-      // For delivery apps: Create collections from products grouped by their collection_handles
+      // For delivery apps: FORCE create collections from ALL available collection handles
+      console.log(`🔍 Processing ${products?.length || 0} products for collection mapping`)
+      
       const collectionsMap = new Map()
       
-      // First, group products by each collection handle they belong to
-      products?.forEach(product => {
-        if (product.collection_handles && Array.isArray(product.collection_handles)) {
-          product.collection_handles.forEach(handle => {
-            if (!collectionsMap.has(handle)) {
-              // Find collection title from collectionsData or use handle
-              const collectionData = collectionsData?.find(col => col.handle === handle)
-              collectionsMap.set(handle, {
-                id: handle,
-                title: collectionData?.title || handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                handle: handle,
-                product_count: 0,
-                products: []
-              })
+      // Process every product and extract ALL collection handles
+      products?.forEach((product, index) => {
+        if (index < 5) {
+          console.log(`🔍 Sample product ${index + 1}:`, {
+            id: product.id,
+            title: product.title,
+            collection_handles: product.collection_handles,
+            type: typeof product.collection_handles
+          })
+        }
+        
+        // Handle different possible formats of collection_handles
+        let handles = []
+        if (typeof product.collection_handles === 'string') {
+          // If it's a string, try to parse as JSON
+          try {
+            handles = JSON.parse(product.collection_handles)
+          } catch {
+            // If not JSON, treat as single handle
+            handles = [product.collection_handles]
+          }
+        } else if (Array.isArray(product.collection_handles)) {
+          handles = product.collection_handles
+        }
+        
+        if (handles && handles.length > 0) {
+          handles.forEach(handle => {
+            if (handle && typeof handle === 'string') {
+              if (!collectionsMap.has(handle)) {
+                // Find collection title from collectionsData or create readable title
+                const collectionData = collectionsData?.find(col => col.handle === handle)
+                collectionsMap.set(handle, {
+                  id: handle,
+                  title: collectionData?.title || handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                  handle: handle,
+                  product_count: 0,
+                  products: []
+                })
+              }
+              const collection = collectionsMap.get(handle)
+              collection.products.push(product)
+              collection.product_count++
             }
-            const collection = collectionsMap.get(handle)
-            collection.products.push(product)
-            collection.product_count++
           })
         }
       })
@@ -138,8 +165,17 @@ Deno.serve(async (req) => {
       
       console.log(`📦 Created ${collections.length} collections from products:`)
       collections.forEach(col => {
-        console.log(`📦 Collection "${col.handle}": ${col.product_count} products`)
+        console.log(`📦 Collection "${col.handle}" (${col.title}): ${col.product_count} products`)
       })
+      
+      // Log specific collections we're looking for
+      const tailgateBeer = collections.find(c => c.handle === 'tailgate-beer')
+      const spirits = collections.find(c => c.handle === 'spirits')
+      const cocktailKits = collections.find(c => c.handle === 'cocktail-kits')
+      
+      console.log('🍺 tailgate-beer collection:', tailgateBeer ? `${tailgateBeer.product_count} products` : 'NOT FOUND')
+      console.log('🥃 spirits collection:', spirits ? `${spirits.product_count} products` : 'NOT FOUND')
+      console.log('🍸 cocktail-kits collection:', cocktailKits ? `${cocktailKits.product_count} products` : 'NOT FOUND')
     }
 
     // Get cache metadata
