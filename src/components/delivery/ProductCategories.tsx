@@ -169,28 +169,39 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const isCurrentlySearchTab = currentTab?.isSearch;
 
   const handleAddToCart = (product: any) => {
+    const firstVariant = product.variants?.[0];
     const cartItem = {
-      id: product.id,
+      id: String(product.id),
       title: product.title,
       name: product.title,
-      price: product.price,
+      price: firstVariant?.price || product.price || 0,
       image: product.image,
-      variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.id : undefined
+      variant: firstVariant?.id ? String(firstVariant.id) : 'default'
     };
     
-    if (onAddToCart) {
-      onAddToCart(cartItem);
-    } else if (onUpdateQuantity) {
-      const currentQty = getCartItemQuantity(product.id, cartItem.variant);
-      onUpdateQuantity(product.id, cartItem.variant, currentQty + 1);
-    }
+    console.log('🛒 ProductCategories: Adding to cart:', cartItem);
+    addToCart(cartItem);
   };
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
     const currentQty = getCartItemQuantity(productId, variantId);
     const newQty = Math.max(0, currentQty + delta);
-    if (onUpdateQuantity) {
-      onUpdateQuantity(productId, variantId, newQty);
+    
+    const product = displayProducts.find(p => p.id === productId) || 
+                   searchProducts.find(p => p.id === productId);
+    const variant = product?.variants?.find((v: any) => v.id === variantId) || product?.variants?.[0];
+    
+    if (newQty === 0) {
+      updateQuantity(productId, variantId || 'default', 0);
+    } else {
+      updateQuantity(productId, variantId || 'default', newQty, {
+        id: String(productId),
+        title: product?.title || '',
+        name: product?.title || '',
+        price: variant?.price || product?.price || 0,
+        image: product?.image || '',
+        variant: variantId || 'default'
+      });
     }
   };
 

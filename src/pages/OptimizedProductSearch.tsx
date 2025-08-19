@@ -45,14 +45,14 @@ export default function OptimizedProductSearch() {
   const [hideFilters, setHideFilters] = useState(false);
   const lastYRef = useRef(0);
 
-  // Categories for filtering (map to collection handles for consistency)
+  // Categories for filtering (based on Shopify product types)
   const categories = [
-    { id: 'all', label: 'All Products', handle: null as string | null },
-    { id: 'spirits', label: 'Spirits', handle: 'spirits' },
-    { id: 'beer', label: 'Beer', handle: 'tailgate-beer' },
-    { id: 'cocktails', label: 'Cocktails', handle: 'cocktail-kits' },
-    { id: 'mixers', label: 'Mixers & N/A', handle: 'mixers-non-alcoholic' },
-    { id: 'seltzers', label: 'Seltzers', handle: 'seltzer-collection' }
+    { id: 'all', label: 'All Products', productType: null as string | null },
+    { id: 'spirits', label: 'Spirits', productType: 'spirits' },
+    { id: 'beer', label: 'Beer', productType: 'beer' },
+    { id: 'wine', label: 'Wine', productType: 'wine' },
+    { id: 'seltzer', label: 'Seltzer', productType: 'seltzer' },
+    { id: 'mixers', label: 'Mixers & N/A', productType: 'mixers' }
   ];
 
   // Spirit types visible when Spirits is selected
@@ -121,60 +121,33 @@ export default function OptimizedProductSearch() {
     (async () => {
       try {
         setLoading(true);
-        // Give instant cache a bit more time on first load; then force refresh if empty
-        const instant = await getInstantProducts();
-        const collections = instant.collections || [];
-        const map: Record<string, any> = {};
-        const pcMap: Record<string, string[]> = {};
-        if (collections.length > 0) {
-          collections.forEach((col: any) => {
-            (col.products || []).forEach((p: any) => {
-              map[p.id] = map[p.id] || p;
-              pcMap[p.id] = pcMap[p.id] || [];
-              if (!pcMap[p.id].includes(col.handle)) pcMap[p.id].push(col.handle);
-            });
-          });
-        }
-        // Fallback: some responses only include products without collections
-        let list: any[] = Object.values(map);
-        if (list.length === 0 && Array.isArray(instant.products) && instant.products.length > 0) {
-          console.warn('Instant cache missing collections; falling back to products array');
-          list = instant.products as any[];
+        // Get all products using get-unified-products
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data: response, error } = await supabase.functions.invoke('get-unified-products', {
+          body: { 
+            use_type: 'search',
+            lightweight: false, // Get all products
+            force_refresh: false
+          }
+        });
+
+        if (error) {
+          console.error('Failed to load products:', error);
+          setError('Failed to load products');
+          return;
         }
 
-        // If still empty, try a force refresh
-        if (list.length === 0) {
-          const retry = await getInstantProducts();
-          const retryCollections = retry.collections || [];
-          const map2: Record<string, any> = {};
-          const pcMap2: Record<string, string[]> = {};
-          if (retryCollections.length > 0) {
-            retryCollections.forEach((col: any) => {
-              (col.products || []).forEach((p: any) => {
-                map2[p.id] = map2[p.id] || p;
-                pcMap2[p.id] = pcMap2[p.id] || [];
-                if (!pcMap2[p.id].includes(col.handle)) pcMap2[p.id].push(col.handle);
-              });
-            });
-          }
-          list = Object.values(map2);
-          if (list.length === 0 && Array.isArray(retry.products) && retry.products.length > 0) {
-            list = retry.products as any[];
-          }
-          if (Object.keys(pcMap2).length > 0) {
-            productCollectionsRef.current = pcMap2;
-          }
-        } else {
-          productCollectionsRef.current = pcMap;
-        }
-
+        const products = response?.products || [];
+        console.log(`✅ Loaded ${products.length} products for search app`);
+        
         if (!mounted) return;
-        setAllProducts(list as any[]);
+        setAllProducts(products);
         if (!searchQuery.trim()) {
-          setProducts(list as any[]);
+          setProducts(products);
         }
       } catch (e) {
-        console.error('Instant catalog load failed', e);
+        console.error('Product load failed:', e);
+        setError('Failed to load products');
       } finally {
         setLoading(false);
       }
@@ -210,12 +183,17 @@ export default function OptimizedProductSearch() {
       // No query: show category view from full catalog
       const current = categories.find(c => c.id === selectedCategory);
       let base = allProducts;
-      if (current && current.handle && selectedCategory !== 'spirits') {
-        const handle = current.handle;
-        base = allProducts.filter(p => (productCollectionsRef.current[p.id] || []).includes(handle));
+      
+      if (current && current.productType && selectedCategory !== 'all') {
+        // Filter by Shopify product type
+        const productType = current.productType.toLowerCase();
+        base = allProducts.filter(p => {
+          const pType = (p.product_type || '').toLowerCase();
+          return pType === productType || pType.includes(productType);
+        });
       }
 
-      // Spirits category: broaden matching to maximize results (product_type, tags, collection handles, title, handle)
+      // Spirits category: subcategories based on product type and keywords
       if (selectedCategory === 'spirits') {
         const norm = (s: any) => String(s || '').trim().toLowerCase();
         const spiritKeywordSets: Record<string, string[]> = {
@@ -232,12 +210,18 @@ export default function OptimizedProductSearch() {
 
         base = allProducts.filter((p) => {
           const type = norm(p.product_type || p.productType);
+          const title = norm(p.title);
           const tagsArr = Array.isArray(p.tags)
             ? p.tags.map((t: any) => norm(t))
-            : norm(p.tags).split(',').map((t: any) => norm(t)).filter(Boolean);
-          const handles = (productCollectionsRef.current[p.id] || []).map(h => norm(h));
-          const haystack = [type, ...tagsArr, ...handles, norm(p.title), norm(p.handle)].filter(Boolean);
-          return keys.some(k => haystack.some(h => h.includes(k)));
+            : norm(p.tags || '').split(',').map((t: any) => norm(t)).filter(Boolean);
+          
+          // Check if product type contains 'spirit' or title/tags match spirit keywords
+          const isSpirit = type.includes('spirit') || keys.some(k => 
+            type.includes(k) || title.includes(k) || tagsArr.some(tag => tag.includes(k))
+          );
+          
+          if (selectedSpirit === 'all') return isSpirit;
+          return isSpirit && keys.some(k => type.includes(k) || title.includes(k) || tagsArr.some(tag => tag.includes(k)));
         });
       }
 

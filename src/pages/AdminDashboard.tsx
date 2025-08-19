@@ -49,6 +49,7 @@ import { TriggerShopifySync } from '@/components/admin/TriggerShopifySync';
 import { CoverPageToggle } from '@/components/admin/CoverPageToggle';
 import { SecuritySyncDashboard } from '@/components/admin/SecuritySyncDashboard';
 import { EnhancedCacheManager } from '@/components/admin/EnhancedCacheManager';
+import SearchAppConfig from '@/components/admin/SearchAppConfig';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -273,7 +274,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-11 gap-1 w-full h-auto flex-wrap p-2">
+            <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-1 w-full h-auto flex-wrap p-2">
               <TabsTrigger value="overview" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">Overview</TabsTrigger>
               <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Orders</TabsTrigger>
               <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">👥 Affiliates</TabsTrigger>
@@ -283,6 +284,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🎬 Cover Pages</TabsTrigger>
               <TabsTrigger value="post-checkout-builder" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">✅ Post-Checkout</TabsTrigger>
               <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Quotes</TabsTrigger>
+              <TabsTrigger value="search-app-config" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🔍 Search App</TabsTrigger>
               <TabsTrigger value="security-sync" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🛡️ Security & Sync</TabsTrigger>
               <TabsTrigger value="performance" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚡ Performance & Optimization</TabsTrigger>
               <TabsTrigger value="ghl-setup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📱 GHL/SMS</TabsTrigger>
@@ -709,6 +711,10 @@ export default function AdminDashboard() {
               
               <CoverPageToggle />
             </div>
+          </TabsContent>
+
+          <TabsContent value="search-app-config" className="space-y-4">
+            <SearchAppConfig />
           </TabsContent>
 
           <TabsContent value="cleanup" className="space-y-4">
