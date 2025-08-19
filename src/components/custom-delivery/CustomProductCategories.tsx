@@ -161,14 +161,18 @@ const [showSearchModal, setShowSearchModal] = useState(false);
 
   // Map collection handles to categories - custom mapping for this app
   const mapCollectionToCategory = (handle: string): string => {
-    // Premium Spirits
-    if (handle === 'spirits' || handle === 'gin-rum' || handle === 'tequila-mezcal' || handle === 'whiskey') return 'spirits';
+    // Premium Spirits (Liquor for Bachelorette apps)
+    if (handle === 'spirits' || handle === 'gin-rum' || handle === 'tequila-mezcal' || 
+        handle === 'bourbon-rye' || handle === 'liqueurs-cordials-cocktail-ingredients' || 
+        handle === 'bachelorette-booze' || handle.includes('whiskey') || handle.includes('vodka')) return 'spirits';
     // Craft Beer
     if (handle === 'tailgate-beer' || handle === 'texas-beer-collection' || handle.includes('beer')) return 'beer';
-    // Fine Wine
-    if (handle === 'champagne' || handle.includes('wine')) return 'wine';
-    // Party Essentials
-    if (handle === 'party-supplies' || handle === 'decorations' || handle === 'hats-sunglasses' || handle === 'costumes') return 'party-supplies';
+    // Fine Wine & Champagne
+    if (handle === 'champagne' || handle.includes('wine') || handle === 'seltzers-wine-champagne') return 'wine';
+    // Party Essentials & Bachelorette Supplies
+    if (handle === 'party-supplies' || handle === 'decorations' || handle === 'hats-sunglasses' || 
+        handle === 'costumes' || handle === 'bachelorette-supplies' || handle === 'bachelorette-party-supplies' ||
+        handle === 'all-party-supplies' || handle === 'drinkware-bartending-tools') return 'party-supplies';
     
     return 'other';
   };

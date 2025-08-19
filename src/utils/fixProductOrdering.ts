@@ -6,17 +6,32 @@ import { supabase } from '@/integrations/supabase/client';
 export const fixProductOrdering = async () => {
   console.log('🔧 Fixing product ordering across all collections...');
   
-  // Collections that need proper ordering - updated to include mixers-non-alcoholic
+  // ALL collections that need proper ordering across delivery apps
   const collectionsToSync = [
+    'spirits',
+    'gin-rum', 
+    'tequila-mezcal',
+    'bourbon-rye',
+    'liqueurs-cordials-cocktail-ingredients',
     'tailgate-beer',
-    'spirits', 
-    'mixers-non-alcoholic',
+    'champagne',
     'wine',
+    'mixers-non-alcoholic',
+    'seltzer-collection',
+    'cocktail-kits',
     'party-supplies',
     'bachelorette-supplies',
+    'bachelorette-booze',
+    'bachelorette-party-supplies',
     'disco-collection',
-    'seltzer-collection',
-    'cocktail-kits'
+    'decorations',
+    'drinkware-bartending-tools',
+    'hats-sunglasses',
+    'costumes',
+    'all-party-supplies',
+    'bachelor-favorites',
+    'hangover-management',
+    'non-alcoholic'
   ];
   
   const results = [];
