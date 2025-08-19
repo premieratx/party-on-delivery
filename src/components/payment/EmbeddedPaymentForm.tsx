@@ -310,9 +310,32 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         localStorage.setItem('lastPaymentIntent', paymentIntentId);
         localStorage.setItem('lastCartTotal', total.toString());
         
-        // Defer Shopify order creation to Success page for faster UX
-        // Success page will process the order using the session/payment intent.
-
+        // CRITICAL: Store checkout completion data for OrderComplete page
+        const checkoutCompletionData = {
+          cartItems,
+          customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+          customerEmail: customerInfo.email,
+          deliveryAddress: deliveryInfo,
+          deliveryDate: deliveryInfo.date,
+          deliveryTime: deliveryInfo.time,
+          subtotal: validSubtotal,
+          deliveryFee: validDeliveryFee,
+          salesTax: validSalesTax,
+          tipAmount: validTipAmount,
+          totalAmount: total,
+          paymentIntentId,
+          appliedDiscount,
+          shareToken: currentGroupToken
+        };
+        
+        sessionStorage.setItem('checkout-completion-data', JSON.stringify(checkoutCompletionData));
+        
+        console.log('💰 PAYMENT VERIFICATION:', {
+          paymentIntentId,
+          totalAmount: total,
+          checkoutDataStored: true
+        });
+        
         // Check if we're in a custom delivery app context
         const customAppContext = sessionStorage.getItem('custom-app-context');
         
