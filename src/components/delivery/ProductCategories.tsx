@@ -435,17 +435,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               ))}
             </div>
             
-            {/* Cart/Checkout on Desktop */}
-            <div className="hidden lg:flex ml-4">
-              <Button 
-                variant="outline"
-                onClick={onOpenCart}
-                className="whitespace-nowrap hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Cart ({cartItemCount})
-              </Button>
-            </div>
           </div>
         </div>
       </div>
