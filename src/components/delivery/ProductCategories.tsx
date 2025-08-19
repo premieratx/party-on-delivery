@@ -117,7 +117,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];
   const currentCollectionHandle = currentTabConfig?.collection_handle;
   
-  // Load products for current collection only - force clear on collection change
+  // Load products for current collection directly from Shopify collections
   const { products: currentTabProducts, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
     collection_handle: currentCollectionHandle,
     use_type: 'delivery'
