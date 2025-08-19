@@ -55,12 +55,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       setLoading(true);
       setError(null);
 
-      console.log(`🔄 Loading products for collection: ${collection_handle || 'ALL'}`);
-
-      // Clear products immediately when switching collections
-      if (collection_handle) {
-        setProducts([]);
-      }
+      console.log(`🔄 Loading products for collection: ${collection_handle || 'ALL'} with caching`);
 
       // Clear products immediately to prevent mixing between collections
       setProducts([]);
@@ -70,7 +65,8 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
           collection_handle,
           force_refresh,
           lightweight,
-          use_type: 'delivery'
+          use_type: 'delivery',
+          preserve_order: true // Maintain Shopify collection order
         }
       });
 
@@ -83,11 +79,13 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
         throw new Error(data?.error || 'Failed to load products');
       }
 
-      setProducts(data.products || []);
+      // Ensure products maintain Shopify collection order
+      const orderedProducts = data.products || [];
+      console.log(`✅ Loaded ${orderedProducts.length} products for collection: ${collection_handle || 'ALL'} in Shopify order`);
+
+      setProducts(orderedProducts);
       setCollections(data.collections || []);
       setCached(data.cached || false);
-
-      console.log(`✅ Loaded ${data.products?.length || 0} products for collection: ${collection_handle || 'ALL'}`);
 
       // Reset retry count on successful load
       setRetryCount(0);

@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
+import { parseProductTitle } from '@/utils/productUtils';
+import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -156,7 +158,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       return belongsToCollection;
     });
     
-    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total)`);
+    // MAINTAIN SHOPIFY COLLECTION ORDER - preserve the order from Shopify
+    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total) in Shopify order`);
     return strictlyFilteredProducts.slice(0, maxProducts);
   }, [currentTabProducts, currentCollectionHandle, maxProducts, selectedCategory]);
 
@@ -305,8 +308,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       )}
 
-      {/* Category Tabs with Cart on Desktop */}
-      <div className="sticky top-[72px] z-40 bg-background border-b">
+      {/* Category Tabs with Cart on Desktop - ALWAYS STICKY */}
+      <div className="sticky top-[72px] z-40 bg-background border-b shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-2">
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
@@ -314,7 +317,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 <Button
                   key={tab.id}
                   variant={selectedCategory === index ? "default" : "ghost"}
-                  className="whitespace-nowrap min-w-fit"
+                  className="whitespace-nowrap min-w-fit transition-all duration-200"
                   onClick={() => {
                     const currentTab = collectionsConfig?.tabs?.[index];
                     console.log(`🔄 SWITCHING TO TAB ${index}: ${currentTab?.name || tab.title} (${currentTab?.collection_handle || tab.handle})`);
@@ -335,7 +338,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               <Button 
                 variant="outline"
                 onClick={() => navigate('/checkout')}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap hover:bg-primary hover:text-primary-foreground transition-colors"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Cart ({cartItemCount})
@@ -346,7 +349,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       </div>
 
       {/* Products Grid */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pb-20 lg:pb-8">
         {/* Show search results when searching */}
         {isSearching && searchProducts.length > 0 ? (
           <>
@@ -424,59 +427,78 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
             {displayProducts.map((product) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+              const { cleanTitle, packageSize } = parseProductTitle(product.title);
               
               return (
-                <div key={product.id} className="bg-card rounded-lg border shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="aspect-square relative">
+                <div key={product.id} className="bg-card rounded-lg border shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 flex flex-col">
+                  <div className="aspect-square relative bg-muted">
                     <OptimizedImage
                       src={product.image}
                       alt={product.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </div>
-                  <div className="p-3 space-y-2">
-                    <h3 className="font-medium text-sm line-clamp-2 leading-tight">{product.title}</h3>
+                  <div className="p-2 md:p-3 space-y-2 flex-1 flex flex-col">
+                    {/* Product Title */}
+                    <h3 className="font-medium text-xs md:text-sm line-clamp-2 leading-tight text-center">
+                      {cleanTitle}
+                    </h3>
+                    
+                    {/* Container Size */}
+                    {packageSize && (
+                      <p className="text-[10px] md:text-xs text-muted-foreground text-center leading-tight">
+                        {packageSize}
+                      </p>
+                    )}
+                    
+                    {/* Price and Vendor */}
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-primary text-lg">${product.price}</span>
+                      <span className="font-bold text-primary text-sm md:text-lg">${product.price}</span>
                       {product.vendor && (
-                        <span className="text-xs text-muted-foreground">{product.vendor}</span>
+                        <span className="text-[8px] md:text-xs text-muted-foreground truncate max-w-[60px]">
+                          {product.vendor}
+                        </span>
                       )}
                     </div>
                     
-                    {/* Single Add to Cart Button */}
-                    {quantity > 0 ? (
-                      <div className="flex items-center justify-between bg-primary/10 rounded-lg p-2">
+                    {/* Add to Cart Controls - OPTIMIZED FOR MOBILE */}
+                    <div className="mt-auto pt-1">
+                      {quantity > 0 ? (
+                        <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1.5 md:p-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 md:h-8 md:w-8 p-0 hover:bg-destructive/20 hover:text-destructive rounded-full"
+                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                          >
+                            <Minus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
+                          </Button>
+                          <span className="font-semibold text-primary px-2 text-sm md:text-base min-w-[20px] text-center">
+                            {quantity}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 md:h-8 md:w-8 p-0 hover:bg-primary/20 hover:text-primary rounded-full"
+                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                          >
+                            <Plus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
+                          </Button>
+                        </div>
+                      ) : (
                         <Button
                           size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-primary/20"
-                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                          onClick={() => handleAddToCart(product)}
+                          className="w-full h-7 md:h-8 text-xs hover:bg-primary/90 transition-colors"
                         >
-                          <Minus className="w-4 h-4" />
+                          <Plus className="w-3 h-3 mr-1" strokeWidth={2} />
+                          Add to Cart
                         </Button>
-                        <span className="font-semibold text-primary px-2">{quantity}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 hover:bg-primary/20"
-                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddToCart(product)}
-                        className="w-full h-8 text-xs"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Add to Cart
-                      </Button>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -484,6 +506,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         )}
       </div>
+
+      {/* Mobile Bottom Cart Bar - ALWAYS VISIBLE */}
+      <MobileBottomCartBar 
+        cartItemCount={cartItemCount}
+        totalAmount={cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
+      />
     </div>
   );
 };
