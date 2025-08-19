@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useGlobalCart } from '@/components/common/GlobalCartProvider';
 import UltraSimplePage from './UltraSimplePage';
 
 interface HomepageDeliveryApp {
@@ -39,6 +40,8 @@ export default function DynamicHomepage() {
     getTotalItems, 
     getTotalPrice 
   } = useUnifiedCart();
+  
+  const { openCart } = useGlobalCart();
 
   useEffect(() => {
     loadHomepageApp();
@@ -154,7 +157,7 @@ export default function DynamicHomepage() {
       collectionsConfig={homepageApp.collections_config}
       onAddToCart={handleAddToCart}
       cartItemCount={getTotalItems()}
-      onOpenCart={() => console.log('Open cart clicked')}
+      onOpenCart={openCart}
       cartItems={cartItems}
       onUpdateQuantity={handleUpdateQuantity}
       onProceedToCheckout={handleProceedToCheckout}
