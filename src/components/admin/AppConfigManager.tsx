@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useAppConfig } from '@/hooks/useAppConfig';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, MapPin, Archive, Users, MessageSquare, Bot, Mic, Volume2 } from 'lucide-react';
+import { Settings, MapPin, Archive, Users, MessageSquare, Bot, Mic, Volume2, CreditCard } from 'lucide-react';
 
 export const AppConfigManager: React.FC = () => {
   const { config, updateConfig, isLoading } = useAppConfig();
@@ -184,6 +184,26 @@ export const AppConfigManager: React.FC = () => {
             id="speech-mode-toggle"
             checked={config.speechModeEnabled}
             onCheckedChange={(checked) => handleToggle('speechModeEnabled', checked)}
+          />
+        </div>
+
+        {/* Stripe Payments Configuration */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              <Label htmlFor="stripe-payments-toggle" className="font-medium">
+                Stripe Payments
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Enable real payment processing via Stripe (requires API keys)
+            </p>
+          </div>
+          <Switch
+            id="stripe-payments-toggle"
+            checked={config.stripePaymentsEnabled}
+            onCheckedChange={(checked) => handleToggle('stripePaymentsEnabled', checked)}
           />
         </div>
 

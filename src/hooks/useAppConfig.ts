@@ -8,6 +8,7 @@ interface AppConfig {
   aiBotAutomationsEnabled: boolean;
   voiceChatEnabled: boolean;
   speechModeEnabled: boolean;
+  stripePaymentsEnabled: boolean;
   // Add more features as needed
 }
 
@@ -19,6 +20,7 @@ const DEFAULT_CONFIG: AppConfig = {
   aiBotAutomationsEnabled: false, // Disabled by default
   voiceChatEnabled: false, // Disabled by default
   speechModeEnabled: false, // Disabled by default
+  stripePaymentsEnabled: false, // Disabled by default - use demo mode
 };
 
 const CONFIG_STORAGE_KEY = 'app_config';

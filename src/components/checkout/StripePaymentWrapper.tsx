@@ -3,6 +3,8 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { supabase } from '@/integrations/supabase/client';
 import { PaymentStep } from './PaymentStep';
+import { PaymentStepFallback } from './PaymentStepFallback';
+import { useAppConfig } from '@/hooks/useAppConfig';
 import { Button } from '@/components/ui/button';
 
 interface StripePaymentWrapperProps {
@@ -22,9 +24,19 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const { config } = useAppConfig();
+
+  const total = props.subtotal + props.deliveryFee + props.salesTax;
 
   useEffect(() => {
     let mounted = true;
+    
+    // If Stripe is disabled, don't try to initialize it
+    if (!config.stripePaymentsEnabled) {
+      setIsLoading(false);
+      setHasError(true);
+      return;
+    }
     
     const initStripe = async () => {
       try {
@@ -58,7 +70,7 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
 
     initStripe();
     return () => { mounted = false; };
-  }, []);
+  }, [config.stripePaymentsEnabled]);
 
   if (isLoading) {
     return (
@@ -77,23 +89,7 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
   }
 
   if (hasError || !stripePromise) {
-    return (
-      <div className="space-y-4">
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">
-            Payment system is not available. Please refresh the page and try again.
-          </p>
-        </div>
-        <Button 
-          type="button"
-          onClick={() => window.location.reload()}
-          className="w-full h-12 text-lg font-semibold"
-          variant="outline"
-        >
-          Refresh Page
-        </Button>
-      </div>
-    );
+    return <PaymentStepFallback total={total} onPaymentSuccess={props.onPaymentSuccess} />;
   }
 
   return (
