@@ -1,122 +1,76 @@
 import React, { useEffect, useState } from 'react';
-import { ProductCategories } from '@/components/delivery/ProductCategories';
+import { SimpleDeliveryApp } from '@/components/simple/SimpleDeliveryApp';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { UnifiedCart } from '@/components/common/UnifiedCart';
-import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 
 const Index = () => {
-  console.log('🏠 Index: STARTING - Loading Main Delivery App as homepage');
+  console.log('🏠 Index: BULLETPROOF VERSION - Loading Main Delivery App');
   
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  
-  console.log('🏠 Index: Initializing hooks...');
-  
-  const navigate = useNavigate();
-  console.log('🏠 Index: Navigate hook ready');
-  
-  const { cartItems, getTotalItems } = useUnifiedCart();
-  console.log('🏠 Index: Cart hook ready, total items:', getTotalItems());
-  
-  const [searchParams] = useSearchParams();
-  const affiliateCode = searchParams.get('ref');
-  console.log('🏠 Index: Search params ready, affiliate code:', affiliateCode);
 
   useEffect(() => {
-    console.log('🏠 Index: useEffect triggered - loading delivery app');
-    
-    const loadDefaultDeliveryApp = async () => {
+    const loadConfig = async () => {
       try {
-        console.log('🏠 Index: Starting database query for homepage delivery app...');
+        console.log('🏠 Index: Loading delivery app config...');
         
-        // Get the homepage delivery app
-        const { data: homepageApp, error: homepageError } = await supabase
+        const { data, error: dbError } = await supabase
           .from('delivery_app_variations')
           .select('*')
           .eq('is_active', true)
           .eq('is_homepage', true)
           .single();
 
-        console.log('🏠 Index: Homepage query result:', { homepageApp, homepageError });
-
-        if (homepageError || !homepageApp) {
-          console.log('❌ No homepage app found, falling back to first active app');
+        if (dbError || !data) {
+          console.log('🏠 Index: No homepage app, using fallback...');
           
-          const { data: fallbackApps, error: fallbackError } = await supabase
+          const { data: fallback, error: fallbackError } = await supabase
             .from('delivery_app_variations')
             .select('*')
             .eq('is_active', true)
             .order('created_at', { ascending: true })
             .limit(1);
-          
-          console.log('🏠 Index: Fallback query result:', { fallbackApps, fallbackError });
             
-          if (fallbackError || !fallbackApps?.length) {
-            console.error('❌ No delivery apps found at all!');
+          if (fallbackError || !fallback?.length) {
             throw new Error('No delivery apps found');
           }
           
-          setAppConfig(fallbackApps[0]);
-          console.log('✅ Index: Using fallback app:', fallbackApps[0].app_name);
+          setAppConfig(fallback[0]);
         } else {
-          setAppConfig(homepageApp);
-          console.log('✅ Index: Loaded homepage app:', homepageApp.app_name);
+          setAppConfig(data);
         }
         
-        console.log('🏠 Index: App config set successfully');
-        
-      } catch (err) {
-        console.error('❌ CRITICAL ERROR loading delivery app:', err);
-        setError('Failed to load delivery app: ' + (err?.message || err));
+        console.log('✅ Index: App config loaded successfully');
+      } catch (err: any) {
+        console.error('❌ Index: Critical error:', err);
+        setError(err.message);
       } finally {
-        console.log('🏠 Index: Setting loading to false');
         setLoading(false);
       }
     };
 
-    loadDefaultDeliveryApp();
+    loadConfig();
   }, []);
 
-  const handleCheckout = () => {
-    localStorage.setItem('deliveryAppReferrer', '/');
-    localStorage.setItem('app-context', JSON.stringify({
-      appSlug: appConfig?.app_slug || 'main-delivery-app',
-      appName: appConfig?.app_name || "Austin's Premier Party Supply Delivery"
-    }));
-    navigate('/checkout');
-  };
-
-  console.log('🏠 Index: Render state - loading:', loading, 'error:', error, 'appConfig:', !!appConfig);
-
   if (loading) {
-    console.log('🏠 Index: Rendering loading state');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <LoadingSpinner />
-          <div>
-            <h3 className="text-lg font-semibold">Loading Main Delivery App</h3>
-            <p className="text-muted-foreground">Setting up your party experience...</p>
-          </div>
+          <h3 className="text-lg font-semibold">Loading Party Supply Store</h3>
+          <p className="text-muted-foreground">Getting everything ready...</p>
         </div>
       </div>
     );
   }
 
   if (error || !appConfig) {
-    console.error('🚨 Index: App configuration error:', error);
-    console.error('🚨 Index: App config state:', appConfig);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
-          <h3 className="text-lg font-semibold text-destructive">Failed to Load App</h3>
-          <p className="text-muted-foreground">{error || 'App configuration not found'}</p>
+          <h3 className="text-lg font-semibold text-destructive">Failed to Load Store</h3>
+          <p className="text-muted-foreground">{error || 'Configuration not found'}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
@@ -128,44 +82,16 @@ const Index = () => {
     );
   }
 
-  // Load the default delivery app directly (NO REDIRECT)
-  console.log('✅ Index: Rendering ProductCategories with config:', {
-    appName: appConfig.app_name,
-    heroHeading: appConfig.main_app_config?.hero_heading,
-    collectionsConfig: appConfig.collections_config
-  });
-  
+  console.log('✅ Index: Rendering SimpleDeliveryApp with config:', appConfig.app_name);
+
   return (
-    <>
-      <ProductCategories
-        appName={appConfig.app_name}
-        heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
-        heroSubheading={appConfig.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
-        heroScrollingText={appConfig.main_app_config?.hero_scrolling_text || ""}
-        logoUrl={appConfig.logo_url}
-        collectionsConfig={appConfig.collections_config}
-        cartItemCount={getTotalItems()}
-        onOpenCart={() => setIsCartOpen(true)}
-      />
-      
-      {/* Cart Sidebar */}
-      <UnifiedCart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-      />
-      
-      {/* Admin Button */}
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button 
-          onClick={() => navigate('/admin')}
-          variant="outline"
-          size="sm"
-          className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground"
-        >
-          Admin
-        </Button>
-      </div>
-    </>
+    <SimpleDeliveryApp
+      appName={appConfig.app_name}
+      heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
+      heroSubheading={appConfig.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
+      logoUrl={appConfig.logo_url}
+      collectionsConfig={appConfig.collections_config}
+    />
   );
 };
 
