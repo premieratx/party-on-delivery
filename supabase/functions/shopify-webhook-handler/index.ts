@@ -170,10 +170,5 @@ async function handleOrderUpdate(supabase: any, order: any) {
   
   console.log(`✅ Order ${order.id} processed with tip handling - Tips: $${tipTotal}, Subtotal: $${itemsSubtotal}`)
   
-  // If order is paid, trigger order processing
-  if (order.financial_status === 'paid') {
-    await supabase.functions.invoke('process-order-complete', {
-      body: { order: standardOrder }
-    })
-  }
+  // Order is already in Shopify, just cache it locally - no need to process further
 }
