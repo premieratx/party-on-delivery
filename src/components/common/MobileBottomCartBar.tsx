@@ -24,7 +24,6 @@ export const MobileBottomCartBar: React.FC<MobileBottomCartBarProps> = ({
       fixed bottom-0 left-0 right-0 z-50 
       bg-background border-t shadow-lg 
       p-3 md:p-4 
-      lg:hidden
       ${className}
     `}>
       <Button 

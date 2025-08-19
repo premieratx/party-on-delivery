@@ -78,19 +78,6 @@ export const Checkout = () => {
           {/* Header - Mobile Optimized */}
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-2 sm:gap-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  // Navigate back to the delivery app they came from
-                  const referrer = localStorage.getItem('deliveryAppReferrer') || '/';
-                  navigate(referrer);
-                }}
-                className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Back to Products</span>
-                <span className="sm:hidden">Back</span>
-              </Button>
               <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">Checkout</h1>
             </div>
             

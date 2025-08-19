@@ -870,18 +870,6 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-secondary/5">
       <div className="relative">
         
-        {/* Mobile-optimized back button */}
-        <div className="p-2 md:p-4">
-          <Button 
-            variant="outline" 
-            onClick={onBack}
-            className="text-xs md:text-sm py-1 px-2 md:py-2 md:px-4 h-6 md:h-auto"
-          >
-            <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-            Back to Products
-          </Button>
-        </div>
-
         <div className="max-w-6xl mx-auto px-2 md:px-4 space-y-2 md:space-y-6">
           {/* Compact Header */}
           <Card className="shadow-floating animate-fade-in">
