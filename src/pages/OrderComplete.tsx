@@ -80,17 +80,21 @@ const OrderComplete = () => {
           const alreadyProcessed = localStorage.getItem('processedPaymentIntent') === piId;
           if (piId && !alreadyProcessed) {
             try {
-              const { data: processed, error: procError } = await supabase.functions.invoke('process-order-complete', {
-                body: { paymentIntentId: piId }
+              const affiliateCode = sessionStorage.getItem('affiliate.code') || sessionStorage.getItem('affiliate_code') || localStorage.getItem('affiliate_code') || '';
+              const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
+              const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
+              
+              const { data: processed, error: procError } = await supabase.functions.invoke('create-shopify-order', {
+                body: piId.startsWith('pi_') ? { paymentIntentId: piId, affiliateCode, commissionPercent } : { sessionId: piId, affiliateCode, commissionPercent }
               });
               if (procError) {
-                console.error('❌ process-order-complete error:', procError);
+                console.error('❌ create-shopify-order error:', procError);
               } else {
-                console.log('✅ process-order-complete success:', processed);
-                if (processed?.order?.order_number) {
+                console.log('✅ create-shopify-order success:', processed);
+                if (processed?.order?.order_number || processed?.orderNumber) {
                   setOrderData((prev: any) => ({
                     ...prev,
-                    order_number: processed.order.order_number
+                    order_number: processed.order?.order_number || processed.orderNumber
                   }));
                   localStorage.setItem('processedPaymentIntent', piId);
                 }
@@ -170,17 +174,21 @@ const OrderComplete = () => {
           const piId = paymentIntentId || sessionId;
           if (piId) {
             try {
-              const { data: processed, error: procError } = await supabase.functions.invoke('process-order-complete', {
-                body: { paymentIntentId: piId }
+              const affiliateCode = sessionStorage.getItem('affiliate.code') || sessionStorage.getItem('affiliate_code') || localStorage.getItem('affiliate_code') || '';
+              const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
+              const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
+              
+              const { data: processed, error: procError } = await supabase.functions.invoke('create-shopify-order', {
+                body: piId.startsWith('pi_') ? { paymentIntentId: piId, affiliateCode, commissionPercent } : { sessionId: piId, affiliateCode, commissionPercent }
               });
               if (procError) {
-                console.error('❌ process-order-complete error:', procError);
+                console.error('❌ create-shopify-order error:', procError);
               } else {
-                console.log('✅ process-order-complete success:', processed);
-                if (processed?.order?.order_number) {
+                console.log('✅ create-shopify-order success:', processed);
+                if (processed?.order?.order_number || processed?.orderNumber) {
                   setOrderData((prev: any) => ({
                     ...prev,
-                    order_number: processed.order.order_number
+                    order_number: processed.order?.order_number || processed.orderNumber
                   }));
                   localStorage.setItem('processedPaymentIntent', piId);
                 }
