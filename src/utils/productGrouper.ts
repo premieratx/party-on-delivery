@@ -87,26 +87,21 @@ function extractSize(title: string): string {
  * Group identical products by their base name into variants
  */
 export function groupProductsByBaseName(products: Product[]): GroupedProduct[] {
-  const groups = new Map<string, { products: Product[], firstIndex: number }>();
+  const groups = new Map<string, Product[]>();
 
-  // Group products by base name while preserving original order
-  products.forEach((product, index) => {
+  // Group products by base name
+  products.forEach(product => {
     const baseName = extractBaseName(product.title);
     if (!groups.has(baseName)) {
-      groups.set(baseName, { products: [], firstIndex: index });
+      groups.set(baseName, []);
     }
-    groups.get(baseName)!.products.push(product);
+    groups.get(baseName)!.push(product);
   });
 
-  // Convert groups to GroupedProduct format, preserving original order
+  // Convert groups to GroupedProduct format
   const groupedProducts: GroupedProduct[] = [];
-  
-  // Sort groups by first appearance to preserve Shopify order
-  const sortedGroups = Array.from(groups.entries()).sort(([, groupA], [, groupB]) => 
-    groupA.firstIndex - groupB.firstIndex
-  );
 
-  sortedGroups.forEach(([baseName, { products: productGroup }]) => {
+  groups.forEach((productGroup, baseName) => {
     if (productGroup.length === 1) {
       // Single product - keep as is but in grouped format
       const product = productGroup[0];
@@ -124,7 +119,7 @@ export function groupProductsByBaseName(products: Product[]): GroupedProduct[] {
         originalProducts: [product]
       });
     } else {
-      // Multiple products - create variants, sorted by price within group
+      // Multiple products - create variants
       const sortedProducts = productGroup.sort((a, b) => {
         const priceA = typeof a.price === 'string' ? parseFloat(a.price) : a.price;
         const priceB = typeof b.price === 'string' ? parseFloat(b.price) : b.price;
@@ -158,8 +153,7 @@ export function groupProductsByBaseName(products: Product[]): GroupedProduct[] {
     }
   });
 
-  // Return in original Shopify order (already sorted by first appearance)
-  return groupedProducts;
+  return groupedProducts.sort((a, b) => a.baseTitle.localeCompare(b.baseTitle));
 }
 
 /**

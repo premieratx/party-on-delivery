@@ -116,13 +116,13 @@ export default function SearchPage() {
 
   // Apply search and filtering
   const filteredProducts = useMemo(() => {
-    let products = [...allProducts]; // Preserve original array order
+    let products = allProducts;
 
     // Apply search if query exists
     if (searchQuery.trim()) {
       products = HierarchicalSearchOptimizer.searchProducts(searchQuery, products, 100);
     } else {
-      // Apply category filtering when no search query - preserve Shopify order
+      // Apply category filtering when no search query
       if (selectedCategory !== 'all') {
         products = HierarchicalSearchOptimizer.filterByCategory(products, selectedCategory);
         
@@ -131,13 +131,12 @@ export default function SearchPage() {
           products = HierarchicalSearchOptimizer.filterSpiritsBySubcategory(products, selectedSpirit);
         }
       }
-      // When no search and no specific category, keep original Shopify order
     }
 
-    // Group identical products by base name (for variants) - preserve order within groups
+    // Group identical products by base name (for variants)
     const groupedProducts = groupProductsByBaseName(products);
     
-    console.log(`📊 Search Results: ${products.length} products → ${groupedProducts.length} grouped cards (Shopify order preserved)`);
+    console.log(`📊 Search Results: ${products.length} products → ${groupedProducts.length} grouped cards`);
     return groupedProducts;
   }, [allProducts, searchQuery, selectedCategory, selectedSpirit]);
 
