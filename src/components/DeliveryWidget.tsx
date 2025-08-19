@@ -5,7 +5,6 @@ import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import ProductCategories from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
 import { RefactoredCheckoutFlow } from './checkout/RefactoredCheckoutFlow';
-import { StripeCheckoutVerify } from './StripeCheckoutVerify';
 import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
 
@@ -256,12 +255,7 @@ export const DeliveryWidget: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {currentStep === 'products' && (
-        <>
-          <div className="p-4 bg-blue-50 border-b">
-            <StripeCheckoutVerify />
-          </div>
-          <ProductCategories />
-        </>
+        <ProductCategories />
       )}
 
       {currentStep === 'checkout' && (
