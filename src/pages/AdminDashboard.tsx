@@ -16,6 +16,7 @@ import { PerformanceChecklist } from '@/components/admin/PerformanceChecklist';
 import { PerformanceOptimizationSummary } from '@/components/admin/PerformanceOptimizationSummary';
 import { DatabaseOptimizationTester } from '@/components/admin/DatabaseOptimizationTester';
 import { PerformanceReportGenerator } from '@/components/admin/PerformanceReportGenerator';
+import { ForceShopifySync } from '@/components/delivery/ForceShopifySync';
 import { LinkValidationDashboard } from '@/components/admin/LinkValidationDashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
@@ -395,6 +396,8 @@ export default function AdminDashboard() {
               </TabsList>
               
               <TabsContent value="partners">
+                <ForceShopifySync />
+                
                 <div className="flex justify-between items-center mb-4">
                   <div>
                     <h3 className="text-lg font-medium">Affiliate Partners</h3>

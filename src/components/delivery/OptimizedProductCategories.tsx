@@ -64,18 +64,22 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
   const loadShopifyCollections = async () => {
     try {
       setLoading(true);
-      console.log('Loading Shopify collections from get-all-collections...');
+      console.log('🔄 Loading Shopify collections with fresh data and proper ordering...');
       
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      // Force fresh data from Shopify to ensure we have latest ordering
+      const { data, error } = await supabase.functions.invoke('get-all-collections', {
+        body: { forceRefresh: true }
+      });
       
       if (error) throw error;
       
       if (data?.success && data?.collections) {
-        const filteredCollections = data.collections.filter((col: any) => 
-          col.products && col.products.length > 0
-        );
+        // Filter collections that have products and sort them consistently
+        const filteredCollections = data.collections
+          .filter((col: any) => col.products && col.products.length > 0)
+          .sort((a: any, b: any) => a.title.localeCompare(b.title));
         
-        console.log(`✅ Loaded ${filteredCollections.length} collections with products`);
+        console.log(`✅ Loaded ${filteredCollections.length} collections with products from Shopify`);
         setCollections(filteredCollections);
         
         // Set first collection as default
@@ -84,11 +88,11 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
         }
       }
     } catch (err) {
-      console.error('Error loading collections:', err);
+      console.error('❌ Error loading collections:', err);
       setError('Failed to load collections');
     } finally {
       setLoading(false);
-    }
+  };
   };
 
   const loadCategoryProducts = async (handle: string) => {
@@ -96,25 +100,39 @@ const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : 
       setLoading(true);
       setError(null);
       
-      console.log(`Loading products for collection: ${handle} using Shopify order`);
+      console.log(`🔄 Loading products for collection: ${handle} using exact Shopify order`);
       
-      // Get products for this specific collection using get-all-collections
-      const selectedCollection = collections.find(col => col.handle === handle);
+      // Get products for this specific collection using get-all-collections with fresh data
+      const { data, error } = await supabase.functions.invoke('get-all-collections', {
+        body: { forceRefresh: false, collection_handle: handle }
+      });
       
-      if (selectedCollection && selectedCollection.products) {
-        // Use products directly from collection with their Shopify sort order
-        const sortedProducts = selectedCollection.products.sort((a: any, b: any) => {
-          // Use Shopify sort_order if available, otherwise use position
-          const sortA = a.sort_order ?? a.position ?? 0;
-          const sortB = b.sort_order ?? b.position ?? 0;
-          return sortA - sortB;
-        });
+      if (error) throw error;
+      
+      if (data?.success && data?.collections) {
+        const selectedCollection = data.collections.find((col: any) => col.handle === handle);
         
-        console.log(`✅ Loaded ${sortedProducts.length} products for ${handle} in Shopify order`);
-        setProducts(sortedProducts);
-      } else {
-        console.log('Collection not found, loading empty products');
-        setProducts([]);
+        if (selectedCollection && selectedCollection.products) {
+          // Use products directly from Shopify with their exact sort order
+          const sortedProducts = selectedCollection.products.sort((a: any, b: any) => {
+            // Primary sort: Shopify sort_order (if available)
+            if (a.sort_order !== undefined && b.sort_order !== undefined) {
+              return a.sort_order - b.sort_order;
+            }
+            // Secondary sort: position (if available)
+            if (a.position !== undefined && b.position !== undefined) {
+              return a.position - b.position;
+            }
+            // Fallback: product ID
+            return a.id.localeCompare(b.id);
+          });
+          
+          console.log(`✅ Loaded ${sortedProducts.length} products for ${handle} in exact Shopify order`);
+          setProducts(sortedProducts);
+        } else {
+          console.log(`⚠️ Collection ${handle} not found or has no products`);
+          setProducts([]);
+        }
       }
     } catch (err) {
       setError('Failed to load products');
