@@ -25,13 +25,15 @@ Deno.serve(async (req) => {
       category, 
       collection_handle,
       search_category, // For search functionality (uses productType)
+      delivery_app_id, // For specific delivery app filtering
+      tab_collection_handles, // Array of collection handles for this tab
       use_type = 'delivery', // 'search' or 'delivery' - determines filtering method
       lightweight = true, 
       force_refresh = false,
       limit = null // Remove default limit to process ALL products for collections
     } = await req.json().catch(() => ({}))
 
-    console.log(`🔍 Loading unified products - use_type: ${use_type}, category: ${category}, collection: ${collection_handle}, search_category: ${search_category}, lightweight: ${lightweight}`)
+    console.log(`🔍 Loading unified products - use_type: ${use_type}, category: ${category}, collection: ${collection_handle}, search_category: ${search_category}, tab_collections: ${tab_collection_handles}, lightweight: ${lightweight}`)
 
     // Debug: Check what products we actually have in cache
     const { data: sampleProducts, error: sampleError } = await supabase
@@ -167,6 +169,13 @@ Deno.serve(async (req) => {
       collections.forEach(col => {
         console.log(`📦 Collection "${col.handle}" (${col.title}): ${col.product_count} products`)
       })
+      
+      // If specific collection handles are requested, filter collections
+      if (tab_collection_handles && Array.isArray(tab_collection_handles) && tab_collection_handles.length > 0) {
+        console.log(`🎯 Filtering for specific collections: ${tab_collection_handles.join(', ')}`)
+        collections = collections.filter(col => tab_collection_handles.includes(col.handle))
+        console.log(`🎯 Filtered to ${collections.length} collections`)
+      }
       
       // Log specific collections we're looking for
       const tailgateBeer = collections.find(c => c.handle === 'tailgate-beer')

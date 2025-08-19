@@ -437,6 +437,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {currentTabProducts.slice(0, maxProducts).map((product) => {
               console.log('🛒 ProductCategories: Rendering product', product.id, product.title);
+              const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
               return (
                 <div key={product.id} className="bg-card rounded-lg border shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
@@ -447,22 +448,46 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.title}</h3>
-                    <p className="text-2xl font-bold text-primary mb-4">${product.price}</p>
+                  <div className="p-3 space-y-2">
+                    <h3 className="font-medium text-sm line-clamp-2 leading-tight">{product.title}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-primary text-lg">${product.price}</span>
+                      {product.vendor && (
+                        <span className="text-xs text-muted-foreground">{product.vendor}</span>
+                      )}
+                    </div>
                     
-                    {/* Force Add to Cart Button */}
-                    <ForceAddToCartButton
-                      product={{
-                        id: product.id,
-                        title: product.title,
-                        price: product.price,
-                        image: product.image,
-                        variants: product.variants
-                      }}
-                      variant="default"
-                      showQuantity={true}
-                    />
+                    {/* Quantity Controls */}
+                    {quantity > 0 ? (
+                      <div className="flex items-center justify-between bg-primary/10 rounded-lg p-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-primary/20"
+                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="font-semibold text-primary px-2">{quantity}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 hover:bg-primary/20"
+                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddToCart(product)}
+                        className="w-full h-9 text-sm font-medium"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add to Cart
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
