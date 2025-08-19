@@ -91,7 +91,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
-  const { products, collections, loading, error, refreshProducts } = useOptimizedProductLoader();
+  
+  // Get current tab collection handle for filtering
+  const currentTabCollectionHandle = useMemo(() => {
+    const currentTab = collectionsConfig?.tabs?.[selectedCategory];
+    return currentTab?.collection_handle || null;
+  }, [collectionsConfig, selectedCategory]);
+  
+  const { products, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
+    collection_handle: currentTabCollectionHandle,
+    use_type: 'delivery'
+  });
 
   // Listen for collection updates and refresh
   useEffect(() => {
@@ -131,29 +141,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // Get products for current tab using configured collection handles
   const currentTabProducts = useMemo(() => {
-    // Safety checks for arrays
-    if (!Array.isArray(tabs) || !Array.isArray(collections)) {
+    if (!Array.isArray(collections) || !collectionsConfig?.tabs) {
       return [];
     }
     
-    const currentTab = tabs[selectedCategory];
-    if (!currentTab || currentTab.isSearch) return [];
+    const currentTab = collectionsConfig.tabs[selectedCategory];
+    if (!currentTab?.collection_handle) {
+      return [];
+    }
     
-    console.log(`📦 Tab ${currentTab.title}: Looking for collection handle: ${currentTab.handle}`);
+    console.log(`📦 Tab ${currentTab.name}: Looking for collection handle: ${currentTab.collection_handle}`);
     
     // Find the exact collection that matches the configured collection handle
     const targetCollection = collections.find(collection => 
-      collection.handle === currentTab.handle
+      collection.handle === currentTab.collection_handle
     );
     
-    if (targetCollection && Array.isArray(targetCollection.products)) {
-      console.log(`📦 ${currentTab.handle}: Found ${targetCollection.products.length} products from collection`);
+    if (targetCollection?.products) {
+      console.log(`📦 ${currentTab.collection_handle}: Found ${targetCollection.products.length} products from collection`);
       return targetCollection.products;
     }
     
-    console.log(`📦 ${currentTab.handle}: No collection found with this handle`);
+    console.log(`📦 ${currentTab.collection_handle}: No collection found with this handle`);
     return [];
-  }, [tabs, selectedCategory, collections]);
+  }, [collections, collectionsConfig, selectedCategory]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;
@@ -334,6 +345,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   variant={selectedCategory === index ? "default" : "ghost"}
                   className="whitespace-nowrap min-w-fit"
                   onClick={() => {
+                    const currentTab = collectionsConfig?.tabs?.[index];
+                    console.log(`🔄 Switching to tab ${index}: ${currentTab?.name || tab.title} (${currentTab?.collection_handle || tab.handle})`);
                     setSelectedCategory(index);
                   }}
                 >
