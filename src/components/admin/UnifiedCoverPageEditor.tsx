@@ -638,36 +638,47 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full h-[95vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-7xl w-full h-[95vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
-            Cover Page Creator
+            <Sparkles className="w-5 h-5 text-primary" />
+            Cover Page Creator - Figma Design System
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Controls Panel */}
-          <div className="w-80 border-r p-6 overflow-y-auto space-y-6">
-            {/* Theme Selection */}
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold">Theme</Label>
-              <div className="grid grid-cols-3 gap-2">
+          <div className="w-80 border-r flex flex-col">
+            <div className="p-6 overflow-y-auto flex-1 space-y-6">
+            {/* Figma Theme Selection */}
+            <div className="space-y-4 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2">
+                <Wand2 className="w-4 h-4 text-primary" />
+                <Label className="text-sm font-semibold">Figma Design Themes</Label>
+              </div>
+              <div className="grid grid-cols-1 gap-3">
                 {Object.entries(COVER_THEMES).map(([key, theme]) => (
                   <button
                     key={key}
                     onClick={() => setSelectedTheme(key as keyof typeof COVER_THEMES)}
-                    className={`p-3 rounded-lg border text-xs font-medium transition-all ${
+                    className={`p-4 rounded-lg border text-sm font-medium transition-all group ${
                       selectedTheme === key 
-                        ? 'border-primary bg-primary/10' 
-                        : 'border-border hover:bg-muted'
+                        ? 'border-primary bg-primary/10 shadow-md ring-2 ring-primary/30' 
+                        : 'border-border hover:bg-muted hover:border-primary/50'
                     }`}
                   >
                     <div 
-                      className="w-full h-6 rounded mb-2"
+                      className="w-full h-8 rounded mb-3 shadow-sm"
                       style={{ background: theme.background }}
                     />
-                    {theme.name}
+                    <div className="text-left">
+                      <div className="font-semibold">{theme.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {key === 'gold' && '✨ Premium Luxury Design'}
+                        {key === 'platinum' && '💎 Elegant Professional'}
+                        {key === 'original' && '🎨 Modern Classic'}
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -948,15 +959,17 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 </div>
               </TabsContent>
             </Tabs>
-
-            {/* Save Button */}
-            <div className="pt-6 border-t">
+            </div>
+            
+            {/* Save Button - Fixed at bottom */}
+            <div className="p-6 border-t bg-background">
               <Button
                 onClick={handleSave}
                 disabled={saving || !title || !slugOk}
-                className="w-full"
+                className="w-full h-12 text-base font-semibold"
+                size="lg"
               >
-                <Save className="w-4 h-4 mr-2" />
+                <Save className="w-5 h-5 mr-2" />
                 {saving ? 'Saving...' : isEditing ? 'Update Cover Page' : 'Create Cover Page'}
               </Button>
             </div>

@@ -337,17 +337,20 @@ export const DeliveryAppCreator = () => {
   };
 
   return (
-    <div className="space-y-6 w-full">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 w-full max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-4 border-b">
         <div>
-          <h2 className="text-3xl font-bold">Delivery App Creator</h2>
-          <p className="text-muted-foreground">Create and manage custom delivery apps with proper collection mapping</p>
+          <h2 className="text-3xl font-bold flex items-center gap-2">
+            <Package className="h-8 w-8 text-primary" />
+            Delivery App Creator
+          </h2>
+          <p className="text-muted-foreground">Create sophisticated delivery apps with advanced collection mapping</p>
         </div>
       </div>
 
       {/* Load Existing App */}
-      <Card className="border-2">
-        <CardHeader className="pb-4">
+      <Card className="border-2 shadow-lg">
+        <CardHeader className="pb-4 bg-gradient-to-r from-primary/5 to-secondary/5">
           <CardTitle className="flex items-center gap-2 text-xl">
             <Settings className="h-6 w-6 text-primary" />
             Load Existing App
@@ -418,19 +421,31 @@ export const DeliveryAppCreator = () => {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="basic" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="hero">Hero Section</TabsTrigger>
-          <TabsTrigger value="tabs">Product Tabs</TabsTrigger>
-          <TabsTrigger value="occasions">Occasions</TabsTrigger>
+      <Tabs defaultValue="basic" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4 h-12 bg-muted/50">
+          <TabsTrigger value="basic" className="flex items-center gap-2 h-10">
+            <Type className="w-4 h-4" />
+            Basic Info
+          </TabsTrigger>
+          <TabsTrigger value="hero" className="flex items-center gap-2 h-10">
+            <ImageIcon className="w-4 h-4" />
+            Hero Section
+          </TabsTrigger>
+          <TabsTrigger value="tabs" className="flex items-center gap-2 h-10">
+            <Layout className="w-4 h-4" />
+            Product Tabs
+          </TabsTrigger>
+          <TabsTrigger value="occasions" className="flex items-center gap-2 h-10">
+            <Palette className="w-4 h-4" />
+            Occasions
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basic" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Type className="h-5 w-5" />
+        <TabsContent value="basic" className="space-y-6">
+          <Card className="shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Type className="h-6 w-6 text-primary" />
                 Basic Information
               </CardTitle>
             </CardHeader>
@@ -891,15 +906,12 @@ export const DeliveryAppCreator = () => {
       </Tabs>
 
       {/* Save Button */}
-      <div className="flex justify-between items-center pt-6 border-t">
-        <div className="text-sm text-muted-foreground">
-          {selectedAppId ? 'Editing existing app' : 'Creating new delivery app'}
-        </div>
-        <Button 
+      <div className="flex justify-center pt-8 pb-4">
+        <Button
           onClick={saveDeliveryApp}
           disabled={loading || !config.app_name || !config.app_slug}
           size="lg"
-          className="min-w-[160px]"
+          className="min-w-[200px] h-14 text-lg font-semibold shadow-lg"
         >
           {loading ? (
             <>
