@@ -43,10 +43,13 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
         setIsLoading(true);
         setHasError(false);
         
+        console.log('[STRIPE-WRAPPER] Attempting to get publishable key...');
         const { data, error } = await supabase.functions.invoke('get-stripe-publishable-key');
         
+        console.log('[STRIPE-WRAPPER] Response:', { data, error });
+        
         if (error || !data?.key) {
-          console.log('Stripe not configured, running without payment processing');
+          console.log('[STRIPE-WRAPPER] Stripe not configured, running without payment processing:', { error, data });
           if (mounted) {
             setHasError(true);
             setIsLoading(false);
@@ -54,13 +57,15 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
           return;
         }
         
+        console.log('[STRIPE-WRAPPER] Got publishable key, initializing Stripe...', { keyPrefix: data.key.substring(0, 8) });
         const stripe = loadStripe(data.key);
         if (mounted) {
           setStripePromise(stripe);
           setIsLoading(false);
+          console.log('[STRIPE-WRAPPER] Stripe successfully initialized');
         }
       } catch (e) {
-        console.log('Stripe initialization failed:', e);
+        console.log('[STRIPE-WRAPPER] Stripe initialization failed:', e);
         if (mounted) {
           setHasError(true);
           setIsLoading(false);
