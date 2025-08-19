@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
-import { CheckoutFlow } from "@/components/delivery/CheckoutFlow";
+import { RefactoredCheckoutFlow } from "@/components/checkout/RefactoredCheckoutFlow";
 import { CheckoutIsolation } from "@/components/checkout/CheckoutIsolation";
 import { useUnifiedCart } from "@/hooks/useUnifiedCart";
 
@@ -17,6 +17,9 @@ interface LocalDeliveryInfo {
 export const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, updateQuantity } = useUnifiedCart();
+  
+  console.log('🔄 Checkout page rendering, cart items:', cartItems.length);
+  
   const [loading, setLoading] = useState(true);
   const [deliveryInfo, setDeliveryInfo] = useState<LocalDeliveryInfo>({
     date: null,
@@ -92,16 +95,19 @@ export const Checkout = () => {
           </div>
 
           {/* Checkout Form */}
-          <CheckoutFlow
-            cartItems={cartItems.map(item => ({
-              id: item.productId || item.id,
-              title: item.title,
-              name: item.title,
-              price: item.price,
-              image: item.image || '',
-              quantity: item.quantity,
-              variant: item.variant
-            }))}
+          <RefactoredCheckoutFlow
+            cartItems={cartItems.map(item => {
+              console.log('🛒 Processing cart item:', item);
+              return {
+                id: item.productId || item.id,
+                title: item.title,
+                name: item.title,
+                price: item.price,
+                image: item.image || '',
+                quantity: item.quantity,
+                variant: item.variant
+              };
+            })}
             deliveryInfo={{
               date: deliveryInfo.date,
               timeSlot: deliveryInfo.timeSlot,
