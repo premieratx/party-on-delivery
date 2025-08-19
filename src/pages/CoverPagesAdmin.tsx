@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,9 +10,12 @@ import {
   Eye, 
   Settings,
   Download,
-  Upload
+  Upload,
+  Edit,
+  Trash2
 } from 'lucide-react';
-import { UnifiedCoverPageEditor } from '@/components/admin/UnifiedCoverPageEditor';
+import { UnifiedCoverPageEditor, type CoverPageConfig, type CoverButtonConfig } from '@/components/admin/UnifiedCoverPageEditor';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface CoverPageProject {
@@ -26,42 +29,71 @@ interface CoverPageProject {
 
 export default function CoverPagesAdmin() {
   const [showCreator, setShowCreator] = useState(false);
-  const [projects, setProjects] = useState<CoverPageProject[]>([
-    {
-      id: '1',
-      name: 'Main App Landing',
-      createdAt: '2024-01-15',
-      lastModified: '2024-01-20',
-      devices: ['Desktop', 'iPhone 14 Pro', 'Galaxy S23', 'Pixel 7'],
-      status: 'published'
-    },
-    {
-      id: '2',
-      name: 'Mobile Onboarding',
-      createdAt: '2024-01-18',
-      lastModified: '2024-01-22',
-      devices: ['iPhone 14 Pro', 'Galaxy S23', 'Pixel 7'],
-      status: 'draft'
-    }
-  ]);
+  const [editingPage, setEditingPage] = useState<CoverPageConfig | null>(null);
+  const [coverPages, setCoverPages] = useState<CoverPageConfig[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState<CoverPageProject[]>([]);
 
-  const handleSaveProject = (settings: any) => {
-    // In a real implementation, this would save to your backend
-    console.log('Saving project settings:', settings);
-    toast.success('Cover page project saved successfully!');
-    
-    // For demo purposes, add to projects list
-    const newProject: CoverPageProject = {
-      id: Date.now().toString(),
-      name: `Project ${Date.now()}`,
-      createdAt: new Date().toISOString().split('T')[0],
-      lastModified: new Date().toISOString().split('T')[0],
-      devices: Object.keys(settings),
-      status: 'draft'
-    };
-    
-    setProjects(prev => [newProject, ...prev]);
+  // Load cover pages from database
+  useEffect(() => {
+    loadCoverPages();
+  }, []);
+
+  const loadCoverPages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cover_pages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      // Convert database JSON types to proper types
+      const convertedData: CoverPageConfig[] = (data || []).map(page => ({
+        id: page.id,
+        slug: page.slug,
+        title: page.title,
+        subtitle: page.subtitle || undefined,
+        logo_url: page.logo_url || undefined,
+        logo_height: page.logo_height || undefined,
+        bg_image_url: page.bg_image_url || undefined,
+        bg_video_url: page.bg_video_url || undefined,
+        checklist: Array.isArray(page.checklist) ? page.checklist.filter(item => typeof item === 'string') : [],
+        buttons: Array.isArray(page.buttons) ? (page.buttons as unknown as CoverButtonConfig[]) : [],
+        is_active: page.is_active,
+        affiliate_id: page.affiliate_id || undefined,
+        affiliate_slug: page.affiliate_slug || undefined,
+        styles: typeof page.styles === 'object' && page.styles ? page.styles as any : undefined,
+        is_default_homepage: page.is_default_homepage || false,
+        flow_name: page.flow_name || undefined,
+        is_multi_flow: page.is_multi_flow || false
+      }));
+      
+      setCoverPages(convertedData);
+      
+      // Convert to projects format for display
+      const projectData: CoverPageProject[] = convertedData.map(page => ({
+        id: page.id!,
+        name: page.title,
+        createdAt: new Date(data?.find(p => p.id === page.id)?.created_at || Date.now()).toLocaleDateString(),
+        lastModified: new Date(data?.find(p => p.id === page.id)?.updated_at || Date.now()).toLocaleDateString(),
+        devices: ['Desktop', 'iPhone 14 Pro', 'Galaxy S23', 'Pixel 7'], // All devices supported
+        status: page.is_active ? 'published' : 'draft'
+      }));
+      setProjects(projectData);
+    } catch (error) {
+      console.error('Error loading cover pages:', error);
+      toast.error('Failed to load cover pages');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveProject = async () => {
+    toast.success('Cover page saved successfully!');
+    await loadCoverPages(); // Reload the list
     setShowCreator(false);
+    setEditingPage(null);
   };
 
   const exportProject = (projectId: string) => {
@@ -69,19 +101,68 @@ export default function CoverPagesAdmin() {
     toast.info('Exporting project...');
   };
 
-  const duplicateProject = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      const duplicate: CoverPageProject = {
-        ...project,
-        id: Date.now().toString(),
-        name: `${project.name} (Copy)`,
-        createdAt: new Date().toISOString().split('T')[0],
-        lastModified: new Date().toISOString().split('T')[0],
-        status: 'draft'
-      };
-      setProjects(prev => [duplicate, ...prev]);
-      toast.success('Project duplicated');
+  const handleEditProject = (projectId: string) => {
+    const coverPage = coverPages.find(p => p.id === projectId);
+    if (coverPage) {
+      setEditingPage(coverPage);
+      setShowCreator(true);
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm('Are you sure you want to delete this cover page?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('cover_pages')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+      
+      toast.success('Cover page deleted successfully');
+      await loadCoverPages();
+    } catch (error) {
+      console.error('Error deleting cover page:', error);
+      toast.error('Failed to delete cover page');
+    }
+  };
+
+  const duplicateProject = async (projectId: string) => {
+    const coverPage = coverPages.find(p => p.id === projectId);
+    if (coverPage) {
+      try {
+        const duplicateData = {
+          slug: `${coverPage.slug}-copy-${Date.now()}`,
+          title: `${coverPage.title} (Copy)`,
+          subtitle: coverPage.subtitle,
+          logo_url: coverPage.logo_url,
+          logo_height: coverPage.logo_height,
+          bg_image_url: coverPage.bg_image_url,
+          bg_video_url: coverPage.bg_video_url,
+          checklist: coverPage.checklist as any,
+          buttons: coverPage.buttons as any,
+          is_active: false, // Start as draft
+          is_default_homepage: false, // Don't copy homepage status
+          affiliate_id: coverPage.affiliate_id,
+          affiliate_slug: coverPage.affiliate_slug,
+          styles: coverPage.styles as any,
+          flow_name: coverPage.flow_name,
+          is_multi_flow: coverPage.is_multi_flow
+        };
+        
+        const { error } = await supabase
+          .from('cover_pages')
+          .insert(duplicateData as any);
+
+        if (error) throw error;
+        
+        toast.success('Project duplicated');
+        await loadCoverPages();
+      } catch (error) {
+        console.error('Error duplicating cover page:', error);
+        toast.error('Failed to duplicate cover page');
+      }
     }
   };
 
@@ -157,14 +238,19 @@ export default function CoverPagesAdmin() {
             <CardTitle>Your Cover Page Projects</CardTitle>
           </CardHeader>
           <CardContent>
-            {projects.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading cover pages...</p>
+              </div>
+            ) : projects.length === 0 ? (
               <div className="text-center py-12">
                 <Layout className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-muted-foreground mb-2">No projects yet</h3>
-                <p className="text-muted-foreground mb-4">Create your first cover page project to get started</p>
+                <h3 className="text-lg font-semibold text-muted-foreground mb-2">No cover pages yet</h3>
+                <p className="text-muted-foreground mb-4">Create your first cover page to get started</p>
                 <Button onClick={() => setShowCreator(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create First Project
+                  Create First Cover Page
                 </Button>
               </div>
             ) : (
@@ -203,7 +289,13 @@ export default function CoverPagesAdmin() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {/* TODO: Open preview */}}
+                          onClick={() => {
+                            const coverPage = coverPages.find(p => p.id === project.id);
+                            if (coverPage) {
+                              window.open(`/cover/${coverPage.slug}`, '_blank');
+                            }
+                          }}
+                          title="Preview"
                         >
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -211,15 +303,17 @@ export default function CoverPagesAdmin() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {/* TODO: Edit project */}}
+                          onClick={() => handleEditProject(project.id)}
+                          title="Edit"
                         >
-                          <Settings className="w-4 h-4" />
+                          <Edit className="w-4 h-4" />
                         </Button>
                         
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => exportProject(project.id)}
+                          onClick={() => duplicateProject(project.id)}
+                          title="Duplicate"
                         >
                           <Download className="w-4 h-4" />
                         </Button>
@@ -227,9 +321,11 @@ export default function CoverPagesAdmin() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => duplicateProject(project.id)}
+                          onClick={() => handleDeleteProject(project.id)}
+                          title="Delete"
+                          className="text-destructive hover:text-destructive"
                         >
-                          Copy
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
@@ -286,11 +382,14 @@ export default function CoverPagesAdmin() {
       {/* Unified Cover Page Editor Modal */}
       <UnifiedCoverPageEditor
         open={showCreator}
-        onOpenChange={setShowCreator}
-        onSaved={() => {
-          setShowCreator(false);
-          toast.success('Cover page saved successfully!');
+        onOpenChange={(open) => {
+          setShowCreator(open);
+          if (!open) {
+            setEditingPage(null);
+          }
         }}
+        initial={editingPage}
+        onSaved={handleSaveProject}
       />
     </div>
   );
