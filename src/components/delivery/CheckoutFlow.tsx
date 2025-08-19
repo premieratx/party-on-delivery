@@ -862,8 +862,8 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     localStorage.removeItem('partyondelivery_cart');
     localStorage.removeItem('partyondelivery_applied_discount'); // Clear discount after transaction
     
-    // Only navigate here if we didn't already navigate with order details above
-    navigate('/order-complete');
+    // Don't navigate here - navigation should only happen once in the try block above
+    // This prevents the 310 error (too many redirects)
   };
 
   return (

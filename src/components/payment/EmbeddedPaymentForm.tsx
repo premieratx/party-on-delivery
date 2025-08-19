@@ -139,8 +139,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
           <p className="text-gray-600">Add some items to your cart to continue with checkout.</p>
           <Button 
             onClick={() => {
-              // Import useNavigate and use proper React Router navigation
-              window.location.href = '/';
+              window.history.back();
             }} 
             size="lg" 
             className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
@@ -317,20 +316,9 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         // Check if we're in a custom delivery app context
         const customAppContext = sessionStorage.getItem('custom-app-context');
         
-        // Navigate to success page with payment intent for mobile compatibility
-        if (window.location.pathname.includes('/checkout') || window.innerWidth <= 768) {
-          // Check if we should redirect to custom app success page
-          if (customAppContext) {
-            const appData = JSON.parse(customAppContext);
-            window.location.href = `/app/${appData.appSlug}/order-complete?payment_intent=${paymentIntentId}`;
-          } else {
-            // Mobile or checkout page - navigate with payment intent
-            window.location.href = `/order-complete?payment_intent=${paymentIntentId}`;
-          }
-        } else {
-          // Desktop widget - use callback
-          onPaymentSuccess(paymentIntentId);
-        }
+        // Always use callback to prevent redirect loops (310 error)
+        // The CheckoutFlow component will handle the proper navigation
+        onPaymentSuccess(paymentIntentId);
       }
     } catch (error) {
       setPaymentError(error instanceof Error ? error.message : 'Payment failed');
