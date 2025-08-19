@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RefactoredCheckoutFlow } from '@/components/checkout/RefactoredCheckoutFlow';
 import { CartItem, DeliveryInfo } from '@/components/DeliveryWidget';
 import { checkoutTester } from '@/utils/checkoutTestUtil';
+import { StripeStatusCheck } from '@/components/StripeStatusCheck';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -59,6 +60,11 @@ const TestCheckout = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-4">
+        {/* Live Status Check */}
+        <div className="mb-6">
+          <StripeStatusCheck />
+        </div>
+        
         {/* Test Controls */}
         <Card className="mb-6">
           <CardHeader>
