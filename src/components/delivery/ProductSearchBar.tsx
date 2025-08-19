@@ -4,9 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useDebounce } from '@/hooks/useDebounce';
-import { getAllCollectionsCached } from '@/utils/instantCacheClient';
-import { getContainerDescription } from '@/utils/containerSizeExtractor';
+import { useToast } from '@/hooks/use-toast';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
 
 interface ShopifyProduct {
@@ -59,13 +57,9 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ShopifyProduct[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [allProducts, setAllProducts] = useState<ShopifyProduct[]>([]);
-  const [indexedProducts, setIndexedProducts] = useState<any[]>([]);
-
-  // Debounce search query
-  const debouncedSearchQuery = useDebounce(searchQuery, 100);
 
   // Load all products on mount
   useEffect(() => {
@@ -97,57 +91,50 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
       if (data?.success && data.products) {
         console.log(`🔍 Loaded ${data.products.length} products for search`);
         setAllProducts(data.products);
-        
-        // Pre-index for faster search using SearchOptimizer
-        const indexed = SearchOptimizer.buildSearchIndex(data.products, 'search-bar');
-        setIndexedProducts(indexed);
       } else {
         console.warn('No products returned from optimized loader');
         setAllProducts([]);
-        setIndexedProducts([]);
       }
     } catch (error) {
       console.error('Error loading products for search:', error);
       setAllProducts([]);
-      setIndexedProducts([]);
     }
   };
 
 
-  const performSearch = useCallback((query: string) => {
-    const q = query.trim();
-    if (!q || indexedProducts.length === 0) {
-      setSearchResults([]);
-      setShowResults(false);
-      onResultsChange?.([], q);
-      onSearchingChange?.(false);
-      return;
-    }
-
-    setIsSearching(true);
-    onSearchingChange?.(true);
-    
-      // Use SearchOptimizer with hierarchical priority scoring: Product Name > Collection > Category > Product Type
-      const results = SearchOptimizer.searchProductsWithHierarchy(q, indexedProducts, 50);
-
-    setSearchResults(results);
-    setShowResults(!!showDropdownResults);
-    setIsSearching(false);
-    onResultsChange?.(results, q);
-    onSearchingChange?.(false);
-  }, [indexedProducts, showDropdownResults]);
-
-  // Perform search immediately when query changes (no debounce delay)
+  // Real-time hierarchical search with SearchOptimizer
   useEffect(() => {
-    if (searchQuery.trim()) {
-      performSearch(searchQuery);
-    } else {
+    const q = searchQuery.trim();
+    if (!q) {
       setSearchResults([]);
       setShowResults(false);
       onResultsChange?.([], '');
       onSearchingChange?.(false);
+      return;
     }
-  }, [searchQuery, performSearch]);
+
+    setIsLoading(true);
+    onSearchingChange?.(true);
+    
+    try {
+      // Use SearchOptimizer for hierarchical search: Product Name > Collection > Category > Product Type
+      const searchIndex = SearchOptimizer.buildSearchIndex(allProducts, 'product-search-bar');
+      const results = SearchOptimizer.searchProductsWithHierarchy(q, searchIndex, 20);
+      
+      console.log(`🔍 ProductSearchBar HIERARCHICAL: Found ${results.length} products for "${q}" (Name > Collection > Category > Type)`);
+      setSearchResults(results);
+      setShowResults(!!showDropdownResults);
+      onResultsChange?.(results, q);
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+      setShowResults(false);
+      onResultsChange?.([], q);
+    } finally {
+      setIsLoading(false);
+      onSearchingChange?.(false);
+    }
+  }, [searchQuery, allProducts, showDropdownResults, onResultsChange, onSearchingChange]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -194,7 +181,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
             <X className="h-4 w-4" />
           </Button>
         )}
-        {isSearching && (
+        {isLoading && (
           <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
         )}
       </div>
@@ -224,11 +211,6 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
                     <div className="font-medium text-sm truncate">
                       {product.title}
                     </div>
-                    {getContainerDescription(product.title) && (
-                      <div className="text-xs text-muted-foreground">
-                        {getContainerDescription(product.title)}
-                      </div>
-                    )}
                     <div className="text-primary font-semibold">
                       ${typeof product.price === 'number' ? applyMarkup(product.price).toFixed(2) : product.price}
                     </div>
@@ -241,7 +223,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
       )}
 
       {/* No Results */}
-      {showDropdownResults && showResults && searchResults.length === 0 && !isSearching && searchQuery.trim() && (
+      {showDropdownResults && showResults && searchResults.length === 0 && !isLoading && searchQuery.trim() && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 p-4 text-center">
           <div className="text-muted-foreground">
             No products found for "{searchQuery}"

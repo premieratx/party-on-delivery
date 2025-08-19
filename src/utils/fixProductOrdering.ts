@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const fixProductOrdering = async () => {
   console.log('🔧 Fixing product ordering across all collections...');
   
-  // Collections that need proper ordering
+  // Collections that need proper ordering - updated to include mixers-non-alcoholic
   const collectionsToSync = [
     'tailgate-beer',
     'spirits', 

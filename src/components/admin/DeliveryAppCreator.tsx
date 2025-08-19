@@ -300,7 +300,8 @@ export const DeliveryAppCreator = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-6">
+    <div className="max-h-[90vh] overflow-y-auto">
+      <div className="space-y-6 max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold">Delivery App Creator</h2>
@@ -834,6 +835,7 @@ export const DeliveryAppCreator = () => {
             </>
           )}
         </Button>
+      </div>
       </div>
     </div>
   );

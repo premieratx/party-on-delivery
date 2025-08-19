@@ -415,7 +415,7 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-7xl h-[90vh] flex flex-col">
+      <div className="bg-background rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -429,7 +429,8 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
 
         <div className="flex flex-1 overflow-hidden">
           {/* Settings Panel */}
-          <div className="w-80 border-r p-6 overflow-y-auto">
+          <div className="w-80 border-r flex flex-col">
+            <div className="p-6 flex-1 overflow-y-auto">
             {/* Device Selector */}
             <div className="space-y-4 mb-6">
               <Label className="text-sm font-semibold">Device View</Label>
@@ -667,33 +668,37 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
               </TabsContent>
             </Tabs>
 
-            {/* Action Buttons */}
-            <div className="space-y-2 mt-6">
-              <Button
-                onClick={() => setPreviewMode(!previewMode)}
-                variant="outline"
-                className="w-full"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {previewMode ? 'Edit Mode' : 'Preview Mode'}
-              </Button>
-              
-              <Button
-                onClick={resetToDefaults}
-                variant="outline"
-                className="w-full"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset Device
-              </Button>
-              
-              <Button
-                onClick={saveAllSettings}
-                className="w-full"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save All Devices
-              </Button>
+            </div>
+            
+            {/* Action Buttons - Fixed at bottom */}
+            <div className="border-t p-4 bg-background">
+              <div className="space-y-2">
+                <Button
+                  onClick={() => setPreviewMode(!previewMode)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  {previewMode ? 'Edit Mode' : 'Preview Mode'}
+                </Button>
+                
+                <Button
+                  onClick={resetToDefaults}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Reset Device
+                </Button>
+                
+                <Button
+                  onClick={saveAllSettings}
+                  className="w-full"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Save All Devices
+                </Button>
+              </div>
             </div>
           </div>
 
