@@ -122,9 +122,7 @@ Deno.serve(async (req) => {
           price: parseFloat(price),
           image: image,
           category: category,
-          category_title: category.charAt(0).toUpperCase() + category.slice(1),
           product_type: product.product_type,
-          search_category: category,
           tags: product.tags?.split(',') || [],
           data: product,
           collection_handles: [], // Will be populated later if needed

@@ -72,33 +72,21 @@ const Index = () => {
 
       console.log(`📊 Current product count in cache: ${count || 0}`);
 
-      if (!countError && (!count || count < 100)) {
-        console.log('🚨 CRITICAL: Insufficient products in cache, showing force sync option...');
-        setShowForceSync(true);
+      if (!countError && (!count || count < 50)) {
+        console.log('🚨 CRITICAL: Insufficient products in cache, triggering emergency sync...');
         
-        // Try triggering unified sync instead of emergency sync
+        // Use the emergency product sync function that works
         try {
-          console.log('🔄 Triggering unified Shopify sync...');
-          const { data: syncResult } = await supabase.functions.invoke('unified-shopify-sync');
+          console.log('🔄 Auto-triggering emergency sync...');
+          const { data: syncResult } = await supabase.functions.invoke('emergency-product-sync');
           if (syncResult?.success) {
-            console.log(`✅ Sync result:`, syncResult);
-            // Wait a moment for cache to update, then recheck
-            setTimeout(async () => {
-              const { count: newCount } = await supabase
-                .from('shopify_products_cache')
-                .select('*', { count: 'exact', head: true });
-              console.log(`📊 Updated product count: ${newCount || 0}`);
-              if (newCount && newCount > 100) {
-                setShowForceSync(false);
-              }
-            }, 2000);
+            console.log(`✅ Emergency sync completed: ${syncResult.products_synced} products`);
           }
         } catch (syncError) {
-          console.error('Unified sync failed:', syncError);
+          console.error('Emergency sync failed:', syncError);
         }
       } else {
         console.log(`✅ Product cache healthy: ${count} products available`);
-        setShowForceSync(false);
       }
     };
 
@@ -166,22 +154,7 @@ const Index = () => {
     );
   }
 
-  // Show instant product loader if products are missing
-  if (showForceSync) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-red-600">🚨 Loading Products</h2>
-            <p className="text-muted-foreground">
-              Product cache is empty. Loading all products now...
-            </p>
-          </div>
-        {/* Using SimpleForceSync instead of old broken sync components */}
-        </div>
-      </div>
-    );
-  }
+  // Don't block the UI with loading screens - let products load in background
 
   if (error || !appConfig) {
     return (
