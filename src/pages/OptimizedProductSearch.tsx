@@ -20,6 +20,7 @@ import { getInstantProducts } from '@/utils/instantCacheClient';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import '@/utils/fixProductOrdering'; // Auto-fix product ordering on load
 export default function OptimizedProductSearch() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');

@@ -14,6 +14,8 @@ import { cacheManager } from '@/utils/cacheManager';
 import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { SearchOptimizer } from '@/utils/searchOptimizer';
+import '@/utils/fixProductOrdering'; // Auto-fix product ordering
 
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
@@ -186,31 +188,14 @@ const [showSearchModal, setShowSearchModal] = useState(false);
     }))
   );
 
-  // Filter products by search term - HIERARCHICAL SEARCH with priority order (using collectionHandle)
+  // Real-time hierarchical search using SearchOptimizer
   const searchFilteredProducts = searchTerm 
-    ? allProducts.filter(product => {
-        const title = String(product.title || '').toLowerCase();
-        const collectionHandle = String(product.collectionHandle || '').toLowerCase();
-        
-        // Match in hierarchical order: Name > Collection for this simplified component
-        const q = searchTerm.toLowerCase();
-        return title.includes(q) || collectionHandle.includes(q);
-      }).sort((a, b) => {
-        // Sort by match priority: Product Name > Collection
-        const q = searchTerm.toLowerCase();
-        const getScore = (product: any) => {
-          const title = String(product.title || '').toLowerCase();
-          const collectionHandle = String(product.collectionHandle || '').toLowerCase();
-          
-          if (title.includes(q)) {
-            return title.startsWith(q) ? 1500 : title === q ? 2000 : 1000;
-          }
-          if (collectionHandle.includes(q)) return 750;
-          return 0;
-        };
-        
-        return getScore(b) - getScore(a);
-      })
+    ? (() => {
+        const searchIndex = SearchOptimizer.buildSearchIndex(allProducts, 'custom-delivery-search');
+        const results = SearchOptimizer.searchProductsWithHierarchy(searchTerm, searchIndex, 50);
+        console.log(`🔍 Custom Delivery: Found ${results.length} products for "${searchTerm}"`);
+        return results;
+      })()
     : allProducts;
 
   const getCartQuantity = (productId: string, variant?: string): number => {
