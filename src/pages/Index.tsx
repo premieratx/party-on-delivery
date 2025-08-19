@@ -9,22 +9,31 @@ import { UnifiedCart } from '@/components/common/UnifiedCart';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 
 const Index = () => {
-  console.log('🏠 Index: Loading Main Delivery App as homepage');
+  console.log('🏠 Index: STARTING - Loading Main Delivery App as homepage');
   
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
+  console.log('🏠 Index: Initializing hooks...');
+  
   const navigate = useNavigate();
+  console.log('🏠 Index: Navigate hook ready');
+  
   const { cartItems, getTotalItems } = useUnifiedCart();
+  console.log('🏠 Index: Cart hook ready, total items:', getTotalItems());
+  
   const [searchParams] = useSearchParams();
   const affiliateCode = searchParams.get('ref');
+  console.log('🏠 Index: Search params ready, affiliate code:', affiliateCode);
 
   useEffect(() => {
+    console.log('🏠 Index: useEffect triggered - loading delivery app');
+    
     const loadDefaultDeliveryApp = async () => {
       try {
-        console.log('🏠 Index: Loading homepage delivery app...');
+        console.log('🏠 Index: Starting database query for homepage delivery app...');
         
         // Get the homepage delivery app
         const { data: homepageApp, error: homepageError } = await supabase
@@ -33,6 +42,8 @@ const Index = () => {
           .eq('is_active', true)
           .eq('is_homepage', true)
           .single();
+
+        console.log('🏠 Index: Homepage query result:', { homepageApp, homepageError });
 
         if (homepageError || !homepageApp) {
           console.log('❌ No homepage app found, falling back to first active app');
@@ -43,22 +54,28 @@ const Index = () => {
             .eq('is_active', true)
             .order('created_at', { ascending: true })
             .limit(1);
+          
+          console.log('🏠 Index: Fallback query result:', { fallbackApps, fallbackError });
             
           if (fallbackError || !fallbackApps?.length) {
+            console.error('❌ No delivery apps found at all!');
             throw new Error('No delivery apps found');
           }
           
           setAppConfig(fallbackApps[0]);
-          console.log('🏠 Index: Using fallback app:', fallbackApps[0].app_name);
+          console.log('✅ Index: Using fallback app:', fallbackApps[0].app_name);
         } else {
           setAppConfig(homepageApp);
-          console.log('🏠 Index: Loaded homepage app:', homepageApp.app_name);
+          console.log('✅ Index: Loaded homepage app:', homepageApp.app_name);
         }
         
+        console.log('🏠 Index: App config set successfully');
+        
       } catch (err) {
-        console.error('❌ Error loading delivery app:', err);
+        console.error('❌ CRITICAL ERROR loading delivery app:', err);
         setError('Failed to load delivery app: ' + (err?.message || err));
       } finally {
+        console.log('🏠 Index: Setting loading to false');
         setLoading(false);
       }
     };
@@ -75,7 +92,10 @@ const Index = () => {
     navigate('/checkout');
   };
 
+  console.log('🏠 Index: Render state - loading:', loading, 'error:', error, 'appConfig:', !!appConfig);
+
   if (loading) {
+    console.log('🏠 Index: Rendering loading state');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -91,6 +111,7 @@ const Index = () => {
 
   if (error || !appConfig) {
     console.error('🚨 Index: App configuration error:', error);
+    console.error('🚨 Index: App config state:', appConfig);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
@@ -108,6 +129,12 @@ const Index = () => {
   }
 
   // Load the default delivery app directly (NO REDIRECT)
+  console.log('✅ Index: Rendering ProductCategories with config:', {
+    appName: appConfig.app_name,
+    heroHeading: appConfig.main_app_config?.hero_heading,
+    collectionsConfig: appConfig.collections_config
+  });
+  
   return (
     <>
       <ProductCategories
