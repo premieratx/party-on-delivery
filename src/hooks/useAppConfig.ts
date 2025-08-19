@@ -3,12 +3,22 @@ import { useState, useEffect } from 'react';
 interface AppConfig {
   googleMapsEnabled: boolean;
   abandonedOrderTrackingEnabled: boolean;
+  groupOrderingEnabled: boolean;
+  telegramBotEnabled: boolean;
+  aiBotAutomationsEnabled: boolean;
+  voiceChatEnabled: boolean;
+  speechModeEnabled: boolean;
   // Add more features as needed
 }
 
 const DEFAULT_CONFIG: AppConfig = {
   googleMapsEnabled: false, // Disabled by default
   abandonedOrderTrackingEnabled: false, // Disabled by default
+  groupOrderingEnabled: false, // Disabled by default
+  telegramBotEnabled: false, // Disabled by default
+  aiBotAutomationsEnabled: false, // Disabled by default
+  voiceChatEnabled: false, // Disabled by default
+  speechModeEnabled: false, // Disabled by default
 };
 
 const CONFIG_STORAGE_KEY = 'app_config';

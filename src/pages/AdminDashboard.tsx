@@ -39,7 +39,7 @@ import {
   Crown
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
-import AITestingControl from '@/components/AITestingControl';
+import ConditionalAITestingControl from '@/components/ConditionalAITestingControl';
 import TestGHLIntegration from '@/components/TestGHLConnection';
 import CleanupUserData from '@/components/CleanupUserData';
 import { SystemTestingSuite } from '@/components/SystemTestingSuite';
@@ -52,6 +52,7 @@ import { SecuritySyncDashboard } from '@/components/admin/SecuritySyncDashboard'
 import { EnhancedCacheManager } from '@/components/admin/EnhancedCacheManager';
 import SearchAppConfig from '@/components/admin/SearchAppConfig';
 import { AppConfigManager } from '@/components/admin/AppConfigManager';
+import { FeatureCleanupReport } from '@/components/FeatureCleanupReport';
 import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
 
 export default function AdminDashboard() {
@@ -728,6 +729,7 @@ export default function AdminDashboard() {
               </div>
               
               <AppConfigManager />
+              <FeatureCleanupReport />
               <CoverPageToggle />
             </div>
           </TabsContent>

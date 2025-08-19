@@ -4,7 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useAppConfig } from '@/hooks/useAppConfig';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, MapPin, Archive } from 'lucide-react';
+import { Settings, MapPin, Archive, Users, MessageSquare, Bot, Mic, Volume2 } from 'lucide-react';
 
 export const AppConfigManager: React.FC = () => {
   const { config, updateConfig, isLoading } = useAppConfig();
@@ -87,8 +87,108 @@ export const AppConfigManager: React.FC = () => {
           />
         </div>
 
+        {/* Group Ordering Configuration */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <Label htmlFor="group-ordering-toggle" className="font-medium">
+                Group Ordering
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Allow customers to create and join group orders with shared links
+            </p>
+          </div>
+          <Switch
+            id="group-ordering-toggle"
+            checked={config.groupOrderingEnabled}
+            onCheckedChange={(checked) => handleToggle('groupOrderingEnabled', checked)}
+          />
+        </div>
+
+        {/* Telegram Bot Configuration */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              <Label htmlFor="telegram-bot-toggle" className="font-medium">
+                Telegram Bot Integration
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Enable Telegram bot for notifications and automated testing
+            </p>
+          </div>
+          <Switch
+            id="telegram-bot-toggle"
+            checked={config.telegramBotEnabled}
+            onCheckedChange={(checked) => handleToggle('telegramBotEnabled', checked)}
+          />
+        </div>
+
+        {/* AI Bot Automations Configuration */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Bot className="w-4 h-4" />
+              <Label htmlFor="ai-bot-toggle" className="font-medium">
+                AI Bot Automations
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Enable AI testing agents and automated monitoring systems
+            </p>
+          </div>
+          <Switch
+            id="ai-bot-toggle"
+            checked={config.aiBotAutomationsEnabled}
+            onCheckedChange={(checked) => handleToggle('aiBotAutomationsEnabled', checked)}
+          />
+        </div>
+
+        {/* Voice Chat Configuration */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Mic className="w-4 h-4" />
+              <Label htmlFor="voice-chat-toggle" className="font-medium">
+                Voice Chat Interface
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Enable voice-based customer interaction and AI voice assistants
+            </p>
+          </div>
+          <Switch
+            id="voice-chat-toggle"
+            checked={config.voiceChatEnabled}
+            onCheckedChange={(checked) => handleToggle('voiceChatEnabled', checked)}
+          />
+        </div>
+
+        {/* Speech Mode Configuration */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4" />
+              <Label htmlFor="speech-mode-toggle" className="font-medium">
+                Speech Mode
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Enable text-to-speech and speech recognition features
+            </p>
+          </div>
+          <Switch
+            id="speech-mode-toggle"
+            checked={config.speechModeEnabled}
+            onCheckedChange={(checked) => handleToggle('speechModeEnabled', checked)}
+          />
+        </div>
+
         <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg">
-          <strong>Note:</strong> These features are disabled by default for security. 
+          <strong>Note:</strong> These features are disabled by default for security and simplicity. 
           Enable only when you have properly configured the required API keys and services.
         </div>
       </CardContent>
