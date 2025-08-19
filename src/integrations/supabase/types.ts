@@ -3548,33 +3548,7 @@ export type Database = {
       }
     }
     Views: {
-      security_monitoring: {
-        Row: {
-          affected_row_id: string | null
-          created_at: string | null
-          details: Json | null
-          event_type: string | null
-          table_name: string | null
-          user_email: string | null
-        }
-        Insert: {
-          affected_row_id?: never
-          created_at?: string | null
-          details?: Json | null
-          event_type?: string | null
-          table_name?: never
-          user_email?: string | null
-        }
-        Update: {
-          affected_row_id?: never
-          created_at?: string | null
-          details?: Json | null
-          event_type?: string | null
-          table_name?: never
-          user_email?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       auto_fix_all_security_issues: {
