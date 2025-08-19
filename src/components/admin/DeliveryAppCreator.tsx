@@ -239,6 +239,12 @@ export const DeliveryAppCreator = () => {
           hero_subheading: config.hero_subheading,
           scrolling_text: config.scrolling_text,
           hero_background_image: config.hero_background_image,
+          hero_background_type: (config as any).hero_background_type,
+          hero_background_video: (config as any).hero_background_video,
+          hero_background_color: (config as any).hero_background_color,
+          hero_gradient_start: (config as any).hero_gradient_start,
+          hero_gradient_end: (config as any).hero_gradient_end,
+          hero_gradient_direction: (config as any).hero_gradient_direction,
           occasion_buttons: config.occasion_buttons
         } as any
       };
@@ -484,14 +490,143 @@ export const DeliveryAppCreator = () => {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="hero_background">Hero Background Image URL</Label>
-                <Input
-                  id="hero_background"
-                  value={config.hero_background_image || ''}
-                  onChange={(e) => setConfig(prev => ({ ...prev, hero_background_image: e.target.value }))}
-                  placeholder="https://example.com/hero-bg.jpg"
-                />
+              <div className="space-y-4">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  Hero Background
+                </Label>
+                
+                <Tabs defaultValue="image" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="image">Image</TabsTrigger>
+                    <TabsTrigger value="video">Video</TabsTrigger>
+                    <TabsTrigger value="color">Color</TabsTrigger>
+                    <TabsTrigger value="gradient">Gradient</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="image" className="space-y-3">
+                    <div>
+                      <Label htmlFor="hero_bg_image">Background Image URL</Label>
+                      <Input
+                        id="hero_bg_image"
+                        value={config.hero_background_image || ''}
+                        onChange={(e) => setConfig(prev => ({ 
+                          ...prev, 
+                          hero_background_image: e.target.value,
+                          hero_background_type: 'image' 
+                        }))}
+                        placeholder="https://example.com/hero-bg.jpg (or .gif)"
+                      />
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="video" className="space-y-3">
+                    <div>
+                      <Label htmlFor="hero_bg_video">Background Video URL</Label>
+                      <Input
+                        id="hero_bg_video"
+                        value={(config as any).hero_background_video || ''}
+                        onChange={(e) => setConfig(prev => ({ 
+                          ...prev, 
+                          hero_background_video: e.target.value,
+                          hero_background_type: 'video',
+                          hero_background_image: undefined
+                        }))}
+                        placeholder="https://example.com/hero-bg.mp4"
+                      />
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="color" className="space-y-3">
+                    <div>
+                      <Label htmlFor="hero_bg_color">Background Color</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="hero_bg_color"
+                          type="color"
+                          value={(config as any).hero_background_color || '#000000'}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            hero_background_color: e.target.value,
+                            hero_background_type: 'color',
+                            hero_background_image: undefined,
+                            hero_background_video: undefined
+                          }))}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={(config as any).hero_background_color || '#000000'}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            hero_background_color: e.target.value,
+                            hero_background_type: 'color',
+                            hero_background_image: undefined,
+                            hero_background_video: undefined
+                          }))}
+                          placeholder="#000000"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="gradient" className="space-y-3">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="gradient_start">Start Color</Label>
+                        <Input
+                          id="gradient_start"
+                          type="color"
+                          value={(config as any).hero_gradient_start || '#000000'}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            hero_gradient_start: e.target.value,
+                            hero_background_type: 'gradient',
+                            hero_background_image: undefined,
+                            hero_background_video: undefined
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="gradient_end">End Color</Label>
+                        <Input
+                          id="gradient_end"
+                          type="color"
+                          value={(config as any).hero_gradient_end || '#333333'}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            hero_gradient_end: e.target.value,
+                            hero_background_type: 'gradient',
+                            hero_background_image: undefined,
+                            hero_background_video: undefined
+                          }))}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="gradient_direction">Direction</Label>
+                      <Select 
+                        value={(config as any).hero_gradient_direction || '135deg'}
+                        onValueChange={(value) => setConfig(prev => ({ 
+                          ...prev, 
+                          hero_gradient_direction: value 
+                        }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0deg">Top to Bottom</SelectItem>
+                          <SelectItem value="90deg">Left to Right</SelectItem>
+                          <SelectItem value="135deg">Diagonal ↘</SelectItem>
+                          <SelectItem value="45deg">Diagonal ↗</SelectItem>
+                          <SelectItem value="180deg">Bottom to Top</SelectItem>
+                          <SelectItem value="270deg">Right to Left</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </CardContent>
           </Card>

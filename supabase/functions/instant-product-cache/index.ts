@@ -49,9 +49,10 @@ Deno.serve(async (req) => {
     // Load fresh data with SHOPIFY ORDER PRESERVED
     let query = supabase
       .from('shopify_products_cache')
-      .select('id, title, price, image, category, vendor, handle, product_type, collection_handles, variants, description, sort_order')
-      .order('sort_order', { ascending: true }) // CRITICAL: Preserve Shopify collection order
-      .order('id', { ascending: true })
+      .select('id, title, price, image, category, vendor, handle, product_type, collection_handles, variants, description, sort_order, updated_at')
+      .order('sort_order', { ascending: true, nullsLast: true }) // CRITICAL: Preserve Shopify collection order
+      .order('updated_at', { ascending: false }) // Secondary sort by update time
+      .order('id', { ascending: true }) // Tertiary sort for consistency
 
     // Filter by collection if specified
     if (collection_handle && collection_handle !== 'all') {
