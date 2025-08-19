@@ -13,6 +13,7 @@ import { DirectProductSync } from '@/components/emergency/DirectProductSync';
 import { InstantProductSync } from '@/components/emergency/InstantProductSync';
 import { QuickSyncTrigger } from '@/components/emergency/QuickSyncTrigger';
 import { SimpleForceSync } from '@/components/emergency/SimpleForceSync';
+import { syncCollectionOrder } from '@/utils/productSync';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -47,8 +48,10 @@ const Index = () => {
               .select('*', { count: 'exact', head: true });
             console.log(`✅ Verified: ${collectionCount} collections in cache`);
             
-            // Trigger a custom event to refresh all components
-            window.dispatchEvent(new CustomEvent('collectionsUpdated'));
+            // Trigger collection order sync after main sync
+            setTimeout(async () => {
+              await syncCollectionOrder();
+            }, 3000);
           }, 2000);
         } else {
           console.error('❌ Sync failed:', error);
