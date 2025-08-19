@@ -63,11 +63,12 @@ export const PostCheckoutScreenManager = () => {
   const handleSave = async () => {
     try {
       const screenData = {
-        screen_name: formData.screen_name,
-        screen_slug: formData.screen_slug,
         title: formData.title,
         message: formData.message,
-        affiliate_id: formData.affiliate_id || null
+        affiliate_id: formData.affiliate_id || null,
+        cover_page_id: '', // Required field - set to empty string for now
+        background_color: '#ffffff',
+        text_color: '#000000'
       };
 
       if (editingScreen) {
