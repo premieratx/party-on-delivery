@@ -7,6 +7,7 @@ import { DeliveryCart } from './delivery/DeliveryCart';
 import { RefactoredCheckoutFlow } from './checkout/RefactoredCheckoutFlow';
 import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
+import { StripeTestComponent } from './StripeTestComponent';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useReliableStorage } from '@/hooks/useReliableStorage';
@@ -258,22 +259,30 @@ export const DeliveryWidget: React.FC = () => {
       )}
 
       {currentStep === 'checkout' && (
-        <RefactoredCheckoutFlow
-          cartItems={cartItems}
-          deliveryInfo={deliveryInfo}
-          totalPrice={getTotalPrice()}
-          onBack={handleBackToProducts}
-          onDeliveryInfoChange={setDeliveryInfo}
-          onUpdateQuantity={handleUpdateQuantity}
-          isAddingToOrder={isAddingToOrder}
-          useSameAddress={useSameAddress}
-          lastOrderInfo={validLastOrderInfo}
-          onDiscountChange={setAppliedDiscount}
-          onTipChange={setTipAmount}
-          onChangesDetected={setHasChanges}
-          appliedDiscount={appliedDiscount}
-          affiliateCode={affiliateReferral}
-        />
+        <>
+          {/* Add Stripe Test Component for debugging */}
+          <div className="p-4 mb-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h3 className="font-medium text-yellow-800 mb-2">🔧 Debug: Test Stripe Integration</h3>
+            <StripeTestComponent />
+          </div>
+          
+          <RefactoredCheckoutFlow
+            cartItems={cartItems}
+            deliveryInfo={deliveryInfo}
+            totalPrice={getTotalPrice()}
+            onBack={handleBackToProducts}
+            onDeliveryInfoChange={setDeliveryInfo}
+            onUpdateQuantity={handleUpdateQuantity}
+            isAddingToOrder={isAddingToOrder}
+            useSameAddress={useSameAddress}
+            lastOrderInfo={validLastOrderInfo}
+            onDiscountChange={setAppliedDiscount}
+            onTipChange={setTipAmount}
+            onChangesDetected={setHasChanges}
+            appliedDiscount={appliedDiscount}
+            affiliateCode={affiliateReferral}
+          />
+        </>
       )}
 
       {/* Slide-out Cart */}
