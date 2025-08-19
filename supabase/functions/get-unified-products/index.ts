@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Get ALL products from unified cache - no limits for proper collection mapping
+    // Get products from unified cache
     let productsQuery = supabase
       .from('shopify_products_cache')
       .select(lightweight ? 
@@ -64,7 +64,11 @@ Deno.serve(async (req) => {
       )
       .order('updated_at', { ascending: false })
 
-    console.log('🔍 Loading ALL products for proper collection mapping...')
+    // CRITICAL: Filter by specific collection handle if provided
+    if (collection_handle && collection_handle !== 'all') {
+      console.log(`🎯 FILTERING FOR SPECIFIC COLLECTION: ${collection_handle}`)
+      productsQuery = productsQuery.contains('collection_handles', [collection_handle])
+    }
 
     // Only apply limit for final result display, not for collection processing
     const processLimit = limit && limit > 0 ? limit : null
@@ -77,6 +81,38 @@ Deno.serve(async (req) => {
     }
 
     console.log(`📊 Loaded ${products?.length || 0} products for collection processing`)
+    
+    // If filtering by specific collection, return products directly without collection grouping
+    if (collection_handle && collection_handle !== 'all') {
+      console.log(`🎯 DIRECT COLLECTION FILTER: Returning ${products?.length || 0} products from ${collection_handle}`)
+      
+      const result = {
+        success: true,
+        products: processLimit ? (products || []).slice(0, processLimit) : (products || []),
+        collections: [{
+          id: collection_handle,
+          title: collection_handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          handle: collection_handle,
+          product_count: products?.length || 0,
+          products: products || []
+        }],
+        categories: [],
+        total_products: products?.length || 0,
+        total_collections: 1,
+        cached: true,
+        lightweight,
+        use_type,
+        last_sync: null,
+        cache_info: null
+      }
+      
+      console.log(`✅ COLLECTION FILTER RESULT: ${result.products.length} products for ${collection_handle}`)
+      
+      return new Response(
+        JSON.stringify(result),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // Get collections/categories
     const { data: collectionsData, error: collectionsError } = await supabase
