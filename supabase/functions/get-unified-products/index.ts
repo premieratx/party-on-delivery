@@ -114,12 +114,18 @@ Deno.serve(async (req) => {
       // For delivery apps: use actual Shopify collections with their products
       collections = collectionsData?.map(col => {
         // Filter products by collection_handles array (exact match)
-        const collectionProducts = products?.filter(p => 
-          p.collection_handles && Array.isArray(p.collection_handles) && 
-          p.collection_handles.includes(col.handle)
-        ) || []
+        const collectionProducts = products?.filter(p => {
+          // Check if product has collection_handles and contains this collection
+          if (!p.collection_handles || !Array.isArray(p.collection_handles)) {
+            return false;
+          }
+          return p.collection_handles.includes(col.handle);
+        }) || [];
         
-        console.log(`📦 Collection ${col.handle}: ${collectionProducts.length} products found`)
+        console.log(`📦 Collection ${col.handle}: ${collectionProducts.length} products found from ${products?.length || 0} total products`);
+        console.log(`📦 Collection ${col.handle}: First few product collection_handles:`, 
+          collectionProducts.slice(0, 3).map(p => ({ id: p.id, title: p.title, collection_handles: p.collection_handles }))
+        );
         
         return {
           id: col.handle,
@@ -127,8 +133,8 @@ Deno.serve(async (req) => {
           handle: col.handle,
           product_count: collectionProducts.length,
           products: collectionProducts
-        }
-      }) || []
+        };
+      }).filter(col => col.product_count > 0) || []; // Only return collections with products
     }
 
     // Get cache metadata
