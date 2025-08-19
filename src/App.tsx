@@ -13,6 +13,7 @@ const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
+const Checkout = lazy(() => import("./pages/Checkout"));
 const TestCheckout = lazy(() => import("./pages/TestCheckout"));
 const VoiceChat = lazy(() => import("./pages/VoiceChat"));
 
@@ -61,6 +62,7 @@ const App = () => {
               <Routes>
                 {/* Core Routes */}
                 <Route path="/" element={<Index />} />
+                <Route path="/checkout" element={<Checkout />} />
                 <Route path="/app/:appSlug" element={<CustomAppView />} />
                 
                 {/* Conditionally render Voice Chat */}
