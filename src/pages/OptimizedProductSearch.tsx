@@ -155,29 +155,36 @@ export default function OptimizedProductSearch() {
     return () => { mounted = false; };
   }, []);
 
-  // IMPROVED Real-time search with EXACT matching - only 4 criteria  
+  // EXACT Real-time search - only these 4 criteria, no assumptions
   useEffect(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       const timer = setTimeout(() => {
-        // EXACT MATCHING search - only these 4 criteria, no description
+        // EXACT MATCHING ONLY - no guessing, no assumptions
         const filtered = allProducts.filter((p) => {
           const title = String(p.title || '').toLowerCase();
           const productType = String(p.product_type || '').toLowerCase();
           const category = String(p.category || '').toLowerCase();
           
-          // Check collection handles
-          const collections = (productCollectionsRef.current[p.id] || []).join(' ').toLowerCase();
+          // Get collection handles if they exist
+          let collections = '';
+          if (p.collection_handles) {
+            if (Array.isArray(p.collection_handles)) {
+              collections = p.collection_handles.join(' ').toLowerCase();
+            } else if (typeof p.collection_handles === 'string') {
+              collections = p.collection_handles.toLowerCase();
+            }
+          }
           
-          // ONLY match these 4 criteria: product name, product type, category, collection
+          // ONLY match these 4 criteria - EXACT substring matching only
           return title.includes(q) || 
                  productType.includes(q) || 
                  category.includes(q) || 
                  collections.includes(q);
         });
-        console.log(`🔍 SEARCH APP: Found ${filtered.length} products matching "${searchQuery}"`);
+        console.log(`🔍 EXACT SEARCH: Found ${filtered.length} products with "${searchQuery}" in title/type/category/collection`);
         setProducts(filtered);
-      }, 100);
+      }, 50); // Faster response for immediate results
       return () => clearTimeout(timer);
     } else {
       // No query: show category view from full catalog

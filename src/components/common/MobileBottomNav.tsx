@@ -1,99 +1,85 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Search, ShoppingCart, CheckCircle } from 'lucide-react';
-import { haptic } from '@/utils/hapticFeedback';
+import { Home, Search, Settings, ShoppingCart } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface MobileBottomNavProps {
-  cartItemCount: number;
-  onOpenCart: () => void;
-  onProceedToCheckout: () => void;
-  onOpenSearch: () => void;
-  currentAppSlug?: string;
-  isVisible?: boolean;
+  cartItemCount?: number;
+  onOpenCart?: () => void;
+  onOpenDeliverySelector?: () => void;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
-  cartItemCount,
+  cartItemCount = 0,
   onOpenCart,
-  onProceedToCheckout,
-  onOpenSearch,
-  isVisible = true
+  onOpenDeliverySelector
 }) => {
-  if (!isVisible) return null;
+  const navigate = useNavigate();
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t">
-      <div className="grid grid-cols-4 gap-1 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-        {/* Search */}
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border lg:hidden">
+      <div className="flex items-center justify-around py-2 px-4">
+        {/* Admin Button */}
         <Button
           variant="ghost"
           size="sm"
-          className="flex flex-col items-center gap-1 h-16 text-xs"
-          onClick={() => {
-            haptic.buttonPress();
-            onOpenSearch();
-          }}
+          onClick={() => navigate('/affiliate/admin-login')}
+          className="flex flex-col items-center gap-1 h-auto py-2 px-3"
         >
-          <Search className="w-5 h-5" />
-          <span>Search</span>
+          <Settings className="h-5 w-5" />
+          <span className="text-xs">Admin</span>
         </Button>
 
-        {/* Manage Order */}
+        {/* Home Button */}
         <Button
           variant="ghost"
           size="sm"
-          className="flex flex-col items-center gap-1 h-16 text-xs"
-          onClick={() => {
-            haptic.buttonPress();
-            onOpenCart();
-          }}
+          onClick={() => navigate('/')}
+          className="flex flex-col items-center gap-1 h-auto py-2 px-3"
         >
-          <ShoppingCart className="w-5 h-5" />
-          <span className="leading-tight">Manage Order</span>
+          <Home className="h-5 w-5" />
+          <span className="text-xs">Home</span>
         </Button>
 
-        {/* Cart */}
+        {/* Search Button */}
         <Button
           variant="ghost"
           size="sm"
-          className="flex flex-col items-center gap-1 h-16 text-xs relative"
-          onClick={() => {
-            haptic.buttonPress();
-            onOpenCart();
-          }}
+          onClick={() => navigate('/search')}
+          className="flex flex-col items-center gap-1 h-auto py-2 px-3"
+        >
+          <Search className="h-5 w-5" />
+          <span className="text-xs">Search</span>
+        </Button>
+
+        {/* Cart Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onOpenCart}
+          className="flex flex-col items-center gap-1 h-auto py-2 px-3 relative"
         >
           <div className="relative">
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="h-5 w-5" />
             {cartItemCount > 0 && (
-              <span className="absolute -top-2 -right-2 rounded-full bg-primary text-primary-foreground text-[10px] px-1 leading-none min-w-[16px] text-center">
+              <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
                 {cartItemCount}
-              </span>
+              </Badge>
             )}
           </div>
-          <span>Cart</span>
+          <span className="text-xs">Cart</span>
         </Button>
 
-        {/* Checkout */}
+        {/* Delivery App Selector */}
         <Button
           variant="ghost"
           size="sm"
-          className={`flex flex-col items-center gap-1 h-16 text-xs ${
-            cartItemCount > 0 
-              ? 'text-success checkout-blink' 
-              : 'text-muted-foreground'
-          }`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (cartItemCount > 0) {
-              haptic.buttonPress();
-              onProceedToCheckout();
-            }
-          }}
-          disabled={cartItemCount === 0}
+          onClick={onOpenDeliverySelector}
+          className="flex flex-col items-center gap-1 h-auto py-2 px-3"
         >
-          <CheckCircle className="w-5 h-5" />
-          <span>Checkout</span>
+          <Settings className="h-5 w-5" />
+          <span className="text-xs">Apps</span>
         </Button>
       </div>
     </div>

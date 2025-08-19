@@ -205,65 +205,74 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   };
 
-  // IMPROVED Real-time search with exact matching 
+  // EXACT Real-time search with exact matching 
   const handleSearch = useCallback(async () => {
-    if (!searchQuery?.trim()) {
+    if (!searchQuery.trim()) {
       setSearchProducts([]);
-      setIsSearchActive(false);
+      setIsSearching(false);
       return;
     }
-    
-    console.log('🔍 EXACT MATCH search for:', searchQuery);
-    setIsSearchActive(true);
-    setSavedSearchQuery(searchQuery); // Save current search
+
+    setIsSearching(true);
+    const q = searchQuery.trim().toLowerCase();
     
     try {
-      setIsSearching(true);
-      
-      // Search across ALL products by calling the unified products API
-      const { data } = await supabase.functions.invoke('get-unified-products', {
+      // Get all products for search
+      const { data: response, error } = await supabase.functions.invoke('get-unified-products', {
         body: { 
-          lightweight: true,
-          use_type: 'delivery',
-          preserve_order: true
+          use_type: 'search',
+          lightweight: false
         }
       });
 
-      if (data?.success && data.products) {
-        const query = searchQuery.toLowerCase();
-        const filtered = data.products.filter((product: any) => {
-          // EXACT MATCHING ONLY - no guessing
-          const title = product.title?.toLowerCase() || '';
-          const productType = product.product_type?.toLowerCase() || '';
-          const category = product.category?.toLowerCase() || '';
-          
-          // Check collection handles  
-          const collectionHandles = Array.isArray(product.collection_handles) 
-            ? product.collection_handles 
-            : typeof product.collection_handles === 'string' 
-              ? JSON.parse(product.collection_handles || '[]')
-              : [];
-          const collections = collectionHandles.join(' ').toLowerCase();
-          
-          // ONLY match these 4 criteria: product name, product type, category, collection
-          return title.includes(query) || 
-                 productType.includes(query) || 
-                 category.includes(query) || 
-                 collections.includes(query);
-        });
+      if (error) throw error;
+
+      const allProducts = response?.products || [];
+      
+      // EXACT MATCHING ONLY - no assumptions, no related words
+      const filtered = allProducts.filter((product: any) => {
+        const title = String(product.title || '').toLowerCase();
+        const productType = String(product.product_type || '').toLowerCase();
+        const category = String(product.category || '').toLowerCase();
         
-        console.log(`🔍 EXACT MATCH: Found ${filtered.length} products matching "${searchQuery}"`);
-        setSearchProducts(filtered);
-      } else {
-        setSearchProducts([]);
-      }
-    } catch (err) {
-      console.error('Search error:', err);
+        // Get collection handles
+        let collections = '';
+        if (product.collection_handles) {
+          if (Array.isArray(product.collection_handles)) {
+            collections = product.collection_handles.join(' ').toLowerCase();
+          } else if (typeof product.collection_handles === 'string') {
+            collections = product.collection_handles.toLowerCase();
+          }
+        }
+        
+        // ONLY match these 4 criteria - EXACT substring matching
+        return title.includes(q) || 
+               productType.includes(q) || 
+               category.includes(q) || 
+               collections.includes(q);
+      });
+
+      console.log(`🔍 DELIVERY SEARCH: Found ${filtered.length} products with "${searchQuery}" in title/type/category/collection`);
+      setSearchProducts(filtered);
+    } catch (error) {
+      console.error('Search error:', error);
       setSearchProducts([]);
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, supabase]);
+  // Search timer for delayed execution
+  useEffect(() => {
+    if (searchQuery?.trim()) {
+      const timer = setTimeout(() => {
+        handleSearch();
+      }, 200);
+      return () => clearTimeout(timer);
+    } else {
+      setSearchProducts([]);
+      setIsSearchActive(false);
+    }
+  }, [searchQuery, handleSearch]);
 
   return (
     <div className="min-h-screen bg-background">
