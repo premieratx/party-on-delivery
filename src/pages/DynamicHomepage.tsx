@@ -35,6 +35,8 @@ export default function DynamicHomepage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  console.log('🏠 DynamicHomepage render - Loading:', loading, 'Error:', error, 'App:', !!homepageApp);
+  
   const { 
     cartItems, 
     addToCart, 
@@ -50,8 +52,17 @@ export default function DynamicHomepage() {
   }, []);
 
   const loadHomepageApp = async () => {
+    console.log('🏠 Starting homepage app load...');
+    
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ Homepage load timeout, using fallback');
+      setLoading(false);
+      setHomepageApp(null);
+    }, 5000);
+
     try {
-      console.log('🏠 Loading homepage delivery app...');
+      console.log('🔍 Querying delivery_app_variations table...');
       
       const { data, error } = await supabase
         .from('delivery_app_variations')
@@ -60,6 +71,8 @@ export default function DynamicHomepage() {
         .eq('is_active', true)
         .single();
 
+      clearTimeout(timeoutId);
+
       if (error) {
         if (error.code === 'PGRST116') {
           // No homepage app set
@@ -67,10 +80,11 @@ export default function DynamicHomepage() {
           setHomepageApp(null);
         } else {
           console.error('❌ Error loading homepage app:', error);
-          throw error;
+          setError(`Database error: ${error.message}`);
+          setHomepageApp(null);
         }
       } else {
-        console.log('✅ Loaded homepage app:', data.app_name);
+        console.log('✅ Loaded homepage app:', data?.app_name || 'Unknown');
         
         // Process the app data to ensure proper structure
         const processedApp: HomepageDeliveryApp = {
@@ -88,10 +102,12 @@ export default function DynamicHomepage() {
         setHomepageApp(processedApp);
       }
     } catch (error: any) {
+      clearTimeout(timeoutId);
       console.error('❌ Failed to load homepage app:', error);
-      setError(error.message || 'Failed to load homepage configuration');
+      setError(error.message || 'Unknown error occurred');
       setHomepageApp(null); // Fallback to simple page
     } finally {
+      console.log('🔄 Setting loading to false');
       setLoading(false);
     }
   };
