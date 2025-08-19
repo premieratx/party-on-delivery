@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
@@ -53,7 +53,7 @@ export default function DynamicHomepage() {
     loadHomepageApp();
   }, []);
 
-  const loadHomepageApp = async () => {
+  const loadHomepageApp = useCallback(async () => {
     console.log('🏠 Loading homepage app...');
     
     try {
@@ -101,7 +101,7 @@ export default function DynamicHomepage() {
       console.log('🔄 Setting loading to false');
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleAddToCart = (item: any) => {
     console.log('🛒 Adding to cart from homepage:', item);
