@@ -62,7 +62,9 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
         setProducts([]);
       }
 
-      // Load products directly from Supabase cache by collection
+      // Clear products immediately to prevent mixing between collections
+      setProducts([]);
+      
       const { data, error: functionError } = await supabase.functions.invoke('get-unified-products', {
         body: { 
           collection_handle,

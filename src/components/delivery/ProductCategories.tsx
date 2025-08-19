@@ -102,7 +102,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];
   const currentCollectionHandle = currentTabConfig?.collection_handle;
   
-  // Load products for current collection only
+  // Load products for current collection only - force clear on collection change
   const { products: currentTabProducts, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
     collection_handle: currentCollectionHandle,
     use_type: 'delivery'
@@ -127,8 +127,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [forceRefresh, refreshProducts]);
 
-  // Products are filtered by collection from the loader
+  // Force clear products when switching tabs and strictly filter by current collection
   const displayProducts = useMemo(() => {
+    console.log(`🔍 TAB ${selectedCategory}: Processing products for collection: ${currentCollectionHandle}`);
+    
     if (!currentCollectionHandle) {
       console.log(`❌ No collection handle for tab ${selectedCategory}`);
       return [];
@@ -139,8 +141,23 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       return [];
     }
     
-    console.log(`📦 ${currentCollectionHandle}: Displaying ${currentTabProducts.length} products from collection`);
-    return currentTabProducts.slice(0, maxProducts);
+    // STRICT filtering - only products that belong to this exact collection
+    const strictlyFilteredProducts = currentTabProducts.filter(product => {
+      const handles = Array.isArray(product.collection_handles) 
+        ? product.collection_handles 
+        : typeof product.collection_handles === 'string' 
+          ? JSON.parse(product.collection_handles || '[]')
+          : [];
+      
+      const belongsToCollection = handles.includes(currentCollectionHandle);
+      if (!belongsToCollection) {
+        console.log(`❌ Product "${product.title}" does not belong to collection "${currentCollectionHandle}" - handles: ${JSON.stringify(handles)}`);
+      }
+      return belongsToCollection;
+    });
+    
+    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total)`);
+    return strictlyFilteredProducts.slice(0, maxProducts);
   }, [currentTabProducts, currentCollectionHandle, maxProducts, selectedCategory]);
 
   const currentTab = tabs[selectedCategory];
@@ -300,8 +317,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   className="whitespace-nowrap min-w-fit"
                   onClick={() => {
                     const currentTab = collectionsConfig?.tabs?.[index];
-                    console.log(`🔄 Switching to tab ${index}: ${currentTab?.name || tab.title} (${currentTab?.collection_handle || tab.handle})`);
+                    console.log(`🔄 SWITCHING TO TAB ${index}: ${currentTab?.name || tab.title} (${currentTab?.collection_handle || tab.handle})`);
                     setSelectedCategory(index);
+                    // Clear search when switching tabs
+                    setSearchProducts([]);
+                    setSearchQuery('');
                   }}
                 >
                   {tab.icon && <span className="mr-2">{tab.icon}</span>}
