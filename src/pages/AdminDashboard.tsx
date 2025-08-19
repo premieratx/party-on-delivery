@@ -50,31 +50,42 @@ export default function AdminDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load dashboard data
-      const response: any = await withRetry(async () =>
-        await supabase.rpc('get_dashboard_data', {
-          dashboard_type: 'admin',
-          user_email: null,
-          affiliate_code: null,
-        }),
-        { shouldRetry: isRetryableError, maxRetries: 3, initialDelay: 800 }
-      );
+      console.log('🔄 Loading admin dashboard data...');
+      
+      // Use the edge function instead of RPC to avoid conflicts
+      const { data: response, error } = await supabase.functions.invoke('get-dashboard-data', {
+        body: {
+          type: 'admin',
+          email: null,
+          affiliateCode: null
+        }
+      });
 
-      if (response?.error) throw response.error;
-      if (!response?.data?.success) {
-        throw new Error(response?.data?.error || 'Failed to load dashboard data');
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
+
+      if (!response?.success) {
+        console.error('❌ Dashboard response error:', response);
+        throw new Error(response?.error || 'Failed to load dashboard data');
       }
 
       const dashboardData = response.data;
+      console.log('✅ Dashboard data loaded successfully:', {
+        totalRevenue: dashboardData.totalRevenue,
+        totalOrders: dashboardData.totalOrders,
+        ordersCount: dashboardData.orders?.length || 0
+      });
 
       // Set dashboard data
-      setTotalRevenue(dashboardData.data.totalRevenue || 0);
-      setTotalOrders(dashboardData.data.totalOrders || 0);
-      setTotalCustomers(dashboardData.data.customers?.length || 0);
-      setTotalProducts(dashboardData.data.totalProducts || 0);
+      setTotalRevenue(dashboardData.totalRevenue || 0);
+      setTotalOrders(dashboardData.totalOrders || 0);
+      setTotalCustomers(dashboardData.customers?.length || 0);
+      setTotalProducts(dashboardData.totalProducts || 0);
       
       // Map orders with customer details
-      const ordersWithDetails = (dashboardData.data.orders || []).map((order: any) => ({
+      const ordersWithDetails = (dashboardData.orders || []).map((order: any) => ({
         ...order,
         customer_name: order.customer_name || (
           order.delivery_address?.email ? order.delivery_address.email.split('@')[0] : 'Unknown Customer'
@@ -106,10 +117,10 @@ export default function AdminDashboard() {
       setAbandonedOrders(abandonedList || []);
 
     } catch (error: any) {
-      console.error('Error loading dashboard data:', error);
+      console.error('❌ Error loading dashboard data:', error);
       toast({
-        title: "Error",
-        description: "Failed to load dashboard data. Please try again.",
+        title: "Dashboard Error",
+        description: "Failed to load dashboard data. Please try refreshing the page.",
         variant: "destructive"
       });
     } finally {

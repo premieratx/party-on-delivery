@@ -263,7 +263,6 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
   const handleFileUpload = (type: 'background' | 'logo') => {
     const input = type === 'background' ? fileInputRef.current : logoInputRef.current;
     if (!input) return;
-
     input.click();
   };
 
@@ -297,16 +296,11 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
   };
 
   const saveAllSettings = () => {
-    // Save to localStorage for persistence
     localStorage.setItem('cover-page-settings', JSON.stringify(deviceSettings));
-    
-    // Call external save handler if provided
     onSave?.(deviceSettings);
-    
     toast.success('Cover page settings saved for all devices!');
   };
 
-  // Load saved settings on mount
   useEffect(() => {
     const saved = localStorage.getItem('cover-page-settings');
     if (saved) {
@@ -333,13 +327,13 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
       opacity: settings.opacity / 100
     };
 
-    const containerClass = `relative ${device.className} flex flex-col justify-center items-center text-center p-8 overflow-hidden`;
+    const containerClass = `relative ${device.className} flex flex-col justify-center items-center text-center p-8 overflow-hidden min-h-[600px]`;
     const alignmentClass = settings.layout === 'left' ? 'items-start text-left' :
                           settings.layout === 'right' ? 'items-end text-right' :
                           'items-center text-center';
 
     return (
-      <div className={`${containerClass} ${alignmentClass}`} style={backgroundStyle}>
+      <div className={`${containerClass} ${alignmentClass} bg-gray-100 rounded-lg`} style={backgroundStyle}>
         {settings.backgroundType === 'video' && (
           <video
             autoPlay
@@ -414,318 +408,373 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 md:p-4 overflow-y-auto">
+      <div className="bg-background rounded-lg shadow-xl w-full max-w-7xl max-h-[95vh] flex flex-col my-4">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Layout className="w-6 h-6" />
-            Unified Cover Page Creator
+        <div className="flex items-center justify-between p-4 md:p-6 border-b flex-shrink-0">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+            <Layout className="w-5 h-5 md:w-6 md:h-6" />
+            Cover Page Creator
           </h2>
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} className="text-lg">
             ×
           </Button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Settings Panel */}
-          <div className="w-80 border-r flex flex-col">
-            <div className="p-6 flex-1 overflow-y-auto">
-            {/* Device Selector */}
-            <div className="space-y-4 mb-6">
-              <Label className="text-sm font-semibold">Device View</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
-                  const IconComponent = device.icon;
-                  return (
-                    <Button
-                      key={key}
-                      variant={activeDevice === key ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
-                      className="flex items-center gap-2"
-                    >
-                      <IconComponent className="w-4 h-4" />
-                      <span className="hidden sm:inline">{device.name}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Separator className="my-4" />
-
-            {/* Templates */}
-            <div className="space-y-4 mb-6">
-              <Label className="text-sm font-semibold">Quick Templates</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(COVER_TEMPLATES).map(([key, template]) => (
-                  <Button
-                    key={key}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => applyTemplate(key as keyof typeof COVER_TEMPLATES)}
-                    className="text-xs"
-                  >
-                    {template.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <Separator className="my-4" />
-
-            {/* Settings Tabs */}
-            <Tabs defaultValue="content" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="content">Content</TabsTrigger>
-                <TabsTrigger value="design">Design</TabsTrigger>
-                <TabsTrigger value="background">Background</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="content" className="space-y-4">
-                <div>
-                  <Label>Title</Label>
-                  <Input
-                    value={currentSettings.title}
-                    onChange={(e) => updateCurrentSettings({ title: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label>Subtitle</Label>
-                  <Textarea
-                    value={currentSettings.subtitle}
-                    onChange={(e) => updateCurrentSettings({ subtitle: e.target.value })}
-                    rows={2}
-                  />
-                </div>
-                
-                <div>
-                  <Label>Primary Button Text</Label>
-                  <Input
-                    value={currentSettings.primaryButtonText}
-                    onChange={(e) => updateCurrentSettings({ primaryButtonText: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label>Secondary Button Text</Label>
-                  <Input
-                    value={currentSettings.secondaryButtonText}
-                    onChange={(e) => updateCurrentSettings({ secondaryButtonText: e.target.value })}
-                  />
+        <div className="flex flex-1 min-h-0">
+          {/* Settings Panel - Scrollable */}
+          <div className="w-72 md:w-80 border-r flex flex-col bg-muted/20 flex-shrink-0">
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 md:p-6 space-y-6">
+                {/* Device Selector */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-semibold">Device View</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
+                      const IconComponent = device.icon;
+                      return (
+                        <Button
+                          key={key}
+                          variant={activeDevice === key ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
+                          className="flex items-center gap-2 justify-start"
+                        >
+                          <IconComponent className="w-4 h-4" />
+                          <span className="text-xs">{device.name.split(' ')[0]}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={currentSettings.showLogo}
-                    onCheckedChange={(checked) => updateCurrentSettings({ showLogo: checked })}
-                  />
-                  <Label>Show Logo</Label>
+                <Separator />
+
+                {/* Templates */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-semibold">Quick Templates</Label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
+                    {Object.entries(COVER_TEMPLATES).map(([key, template]) => (
+                      <Button
+                        key={key}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applyTemplate(key as keyof typeof COVER_TEMPLATES)}
+                        className="text-xs h-8 justify-start"
+                      >
+                        {template.name}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
 
-                {currentSettings.showLogo && (
-                  <div>
-                    <Label>Logo</Label>
-                    <div className="flex gap-2">
+                <Separator />
+
+                {/* Settings Tabs */}
+                <Tabs defaultValue="content" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 h-8">
+                    <TabsTrigger value="content" className="text-xs">Content</TabsTrigger>
+                    <TabsTrigger value="design" className="text-xs">Design</TabsTrigger>
+                    <TabsTrigger value="background" className="text-xs">Background</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="content" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-xs">Title</Label>
                       <Input
-                        value={currentSettings.logoUrl}
-                        onChange={(e) => updateCurrentSettings({ logoUrl: e.target.value })}
-                        placeholder="Logo URL"
+                        value={currentSettings.title}
+                        onChange={(e) => updateCurrentSettings({ title: e.target.value })}
+                        className="h-8 text-sm"
                       />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleFileUpload('logo')}
-                      >
-                        <Upload className="w-4 h-4" />
-                      </Button>
                     </div>
-                  </div>
-                )}
-              </TabsContent>
+                    
+                    <div>
+                      <Label className="text-xs">Subtitle</Label>
+                      <Textarea
+                        value={currentSettings.subtitle}
+                        onChange={(e) => updateCurrentSettings({ subtitle: e.target.value })}
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Primary Button</Label>
+                      <Input
+                        value={currentSettings.primaryButtonText}
+                        onChange={(e) => updateCurrentSettings({ primaryButtonText: e.target.value })}
+                        placeholder="Button text"
+                        className="h-8 text-sm mb-2"
+                      />
+                      <Input
+                        value={currentSettings.primaryButtonUrl}
+                        onChange={(e) => updateCurrentSettings({ primaryButtonUrl: e.target.value })}
+                        placeholder="Button URL"
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Secondary Button</Label>
+                      <Input
+                        value={currentSettings.secondaryButtonText}
+                        onChange={(e) => updateCurrentSettings({ secondaryButtonText: e.target.value })}
+                        placeholder="Button text"
+                        className="h-8 text-sm mb-2"
+                      />
+                      <Input
+                        value={currentSettings.secondaryButtonUrl}
+                        onChange={(e) => updateCurrentSettings({ secondaryButtonUrl: e.target.value })}
+                        placeholder="Button URL"
+                        className="h-8 text-sm"
+                      />
+                    </div>
 
-              <TabsContent value="design" className="space-y-4">
-                <div>
-                  <Label>Layout</Label>
-                  <Select
-                    value={currentSettings.layout}
-                    onValueChange={(value) => 
-                      updateCurrentSettings({ layout: value as 'center' | 'left' | 'right' })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Title Color</Label>
-                  <Input
-                    type="color"
-                    value={currentSettings.titleStyle.color}
-                    onChange={(e) => updateCurrentSettings({
-                      titleStyle: { ...currentSettings.titleStyle, color: e.target.value }
-                    })}
-                  />
-                </div>
-
-                <div>
-                  <Label>Subtitle Color</Label>
-                  <Input
-                    type="color"
-                    value={currentSettings.subtitleStyle.color}
-                    onChange={(e) => updateCurrentSettings({
-                      subtitleStyle: { ...currentSettings.subtitleStyle, color: e.target.value }
-                    })}
-                  />
-                </div>
-
-                <div>
-                  <Label>Button Background</Label>
-                  <Input
-                    type="color"
-                    value={currentSettings.buttonStyle.background}
-                    onChange={(e) => updateCurrentSettings({
-                      buttonStyle: { ...currentSettings.buttonStyle, background: e.target.value }
-                    })}
-                  />
-                </div>
-
-                <div>
-                  <Label>Button Text Color</Label>
-                  <Input
-                    type="color"
-                    value={currentSettings.buttonStyle.color}
-                    onChange={(e) => updateCurrentSettings({
-                      buttonStyle: { ...currentSettings.buttonStyle, color: e.target.value }
-                    })}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="background" className="space-y-4">
-                <div>
-                  <Label>Background Type</Label>
-                  <Select
-                    value={currentSettings.backgroundType}
-                    onValueChange={(value) => 
-                      updateCurrentSettings({ backgroundType: value as 'color' | 'gradient' | 'image' | 'video' })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="color">Solid Color</SelectItem>
-                      <SelectItem value="gradient">Gradient</SelectItem>
-                      <SelectItem value="image">Image</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Background Value</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={currentSettings.backgroundValue}
-                      onChange={(e) => updateCurrentSettings({ backgroundValue: e.target.value })}
-                      placeholder={currentSettings.backgroundType === 'color' ? '#000000' : 
-                                  currentSettings.backgroundType === 'gradient' ? 'linear-gradient(...)' :
-                                  'URL or upload file'}
-                    />
-                    {(currentSettings.backgroundType === 'image' || currentSettings.backgroundType === 'video') && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleFileUpload('background')}
-                      >
-                        <Upload className="w-4 h-4" />
-                      </Button>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={currentSettings.showLogo}
+                        onCheckedChange={(checked) => updateCurrentSettings({ showLogo: checked })}
+                      />
+                      <Label className="text-xs">Show Logo</Label>
+                    </div>
+                    
+                    {currentSettings.showLogo && (
+                      <div>
+                        <Label className="text-xs">Logo</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={currentSettings.logoUrl}
+                            onChange={(e) => updateCurrentSettings({ logoUrl: e.target.value })}
+                            placeholder="Logo URL"
+                            className="h-8 text-sm"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleFileUpload('logo')}
+                            className="h-8 px-2"
+                          >
+                            <Upload className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
                     )}
-                  </div>
-                </div>
+                  </TabsContent>
 
-                <div>
-                  <Label>Opacity: {currentSettings.opacity}%</Label>
-                  <Slider
-                    value={[currentSettings.opacity]}
-                    onValueChange={([value]) => updateCurrentSettings({ opacity: value })}
-                    max={100}
-                    min={0}
-                    step={5}
-                    className="mt-2"
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
+                  <TabsContent value="design" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-xs">Layout</Label>
+                      <Select
+                        value={currentSettings.layout}
+                        onValueChange={(value) => updateCurrentSettings({ layout: value as any })}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Title Font Size</Label>
+                      <Input
+                        value={currentSettings.titleStyle.fontSize}
+                        onChange={(e) => updateCurrentSettings({ 
+                          titleStyle: { ...currentSettings.titleStyle, fontSize: e.target.value }
+                        })}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Title Color</Label>
+                      <Input
+                        type="color"
+                        value={currentSettings.titleStyle.color}
+                        onChange={(e) => updateCurrentSettings({ 
+                          titleStyle: { ...currentSettings.titleStyle, color: e.target.value }
+                        })}
+                        className="h-8 w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Subtitle Color</Label>
+                      <Input
+                        type="color"
+                        value={currentSettings.subtitleStyle.color}
+                        onChange={(e) => updateCurrentSettings({ 
+                          subtitleStyle: { ...currentSettings.subtitleStyle, color: e.target.value }
+                        })}
+                        className="h-8 w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Button Background</Label>
+                      <Input
+                        type="color"
+                        value={currentSettings.buttonStyle.background}
+                        onChange={(e) => updateCurrentSettings({ 
+                          buttonStyle: { ...currentSettings.buttonStyle, background: e.target.value }
+                        })}
+                        className="h-8 w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Button Text Color</Label>
+                      <Input
+                        type="color"
+                        value={currentSettings.buttonStyle.color}
+                        onChange={(e) => updateCurrentSettings({ 
+                          buttonStyle: { ...currentSettings.buttonStyle, color: e.target.value }
+                        })}
+                        className="h-8 w-full"
+                      />
+                    </div>
+                  </TabsContent>
 
+                  <TabsContent value="background" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-xs">Background Type</Label>
+                      <Select
+                        value={currentSettings.backgroundType}
+                        onValueChange={(value) => updateCurrentSettings({ backgroundType: value as any })}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="color">Solid Color</SelectItem>
+                          <SelectItem value="gradient">Gradient</SelectItem>
+                          <SelectItem value="image">Image</SelectItem>
+                          <SelectItem value="video">Video</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {currentSettings.backgroundType === 'color' && (
+                      <div>
+                        <Label className="text-xs">Color</Label>
+                        <Input
+                          type="color"
+                          value={currentSettings.backgroundValue}
+                          onChange={(e) => updateCurrentSettings({ backgroundValue: e.target.value })}
+                          className="h-8 w-full"
+                        />
+                      </div>
+                    )}
+                    
+                    {currentSettings.backgroundType === 'gradient' && (
+                      <div>
+                        <Label className="text-xs">Gradient CSS</Label>
+                        <Textarea
+                          value={currentSettings.backgroundValue}
+                          onChange={(e) => updateCurrentSettings({ backgroundValue: e.target.value })}
+                          placeholder="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                          rows={2}
+                          className="text-sm"
+                        />
+                      </div>
+                    )}
+                    
+                    {(currentSettings.backgroundType === 'image' || currentSettings.backgroundType === 'video') && (
+                      <div>
+                        <Label className="text-xs">File URL</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={currentSettings.backgroundValue}
+                            onChange={(e) => updateCurrentSettings({ backgroundValue: e.target.value })}
+                            placeholder="Enter URL or upload file"
+                            className="h-8 text-sm"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleFileUpload('background')}
+                            className="h-8 px-2"
+                          >
+                            <Upload className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <Label className="text-xs">Opacity: {currentSettings.opacity}%</Label>
+                      <Slider
+                        value={[currentSettings.opacity]}
+                        onValueChange={([value]) => updateCurrentSettings({ opacity: value })}
+                        max={100}
+                        step={5}
+                        className="mt-2"
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
             
-            {/* Action Buttons - Fixed at bottom */}
-            <div className="border-t p-4 bg-background">
-              <div className="space-y-2">
+            {/* Control Buttons - Fixed at bottom */}
+            <div className="p-4 border-t bg-background space-y-2 flex-shrink-0">
+              <div className="flex gap-2">
                 <Button
                   onClick={() => setPreviewMode(!previewMode)}
                   variant="outline"
-                  className="w-full"
+                  size="sm"
+                  className="flex-1"
                 >
-                  <Eye className="w-4 h-4 mr-2" />
-                  {previewMode ? 'Edit Mode' : 'Preview Mode'}
+                  <Eye className="w-3 h-3 mr-1" />
+                  {previewMode ? 'Edit' : 'Preview'}
                 </Button>
-                
                 <Button
                   onClick={resetToDefaults}
                   variant="outline"
-                  className="w-full"
+                  size="sm"
+                  className="flex-1"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset Device
-                </Button>
-                
-                <Button
-                  onClick={saveAllSettings}
-                  className="w-full"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  Save All Devices
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  Reset
                 </Button>
               </div>
+              <Button
+                onClick={saveAllSettings}
+                className="w-full"
+                size="sm"
+              >
+                <Save className="w-3 h-3 mr-1" />
+                Save All Devices
+              </Button>
             </div>
           </div>
 
-          {/* Preview Panel */}
-          <div className="flex-1 p-6 bg-muted/20 overflow-auto">
-            <div className="h-full flex items-center justify-center">
-              <div className="border rounded-lg bg-background shadow-lg overflow-hidden">
-                {renderPreview()}
-              </div>
+          {/* Preview Panel - Scrollable */}
+          <div className="flex-1 bg-gray-50 p-4 md:p-8 overflow-auto">
+            <div className="flex justify-center items-start min-h-full">
+              {renderPreview()}
             </div>
           </div>
         </div>
-
+        
         {/* Hidden file inputs */}
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*,video/*"
           onChange={(e) => handleFileChange(e, 'background')}
-          style={{ display: 'none' }}
+          className="hidden"
         />
         <input
           ref={logoInputRef}
           type="file"
           accept="image/*"
           onChange={(e) => handleFileChange(e, 'logo')}
-          style={{ display: 'none' }}
+          className="hidden"
         />
       </div>
     </div>
