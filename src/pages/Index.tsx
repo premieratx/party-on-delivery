@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
-import { ShoppingCart, Plus, Minus } from 'lucide-react';
+import { RealProductLoader } from '@/components/delivery/RealProductLoader';
+import { ShoppingCart } from 'lucide-react';
 
 const Index = () => {
   console.log('🚨 HOMEPAGE BULLETPROOF v3: Starting load...');
   
   const navigate = useNavigate();
-  const { addToCart, getTotalItems, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  const { getTotalItems } = useUnifiedCart();
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,19 +89,6 @@ const Index = () => {
     loadEverything();
   }, []);
 
-  const handleAddToCart = (product: any) => {
-    const cartItem = {
-      id: 'sample-beer',
-      title: 'Party Pack Beer',
-      name: 'Party Pack Beer', 
-      price: 29.99,
-      image: '',
-      variant: 'default'
-    };
-    
-    console.log('🛒 Adding to cart:', cartItem);
-    addToCart(cartItem);
-  };
 
   // Show loading
   if (loading) {
@@ -158,8 +146,6 @@ const Index = () => {
   // SUCCESS - Render the store
   console.log('🚨 RENDERING: Success state with config:', appConfig.app_name);
   
-  const quantity = getCartItemQuantity('sample-beer', 'default');
-  
   return (
     <div className="min-h-screen bg-background">
       {/* Simple Hero */}
@@ -185,79 +171,16 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Simple Product Section */}
-      <div className="container mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold mb-8 text-center">Featured Products</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {/* Sample Products */}
-          <div className="bg-card rounded-lg border p-6 text-center">
-            <div className="w-full h-48 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-              <span className="text-gray-500">🍺 Beer</span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Party Pack Beer</h3>
-            <p className="text-2xl font-bold text-blue-600 mb-4">$29.99</p>
-            
-            {quantity === 0 ? (
-              <Button onClick={handleAddToCart} className="w-full">
-                Add to Cart
-              </Button>
-            ) : (
-              <div className="flex items-center justify-center gap-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => updateQuantity('sample-beer', 'default', quantity - 1, {
-                    id: 'sample-beer',
-                    title: 'Party Pack Beer',
-                    name: 'Party Pack Beer',
-                    price: 29.99,
-                    image: '',
-                    variant: 'default'
-                  })}
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="font-semibold text-lg">{quantity}</span>
-                <Button
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => updateQuantity('sample-beer', 'default', quantity + 1, {
-                    id: 'sample-beer',
-                    title: 'Party Pack Beer', 
-                    name: 'Party Pack Beer',
-                    price: 29.99,
-                    image: '',
-                    variant: 'default'
-                  })}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-          </div>
+      {/* Real Products Section */}
+      <RealProductLoader 
+        appConfig={appConfig} 
+        onCartOpen={() => setIsCartOpen(true)}
+      />
 
-          <div className="bg-card rounded-lg border p-6 text-center">
-            <div className="w-full h-48 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-              <span className="text-gray-500">🥤 Seltzers</span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Premium Seltzers</h3>
-            <p className="text-2xl font-bold text-blue-600 mb-4">$24.99</p>
-            <Button variant="outline" className="w-full">Add to Cart</Button>
-          </div>
-
-          <div className="bg-card rounded-lg border p-6 text-center">
-            <div className="w-full h-48 bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-              <span className="text-gray-500">🍸 Cocktails</span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Cocktail Kit</h3>
-            <p className="text-2xl font-bold text-blue-600 mb-4">$49.99</p>
-            <Button variant="outline" className="w-full">Add to Cart</Button>
-          </div>
-        </div>
-
-        <div className="text-center mt-12">
-          <p className="text-muted-foreground mb-4">Store successfully loaded: {appConfig.app_name}</p>
+      {/* Admin Panel Access */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Store: {appConfig.app_name}</p>
           <div className="flex justify-center gap-4">
             <Button onClick={() => navigate('/admin')} variant="outline">
               Admin Panel
