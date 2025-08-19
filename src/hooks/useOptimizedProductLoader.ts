@@ -57,13 +57,13 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
 
       console.log(`🔄 Loading products for collection: ${collection_handle}`);
 
-      // Use new unified collection manager for fast, reliable collection filtering
-      const { data, error: functionError } = await supabase.functions.invoke('unified-collection-manager', {
+      // Use get-unified-products with proper collection filtering
+      const { data, error: functionError } = await supabase.functions.invoke('get-unified-products', {
         body: { 
-          action: 'get_products',
           collection_handle,
           force_refresh,
-          lightweight
+          lightweight,
+          use_type: 'delivery'
         }
       });
 
@@ -76,21 +76,11 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
         throw new Error(data?.error || 'Failed to load products');
       }
 
-      const products = data.products || [];
-      
-      // Create a single collection object for the loaded products
-      const collection = {
-        id: collection_handle || 'unknown',
-        title: collection_handle ? collection_handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Unknown',
-        handle: collection_handle || 'unknown',
-        products: products
-      };
-
-      setProducts(products);
-      setCollections([collection]);
+      setProducts(data.products || []);
+      setCollections(data.collections || []);
       setCached(data.cached || false);
 
-      console.log(`✅ Loaded ${products.length} products for collection: ${collection_handle}`);
+      console.log(`✅ Loaded ${data.products?.length || 0} products for collection: ${collection_handle}`);
 
       // Reset retry count on successful load
       setRetryCount(0);

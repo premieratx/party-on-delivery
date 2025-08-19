@@ -139,13 +139,32 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return DEFAULT_COLLECTIONS;
   }, [collectionsConfig]);
 
-  // Get products for current tab - products are already filtered by collection handle in the hook
+  // Get products for current tab using configured collection handles
   const currentTabProducts = useMemo(() => {
-    // Since we're now loading products specifically for the collection handle,
-    // we can directly use the products array
-    console.log(`📦 Tab ${selectedCategory}: Using ${products.length} products from collection: ${currentTabCollectionHandle}`);
-    return products;
-  }, [products, selectedCategory, currentTabCollectionHandle]);
+    if (!Array.isArray(collections) || !collectionsConfig?.tabs) {
+      return [];
+    }
+    
+    const currentTab = collectionsConfig.tabs[selectedCategory];
+    if (!currentTab?.collection_handle) {
+      return [];
+    }
+    
+    console.log(`📦 Tab ${currentTab.name}: Looking for collection handle: ${currentTab.collection_handle}`);
+    
+    // Find the exact collection that matches the configured collection handle
+    const targetCollection = collections.find(collection => 
+      collection.handle === currentTab.collection_handle
+    );
+    
+    if (targetCollection?.products) {
+      console.log(`📦 ${currentTab.collection_handle}: Found ${targetCollection.products.length} products from collection`);
+      return targetCollection.products;
+    }
+    
+    console.log(`📦 ${currentTab.collection_handle}: No collection found with this handle`);
+    return [];
+  }, [collections, collectionsConfig, selectedCategory]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;

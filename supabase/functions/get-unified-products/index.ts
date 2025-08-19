@@ -50,9 +50,15 @@ Deno.serve(async (req) => {
       collection_handles: p.collection_handles
     })))
 
-    // Check if we need to refresh cache
-    if (force_refresh || await needsCacheRefresh(supabase)) {
-      console.log('🔄 Triggering unified sync...')
+    // Check if we need to refresh cache OR if cache is empty
+    const { count: productCount, error: countError } = await supabase
+      .from('shopify_products_cache')
+      .select('*', { count: 'exact', head: true })
+
+    const cacheEmpty = !productCount || productCount < 50
+    
+    if (force_refresh || cacheEmpty || await needsCacheRefresh(supabase)) {
+      console.log(`🔄 Triggering unified sync... (force: ${force_refresh}, empty: ${cacheEmpty}, products: ${productCount || 0})`)
       await supabase.functions.invoke('unified-shopify-sync', {
         body: { forceRefresh: true }
       })
