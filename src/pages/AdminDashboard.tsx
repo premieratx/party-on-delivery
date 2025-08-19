@@ -5,7 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
+import { CustomerFlowBuilder } from '@/components/admin/CustomerFlowBuilder';
+import { AffiliateFlowAssignmentManager } from '@/components/admin/AffiliateFlowAssignmentManager';
+import CoverPagesAdmin from '@/pages/CoverPagesAdmin';
 import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
+import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
+import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -25,11 +30,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
-import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { CANONICAL_DOMAIN } from '@/utils/links';
-import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
-import CoverPagesAdmin from '@/pages/CoverPagesAdmin';
-import { CustomerFlowBuilder } from '@/components/admin/CustomerFlowBuilder';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -210,8 +211,9 @@ export default function AdminDashboard() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="customer-flows" className="space-y-4">
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 gap-1 w-full h-auto flex-wrap p-2">
+          <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-1 w-full h-auto flex-wrap p-2">
             <TabsTrigger value="customer-flows" className="px-3 py-2 text-xs sm:text-sm">🔄 Flows</TabsTrigger>
+            <TabsTrigger value="flow-assignments" className="px-3 py-2 text-xs sm:text-sm">🎯 Assignments</TabsTrigger>
             <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm">🎬 Cover Pages</TabsTrigger>
             <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm">🚚 Apps</TabsTrigger>
             <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm">📋 Orders</TabsTrigger>
@@ -222,6 +224,11 @@ export default function AdminDashboard() {
           {/* Customer Flow Configuration */}
           <TabsContent value="customer-flows" className="space-y-4">
             <CustomerFlowBuilder />
+          </TabsContent>
+
+          {/* Flow Assignments */}
+          <TabsContent value="flow-assignments" className="space-y-4">
+            <AffiliateFlowAssignmentManager />
           </TabsContent>
 
           {/* Cover Pages */}

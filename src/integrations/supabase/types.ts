@@ -141,6 +141,51 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_flow_assignments: {
+        Row: {
+          affiliate_id: string
+          created_at: string
+          customer_flow_id: string
+          id: string
+          is_active: boolean
+          share_slug: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          created_at?: string
+          customer_flow_id: string
+          id?: string
+          is_active?: boolean
+          share_slug: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          created_at?: string
+          customer_flow_id?: string
+          id?: string
+          is_active?: boolean
+          share_slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_flow_assignments_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_flow_assignments_customer_flow_id_fkey"
+            columns: ["customer_flow_id"]
+            isOneToOne: false
+            referencedRelation: "customer_flows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_flows: {
         Row: {
           affiliate_id: string

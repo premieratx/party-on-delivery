@@ -242,6 +242,9 @@ export const CustomerFlowBuilder: React.FC = () => {
                 }}
                 placeholder="Party Supply Flow"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Create complete customer journeys. Administrators can assign these to affiliates.
+              </p>
             </div>
             
             <div>

@@ -42,7 +42,6 @@ export const CoverPageManager = () => {
     title: '',
     subtitle: '',
     slug: '',
-    affiliate_id: '',
     flow_name: '',
     buttons: [{ text: 'Get Started', url: '/delivery', variant: 'default' }]
   });
@@ -96,7 +95,6 @@ export const CoverPageManager = () => {
       title: '',
       subtitle: '',
       slug: '',
-      affiliate_id: '',
       flow_name: '',
       buttons: [{ text: 'Get Started', url: '/delivery', variant: 'default' }]
     });
@@ -109,7 +107,6 @@ export const CoverPageManager = () => {
       title: page.title,
       subtitle: page.subtitle || '',
       slug: page.slug,
-      affiliate_id: page.affiliate_id || '',
       flow_name: page.flow_name || '',
       buttons: page.buttons.length > 0 ? page.buttons : [{ text: 'Get Started', url: '/delivery', variant: 'default' }]
     });
@@ -117,14 +114,10 @@ export const CoverPageManager = () => {
 
   const handleSave = async () => {
     try {
-      const selectedAffiliate = affiliates.find(a => a.id === formData.affiliate_id);
-      
       const pageData = {
         title: formData.title,
         subtitle: formData.subtitle || null,
         slug: formData.slug,
-        affiliate_id: formData.affiliate_id || null,
-        affiliate_slug: selectedAffiliate?.affiliate_code || null,
         flow_name: formData.flow_name || null,
         buttons: formData.buttons,
         is_active: true
@@ -261,34 +254,16 @@ export const CoverPageManager = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Affiliate (Optional)</label>
-                <Select
-                  value={formData.affiliate_id}
-                  onValueChange={(value) => setFormData({ ...formData, affiliate_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select affiliate" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">No Affiliate</SelectItem>
-                    {affiliates.map((affiliate) => (
-                      <SelectItem key={affiliate.id} value={affiliate.id}>
-                        {affiliate.company_name} ({affiliate.affiliate_code})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Flow Name</label>
-                <Input
-                  value={formData.flow_name}
-                  onChange={(e) => setFormData({ ...formData, flow_name: e.target.value })}
-                  placeholder="Optional flow identifier"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Flow Name (Optional)</label>
+              <Input
+                value={formData.flow_name}
+                onChange={(e) => setFormData({ ...formData, flow_name: e.target.value })}
+                placeholder="Optional flow identifier"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This cover page can be assigned to customer flows by administrators
+              </p>
             </div>
 
             <div>
@@ -381,15 +356,10 @@ export const CoverPageManager = () => {
                     
                     <div className="flex gap-4 text-sm text-muted-foreground">
                       <span>Slug: /{page.slug}</span>
-                      {affiliate && (
-                        <span className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          {affiliate.company_name}
-                        </span>
-                      )}
                       {page.flow_name && (
                         <span>Flow: {page.flow_name}</span>
                       )}
+                      <span className="text-primary">Available for flow assignment</span>
                     </div>
                     
                     <div className="mt-2">
