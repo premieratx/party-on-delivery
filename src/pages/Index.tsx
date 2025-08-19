@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -106,20 +107,38 @@ const Index = () => {
     );
   }
 
-  // Simple, direct approach - redirect to the delivery app
-  window.location.href = `/app/${appConfig.app_slug}`;
-  
-  // Show loading while redirecting
+  // Load the default delivery app directly (NO REDIRECT)
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <LoadingSpinner />
-        <div>
-          <h3 className="text-lg font-semibold">Redirecting to {appConfig.app_name}</h3>
-          <p className="text-muted-foreground">Taking you to your party supply store...</p>
-        </div>
+    <>
+      <ProductCategories
+        appName={appConfig.app_name}
+        heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
+        heroSubheading={appConfig.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
+        heroScrollingText={appConfig.main_app_config?.hero_scrolling_text || ""}
+        logoUrl={appConfig.logo_url}
+        collectionsConfig={appConfig.collections_config}
+        cartItemCount={getTotalItems()}
+        onOpenCart={() => setIsCartOpen(true)}
+      />
+      
+      {/* Cart Sidebar */}
+      <UnifiedCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+      />
+      
+      {/* Admin Button */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button 
+          onClick={() => navigate('/admin')}
+          variant="outline"
+          size="sm"
+          className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground"
+        >
+          Admin
+        </Button>
       </div>
-    </div>
+    </>
   );
 };
 
