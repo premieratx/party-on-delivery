@@ -76,8 +76,8 @@ Deno.serve(async (req) => {
     // CRITICAL: Filter by specific collection handle if provided
     if (collection_handle && collection_handle !== 'all') {
       console.log(`🎯 FILTERING FOR SPECIFIC COLLECTION: ${collection_handle}`)
-      // Use OR condition to handle both string and array formats in collection_handles
-      productsQuery = productsQuery.or(`collection_handles.cs.{${collection_handle}},collection_handles.cs."${collection_handle}"`)
+      // Use contains operator to properly filter collection handles array
+      productsQuery = productsQuery.contains('collection_handles', [collection_handle])
     }
 
     // Only apply limit for final result display, not for collection processing
@@ -240,12 +240,24 @@ Deno.serve(async (req) => {
       .eq('key', 'shopify-unified-sync')
       .maybeSingle()
 
+    // If specific collection was requested, return ONLY those products, not all products
+    const finalProducts = collection_handle && collection_handle !== 'all' 
+      ? (products || []).filter(product => {
+          const handles = Array.isArray(product.collection_handles) 
+            ? product.collection_handles 
+            : typeof product.collection_handles === 'string' 
+              ? JSON.parse(product.collection_handles || '[]')
+              : []
+          return handles.includes(collection_handle)
+        })
+      : (products || [])
+
     const result = {
       success: true,
-      products: processLimit ? (products || []).slice(0, processLimit) : (products || []),
+      products: processLimit ? finalProducts.slice(0, processLimit) : finalProducts,
       collections,
       categories: collections, // Categories and collections based on use_type
-      total_products: products?.length || 0,
+      total_products: finalProducts.length,
       total_collections: collections.length,
       cached: true,
       lightweight,
