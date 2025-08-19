@@ -959,7 +959,6 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 </div>
               </TabsContent>
             </Tabs>
-            </div>
             
             {/* Save Button - Fixed at bottom */}
             <div className="p-6 border-t bg-background">
