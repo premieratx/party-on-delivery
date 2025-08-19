@@ -213,7 +213,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     addToCart(cartItem);
   };
 
-  const handleQuantityChange = (productId: string, variantId: string | undefined, delta: number) => {
+  const handleQuantityChange = useCallback((productId: string, variantId: string | undefined, delta: number) => {
     // Normalize IDs to ensure consistency
     const normalizedProductId = String(productId);
     const normalizedVariantId = variantId ? String(variantId) : undefined;
@@ -229,8 +229,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       newQty
     });
     
-    // Find product from current display (either tab products or search results)
-    const product = [...displayProducts, ...searchProducts].find(p => String(p.id) === normalizedProductId);
+    // FIXED: Get product from source data (not displayProducts to avoid circular dependency)
+    const product = [...(currentTabProducts || []), ...searchProducts].find(p => String(p.id) === normalizedProductId);
     
     if (!product) {
       console.error('🚫 Product not found for quantity change:', normalizedProductId);
@@ -252,7 +252,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     console.log('🛒 ProductCategories: Updating cart with:', cartItem);
     updateQuantity(normalizedProductId, normalizedVariantId, newQty, cartItem);
-  };
+  }, [currentTabProducts, searchProducts, getCartItemQuantity, updateQuantity]);
 
   // Real-time hierarchical search using SearchOptimizer
   const handleSearch = useCallback(async () => {
