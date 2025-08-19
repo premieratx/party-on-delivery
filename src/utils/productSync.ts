@@ -1,11 +1,12 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export const syncCollectionOrder = async () => {
-  console.log('🔄 Syncing collection orders...');
+  console.log('🔄 Syncing collection orders with exact Shopify ordering...');
   
   const collections = [
     'beer', 'wine', 'spirits', 'mixers', 'party-supplies', 
-    'tailgate-beer', 'bachelorette-supplies', 'disco-collection'
+    'tailgate-beer', 'bachelorette-supplies', 'disco-collection',
+    'seltzer-collection', 'cocktail-kits'
   ];
   
   for (const collection of collections) {
@@ -15,7 +16,7 @@ export const syncCollectionOrder = async () => {
       });
       
       if (data?.success) {
-        console.log(`✅ Updated order for ${collection}: ${data.products_updated} products`);
+        console.log(`✅ Updated Shopify order for ${collection}: ${data.products_updated} products`);
       } else {
         console.error(`❌ Failed to update ${collection}:`, error || data?.error);
       }
@@ -24,5 +25,5 @@ export const syncCollectionOrder = async () => {
     }
   }
   
-  console.log('🎉 Collection order sync complete');
+  console.log('🎉 Shopify collection order sync complete - products now match Shopify order');
 };

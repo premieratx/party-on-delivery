@@ -68,10 +68,11 @@ Deno.serve(async (req) => {
     let productsQuery = supabase
       .from('shopify_products_cache')
       .select(lightweight ? 
-        'id, title, price, image, category, category_title, vendor, handle, product_type, search_category, collection_handles' : 
+        'id, title, price, image, category, category_title, vendor, handle, product_type, search_category, collection_handles, sort_order' : 
         '*'
       )
-      .order('updated_at', { ascending: false })
+      .order('sort_order', { ascending: true })
+      .order('id', { ascending: true })
 
     // CRITICAL: Filter by specific collection handle if provided
     if (collection_handle && collection_handle !== 'all') {

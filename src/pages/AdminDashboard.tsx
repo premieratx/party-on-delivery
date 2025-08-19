@@ -50,6 +50,7 @@ import { CoverPageToggle } from '@/components/admin/CoverPageToggle';
 import { SecuritySyncDashboard } from '@/components/admin/SecuritySyncDashboard';
 import { EnhancedCacheManager } from '@/components/admin/EnhancedCacheManager';
 import SearchAppConfig from '@/components/admin/SearchAppConfig';
+import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -545,7 +546,20 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="delivery-apps" className="space-y-4">
-            <DeliveryAppManager />
+            <Tabs defaultValue="manager" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manager">App Manager</TabsTrigger>
+                <TabsTrigger value="creator">App Creator</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="manager">
+                <DeliveryAppManager />
+              </TabsContent>
+              
+              <TabsContent value="creator">
+                <DeliveryAppCreator />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="post-checkout-builder" className="space-y-4">

@@ -2647,6 +2647,7 @@ export type Database = {
           search_category: string | null
           shopify_id: string | null
           shopify_product_id: string
+          sort_order: number | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -2670,6 +2671,7 @@ export type Database = {
           search_category?: string | null
           shopify_id?: string | null
           shopify_product_id: string
+          sort_order?: number | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -2693,6 +2695,7 @@ export type Database = {
           search_category?: string | null
           shopify_id?: string | null
           shopify_product_id?: string
+          sort_order?: number | null
           tags?: string[] | null
           title?: string
           updated_at?: string
