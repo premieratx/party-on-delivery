@@ -20,6 +20,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    const requestBody = await req.json().catch(() => ({}))
+    
     const { 
       app_slug, 
       category, 
@@ -31,9 +33,10 @@ Deno.serve(async (req) => {
       lightweight = true, 
       force_refresh = false,
       limit = null // Remove default limit to process ALL products for collections
-    } = await req.json().catch(() => ({}))
+    } = requestBody
 
     console.log(`🔍 Loading unified products - use_type: ${use_type}, category: ${category}, collection: ${collection_handle}, search_category: ${search_category}, tab_collections: ${tab_collection_handles}, lightweight: ${lightweight}`)
+    console.log('🔍 Full request body:', requestBody)
 
     // Debug: Check what products we actually have in cache
     const { data: sampleProducts, error: sampleError } = await supabase
@@ -67,7 +70,8 @@ Deno.serve(async (req) => {
     // CRITICAL: Filter by specific collection handle if provided
     if (collection_handle && collection_handle !== 'all') {
       console.log(`🎯 FILTERING FOR SPECIFIC COLLECTION: ${collection_handle}`)
-      productsQuery = productsQuery.contains('collection_handles', [collection_handle])
+      // Use OR condition to handle both string and array formats in collection_handles
+      productsQuery = productsQuery.or(`collection_handles.cs.{${collection_handle}},collection_handles.cs."${collection_handle}"`)
     }
 
     // Only apply limit for final result display, not for collection processing
