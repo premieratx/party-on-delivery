@@ -21,6 +21,43 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCoverPage, setShowCoverPage] = useState(false);
   const [showForceSync, setShowForceSync] = useState(false);
+  // Immediately force sync on component mount
+  useEffect(() => {
+    const forceCompleteSync = async () => {
+      console.log('🚀 FORCING COMPLETE SYNC FOR ALL DELIVERY APPS...');
+      
+      try {
+        // Clear any existing cache to force fresh data
+        await supabase.from('cache').delete().like('key', 'shopify%');
+        
+        // Force unified sync
+        const { data, error } = await supabase.functions.invoke('unified-shopify-sync', {
+          body: { forceRefresh: true }
+        });
+        
+        if (data?.success) {
+          console.log(`🎉 SYNC COMPLETE: ${data.products_synced} products, ${data.collections_synced} collections`);
+          
+          // Verify collections were cached
+          setTimeout(async () => {
+            const { count: collectionCount } = await supabase
+              .from('shopify_collections_cache')
+              .select('*', { count: 'exact', head: true });
+            console.log(`✅ Verified: ${collectionCount} collections in cache`);
+            
+            // Trigger a custom event to refresh all components
+            window.dispatchEvent(new CustomEvent('collectionsUpdated'));
+          }, 2000);
+        } else {
+          console.error('❌ Sync failed:', error);
+        }
+      } catch (error) {
+        console.error('❌ Complete sync error:', error);
+      }
+    };
+    
+    forceCompleteSync();
+  }, []);
   const navigate = useNavigate();
   const { cartItems } = useUnifiedCart();
   const [searchParams] = useSearchParams();

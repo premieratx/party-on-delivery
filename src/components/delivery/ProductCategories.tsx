@@ -93,6 +93,17 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
   const { products, collections, loading, error, refreshProducts } = useOptimizedProductLoader();
 
+  // Listen for collection updates and refresh
+  useEffect(() => {
+    const handleCollectionsUpdate = () => {
+      console.log('🔄 Collections updated, refreshing products...');
+      refreshProducts();
+    };
+    
+    window.addEventListener('collectionsUpdated', handleCollectionsUpdate);
+    return () => window.removeEventListener('collectionsUpdated', handleCollectionsUpdate);
+  }, [refreshProducts]);
+
   // Force refresh products if requested
   useEffect(() => {
     if (forceRefresh) {

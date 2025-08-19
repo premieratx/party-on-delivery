@@ -112,14 +112,28 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     return loadProducts(true);
   }, [loadProducts]);
 
-  // Load products once on mount - FIXED: using useRef to prevent infinite loops
+  // Load products once on mount and listen for refresh events
   const hasMounted = useRef(false);
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
       loadProducts();
     }
-  }, []); // Empty dependency array to run only once
+    
+    // Listen for custom refresh events
+    const handleRefresh = () => {
+      console.log('🔄 Refreshing products due to external event');
+      loadProducts(true);
+    };
+    
+    window.addEventListener('collectionsUpdated', handleRefresh);
+    window.addEventListener('forceProductRefresh', handleRefresh);
+    
+    return () => {
+      window.removeEventListener('collectionsUpdated', handleRefresh);
+      window.removeEventListener('forceProductRefresh', handleRefresh);
+    };
+  }, [loadProducts]);
 
   // Auto-refresh every 5 minutes if enabled (but not during active retry attempts)
   useEffect(() => {

@@ -119,6 +119,15 @@ export function DeliveryAppManager() {
 
   useEffect(() => {
     loadData();
+    
+    // Listen for collection updates
+    const handleCollectionsUpdate = () => {
+      console.log('🔄 DeliveryAppManager: Collections updated, reloading...');
+      loadData();
+    };
+    
+    window.addEventListener('collectionsUpdated', handleCollectionsUpdate);
+    return () => window.removeEventListener('collectionsUpdated', handleCollectionsUpdate);
   }, []);
 
   const loadData = async () => {
@@ -159,18 +168,38 @@ export function DeliveryAppManager() {
         setDeliveryApps(typedApps);
       }
 
-      // Load collections
-      const { data: collectionsResponse, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
+      // Load collections from cache first, then from API if needed
+      console.log('📦 Loading collections for delivery app manager...');
       
-      if (collectionsError) throw collectionsError;
+      // Try cache first
+      const { data: cachedCollections, error: cacheError } = await supabase
+        .from('shopify_collections_cache')
+        .select('handle, title, products_count')
+        .order('products_count', { ascending: false });
       
-      if (collectionsResponse?.collections) {
-        const collectionsData = collectionsResponse.collections.map((c: any) => ({
-          id: c.id,
+      if (!cacheError && cachedCollections && cachedCollections.length > 0) {
+        console.log(`✅ Loaded ${cachedCollections.length} collections from cache`);
+        const collectionsData = cachedCollections.map((c: any) => ({
+          id: c.handle,
           handle: c.handle,
           title: c.title
         }));
         setCollections(collectionsData);
+      } else {
+        console.log('📦 Cache empty, loading from API...');
+        // Fallback to API
+        const { data: collectionsResponse, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
+        
+        if (collectionsError) throw collectionsError;
+        
+        if (collectionsResponse?.collections) {
+          const collectionsData = collectionsResponse.collections.map((c: any) => ({
+            id: c.id,
+            handle: c.handle,
+            title: c.title
+          }));
+          setCollections(collectionsData);
+        }
       }
 
     } catch (error) {
