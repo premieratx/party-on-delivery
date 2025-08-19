@@ -4,7 +4,7 @@
 
 export class SearchOptimizer {
   private static searchCache = new Map<string, any[]>();
-  private static indexCache = new Map<string, { p: any; t: string }[]>();
+  private static indexCache = new Map<string, any[]>();
   private static lastCacheTime = 0;
   private static readonly CACHE_DURATION = 30000; // 30 seconds
 
@@ -18,7 +18,7 @@ export class SearchOptimizer {
     }
   }
 
-  // Build optimized search index
+  // Build optimized search index with priority fields
   static buildSearchIndex(products: any[], cacheKey: string = 'default') {
     this.clearExpiredCache();
     
@@ -29,7 +29,17 @@ export class SearchOptimizer {
     const startTime = performance.now();
     const index = products.map((p: any) => ({
       p,
-      t: p.title.toLowerCase() // Only index title for consistent search
+      // Create searchable fields in priority order
+      title: (p.title || '').toLowerCase(),
+      category: (p.category || p.product_type || '').toLowerCase(), 
+      collections: Array.isArray(p.collection_handles) 
+        ? p.collection_handles.join(' ').toLowerCase()
+        : (p.collections || '').toLowerCase(),
+      productType: (p.product_type || '').toLowerCase(),
+      // Combined search string for fallback
+      combined: `${p.title || ''} ${p.category || p.product_type || ''} ${
+        Array.isArray(p.collection_handles) ? p.collection_handles.join(' ') : (p.collections || '')
+      } ${p.product_type || ''}`.toLowerCase()
     }));
     
     this.indexCache.set(cacheKey, index);
@@ -42,8 +52,8 @@ export class SearchOptimizer {
     return index;
   }
 
-  // Optimized search with caching
-  static searchProducts(query: string, index: { p: any; t: string }[], maxResults: number = 50) {
+  // Optimized search with priority scoring
+  static searchProducts(query: string, index: any[], maxResults: number = 50) {
     const cacheKey = `${query.toLowerCase()}_${maxResults}`;
     
     if (this.searchCache.has(cacheKey)) {
@@ -57,35 +67,82 @@ export class SearchOptimizer {
       return [];
     }
 
-    // Use simple string includes for best performance
-    const results = index
-      .filter(item => item.t.includes(searchTerm))
+    // Score matches based on priority: Name > Category > Collection > Product Type
+    const scoredResults = index
+      .map(item => {
+        let score = 0;
+        let matchedField = '';
+        
+        // Priority 1: Product name/title (highest score)
+        if (item.title.includes(searchTerm)) {
+          score = 100;
+          matchedField = 'title';
+          // Bonus for exact match or starts with
+          if (item.title === searchTerm) score += 50;
+          else if (item.title.startsWith(searchTerm)) score += 25;
+        }
+        // Priority 2: Category
+        else if (item.category.includes(searchTerm)) {
+          score = 75;
+          matchedField = 'category';
+        }
+        // Priority 3: Collections
+        else if (item.collections.includes(searchTerm)) {
+          score = 50;
+          matchedField = 'collections';
+        }
+        // Priority 4: Product type
+        else if (item.productType.includes(searchTerm)) {
+          score = 25;
+          matchedField = 'productType';
+        }
+        
+        return score > 0 ? { ...item, score, matchedField } : null;
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => b.score - a.score)
       .slice(0, maxResults)
-      .map(item => item.p);
+      .map((item: any) => item.p);
 
-    this.searchCache.set(cacheKey, results);
+    this.searchCache.set(cacheKey, scoredResults);
     
     const duration = performance.now() - startTime;
     if (duration > 10) {
       console.warn(`Search took ${duration.toFixed(2)}ms for query "${query}"`);
     }
 
-    return results;
+    return scoredResults;
   }
 
-  // Get search suggestions (titles starting with query)
-  static getSearchSuggestions(query: string, index: { p: any; t: string }[], maxSuggestions: number = 5) {
+  // Get search suggestions with priority
+  static getSearchSuggestions(query: string, index: any[], maxSuggestions: number = 5) {
     const searchTerm = query.toLowerCase().trim();
     if (!searchTerm || searchTerm.length < 2) return [];
 
-    return index
-      .filter(item => item.t.startsWith(searchTerm))
+    // Prioritize title matches for suggestions
+    const titleMatches = index
+      .filter(item => item.title.startsWith(searchTerm))
       .slice(0, maxSuggestions)
       .map(item => item.p.title);
+      
+    // If we need more suggestions, add category/type matches
+    if (titleMatches.length < maxSuggestions) {
+      const categoryMatches = index
+        .filter(item => 
+          !item.title.startsWith(searchTerm) && 
+          (item.category.startsWith(searchTerm) || item.productType.startsWith(searchTerm))
+        )
+        .slice(0, maxSuggestions - titleMatches.length)
+        .map(item => item.p.title);
+      
+      return [...titleMatches, ...categoryMatches];
+    }
+
+    return titleMatches;
   }
 
   // Pre-warm cache with common searches
-  static preWarmCache(commonQueries: string[], index: { p: any; t: string }[]) {
+  static preWarmCache(commonQueries: string[], index: any[]) {
     commonQueries.forEach(query => {
       this.searchProducts(query, index);
     });

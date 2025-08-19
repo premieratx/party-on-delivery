@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 import { getAllCollectionsCached } from '@/utils/instantCacheClient';
 import { getContainerDescription } from '@/utils/containerSizeExtractor';
+import { SearchOptimizer } from '@/utils/searchOptimizer';
 
 interface ShopifyProduct {
   id: string;
@@ -61,7 +62,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [allProducts, setAllProducts] = useState<ShopifyProduct[]>([]);
-  const [indexedProducts, setIndexedProducts] = useState<{ p: ShopifyProduct; t: string }[]>([]);
+  const [indexedProducts, setIndexedProducts] = useState<any[]>([]);
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 100);
@@ -97,11 +98,8 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
         console.log(`🔍 Loaded ${data.products.length} products for search`);
         setAllProducts(data.products);
         
-        // Pre-index for faster search
-        const indexed = data.products.map((p: ShopifyProduct) => ({
-          p,
-          t: `${p.title} ${p.description || ''} ${p.handle || ''} ${p.vendor || ''} ${p.category || ''}`.toLowerCase()
-        }));
+        // Pre-index for faster search using SearchOptimizer
+        const indexed = SearchOptimizer.buildSearchIndex(data.products, 'search-bar');
         setIndexedProducts(indexed);
       } else {
         console.warn('No products returned from optimized loader');
@@ -128,13 +126,9 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
     setIsSearching(true);
     onSearchingChange?.(true);
-    const searchTerm = q.toLowerCase();
     
-    // Filter ONLY by product title for consistent behavior with search app
-    const results = indexedProducts
-      .filter(ip => ip.p.title.toLowerCase().includes(searchTerm))
-      .slice(0, 50)
-      .map(ip => ip.p);
+    // Use SearchOptimizer with priority scoring: Name > Category > Collection > Product Type
+    const results = SearchOptimizer.searchProducts(q, indexedProducts, 50);
 
     setSearchResults(results);
     setShowResults(!!showDropdownResults);
