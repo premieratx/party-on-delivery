@@ -55,7 +55,12 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       setLoading(true);
       setError(null);
 
-      console.log(`🔄 Loading products by collection only`);
+      console.log(`🔄 Loading products for collection: ${collection_handle || 'ALL'}`);
+
+      // Clear products immediately when switching collections
+      if (collection_handle) {
+        setProducts([]);
+      }
 
       // Load products directly from Supabase cache by collection
       const { data, error: functionError } = await supabase.functions.invoke('get-unified-products', {
@@ -80,7 +85,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       setCollections(data.collections || []);
       setCached(data.cached || false);
 
-      console.log(`✅ Loaded ${data.products?.length || 0} products from Supabase cache`);
+      console.log(`✅ Loaded ${data.products?.length || 0} products for collection: ${collection_handle || 'ALL'}`);
 
       // Reset retry count on successful load
       setRetryCount(0);
@@ -100,15 +105,22 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
     return loadProducts(true);
   }, [loadProducts]);
 
-  // Load products once on mount and listen for refresh events
+  // Load products when collection_handle changes
   const hasMounted = useRef(false);
+  const prevCollectionHandle = useRef<string | undefined>(undefined);
+  
   useEffect(() => {
-    if (!hasMounted.current) {
+    // Load products on mount or when collection_handle changes
+    if (!hasMounted.current || prevCollectionHandle.current !== collection_handle) {
       hasMounted.current = true;
+      prevCollectionHandle.current = collection_handle;
+      console.log(`🔄 Collection changed to: ${collection_handle || 'ALL'} - loading products`);
       loadProducts();
     }
-    
-    // Listen for custom refresh events
+  }, [loadProducts, collection_handle]);
+
+  // Listen for custom refresh events
+  useEffect(() => {
     const handleRefresh = () => {
       console.log('🔄 Refreshing products due to external event');
       loadProducts(true);

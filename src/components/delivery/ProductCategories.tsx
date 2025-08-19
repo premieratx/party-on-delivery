@@ -73,7 +73,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   forceRefresh = false
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
-  const [prevCollectionHandle, setPrevCollectionHandle] = useState<string | null>(null);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchProducts, setSearchProducts] = useState<any[]>([]);
@@ -128,18 +127,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [forceRefresh, refreshProducts]);
 
-  // Clear products when switching between different collections
-  useEffect(() => {
-    if (currentCollectionHandle && currentCollectionHandle !== prevCollectionHandle) {
-      console.log(`🔄 Tab switched from ${prevCollectionHandle} to ${currentCollectionHandle} - clearing previous products`);
-      setPrevCollectionHandle(currentCollectionHandle);
-      refreshProducts();
-    }
-  }, [currentCollectionHandle, prevCollectionHandle, refreshProducts]);
-
-  // Clear products when switching tabs and filter strictly by collection
+  // Products are filtered by collection from the loader
   const displayProducts = useMemo(() => {
-    // If no collection handle, return empty array to prevent mixing
     if (!currentCollectionHandle) {
       console.log(`❌ No collection handle for tab ${selectedCategory}`);
       return [];
@@ -150,18 +139,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       return [];
     }
     
-    // Double-check that products belong to current collection only
-    const filteredProducts = currentTabProducts.filter(product => {
-      const handles = Array.isArray(product.collection_handles) 
-        ? product.collection_handles 
-        : typeof product.collection_handles === 'string' 
-          ? JSON.parse(product.collection_handles || '[]')
-          : [];
-      return handles.includes(currentCollectionHandle);
-    });
-    
-    console.log(`📦 ${currentCollectionHandle}: Displaying ${filteredProducts.length} products (filtered from ${currentTabProducts.length}) from Shopify collection`);
-    return filteredProducts.slice(0, maxProducts);
+    console.log(`📦 ${currentCollectionHandle}: Displaying ${currentTabProducts.length} products from collection`);
+    return currentTabProducts.slice(0, maxProducts);
   }, [currentTabProducts, currentCollectionHandle, maxProducts, selectedCategory]);
 
   const currentTab = tabs[selectedCategory];
