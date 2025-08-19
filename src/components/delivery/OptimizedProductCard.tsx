@@ -179,14 +179,15 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-5 h-5 md:w-8 md:h-8"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (selectedVariant) {
+                  const variant = selectedVariant || product.variants[0];
+                  if (variant) {
                     onAddToCart({
                       id: product.id,
                       title: product.title,
                       name: product.title,
-                      price: selectedVariant.price,
+                      price: applyMarkup(variant.price),
                       image: product.image,
-                      variant: selectedVariant.id
+                      variant: variant.id
                     });
                   }
                 }}
