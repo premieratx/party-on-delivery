@@ -70,8 +70,10 @@ serve(async (req) => {
 
     // Parse cart items from metadata - with database fallback for large orders
     let cartItems = [];
+    let amountSource = 'metadata'; // Track where amounts come from
+    let draftAmounts = null;
     
-    // First try to get cart data from order_drafts if referenced
+    // First try to get cart data AND amounts from order_drafts if referenced
     if (metadata?.order_draft_id) {
       try {
         const supabaseClient = createClient(
@@ -82,19 +84,34 @@ serve(async (req) => {
         
         const { data: orderDraft, error } = await supabaseClient
           .from('order_drafts')
-          .select('draft_data')
+          .select('draft_data, total_amount')
           .eq('id', metadata.order_draft_id)
           .single();
           
-        if (!error && orderDraft?.draft_data?.cart_items) {
-          cartItems = orderDraft.draft_data.cart_items;
-          logStep("Cart items loaded from order_drafts", { 
-            orderDraftId: metadata.order_draft_id,
-            itemCount: cartItems.length 
-          });
+        if (!error && orderDraft?.draft_data) {
+          if (orderDraft.draft_data.cart_items) {
+            cartItems = orderDraft.draft_data.cart_items;
+            logStep("Cart items loaded from order_drafts", { 
+              orderDraftId: metadata.order_draft_id,
+              itemCount: cartItems.length 
+            });
+          }
+          
+          // Use amounts from order_drafts if available (they are stored in cents, convert to dollars)
+          if (orderDraft.draft_data.subtotal !== undefined) {
+            draftAmounts = {
+              subtotal: (orderDraft.draft_data.subtotal || 0) / 100,
+              delivery_fee: (orderDraft.draft_data.delivery_fee || 0) / 100,
+              sales_tax: (orderDraft.draft_data.sales_tax || 0) / 100,
+              tip_amount: (orderDraft.draft_data.tip_amount || 0) / 100,
+              total_amount: orderDraft.total_amount || 0 // Already in dollars
+            };
+            amountSource = 'order_drafts';
+            logStep("Amounts loaded from order_drafts", { draftAmounts, amountSource });
+          }
         }
       } catch (dbError) {
-        logStep("Failed to load cart data from database", dbError);
+        logStep("Failed to load data from order_drafts", dbError);
       }
     }
     
@@ -137,16 +154,47 @@ serve(async (req) => {
     const groupOrderToken = metadata?.group_order_token; // New: detect if joining existing order
     const discountCode = metadata?.discount_code;
     const discountAmount = metadata?.discount_amount;
-    const subtotal = parseFloat(metadata?.subtotal || '0');
-    const shippingFee = parseFloat(metadata?.delivery_fee || '0');
-    const salesTax = parseFloat(metadata?.sales_tax || '0');
-    const tipAmount = parseFloat(metadata?.tip_amount || '0');
-    const totalAmount = parseFloat(metadata?.total_amount || '0');
+    
+    // Use amounts from order_drafts if available, otherwise fall back to metadata
+    const subtotal = draftAmounts?.subtotal ?? parseFloat(metadata?.subtotal || '0');
+    const shippingFee = draftAmounts?.delivery_fee ?? parseFloat(metadata?.delivery_fee || '0');
+    const salesTax = draftAmounts?.sales_tax ?? parseFloat(metadata?.sales_tax || '0');
+    const tipAmount = draftAmounts?.tip_amount ?? parseFloat(metadata?.tip_amount || '0');
+    const totalAmount = draftAmounts?.total_amount ?? parseFloat(metadata?.total_amount || '0');
     
     // CRITICAL: Verify amounts match to prevent 100x errors
     const calculatedTotal = subtotal + shippingFee + salesTax + tipAmount;
-    if (Math.abs(totalAmount - calculatedTotal) > 0.01) {
-      throw new Error(`Shopify order amount mismatch: Metadata total $${totalAmount.toFixed(2)} doesn't match calculated total $${calculatedTotal.toFixed(2)}`);
+    const totalDifference = Math.abs(totalAmount - calculatedTotal);
+    
+    logStep("Amount validation", {
+      subtotal,
+      shippingFee,
+      salesTax, 
+      tipAmount,
+      totalAmount,
+      calculatedTotal,
+      difference: totalDifference,
+      metadataKeys: Object.keys(metadata || {})
+    });
+    
+    if (totalDifference > 0.01) {
+      // Log detailed breakdown for debugging
+      logStep("ERROR: Amount mismatch detected", {
+        metadataSubtotal: metadata?.subtotal,
+        metadataDeliveryFee: metadata?.delivery_fee,
+        metadataSalesTax: metadata?.sales_tax,
+        metadataTipAmount: metadata?.tip_amount,
+        metadataTotalAmount: metadata?.total_amount,
+        parsedSubtotal: subtotal,
+        parsedDeliveryFee: shippingFee,
+        parsedSalesTax: salesTax,
+        parsedTipAmount: tipAmount,
+        parsedTotalAmount: totalAmount,
+        calculatedTotal: calculatedTotal,
+        difference: totalDifference
+      });
+      
+      throw new Error(`Shopify order amount mismatch: Metadata total $${totalAmount.toFixed(2)} doesn't match calculated total $${calculatedTotal.toFixed(2)}. Check amount formats in metadata vs order_drafts.`);
     }
     
     // Validate reasonable amount range
