@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     // Get collection by handle from Shopify
     const collectionsResponse = await fetch(
-      `${shopifyUrl}/admin/api/2023-10/collections.json?handle=${collection_handle}`,
+      `https://${shopifyUrl}/admin/api/2023-10/collections.json?handle=${collection_handle}`,
       {
         headers: {
           'X-Shopify-Access-Token': shopifyToken,
@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
 
     // Get products in collection with their correct order from Shopify
     const productsResponse = await fetch(
-      `${shopifyUrl}/admin/api/2023-10/collections/${collection.id}/products.json?limit=250`,
+      `https://${shopifyUrl}/admin/api/2023-10/collections/${collection.id}/products.json?limit=250`,
       {
         headers: {
           'X-Shopify-Access-Token': shopifyToken,
