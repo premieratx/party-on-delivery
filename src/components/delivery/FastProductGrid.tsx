@@ -1,5 +1,6 @@
 import React from 'react';
 import { VirtualizedProductGrid } from '@/components/common/VirtualizedProductGrid';
+import { CartQuantityManager } from './CartQuantityManager';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 
 interface FastProductGridProps {
@@ -21,34 +22,17 @@ export const FastProductGrid: React.FC<FastProductGridProps> = ({
   onUpdateQuantity,
   className
 }) => {
-  const { cartItems, addToCart, updateQuantity } = useUnifiedCart();
+  const { cartItems } = useUnifiedCart();
 
   const handleAddToCart = (item: any) => {
     if (onAddToCart) {
       onAddToCart(item);
-    } else {
-      console.log('🛒 FastProductGrid: Adding product to cart:', item);
-      // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-      const currentQty = cartItems.find(cartItem => {
-        const itemId = cartItem.productId || cartItem.id;
-        const itemVariant = cartItem.variant || 'default';
-        const checkVariant = item.variant || 'default';
-        return itemId === item.id && itemVariant === checkVariant;
-      })?.quantity || 0;
-      
-      updateQuantity(item.id, item.variant, currentQty + 1, {
-        ...item,
-        name: item.title,
-        productId: item.id
-      });
     }
   };
 
   const handleUpdateQuantity = (id: string, variant: string | undefined, quantity: number) => {
     if (onUpdateQuantity) {
       onUpdateQuantity(id, variant, quantity);
-    } else {
-      updateQuantity(id, variant, quantity);
     }
   };
 

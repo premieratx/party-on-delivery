@@ -51,6 +51,7 @@ const Index = () => {
             // Trigger collection order sync after main sync
             setTimeout(async () => {
               await syncCollectionOrder();
+              console.log('🎯 Collection order sync completed - products now match Shopify order');
             }, 3000);
           }, 2000);
         } else {

@@ -2,6 +2,9 @@ import React, { useMemo } from 'react';
 import { useOptimizedProductLoader } from '@/hooks/useOptimizedProductLoader';
 import { ProductSkeleton } from '@/components/common/ProductSkeleton';
 import { OptimizedProductCard } from './OptimizedProductCard';
+import { OptimizedImage } from '@/components/common/OptimizedImage';
+import { Card, CardContent } from '@/components/ui/card';
+import { CartQuantityManager } from './CartQuantityManager';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 
 interface SuperOptimizedProductGridProps {
@@ -104,20 +107,36 @@ export const SuperOptimizedProductGrid: React.FC<SuperOptimizedProductGridProps>
   return (
     <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ${className}`}>
       {filteredProducts.map((product) => (
-        <OptimizedProductCard
-          key={product.id}
-          product={product}
-          isSearchFocused={!!searchTerm}
-          selectedCategory={0}
-          isCocktailsTab={false}
-          selectedVariant={null}
-          cartQty={getCartItemQuantity(product.id)}
-          onProductClick={() => {}}
-          onAddToCart={handleAddToCart}
-          onQuantityChange={handleQuantityChange}
-          onVariantChange={() => {}}
-          applyMarkup={(price: number) => price}
-        />
+        <Card key={product.id} className="group hover:shadow-lg transition-shadow">
+          <CardContent className="p-3">
+            <div className="space-y-3">
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                <OptimizedImage
+                  src={product.image}
+                  alt={product.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <h3 className="font-medium text-sm line-clamp-2">{product.title}</h3>
+                <p className="text-lg font-bold text-primary">${parseFloat(product.price).toFixed(2)}</p>
+              </div>
+              
+              <CartQuantityManager
+                productId={product.id}
+                product={{
+                  id: product.id,
+                  title: product.title,
+                  price: parseFloat(product.price) || 0,
+                  image: product.image
+                }}
+                size="sm"
+                className="w-full"
+              />
+            </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );

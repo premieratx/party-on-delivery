@@ -235,6 +235,7 @@ export type Database = {
           created_at: string | null
           customer_email: string | null
           delivery_app_slug: string | null
+          flow_path: string | null
           id: string
           order_completed_at: string | null
           order_id: string | null
@@ -242,6 +243,7 @@ export type Database = {
           subtotal: number | null
           tracking_url_params: Json | null
           updated_at: string | null
+          used_default_flow: boolean | null
         }
         Insert: {
           affiliate_id: string
@@ -252,6 +254,7 @@ export type Database = {
           created_at?: string | null
           customer_email?: string | null
           delivery_app_slug?: string | null
+          flow_path?: string | null
           id?: string
           order_completed_at?: string | null
           order_id?: string | null
@@ -259,6 +262,7 @@ export type Database = {
           subtotal?: number | null
           tracking_url_params?: Json | null
           updated_at?: string | null
+          used_default_flow?: boolean | null
         }
         Update: {
           affiliate_id?: string
@@ -269,6 +273,7 @@ export type Database = {
           created_at?: string | null
           customer_email?: string | null
           delivery_app_slug?: string | null
+          flow_path?: string | null
           id?: string
           order_completed_at?: string | null
           order_id?: string | null
@@ -276,6 +281,7 @@ export type Database = {
           subtotal?: number | null
           tracking_url_params?: Json | null
           updated_at?: string | null
+          used_default_flow?: boolean | null
         }
         Relationships: [
           {
@@ -799,6 +805,39 @@ export type Database = {
           id?: string
           key?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      cart_sessions: {
+        Row: {
+          affiliate_tracking: Json | null
+          cart_data: Json | null
+          created_at: string | null
+          customer_email: string | null
+          expires_at: string | null
+          id: string
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_tracking?: Json | null
+          cart_data?: Json | null
+          created_at?: string | null
+          customer_email?: string | null
+          expires_at?: string | null
+          id?: string
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_tracking?: Json | null
+          cart_data?: Json | null
+          created_at?: string | null
+          customer_email?: string | null
+          expires_at?: string | null
+          id?: string
+          session_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
