@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Eye, ExternalLink, Settings } from 'lucide-react';
-import { CoverPageLoader } from './CoverPageLoader';
 
 export const CoverPageAssignmentViewer: React.FC = () => {
   const [coverPages, setCoverPages] = useState<any[]>([]);
@@ -198,12 +197,14 @@ export const CoverPageAssignmentViewer: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Preview Modal */}
+      {/* Cover pages are now disabled - no preview modal */}
       {previewPage && (
-        <CoverPageLoader
-          forceShow={true}
-          onClose={() => setPreviewPage(null)}
-        />
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">Cover pages have been disabled to fix loading issues</p>
+          <Button onClick={() => setPreviewPage(null)} variant="outline" size="sm" className="mt-2">
+            Close
+          </Button>
+        </div>
       )}
     </div>
   );

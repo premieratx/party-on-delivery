@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import MultiCTACoverModal from '@/components/custom-delivery/MultiCTACoverModal';
 import { useAffiliateFlowTracking } from '@/hooks/useAffiliateFlowTracking';
 
 // Resolves short links for:
@@ -217,40 +216,10 @@ onClick: () => {
   }, [coverPage]);
 
   if (coverPage) {
-    const checklist = (coverPage.checklist || []) as string[];
-    return (
-      <div className="min-h-screen bg-background">
-        <MultiCTACoverModal
-          open={true}
-          onOpenChange={() => {}}
-          appName={coverPage.title}
-          logoUrl={coverPage.logo_url || undefined}
-          logoHeight={coverPage.logo_height ?? 160}
-          title={coverPage.title}
-          subtitle={coverPage.subtitle || ''}
-          checklistItems={checklist}
-          backgroundImageUrl={coverPage.bg_image_url || undefined}
-          backgroundVideoUrl={coverPage.bg_video_url || undefined}
-          buttons={buttons}
-          titleSize={coverPage.styles?.title_size}
-          subtitleSize={coverPage.styles?.subtitle_size}
-          checklistSize={coverPage.styles?.checklist_size}
-          backgroundColor={coverPage.styles?.background_color || undefined}
-          titleOffsetY={coverPage.styles?.title_offset_y}
-          subtitleOffsetY={coverPage.styles?.subtitle_offset_y}
-          checklistOffsetY={coverPage.styles?.checklist_offset_y}
-          buttonsOffsetY={coverPage.styles?.buttons_offset_y}
-          // Newly wired controls
-          buttonsBottomOffset={coverPage.styles?.buttons_bottom_offset}
-          buttonsSpacing={coverPage.styles?.buttons_spacing}
-          checklistToButtonsOffset={coverPage.styles?.checklist_to_buttons_offset}
-          dotSpacing={coverPage.styles?.dot_spacing}
-          dotSize={coverPage.styles?.dot_size}
-          logoBgColor={coverPage.styles?.logo_bg_color || undefined}
-          logoBgMode={coverPage.styles?.logo_bg_mode || 'auto'}
-        />
-      </div>
-    );
+    // Cover pages are disabled - redirect to main app instead
+    console.log('🚫 Cover page found but disabled, redirecting to main app');
+    navigate('/');
+    return null;
   }
 
   return (

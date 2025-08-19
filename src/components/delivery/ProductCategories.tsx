@@ -331,7 +331,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 {heroSubheading}
               </p>
             )}
-            {/* DISABLED: Scrolling text animation causing issues */}
+            {/* COMPLETELY DISABLED: All scrolling text removed to fix old template issues */}
             {/* {heroScrollingText && (
               <div className="mb-8">
                 <div className="text-2xl md:text-3xl font-bold text-yellow-300">
