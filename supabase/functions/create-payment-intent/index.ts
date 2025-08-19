@@ -3,274 +3,138 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-PAYMENT-INTENT] ${step}${detailsStr}`);
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep("Function started");
+    // Get environment variables
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
 
-    const body = await req.json();
-    logStep("Raw request body received", { bodyKeys: Object.keys(body) });
-    
-    // Support both 'items' and 'cartItems' for backward compatibility
-    const cartItems = body.cartItems || body.items;
-    const { amount, currency, customerInfo, deliveryInfo, appliedDiscount, tipAmount, groupOrderNumber, subtotal, deliveryFee, salesTax, groupOrderToken, affiliateCode, commissionPercent } = body;
-    
-    logStep("Extracted data", {
-      amount,
-      currency,
-      cartItemsLength: cartItems?.length,
-      customerInfoKeys: customerInfo ? Object.keys(customerInfo) : null,
-      deliveryInfoKeys: deliveryInfo ? Object.keys(deliveryInfo) : null,
+    // Parse request body
+    const { 
+      amount, 
+      currency = 'usd', 
+      cartItems, 
+      customerInfo, 
+      deliveryInfo, 
+      appliedDiscount,
+      tipAmount,
       subtotal,
       deliveryFee,
       salesTax,
-      tipAmount,
-      groupOrderToken,
-      affiliateCode,
-      commissionPercent
-    });
-    
-    // Validate required fields with detailed error messages
-    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
-      logStep("ERROR: Cart items validation failed", { cartItems });
-      throw new Error("Cart items are required and must be a non-empty array");
-    }
-    
-    if (!customerInfo || !customerInfo.email) {
-      logStep("ERROR: Customer info validation failed", { customerInfo });
-      throw new Error("Customer information with email is required");
-    }
-    
-    if (!deliveryInfo || !deliveryInfo.address) {
-      logStep("ERROR: Delivery info validation failed", { deliveryInfo });
-      throw new Error("Delivery information with address is required");
-    }
-    
-    if (typeof amount !== 'number' || amount <= 0) {
-      logStep("ERROR: Amount validation failed", { amount, type: typeof amount });
-      throw new Error(`Invalid amount: ${amount}. Must be a positive number in cents.`);
-    }
-    
-    logStep("Request data received", { 
+      affiliateCode 
+    } = await req.json();
+
+    console.log('💰 Creating payment intent:', { 
       amount, 
-      currency,
-      cartItems: cartItems?.length,
-      customerInfo: customerInfo?.email,
-      tipAmount,
-      subtotal,
-      deliveryFee,
-      salesTax
+      currency, 
+      itemCount: cartItems?.length,
+      customerEmail: customerInfo?.email 
     });
 
-    // Validate Stripe configuration
-    logStep("Validating Stripe configuration");
-    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeSecretKey) {
-      logStep("ERROR: STRIPE_SECRET_KEY missing from environment");
-      throw new Error("STRIPE_SECRET_KEY not found in environment variables. Please check Supabase secrets configuration.");
+    // Validate amount (critical security check)
+    const expectedTotal = (subtotal || 0) + (deliveryFee || 0) + (salesTax || 0) + (tipAmount || 0);
+    const amountInDollars = amount / 100;
+    
+    if (Math.abs(amountInDollars - expectedTotal) > 0.01) {
+      throw new Error(`Amount verification failed: Expected $${expectedTotal.toFixed(2)}, got $${amountInDollars.toFixed(2)}`);
     }
-    if (!stripeSecretKey.startsWith('sk_')) {
-      logStep("ERROR: Invalid STRIPE_SECRET_KEY format", { keyPrefix: stripeSecretKey.substring(0, 8) });
-      throw new Error("Invalid STRIPE_SECRET_KEY format. Must start with 'sk_'");
+
+    // Sanity check amounts
+    if (amount < 50 || amount > 1000000) { // $0.50 to $10,000.00
+      throw new Error(`Invalid amount: $${amountInDollars.toFixed(2)}. Must be between $0.50 and $10,000.00`);
     }
-    logStep("✅ STRIPE_SECRET_KEY validated", { 
-      keyPrefix: stripeSecretKey.substring(0, 12) + "...",
-      environment: stripeSecretKey.includes('test') ? 'test' : 'live'
-    });
 
     // Initialize Stripe
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: "2023-10-16",
-    });
-    logStep("✅ Stripe keys validated successfully");
-
-    // 🚨 CRITICAL 100X PROTECTION: Frontend sends amount in CENTS
-    const validAmount = Math.round(amount);
-    if (validAmount !== amount) {
-      logStep("⚠️ Amount rounded for cent precision", { originalAmount: amount, validAmount });
-    }
-    
-    // 🛡️ CRITICAL: Cross-verify with breakdown to prevent 100x overcharging
-    const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
-    const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
-    const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
-    const validTipAmount = typeof tipAmount === 'number' && !isNaN(tipAmount) ? tipAmount : 0;
-    
-    // Calculate expected amount in cents from breakdown
-    const expectedAmountInCents = Math.round((validSubtotal + validDeliveryFee + validSalesTax + validTipAmount) * 100);
-    
-    // 🚨 100X PROTECTION: Verify amount matches breakdown (allow 1 cent variance for rounding)
-    if (Math.abs(validAmount - expectedAmountInCents) > 1) {
-      logStep("🚨 PAYMENT BLOCKED - Amount mismatch detected", {
-        receivedCents: validAmount,
-        expectedCents: expectedAmountInCents,
-        differenceCents: Math.abs(validAmount - expectedAmountInCents)
-      });
-      throw new Error(`🚨 CRITICAL AMOUNT MISMATCH BLOCKED: Received ${validAmount} cents ($${(validAmount/100).toFixed(2)}) but breakdown totals ${expectedAmountInCents} cents ($${(expectedAmountInCents/100).toFixed(2)}). This prevents 100x overcharging. Subtotal: $${validSubtotal}, Delivery: $${validDeliveryFee}, Tax: $${validSalesTax}, Tip: $${validTipAmount}`);
-    }
-    
-    // 🛡️ SANITY CHECK: Prevent unreasonable amounts (between $0.50 and $10,000)
-    if (validAmount < 50 || validAmount > 1000000) {
-      logStep("🚨 PAYMENT BLOCKED - Unreasonable amount detected", {
-        amountCents: validAmount,
-        amountDollars: (validAmount/100).toFixed(2)
-      });
-      throw new Error(`🚨 PAYMENT BLOCKED - Invalid amount: ${validAmount} cents ($${(validAmount/100).toFixed(2)}). Amount must be between $0.50 and $10,000. This prevents accidental overcharging.`);
-    }
-    
-    logStep("Creating payment intent", { validAmount, currency, originalAmount: amount });
-    
-    // Create a concise cart summary that fits in Stripe's 500 char metadata limit
-    const cartSummary = cartItems.map((item: any) => 
-      `${item.quantity}x ${item.title.substring(0, 25)}`
-    ).join(', ').substring(0, 300); // Keep well under 500 chars
-    
-    const itemCount = cartItems.reduce((total: number, item: any) => total + item.quantity, 0);
-    
-    // Amount verification for logging
-    logStep("💰 AMOUNT VERIFICATION - Payment Intent", {
-      amountInCents: validAmount,
-      amountInDollars: (validAmount / 100).toFixed(2),
-      verificationNote: "This exact amount will be charged by Stripe and logged in Shopify",
-      subtotalFromMetadata: validSubtotal.toFixed(2),
-      salesTaxFromMetadata: validSalesTax.toFixed(2),
-      shippingFeeFromMetadata: validDeliveryFee.toFixed(2),
-      tipFromMetadata: validTipAmount.toFixed(2)
-    });
-    
-    logStep("Cart items data prepared", { 
-      cartItemsLength: JSON.stringify(cartItems).length,
-      itemCount 
+      apiVersion: '2023-10-16',
     });
 
-    // Extract customer and delivery information safely
-    const customerName = `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim();
-    const customerPhone = customerInfo?.phone || '';
-    const customerEmail = customerInfo?.email || '';
-    
-    const deliveryDate = deliveryInfo.date || '';
-    const deliveryTime = deliveryInfo.timeSlot || '';
-    const deliveryAddress = deliveryInfo.address || '';
-    const deliveryInstructions = deliveryInfo.instructions || '';
-    
-    // CRITICAL: Store cart items in a separate database record due to Stripe metadata limits
-    // Then reference it in the payment intent
+    // Create Supabase client with service role
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } }
     );
-    
-    let cartDataId = null;
+
+    // Store order details in Supabase (due to Stripe metadata limitations)
+    const orderDraftData = {
+      cart_items: cartItems,
+      customer_info: customerInfo,
+      delivery_info: deliveryInfo,
+      applied_discount: appliedDiscount,
+      tip_amount: tipAmount,
+      subtotal: subtotal,
+      delivery_fee: deliveryFee,
+      sales_tax: salesTax,
+      affiliate_code: affiliateCode,
+      total_amount: amountInDollars,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+    };
+
+    let orderDraftId = null;
     try {
-      const { data: cartRecord, error } = await supabase
+      const { data: orderDraft, error: orderError } = await supabase
         .from('order_drafts')
-        .insert({
-          draft_data: {
-            cartItems,
-            customerInfo,
-            deliveryInfo,
-            appliedDiscount,
-            groupOrderToken,
-            groupOrderNumber
-          },
-          total_amount: validSubtotal + validDeliveryFee + validSalesTax + validTipAmount,
-          customer_email: customerEmail,
-          checkout_step: 'payment'
-        })
-        .select('id')
+        .insert(orderDraftData)
+        .select()
         .single();
-        
-      if (!error && cartRecord) {
-        cartDataId = cartRecord.id;
-        logStep("Cart data stored in order_drafts", { cartDataId });
+
+      if (orderError) {
+        console.log('Failed to create order draft, continuing without it:', orderError);
+      } else {
+        orderDraftId = orderDraft.id;
+        console.log('✅ Order draft created:', orderDraftId);
       }
-    } catch (dbError) {
-      logStep("Warning: Could not store cart data", dbError);
+    } catch (err) {
+      console.log('Order draft creation failed, continuing:', err);
     }
-    
-    logStep("Preparing metadata for payment intent", { 
-      customerName, 
-      customerPhone, 
-      deliveryDate, 
-      deliveryTime,
-      cartDataId
-    });
 
-    // Create payment intent with compact metadata (full data stored in order_drafts)
-    // Ensure discount code captured even if free shipping was auto-assigned via affiliate
-    const discountCodeToUse = (appliedDiscount?.code || ((validDeliveryFee === 0 && affiliateCode) ? String(affiliateCode) : '')).substring(0, 50);
-    const discountTypeToUse = (appliedDiscount?.type || ((validDeliveryFee === 0 && affiliateCode) ? 'free_shipping' : '')).substring(0, 20);
-
+    // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: validAmount,
-      currency,
+      amount: amount,
+      currency: currency,
       metadata: {
-        customer_name: customerName.substring(0, 100),
-        customer_email: customerEmail.substring(0, 100),
-        customer_phone: customerPhone.substring(0, 50),
-        delivery_date: deliveryDate.substring(0, 50),
-        delivery_time: deliveryTime.substring(0, 50),
-        delivery_address: deliveryAddress.substring(0, 200),
-        delivery_instructions: deliveryInstructions.substring(0, 200),
-        cart_summary: cartSummary,
-        cart_data_id: cartDataId || '', // Reference to full cart data
-        item_count: itemCount.toString(),
-        subtotal: validSubtotal.toFixed(2),
-        shipping_fee: validDeliveryFee.toFixed(2),
-        sales_tax: validSalesTax.toFixed(2),
-        tip_amount: validTipAmount.toFixed(2),
-        total_amount: (validSubtotal + validDeliveryFee + validSalesTax + validTipAmount).toFixed(2),
-        discount_code: discountCodeToUse,
-        discount_type: discountTypeToUse,
-        discount_value: (appliedDiscount?.value?.toString() || '0').substring(0, 10),
-        discount_amount: (appliedDiscount?.type === 'percentage' ? (validSubtotal * (appliedDiscount.value / 100)).toFixed(2) : '0'),
-        group_order_number: (groupOrderNumber || '').substring(0, 50),
-        group_order_token: (groupOrderToken || '').substring(0, 50),
-        is_adding_to_order: groupOrderToken ? 'true' : 'false',
-        affiliate_code: (affiliateCode || '').substring(0, 50),
-        commission_percent: (typeof commissionPercent === 'number' && !isNaN(commissionPercent) ? commissionPercent.toString() : '')
+        order_draft_id: orderDraftId || '',
+        customer_email: customerInfo?.email || '',
+        affiliate_code: affiliateCode || '',
+        order_type: 'delivery',
+        cart_item_count: cartItems?.length || 0
+      },
+    });
+
+    console.log('✅ Payment intent created:', paymentIntent.id);
+
+    return new Response(
+      JSON.stringify({ 
+        client_secret: paymentIntent.client_secret,
+        payment_intent_id: paymentIntent.id 
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
       }
-    });
-
-    logStep("Payment intent created", { 
-      paymentIntentId: paymentIntent.id,
-      amount: paymentIntent.amount 
-    });
-
-    return new Response(JSON.stringify({ 
-      client_secret: paymentIntent.client_secret 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    );
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-payment-intent", { 
-      message: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: "Check edge function logs for more information"
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error('Payment intent creation failed:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Payment processing failed' 
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      }
+    );
   }
 });

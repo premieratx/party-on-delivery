@@ -3,110 +3,100 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const log = (step: string, details?: unknown) => {
-  console.log(`[STRIPE-WEBHOOK] ${step}`, details ? JSON.stringify(details) : "");
-};
-
-serve(async (req: Request) => {
-  // CORS preflight
-  if (req.method === "OPTIONS") {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const stripeSecret = Deno.env.get("STRIPE_SECRET_KEY") || "";
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
-  if (!stripeSecret || !webhookSecret) {
-    return new Response(JSON.stringify({ error: "Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
-  }
-
-  const stripe = new Stripe(stripeSecret, { apiVersion: "2023-10-16" });
-
-  // Supabase client (service role) for downstream calls
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
-
   try {
-    const sig = req.headers.get("stripe-signature") || req.headers.get("Stripe-Signature");
-    if (!sig) throw new Error("Missing Stripe-Signature header");
-
-    const bodyText = await req.text();
-    const event = await stripe.webhooks.constructEventAsync(bodyText, sig, webhookSecret);
-
-    log("Event received", { id: event.id, type: event.type });
-
-    // Handle only the success events for order creation
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const paymentIntentId = (session.payment_intent as string) || undefined;
-
-      // Fire-and-forget: let existing function create Shopify order + DB records
-      // Use background task to avoid blocking the webhook response
-      // Passing both session id and payment intent id for idempotency
-      EdgeRuntime.waitUntil(
-        (async () => {
-          try {
-            log("Invoking create-shopify-order", { sessionId: session.id, paymentIntentId });
-            const { data, error } = await supabase.functions.invoke("create-shopify-order", {
-              body: { sessionId: session.id, paymentIntentId, trigger: "checkout.session.completed" },
-            });
-            if (error) log("create-shopify-order error", { error });
-            else log("create-shopify-order result", data);
-          } catch (err) {
-            log("invoke error", { message: err instanceof Error ? err.message : String(err) });
-          }
-        })()
-      );
-    }
-
-    if (event.type === "payment_intent.succeeded") {
-      const pi = event.data.object as Stripe.PaymentIntent;
-      const sessionId = (pi.latest_charge as any)?.metadata?.checkout_session_id || undefined;
-
-      EdgeRuntime.waitUntil(
-        (async () => {
-          try {
-            log("Invoking create-shopify-order (from PI)", { sessionId, paymentIntentId: pi.id });
-            const { data, error } = await supabase.functions.invoke("create-shopify-order", {
-              body: { paymentIntentId: pi.id, sessionId, trigger: "payment_intent.succeeded" },
-            });
-            if (error) log("create-shopify-order error", { error });
-            else log("create-shopify-order result", data);
-          } catch (err) {
-            log("invoke error", { message: err instanceof Error ? err.message : String(err) });
-          }
-        })()
-      );
-    }
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     
-    if (event.type === "charge.succeeded") {
-      // Ignore charge.succeeded to prevent duplicate order creation
-      // We handle order creation on payment_intent.succeeded and checkout.session.completed only
-      const charge = event.data.object as any;
-      const piId = typeof charge.payment_intent === 'string' ? charge.payment_intent : undefined;
-      log("Skipping create-shopify-order for charge.succeeded to avoid duplicates", { paymentIntentId: piId });
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY not configured');
     }
 
-    // Acknowledge immediately
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2023-10-16',
+    });
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+
+    const signature = req.headers.get('stripe-signature');
+    const body = await req.text();
+
+    let event: Stripe.Event;
+
+    if (webhookSecret && signature) {
+      // Verify webhook signature in production
+      try {
+        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      } catch (err) {
+        console.error('Webhook signature verification failed:', err);
+        return new Response('Webhook signature verification failed', { status: 400 });
+      }
+    } else {
+      // For development/testing
+      event = JSON.parse(body) as Stripe.Event;
+    }
+
+    console.log('📧 Stripe webhook received:', event.type);
+
+    // Handle different event types
+    switch (event.type) {
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('✅ Payment succeeded:', paymentIntent.id);
+        
+        // Try to process successful payment
+        try {
+          await supabase.functions.invoke('process-order-complete', {
+            body: {
+              payment_intent_id: paymentIntent.id,
+              order_draft_id: paymentIntent.metadata.order_draft_id,
+              customer_email: paymentIntent.metadata.customer_email,
+              affiliate_code: paymentIntent.metadata.affiliate_code
+            }
+          });
+        } catch (processError) {
+          console.log('Order processing failed, but payment succeeded:', processError);
+        }
+        
+        break;
+      }
+
+      case 'payment_intent.payment_failed': {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        console.log('❌ Payment failed:', paymentIntent.id);
+        // Handle failed payment if needed
+        break;
+      }
+
+      default:
+        console.log('Unhandled event type:', event.type);
+    }
+
     return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    log("ERROR", { message });
-    return new Response(JSON.stringify({ error: message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Webhook processing failed' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      }
+    );
   }
 });
