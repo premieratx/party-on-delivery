@@ -21,7 +21,8 @@ import {
   Image as ImageIcon,
   Type,
   Layout,
-  Palette
+  Palette,
+  Package
 } from 'lucide-react';
 
 interface Collection {
@@ -299,75 +300,83 @@ export const DeliveryAppCreator = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Delivery App Creator</h2>
-          <p className="text-muted-foreground">Create and manage custom delivery apps</p>
+          <h2 className="text-3xl font-bold">Delivery App Creator</h2>
+          <p className="text-muted-foreground">Create and manage custom delivery apps with proper collection mapping</p>
         </div>
       </div>
 
       {/* Load Existing App */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+      <Card className="border-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Settings className="h-6 w-6 text-primary" />
             Load Existing App
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <Label>Select Existing App</Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2">
+              <Label className="text-base font-medium">Select Existing App</Label>
               <Select value={selectedAppId} onValueChange={setSelectedAppId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12">
                   <SelectValue placeholder="Choose an existing app to edit" />
                 </SelectTrigger>
                 <SelectContent>
                   {existingApps.map((app) => (
                     <SelectItem key={app.id} value={app.id}>
-                      {app.app_name} ({app.app_slug})
-                      {app.is_homepage && ' - HOMEPAGE'}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{app.app_name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          /{app.app_slug} {app.is_homepage && '(HOMEPAGE)'}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button 
-              onClick={() => selectedAppId && loadExistingApp(selectedAppId)}
-              disabled={!selectedAppId}
-            >
-              Load App
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => {
-                setSelectedAppId('');
-                setConfig({
-                  app_name: '',
-                  app_slug: '',
-                  hero_heading: 'Alcohol Delivery Made Easy',
-                  hero_subheading: 'Beer, Wine, Spirits & More Delivered to Your Door',
-                  scrolling_text: 'Fast Delivery • Premium Selection • Competitive Prices',
-                  is_homepage: false,
-                  is_active: true,
-                  tabs: [
-                    { index: 0, name: 'Beer', collection_handle: 'beer' },
-                    { index: 1, name: 'Wine', collection_handle: 'wine' },
-                    { index: 2, name: 'Spirits', collection_handle: 'spirits' },
-                    { index: 3, name: 'Mixers', collection_handle: 'mixers' },
-                    { index: 4, name: 'Party Supplies', collection_handle: 'party-supplies' }
-                  ],
-                  occasion_buttons: [
-                    { title: 'Tailgate', collection_handle: 'tailgate-beer', enabled: true },
-                    { title: 'Bachelorette', collection_handle: 'bachelorette-supplies', enabled: true },
-                    { title: 'Party Pack', collection_handle: 'disco-collection', enabled: true }
-                  ]
-                });
-              }}
-            >
-              New App
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => selectedAppId && loadExistingApp(selectedAppId)}
+                disabled={!selectedAppId}
+                className="flex-1"
+              >
+                Load App
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setSelectedAppId('');
+                  setConfig({
+                    app_name: '',
+                    app_slug: '',
+                    hero_heading: 'Alcohol Delivery Made Easy',
+                    hero_subheading: 'Beer, Wine, Spirits & More Delivered to Your Door',
+                    scrolling_text: 'Fast Delivery • Premium Selection • Competitive Prices',
+                    is_homepage: false,
+                    is_active: true,
+                    tabs: [
+                      { index: 0, name: 'Beer', collection_handle: 'beer-collection' },
+                      { index: 1, name: 'Wine', collection_handle: 'wine-collection' },
+                      { index: 2, name: 'Spirits', collection_handle: 'spirits-collection' },
+                      { index: 3, name: 'Cocktails', collection_handle: 'cocktail-kits' },
+                      { index: 4, name: 'Seltzers', collection_handle: 'seltzer-collection' }
+                    ],
+                    occasion_buttons: [
+                      { title: 'Tailgate', collection_handle: 'tailgate-beer', enabled: true },
+                      { title: 'Bachelorette', collection_handle: 'bachelorette-booze', enabled: true },
+                      { title: 'Party Pack', collection_handle: 'disco-collection', enabled: true }
+                    ]
+                  });
+                }}
+                className="flex-1"
+              >
+                New App
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -633,61 +642,96 @@ export const DeliveryAppCreator = () => {
         </TabsContent>
 
         <TabsContent value="tabs" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 justify-between">
-                <div className="flex items-center gap-2">
-                  <Layout className="h-5 w-5" />
-                  Product Category Tabs
-                </div>
-                <Button onClick={addTab} disabled={config.tabs.length >= 8}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Tab
-                </Button>
+          <Card className="border-2">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Package className="h-6 w-6 text-primary" />
+                Product Tabs Configuration
               </CardTitle>
+              <p className="text-muted-foreground mt-2">
+                Configure which Shopify collections appear as tabs in your delivery app
+              </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">Product Category Tabs</h3>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={addTab}
+                    disabled={config.tabs.length >= 8}
+                    size="sm"
+                    className="h-10"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Tab
+                  </Button>
+                </div>
+              </div>
+
               <div className="space-y-4">
                 {config.tabs.map((tab, index) => (
-                  <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
-                    <div className="flex-1">
-                      <Label>Tab Name</Label>
-                      <Input
-                        value={tab.name}
-                        onChange={(e) => updateTab(index, 'name', e.target.value)}
-                        placeholder="Tab Name"
-                      />
+                  <div key={index} className="border-2 rounded-xl p-4 space-y-4 bg-muted/20">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold">Tab {index + 1}</h4>
+                      <Button
+                        type="button"
+                        onClick={() => removeTab(index)}
+                        variant="outline"
+                        size="sm"
+                        disabled={config.tabs.length <= 1}
+                        className="h-8"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
                     </div>
                     
-                    <div className="flex-1">
-                      <Label>Collection</Label>
-                      <Select 
-                        value={tab.collection_handle}
-                        onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {availableCollections.map((collection) => (
-                            <SelectItem key={collection.handle} value={collection.handle}>
-                              {collection.title} ({collection.products_count || 0} products)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor={`tab_name_${index}`} className="font-medium">Tab Display Name</Label>
+                        <Input
+                          id={`tab_name_${index}`}
+                          value={tab.name}
+                          onChange={(e) => updateTab(index, 'name', e.target.value)}
+                          placeholder="e.g., Beer"
+                          className="h-12 mt-1"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor={`collection_${index}`} className="font-medium">Shopify Collection</Label>
+                        <Select
+                          value={tab.collection_handle}
+                          onValueChange={(value) => updateTab(index, 'collection_handle', value)}
+                        >
+                          <SelectTrigger className="h-12 mt-1">
+                            <SelectValue placeholder="Select collection" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            {availableCollections.map((collection) => (
+                              <SelectItem key={collection.handle} value={collection.handle}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{collection.title}</span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {collection.products_count || 0} products • Handle: {collection.handle}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeTab(index)}
-                      disabled={config.tabs.length <= 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
+                
+                {config.tabs.length === 0 && (
+                  <div className="text-center py-12 bg-muted/30 rounded-xl">
+                    <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground text-lg">No tabs configured</p>
+                    <p className="text-sm text-muted-foreground mt-1">Add a tab to get started</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -768,14 +812,27 @@ export const DeliveryAppCreator = () => {
       </Tabs>
 
       {/* Save Button */}
-      <div className="flex justify-end gap-4">
+      <div className="flex justify-between items-center pt-6 border-t">
+        <div className="text-sm text-muted-foreground">
+          {selectedAppId ? 'Editing existing app' : 'Creating new delivery app'}
+        </div>
         <Button 
           onClick={saveDeliveryApp}
           disabled={loading || !config.app_name || !config.app_slug}
-          className="px-8"
+          size="lg"
+          className="min-w-[160px]"
         >
-          <Save className="h-4 w-4 mr-2" />
-          {loading ? 'Saving...' : selectedAppId ? 'Update App' : 'Create App'}
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              {selectedAppId ? 'Updating...' : 'Creating...'}
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              {selectedAppId ? 'Update App' : 'Create App'}
+            </>
+          )}
         </Button>
       </div>
     </div>

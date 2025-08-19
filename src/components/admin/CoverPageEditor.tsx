@@ -307,22 +307,42 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Cover Page' : 'New Cover Page'}</DialogTitle>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-2xl font-bold">
+            {isEditing ? 'Edit Cover Page' : 'Create New Cover Page'}
+          </DialogTitle>
+          <p className="text-muted-foreground">
+            {isEditing ? 'Update your cover page settings' : 'Design a custom cover page for your delivery app'}
+          </p>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <Card>
-              <CardContent className="space-y-3 pt-6">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="subtitle">Subtitle</Label>
-                  <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+        <div className="grid lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <Card className="border-2">
+              <CardContent className="space-y-6 pt-6">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg">Basic Information</h3>
+                  <div>
+                    <Label htmlFor="title" className="font-medium">Page Title *</Label>
+                    <Input 
+                      id="title" 
+                      value={title} 
+                      onChange={(e) => setTitle(e.target.value)} 
+                      placeholder="Enter cover page title"
+                      className="h-12 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="subtitle" className="font-medium">Subtitle</Label>
+                    <Input 
+                      id="subtitle" 
+                      value={subtitle} 
+                      onChange={(e) => setSubtitle(e.target.value)} 
+                      placeholder="Enter subtitle (optional)"
+                      className="h-12 mt-1"
+                    />
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>

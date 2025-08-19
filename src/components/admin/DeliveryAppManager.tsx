@@ -46,6 +46,7 @@ interface Collection {
   id: string;
   handle: string;
   title: string;
+  products_count?: number;
 }
 
 export function DeliveryAppManager() {
@@ -168,37 +169,45 @@ export function DeliveryAppManager() {
         setDeliveryApps(typedApps);
       }
 
-      // Load collections from cache first, then from API if needed
+      // Load collections using the get-all-collections function
       console.log('📦 Loading collections for delivery app manager...');
       
-      // Try cache first
-      const { data: cachedCollections, error: cacheError } = await supabase
-        .from('shopify_collections_cache')
-        .select('handle, title, products_count')
-        .order('products_count', { ascending: false });
-      
-      if (!cacheError && cachedCollections && cachedCollections.length > 0) {
-        console.log(`✅ Loaded ${cachedCollections.length} collections from cache`);
-        const collectionsData = cachedCollections.map((c: any) => ({
-          id: c.handle,
-          handle: c.handle,
-          title: c.title
-        }));
-        setCollections(collectionsData);
-      } else {
-        console.log('📦 Cache empty, loading from API...');
-        // Fallback to API
+      try {
         const { data: collectionsResponse, error: collectionsError } = await supabase.functions.invoke('get-all-collections');
         
         if (collectionsError) throw collectionsError;
         
-        if (collectionsResponse?.collections) {
+        if (collectionsResponse?.success && collectionsResponse.collections) {
+          console.log(`✅ Loaded ${collectionsResponse.collections.length} collections from API`);
           const collectionsData = collectionsResponse.collections.map((c: any) => ({
-            id: c.id,
+            id: c.handle,
             handle: c.handle,
-            title: c.title
+            title: c.title,
+            products_count: c.products_count
           }));
           setCollections(collectionsData);
+        } else {
+          console.log('⚠️ No collections returned from API');
+        }
+      } catch (apiError) {
+        console.error('Error loading collections from API:', apiError);
+        // Try cache as fallback
+        const { data: cachedCollections, error: cacheError } = await supabase
+          .from('shopify_collections_cache')
+          .select('handle, title, products_count')
+          .order('products_count', { ascending: false });
+        
+        if (!cacheError && cachedCollections && cachedCollections.length > 0) {
+          console.log(`✅ Loaded ${cachedCollections.length} collections from cache as fallback`);
+          const collectionsData = cachedCollections.map((c: any) => ({
+            id: c.handle,
+            handle: c.handle,
+            title: c.title,
+            products_count: c.products_count
+          }));
+          setCollections(collectionsData);
+        } else {
+          console.log('❌ Failed to load collections from both API and cache');
         }
       }
 
@@ -1107,24 +1116,29 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                         />
                       </div>
                       
-                      <div>
-                        <Label>Collection</Label>
-                        <Select
-                          value={collections.some(c => c.handle === tab.collection_handle) ? tab.collection_handle : undefined}
-                          onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select collection" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {collections.map(collection => (
-                              <SelectItem key={collection.id} value={collection.handle}>
-                                {collection.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                    </div>
+                       <div>
+                         <Label>Collection</Label>
+                         <Select
+                           value={collections.some(c => c.handle === tab.collection_handle) ? tab.collection_handle : undefined}
+                           onValueChange={(value) => updateTab(index, 'collection_handle', value)}
+                         >
+                           <SelectTrigger>
+                             <SelectValue placeholder="Select collection" />
+                           </SelectTrigger>
+                           <SelectContent className="max-h-60">
+                             {collections.map(collection => (
+                               <SelectItem key={collection.id} value={collection.handle}>
+                                 <div className="flex flex-col">
+                                   <span className="font-medium">{collection.title}</span>
+                                   <span className="text-sm text-muted-foreground">
+                                     Handle: {collection.handle} • {collection.products_count || 0} products
+                                   </span>
+                                 </div>
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                     </div>
                     </div>
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="md:col-span-2">
