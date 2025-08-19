@@ -54,78 +54,27 @@ export default function DynamicHomepage() {
   }, []);
 
   const loadHomepageApp = async () => {
-    console.log('🏠 Starting homepage app load...');
+    console.log('🏠 Loading homepage app...');
     
-    // Add a timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      console.log('⏰ Homepage load timeout, using fallback');
-      setLoading(false);
-      setHomepageApp(null);
-    }, 5000);
-
     try {
-      // Test basic Supabase connection first
-      console.log('🔍 Testing basic Supabase connection...');
-      const { data: testData, error: testError } = await supabase
-        .from('delivery_app_variations')
-        .select('count')
-        .limit(1);
-      
-      if (testError) {
-        console.error('❌ Basic Supabase connection failed:', testError);
-        throw new Error(`Connection failed: ${testError.message}`);
-      }
-      
-      console.log('✅ Basic Supabase connection works');
-      
-      // First check if we should show the cover modal
-      const savedApp = localStorage.getItem('preferred-delivery-app');
-      if (!savedApp) {
-        // Check if there's an active homepage cover page
-        const { data: coverConfig } = await supabase
-          .from('homepage_cover_config')
-          .select('id')
-          .eq('is_active', true)
-          .maybeSingle();
-        
-        if (coverConfig) {
-          // Show cover modal to let user choose
-          setShowCoverModal(true);
-          setLoading(false);
-          clearTimeout(timeoutId);
-          return;
-        }
-      }
-      
-      console.log('🔍 Querying delivery_app_variations table...');
-      
+      // Get the homepage app
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .select('*')
         .eq('is_homepage', true)
         .eq('is_active', true)
-        .single();
-
-      clearTimeout(timeoutId);
+        .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No homepage app set
-          console.log('⚠️ No homepage app configured, using fallback');
-          setHomepageApp(null);
-        } else {
-          console.error('❌ Error loading homepage app:', error);
-          console.error('❌ Full error object:', JSON.stringify(error, null, 2));
-          const errorMessage = typeof error === 'object' ? 
-            (error.message || error.details || 'Unknown database error') : 
-            String(error);
-          setError(`Database error: ${errorMessage}`);
-          setHomepageApp(null);
-        }
+        console.error('❌ Database error:', error);
+        setError('Unable to load homepage configuration');
+        setHomepageApp(null);
+      } else if (!data) {
+        console.log('⚠️ No homepage app configured');
+        setHomepageApp(null);
       } else {
-        console.log('✅ Loaded homepage app:', data?.app_name || 'Unknown');
+        console.log('✅ Loaded homepage app:', data.app_name);
         
-        // Process the app data to ensure proper structure
         const processedApp: HomepageDeliveryApp = {
           id: data.id,
           app_name: data.app_name,
@@ -140,13 +89,11 @@ export default function DynamicHomepage() {
         
         setHomepageApp(processedApp);
       }
-    } catch (error: any) {
-      clearTimeout(timeoutId);
-      console.error('❌ Failed to load homepage app:', error);
-      setError(error.message || 'Unknown error occurred');
-      setHomepageApp(null); // Fallback to simple page
+    } catch (err: any) {
+      console.error('❌ Unexpected error:', err);
+      setError('System error occurred');
+      setHomepageApp(null);
     } finally {
-      console.log('🔄 Setting loading to false');
       setLoading(false);
     }
   };
