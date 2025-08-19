@@ -146,6 +146,32 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       } else {
         console.log('✅ Payment successful!');
         const paymentIntentId = data.client_secret.split('_secret_')[0];
+        
+        // Create Shopify order immediately after successful payment
+        console.log('📦 Creating Shopify order after successful payment...');
+        try {
+          const orderResponse = await supabase.functions.invoke('create-shopify-order', {
+            body: {
+              paymentIntentId: paymentIntentId,
+              isAddingToOrder: isAddingToOrder || false,
+              useSameAddress: false
+            }
+          });
+          
+          console.log('📦 Shopify order creation response:', orderResponse);
+          
+          if (orderResponse.error) {
+            console.error('❌ Shopify order creation failed:', orderResponse.error);
+            // Payment succeeded but order creation failed - still proceed
+          } else {
+            console.log('✅ Shopify order created successfully:', orderResponse.data);
+          }
+        } catch (orderError) {
+          console.error('❌ Order creation error (payment succeeded):', orderError);
+          // Payment succeeded but order creation failed - still proceed
+        }
+        
+        // Call success handler
         onPaymentSuccess(paymentIntentId);
       }
     } catch (error) {

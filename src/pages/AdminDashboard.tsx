@@ -59,22 +59,48 @@ export default function AdminDashboard() {
           .from('customer_orders')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(50),
+          .limit(50)
+          .then(response => {
+            console.log('Orders response:', response);
+            return response;
+          }),
         supabase
           .from('customers')
           .select('*')
-          .limit(100),
+          .limit(100)
+          .then(response => {
+            console.log('Customers response:', response);
+            return response;
+          }),
         supabase
           .from('affiliates')
           .select('*')
           .eq('status', 'active')
           .limit(50)
+          .then(response => {
+            console.log('Affiliates response:', response);
+            return response;
+          })
       ]);
+
+      // Check for errors in each response
+      if (ordersResponse.error) {
+        console.error('Orders error:', ordersResponse.error);
+      }
+      if (customersResponse.error) {
+        console.error('Customers error:', customersResponse.error);
+      }
+      if (affiliatesResponse.error) {
+        console.error('Affiliates error:', affiliatesResponse.error);
+      }
 
       console.log('✅ Raw data loaded:', {
         orders: ordersResponse.data?.length || 0,
+        ordersError: ordersResponse.error,
         customers: customersResponse.data?.length || 0,
-        affiliates: affiliatesResponse.data?.length || 0
+        customersError: customersResponse.error,
+        affiliates: affiliatesResponse.data?.length || 0,
+        affiliatesError: affiliatesResponse.error
       });
 
       // Process orders data
