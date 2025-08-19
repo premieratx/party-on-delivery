@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
+import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { parseProductTitle } from '@/utils/productUtils';
 import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
@@ -343,74 +344,28 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
-      {/* Search Bar - STICKY WHEN ACTIVE */}
-      {showSearch && (isSearchActive || searchQuery) && (
-        <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
-          <div className="container mx-auto px-4 py-3">
-            <div className="flex">
-              <Input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => {
-                   setSearchQuery(e.target.value);
-                   setIsSearchActive(!!e.target.value.trim());
-                }}
-                onBlur={() => {
-                  if (!searchQuery.trim()) setIsSearchActive(false);
-                }}
-                className="rounded-r-none"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button 
-                onClick={handleSearch}
-                className="rounded-l-none"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Category Tabs - ALWAYS STICKY */}
-      <div className={`sticky ${(isSearchActive || searchQuery) ? 'top-[76px]' : 'top-0'} z-40 bg-background border-b shadow-sm transition-all duration-300`}>
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-2">
-            <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
-              {tabs.map((tab, index) => (
-                <Button
-                  key={tab.id}
-                  variant={selectedCategory === index ? "default" : "ghost"}
-                  className="whitespace-nowrap text-xs px-3 py-1 h-8 min-w-fit flex-shrink-0 transition-all duration-200"
-                  onClick={() => {
-                    const currentTab = collectionsConfig?.tabs?.[index];
-                    console.log(`🔄 SWITCHING TO TAB ${index}: ${currentTab?.name || tab.title} (${currentTab?.collection_handle || tab.handle})`);
-                    setSelectedCategory(index);
-                    setSearchProducts([]);
-                    setIsSearchActive(false);
-                  }}
-                >
-                  {tab.icon && <span className="mr-1 text-xs">{tab.icon}</span>}
-                  <span className="text-xs">{tab.title}</span>
-                </Button>
-              ))}
-            </div>
-            
-            {/* Mobile Search Icon */}
-            {showSearch && !isSearchActive && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSearchActive(true)}
-                className="ml-2 lg:hidden"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Combined Search and Tabs */}
+      <CombinedSearchTabs
+        tabs={tabs}
+        selectedCategory={selectedCategory}
+        onTabSelect={(index) => {
+          const currentTab = collectionsConfig?.tabs?.[index];
+          console.log(`🔄 SWITCHING TO TAB ${index}: ${currentTab?.name || tabs[index].title} (${currentTab?.collection_handle || tabs[index].handle})`);
+          setSelectedCategory(index);
+          setSearchProducts([]);
+          setIsSearchActive(false);
+        }}
+        searchQuery={searchQuery}
+        onSearchChange={(query) => {
+          setSearchQuery(query);
+          setIsSearchActive(!!query.trim());
+        }}
+        onSearchSubmit={handleSearch}
+        showSearch={showSearch}
+        isSearchActive={isSearchActive}
+        onSearchActiveChange={setIsSearchActive}
+        isSearching={isSearching}
+      />
 
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8 pb-32 lg:pb-24">

@@ -16,6 +16,7 @@ import { parseProductTitle } from '@/utils/productUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
+import { CombinedSearchTabsCustom } from './CombinedSearchTabsCustom';
 
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
 import seltzerCategoryBg from '@/assets/seltzer-category-bg.jpg';
@@ -277,71 +278,23 @@ const [showSearchModal, setShowSearchModal] = useState(false);
               </div>
             </div>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSearchModal(true)}
-              className="p-2"
-            >
-              <Search className="w-5 h-5" />
-            </Button>
+            <div className="w-10"></div>
           </div>
         </div>
       </div>
 
-      {/* Search Bar - STICKY WHEN MODAL ACTIVE */}
-      {showSearchModal && (
-        <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
-          <div className="max-w-md mx-auto px-4 py-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                autoFocus
-              />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Category Tabs - ALWAYS STICKY */}
-      <div className={`sticky ${showSearchModal ? 'top-[76px]' : 'top-0'} z-40 bg-white border-b shadow-sm`}>
-        <div className="max-w-md mx-auto">
-          <div className="flex overflow-x-auto scrollbar-hide">
-            {categories.map((category) => {
-              const categoryProducts = collections
-                .filter(collection => mapCollectionToCategory(collection.handle) === category.id)
-                .flatMap(collection => collection.products);
-              
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`flex-shrink-0 px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                    activeCategory === category.id
-                      ? 'border-purple-500 text-purple-600 bg-purple-50'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center gap-1">
-                    <category.icon className="w-3 h-3" />
-                    <span className="whitespace-nowrap">{category.name}</span>
-                    {categoryProducts.length > 0 && (
-                      <Badge variant="secondary" className="text-xs ml-1">
-                        {categoryProducts.length}
-                      </Badge>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      {/* Combined Search and Tabs */}
+      <CombinedSearchTabsCustom
+        categories={categories}
+        activeCategory={activeCategory}
+        onCategorySelect={setActiveCategory}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        showSearchModal={showSearchModal}
+        onToggleSearch={() => setShowSearchModal(!showSearchModal)}
+        collections={collections}
+        mapCollectionToCategory={mapCollectionToCategory}
+      />
 
       {/* Content */}
       <div className="max-w-md mx-auto px-4 py-6">
