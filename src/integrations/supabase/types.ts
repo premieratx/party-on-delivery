@@ -3587,6 +3587,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      revoke_all_public_access: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       safe_cache_upsert: {
         Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
         Returns: string
