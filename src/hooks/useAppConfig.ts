@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: AppConfig = {
   aiBotAutomationsEnabled: false, // Disabled by default
   voiceChatEnabled: false, // Disabled by default
   speechModeEnabled: false, // Disabled by default
-  stripePaymentsEnabled: false, // Disabled by default - use demo mode
+  stripePaymentsEnabled: true, // Enabled by default for real payments
 };
 
 const CONFIG_STORAGE_KEY = 'app_config';
