@@ -33,6 +33,18 @@ Deno.serve(async (req) => {
 
     console.log(`🔍 Loading unified products - use_type: ${use_type}, category: ${category}, collection: ${collection_handle}, search_category: ${search_category}, lightweight: ${lightweight}`)
 
+    // Debug: Check what products we actually have in cache
+    const { data: sampleProducts, error: sampleError } = await supabase
+      .from('shopify_products_cache')
+      .select('id, title, collection_handles')
+      .limit(5)
+    
+    console.log('🔍 Sample products in cache:', sampleProducts?.map(p => ({
+      id: p.id,
+      title: p.title,
+      collection_handles: p.collection_handles
+    })))
+
     // Check if we need to refresh cache
     if (force_refresh || await needsCacheRefresh(supabase)) {
       console.log('🔄 Triggering unified sync...')
@@ -41,7 +53,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    // Get products from unified cache
+    // Get products from unified cache - FOR NOW, GET ALL TO DEBUG
     let productsQuery = supabase
       .from('shopify_products_cache')
       .select(lightweight ? 
@@ -50,22 +62,8 @@ Deno.serve(async (req) => {
       )
       .order('updated_at', { ascending: false })
 
-    // Apply filters based on use type
-    if (use_type === 'search') {
-      // For search: use search_category (normalized productType)
-      if (search_category && search_category !== 'all') {
-        productsQuery = productsQuery.eq('search_category', search_category)
-      }
-    } else {
-      // For delivery apps: use collections and category
-      if (category && category !== 'all') {
-        productsQuery = productsQuery.eq('category', category)
-      }
-
-      if (collection_handle && collection_handle !== 'all') {
-        productsQuery = productsQuery.contains('collection_handles', [collection_handle])
-      }
-    }
+    // Don't apply filters for now - we need to see what data we actually have
+    console.log('🔍 Loading ALL products to debug collection mapping...')
 
     if (limit) {
       productsQuery = productsQuery.limit(limit)
@@ -149,7 +147,7 @@ Deno.serve(async (req) => {
       .from('cache')
       .select('data, updated_at')
       .eq('key', 'shopify-unified-sync')
-      .single()
+      .maybeSingle()
 
     const result = {
       success: true,
