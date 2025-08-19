@@ -3620,6 +3620,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_sensitive_payment_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       comprehensive_security_check: {
         Args: Record<PropertyKey, never>
         Returns: Json
