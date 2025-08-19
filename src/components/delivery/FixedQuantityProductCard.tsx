@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Minus } from 'lucide-react';
 import { parseProductTitle } from '@/utils/productUtils';
 
-interface OptimizedProductCardProps {
+interface FixedQuantityProductCardProps {
   product: any;
   isSearchFocused: boolean;
   selectedCategory: number;
@@ -19,8 +19,8 @@ interface OptimizedProductCardProps {
   applyMarkup: (price: number) => number;
 }
 
-// Memoized product card for better performance
-export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
+// Fixed product card with consistent alignment and better quantity management
+export const FixedQuantityProductCard = memo<FixedQuantityProductCardProps>(({
   product,
   isSearchFocused,
   selectedCategory,
@@ -44,6 +44,27 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
     displayPackage = '20 Lbs';
   }
 
+  const handleQuantityChange = (delta: number) => {
+    const variantId = selectedVariant?.id || product.variants[0]?.id;
+    console.log('🛒 Quantity change for product:', product.id, 'variant:', variantId, 'delta:', delta);
+    onQuantityChange(String(product.id), variantId ? String(variantId) : undefined, delta);
+  };
+
+  const handleAddToCart = () => {
+    const variant = selectedVariant || product.variants[0];
+    if (variant) {
+      console.log('🛒 Adding to cart - Product:', product.id, 'Variant:', variant.id);
+      onAddToCart({
+        id: String(product.id),
+        title: product.title,
+        name: product.title,
+        price: applyMarkup(variant.price),
+        image: product.image,
+        variant: String(variant.id)
+      });
+    }
+  };
+
   return (
     <div 
       className={`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full ${
@@ -51,7 +72,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
       } ${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md`}
       onClick={() => onProductClick(product)}
     >
-      {/* Product image - condensed when search focused */}
+      {/* Product image - using object-contain for full image visibility */}
       <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${
         isSearchFocused 
           ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-1' : 'mb-2'
@@ -66,13 +87,10 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
         />
       </div>
       
-      {/* Product info with condensed height when search focused */}
-      <div className={`flex flex-col flex-1 justify-between ${
-        isSearchFocused 
-          ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[4.5rem]' : 'min-h-[6rem]'
-          : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'
-      }`}>
-        <div className="flex-1 flex flex-col justify-start">
+      {/* Product info with flexible height */}
+      <div className="flex flex-col flex-1">
+        {/* Product title and package - grows to fill available space */}
+        <div className="flex-1 flex flex-col justify-start mb-3">
           {isCocktailsTab ? (
             <h4 className="font-bold leading-tight text-center text-sm mb-2">
               {product.title}
@@ -133,20 +151,20 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
           })()}
         </div>
         
-        {/* Price and cart controls container - FIXED VERTICAL ALIGNMENT */}
-        <div className="mt-auto pt-2 flex items-end justify-between min-h-[32px]">
-          {/* Price aligned left and bottom */}
+        {/* Fixed bottom section for price and controls - consistent alignment */}
+        <div className="flex items-end justify-between h-8">
+          {/* Price badge - aligned to bottom left */}
           <div className="flex items-end">
-            <Badge variant="secondary" className="font-semibold text-xs">
+            <Badge variant="secondary" className="font-semibold text-xs h-6">
               ${applyMarkup(selectedVariant?.price || 0).toFixed(2)}
             </Badge>
           </div>
-            
-          {/* Cart Controls aligned right and bottom */}
+          
+          {/* Cart controls - aligned to bottom right */}
           <div className="flex items-end">
             {cartQty > 0 ? (
               <div 
-                className="flex items-center bg-muted/80 rounded-md px-1 py-0.5 gap-1 border border-border/50" 
+                className="flex items-center bg-muted/80 rounded-md px-1 py-0.5 gap-1 border border-border/50 h-8" 
                 onClick={(e) => e.stopPropagation()}
               >
                 <Button
@@ -155,9 +173,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   className="h-6 w-6 p-0 rounded-sm hover:bg-destructive/20 hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const variantId = selectedVariant?.id || product.variants[0]?.id;
-                    console.log('🛒 Decrement quantity for product:', product.id, 'variant:', variantId);
-                    onQuantityChange(String(product.id), variantId ? String(variantId) : undefined, -1);
+                    handleQuantityChange(-1);
                   }}
                 >
                   <Minus className="w-3 h-3" strokeWidth={2} />
@@ -171,9 +187,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                   className="h-6 w-6 p-0 rounded-sm hover:bg-primary/20 hover:text-primary"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const variantId = selectedVariant?.id || product.variants[0]?.id;
-                    console.log('🛒 Increment quantity for product:', product.id, 'variant:', variantId);
-                    onQuantityChange(String(product.id), variantId ? String(variantId) : undefined, 1);
+                    handleQuantityChange(1);
                   }}
                 >
                   <Plus className="w-3 h-3" strokeWidth={2} />
@@ -184,18 +198,7 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full flex items-center justify-center transition-colors w-8 h-8"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const variant = selectedVariant || product.variants[0];
-                  if (variant) {
-                    console.log('🛒 Adding to cart - Product:', product.id, 'Variant:', variant.id);
-                    onAddToCart({
-                      id: String(product.id),
-                      title: product.title,
-                      name: product.title,
-                      price: applyMarkup(variant.price),
-                      image: product.image,
-                      variant: String(variant.id)
-                    });
-                  }
+                  handleAddToCart();
                 }}
               >
                 <Plus className="w-4 h-4" strokeWidth={3} />
