@@ -143,17 +143,17 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
     onSearchingChange?.(false);
   }, [indexedProducts, showDropdownResults]);
 
-  // Perform search when debounced query changes
+  // Perform search immediately when query changes (no debounce delay)
   useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      performSearch(debouncedSearchQuery);
+    if (searchQuery.trim()) {
+      performSearch(searchQuery);
     } else {
       setSearchResults([]);
       setShowResults(false);
       onResultsChange?.([], '');
       onSearchingChange?.(false);
     }
-  }, [debouncedSearchQuery, performSearch]);
+  }, [searchQuery, performSearch]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;

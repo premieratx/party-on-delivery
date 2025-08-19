@@ -155,37 +155,34 @@ export default function OptimizedProductSearch() {
     return () => { mounted = false; };
   }, []);
 
-  // EXACT Real-time search - only these 4 criteria, no assumptions
+  // IMMEDIATE Real-time search - no delay
   useEffect(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
-      const timer = setTimeout(() => {
-        // EXACT MATCHING ONLY - no guessing, no assumptions
-        const filtered = allProducts.filter((p) => {
-          const title = String(p.title || '').toLowerCase();
-          const productType = String(p.product_type || '').toLowerCase();
-          const category = String(p.category || '').toLowerCase();
-          
-          // Get collection handles if they exist
-          let collections = '';
-          if (p.collection_handles) {
-            if (Array.isArray(p.collection_handles)) {
-              collections = p.collection_handles.join(' ').toLowerCase();
-            } else if (typeof p.collection_handles === 'string') {
-              collections = p.collection_handles.toLowerCase();
-            }
+      // IMMEDIATE SEARCH - no timeout delay
+      const filtered = allProducts.filter((p) => {
+        const title = String(p.title || '').toLowerCase();
+        const productType = String(p.product_type || '').toLowerCase();
+        const category = String(p.category || '').toLowerCase();
+        
+        // Get collection handles if they exist
+        let collections = '';
+        if (p.collection_handles) {
+          if (Array.isArray(p.collection_handles)) {
+            collections = p.collection_handles.join(' ').toLowerCase();
+          } else if (typeof p.collection_handles === 'string') {
+            collections = p.collection_handles.toLowerCase();
           }
-          
-          // ONLY match these 4 criteria - EXACT substring matching only
-          return title.includes(q) || 
-                 productType.includes(q) || 
-                 category.includes(q) || 
-                 collections.includes(q);
-        });
-        console.log(`🔍 EXACT SEARCH: Found ${filtered.length} products with "${searchQuery}" in title/type/category/collection`);
-        setProducts(filtered);
-      }, 50); // Faster response for immediate results
-      return () => clearTimeout(timer);
+        }
+        
+        // ONLY match these 4 criteria - EXACT substring matching only
+        return title.includes(q) || 
+               productType.includes(q) || 
+               category.includes(q) || 
+               collections.includes(q);
+      });
+      console.log(`🔍 IMMEDIATE SEARCH: Found ${filtered.length} products with "${searchQuery}" in title/type/category/collection`);
+      setProducts(filtered);
     } else {
       // No query: show category view from full catalog
       const current = categories.find(c => c.id === selectedCategory);
