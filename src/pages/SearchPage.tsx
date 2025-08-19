@@ -112,34 +112,37 @@ export default function SearchPage() {
     ...SUBCATEGORIES.filter(sub => sub.parentCategory === 'spirits')
   ], []);
 
-  // Apply search and filtering while preserving Shopify order
+  // Apply search and filtering while preserving exact Shopify order
   const filteredProducts = useMemo(() => {
-    let products = [...allProducts]; // Preserve original array order
-
-    // Apply search if query exists
-    if (searchQuery.trim()) {
-      products = HierarchicalSearchOptimizer.searchProducts(searchQuery, products, 100);
-    } else {
-      // Apply category filtering when no search query
-      if (selectedCategory !== 'all') {
-        // Filter while maintaining original order
-        products = products.filter(product => {
-          const categoryProducts = HierarchicalSearchOptimizer.filterByCategory([product], selectedCategory);
-          if (categoryProducts.length === 0) return false;
+    // If no search query, just apply basic filtering while preserving order
+    if (!searchQuery.trim()) {
+      if (selectedCategory === 'all') {
+        // Return all products in original Shopify order
+        return allProducts;
+      }
+      
+      // Filter by category while preserving original order
+      return allProducts.filter(product => {
+        if (selectedCategory === 'spirits') {
+          const isSpirit = HierarchicalSearchOptimizer.filterByCategory([product], selectedCategory).length > 0;
+          if (!isSpirit) return false;
           
           // Apply spirit subcategory filtering if needed
-          if (selectedCategory === 'spirits' && selectedSpirit !== 'all') {
-            const spiritProducts = HierarchicalSearchOptimizer.filterSpiritsBySubcategory([product], selectedSpirit);
-            return spiritProducts.length > 0;
+          if (selectedSpirit !== 'all') {
+            return HierarchicalSearchOptimizer.filterSpiritsBySubcategory([product], selectedSpirit).length > 0;
           }
           return true;
-        });
-      }
-      // If no category selected, keep original Shopify order
+        }
+        
+        // For other categories, use the filter function
+        return HierarchicalSearchOptimizer.filterByCategory([product], selectedCategory).length > 0;
+      });
     }
-
-    console.log(`📊 Search Results: ${products.length} products (original Shopify order preserved)`);
-    return products;
+    
+    // Only when searching, use the search optimizer (which may reorder for relevance)
+    const searchResults = HierarchicalSearchOptimizer.searchProducts(searchQuery, allProducts, 100);
+    console.log(`📊 Search Results: ${searchResults.length} products (search-based ordering)`);
+    return searchResults;
   }, [allProducts, searchQuery, selectedCategory, selectedSpirit]);
 
   // Handle add to cart
