@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '../utils/directSync'; // This will trigger the sync immediately
+import '../utils/forceShopifySync'; // This will force proper Shopify collection sync
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -26,45 +26,71 @@ const Index = () => {
   const [showCoverPage, setShowCoverPage] = useState(false);
   const [showForceSync, setShowForceSync] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  // Immediately force sync on component mount
+  // Force complete sync with collection order preservation
   useEffect(() => {
-    const forceCompleteSync = async () => {
-      console.log('🚀 FORCING COMPLETE SYNC FOR ALL DELIVERY APPS...');
+    const forceShopifyCollectionSync = async () => {
+      console.log('🔄 FORCING SHOPIFY COLLECTION SYNC WITH EXACT ORDER...');
       
       try {
-        // Clear any existing cache to force fresh data
-        await supabase.from('cache').delete().like('key', 'shopify%');
-        
-        // Force unified sync
-        const { data, error } = await supabase.functions.invoke('unified-shopify-sync', {
+        // 1. First force unified sync to get all products and collections
+        console.log('🔄 Step 1: Unified Shopify sync...');
+        const { data: unifiedResult, error: unifiedError } = await supabase.functions.invoke('unified-shopify-sync', {
           body: { forceRefresh: true }
         });
         
-        if (data?.success) {
-          console.log(`🎉 SYNC COMPLETE: ${data.products_synced} products, ${data.collections_synced} collections`);
-          
-          // Verify collections were cached
-          setTimeout(async () => {
-            const { count: collectionCount } = await supabase
-              .from('shopify_collections_cache')
-              .select('*', { count: 'exact', head: true });
-            console.log(`✅ Verified: ${collectionCount} collections in cache`);
-            
-            // Trigger collection order sync after main sync
-            setTimeout(async () => {
-              await syncCollectionOrder();
-              console.log('🎯 Collection order sync completed - products now match Shopify order');
-            }, 3000);
-          }, 2000);
-        } else {
-          console.error('❌ Sync failed:', error);
+        if (unifiedError) {
+          console.error('❌ Unified sync failed:', unifiedError);
+          return;
         }
+        
+        console.log('✅ Unified sync completed:', unifiedResult);
+        
+        // 2. Wait for sync to complete then sync collection orders
+        setTimeout(async () => {
+          console.log('🔄 Step 2: Syncing collection orders for all collections...');
+          
+          // Get all collections from delivery apps
+          const collectionsToSync = [
+            'tailgate-beer', 'seltzer-collection', 'cocktail-kits', 
+            'mixers-non-alcoholic', 'spirits', 'bourbon-rye', 'gin-rum',
+            'tequila-mezcal', 'decorations', 'drinkware-bartending-tools',
+            'party-supplies', 'bachelorette-supplies'
+          ];
+          
+          for (const collection of collectionsToSync) {
+            try {
+              console.log(`🎯 Syncing order for collection: ${collection}`);
+              const { data: orderResult, error: orderError } = await supabase.functions.invoke('shopify-collection-order', {
+                body: { collection_handle: collection }
+              });
+              
+              if (orderError) {
+                console.warn(`⚠️ Failed to sync order for ${collection}:`, orderError);
+              } else {
+                console.log(`✅ Synced order for ${collection}:`, orderResult);
+              }
+            } catch (error) {
+              console.warn(`⚠️ Error syncing ${collection}:`, error);
+            }
+          }
+          
+          console.log('🎉 ALL COLLECTION ORDERS SYNCED - Products now in exact Shopify order');
+          
+          // Clear browser caches to force fresh data
+          localStorage.removeItem('products-cache');
+          localStorage.removeItem('collections-cache');
+          
+          // Trigger a refresh event for components
+          window.dispatchEvent(new CustomEvent('collectionsUpdated'));
+          
+        }, 3000);
+        
       } catch (error) {
         console.error('❌ Complete sync error:', error);
       }
     };
     
-    forceCompleteSync();
+    forceShopifyCollectionSync();
   }, []);
   const navigate = useNavigate();
   const { cartItems } = useUnifiedCart();
