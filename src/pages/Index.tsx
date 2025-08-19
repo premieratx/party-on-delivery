@@ -5,94 +5,123 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
-import { RealProductLoader } from '@/components/delivery/RealProductLoader';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Plus, Minus } from 'lucide-react';
 
 const Index = () => {
-  console.log('🚨 HOMEPAGE BULLETPROOF v3: Starting load...');
+  console.log('🚀 HOMEPAGE v4: ULTRA SIMPLE - Starting...');
   
   const navigate = useNavigate();
-  const { getTotalItems } = useUnifiedCart();
+  const { addToCart, getTotalItems, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  
+  // State for app config and products
   const [appConfig, setAppConfig] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   useEffect(() => {
-    const loadEverything = async () => {
-      try {
-        console.log('🚨 STEP 1: Starting database query...');
-        
-        // Use maybeSingle() to avoid errors when no data found
-        const { data: homepageApp, error: homepageError } = await supabase
+    loadHomepageData();
+  }, []);
+
+  const loadHomepageData = async () => {
+    try {
+      console.log('📋 STEP 1: Loading delivery app config...');
+      setLoading(true);
+      setError(null);
+
+      // Load the main delivery app config
+      const { data: homepageApp, error: configError } = await supabase
+        .from('delivery_app_variations')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_homepage', true)
+        .maybeSingle();
+
+      console.log('📋 STEP 2: Config result:', { homepageApp, configError });
+
+      if (configError) {
+        throw new Error(`Config error: ${configError.message}`);
+      }
+
+      let finalConfig = homepageApp;
+      if (!homepageApp) {
+        console.log('📋 STEP 3: No homepage app, getting fallback...');
+        const { data: fallbackApps, error: fallbackError } = await supabase
           .from('delivery_app_variations')
           .select('*')
           .eq('is_active', true)
-          .eq('is_homepage', true)
-          .maybeSingle();
+          .order('created_at', { ascending: true })
+          .limit(1);
 
-        console.log('🚨 STEP 2: Homepage query result:', { homepageApp, homepageError });
-
-        let finalConfig = null;
-
-        if (homepageError) {
-          console.error('🚨 HOMEPAGE ERROR:', homepageError);
-          throw homepageError;
+        if (fallbackError) {
+          throw new Error(`Fallback error: ${fallbackError.message}`);
         }
 
-        if (!homepageApp) {
-          console.log('🚨 STEP 3: No homepage app found, getting fallback...');
-          
-          const { data: fallbackApps, error: fallbackError } = await supabase
-            .from('delivery_app_variations')
-            .select('*')
-            .eq('is_active', true)
-            .order('created_at', { ascending: true })
-            .limit(1);
-          
-          console.log('🚨 STEP 4: Fallback query result:', { fallbackApps, fallbackError });
-            
-          if (fallbackError) {
-            console.error('🚨 FALLBACK ERROR:', fallbackError);
-            throw fallbackError;
-          }
-
-          if (!fallbackApps || fallbackApps.length === 0) {
-            throw new Error('No delivery apps found in database');
-          }
-          
-          finalConfig = fallbackApps[0];
-          console.log('🚨 STEP 5: Using fallback app:', finalConfig.app_name);
-        } else {
-          finalConfig = homepageApp;
-          console.log('🚨 STEP 5: Using homepage app:', finalConfig.app_name);
+        if (!fallbackApps || fallbackApps.length === 0) {
+          throw new Error('No delivery apps found in database');
         }
-        
-        console.log('🚨 STEP 6: Final config loaded:', finalConfig);
-        setAppConfig(finalConfig);
-        
-      } catch (err: any) {
-        console.error('🚨 FATAL ERROR in loadEverything:', err);
-        console.error('🚨 ERROR DETAILS:', {
-          message: err?.message,
-          code: err?.code,
-          details: err?.details,
-          hint: err?.hint
-        });
-        setError(`Database error: ${err?.message || 'Unknown error'}`);
-      } finally {
-        console.log('🚨 STEP 7: Setting loading to false');
-        setLoading(false);
+
+        finalConfig = fallbackApps[0];
       }
+
+      console.log('📋 STEP 4: Using config:', finalConfig.app_name);
+      setAppConfig(finalConfig);
+
+      // Load products from the configured collections
+      console.log('🛍️ STEP 5: Loading products...');
+      const collectionsConfig = finalConfig.collections_config as any;
+      const collections = collectionsConfig?.tabs || [];
+      
+      if (collections.length > 0) {
+        const collectionHandles = collections.slice(0, 3).map((tab: any) => tab.collection_handle);
+        console.log('🛍️ STEP 6: Loading from collections:', collectionHandles);
+
+        const { data: productData, error: productError } = await supabase
+          .from('shopify_products_cache')
+          .select('*')
+          .overlaps('collection_handles', collectionHandles)
+          .limit(6);
+
+        if (productError) {
+          console.error('❌ Product error:', productError);
+          // Don't fail the whole page for product errors, just show empty products
+          setProducts([]);
+        } else {
+          console.log('✅ Loaded products:', productData?.length || 0);
+          setProducts(productData || []);
+        }
+      } else {
+        console.log('⚠️ No collections configured');
+        setProducts([]);
+      }
+
+    } catch (err: any) {
+      console.error('💥 FATAL ERROR:', err);
+      setError(err.message || 'Unknown error occurred');
+    } finally {
+      console.log('🏁 STEP 7: Loading complete');
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product: any) => {
+    const cartItem = {
+      id: product.handle || product.id,
+      title: product.title,
+      name: product.title,
+      price: product.price || (product.variants?.[0]?.price || 0),
+      image: product.image || product.image_url || '',
+      variant: 'default'
     };
+    
+    console.log('🛒 Adding to cart:', cartItem);
+    addToCart(cartItem);
+  };
 
-    loadEverything();
-  }, []);
-
-
-  // Show loading
+  // LOADING STATE
   if (loading) {
-    console.log('🚨 RENDERING: Loading state');
+    console.log('⏳ RENDERING: Loading...');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -106,20 +135,20 @@ const Index = () => {
     );
   }
 
-  // Show error
+  // ERROR STATE
   if (error) {
-    console.log('🚨 RENDERING: Error state -', error);
+    console.log('❌ RENDERING: Error -', error);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4 max-w-md">
-          <h3 className="text-lg font-semibold text-destructive">Database Error</h3>
+          <h3 className="text-lg font-semibold text-destructive">Error Loading Store</h3>
           <p className="text-muted-foreground text-sm">{error}</p>
           <div className="space-y-2">
             <Button onClick={() => window.location.reload()} className="w-full">
               Reload Page
             </Button>
             <Button onClick={() => navigate('/admin')} variant="outline" className="w-full">
-              Go to Admin
+              Admin Panel
             </Button>
           </div>
         </div>
@@ -127,43 +156,46 @@ const Index = () => {
     );
   }
 
-  // Show missing config
+  // NO CONFIG STATE
   if (!appConfig) {
-    console.log('🚨 RENDERING: No config state');
+    console.log('⚠️ RENDERING: No config');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
           <h3 className="text-lg font-semibold">No Store Configuration</h3>
-          <p className="text-muted-foreground">No delivery apps are configured</p>
-          <Button onClick={() => navigate('/admin')}>
-            Set Up Store
-          </Button>
+          <p className="text-muted-foreground">Store not configured yet</p>
+          <Button onClick={() => navigate('/admin')}>Admin Panel</Button>
         </div>
       </div>
     );
   }
 
-  // SUCCESS - Render the store
-  console.log('🚨 RENDERING: Success state with config:', appConfig.app_name);
-  
+  // SUCCESS STATE - RENDER THE STORE
+  console.log('✅ RENDERING: Success with', products.length, 'products');
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Simple Hero */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-primary to-primary/80 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           {appConfig.logo_url && (
-            <img src={appConfig.logo_url} alt={appConfig.app_name} className="h-16 mx-auto mb-6" />
+            <img 
+              src={appConfig.logo_url} 
+              alt={appConfig.app_name} 
+              className="h-16 mx-auto mb-6"
+              onError={(e) => e.currentTarget.style.display = 'none'}
+            />
           )}
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
             {appConfig.main_app_config?.hero_heading || appConfig.app_name}
           </h1>
-          <p className="text-xl text-blue-100 mb-6">
-            {appConfig.main_app_config?.hero_subheading || "Austin's Premier Party Supply Delivery"}
+          <p className="text-xl opacity-90 mb-6">
+            {appConfig.main_app_config?.hero_subheading || "Premium Delivery Service"}
           </p>
           
           <Button
             onClick={() => setIsCartOpen(true)}
-            className="bg-white text-blue-600 hover:bg-white/90 text-lg px-8 py-3"
+            className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3"
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
             Cart ({getTotalItems()})
@@ -171,16 +203,98 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Real Products Section */}
-      <RealProductLoader 
-        appConfig={appConfig} 
-        onCartOpen={() => setIsCartOpen(true)}
-      />
+      {/* Products Section */}
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold">Featured Products</h2>
+          <Button onClick={() => setIsCartOpen(true)} variant="outline">
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            View Cart ({getTotalItems()})
+          </Button>
+        </div>
 
-      {/* Admin Panel Access */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Store: {appConfig.app_name}</p>
+        {products.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-4">No products available</p>
+            <p className="text-sm text-muted-foreground">Products will appear here once configured</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {products.map((product) => {
+              const quantity = getCartItemQuantity(product.handle || product.id, 'default');
+              const price = product.price || product.variants?.[0]?.price || 0;
+              const image = product.image || product.image_url;
+
+              return (
+                <div key={product.id} className="bg-card rounded-lg border p-6 text-center hover:shadow-lg transition-shadow">
+                  <div className="w-full h-48 bg-muted rounded-lg mb-4 overflow-hidden flex items-center justify-center">
+                    {image ? (
+                      <img 
+                        src={image} 
+                        alt={product.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`${image ? 'hidden' : ''} text-muted-foreground`}>
+                      📦 {product.title}
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">{product.title}</h3>
+                  <p className="text-2xl font-bold text-primary mb-4">${price}</p>
+                  
+                  {quantity === 0 ? (
+                    <Button onClick={() => handleAddToCart(product)} className="w-full">
+                      Add to Cart
+                    </Button>
+                  ) : (
+                    <div className="flex items-center justify-center gap-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(product.handle || product.id, 'default', quantity - 1, {
+                          id: product.handle || product.id,
+                          title: product.title,
+                          name: product.title,
+                          price: price,
+                          image: image || '',
+                          variant: 'default'
+                        })}
+                      >
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="font-semibold text-lg">{quantity}</span>
+                      <Button
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => updateQuantity(product.handle || product.id, 'default', quantity + 1, {
+                          id: product.handle || product.id,
+                          title: product.title,
+                          name: product.title,
+                          price: price,
+                          image: image || '',
+                          variant: 'default'
+                        })}
+                      >
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Store Info & Admin Access */}
+        <div className="text-center mt-12 space-y-4">
+          <p className="text-muted-foreground">
+            Store: {appConfig.app_name} • {products.length} products loaded
+          </p>
           <div className="flex justify-center gap-4">
             <Button onClick={() => navigate('/admin')} variant="outline">
               Admin Panel

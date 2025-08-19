@@ -41,11 +41,11 @@ export const RealProductLoader = ({ appConfig, onCartOpen }: RealProductLoaderPr
       const collectionHandles = collections.slice(0, 3).map((tab: any) => tab.collection_handle);
       console.log('🎯 Loading products from collections:', collectionHandles);
 
-      // Query products from these collections
+      // Query products from these collections - use array overlap operator
       const { data: productData, error: productError } = await supabase
         .from('shopify_products_cache')
         .select('*')
-        .or(collectionHandles.map(handle => `collection_handles.cs.{${handle}}`).join(','))
+        .overlaps('collection_handles', collectionHandles)
         .limit(6);
 
       if (productError) {
