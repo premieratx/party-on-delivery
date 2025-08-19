@@ -54,6 +54,7 @@ import SearchAppConfig from '@/components/admin/SearchAppConfig';
 import { AppConfigManager } from '@/components/admin/AppConfigManager';
 import { FeatureCleanupReport } from '@/components/FeatureCleanupReport';
 import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
+import CoverPagesAdmin from '@/pages/CoverPagesAdmin';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -285,7 +286,7 @@ export default function AdminDashboard() {
               <TabsTrigger value="abandoned" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⏰ Abandoned</TabsTrigger>
               <TabsTrigger value="products" onClick={() => navigate('/admin/create-collection')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📦 Products</TabsTrigger>
               <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🚚 Apps</TabsTrigger>
-              <TabsTrigger value="cover-pages" onClick={() => navigate('/admin/cover-pages')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🎬 Cover Pages</TabsTrigger>
+              <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🎬 Cover Pages</TabsTrigger>
               <TabsTrigger value="post-checkout-builder" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">✅ Post-Checkout</TabsTrigger>
               <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Quotes</TabsTrigger>
               <TabsTrigger value="search-app-config" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🔍 Search App</TabsTrigger>
@@ -565,6 +566,10 @@ export default function AdminDashboard() {
                 <DeliveryAppCreator />
               </TabsContent>
             </Tabs>
+          </TabsContent>
+
+          <TabsContent value="cover-pages" className="space-y-4">
+            <CoverPagesAdmin />
           </TabsContent>
 
           <TabsContent value="post-checkout-builder" className="space-y-4">
