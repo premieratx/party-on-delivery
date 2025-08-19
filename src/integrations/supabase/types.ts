@@ -2606,6 +2606,63 @@ export type Database = {
         }
         Relationships: []
       }
+      security_check_schedule: {
+        Row: {
+          created_at: string | null
+          findings: Json | null
+          id: string
+          last_run: string | null
+          next_run: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          findings?: Json | null
+          id?: string
+          last_run?: string | null
+          next_run?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          findings?: Json | null
+          id?: string
+          last_run?: string | null
+          next_run?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      security_standards: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          enforcement_rule: string
+          id: string
+          is_active: boolean | null
+          standard_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          enforcement_rule: string
+          id?: string
+          is_active?: boolean | null
+          standard_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          enforcement_rule?: string
+          id?: string
+          is_active?: boolean | null
+          standard_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       shared_order_participants: {
         Row: {
           id: string
@@ -3483,9 +3540,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      comprehensive_security_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       configure_auth_security: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      enforce_security_standards: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       execute_automation_template: {
         Args: { template_name_param: string }
