@@ -396,86 +396,76 @@ export default function OptimizedProductSearch() {
 
             {/* Products Grid */}
             {displayProducts.length > 0 ? (
-              <div className="grid grid-cols-3 md:grid-cols-8 gap-2 sm:gap-3 md:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
                 {displayProducts.map((product) => {
                   const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
                   
                   return (
-                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                      <div className="aspect-square relative">
+                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in">
+                      <div className="aspect-square relative overflow-hidden">
                         <OptimizedImage
                           src={product.image}
                           alt={product.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover hover-scale"
                         />
                       </div>
                       
-                      <CardContent className="p-3">
+                      <CardContent className="p-3 space-y-3">
                         <h3 className="font-medium text-sm mb-2 line-clamp-2">
                           {product.title}
                         </h3>
                         
-                        <div className="flex items-center justify-center mb-3">
-                          <span className="font-bold text-primary">
+                        {/* Price and Add to Cart - Centered */}
+                        <div className="flex flex-col items-center space-y-2">
+                          <span className="font-bold text-primary text-lg">
                             ${(parseFloat(String(product.price)) || 0).toFixed(2)}
                           </span>
-                        </div>
 
-                        {quantity > 0 ? (
-                          <div className="flex items-center justify-between bg-muted rounded-md p-1">
+                          {quantity > 0 ? (
+                            <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              
+                              <span className="font-medium px-2">{quantity}</span>
+                              
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
                             <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            
-                            <span className="font-medium px-2">{quantity}</span>
-                            
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Plus className="h-4 w-4 md:h-5 md:w-5" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex justify-center">
-                            <button
                               onClick={() => handleAddToCart(product)}
-                              aria-label="Add to cart"
-                              className="bg-green-600 hover:bg-green-700 text-white rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
+                              className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
                             >
-                              <Plus className="h-4 w-4 md:h-5 md:w-5" />
-                            </button>
-                          </div>
-                        )}
+                              <Plus className="h-5 w-5" />
+                            </Button>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   );
                 })}
               </div>
-            ) : searchQuery ? (
-              <div className="text-center py-12">
-                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No products found</h3>
-                <p className="text-muted-foreground mb-4">
-                  Try different keywords or browse our categories
-                </p>
-                <Button onClick={() => setSearchQuery('')}>
-                  Clear Search
-                </Button>
-              </div>
             ) : (
               <div className="text-center py-12">
-                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Start searching</h3>
+                <div className="w-16 h-16 mx-auto mb-4 text-6xl">🔍</div>
+                <h3 className="text-xl font-semibold mb-2">No products found</h3>
                 <p className="text-muted-foreground">
-                  Enter keywords to find the perfect products for your party
+                  {searchQuery 
+                    ? `No results for "${searchQuery}"${selectedCategory !== 'all' ? ` in ${categories.find(c => c.id === selectedCategory)?.label}` : ''}`
+                    : 'No products available in this category'
+                  }
                 </p>
               </div>
             )}
@@ -483,20 +473,19 @@ export default function OptimizedProductSearch() {
         )}
       </div>
 
-      {/* Cart */}
+      {/* Cart Sidebar */}
       <UnifiedCart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
+        onProceedToCheckout={() => {
+          setIsCartOpen(false);
+          navigate('/checkout');
+        }}
       />
 
-      {/* Bottom Cart Bar - persistent */}
+      {/* Bottom Cart Bar for Mobile */}
       <BottomCartBar
-        items={cartItems}
-        totalPrice={getTotalPrice()}
-        isVisible={true}
         onOpenCart={() => setIsCartOpen(true)}
-        onCheckout={() => navigate('/checkout')}
-        currentAppSlug={undefined} // Search page doesn't have a specific app
       />
     </div>
   );

@@ -375,52 +375,70 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       {/* Products Grid */}
       <div className="container mx-auto px-4 py-8 pb-20 lg:pb-8">
         {/* Show search results when searching */}
-        {isSearching && searchProducts.length > 0 ? (
+        {searchQuery && searchProducts.length > 0 ? (
           <>
             <h3 className="text-lg font-semibold mb-4">Search Results ({searchProducts.length})</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {searchProducts.map((product) => {
                 const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+                const { cleanTitle, packageSize } = parseProductTitle(product.title);
                 return (
-                  <div key={product.id} className="bg-card border rounded-lg p-4 hover:shadow-lg transition-shadow">
-                    <OptimizedImage
-                      src={product.image}
-                      alt={product.title}
-                      className="w-full h-48 object-cover rounded-lg mb-3"
-                    />
-                    <h3 className="font-medium text-sm mb-2 line-clamp-2">{product.title}</h3>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-primary">${product.price}</span>
+                  <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in">
+                    <div className="aspect-square relative overflow-hidden">
+                      <OptimizedImage
+                        src={product.image}
+                        alt={cleanTitle}
+                        className="w-full h-full object-cover hover-scale"
+                      />
                     </div>
-                     {quantity > 0 ? (
-                      <div className="flex items-center justify-between bg-muted rounded-md p-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Minus className="w-4 h-4" />
-                        </Button>
-                        <span className="font-medium px-2">{quantity}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
+                    <div className="p-3 space-y-3">
+                      <div className="space-y-1">
+                        <h3 className="font-medium text-sm line-clamp-2 leading-tight">
+                          {cleanTitle}
+                        </h3>
+                        {packageSize && (
+                          <p className="text-xs text-muted-foreground">
+                            {packageSize}
+                          </p>
+                        )}
                       </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddToCart(product)}
-                        className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    )}
+                      
+                      {/* Price and Add to Cart - Centered */}
+                      <div className="flex flex-col items-center space-y-2">
+                        <span className="font-bold text-primary text-lg">
+                          ${(parseFloat(String(product.price)) || 0).toFixed(2)}
+                        </span>
+                        
+                        {quantity > 0 ? (
+                          <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                            <span className="font-medium px-2">{quantity}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => handleAddToCart(product)}
+                            className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -458,74 +476,63 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               const { cleanTitle, packageSize } = parseProductTitle(product.title);
               
               return (
-                <div key={product.id} className="bg-card rounded-lg border shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 flex flex-col">
-                  <div className="aspect-square relative bg-muted">
+                <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in">
+                  <div className="aspect-square relative overflow-hidden">
                     <OptimizedImage
                       src={product.image}
-                      alt={product.title}
-                      className="w-full h-full object-contain"
+                      alt={cleanTitle}
+                      className="w-full h-full object-cover hover-scale"
                     />
                   </div>
-                  <div className="p-2 md:p-3 space-y-2 flex-1 flex flex-col">
+                  
+                  <div className="p-3 space-y-3">
                     {/* Product Title */}
-                    <h3 className="font-medium text-xs md:text-sm line-clamp-2 leading-tight text-center">
-                      {cleanTitle}
-                    </h3>
-                    
-                    {/* Container Size */}
-                    {packageSize && (
-                      <p className="text-[10px] md:text-xs text-muted-foreground text-center leading-tight">
-                        {packageSize}
-                      </p>
-                    )}
-                    
-                    {/* Price and Vendor */}
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-primary text-sm md:text-lg">${product.price}</span>
-                      {product.vendor && (
-                        <span className="text-[8px] md:text-xs text-muted-foreground truncate max-w-[60px]">
-                          {product.vendor}
-                        </span>
+                    <div className="space-y-1">
+                      <h3 className="font-medium text-sm line-clamp-2 leading-tight">
+                        {cleanTitle}
+                      </h3>
+                      {packageSize && (
+                        <p className="text-xs text-muted-foreground">
+                          {packageSize}
+                        </p>
                       )}
                     </div>
-                    
-                    {/* Add to Cart Controls - OPTIMIZED FOR MOBILE */}
-                    <div className="mt-auto pt-1">
+
+                    {/* Price and Add to Cart - Centered */}
+                    <div className="flex flex-col items-center space-y-2">
+                      <span className="font-bold text-primary text-lg">
+                        ${(parseFloat(String(product.price)) || 0).toFixed(2)}
+                      </span>
+                      
                       {quantity > 0 ? (
-                        <div className="flex items-center justify-between bg-primary/10 rounded-lg p-1.5 md:p-2">
+                        <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
                           <Button
-                            size="sm"
                             variant="ghost"
-                            className="h-6 w-6 md:h-8 md:w-8 p-0 hover:bg-destructive/20 hover:text-destructive rounded-full"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
                           >
-                            <Minus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
+                            <Minus className="w-4 h-4" />
                           </Button>
-                          <span className="font-semibold text-primary px-2 text-sm md:text-base min-w-[20px] text-center">
+                          <span className="font-semibold min-w-[2rem] text-center">
                             {quantity}
                           </span>
                           <Button
-                            size="sm"
                             variant="ghost"
-                            className="h-6 w-6 md:h-8 md:w-8 p-0 hover:bg-primary/20 hover:text-primary rounded-full"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                          >
-                            <Plus className="w-3 h-3 md:w-4 md:h-4" strokeWidth={2} />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-primary text-sm">
-                            ${(parseFloat(String(product.price)) || 0).toFixed(2)}
-                          </span>
-                          <Button
-                            size="sm"
-                            onClick={() => handleAddToCart(product)}
-                            className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0"
                           >
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleAddToCart(product)}
+                          className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -534,13 +541,12 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             })}
           </div>
         )}
-      </div>
 
-      {/* Mobile Bottom Cart Bar - ALWAYS VISIBLE */}
-      <MobileBottomCartBar 
-        cartItemCount={cartItemCount}
-        totalAmount={cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)}
-      />
+        {/* Mobile Bottom Cart Bar */}
+        <MobileBottomCartBar 
+          cartItemCount={cartItemCount}
+        />
+      </div>
     </div>
   );
 };
