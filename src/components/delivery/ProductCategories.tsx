@@ -198,15 +198,33 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       return;
     }
     
-    console.log('🔍 Instant search for:', searchQuery);
+    console.log('🔍 Real-time search for:', searchQuery);
     try {
       setIsSearching(true);
       
-      // Simple search in current tab products only
-      const filtered = currentTabProducts.filter((product: any) =>
-        product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      // Enhanced search across all products - search by name, type, category, collection
+      const query = searchQuery.toLowerCase();
+      const filtered = currentTabProducts.filter((product: any) => {
+        const title = product.title?.toLowerCase() || '';
+        const productType = product.product_type?.toLowerCase() || '';
+        const category = product.category?.toLowerCase() || '';
+        const description = product.description?.toLowerCase() || '';
+        
+        // Check collection handles
+        const collectionHandles = Array.isArray(product.collection_handles) 
+          ? product.collection_handles 
+          : typeof product.collection_handles === 'string' 
+            ? JSON.parse(product.collection_handles || '[]')
+            : [];
+        const collections = collectionHandles.join(' ').toLowerCase();
+        
+        return title.includes(query) || 
+               productType.includes(query) || 
+               category.includes(query) || 
+               collections.includes(query) ||
+               description.includes(query);
+      });
+      
       console.log(`🔍 Found ${filtered.length} search results`);
       setSearchProducts(filtered);
     } catch (err) {
@@ -330,6 +348,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     // Clear search when switching tabs
                     setSearchProducts([]);
                     setSearchQuery('');
+                    // NO AUTO-SCROLL - Let user stay at current position
                   }}
                 >
                   {tab.icon && <span className="mr-2">{tab.icon}</span>}
@@ -373,20 +392,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     <div className="flex items-center justify-between mb-3">
                       <span className="font-bold text-primary">${product.price}</span>
                     </div>
-                    {quantity > 0 ? (
-                      <div className="flex items-center justify-between">
+                     {quantity > 0 ? (
+                      <div className="flex items-center justify-between bg-muted rounded-md p-1">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                          className="h-8 w-8 p-0"
                         >
                           <Minus className="w-4 h-4" />
                         </Button>
-                        <span className="font-medium">{quantity}</span>
+                        <span className="font-medium px-2">{quantity}</span>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                          className="h-8 w-8 p-0"
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
@@ -395,10 +416,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <Button
                         size="sm"
                         onClick={() => handleAddToCart(product)}
-                        className="w-full"
+                        className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0"
                       >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add to Cart
+                        <Plus className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
@@ -494,14 +514,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                           </Button>
                         </div>
                       ) : (
-                        <Button
-                          size="sm"
-                          onClick={() => handleAddToCart(product)}
-                          className="w-full h-7 md:h-8 text-xs hover:bg-primary/90 transition-colors"
-                        >
-                          <Plus className="w-3 h-3 mr-1" strokeWidth={2} />
-                          Add to Cart
-                        </Button>
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-primary text-sm">
+                            ${(parseFloat(String(product.price)) || 0).toFixed(2)}
+                          </span>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAddToCart(product)}
+                            className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>

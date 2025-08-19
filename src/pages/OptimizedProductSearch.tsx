@@ -182,15 +182,27 @@ export default function OptimizedProductSearch() {
     return () => { mounted = false; };
   }, []);
 
-  // Debounced local search (fast, uses full catalog)
+  // Real-time search with enhanced filtering (fast, uses full catalog)
   useEffect(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
       const timer = setTimeout(() => {
-        // Filter ONLY by title for consistency with delivery app search
-        const filtered = allProducts.filter((p) =>
-          String(p.title).toLowerCase().includes(q)
-        );
+        // Enhanced search by product name, type, category, or collection
+        const filtered = allProducts.filter((p) => {
+          const title = String(p.title || '').toLowerCase();
+          const productType = String(p.product_type || '').toLowerCase();
+          const category = String(p.category || '').toLowerCase();
+          const description = String(p.description || '').toLowerCase();
+          
+          // Check collection handles
+          const collections = (productCollectionsRef.current[p.id] || []).join(' ').toLowerCase();
+          
+          return title.includes(q) || 
+                 productType.includes(q) || 
+                 category.includes(q) || 
+                 collections.includes(q) ||
+                 description.includes(q);
+        });
         setProducts(filtered);
       }, 100);
       return () => clearTimeout(timer);
@@ -410,22 +422,23 @@ export default function OptimizedProductSearch() {
                         </div>
 
                         {quantity > 0 ? (
-                          <div className="flex items-center justify-between bg-primary/10 rounded-lg p-2">
+                          <div className="flex items-center justify-between bg-muted rounded-md p-1">
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
-                              className="h-10 w-10 md:h-10 md:w-10 p-0"
+                              className="h-8 w-8 p-0"
                             >
-                              <Minus className="h-4 w-4 md:h-5 md:w-5" />
+                              <Minus className="h-4 w-4" />
                             </Button>
                             
-                            <span className="font-medium px-3">{quantity}</span>
+                            <span className="font-medium px-2">{quantity}</span>
                             
                             <Button
                               size="sm"
+                              variant="ghost"
                               onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
-                              className="h-10 w-10 md:h-10 md:w-10 p-0"
+                              className="h-8 w-8 p-0"
                             >
                               <Plus className="h-4 w-4 md:h-5 md:w-5" />
                             </Button>
@@ -435,9 +448,9 @@ export default function OptimizedProductSearch() {
                             <button
                               onClick={() => handleAddToCart(product)}
                               aria-label="Add to cart"
-                              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center"
+                              className="bg-green-600 hover:bg-green-700 text-white rounded-full w-8 h-8 md:w-10 md:h-10 flex items-center justify-center"
                             >
-                              <Plus className="h-5 w-5 md:h-6 md:w-6" strokeWidth={4} />
+                              <Plus className="h-4 w-4 md:h-5 md:w-5" />
                             </button>
                           </div>
                         )}
