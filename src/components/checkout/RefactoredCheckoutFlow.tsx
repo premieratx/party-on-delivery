@@ -13,7 +13,7 @@ import { DateTimeStep } from './DateTimeStep';
 import { AddressStep } from './AddressStep';
 import { CustomerInfoStep } from './CustomerInfoStep';
 import { CheckoutSummary } from './CheckoutSummary';
-import { PaymentStep } from './PaymentStep';
+import { StripePaymentWrapper } from './StripePaymentWrapper';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -239,7 +239,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             {/* Payment Step */}
             {currentStep === 'payment' && confirmedDateTime && confirmedAddress && (
               <div className="space-y-6">
-                <PaymentStep
+                <StripePaymentWrapper
                   cartItems={cartItems}
                   subtotal={discountedSubtotal}
                   deliveryFee={finalDeliveryFee}

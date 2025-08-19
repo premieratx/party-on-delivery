@@ -47,8 +47,8 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Check if Stripe is available (will be null if not configured)
-  const stripeAvailable = stripe !== null;
+  // Stripe should always be available when this component renders
+  // since it's wrapped by StripePaymentWrapper
   
   // Tip management
   const [tipAmount, setTipAmount] = useState(subtotal * 0.10); // Default 10%
@@ -232,23 +232,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         </div>
 
         {/* Payment Form */}
-        {!stripeAvailable ? (
-          <div className="space-y-4">
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">
-                Payment system is not available. Please refresh the page and try again.
-              </p>
-            </div>
-            <Button 
-              type="button"
-              onClick={() => window.location.reload()}
-              className="w-full h-12 text-lg font-semibold"
-              variant="outline"
-            >
-              Refresh Page
-            </Button>
-          </div>
-        ) : (
+        <div className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label>Card Information</Label>
@@ -284,7 +268,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
               }
             </Button>
           </form>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
