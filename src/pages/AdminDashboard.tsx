@@ -11,6 +11,7 @@ import CoverPagesAdmin from '@/pages/CoverPagesAdmin';
 import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
 import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
+import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -52,72 +53,85 @@ export default function AdminDashboard() {
     try {
       console.log('🔄 Loading admin dashboard data...');
       
-      // Use the edge function instead of RPC to avoid conflicts
-      const { data: response, error } = await supabase.functions.invoke('get-dashboard-data', {
-        body: {
-          type: 'admin',
-          email: null,
-          affiliateCode: null
-        }
+      // Load data directly from Supabase tables with proper error handling
+      const [ordersResponse, customersResponse, affiliatesResponse] = await Promise.all([
+        supabase
+          .from('customer_orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('customers')
+          .select('*')
+          .limit(100),
+        supabase
+          .from('affiliates')
+          .select('*')
+          .eq('status', 'active')
+          .limit(50)
+      ]);
+
+      console.log('✅ Raw data loaded:', {
+        orders: ordersResponse.data?.length || 0,
+        customers: customersResponse.data?.length || 0,
+        affiliates: affiliatesResponse.data?.length || 0
       });
 
-      if (error) {
-        console.error('❌ Edge function error:', error);
-        throw error;
-      }
-
-      if (!response?.success) {
-        console.error('❌ Dashboard response error:', response);
-        throw new Error(response?.error || 'Failed to load dashboard data');
-      }
-
-      const dashboardData = response.data;
-      console.log('✅ Dashboard data loaded successfully:', {
-        totalRevenue: dashboardData.totalRevenue,
-        totalOrders: dashboardData.totalOrders,
-        ordersCount: dashboardData.orders?.length || 0
-      });
-
-      // Set dashboard data
-      setTotalRevenue(dashboardData.totalRevenue || 0);
-      setTotalOrders(dashboardData.totalOrders || 0);
-      setTotalCustomers(dashboardData.customers?.length || 0);
-      setTotalProducts(dashboardData.totalProducts || 0);
+      // Process orders data
+      const orders = ordersResponse.data || [];
+      const totalOrderRevenue = orders.reduce((sum, order) => sum + (parseFloat(String(order.total_amount || 0))), 0);
+      
+      // Set dashboard statistics
+      setTotalRevenue(totalOrderRevenue);
+      setTotalOrders(orders.length);
+      setTotalCustomers(customersResponse.data?.length || 0);
+      setTotalProducts(1052); // Static for now
       
       // Map orders with customer details
-      const ordersWithDetails = (dashboardData.orders || []).map((order: any) => ({
+      const ordersWithDetails = orders.map((order: any) => ({
         ...order,
         customer_name: order.customer_name || (
           order.delivery_address?.email ? order.delivery_address.email.split('@')[0] : 'Unknown Customer'
         ),
         customer_email: order.customer_email || order.delivery_address?.email || 'No email',
-        customer_phone: order.customer_phone || 'No phone'
+        customer_phone: order.customer_phone || 'No phone',
+        formatted_total: `$${parseFloat(String(order.total_amount || 0)).toFixed(2)}`,
+        formatted_date: new Date(order.created_at).toLocaleDateString()
       }));
       
       setRecentOrders(ordersWithDetails);
 
-      // Set additional data from response
-      setAffiliates(dashboardData.affiliateReferrals?.map((ref: any) => ({
-        id: ref.affiliate_id,
-        name: ref.customer_email || 'Unknown',
-        affiliate_code: 'N/A',
-        status: 'active',
-        email: ref.customer_email,
-        company_name: 'N/A',
-        total_sales: ref.subtotal || 0,
-        orders_count: 1,
-        commission_unpaid: ref.commission_amount || 0,
-        commission_rate: ref.commission_rate || 5
-      })) || []);
+      // Set affiliates data
+      const affiliatesData = affiliatesResponse.data || [];
+      setAffiliates(affiliatesData.map((affiliate: any) => ({
+        ...affiliate,
+        name: affiliate.name || affiliate.company_name || 'Unknown',
+        total_sales: affiliate.total_sales || 0,
+        orders_count: affiliate.orders_count || 0,
+        commission_unpaid: affiliate.commission_unpaid || 0,
+        commission_rate: affiliate.commission_rate || 5
+      })));
 
-      // Use sample abandoned orders data for now to avoid 403 errors
+      // Abandoned orders - skip for now to avoid permission issues
       setAbandonedOrders([]);
+
+      console.log('✅ Dashboard data processed successfully');
 
     } catch (error: any) {
       console.error('❌ Error loading dashboard data:', error);
+      
+      // Set fallback data so admin can still use the interface
+      setTotalRevenue(0);
+      setTotalOrders(0);
+      setTotalCustomers(0);
+      setTotalProducts(1052);
+      setRecentOrders([]);
+      setAffiliates([]);
+      setAbandonedOrders([]);
+      
       toast({
-        title: "Dashboard Error",
-        description: "Failed to load dashboard data. Please try refreshing the page.",
+        title: "Dashboard Warning",
+        description: "Some dashboard data couldn't be loaded, but you can still manage delivery apps.",
         variant: "destructive"
       });
     } finally {
@@ -218,16 +232,22 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Main Tabs */}
-        <Tabs defaultValue="customer-flows" className="space-y-4">
-          <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-1 w-full h-auto flex-wrap p-2">
+        <Tabs defaultValue="homepage" className="space-y-4">
+          <TabsList className="grid grid-cols-4 md:grid-cols-8 gap-1 w-full h-auto flex-wrap p-2">
+            <TabsTrigger value="homepage" className="px-3 py-2 text-xs sm:text-sm">🏠 Homepage</TabsTrigger>
+            <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm">🚚 Apps</TabsTrigger>
             <TabsTrigger value="customer-flows" className="px-3 py-2 text-xs sm:text-sm">🔄 Flows</TabsTrigger>
             <TabsTrigger value="flow-assignments" className="px-3 py-2 text-xs sm:text-sm">🎯 Assignments</TabsTrigger>
             <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm">🎬 Cover Pages</TabsTrigger>
-            <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm">🚚 Apps</TabsTrigger>
             <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm">📋 Orders</TabsTrigger>
             <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm">👥 Affiliates</TabsTrigger>
             <TabsTrigger value="abandoned" className="px-3 py-2 text-xs sm:text-sm">⏰ Abandoned</TabsTrigger>
           </TabsList>
+
+          {/* Homepage Configuration - PRIORITY TAB */}
+          <TabsContent value="homepage" className="space-y-4">
+            <HomepageAppSwitcher />
+          </TabsContent>
 
           {/* Customer Flow Configuration */}
           <TabsContent value="customer-flows" className="space-y-4">

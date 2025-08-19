@@ -8,7 +8,7 @@ import { useAppConfig } from '@/hooks/useAppConfig';
 import RequireAdmin from "./components/admin/RequireAdmin";
 
 // Simple, bulletproof homepage
-import UltraSimplePage from "./pages/UltraSimplePage";
+import DynamicHomepage from "./pages/DynamicHomepage";
 const Success = lazy(() => import("./pages/Success"));
 const OrderComplete = lazy(() => import("./pages/OrderComplete"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -60,8 +60,8 @@ const App = () => {
               </div>
             }>
               <Routes>
-                {/* ULTRA SIMPLE ROOT ROUTE */}
-                <Route path="/" element={<UltraSimplePage />} />
+                {/* DYNAMIC HOMEPAGE ROUTE */}
+                <Route path="/" element={<DynamicHomepage />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/app/:appSlug" element={<CustomAppView />} />
                 
