@@ -165,14 +165,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           : [];
       
       const belongsToCollection = handles.includes(currentCollectionHandle);
-      if (!belongsToCollection) {
-        console.log(`❌ Product "${product.title}" does not belong to collection "${currentCollectionHandle}" - handles: ${JSON.stringify(handles)}`);
+      if (belongsToCollection) {
+        console.log(`✅ Product "${product.title}" belongs to collection "${currentCollectionHandle}"`);
       }
       return belongsToCollection;
     });
     
-    // MAINTAIN SHOPIFY COLLECTION ORDER - preserve the order from Shopify
-    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total) in Shopify order`);
+    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total)`);
     return strictlyFilteredProducts.slice(0, maxProducts);
   }, [currentTabProducts, currentCollectionHandle, maxProducts, selectedCategory]);
 
