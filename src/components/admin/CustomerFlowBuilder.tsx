@@ -69,12 +69,12 @@ export const CustomerFlowBuilder: React.FC = () => {
       const [coverPages, deliveryApps, flows] = await Promise.all([
         supabase.from('cover_pages').select('*').order('created_at', { ascending: false }),
         supabase.from('delivery_app_variations').select('*').order('created_at', { ascending: false }),
-        (supabase as any).from('customer_flows').select('*').order('created_at', { ascending: false })
+        supabase.from('customer_flows').select('*').order('created_at', { ascending: false })
       ]);
 
       if (coverPages.error) throw coverPages.error;
       if (deliveryApps.error) throw deliveryApps.error;
-      if (flows.error && flows.error.code !== 'PGRST116') throw flows.error; // Table might not exist yet
+      if (flows.error) throw flows.error;
 
       setComponents({
         coverPages: (coverPages.data || []).map(cp => ({
@@ -96,7 +96,7 @@ export const CustomerFlowBuilder: React.FC = () => {
         postCheckouts: [] // We'll add post-checkout pages later
       });
 
-      setFlows((flows.data as any[]) || []);
+      setFlows(flows.data || []);
     } catch (error) {
       console.error('Error loading flow data:', error);
       toast({ title: 'Error loading data', description: 'Please try again', variant: 'destructive' });
@@ -107,23 +107,13 @@ export const CustomerFlowBuilder: React.FC = () => {
 
   const createNewFlow = async (flowData: Omit<CustomerFlow, 'id'>) => {
     try {
-      // Create customer_flows table if it doesn't exist
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('customer_flows')
         .insert([flowData])
         .select()
         .single();
 
-      if (error) {
-        // If table doesn't exist, we'll need to create it via migration
-        console.error('Customer flows table may not exist:', error);
-        toast({ 
-          title: 'Database Setup Required', 
-          description: 'Customer flows table needs to be created. Please contact admin.',
-          variant: 'destructive' 
-        });
-        return;
-      }
+      if (error) throw error;
 
       await loadAllData();
       setIsCreatingFlow(false);
