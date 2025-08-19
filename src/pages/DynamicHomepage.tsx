@@ -64,6 +64,20 @@ export default function DynamicHomepage() {
     }, 5000);
 
     try {
+      // Test basic Supabase connection first
+      console.log('🔍 Testing basic Supabase connection...');
+      const { data: testData, error: testError } = await supabase
+        .from('delivery_app_variations')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        console.error('❌ Basic Supabase connection failed:', testError);
+        throw new Error(`Connection failed: ${testError.message}`);
+      }
+      
+      console.log('✅ Basic Supabase connection works');
+      
       // First check if we should show the cover modal
       const savedApp = localStorage.getItem('preferred-delivery-app');
       if (!savedApp) {
@@ -101,7 +115,11 @@ export default function DynamicHomepage() {
           setHomepageApp(null);
         } else {
           console.error('❌ Error loading homepage app:', error);
-          setError(`Database error: ${error.message}`);
+          console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+          const errorMessage = typeof error === 'object' ? 
+            (error.message || error.details || 'Unknown database error') : 
+            String(error);
+          setError(`Database error: ${errorMessage}`);
           setHomepageApp(null);
         }
       } else {
