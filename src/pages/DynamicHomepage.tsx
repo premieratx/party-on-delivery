@@ -55,15 +55,19 @@ export default function DynamicHomepage() {
 
   const loadHomepageApp = async () => {
     console.log('🏠 Loading homepage app...');
+    console.log('🏠 Initial state - Loading:', loading, 'Error:', error, 'App:', !!homepageApp);
     
     try {
       // Get the homepage app
+      console.log('🔍 Querying delivery_app_variations...');
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .select('*')
         .eq('is_homepage', true)
         .eq('is_active', true)
         .maybeSingle();
+
+      console.log('🔍 Query result:', { data: !!data, error, appName: data?.app_name });
 
       if (error) {
         console.error('❌ Database error:', error);
@@ -73,7 +77,7 @@ export default function DynamicHomepage() {
         console.log('⚠️ No homepage app configured');
         setHomepageApp(null);
       } else {
-        console.log('✅ Loaded homepage app:', data.app_name);
+        console.log('✅ Processing homepage app:', data.app_name);
         
         const processedApp: HomepageDeliveryApp = {
           id: data.id,
@@ -87,6 +91,7 @@ export default function DynamicHomepage() {
           logo_url: data.logo_url || ''
         };
         
+        console.log('✅ Setting homepage app:', processedApp.app_name, 'with', processedApp.collections_config.tabs.length, 'tabs');
         setHomepageApp(processedApp);
       }
     } catch (err: any) {
@@ -94,6 +99,7 @@ export default function DynamicHomepage() {
       setError('System error occurred');
       setHomepageApp(null);
     } finally {
+      console.log('🔄 Setting loading to false');
       setLoading(false);
     }
   };
@@ -130,7 +136,10 @@ export default function DynamicHomepage() {
     loadHomepageApp();
   };
 
+  console.log('🏠 DynamicHomepage render - Loading:', loading, 'Error:', error, 'App:', !!homepageApp, 'ShowCover:', showCoverModal);
+  
   if (loading) {
+    console.log('🏠 Rendering loading state');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 flex items-center justify-center">
         <div className="text-center">
@@ -142,6 +151,7 @@ export default function DynamicHomepage() {
   }
 
   if (error) {
+    console.log('🏠 Rendering error state:', error);
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-600 via-orange-600 to-red-800 flex items-center justify-center">
         <div className="text-center text-white p-8">
@@ -160,12 +170,13 @@ export default function DynamicHomepage() {
 
   // If no homepage app is configured, show the simple fallback page
   if (!homepageApp && !showCoverModal) {
-    console.log('🏠 No homepage app configured, showing fallback page');
+    console.log('🏠 Rendering fallback page - No homepage app configured');
     return <UltraSimplePage />;
   }
 
   // Render cover modal first if needed
   if (showCoverModal) {
+    console.log('🏠 Rendering cover modal');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800">
         <HomepageCoverModal 
@@ -177,7 +188,11 @@ export default function DynamicHomepage() {
   }
 
   // Render the configured homepage delivery app
-  console.log('🏠 Rendering homepage app:', homepageApp.app_name);
+  console.log('🏠 Rendering homepage app:', homepageApp?.app_name);
+  if (!homepageApp) {
+    console.log('❌ homepageApp is null but we reached the render section!');
+    return <UltraSimplePage />;
+  }
   return (
     <CustomDeliveryTabsPage
       appName={homepageApp.app_name}
