@@ -12,7 +12,7 @@ import {
   Download,
   Upload
 } from 'lucide-react';
-import { UnifiedCoverPageCreator } from '@/components/admin/UnifiedCoverPageCreator';
+import { UnifiedCoverPageEditor } from '@/components/admin/UnifiedCoverPageEditor';
 import { toast } from 'sonner';
 
 interface CoverPageProject {
@@ -283,11 +283,14 @@ export default function CoverPagesAdmin() {
         </Card>
       </div>
 
-      {/* Unified Cover Page Creator Modal */}
-      <UnifiedCoverPageCreator
-        isOpen={showCreator}
-        onClose={() => setShowCreator(false)}
-        onSave={handleSaveProject}
+      {/* Unified Cover Page Editor Modal */}
+      <UnifiedCoverPageEditor
+        open={showCreator}
+        onOpenChange={setShowCreator}
+        onSaved={() => {
+          setShowCreator(false);
+          toast.success('Cover page saved successfully!');
+        }}
       />
     </div>
   );
