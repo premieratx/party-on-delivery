@@ -9,14 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
+import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { parseProductTitle } from '@/utils/productUtils';
 import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useProductPreloader } from '@/hooks/useProductPreloader';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
-import { groupProductsByBaseName } from '@/utils/productGrouper';
-import { GroupedProductCard } from '@/components/delivery/GroupedProductCard';
 import '@/utils/fixProductOrdering'; // Auto-fix product ordering
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
@@ -172,10 +171,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       return belongsToCollection;
     });
     
-    // Group identical products for tab display too
-    const groupedProducts = groupProductsByBaseName(strictlyFilteredProducts.slice(0, maxProducts));
-    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${groupedProducts.length} grouped products from ${strictlyFilteredProducts.length} total`);
-    return groupedProducts;
+    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total)`);
+    return strictlyFilteredProducts.slice(0, maxProducts);
   }, [currentTabProducts, currentCollectionHandle, maxProducts, selectedCategory]);
 
   const currentTab = tabs[selectedCategory];
@@ -217,32 +214,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     });
     
     // Find product from current display (either tab products or search results)
-    // For grouped products, we need to look in the originalProducts array
-    let product = null;
-    
-    // Check display products (grouped)
-    for (const groupedProduct of displayProducts) {
-      if (groupedProduct.originalProducts) {
-        product = groupedProduct.originalProducts.find(p => String(p.id) === normalizedProductId);
-        if (product) break;
-      } else if (String(groupedProduct.id) === normalizedProductId) {
-        product = groupedProduct;
-        break;
-      }
-    }
-    
-    // Check search products (grouped) if not found
-    if (!product) {
-      for (const groupedProduct of searchProducts) {
-        if (groupedProduct.originalProducts) {
-          product = groupedProduct.originalProducts.find(p => String(p.id) === normalizedProductId);
-          if (product) break;
-        } else if (String(groupedProduct.id) === normalizedProductId) {
-          product = groupedProduct;
-          break;
-        }
-      }
-    }
+    const product = [...displayProducts, ...searchProducts].find(p => String(p.id) === normalizedProductId);
     
     if (!product) {
       console.error('🚫 Product not found for quantity change:', normalizedProductId);
@@ -300,10 +272,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         ? SearchOptimizer.searchProductsWithHierarchy(searchQuery, searchIndex, 50)
         : [];
 
-      // Group identical products into variants
-      const groupedResults = groupProductsByBaseName(results);
-      console.log(`🔍 DELIVERY HIERARCHICAL SEARCH: Found ${results.length} products, grouped into ${groupedResults.length} cards for "${searchQuery}"`);
-      setSearchProducts(groupedResults);
+      console.log(`🔍 DELIVERY HIERARCHICAL SEARCH: Found ${results.length} products for "${searchQuery}" (Name > Collection > Category > Type)`);
+      setSearchProducts(results);
     } catch (error) {
       console.error('Search error:', error);
       setSearchProducts([]);
@@ -404,15 +374,69 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           <>
             <h3 className="text-lg font-semibold mb-4">Search Results ({searchProducts.length})</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-              {searchProducts.map((groupedProduct) => (
-                <GroupedProductCard
-                  key={groupedProduct.id}
-                  groupedProduct={groupedProduct}
-                  getCartItemQuantity={getCartItemQuantity}
-                  onAddToCart={handleAddToCart}
-                  onQuantityChange={handleQuantityChange}
-                />
-              ))}
+              {searchProducts.map((product) => {
+                const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+                const { cleanTitle, packageSize } = parseProductTitle(product.title);
+                return (
+                  <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full">
+                    <div className="aspect-square relative overflow-hidden">
+                      <OptimizedImage
+                        src={product.image}
+                        alt={cleanTitle}
+                        className="w-full h-full object-cover hover-scale"
+                      />
+                    </div>
+                    <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
+                      <div className="space-y-1 text-center">
+                        <h3 className="font-medium text-sm line-clamp-2 leading-tight">
+                          {cleanTitle}
+                        </h3>
+                        {packageSize && (
+                          <p className="text-xs text-muted-foreground">
+                            {packageSize}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Price and Add to Cart - Fixed at bottom */}
+                      <div className="flex flex-col items-center space-y-2 mt-auto">
+                        <span className="font-bold text-primary text-lg">
+                          ${(parseFloat(String(product.price)) || 0).toFixed(2)}
+                        </span>
+                        
+                        {quantity > 0 ? (
+                          <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                            <span className="font-medium px-2">{quantity}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => handleAddToCart(product)}
+                            className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </>
         ) : loading ? (
@@ -442,15 +466,74 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-            {displayProducts.map((groupedProduct) => (
-              <GroupedProductCard
-                key={groupedProduct.id}
-                groupedProduct={groupedProduct}
-                getCartItemQuantity={getCartItemQuantity}
-                onAddToCart={handleAddToCart}
-                onQuantityChange={handleQuantityChange}
-              />
-            ))}
+            {displayProducts.map((product) => {
+              const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
+              const { cleanTitle, packageSize } = parseProductTitle(product.title);
+              
+              return (
+                <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full">
+                  <div className="aspect-square relative overflow-hidden">
+                    <OptimizedImage
+                      src={product.image}
+                      alt={cleanTitle}
+                      className="w-full h-full object-cover hover-scale"
+                    />
+                  </div>
+                  
+                  <div className="p-3 flex flex-col flex-1 justify-between space-y-3">
+                    {/* Product Title */}
+                    <div className="space-y-1 text-center">
+                      <h3 className="font-medium text-sm line-clamp-2 leading-tight">
+                        {cleanTitle}
+                      </h3>
+                      {packageSize && (
+                        <p className="text-xs text-muted-foreground">
+                          {packageSize}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Price and Add to Cart - Fixed at bottom */}
+                    <div className="flex flex-col items-center space-y-2 mt-auto">
+                      <span className="font-bold text-primary text-lg">
+                        ${(parseFloat(String(product.price)) || 0).toFixed(2)}
+                      </span>
+                      
+                      {quantity > 0 ? (
+                        <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, -1)}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <span className="font-semibold min-w-[2rem] text-center">
+                            {quantity}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleQuantityChange(product.id, product.variants?.[0]?.id, 1)}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleAddToCart(product)}
+                          className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -460,6 +543,10 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           onOpenCart={() => onOpenCart && onOpenCart()}
         />
         
+        {/* What's the Occasion? - Bottom Section */}
+        <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
+          <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
+        </div>
       </div>
     </div>
   );

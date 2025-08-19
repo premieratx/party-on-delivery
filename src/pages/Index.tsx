@@ -229,6 +229,26 @@ const Index = () => {
         onClose={() => setIsCartOpen(false)}
       />
       
+      {/* Bottom Menu Bar with Admin Button and Sync */}
+      <div className="fixed bottom-4 left-4 right-4 z-50 lg:hidden">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => navigate('/admin')}
+              variant="outline"
+              size="sm"
+              className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors"
+            >
+              Admin
+            </Button>
+            <ForceCollectionOrderSync />
+          </div>
+          
+          <div className="ml-4">
+            <DeliveryAppDropdown />
+          </div>
+        </div>
+      </div>
       
       {/* Desktop Admin Button and Sync - Bottom Right */}
       <div className="hidden lg:flex lg:gap-2 fixed bottom-4 right-4 z-50">
