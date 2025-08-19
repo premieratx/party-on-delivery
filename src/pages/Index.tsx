@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../utils/directSync'; // This will trigger the sync immediately
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
