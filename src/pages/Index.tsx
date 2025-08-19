@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
@@ -188,6 +189,16 @@ const Index = () => {
         cartItemCount={cartItems.length}
       />
       
+      {/* Admin Button */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button 
+          onClick={() => navigate('/admin')}
+          variant="outline"
+          className="bg-background/90 backdrop-blur-sm"
+        >
+          Admin
+        </Button>
+      </div>
     </>
   );
 };
