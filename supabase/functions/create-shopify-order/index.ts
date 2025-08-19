@@ -132,8 +132,8 @@ serve(async (req) => {
       logStep("CRITICAL: No cart items found anywhere", { 
         availableMetadataKeys: Object.keys(metadata || {}),
         orderDraftId: metadata?.order_draft_id,
-        isGroupOrder: !!groupOrderToken,
-        groupOrderToken
+        isGroupOrder: !!metadata?.group_order_token,
+        groupOrderToken: metadata?.group_order_token
       });
       throw new Error("No cart items found. Check order_drafts table and metadata structure.");
     }
