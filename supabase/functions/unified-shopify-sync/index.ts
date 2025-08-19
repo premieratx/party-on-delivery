@@ -328,15 +328,26 @@ async function updateCaches(
 
   console.log('💾 Inserting collections cache...')
   
-  const { error: collectionsError } = await supabase
-    .from('shopify_collections_cache')
-    .insert(collections)
+  // Insert collections in smaller batches to avoid timeouts
+  const collectionBatchSize = 25
+  let totalCollectionsInserted = 0
+  
+  for (let i = 0; i < collections.length; i += collectionBatchSize) {
+    const batch = collections.slice(i, i + collectionBatchSize)
+    
+    const { error: collectionsError } = await supabase
+      .from('shopify_collections_cache')
+      .insert(batch)
 
-  if (collectionsError) {
-    console.error('Error inserting collections:', collectionsError)
-  } else {
-    console.log(`✅ Inserted ${collections.length} collections`)
+    if (collectionsError) {
+      console.error(`Error inserting collection batch ${Math.floor(i / collectionBatchSize) + 1}:`, collectionsError)
+    } else {
+      totalCollectionsInserted += batch.length
+      console.log(`✅ Inserted collection batch ${Math.floor(i / collectionBatchSize) + 1} (${batch.length} collections)`)
+    }
   }
+
+  console.log(`💾 Collections cache complete: ${totalCollectionsInserted}/${collections.length} collections inserted`)
 
   // Create unified cache entry
   const unifiedCacheData = {
