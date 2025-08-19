@@ -658,7 +658,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0">
+       <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 overflow-hidden">
         <div className="h-full flex flex-col">
           {/* Header */}
           <DialogHeader className="p-4 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
@@ -691,8 +691,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
           {/* Main Content */}
           <div className="flex-1 flex overflow-hidden">
             {/* Controls Panel */}
-            <div className="w-80 border-r flex flex-col">
-              <div className="p-4 overflow-y-auto flex-1 space-y-6 custom-scrollbar">
+            <div className="w-80 border-r flex flex-col max-h-full">
+              <div className="p-4 overflow-y-auto flex-1 space-y-6 custom-scrollbar max-h-full">
                 {/* Theme Selection */}
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold">Theme</Label>
@@ -1001,8 +1001,10 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
 
             {/* Preview Panel */}
-            <div className="flex-1 overflow-auto bg-gray-50">
-              {renderPreview()}
+            <div className="flex-1 overflow-hidden bg-gray-50">
+              <div className="h-full overflow-y-auto p-4 custom-scrollbar">
+                {renderPreview()}
+              </div>
             </div>
           </div>
         </div>

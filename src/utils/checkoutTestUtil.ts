@@ -138,7 +138,7 @@ export class CheckoutFlowTester {
       console.log('[CHECKOUT-TEST] Testing webhook endpoint...');
       
       // Test if webhook function exists by sending invalid data (should get proper error)
-      const response = await fetch(`https://acmlfzfliqupwxwoefdq.supabase.co/functions/v1/stripe-webhook`, {
+      const response = await fetch(`https://order.partyondelivery.com/functions/v1/stripe-webhook`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
