@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import MultiCTACoverModal from '@/components/custom-delivery/MultiCTACoverModal';
+import { useAffiliateFlowTracking } from '@/hooks/useAffiliateFlowTracking';
 
 // Resolves short links for:
 // 1) /:shortPath -> first try cover_pages.slug (public), then delivery app short_path, then affiliate code
@@ -15,6 +16,7 @@ export default function ShortLinkResolver() {
     coverSlug?: string;
   }>();
   const navigate = useNavigate();
+  const { startAffiliateFlow } = useAffiliateFlowTracking();
 
   const [coverPage, setCoverPage] = useState<any | null>(null);
   const [affiliateCode, setAffiliateCode] = useState<string | null>(null);
@@ -52,6 +54,8 @@ export default function ShortLinkResolver() {
           if (cp2) {
             setCoverPage(cp2);
             setAffiliateCode(affiliateSlug);
+            // Start affiliate flow tracking
+            startAffiliateFlow(affiliateSlug, cp2.id);
             return; // keep URL intact
           }
           navigate('/404', { replace: true });
@@ -69,6 +73,10 @@ export default function ShortLinkResolver() {
           if (cpErr) throw cpErr;
           if (cp) {
             setCoverPage(cp);
+            // Check if this cover page has an affiliate slug
+            if (cp.affiliate_slug) {
+              startAffiliateFlow(cp.affiliate_slug, cp.id);
+            }
             return; // keep URL intact (root slug)
           }
 
@@ -151,8 +159,14 @@ onClick: () => {
       if (btnAff) {
         sessionStorage.setItem('affiliate.code', btnAff);
         sessionStorage.setItem('affiliate_code', btnAff);
-        sessionStorage.setItem('affiliate_source', 'url');
+        sessionStorage.setItem('affiliate_source', 'cover_page');
         localStorage.setItem('affiliate_code', btnAff);
+        
+        // Store cover page context for post-checkout redirect
+        sessionStorage.setItem('originating_cover_page', JSON.stringify({
+          affiliateSlug: btnAff,
+          coverPageId: coverPage?.id
+        }));
       }
 
       // Address prefill handling

@@ -183,6 +183,75 @@ export type Database = {
           },
         ]
       }
+      affiliate_order_tracking: {
+        Row: {
+          affiliate_id: string
+          affiliate_slug: string
+          commission_amount: number | null
+          commission_rate: number | null
+          cover_page_id: string | null
+          created_at: string | null
+          customer_email: string | null
+          delivery_app_slug: string | null
+          id: string
+          order_completed_at: string | null
+          order_id: string | null
+          session_id: string | null
+          subtotal: number | null
+          tracking_url_params: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          affiliate_slug: string
+          commission_amount?: number | null
+          commission_rate?: number | null
+          cover_page_id?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          delivery_app_slug?: string | null
+          id?: string
+          order_completed_at?: string | null
+          order_id?: string | null
+          session_id?: string | null
+          subtotal?: number | null
+          tracking_url_params?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          affiliate_slug?: string
+          commission_amount?: number | null
+          commission_rate?: number | null
+          cover_page_id?: string | null
+          created_at?: string | null
+          customer_email?: string | null
+          delivery_app_slug?: string | null
+          id?: string
+          order_completed_at?: string | null
+          order_id?: string | null
+          session_id?: string | null
+          subtotal?: number | null
+          tracking_url_params?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_order_tracking_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_order_tracking_cover_page_id_fkey"
+            columns: ["cover_page_id"]
+            isOneToOne: false
+            referencedRelation: "cover_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_referrals: {
         Row: {
           affiliate_id: string | null
@@ -884,6 +953,8 @@ export type Database = {
       }
       cover_pages: {
         Row: {
+          affiliate_id: string | null
+          affiliate_slug: string | null
           bg_image_url: string | null
           bg_video_url: string | null
           buttons: Json
@@ -902,6 +973,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          affiliate_id?: string | null
+          affiliate_slug?: string | null
           bg_image_url?: string | null
           bg_video_url?: string | null
           buttons?: Json
@@ -920,6 +993,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          affiliate_id?: string | null
+          affiliate_slug?: string | null
           bg_image_url?: string | null
           bg_video_url?: string | null
           buttons?: Json
@@ -937,7 +1012,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cover_pages_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       custom_affiliate_sites: {
         Row: {
@@ -1962,6 +2045,75 @@ export type Database = {
         }
         Relationships: []
       }
+      post_checkout_screens: {
+        Row: {
+          affiliate_id: string | null
+          background_color: string | null
+          button_1_text: string | null
+          button_1_url: string | null
+          button_2_text: string | null
+          button_2_url: string | null
+          cover_page_id: string
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          styles: Json | null
+          subtitle: string | null
+          text_color: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_id?: string | null
+          background_color?: string | null
+          button_1_text?: string | null
+          button_1_url?: string | null
+          button_2_text?: string | null
+          button_2_url?: string | null
+          cover_page_id: string
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          styles?: Json | null
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_id?: string | null
+          background_color?: string | null
+          button_1_text?: string | null
+          button_1_url?: string | null
+          button_2_text?: string | null
+          button_2_url?: string | null
+          cover_page_id?: string
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          styles?: Json | null
+          subtitle?: string | null
+          text_color?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_checkout_screens_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_checkout_screens_cover_page_id_fkey"
+            columns: ["cover_page_id"]
+            isOneToOne: false
+            referencedRelation: "cover_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           assigned_category: string
@@ -2429,6 +2581,7 @@ export type Database = {
           id: string
           image_url: string | null
           last_synced_at: string
+          product_order: number[] | null
           products_count: number | null
           shopify_collection_id: string
           title: string
@@ -2442,6 +2595,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           last_synced_at?: string
+          product_order?: number[] | null
           products_count?: number | null
           shopify_collection_id: string
           title: string
@@ -2455,6 +2609,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           last_synced_at?: string
+          product_order?: number[] | null
           products_count?: number | null
           shopify_collection_id?: string
           title?: string
@@ -3350,6 +3505,14 @@ export type Database = {
       safe_timestamp_to_bigint: {
         Args: { ts: string }
         Returns: number
+      }
+      track_affiliate_order: {
+        Args: {
+          p_affiliate_slug: string
+          p_order_data: Json
+          p_session_id: string
+        }
+        Returns: string
       }
       trigger_shopify_bulk_sync: {
         Args: Record<PropertyKey, never>
