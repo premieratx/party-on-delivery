@@ -126,19 +126,50 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [forceRefresh, refreshProducts]);
 
-  // Filter products by collection handle for current tab - SIMPLIFIED
+  // Filter products by collection handle for current tab - STRICT MATCHING
   const currentTabProducts = useMemo(() => {
     if (!currentCollectionHandle || !products?.length) {
       console.log(`❌ No collection handle (${currentCollectionHandle}) or no products (${products?.length})`);
       return [];
     }
 
-    // Filter products that belong to the current collection
-    const filtered = products.filter(product => 
-      product.collection_handles?.includes(currentCollectionHandle)
-    );
+    // STRICT filtering - only products that actually belong to this collection
+    const filtered = products.filter(product => {
+      // Check if product has collection_handles array and includes the current handle
+      const hasCollection = product.collection_handles?.includes(currentCollectionHandle);
+      
+      // Additional validation for mixers - exclude alcoholic products
+      if (currentCollectionHandle === 'mixers-non-alcoholic' && hasCollection) {
+        const title = product.title?.toLowerCase() || '';
+        const isAlcoholic = title.includes('alcohol') || 
+                          title.includes('beer') || 
+                          title.includes('wine') || 
+                          title.includes('vodka') || 
+                          title.includes('whiskey') || 
+                          title.includes('rum') || 
+                          title.includes('gin') || 
+                          title.includes('tequila') || 
+                          title.includes('bourbon') || 
+                          title.includes('scotch') || 
+                          title.includes('brandy') || 
+                          title.includes('cognac') || 
+                          title.includes('liqueur') || 
+                          title.includes('abv') ||
+                          title.includes('proof') ||
+                          title.includes('curaçao') ||
+                          title.includes('hard tea') ||
+                          title.includes('hard seltzer');
+        
+        if (isAlcoholic) {
+          console.log(`🚫 Excluding alcoholic product from mixers: ${product.title}`);
+          return false;
+        }
+      }
+      
+      return hasCollection;
+    });
     
-    console.log(`📦 ${currentCollectionHandle}: Found ${filtered.length} products out of ${products.length} total`);
+    console.log(`📦 ${currentCollectionHandle}: Found ${filtered.length} products using enhanced mapping`);
     return filtered.slice(0, maxProducts);
   }, [products, currentCollectionHandle, maxProducts]);
 
@@ -405,6 +436,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {currentTabProducts.map((product) => {
+              console.log(`🛒 ProductCategories: Rendering product ${product.id} ${product.title}`);
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
               return (
@@ -425,7 +457,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       )}
                     </div>
                     
-                    {/* Quantity Controls */}
+                    {/* Single Add to Cart Button */}
                     {quantity > 0 ? (
                       <div className="flex items-center justify-between bg-primary/10 rounded-lg p-2">
                         <Button
@@ -450,9 +482,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       <Button
                         size="sm"
                         onClick={() => handleAddToCart(product)}
-                        className="w-full h-9 text-sm font-medium"
+                        className="w-full h-8 text-xs"
                       >
-                        <Plus className="w-4 h-4 mr-1" />
+                        <Plus className="w-3 h-3 mr-1" />
                         Add to Cart
                       </Button>
                     )}
