@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckoutFlow } from '@/components/delivery/CheckoutFlow';
+import { RefactoredCheckoutFlow } from '@/components/checkout/RefactoredCheckoutFlow';
 import { CartItem, DeliveryInfo } from '@/components/DeliveryWidget';
 
 const TestCheckout = () => {
@@ -36,7 +36,7 @@ const TestCheckout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <CheckoutFlow
+      <RefactoredCheckoutFlow
         cartItems={testCartItems}
         deliveryInfo={deliveryInfo}
         totalPrice={totalPrice}
