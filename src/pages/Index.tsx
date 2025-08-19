@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -16,7 +15,6 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   
-  // Simplified initialization - no automatic syncing
   const navigate = useNavigate();
   const { cartItems, getTotalItems } = useUnifiedCart();
   const [searchParams] = useSearchParams();
@@ -27,7 +25,7 @@ const Index = () => {
       try {
         console.log('🏠 Index: Loading homepage delivery app...');
         
-        // STRICT: Only get the homepage delivery app
+        // Get the homepage delivery app
         const { data: homepageApp, error: homepageError } = await supabase
           .from('delivery_app_variations')
           .select('*')
@@ -38,7 +36,6 @@ const Index = () => {
         if (homepageError || !homepageApp) {
           console.log('❌ No homepage app found, falling back to first active app');
           
-          // Fallback to first active app
           const { data: fallbackApps, error: fallbackError } = await supabase
             .from('delivery_app_variations')
             .select('*')
@@ -47,7 +44,7 @@ const Index = () => {
             .limit(1);
             
           if (fallbackError || !fallbackApps?.length) {
-            throw new Error('No delivery apps found - please create one in admin dashboard');
+            throw new Error('No delivery apps found');
           }
           
           setAppConfig(fallbackApps[0]);
@@ -68,14 +65,14 @@ const Index = () => {
     loadDefaultDeliveryApp();
   }, []);
 
-  const handleCheckout = useCallback((items: any[]) => {
+  const handleCheckout = () => {
     localStorage.setItem('deliveryAppReferrer', '/');
     localStorage.setItem('app-context', JSON.stringify({
-      appSlug: appConfig?.app_slug || 'party-on-delivery',
+      appSlug: appConfig?.app_slug || 'main-delivery-app',
       appName: appConfig?.app_name || "Austin's Premier Party Supply Delivery"
     }));
     navigate('/checkout');
-  }, [appConfig?.app_slug, appConfig?.app_name, navigate]);
+  };
 
   if (loading) {
     return (
@@ -90,8 +87,6 @@ const Index = () => {
       </div>
     );
   }
-
-  // Don't block the UI with loading screens - let products load in background
 
   if (error || !appConfig) {
     console.error('🚨 Index: App configuration error:', error);
@@ -111,90 +106,20 @@ const Index = () => {
     );
   }
 
-  // Stabilize config to prevent React #310 error
-  const stableAppConfig = React.useMemo(() => {
-    if (!appConfig) return null;
-    return {
-      app_name: appConfig.app_name || "Austin's Premier Party Supply Delivery",
-      main_app_config: appConfig.main_app_config || {},
-      logo_url: appConfig.logo_url || null,
-      collections_config: appConfig.collections_config || null,
-      app_slug: appConfig.app_slug || 'party-on-delivery'
-    };
-  }, [
-    appConfig?.app_name,
-    appConfig?.main_app_config,
-    appConfig?.logo_url, 
-    appConfig?.collections_config,
-    appConfig?.app_slug
-  ]);
-
-  // Don't render if config is not stable
-  if (!stableAppConfig) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <LoadingSpinner />
-          <div>
-            <h3 className="text-lg font-semibold">Loading Main Delivery App</h3>
-            <p className="text-muted-foreground">Setting up your party experience...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Simple, direct approach - redirect to the delivery app
+  window.location.href = `/app/${appConfig.app_slug}`;
+  
+  // Show loading while redirecting
   return (
-    <>
-      <ProductCategories
-        appName={stableAppConfig.app_name}
-        heroHeading={stableAppConfig.main_app_config?.hero_heading || stableAppConfig.app_name}
-        heroSubheading={stableAppConfig.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
-        heroScrollingText=""
-        logoUrl={stableAppConfig.logo_url}
-        collectionsConfig={stableAppConfig.collections_config}
-        cartItemCount={getTotalItems()}
-        onOpenCart={() => setIsCartOpen(true)}
-      />
-      
-      {/* Cart Sidebar */}
-      <UnifiedCart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-      />
-      
-      {/* Bottom Menu Bar with Admin Button */}
-      <div className="fixed bottom-4 left-4 right-4 z-50 lg:hidden">
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => navigate('/admin')}
-              variant="outline"
-              size="sm"
-              className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors"
-            >
-              Admin
-            </Button>
-          </div>
-          
-          <div className="ml-4">
-            <DeliveryAppDropdown />
-          </div>
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <LoadingSpinner />
+        <div>
+          <h3 className="text-lg font-semibold">Redirecting to {appConfig.app_name}</h3>
+          <p className="text-muted-foreground">Taking you to your party supply store...</p>
         </div>
       </div>
-      
-      {/* Desktop Admin Button - Bottom Right */}
-      <div className="hidden lg:flex lg:gap-2 fixed bottom-4 right-4 z-50">
-        <Button 
-          onClick={() => navigate('/admin')}
-          variant="outline"
-          size="sm"
-          className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors"
-        >
-          Admin
-        </Button>
-      </div>
-    </>
+    </div>
   );
 };
 
