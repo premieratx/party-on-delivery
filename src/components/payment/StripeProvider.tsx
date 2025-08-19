@@ -34,11 +34,16 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
     return () => { mounted = false; };
   }, []);
 
-  // Always wrap in Elements provider to maintain consistent context
-  // This prevents "Elements context not found" errors during re-renders
-  return (
-    <Elements stripe={stripePromise}>
-      {children}
-    </Elements>
-  );
+  // Only wrap in Elements provider when Stripe is properly initialized
+  // This prevents "Elements context not found" errors when Stripe is unavailable
+  if (stripePromise) {
+    return (
+      <Elements stripe={stripePromise}>
+        {children}
+      </Elements>
+    );
+  }
+
+  // Render children directly when Stripe is not available
+  return <>{children}</>;
 };
