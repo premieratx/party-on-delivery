@@ -25,40 +25,48 @@ const Index = () => {
   useEffect(() => {
     const loadDefaultDeliveryApp = async () => {
       try {
-        console.log('🏠 Index: Loading default delivery app config...');
+        console.log('🏠 Index: Loading homepage delivery app...');
         
-        // Get the homepage delivery app or first active app
-        const { data: apps, error: appsError } = await supabase
+        // STRICT: Only get the homepage delivery app
+        const { data: homepageApp, error: homepageError } = await supabase
           .from('delivery_app_variations')
           .select('*')
           .eq('is_active', true)
-          .order('is_homepage', { ascending: false })
-          .order('created_at', { ascending: true })
-          .limit(1);
+          .eq('is_homepage', true)
+          .single();
 
-        if (appsError) {
-          console.error('Error fetching delivery apps:', appsError);
-          throw appsError;
+        if (homepageError || !homepageApp) {
+          console.log('❌ No homepage app found, falling back to first active app');
+          
+          // Fallback to first active app
+          const { data: fallbackApps, error: fallbackError } = await supabase
+            .from('delivery_app_variations')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: true })
+            .limit(1);
+            
+          if (fallbackError || !fallbackApps?.length) {
+            throw new Error('No delivery apps found - please create one in admin dashboard');
+          }
+          
+          setAppConfig(fallbackApps[0]);
+          console.log('🏠 Index: Using fallback app:', fallbackApps[0].app_name);
+        } else {
+          setAppConfig(homepageApp);
+          console.log('🏠 Index: Loaded homepage app:', homepageApp.app_name);
         }
-
-        if (!apps || apps.length === 0) {
-          throw new Error('No delivery apps found - please create one in admin dashboard');
-        } 
-
-        // Always use the real delivery app from database
-        setAppConfig(apps[0]);
-        console.log('🏠 Index: Loaded delivery app:', apps[0].app_name);
         
       } catch (err) {
-        console.error('Error loading delivery app:', err);
-        setError('Failed to load delivery app: ' + err.message);
+        console.error('❌ Error loading delivery app:', err);
+        setError('Failed to load delivery app: ' + (err?.message || err));
       } finally {
         setLoading(false);
       }
     };
 
     loadDefaultDeliveryApp();
-  }, [navigate]);
+  }, []);
 
   const handleCheckout = (items: any[]) => {
     localStorage.setItem('deliveryAppReferrer', '/');

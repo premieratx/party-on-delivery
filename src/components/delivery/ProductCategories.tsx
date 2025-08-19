@@ -145,44 +145,33 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [forceRefresh, refreshProducts]);
 
-  // Force clear products when switching tabs and strictly filter by current collection
+  // FIXED: Stable product filtering to prevent React error #310
   const displayProducts = useMemo(() => {
-    console.log(`🔍 TAB ${selectedCategory}: Processing products for collection: ${currentCollectionHandle}`);
-    
-    if (!currentCollectionHandle) {
-      console.log(`❌ No collection handle for tab ${selectedCategory}`);
+    if (!currentCollectionHandle || !currentTabProducts?.length) {
       return [];
     }
     
-    if (!currentTabProducts?.length) {
-      console.log(`❌ No products loaded for collection: ${currentCollectionHandle}`);
-      return [];
-    }
-    
-    // STRICT filtering - only products that belong to this exact collection
-    // FIX: Safe JSON parsing to prevent React error #310
-    const strictlyFilteredProducts = currentTabProducts.filter(product => {
+    // Safe filtering with guaranteed stable returns
+    const filteredProducts = currentTabProducts.filter(product => {
+      if (!product) return false;
+      
+      // Safe collection handle parsing
+      let handles = [];
       try {
-        const handles = Array.isArray(product.collection_handles) 
-          ? product.collection_handles 
-          : typeof product.collection_handles === 'string' 
-            ? JSON.parse(product.collection_handles || '[]')
-            : [];
-        
-        const belongsToCollection = handles.includes(currentCollectionHandle);
-        if (belongsToCollection) {
-          console.log(`✅ Product "${product.title}" belongs to collection "${currentCollectionHandle}"`);
+        if (Array.isArray(product.collection_handles)) {
+          handles = product.collection_handles;
+        } else if (typeof product.collection_handles === 'string') {
+          handles = product.collection_handles ? JSON.parse(product.collection_handles) : [];
         }
-        return belongsToCollection;
-      } catch (error) {
-        console.error(`❌ Failed to parse collection handles for product ${product.title}:`, error);
-        return false;
+      } catch {
+        handles = [];
       }
+      
+      return Array.isArray(handles) && handles.includes(currentCollectionHandle);
     });
     
-    console.log(`📦 TAB ${selectedCategory} (${currentCollectionHandle}): Showing ${strictlyFilteredProducts.length} products (filtered from ${currentTabProducts.length} total)`);
-    return strictlyFilteredProducts.slice(0, maxProducts);
-  }, [currentTabProducts, currentCollectionHandle, maxProducts, selectedCategory]);
+    return filteredProducts.slice(0, maxProducts);
+  }, [currentTabProducts, currentCollectionHandle, maxProducts]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;
