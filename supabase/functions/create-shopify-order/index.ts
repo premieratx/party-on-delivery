@@ -97,14 +97,14 @@ serve(async (req) => {
             });
           }
           
-          // Use amounts from order_drafts if available (they are stored in cents, convert to dollars)
+          // Use amounts from order_drafts if available (amounts are stored in cents, convert to dollars)
           if (orderDraft.draft_data.subtotal !== undefined) {
             draftAmounts = {
               subtotal: (orderDraft.draft_data.subtotal || 0) / 100,
               delivery_fee: (orderDraft.draft_data.delivery_fee || 0) / 100,
               sales_tax: (orderDraft.draft_data.sales_tax || 0) / 100,
               tip_amount: (orderDraft.draft_data.tip_amount || 0) / 100,
-              total_amount: orderDraft.total_amount || 0 // Already in dollars
+              total_amount: orderDraft.total_amount || 0 // Already stored in dollars
             };
             amountSource = 'order_drafts';
             logStep("Amounts loaded from order_drafts", { draftAmounts, amountSource });
@@ -162,22 +162,22 @@ serve(async (req) => {
     const tipAmount = draftAmounts?.tip_amount ?? parseFloat(metadata?.tip_amount || '0');
     const totalAmount = draftAmounts?.total_amount ?? parseFloat(metadata?.total_amount || '0');
     
-    // CRITICAL: Verify amounts match to prevent 100x errors
-    const calculatedTotal = subtotal + shippingFee + salesTax + tipAmount;
+    // CRITICAL: Verify amounts match to prevent pricing errors
+    const calculatedTotal = Math.round((subtotal + shippingFee + salesTax + tipAmount) * 100) / 100;
     const totalDifference = Math.abs(totalAmount - calculatedTotal);
     
     logStep("Amount validation", {
-      subtotal,
-      shippingFee,
-      salesTax, 
-      tipAmount,
-      totalAmount,
-      calculatedTotal,
-      difference: totalDifference,
-      metadataKeys: Object.keys(metadata || {})
+      subtotal: subtotal.toFixed(2),
+      shippingFee: shippingFee.toFixed(2),
+      salesTax: salesTax.toFixed(2), 
+      tipAmount: tipAmount.toFixed(2),
+      totalAmount: totalAmount.toFixed(2),
+      calculatedTotal: calculatedTotal.toFixed(2),
+      difference: totalDifference.toFixed(4),
+      amountSource: amountSource
     });
     
-    if (totalDifference > 0.01) {
+    if (totalDifference > 0.02) { // Allow for minor rounding differences
       // Log detailed breakdown for debugging
       logStep("ERROR: Amount mismatch detected", {
         metadataSubtotal: metadata?.subtotal,
@@ -185,22 +185,29 @@ serve(async (req) => {
         metadataSalesTax: metadata?.sales_tax,
         metadataTipAmount: metadata?.tip_amount,
         metadataTotalAmount: metadata?.total_amount,
-        parsedSubtotal: subtotal,
-        parsedDeliveryFee: shippingFee,
-        parsedSalesTax: salesTax,
-        parsedTipAmount: tipAmount,
-        parsedTotalAmount: totalAmount,
-        calculatedTotal: calculatedTotal,
-        difference: totalDifference
+        parsedSubtotal: subtotal.toFixed(2),
+        parsedDeliveryFee: shippingFee.toFixed(2),
+        parsedSalesTax: salesTax.toFixed(2),
+        parsedTipAmount: tipAmount.toFixed(2),
+        parsedTotalAmount: totalAmount.toFixed(2),
+        calculatedTotal: calculatedTotal.toFixed(2),
+        difference: totalDifference.toFixed(4),
+        amountSource: amountSource
       });
       
-      throw new Error(`Shopify order amount mismatch: Metadata total $${totalAmount.toFixed(2)} doesn't match calculated total $${calculatedTotal.toFixed(2)}. Check amount formats in metadata vs order_drafts.`);
+      throw new Error(`Shopify order amount mismatch: Total $${totalAmount.toFixed(2)} doesn't match calculated total $${calculatedTotal.toFixed(2)}. Difference: $${totalDifference.toFixed(4)}`);
     }
     
     // Validate reasonable amount range
     if (totalAmount < 0.50 || totalAmount > 10000) {
       throw new Error(`Invalid order amount: $${totalAmount.toFixed(2)}. Must be between $0.50 and $10,000.00`);
     }
+    
+    logStep("Amount validation passed", { 
+      finalTotal: totalAmount.toFixed(2),
+      calculatedTotal: calculatedTotal.toFixed(2),
+      amountSource: amountSource
+    });
     // Prefer body-provided affiliateCode, else fall back to Stripe metadata affiliate_code or discount_code
     const affiliateCode = body.affiliateCode || metadata?.affiliate_code || metadata?.discount_code || undefined;
     const commissionPercent = typeof body.commissionPercent === 'number' ? body.commissionPercent : undefined;
