@@ -8,8 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Eye, Save, Plus, Palette } from 'lucide-react';
-import { VisualCoverPageEditor } from './VisualCoverPageEditor';
+import { Loader2, Save, Plus } from 'lucide-react';
 
 interface UnifiedBuilderProps {
   onSuccess?: () => void;
@@ -20,7 +19,6 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
   const [isCreating, setIsCreating] = useState(false);
   const [selectedCoverPage, setSelectedCoverPage] = useState<any>(null);
   const [coverPages, setCoverPages] = useState<any[]>([]);
-  const [showVisualEditor, setShowVisualEditor] = useState(false);
   const { toast } = useToast();
 
   // Cover Page Fields
@@ -98,8 +96,8 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
       const slug = generateSlug(coverTitle);
 
       if (isCreating) {
-        // Create new cover page with integrated post-checkout config
-        const { data: coverPageData, error: coverError } = await supabase
+        // Create new cover page
+        const { error: coverError } = await supabase
           .from('cover_pages')
           .insert({
             title: coverTitle,
@@ -108,61 +106,20 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
             logo_url: coverLogoUrl,
             bg_image_url: coverBgImageUrl,
             bg_video_url: coverBgVideoUrl,
-            styles: {
-              textColor: postCheckoutTextColor,
-              backgroundColor: postCheckoutBgColor
-            },
-            buttons: [
-              {
-                text: postCheckoutButtonText,
-                url: postCheckoutButtonUrl || `/${slug}`,
-                variant: 'primary'
-              }
-            ],
             checklist: [],
-            is_active: true,
-            created_by: 'admin'
-          })
-          .select()
-          .single();
-
-        if (coverError) throw coverError;
-
-        // Create corresponding delivery app variation with post-checkout config
-        const { error: appError } = await supabase
-          .from('delivery_app_variations')
-          .insert({
-            app_name: coverTitle,
-            app_slug: slug,
-            logo_url: coverLogoUrl,
-            collections_config: {
-              tabs: [],
-              tab_count: 5
-            },
-            main_app_config: {
-              hero_heading: coverTitle
-            },
-            start_screen_config: {
-              title: coverTitle,
-              subtitle: coverSubtitle
-            },
-            custom_post_checkout_config: {
-              enabled: postCheckoutEnabled,
-              title: postCheckoutTitle,
-              message: postCheckoutMessage,
-              cta_button_text: postCheckoutButtonText,
-              cta_button_url: postCheckoutButtonUrl || `/${slug}`,
-              text_color: postCheckoutTextColor,
-              background_color: postCheckoutBgColor
-            },
+            buttons: [{
+              text: postCheckoutButtonText,
+              type: 'url',
+              url: postCheckoutButtonUrl || `/${slug}`
+            }],
             is_active: true
           });
 
-        if (appError) throw appError;
+        if (coverError) throw coverError;
 
         toast({
           title: "Success!",
-          description: `Cover page and post-checkout experience created successfully! Available at /${slug}`,
+          description: `Cover page created successfully! Available at /${slug}`,
         });
 
       } else if (selectedCoverPage) {
@@ -174,44 +131,15 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
             subtitle: coverSubtitle,
             logo_url: coverLogoUrl,
             bg_image_url: coverBgImageUrl,
-            bg_video_url: coverBgVideoUrl,
-            styles: {
-              textColor: postCheckoutTextColor,
-              backgroundColor: postCheckoutBgColor
-            },
-            buttons: [
-              {
-                text: postCheckoutButtonText,
-                url: postCheckoutButtonUrl || `/${selectedCoverPage.slug}`,
-                variant: 'primary'
-              }
-            ]
+            bg_video_url: coverBgVideoUrl
           })
           .eq('id', selectedCoverPage.id);
 
         if (updateError) throw updateError;
 
-        // Update corresponding delivery app variation
-        const { error: appUpdateError } = await supabase
-          .from('delivery_app_variations')
-          .update({
-            custom_post_checkout_config: {
-              enabled: postCheckoutEnabled,
-              title: postCheckoutTitle,
-              message: postCheckoutMessage,
-              cta_button_text: postCheckoutButtonText,
-              cta_button_url: postCheckoutButtonUrl || `/${selectedCoverPage.slug}`,
-              text_color: postCheckoutTextColor,
-              background_color: postCheckoutBgColor
-            }
-          })
-          .eq('app_slug', selectedCoverPage.slug);
-
-        if (appUpdateError) throw appUpdateError;
-
         toast({
           title: "Success!",
-          description: "Cover page and post-checkout experience updated successfully!",
+          description: "Cover page updated successfully!",
         });
       }
 
@@ -234,45 +162,32 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Unified Cover Page & Post-Checkout Builder</h3>
+          <h3 className="text-lg font-medium">Cover Page & Post-Checkout Builder</h3>
           <p className="text-sm text-muted-foreground">
-            Create cover pages and their corresponding post-checkout experiences in one place
+            Create cover pages and configure post-checkout experiences
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIsCreating(true);
-              setSelectedCoverPage(null);
-              setCoverTitle('');
-              setCoverSubtitle('');
-              setCoverLogoUrl('');
-              setCoverBgImageUrl('');
-              setCoverBgVideoUrl('');
-              setPostCheckoutTitle('Thank You for Your Order!');
-              setPostCheckoutMessage('We\'ll contact you shortly to confirm delivery details.');
-              setPostCheckoutButtonText('Order More Items');
-              setPostCheckoutButtonUrl('');
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create New
-          </Button>
-          <Button
-            variant="default"
-            onClick={() => setShowVisualEditor(true)}
-          >
-            <Palette className="w-4 h-4 mr-2" />
-            Visual Editor
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setIsCreating(true);
+            setSelectedCoverPage(null);
+            setCoverTitle('');
+            setCoverSubtitle('');
+            setCoverLogoUrl('');
+            setCoverBgImageUrl('');
+            setCoverBgVideoUrl('');
+          }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create New
+        </Button>
       </div>
 
       {!isCreating && coverPages.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Select Existing Cover Page to Edit</CardTitle>
+            <CardTitle>Select Cover Page to Edit</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -296,175 +211,54 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
         </Card>
       )}
 
-      <Tabs defaultValue="cover-page" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="cover-page">Cover Page Settings</TabsTrigger>
-          <TabsTrigger value="post-checkout">Post-Checkout Settings</TabsTrigger>
-        </TabsList>
+      <Card>
+        <CardHeader>
+          <CardTitle>Cover Page Configuration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={coverTitle}
+                onChange={(e) => setCoverTitle(e.target.value)}
+                placeholder="Enter cover page title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="subtitle">Subtitle</Label>
+              <Input
+                id="subtitle"
+                value={coverSubtitle}
+                onChange={(e) => setCoverSubtitle(e.target.value)}
+                placeholder="Enter subtitle"
+              />
+            </div>
+          </div>
 
-        <TabsContent value="cover-page" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cover Page Configuration</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={coverTitle}
-                    onChange={(e) => setCoverTitle(e.target.value)}
-                    placeholder="Enter cover page title"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subtitle">Subtitle</Label>
-                  <Input
-                    id="subtitle"
-                    value={coverSubtitle}
-                    onChange={(e) => setCoverSubtitle(e.target.value)}
-                    placeholder="Enter subtitle"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="logo">Logo URL</Label>
-                  <Input
-                    id="logo"
-                    value={coverLogoUrl}
-                    onChange={(e) => setCoverLogoUrl(e.target.value)}
-                    placeholder="https://example.com/logo.png"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bg-image">Background Image URL</Label>
-                  <Input
-                    id="bg-image"
-                    value={coverBgImageUrl}
-                    onChange={(e) => setCoverBgImageUrl(e.target.value)}
-                    placeholder="https://example.com/background.jpg"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bg-video">Background Video URL (optional)</Label>
-                <Input
-                  id="bg-video"
-                  value={coverBgVideoUrl}
-                  onChange={(e) => setCoverBgVideoUrl(e.target.value)}
-                  placeholder="https://example.com/background.mp4"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="post-checkout" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Post-Checkout Experience</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="enabled"
-                  checked={postCheckoutEnabled}
-                  onCheckedChange={setPostCheckoutEnabled}
-                />
-                <Label htmlFor="enabled">Enable Custom Post-Checkout Screen</Label>
-              </div>
-
-              {postCheckoutEnabled && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="post-title">Thank You Title</Label>
-                    <Input
-                      id="post-title"
-                      value={postCheckoutTitle}
-                      onChange={(e) => setPostCheckoutTitle(e.target.value)}
-                      placeholder="Thank You for Your Order!"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="post-message">Thank You Message</Label>
-                    <Textarea
-                      id="post-message"
-                      value={postCheckoutMessage}
-                      onChange={(e) => setPostCheckoutMessage(e.target.value)}
-                      placeholder="We'll contact you shortly to confirm delivery details."
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="button-text">Button Text</Label>
-                      <Input
-                        id="button-text"
-                        value={postCheckoutButtonText}
-                        onChange={(e) => setPostCheckoutButtonText(e.target.value)}
-                        placeholder="Order More Items"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="button-url">Button URL (optional)</Label>
-                      <Input
-                        id="button-url"
-                        value={postCheckoutButtonUrl}
-                        onChange={(e) => setPostCheckoutButtonUrl(e.target.value)}
-                        placeholder="Leave empty to use cover page URL"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="text-color">Text Color</Label>
-                      <Input
-                        id="text-color"
-                        type="color"
-                        value={postCheckoutTextColor}
-                        onChange={(e) => setPostCheckoutTextColor(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bg-color">Background Color</Label>
-                      <Input
-                        id="bg-color"
-                        type="color"
-                        value={postCheckoutBgColor}
-                        onChange={(e) => setPostCheckoutBgColor(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-muted p-4 rounded-lg">
-                    <h4 className="font-medium mb-2">Preview</h4>
-                    <div 
-                      className="p-6 rounded-lg text-center"
-                      style={{ 
-                        backgroundColor: postCheckoutBgColor,
-                        color: postCheckoutTextColor
-                      }}
-                    >
-                      <h3 className="text-xl font-bold mb-2">{postCheckoutTitle}</h3>
-                      <p className="mb-4">{postCheckoutMessage}</p>
-                      <Button variant="outline">
-                        {postCheckoutButtonText}
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="logo">Logo URL</Label>
+              <Input
+                id="logo"
+                value={coverLogoUrl}
+                onChange={(e) => setCoverLogoUrl(e.target.value)}
+                placeholder="https://example.com/logo.png"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bg-image">Background Image URL</Label>
+              <Input
+                id="bg-image"
+                value={coverBgImageUrl}
+                onChange={(e) => setCoverBgImageUrl(e.target.value)}
+                placeholder="https://example.com/background.jpg"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isLoading}>
@@ -473,25 +267,9 @@ export const UnifiedCoverPostCheckoutBuilder: React.FC<UnifiedBuilderProps> = ({
           ) : (
             <Save className="w-4 h-4 mr-2" />
           )}
-          {isCreating ? 'Create Cover Page & Post-Checkout' : 'Update Configuration'}
+          {isCreating ? 'Create Cover Page' : 'Update Cover Page'}
         </Button>
       </div>
-
-      {/* Visual Editor Modal */}
-      <VisualCoverPageEditor
-        isOpen={showVisualEditor}
-        onClose={() => setShowVisualEditor(false)}
-        onSave={(settings) => {
-          setShowVisualEditor(false);
-          loadCoverPages();
-          toast({
-            title: "Success!",
-            description: "Cover page saved successfully with visual editor!",
-          });
-        }}
-        initialData={selectedCoverPage}
-        existingCoverPages={coverPages}
-      />
     </div>
   );
 };

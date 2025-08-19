@@ -69,7 +69,7 @@ export const CustomerFlowBuilder: React.FC = () => {
       const [coverPages, deliveryApps, flows] = await Promise.all([
         supabase.from('cover_pages').select('*').order('created_at', { ascending: false }),
         supabase.from('delivery_app_variations').select('*').order('created_at', { ascending: false }),
-        supabase.from('customer_flows').select('*').order('created_at', { ascending: false })
+        (supabase as any).from('customer_flows').select('*').order('created_at', { ascending: false })
       ]);
 
       if (coverPages.error) throw coverPages.error;
@@ -96,7 +96,7 @@ export const CustomerFlowBuilder: React.FC = () => {
         postCheckouts: [] // We'll add post-checkout pages later
       });
 
-      setFlows(flows.data || []);
+      setFlows((flows.data as any[]) || []);
     } catch (error) {
       console.error('Error loading flow data:', error);
       toast({ title: 'Error loading data', description: 'Please try again', variant: 'destructive' });
@@ -108,7 +108,7 @@ export const CustomerFlowBuilder: React.FC = () => {
   const createNewFlow = async (flowData: Omit<CustomerFlow, 'id'>) => {
     try {
       // Create customer_flows table if it doesn't exist
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('customer_flows')
         .insert([flowData])
         .select()

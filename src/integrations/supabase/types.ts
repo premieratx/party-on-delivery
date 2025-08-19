@@ -1298,6 +1298,45 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_flows: {
+        Row: {
+          cover_page_id: string | null
+          created_at: string
+          delivery_app_id: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          post_checkout_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          cover_page_id?: string | null
+          created_at?: string
+          delivery_app_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          post_checkout_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          cover_page_id?: string | null
+          created_at?: string
+          delivery_app_id?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          post_checkout_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customer_orders: {
         Row: {
           affiliate_code: string | null
