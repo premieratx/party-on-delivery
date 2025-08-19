@@ -27,8 +27,10 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
 
   const handleCheckout = () => {
     console.log('Navigating to checkout from unified cart');
+    // Store current delivery app referrer for back navigation
+    localStorage.setItem('deliveryAppReferrer', window.location.pathname);
     // Navigate to the main checkout flow
-    navigate('/?checkout=true');
+    navigate('/checkout');
     onClose();
   };
 

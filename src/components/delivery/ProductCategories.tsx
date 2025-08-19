@@ -374,7 +374,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             <div className="hidden lg:flex ml-4">
               <Button 
                 variant="outline"
-                onClick={() => navigate('/checkout')}
+                onClick={onOpenCart}
                 className="whitespace-nowrap hover:bg-primary hover:text-primary-foreground transition-colors"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
@@ -558,6 +558,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {/* Mobile Bottom Cart Bar */}
         <MobileBottomCartBar 
           cartItemCount={cartItemCount}
+          onOpenCart={() => onOpenCart && onOpenCart()}
         />
       </div>
     </div>

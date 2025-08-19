@@ -1,20 +1,21 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface MobileBottomCartBarProps {
   cartItemCount: number;
   totalAmount?: number;
   className?: string;
+  onOpenCart: () => void;
 }
 
 export const MobileBottomCartBar: React.FC<MobileBottomCartBarProps> = ({
   cartItemCount,
   totalAmount,
-  className = ''
+  className = '',
+  onOpenCart
 }) => {
-  const navigate = useNavigate();
+  
 
   if (cartItemCount === 0) return null;
 
@@ -27,7 +28,7 @@ export const MobileBottomCartBar: React.FC<MobileBottomCartBarProps> = ({
       ${className}
     `}>
       <Button 
-        onClick={() => navigate('/checkout')}
+        onClick={onOpenCart}
         className="w-full h-12 text-lg font-semibold flex items-center justify-between px-6"
         size="lg"
       >

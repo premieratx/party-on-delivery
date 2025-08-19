@@ -480,10 +480,11 @@ export default function OptimizedProductSearch() {
       />
 
       {/* Bottom Cart Bar for Mobile */}
-      <MobileBottomCartBar
-        cartItemCount={getTotalItems()}
-        totalAmount={getTotalPrice()}
-      />
+        <MobileBottomCartBar
+          cartItemCount={getTotalItems()}
+          totalAmount={getTotalPrice()}
+          onOpenCart={() => setIsCartOpen(true)}
+        />
     </div>
   );
 }

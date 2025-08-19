@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { CoverPageLoader } from '@/components/cover-page/CoverPageLoader';
+import { UnifiedCart } from '@/components/common/UnifiedCart';
 import { ForceProductSync } from '@/components/emergency/ForceProductSync';
-import { InstantProductLoader } from '@/components/emergency/InstantProductLoader';
+import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 import { CriticalProductSync } from '@/components/emergency/CriticalProductSync';
 import { DirectProductSync } from '@/components/emergency/DirectProductSync';
 import { InstantProductSync } from '@/components/emergency/InstantProductSync';
@@ -22,6 +22,7 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [showCoverPage, setShowCoverPage] = useState(false);
   const [showForceSync, setShowForceSync] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   // Immediately force sync on component mount
   useEffect(() => {
     const forceCompleteSync = async () => {
@@ -187,10 +188,35 @@ const Index = () => {
         logoUrl={appConfig?.logo_url}
         collectionsConfig={appConfig?.collections_config}
         cartItemCount={cartItems.length}
+        onOpenCart={() => setIsCartOpen(true)}
       />
       
-      {/* Admin Button - Bottom Right */}
-      <div className="fixed bottom-4 right-4 z-50">
+      {/* Cart Sidebar */}
+      <UnifiedCart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+      />
+      
+      {/* Bottom Menu Bar with Admin Button */}
+      <div className="fixed bottom-4 left-4 right-4 z-50 lg:hidden">
+        <div className="flex items-center justify-between">
+          <Button 
+            onClick={() => navigate('/admin')}
+            variant="outline"
+            size="sm"
+            className="bg-background/90 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground transition-colors"
+          >
+            Admin
+          </Button>
+          
+          <div className="ml-4">
+            <DeliveryAppDropdown />
+          </div>
+        </div>
+      </div>
+      
+      {/* Desktop Admin Button - Bottom Right */}
+      <div className="hidden lg:block fixed bottom-4 right-4 z-50">
         <Button 
           onClick={() => navigate('/admin')}
           variant="outline"
