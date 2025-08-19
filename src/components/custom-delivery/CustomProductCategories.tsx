@@ -15,7 +15,8 @@ import { ErrorHandler } from '@/utils/errorHandler';
 import { parseProductTitle } from '@/utils/productUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
-import { OccasionButtons } from '@/components/delivery/OccasionButtons';
+import { groupProductsByBaseName } from '@/utils/productGrouper';
+import { GroupedProductCard } from '@/components/delivery/GroupedProductCard';
 import { CombinedSearchTabsCustom } from './CombinedSearchTabsCustom';
 
 import beerCategoryBg from '@/assets/beer-category-bg.jpg';
@@ -75,7 +76,7 @@ export const CustomProductCategories: React.FC<CustomProductCategoriesProps> = (
   const [activeCategory, setActiveCategory] = useState<string>('spirits');
   const [collections, setCollections] = useState<ShopifyCollection[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<ShopifyProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ShopifyProduct | any>(null);
   const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
@@ -193,15 +194,16 @@ const [showSearchModal, setShowSearchModal] = useState(false);
     }))
   );
 
-  // Real-time hierarchical search using SearchOptimizer
+  // Real-time hierarchical search using SearchOptimizer with grouping
   const searchFilteredProducts = searchTerm 
     ? (() => {
         const searchIndex = SearchOptimizer.buildSearchIndex(allProducts, 'custom-delivery-search');
         const results = SearchOptimizer.searchProductsWithHierarchy(searchTerm, searchIndex, 50);
-        console.log(`🔍 Custom Delivery: Found ${results.length} products for "${searchTerm}"`);
-        return results;
+        const groupedResults = groupProductsByBaseName(results);
+        console.log(`🔍 Custom Delivery: Found ${results.length} products, grouped into ${groupedResults.length} cards for "${searchTerm}"`);
+        return groupedResults;
       })()
-    : allProducts;
+    : groupProductsByBaseName(allProducts);
 
   const getCartQuantity = (productId: string, variant?: string): number => {
     const cartItem = cartItems.find(item => {
@@ -213,31 +215,33 @@ const [showSearchModal, setShowSearchModal] = useState(false);
     return cartItem?.quantity || 0;
   };
 
-  const handleAddToCart = (product: ShopifyProduct) => {
-    const selectedVariant = selectedVariants[product.id];
-    const variant = product.variants.find(v => v.id === selectedVariant) || product.variants[0];
+  const handleAddToCart = (product: any) => {
+    // Handle both individual products and grouped products
+    const actualProduct = product.originalProduct || product;
+    const selectedVariant = selectedVariants[actualProduct.id];
+    const variant = actualProduct.variants.find(v => v.id === selectedVariant) || actualProduct.variants[0];
     
     const cartItem = {
-      id: product.id,
-      title: product.title,
-      name: product.title,
+      id: actualProduct.id,
+      title: actualProduct.title,
+      name: actualProduct.title,
       price: variant.price,
-      image: product.image,
+      image: actualProduct.image,
       variant: variant.id
     };
 
     console.log('🛒 CustomProductCategories: Adding product to cart:', cartItem);
     // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = getCartQuantity(product.id, variant.id);
+    const currentQty = getCartQuantity(actualProduct.id, variant.id);
     
-    onUpdateQuantity(product.id, variant.id, currentQty + 1);
+    onUpdateQuantity(actualProduct.id, variant.id, currentQty + 1);
     
     // Show feedback
     import('@/hooks/use-toast').then(({ useToast }) => {
       const { toast } = useToast();
       toast({
         title: "Added to cart",
-        description: `${product.title} has been added to your cart.`,
+        description: `${actualProduct.title} has been added to your cart.`,
       });
     });
   };
@@ -315,117 +319,20 @@ const [showSearchModal, setShowSearchModal] = useState(false);
           </div>
         ) : (
           <div className="space-y-4">
-            {searchFilteredProducts.map((product) => {
-              const selectedVariant = selectedVariants[product.id] || product.variants[0]?.id;
-              const variant = product.variants.find(v => v.id === selectedVariant) || product.variants[0];
-              const cartQuantity = getCartQuantity(product.id, variant?.id);
-              
-              return (
-                <Card key={`${product.id}-${selectedVariant}`} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <div 
-                    className="cursor-pointer"
-                    onClick={() => setSelectedProduct(product)}
-                  >
-                    <div className="flex p-4">
-                      <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-                        {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.title}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="w-8 h-8 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 ml-4">
-                        <h3 className="font-medium text-gray-900 line-clamp-2 text-sm leading-5">
-                          {product.title}
-                        </h3>
-                        
-<div className="mt-2">
-  <span className="text-lg font-bold text-purple-600">
-    ${applyMarkup(variant?.price || 0).toFixed(2)}
-  </span>
-</div>
-
-                        {/* Variant Selector */}
-                        {product.variants.length > 1 && (
-                          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                            <Select
-                              value={selectedVariant}
-                              onValueChange={(value) => handleVariantChange(product.id, value)}
-                            >
-                              <SelectTrigger className="h-8 text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {product.variants.map((variant) => (
-<SelectItem key={variant.id} value={variant.id}>
-  {variant.title} - ${applyMarkup(variant.price).toFixed(2)}
-</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Add to Cart Controls */}
-                  <div className="px-4 pb-4">
-                    {cartQuantity === 0 ? (
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(product);
-                        }}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                        size="sm"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add to Cart
-                      </Button>
-                    ) : (
-                      <div className="flex items-center justify-between bg-purple-50 rounded-lg p-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUpdateQuantity(product.id, -1, variant?.id);
-                          }}
-                          className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} p-0 text-purple-600 hover:bg-purple-100`}
-                        >
-                          <Minus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                        </Button>
-                        
-                        <span className={`font-medium text-purple-700 ${isMobile ? 'min-w-[1.5rem] px-1' : 'min-w-[2rem] px-2'} text-center text-xs`}>
-                          {cartQuantity}
-                        </span>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUpdateQuantity(product.id, 1, variant?.id);
-                          }}
-                          className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} p-0 text-purple-600 hover:bg-purple-100`}
-                        >
-                          <Plus className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              );
-            })}
+            {searchFilteredProducts.map((groupedProduct) => (
+              <GroupedProductCard
+                key={groupedProduct.id}
+                groupedProduct={groupedProduct}
+                getCartItemQuantity={getCartQuantity}
+                onAddToCart={handleAddToCart}
+                onQuantityChange={(productId, variantId, delta) => {
+                  const currentQuantity = getCartQuantity(productId, variantId);
+                  const newQuantity = Math.max(0, currentQuantity + delta);
+                  onUpdateQuantity(productId, variantId, newQuantity);
+                }}
+                onProductClick={setSelectedProduct}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -490,12 +397,6 @@ const [showSearchModal, setShowSearchModal] = useState(false);
         </DialogContent>
       </Dialog>
       
-      {/* What's the Occasion? - Bottom Section */}
-      <div className="max-w-md mx-auto px-4 mt-16 mb-24">
-        <div className="bg-muted/20 rounded-lg p-6">
-          <OccasionButtons isMobile={true} isScrollingDown={false} />
-        </div>
-      </div>
     </div>
   );
 };
