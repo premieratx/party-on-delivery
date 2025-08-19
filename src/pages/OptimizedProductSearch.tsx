@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { UnifiedCart } from '@/components/common/UnifiedCart';
-import { BottomCartBar } from '@/components/common/BottomCartBar';
+import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { getInstantProducts } from '@/utils/instantCacheClient';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -477,15 +477,12 @@ export default function OptimizedProductSearch() {
       <UnifiedCart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        onProceedToCheckout={() => {
-          setIsCartOpen(false);
-          navigate('/checkout');
-        }}
       />
 
       {/* Bottom Cart Bar for Mobile */}
-      <BottomCartBar
-        onOpenCart={() => setIsCartOpen(true)}
+      <MobileBottomCartBar
+        cartItemCount={getTotalItems()}
+        totalAmount={getTotalPrice()}
       />
     </div>
   );

@@ -192,48 +192,61 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   };
 
+  // Real-time search across ALL products, not just current tab
   const handleSearch = useCallback(async () => {
     if (!searchQuery?.trim()) {
       setSearchProducts([]);
       return;
     }
     
-    console.log('🔍 Real-time search for:', searchQuery);
+    console.log('🔍 Real-time search across all products for:', searchQuery);
     try {
       setIsSearching(true);
       
-      // Enhanced search across all products - search by name, type, category, collection
-      const query = searchQuery.toLowerCase();
-      const filtered = currentTabProducts.filter((product: any) => {
-        const title = product.title?.toLowerCase() || '';
-        const productType = product.product_type?.toLowerCase() || '';
-        const category = product.category?.toLowerCase() || '';
-        const description = product.description?.toLowerCase() || '';
-        
-        // Check collection handles
-        const collectionHandles = Array.isArray(product.collection_handles) 
-          ? product.collection_handles 
-          : typeof product.collection_handles === 'string' 
-            ? JSON.parse(product.collection_handles || '[]')
-            : [];
-        const collections = collectionHandles.join(' ').toLowerCase();
-        
-        return title.includes(query) || 
-               productType.includes(query) || 
-               category.includes(query) || 
-               collections.includes(query) ||
-               description.includes(query);
+      // Search across ALL products by calling the unified products API
+      const { data } = await supabase.functions.invoke('get-unified-products', {
+        body: { 
+          lightweight: true,
+          use_type: 'delivery',
+          preserve_order: true
+        }
       });
-      
-      console.log(`🔍 Found ${filtered.length} search results`);
-      setSearchProducts(filtered);
+
+      if (data?.success && data.products) {
+        const query = searchQuery.toLowerCase();
+        const filtered = data.products.filter((product: any) => {
+          const title = product.title?.toLowerCase() || '';
+          const productType = product.product_type?.toLowerCase() || '';
+          const category = product.category?.toLowerCase() || '';
+          const description = product.description?.toLowerCase() || '';
+          
+          // Check collection handles
+          const collectionHandles = Array.isArray(product.collection_handles) 
+            ? product.collection_handles 
+            : typeof product.collection_handles === 'string' 
+              ? JSON.parse(product.collection_handles || '[]')
+              : [];
+          const collections = collectionHandles.join(' ').toLowerCase();
+          
+          return title.includes(query) || 
+                 productType.includes(query) || 
+                 category.includes(query) || 
+                 collections.includes(query) ||
+                 description.includes(query);
+        });
+        
+        console.log(`🔍 Found ${filtered.length} search results from all products`);
+        setSearchProducts(filtered);
+      } else {
+        setSearchProducts([]);
+      }
     } catch (err) {
       console.error('Search error:', err);
       setSearchProducts([]);
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, currentTabProducts]);
+  }, [searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -348,7 +361,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                     // Clear search when switching tabs
                     setSearchProducts([]);
                     setSearchQuery('');
-                    // NO AUTO-SCROLL - Let user stay at current position
+                    // NO AUTO-SCROLL - User stays at current position
                   }}
                 >
                   {tab.icon && <span className="mr-2">{tab.icon}</span>}
@@ -392,7 +405,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       />
                     </div>
                     <div className="p-3 space-y-3">
-                      <div className="space-y-1">
+                      <div className="space-y-1 text-center">
                         <h3 className="font-medium text-sm line-clamp-2 leading-tight">
                           {cleanTitle}
                         </h3>
@@ -487,7 +500,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                   
                   <div className="p-3 space-y-3">
                     {/* Product Title */}
-                    <div className="space-y-1">
+                    <div className="space-y-1 text-center">
                       <h3 className="font-medium text-sm line-clamp-2 leading-tight">
                         {cleanTitle}
                       </h3>
