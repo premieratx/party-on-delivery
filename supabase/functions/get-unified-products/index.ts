@@ -74,26 +74,7 @@ Deno.serve(async (req) => {
       .order('sort_order', { ascending: true })
       .order('id', { ascending: true })
 
-    // CRITICAL: Filter by specific collection handle if provided
-    if (collection_handle && collection_handle !== 'all') {
-      console.log(`🎯 FILTERING FOR SPECIFIC COLLECTION: ${collection_handle}`)
-      // Use contains operator to properly filter collection handles array
-      productsQuery = productsQuery.contains('collection_handles', [collection_handle])
-    }
-
-    // Only apply limit for final result display, not for collection processing
-    const processLimit = limit && limit > 0 ? limit : null
-
-    const { data: products, error: productsError } = await productsQuery
-
-    if (productsError) {
-      console.error('Error fetching products:', productsError)
-      throw productsError
-    }
-
-    console.log(`📊 Loaded ${products?.length || 0} products for collection processing`)
-    
-    // If filtering by specific collection, get EXACT Shopify collection order
+    // CRITICAL: For collection requests, bypass products cache and go straight to collections cache
     if (collection_handle && collection_handle !== 'all') {
       console.log(`🎯 Getting exact Shopify collection: ${collection_handle}`)
       
@@ -109,7 +90,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             success: false, 
-            error: `Collection '${collection_handle}' not found`,
+            error: `Collection '${collection_handle}' not found in cache`,
             products: [], 
             collections: [] 
           }),
@@ -119,11 +100,12 @@ Deno.serve(async (req) => {
       
       // Use products directly from collection data (preserves Shopify sort order)
       const collectionProducts = collectionData.data?.products || []
-      console.log(`✅ Found ${collectionProducts.length} products in exact Shopify order for ${collection_handle}`)
+      console.log(`✅ SHOPIFY ORDER: Found ${collectionProducts.length} products for ${collection_handle}`)
+      console.log(`First 3 products: ${collectionProducts.slice(0, 3).map(p => p.title).join(', ')}`)
       
       const result = {
         success: true,
-        products: processLimit ? collectionProducts.slice(0, processLimit) : collectionProducts,
+        products: collectionProducts,
         collections: [{
           id: collection_handle,
           title: collectionData.title || collection_handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
@@ -138,13 +120,20 @@ Deno.serve(async (req) => {
         lightweight,
         use_type,
         last_sync: collectionData.updated_at,
-        cache_info: { source: 'shopify_collections_cache', preserves_order: true }
+        cache_info: { source: 'shopify_collections_cache', preserves_shopify_order: true }
       }
       
       return new Response(
         JSON.stringify(result),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
+    }
+
+    const { data: products, error: productsError } = await productsQuery
+
+    if (productsError) {
+      console.error('Error fetching products:', productsError)
+      throw productsError
     }
 
     // Get collections/categories
