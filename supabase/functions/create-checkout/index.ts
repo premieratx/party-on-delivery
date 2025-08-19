@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -122,6 +123,22 @@ serve(async (req) => {
     });
 
     console.log('✅ Checkout session created:', session.id);
+
+    // 🔒 SECURITY: Schedule cleanup of sensitive payment data after 24 hours
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { persistSession: false } }
+      );
+      
+      // Call general cleanup function to remove any expired data
+      await supabase.rpc('cleanup_sensitive_payment_data');
+      console.log('🔒 Scheduled cleanup of expired payment data');
+    } catch (cleanupError) {
+      console.log('⚠️ Warning: Failed to schedule payment data cleanup:', cleanupError);
+      // Don't fail checkout creation
+    }
 
     return new Response(
       JSON.stringify({ 

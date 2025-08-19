@@ -977,6 +977,19 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
       console.error('Error calling sync function:', syncError);
     }
 
+    // 🔒 SECURITY: Clean up sensitive payment data after successful order creation
+    try {
+      if (paymentIntentId) {
+        await supabaseClient.rpc('sanitize_order_payment_data', {
+          payment_intent_id_param: paymentIntentId
+        });
+        logStep("Payment data sanitized successfully", { paymentIntentId });
+      }
+    } catch (sanitizeError) {
+      logStep("Warning: Failed to sanitize payment data", sanitizeError);
+      // Don't fail the order, just log the issue
+    }
+
     return new Response(JSON.stringify({ 
       success: true,
       shopifyOrderId: orderResult.order.id,

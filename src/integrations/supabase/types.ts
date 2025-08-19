@@ -3788,6 +3788,10 @@ export type Database = {
         Args: { ts: string }
         Returns: number
       }
+      sanitize_order_payment_data: {
+        Args: { payment_intent_id_param: string }
+        Returns: undefined
+      }
       track_affiliate_order: {
         Args: {
           p_affiliate_slug: string
