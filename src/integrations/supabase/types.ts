@@ -3434,21 +3434,7 @@ export type Database = {
       }
     }
     Views: {
-      instant_products_view: {
-        Row: {
-          app_category: string | null
-          category: string | null
-          collection_handles: string[] | null
-          handle: string | null
-          id: string | null
-          image: string | null
-          price: number | null
-          title: string | null
-          updated_at: string | null
-          variants: Json | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       cleanup_expired_cache: {
@@ -3573,6 +3559,10 @@ export type Database = {
       }
       link_customer_session: {
         Args: { customer_email: string; session_token: string }
+        Returns: undefined
+      }
+      log_security_access: {
+        Args: { details?: Json; event_type: string; table_name: string }
         Returns: undefined
       }
       log_security_event: {
