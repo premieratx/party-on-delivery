@@ -3,7 +3,6 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { supabase } from '@/integrations/supabase/client';
 import { PaymentStep } from './PaymentStep';
-import { PaymentStepFallback } from './PaymentStepFallback';
 import { useAppConfig } from '@/hooks/useAppConfig';
 import { Button } from '@/components/ui/button';
 
@@ -101,8 +100,33 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
     );
   }
 
-  if (hasError || !stripePromise) {
-    return <PaymentStepFallback total={total} onPaymentSuccess={props.onPaymentSuccess} />;
+  // NEVER show fallback - force Stripe to work or show error
+  if (hasError) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p className="text-sm text-red-600 font-medium">Stripe Payment System Error</p>
+        <p className="text-xs text-red-500 mt-1">
+          The payment system failed to initialize. Please refresh the page or contact support.
+        </p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded"
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
+  }
+  
+  if (!stripePromise) {
+    return (
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-blue-600">Loading Stripe payment system...</p>
+        <div className="mt-2 h-2 bg-blue-200 rounded-full overflow-hidden">
+          <div className="h-full bg-blue-500 animate-pulse"></div>
+        </div>
+      </div>
+    );
   }
 
   return (

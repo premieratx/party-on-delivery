@@ -12,18 +12,23 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔍 [GET-STRIPE-KEY] Function called, checking environment...');
+    
     const publishableKey = Deno.env.get('STRIPE_PUBLISHABLE_KEY');
+    console.log('🔑 [GET-STRIPE-KEY] Key found:', publishableKey ? 'YES (length: ' + publishableKey.length + ')' : 'NO');
     
     if (!publishableKey) {
-      console.log('No Stripe publishable key configured');
+      console.error('❌ [GET-STRIPE-KEY] No Stripe publishable key configured in environment');
       return new Response(
-        JSON.stringify({ error: 'Stripe not configured' }), 
+        JSON.stringify({ error: 'Stripe not configured', debug: 'STRIPE_PUBLISHABLE_KEY environment variable not found' }), 
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
         }
       );
     }
+    
+    console.log('✅ [GET-STRIPE-KEY] Successfully returning publishable key');
 
     return new Response(
       JSON.stringify({ key: publishableKey }), 
