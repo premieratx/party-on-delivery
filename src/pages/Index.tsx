@@ -16,6 +16,7 @@ import { QuickSyncTrigger } from '@/components/emergency/QuickSyncTrigger';
 import { SimpleForceSync } from '@/components/emergency/SimpleForceSync';
 import { ForceCollectionOrderSync } from '@/components/ForceCollectionOrderSync';
 import { syncCollectionOrder } from '@/utils/productSync';
+import { RestoreShopifyOrder } from '@/components/emergency/RestoreShopifyOrder';
 
 const Index = () => {
   console.log('🏠 Index: Loading Main Delivery App as homepage');
@@ -210,6 +211,9 @@ const Index = () => {
 
   return (
     <>
+      {/* Restore exact Shopify order immediately */}
+      <RestoreShopifyOrder />
+      
       {/* Show sync option only when needed */}
       {showForceSync && <SimpleForceSync />}
       <ProductCategories
