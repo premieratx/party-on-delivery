@@ -1,105 +1,76 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Circle, Calendar, MapPin, User, CreditCard } from 'lucide-react';
+import { CheckCircle, Calendar, MapPin, User, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type CheckoutStep = 'datetime' | 'address' | 'payment';
-
-interface StepInfo {
-  id: CheckoutStep;
-  title: string;
-  icon: React.ReactNode;
-  description: string;
-}
-
 interface CheckoutStepsProps {
-  currentStep: CheckoutStep;
-  confirmedSteps: Set<CheckoutStep>;
-  onStepClick: (step: CheckoutStep) => void;
-  isStepComplete: (step: CheckoutStep) => boolean;
+  currentStep: 'datetime' | 'address' | 'payment';
+  confirmedDateTime: boolean;
+  confirmedAddress: boolean;
+  confirmedCustomer: boolean;
 }
 
-const steps: StepInfo[] = [
-  {
-    id: 'datetime',
-    title: 'Date & Contact',
-    icon: <User className="w-4 h-4" />,
-    description: 'When and who?'
-  },
-  {
-    id: 'address',
-    title: 'Address',
-    icon: <MapPin className="w-4 h-4" />,
-    description: 'Where should we deliver?'
-  },
-  {
-    id: 'payment',
-    title: 'Payment',
-    icon: <CreditCard className="w-4 h-4" />,
-    description: 'Complete your order'
-  }
+const steps = [
+  { id: 'datetime', label: 'Date & Time', icon: Calendar },
+  { id: 'address', label: 'Address', icon: MapPin },
+  { id: 'customer', label: 'Contact', icon: User },
+  { id: 'payment', label: 'Payment', icon: CreditCard }
 ];
 
 export const CheckoutSteps: React.FC<CheckoutStepsProps> = ({
   currentStep,
-  confirmedSteps,
-  onStepClick,
-  isStepComplete
+  confirmedDateTime,
+  confirmedAddress,
+  confirmedCustomer
 }) => {
-  const getStepStatus = (stepId: CheckoutStep) => {
-    if (confirmedSteps.has(stepId)) return 'confirmed';
-    if (stepId === currentStep) return 'current';
+  const getStepStatus = (stepId: string) => {
+    if (stepId === 'datetime') return confirmedDateTime ? 'completed' : currentStep === 'datetime' ? 'current' : 'pending';
+    if (stepId === 'address') return confirmedAddress ? 'completed' : currentStep === 'address' ? 'current' : 'pending';
+    if (stepId === 'customer') return confirmedCustomer ? 'completed' : currentStep === 'address' ? 'current' : 'pending';
+    if (stepId === 'payment') return currentStep === 'payment' ? 'current' : 'pending';
     return 'pending';
   };
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Checkout Progress</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex gap-2">
-          {steps.map((step, index) => {
-            const status = getStepStatus(step.id);
-            const isComplete = isStepComplete(step.id);
-            const canClick = status === 'confirmed' || (index === 0 || confirmedSteps.has(steps[index - 1].id));
-            
-            return (
-              <Button
-                key={step.id}
-                variant={status === 'current' ? 'default' : 'ghost'}
-                className={cn(
-                  "flex-1 justify-center h-12 relative text-xs",
-                  status === 'confirmed' && "bg-green-50 hover:bg-green-100 border-green-200",
-                  !canClick && "opacity-50 cursor-not-allowed"
+    <div className="mb-6">
+      <div className="flex justify-between items-center">
+        {steps.map((step, index) => {
+          const status = getStepStatus(step.id);
+          const Icon = step.icon;
+          
+          return (
+            <div key={step.id} className="flex items-center">
+              <div className={cn(
+                "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all",
+                status === 'completed' && "bg-green-500 border-green-500 text-white",
+                status === 'current' && "bg-primary border-primary text-primary-foreground",
+                status === 'pending' && "bg-background border-muted-foreground/30 text-muted-foreground"
+              )}>
+                {status === 'completed' ? (
+                  <CheckCircle className="w-4 h-4" />
+                ) : (
+                  <Icon className="w-4 h-4" />
                 )}
-                onClick={() => canClick && onStepClick(step.id)}
-                disabled={!canClick}
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <div className={cn(
-                    "flex items-center justify-center w-6 h-6 rounded-full border-2",
-                    status === 'confirmed' && "bg-green-500 border-green-500 text-white",
-                    status === 'current' && "border-primary bg-primary text-white",
-                    status === 'pending' && "border-muted-foreground"
-                  )}>
-                    {status === 'confirmed' ? (
-                      <CheckCircle className="w-3 h-3" />
-                    ) : (
-                      React.cloneElement(step.icon as React.ReactElement, { className: "w-3 h-3" })
-                    )}
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="font-medium text-xs">{step.title}</div>
-                  </div>
-                </div>
-              </Button>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              </div>
+              
+              <span className={cn(
+                "ml-2 text-sm font-medium",
+                status === 'completed' && "text-green-600",
+                status === 'current' && "text-primary",
+                status === 'pending' && "text-muted-foreground"
+              )}>
+                {step.label}
+              </span>
+              
+              {index < steps.length - 1 && (
+                <div className={cn(
+                  "mx-4 w-8 h-0.5 transition-colors",
+                  status === 'completed' ? "bg-green-500" : "bg-muted-foreground/20"
+                )} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };

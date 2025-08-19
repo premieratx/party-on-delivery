@@ -4,7 +4,7 @@ import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import ProductCategories from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
-import { CheckoutFlow } from './delivery/CheckoutFlow';
+import { RefactoredCheckoutFlow } from './checkout/RefactoredCheckoutFlow';
 import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -258,7 +258,7 @@ export const DeliveryWidget: React.FC = () => {
       )}
 
       {currentStep === 'checkout' && (
-        <CheckoutFlow 
+        <RefactoredCheckoutFlow
           cartItems={cartItems}
           deliveryInfo={deliveryInfo}
           totalPrice={getTotalPrice()}
