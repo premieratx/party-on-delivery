@@ -55,6 +55,7 @@ import { AppConfigManager } from '@/components/admin/AppConfigManager';
 import { FeatureCleanupReport } from '@/components/FeatureCleanupReport';
 import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
 import CoverPagesAdmin from '@/pages/CoverPagesAdmin';
+import { CustomerFlowBuilder } from '@/components/admin/CustomerFlowBuilder';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -279,22 +280,13 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-1 w-full h-auto flex-wrap p-2">
-              <TabsTrigger value="overview" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">Overview</TabsTrigger>
+            <TabsList className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-1 w-full h-auto flex-wrap p-2">
+              <TabsTrigger value="overview" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📊 Overview</TabsTrigger>
+              <TabsTrigger value="customer-flows" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🔄 Customer Flows</TabsTrigger>
+              <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🎬 Cover Pages</TabsTrigger>
+              <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🚚 Delivery Apps</TabsTrigger>
               <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Orders</TabsTrigger>
               <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">👥 Affiliates</TabsTrigger>
-              <TabsTrigger value="abandoned" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⏰ Abandoned</TabsTrigger>
-              <TabsTrigger value="products" onClick={() => navigate('/admin/create-collection')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📦 Products</TabsTrigger>
-              <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🚚 Apps</TabsTrigger>
-              <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🎬 Cover Pages</TabsTrigger>
-              <TabsTrigger value="post-checkout-builder" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">✅ Post-Checkout</TabsTrigger>
-              <TabsTrigger value="quotes" onClick={() => navigate('/admin/quotes')} className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📋 Quotes</TabsTrigger>
-              <TabsTrigger value="search-app-config" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🔍 Search App</TabsTrigger>
-              <TabsTrigger value="security-sync" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🛡️ Security & Sync</TabsTrigger>
-              <TabsTrigger value="performance" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚡ Performance & Optimization</TabsTrigger>
-              <TabsTrigger value="ghl-setup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">📱 GHL/SMS</TabsTrigger>
-              <TabsTrigger value="settings" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">⚙️ Settings</TabsTrigger>
-              <TabsTrigger value="cleanup" className="px-3 py-2 text-xs sm:text-sm min-w-0 flex-shrink-0">🗑️ Cleanup</TabsTrigger>
             </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
