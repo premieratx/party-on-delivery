@@ -84,7 +84,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const navigate = useNavigate();
-  const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice } = useUnifiedCart();
+  const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice, getTotalItems } = useUnifiedCart();
   const { isScrollingDown } = useScrollHeader({ threshold: 100 });
   const { preloadMultipleCollections } = useProductPreloader();
   
@@ -382,7 +382,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         isSearchActive={isSearchActive}
         onSearchActiveChange={setIsSearchActive}
         isSearching={isSearching}
-        cartItemCount={cartItemCount}
+        cartItemCount={getTotalItems()}
         totalAmount={getTotalPrice()}
         onOpenCart={onOpenCart}
         onCheckout={onCheckout}

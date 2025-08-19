@@ -18,7 +18,7 @@ const Index = () => {
   
   // Simplified initialization - no automatic syncing
   const navigate = useNavigate();
-  const { cartItems } = useUnifiedCart();
+  const { cartItems, getTotalItems } = useUnifiedCart();
   const [searchParams] = useSearchParams();
   const affiliateCode = searchParams.get('ref');
 
@@ -132,7 +132,7 @@ const Index = () => {
         heroScrollingText="" // COMPLETELY DISABLED: All scrolling text removed
         logoUrl={stableAppConfig.logo_url}
         collectionsConfig={stableAppConfig.collections_config}
-        cartItemCount={cartItems.length}
+        cartItemCount={getTotalItems()}
         onOpenCart={() => setIsCartOpen(true)}
       />
       
