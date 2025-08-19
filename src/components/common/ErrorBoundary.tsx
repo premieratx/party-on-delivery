@@ -24,7 +24,26 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('ErrorBoundary caught an error:', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Log specific details for React Error #310
+    if (error.message.includes('310')) {
+      console.error('🚨 REACT ERROR #310 DETECTED - This is typically caused by:', {
+        possibleCauses: [
+          'Unstable array references in component rendering',
+          'Invalid children structure',
+          'Conditional rendering of elements',
+          'Changing element types between renders'
+        ],
+        error: error.message,
+        componentStack: errorInfo.componentStack
+      });
+    }
   }
 
   handleRetry = () => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -94,6 +94,7 @@ const Index = () => {
   // Don't block the UI with loading screens - let products load in background
 
   if (error || !appConfig) {
+    console.error('🚨 Index: App configuration error:', error);
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center space-y-4">
@@ -110,18 +111,27 @@ const Index = () => {
     );
   }
 
+  // Ensure stable props to prevent React error #310
+  const stableAppConfig = useMemo(() => ({
+    app_name: appConfig?.app_name || "Austin's Premier Party Supply Delivery",
+    main_app_config: appConfig?.main_app_config || {},
+    logo_url: appConfig?.logo_url,
+    collections_config: appConfig?.collections_config,
+    app_slug: appConfig?.app_slug || 'party-on-delivery'
+  }), [appConfig]);
+
   return (
     <>
       {/* Disabled auto-reload component that was causing infinite loops */}
       {/* <RestoreShopifyOrder /> */}
       
       <ProductCategories
-        appName={appConfig?.app_name || "Austin's Premier Party Supply Delivery"}
-        heroHeading={appConfig?.main_app_config?.hero_heading || "Austin's Premier Party Supply Delivery"}
-        heroSubheading={appConfig?.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
+        appName={stableAppConfig.app_name}
+        heroHeading={stableAppConfig.main_app_config?.hero_heading || stableAppConfig.app_name}
+        heroSubheading={stableAppConfig.main_app_config?.hero_subheading || "Satisfaction Guaranteed, On-Time Delivery"}
         heroScrollingText="" // COMPLETELY DISABLED: All scrolling text removed
-        logoUrl={appConfig?.logo_url}
-        collectionsConfig={appConfig?.collections_config}
+        logoUrl={stableAppConfig.logo_url}
+        collectionsConfig={stableAppConfig.collections_config}
         cartItemCount={cartItems.length}
         onOpenCart={() => setIsCartOpen(true)}
       />

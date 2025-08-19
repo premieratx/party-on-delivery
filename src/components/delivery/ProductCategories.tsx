@@ -147,29 +147,47 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   // FIXED: Stable product filtering to prevent React error #310
   const displayProducts = useMemo(() => {
+    // Always return stable empty array if no data
     if (!currentCollectionHandle || !currentTabProducts?.length) {
       return [];
     }
     
-    // Safe filtering with guaranteed stable returns
-    const filteredProducts = currentTabProducts.filter(product => {
-      if (!product) return false;
+    // Create stable product list with guaranteed structure
+    const stableProducts = currentTabProducts.map(product => {
+      // Ensure each product has stable properties
+      if (!product || typeof product !== 'object') return null;
       
-      // Safe collection handle parsing
-      let handles = [];
+      return {
+        ...product,
+        id: product.id || '',
+        title: product.title || '',
+        price: product.price || 0,
+        image: product.image || '',
+        collection_handles: product.collection_handles || []
+      };
+    }).filter(Boolean);
+    
+    // Safe filtering with guaranteed stable returns
+    const filteredProducts = stableProducts.filter(product => {
+      // Robust collection handle parsing
+      let handles: string[] = [];
       try {
-        if (Array.isArray(product.collection_handles)) {
-          handles = product.collection_handles;
-        } else if (typeof product.collection_handles === 'string') {
-          handles = product.collection_handles ? JSON.parse(product.collection_handles) : [];
+        const collectionData: any = product.collection_handles;
+        if (Array.isArray(collectionData)) {
+          handles = collectionData;
+        } else if (typeof collectionData === 'string' && collectionData) {
+          const parsed = JSON.parse(collectionData);
+          handles = Array.isArray(parsed) ? parsed : [];
         }
-      } catch {
+      } catch (error) {
+        console.warn('Failed to parse collection handles for product:', product.id, error);
         handles = [];
       }
       
       return Array.isArray(handles) && handles.includes(currentCollectionHandle);
     });
     
+    // Return stable slice
     return filteredProducts.slice(0, maxProducts);
   }, [currentTabProducts, currentCollectionHandle, maxProducts]);
 
