@@ -3609,6 +3609,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      document_remaining_manual_actions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       enforce_security_standards: {
         Args: Record<PropertyKey, never>
         Returns: Json
