@@ -15,6 +15,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { UnifiedCoverPageEditor, type CoverPageConfig, type CoverButtonConfig } from '@/components/admin/UnifiedCoverPageEditor';
+import { HomepageCoverSettings } from '@/components/admin/HomepageCoverSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -192,6 +193,11 @@ export default function CoverPagesAdmin() {
             </div>
           </CardHeader>
         </Card>
+
+        {/* Homepage Cover Modal Settings */}
+        <div className="mb-6">
+          <HomepageCoverSettings />
+        </div>
 
         {/* Features Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

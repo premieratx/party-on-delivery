@@ -5,6 +5,7 @@ import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliv
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useGlobalCart } from '@/components/common/GlobalCartProvider';
 import UltraSimplePage from './UltraSimplePage';
+import { HomepageCoverModal } from '@/components/common/HomepageCoverModal';
 
 interface HomepageDeliveryApp {
   id: string;
@@ -34,6 +35,7 @@ export default function DynamicHomepage() {
   const [homepageApp, setHomepageApp] = useState<HomepageDeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCoverModal, setShowCoverModal] = useState(false);
   
   console.log('🏠 DynamicHomepage render - Loading:', loading, 'Error:', error, 'App:', !!homepageApp);
   
@@ -62,6 +64,25 @@ export default function DynamicHomepage() {
     }, 5000);
 
     try {
+      // First check if we should show the cover modal
+      const savedApp = localStorage.getItem('preferred-delivery-app');
+      if (!savedApp) {
+        // Check if there's an active homepage cover page
+        const { data: coverConfig } = await supabase
+          .from('homepage_cover_config')
+          .select('id')
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (coverConfig) {
+          // Show cover modal to let user choose
+          setShowCoverModal(true);
+          setLoading(false);
+          clearTimeout(timeoutId);
+          return;
+        }
+      }
+      
       console.log('🔍 Querying delivery_app_variations table...');
       
       const { data, error } = await supabase
@@ -132,6 +153,18 @@ export default function DynamicHomepage() {
     window.location.reload();
   };
 
+  const handleAppSelect = (selectedAppSlug: string) => {
+    localStorage.setItem('preferred-delivery-app', selectedAppSlug);
+    setShowCoverModal(false);
+    navigate(`/app/${selectedAppSlug}`);
+  };
+
+  const handleCoverDismiss = () => {
+    setShowCoverModal(false);
+    // Load default app when cover is dismissed
+    loadHomepageApp();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 flex items-center justify-center">
@@ -161,9 +194,21 @@ export default function DynamicHomepage() {
   }
 
   // If no homepage app is configured, show the simple fallback page
-  if (!homepageApp) {
+  if (!homepageApp && !showCoverModal) {
     console.log('🏠 No homepage app configured, showing fallback page');
     return <UltraSimplePage />;
+  }
+
+  // Render cover modal first if needed
+  if (showCoverModal) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800">
+        <HomepageCoverModal 
+          onAppSelect={handleAppSelect}
+          onDismiss={handleCoverDismiss}
+        />
+      </div>
+    );
   }
 
   // Render the configured homepage delivery app

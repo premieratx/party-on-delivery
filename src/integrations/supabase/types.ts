@@ -1829,6 +1829,38 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_cover_config: {
+        Row: {
+          cover_page_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          cover_page_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          cover_page_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homepage_cover_config_cover_page_id_fkey"
+            columns: ["cover_page_id"]
+            isOneToOne: false
+            referencedRelation: "cover_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_health_logs: {
         Row: {
           checked_at: string
@@ -3941,6 +3973,10 @@ export type Database = {
         Returns: undefined
       }
       safe_cache_upsert: {
+        Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
+        Returns: string
+      }
+      safe_cache_upsert_fixed: {
         Args: { cache_data: Json; cache_key: string; expires_timestamp: number }
         Returns: string
       }

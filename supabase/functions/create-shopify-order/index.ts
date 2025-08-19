@@ -251,11 +251,14 @@ serve(async (req) => {
       });
       
       try {
-        const supabaseClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-          { auth: { autoRefreshToken: false, persistSession: false } }
-        );
+      // Use the fixed cache upsert function to prevent duplicates
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+
+      logStep("Supabase client initialized");
 
         // Try to join the existing group order
         const { data: joinResult, error: joinError } = await supabaseClient.rpc('join_group_order', {
