@@ -1628,6 +1628,33 @@ export type Database = {
         }
         Relationships: []
       }
+      development_security_checklist: {
+        Row: {
+          category: string
+          checklist_item: string
+          created_at: string | null
+          id: string
+          is_automated: boolean | null
+          validation_query: string | null
+        }
+        Insert: {
+          category: string
+          checklist_item: string
+          created_at?: string | null
+          id?: string
+          is_automated?: boolean | null
+          validation_query?: string | null
+        }
+        Update: {
+          category?: string
+          checklist_item?: string
+          created_at?: string | null
+          id?: string
+          is_automated?: boolean | null
+          validation_query?: string | null
+        }
+        Relationships: []
+      }
       launch_phases: {
         Row: {
           actual_completion: string | null
@@ -2630,6 +2657,36 @@ export type Database = {
           last_run?: string | null
           next_run?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      security_documentation: {
+        Row: {
+          category: string
+          code_example: string | null
+          created_at: string | null
+          description: string
+          id: string
+          prevention_rule: string
+          title: string
+        }
+        Insert: {
+          category: string
+          code_example?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          prevention_rule: string
+          title: string
+        }
+        Update: {
+          category?: string
+          code_example?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          prevention_rule?: string
+          title?: string
         }
         Relationships: []
       }
