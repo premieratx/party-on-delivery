@@ -73,7 +73,7 @@ export const useUnifiedCart = () => {
     return itemId === checkId && itemVariant === checkVariant;
   };
 
-  // Update quantity - SIMPLIFIED AND RELIABLE
+  // Update quantity - FIXED AND RELIABLE
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number, productData?: Partial<UnifiedCartItem>) => {
     if (!id) {
       console.warn('🛒 updateQuantity: Missing product ID');
@@ -91,66 +91,60 @@ export const useUnifiedCart = () => {
       operation: qty === 0 ? 'REMOVE' : qty > 0 ? 'SET' : 'INVALID'
     });
     
-    const baseItems = getCartFromStorage();
-    // Work from latest storage to avoid stale overwrites across instances
-    const currentItems = [...baseItems];
-    
-    // Find existing item using strict matching
-    const existingIndex = currentItems.findIndex(item => {
-      const itemId = normalizeId(item.productId ?? item.id);
-      const itemVariant = normalizeVariant(item.variant);
-      return itemId === nid && itemVariant === normalizedVariant;
-    });
-    
-    let result = currentItems;
-    
-    if (qty <= 0) {
-      // REMOVE operation
-      if (existingIndex >= 0) {
-        console.log('🛒 ATOMIC REMOVE:', id, normalizedVariant);
-        result = currentItems.filter((_, index) => index !== existingIndex);
+    setCartItems(currentItems => {
+      // Find existing item using strict matching
+      const existingIndex = currentItems.findIndex(item => {
+        const itemId = normalizeId(item.productId ?? item.id);
+        const itemVariant = normalizeVariant(item.variant);
+        return itemId === nid && itemVariant === normalizedVariant;
+      });
+      
+      if (qty <= 0) {
+        // REMOVE operation
+        if (existingIndex >= 0) {
+          console.log('🛒 ATOMIC REMOVE:', id, normalizedVariant);
+          return currentItems.filter((_, index) => index !== existingIndex);
+        }
+        return currentItems;
       }
-      setCartItems(result);
-      return;
-    }
-    
-    if (existingIndex >= 0) {
-      // UPDATE operation
-      console.log('🛒 ATOMIC UPDATE:', id, normalizedVariant, 'quantity:', qty);
-      const newItems = [...currentItems];
-      newItems[existingIndex] = { 
-        ...newItems[existingIndex], 
-        quantity: qty 
-      };
-      result = newItems;
-    } else if (productData) {
-      // CREATE operation
-      console.log('🛒 ATOMIC CREATE:', nid, normalizedVariant, 'quantity:', qty);
-      const newItem: UnifiedCartItem = {
-        id: nid,
-        productId: nid,
-        title: String(productData.title || `Product ${nid}`),
-        name: String(productData.name || productData.title || `Product ${nid}`),
-        price: Number(productData.price || 0),
-        quantity: qty,
-        image: String(productData.image || ''),
-        variant: normalizedVariant,
-        eventName: productData.eventName,
-        category: productData.category
-      };
-      result = [...currentItems, newItem];
-    }
-    
-    // No changes needed or updated result
-    setCartItems(result);
-  }, []);
+      
+      if (existingIndex >= 0) {
+        // UPDATE operation
+        console.log('🛒 ATOMIC UPDATE:', id, normalizedVariant, 'quantity:', qty);
+        const newItems = [...currentItems];
+        newItems[existingIndex] = { 
+          ...newItems[existingIndex], 
+          quantity: qty 
+        };
+        return newItems;
+      } else if (productData) {
+        // CREATE operation
+        console.log('🛒 ATOMIC CREATE:', nid, normalizedVariant, 'quantity:', qty);
+        const newItem: UnifiedCartItem = {
+          id: nid,
+          productId: nid,
+          title: String(productData.title || `Product ${nid}`),
+          name: String(productData.name || productData.title || `Product ${nid}`),
+          price: Number(productData.price || 0),
+          quantity: qty,
+          image: String(productData.image || ''),
+          variant: normalizedVariant,
+          eventName: productData.eventName,
+          category: productData.category
+        };
+        return [...currentItems, newItem];
+      }
+      
+      return currentItems;
+    });
+  }, [setCartItems]);
 
   const getCartItemQuantity = useCallback((id: string, variant?: string) => {
     const item = cartItems.find(item => matchesItem(item, id, variant));
     return item?.quantity || 0;
   }, [cartItems]);
 
-  // Add or increment item - SIMPLIFIED
+  // Add or increment item - FIXED
   const addToCart = useCallback((item: Omit<UnifiedCartItem, 'quantity'>) => {
     if (!item.id) {
       console.warn('🛒 addToCart: Missing item.id, skipping');
@@ -163,8 +157,8 @@ export const useUnifiedCart = () => {
       title: item.title 
     });
     
-    // Get current quantity atomically
-    const currentQty = getCartFromStorage().find(cartItem => matchesItem(cartItem, item.id, item.variant))?.quantity || 0;
+    // Get current quantity from current state
+    const currentQty = cartItems.find(cartItem => matchesItem(cartItem, item.id, item.variant))?.quantity || 0;
     console.log('🛒 ATOMIC INCREMENT from', currentQty, 'to', currentQty + 1);
     
     // Use updateQuantity with product data (atomic operation)
