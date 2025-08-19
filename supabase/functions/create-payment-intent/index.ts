@@ -97,13 +97,13 @@ serve(async (req) => {
     });
     logStep("✅ Stripe keys validated successfully");
 
-    // CRITICAL: Amount validation - frontend sends amount in CENTS
+    // 🚨 CRITICAL 100X PROTECTION: Frontend sends amount in CENTS
     const validAmount = Math.round(amount);
     if (validAmount !== amount) {
-      logStep("Amount rounded", { originalAmount: amount, validAmount });
+      logStep("⚠️ Amount rounded for cent precision", { originalAmount: amount, validAmount });
     }
     
-    // CRITICAL: Cross-verify with breakdown to prevent 100x errors
+    // 🛡️ CRITICAL: Cross-verify with breakdown to prevent 100x overcharging
     const validSubtotal = typeof subtotal === 'number' && !isNaN(subtotal) ? subtotal : 0;
     const validDeliveryFee = typeof deliveryFee === 'number' && !isNaN(deliveryFee) ? deliveryFee : 0;
     const validSalesTax = typeof salesTax === 'number' && !isNaN(salesTax) ? salesTax : 0;
@@ -112,14 +112,23 @@ serve(async (req) => {
     // Calculate expected amount in cents from breakdown
     const expectedAmountInCents = Math.round((validSubtotal + validDeliveryFee + validSalesTax + validTipAmount) * 100);
     
-    // Verify amount matches breakdown (allow 1 cent variance for rounding)
+    // 🚨 100X PROTECTION: Verify amount matches breakdown (allow 1 cent variance for rounding)
     if (Math.abs(validAmount - expectedAmountInCents) > 1) {
-      throw new Error(`CRITICAL AMOUNT MISMATCH: Received ${validAmount} cents but breakdown totals ${expectedAmountInCents} cents. Subtotal: $${validSubtotal}, Delivery: $${validDeliveryFee}, Tax: $${validSalesTax}, Tip: $${validTipAmount}`);
+      logStep("🚨 PAYMENT BLOCKED - Amount mismatch detected", {
+        receivedCents: validAmount,
+        expectedCents: expectedAmountInCents,
+        differenceCents: Math.abs(validAmount - expectedAmountInCents)
+      });
+      throw new Error(`🚨 CRITICAL AMOUNT MISMATCH BLOCKED: Received ${validAmount} cents ($${(validAmount/100).toFixed(2)}) but breakdown totals ${expectedAmountInCents} cents ($${(expectedAmountInCents/100).toFixed(2)}). This prevents 100x overcharging. Subtotal: $${validSubtotal}, Delivery: $${validDeliveryFee}, Tax: $${validSalesTax}, Tip: $${validTipAmount}`);
     }
     
-    // Prevent unreasonable amounts (between $0.50 and $10,000)
+    // 🛡️ SANITY CHECK: Prevent unreasonable amounts (between $0.50 and $10,000)
     if (validAmount < 50 || validAmount > 1000000) {
-      throw new Error(`Invalid amount: ${validAmount} cents ($${(validAmount/100).toFixed(2)}). Amount must be between $0.50 and $10,000.`);
+      logStep("🚨 PAYMENT BLOCKED - Unreasonable amount detected", {
+        amountCents: validAmount,
+        amountDollars: (validAmount/100).toFixed(2)
+      });
+      throw new Error(`🚨 PAYMENT BLOCKED - Invalid amount: ${validAmount} cents ($${(validAmount/100).toFixed(2)}). Amount must be between $0.50 and $10,000. This prevents accidental overcharging.`);
     }
     
     logStep("Creating payment intent", { validAmount, currency, originalAmount: amount });
