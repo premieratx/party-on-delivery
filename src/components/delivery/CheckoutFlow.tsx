@@ -2,7 +2,7 @@
 // removed distance-based delivery pricing import
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { StripePaymentWrapper } from '@/components/checkout/StripePaymentWrapper';
+import { EmbeddedPaymentFormWrapper } from '@/components/payment/EmbeddedPaymentFormWrapper';
 import { TimeSelector } from './TimeSelector';
 import { CheckoutKeepShopping } from './CheckoutKeepShopping';
 import { Button } from '@/components/ui/button';
@@ -1297,7 +1297,7 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
             {/* Step 3: Payment Section - No redundant summary needed */}
             {currentStep === 'payment' && (
               <div className="space-y-4">
-                <StripePaymentWrapper
+                <EmbeddedPaymentFormWrapper
                   cartItems={cartItems}
                   subtotal={discountedSubtotal}
                   deliveryFee={finalDeliveryFee}
@@ -1311,8 +1311,18 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   }}
                   appliedDiscount={appliedDiscount}
                   onPaymentSuccess={handlePaymentSuccess}
+                  tipAmount={tipAmount}
+                  setTipAmount={handleTipChange}
+                  tipType={tipType}
+                  tipPercentage={tipPercentage}
+                  deliveryPricing={{ fee: baseDeliveryFee, minimumOrder: 0, isDistanceBased: false }}
                   isAddingToOrder={isAddingToOrder}
-                  affiliateCode={affiliateCode}
+                  useSameAddress={useSameAddress}
+                  hasChanges={hasChanges}
+                  discountCode={discountCode}
+                  setDiscountCode={setDiscountCode}
+                  handleApplyDiscount={handleApplyDiscount}
+                  handleRemoveDiscount={handleRemoveDiscount}
                 />
               </div>
             )}
