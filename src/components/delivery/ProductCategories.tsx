@@ -50,7 +50,7 @@ const DEFAULT_COLLECTIONS = [
   { id: 'spirits', title: 'Spirits', handle: 'spirits', isSearch: false, icon: '🥃' },
   { id: 'beer', title: 'Beer', handle: 'beer', isSearch: false, icon: '🍺' },
   { id: 'seltzers', title: 'Seltzers', handle: 'seltzers', isSearch: false, icon: '🥤' },
-  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers', isSearch: false, icon: '🧊' },
+  { id: 'mixers', title: 'Mixers & N/A', handle: 'mixers-non-alcoholic', isSearch: false, icon: '🧊' },
   { id: 'cocktails', title: 'Cocktails', handle: 'cocktails', isSearch: false, icon: '🍸' }
 ];
 
@@ -228,11 +228,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     const q = searchQuery.trim().toLowerCase();
     
     try {
-      // Get all products for search
-      const { data: response, error } = await supabase.functions.invoke('get-unified-products', {
+      // Get all products for search using instant cache
+      const { data: response, error } = await supabase.functions.invoke('instant-product-cache', {
         body: { 
-          use_type: 'search',
-          lightweight: false
+          collection_handle: 'all',
+          force_refresh: false
         }
       });
 
