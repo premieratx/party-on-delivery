@@ -55,9 +55,9 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       setLoading(true);
       setError(null);
 
-      console.log(`🔄 Loading products for collection: ${collection_handle}`);
+      console.log(`🔄 Loading products by collection only`);
 
-      // Use get-unified-products with proper collection filtering
+      // Load products directly from Supabase cache by collection
       const { data, error: functionError } = await supabase.functions.invoke('get-unified-products', {
         body: { 
           collection_handle,
@@ -80,7 +80,7 @@ export function useOptimizedProductLoader(options: LoaderOptions = {}) {
       setCollections(data.collections || []);
       setCached(data.cached || false);
 
-      console.log(`✅ Loaded ${data.products?.length || 0} products for collection: ${collection_handle}`);
+      console.log(`✅ Loaded ${data.products?.length || 0} products from Supabase cache`);
 
       // Reset retry count on successful load
       setRetryCount(0);

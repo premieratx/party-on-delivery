@@ -102,8 +102,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];
   const currentCollectionHandle = currentTabConfig?.collection_handle;
   
-  // Load products from optimized loader (gets ALL products)
-  const { products, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
+  // Load products for current collection only
+  const { products: currentTabProducts, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
+    collection_handle: currentCollectionHandle,
     use_type: 'delivery'
   });
 
@@ -126,21 +127,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [forceRefresh, refreshProducts]);
 
-  // Filter products by collection handle for current tab - COLLECTION ONLY
-  const currentTabProducts = useMemo(() => {
-    if (!currentCollectionHandle || !products?.length) {
-      console.log(`❌ No collection handle (${currentCollectionHandle}) or no products (${products?.length})`);
+  // Products are already filtered by collection from the loader
+  const displayProducts = useMemo(() => {
+    if (!currentTabProducts?.length) {
+      console.log(`❌ No products loaded for collection: ${currentCollectionHandle}`);
       return [];
     }
-
-    // STRICT collection-only filtering - exactly as curated in Shopify
-    const filtered = products.filter(product => 
-      product.collection_handles?.includes(currentCollectionHandle)
-    );
     
-    console.log(`📦 ${currentCollectionHandle}: Found ${filtered.length} products from collection`);
-    return filtered.slice(0, maxProducts);
-  }, [products, currentCollectionHandle, maxProducts]);
+    console.log(`📦 ${currentCollectionHandle}: Displaying ${currentTabProducts.length} products from Shopify collection`);
+    return currentTabProducts.slice(0, maxProducts);
+  }, [currentTabProducts, currentCollectionHandle, maxProducts]);
 
   const currentTab = tabs[selectedCategory];
   const isCurrentlySearchTab = currentTab?.isSearch;
@@ -181,8 +177,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     try {
       setIsSearching(true);
       
-      // Simple search in loaded products
-      const filtered = products.filter((product: any) =>
+      // Simple search in current tab products only
+      const filtered = currentTabProducts.filter((product: any) =>
         product.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -194,7 +190,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, products]);
+  }, [searchQuery, currentTabProducts]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -391,7 +387,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
               Try Again
             </Button>
           </div>
-        ) : currentTabProducts.length === 0 ? (
+        ) : displayProducts.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 text-muted-foreground">📦</div>
             <h3 className="text-xl font-semibold mb-2">No Products Found</h3>
@@ -404,8 +400,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {currentTabProducts.map((product) => {
-              console.log(`🛒 ProductCategories: Rendering product ${product.id} ${product.title}`);
+            {displayProducts.map((product) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               
               return (
