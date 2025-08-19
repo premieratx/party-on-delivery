@@ -12,6 +12,7 @@ import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import { parseProductTitle } from '@/utils/productUtils';
 import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
+import { useScrollHeader } from '@/hooks/useScrollHeader';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -83,6 +84,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  const { isScrollingDown } = useScrollHeader({ threshold: 100 });
   
   // Set up search variables
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
@@ -327,13 +329,13 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
-      {/* Combined Row: Occasion Buttons + Search Bar - STICKY */}
-      <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
+      {/* Combined Row: Occasion Buttons + Search Bar - STICKY WITH MOBILE HIDE */}
+      <div className={`sticky top-0 z-50 bg-background border-b shadow-sm transition-transform duration-300 ${isScrollingDown ? 'lg:translate-y-0 md:translate-y-0 -translate-y-full' : 'translate-y-0'}`}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Occasion Buttons */}
             <div className="flex-1">
-              <OccasionButtons isMobile={false} isScrollingDown={false} />
+              <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={isScrollingDown} />
             </div>
             
             {/* Search Bar */}
@@ -378,8 +380,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
       </div>
 
-      {/* Category Tabs - STICKY BELOW COMBINED ROW */}
-      <div className="sticky top-[88px] z-40 bg-background border-b shadow-sm">
+      {/* Category Tabs - ALWAYS STICKY */}
+      <div className={`sticky ${isScrollingDown ? 'top-0' : 'top-[88px]'} z-40 bg-background border-b shadow-sm transition-all duration-300`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-2">
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">

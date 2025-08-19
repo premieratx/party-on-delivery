@@ -39,7 +39,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
 
   return (
     <>
-      {/* Static/Sticky Mobile Bottom Bar */}
+      {/* Always Sticky Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto lg:hidden">
         <div className="bg-background border-t shadow-lg p-2">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
@@ -111,8 +111,8 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
         </div>
       </div>
 
-      {/* Desktop Bottom Bar */}
-      <div className={`hidden lg:block fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3 transition-transform duration-200 ${shouldHide ? 'translate-y-full' : 'translate-y-0'}`}>
+      {/* Always Sticky Desktop Bottom Bar */}
+      <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-[100] pointer-events-auto bg-background border-t shadow-lg p-2 sm:p-3">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             {showAdmin && (
