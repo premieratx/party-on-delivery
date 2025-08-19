@@ -72,18 +72,19 @@ const Index = () => {
 
       console.log(`📊 Current product count in cache: ${count || 0}`);
 
-      if (!countError && (!count || count < 50)) {
-        console.log('🚨 CRITICAL: Insufficient products in cache, triggering emergency sync...');
+      if (!countError && (!count || count < 10)) {
+        console.log('🚨 CRITICAL: No products in cache, triggering immediate fix...');
         
-        // Use the emergency product sync function that works
         try {
-          console.log('🔄 Auto-triggering emergency sync...');
-          const { data: syncResult } = await supabase.functions.invoke('emergency-product-sync');
+          console.log('🔄 Auto-triggering immediate fix...');
+          const { data: syncResult } = await supabase.functions.invoke('immediate-products-fix');
           if (syncResult?.success) {
-            console.log(`✅ Emergency sync completed: ${syncResult.products_synced} products`);
+            console.log(`✅ Immediate fix completed: ${syncResult.products_synced} products`);
+            // Reload the page to show products
+            setTimeout(() => window.location.reload(), 1000);
           }
         } catch (syncError) {
-          console.error('Emergency sync failed:', syncError);
+          console.error('Immediate fix failed:', syncError);
         }
       } else {
         console.log(`✅ Product cache healthy: ${count} products available`);
