@@ -48,6 +48,14 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
         
         console.log('[STRIPE-WRAPPER] Response:', { data, error });
         
+        // Additional debug logging
+        if (error) {
+          console.error('[STRIPE-WRAPPER] Error details:', error);
+        }
+        if (data?.key) {
+          console.log('[STRIPE-WRAPPER] Key received, length:', data.key.length);
+        }
+        
         if (error || !data?.key) {
           console.log('[STRIPE-WRAPPER] Stripe not configured, running without payment processing:', { error, data });
           if (mounted) {
