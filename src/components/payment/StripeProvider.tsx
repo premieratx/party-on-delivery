@@ -9,7 +9,6 @@ interface StripeProviderProps {
 
 export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -18,7 +17,7 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
       try {
         const { data, error } = await supabase.functions.invoke('get-stripe-publishable-key');
         if (error || !data?.key) {
-          if (mounted) setInitialized(true);
+          console.log('Stripe not configured, running without payment processing');
           return;
         }
         
@@ -27,9 +26,7 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
           setStripePromise(Promise.resolve(stripe));
         }
       } catch (e) {
-        // Silently fail for missing Stripe configuration
-      } finally {
-        if (mounted) setInitialized(true);
+        console.log('Stripe initialization failed, running without payment processing');
       }
     };
 
@@ -37,11 +34,8 @@ export const StripeProvider: React.FC<StripeProviderProps> = ({ children }) => {
     return () => { mounted = false; };
   }, []);
 
-  // Always render children, with or without Stripe
-  if (!initialized) return <>{children}</>;
-  
-  if (!stripePromise) return <>{children}</>;
-
+  // Always wrap in Elements provider to maintain consistent context
+  // This prevents "Elements context not found" errors during re-renders
   return (
     <Elements stripe={stripePromise}>
       {children}

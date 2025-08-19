@@ -151,6 +151,18 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       </Card>
     );
   }
+
+  // Show loading state while Stripe initializes
+  if (!stripe) {
+    return (
+      <Card className="shadow-card border-2 border-green-500">
+        <CardContent className="py-8 text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+          <p className="text-gray-600">Loading payment system...</p>
+        </CardContent>
+      </Card>
+    );
+  }
   
   const handleCustomTipConfirm = () => {
     if (tipAmount > 0) {
@@ -168,11 +180,17 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
   };
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    
+    // Add defensive check for Stripe context
     if (!stripe || !elements) {
+      console.error('Stripe not properly initialized');
+      setPaymentError('Payment system not available. Please refresh the page and try again.');
       return;
     }
+    
     setIsProcessing(true);
     setPaymentError(null);
+    
     const card = elements.getElement(CardElement);
     if (!card) {
       setPaymentError('Card information is required');
