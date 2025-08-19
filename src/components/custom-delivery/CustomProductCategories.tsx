@@ -294,6 +294,10 @@ const [showSearchModal, setShowSearchModal] = useState(false);
         onToggleSearch={() => setShowSearchModal(!showSearchModal)}
         collections={collections}
         mapCollectionToCategory={mapCollectionToCategory}
+        cartItemCount={cartItemCount}
+        totalAmount={cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)}
+        onOpenCart={onOpenCart}
+        onCheckout={onProceedToCheckout}
       />
 
       {/* Content */}
