@@ -14,6 +14,8 @@ import { parseProductTitle } from '@/utils/productUtils';
 import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useProductPreloader } from '@/hooks/useProductPreloader';
+import { SearchOptimizer } from '@/utils/searchOptimizer';
+import '@/utils/fixProductOrdering'; // Auto-fix product ordering
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
