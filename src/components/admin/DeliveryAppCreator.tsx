@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Save, 
   Upload, 
@@ -54,15 +55,22 @@ interface DeliveryAppCreatorProps {
   onBack?: () => void;
 }
 
-const POPULAR_COLLECTIONS = [
-  { handle: 'spirits', name: 'Spirits', icon: '🥃' },
-  { handle: 'beer', name: 'Beer', icon: '🍺' },
-  { handle: 'wine', name: 'Wine', icon: '🍷' },
-  { handle: 'seltzers', name: 'Seltzers', icon: '🥤' },
-  { handle: 'mixers', name: 'Mixers & N/A', icon: '🧊' },
-  { handle: 'cocktails', name: 'Cocktails', icon: '🍸' },
-  { handle: 'party-supplies', name: 'Party Supplies', icon: '🎉' },
-  { handle: 'snacks', name: 'Snacks', icon: '🍿' }
+const ICON_OPTIONS = [
+  { value: '⭐', label: '⭐ Featured' },
+  { value: '🥃', label: '🥃 Spirits' },
+  { value: '🍺', label: '🍺 Beer' },
+  { value: '🍷', label: '🍷 Wine' },
+  { value: '🥤', label: '🥤 Seltzers' },
+  { value: '🧊', label: '🧊 Mixers' },
+  { value: '🍸', label: '🍸 Cocktails' },
+  { value: '🎉', label: '🎉 Party Supplies' },
+  { value: '🍿', label: '🍿 Snacks' },
+  { value: '📦', label: '📦 Products' },
+  { value: '🔥', label: '🔥 Hot Deals' },
+  { value: '🎊', label: '🎊 Celebration' },
+  { value: '🥇', label: '🥇 Premium' },
+  { value: '💎', label: '💎 Luxury' },
+  { value: '🌟', label: '🌟 Special' }
 ];
 
 export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
@@ -86,14 +94,72 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const [isActive, setIsActive] = useState(true);
   const [isHomepage, setIsHomepage] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [shopifyCollections, setShopifyCollections] = useState<any[]>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
 
   const { toast } = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!initial?.id;
 
+  // Load Shopify collections
+  const loadShopifyCollections = async () => {
+    try {
+      setCollectionsLoading(true);
+      const { data, error } = await supabase
+        .from('shopify_products_cache')
+        .select('data')
+        .limit(100);
+      
+      if (error) throw error;
+      
+      // Extract unique collections from products
+      const collectionsSet = new Set<string>();
+      const collections: any[] = [];
+      
+      data?.forEach((product: any) => {
+        if (product.data?.collections) {
+          product.data.collections.forEach((collection: any) => {
+            if (collection && typeof collection === 'string' && !collectionsSet.has(collection)) {
+              collectionsSet.add(collection);
+              collections.push({
+                handle: collection,
+                name: collection.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+              });
+            }
+          });
+        }
+      });
+      
+      // Add some default collections if none found
+      if (collections.length === 0) {
+        collections.push(
+          { handle: 'featured', name: 'Featured' },
+          { handle: 'spirits', name: 'Spirits' },
+          { handle: 'beer', name: 'Beer' },
+          { handle: 'wine', name: 'Wine' }
+        );
+      }
+      
+      setShopifyCollections(collections.sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (error) {
+      console.error('Error loading collections:', error);
+      // Set fallback collections
+      setShopifyCollections([
+        { handle: 'featured', name: 'Featured' },
+        { handle: 'spirits', name: 'Spirits' },
+        { handle: 'beer', name: 'Beer' },
+        { handle: 'wine', name: 'Wine' }
+      ]);
+    } finally {
+      setCollectionsLoading(false);
+    }
+  };
+
   // Initialize form with existing data
   useEffect(() => {
     if (!open) return;
+
+    loadShopifyCollections();
 
     if (initial) {
       setAppName(initial.app_name || '');
@@ -248,7 +314,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
       updateTab(emptyTabIndex, {
         name: collection.name,
         collection_handle: collection.handle,
-        icon: collection.icon
+        icon: '📦' // Default icon
       });
     } else {
       // Add as new tab if space available
@@ -256,7 +322,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
         setTabs([...tabs, {
           name: collection.name,
           collection_handle: collection.handle,
-          icon: collection.icon
+          icon: '📦' // Default icon
         }]);
       }
     }
@@ -430,82 +496,115 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                     </Button>
                   </div>
 
-                  {/* Collection Suggestions */}
+                   {/* Collection Suggestions */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Popular Collections</CardTitle>
+                      <CardTitle className="text-base">Available Collections</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {collectionsLoading ? 'Loading...' : `${shopifyCollections.length} collections found`}
+                      </p>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {POPULAR_COLLECTIONS.map((collection) => (
-                          <Button
-                            key={collection.handle}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => useCollectionSuggestion(collection)}
-                            className="flex items-center gap-2"
-                          >
-                            <span>{collection.icon}</span>
-                            {collection.name}
-                          </Button>
-                        ))}
-                      </div>
+                      <ScrollArea className="h-32">
+                        <div className="flex flex-wrap gap-2">
+                          {shopifyCollections.map((collection) => (
+                            <Button
+                              key={collection.handle}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => useCollectionSuggestion(collection)}
+                              disabled={collectionsLoading}
+                              className="flex items-center gap-2"
+                            >
+                              {collection.name}
+                            </Button>
+                          ))}
+                        </div>
+                      </ScrollArea>
                     </CardContent>
                   </Card>
 
                   {/* Tab Configuration */}
-                  <div className="grid gap-4">
-                    {tabs.map((tab, index) => (
-                      <Card key={index}>
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">Tab {index + 1}</Badge>
-                              <span className="text-lg">{tab.icon}</span>
-                              <span className="font-medium">{tab.name}</span>
+                  <ScrollArea className="h-[400px]">
+                    <div className="grid gap-4 pr-4">
+                      {tabs.map((tab, index) => (
+                        <Card key={index}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">Tab {index + 1}</Badge>
+                                <span className="text-lg">{tab.icon}</span>
+                                <span className="font-medium">{tab.name}</span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeTab(index)}
+                                disabled={tabs.length <= 1}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeTab(index)}
-                              disabled={tabs.length <= 1}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="grid grid-cols-3 gap-3">
-                            <div>
-                              <Label>Tab Name</Label>
-                              <Input
-                                value={tab.name}
-                                onChange={(e) => updateTab(index, { name: e.target.value })}
-                                placeholder="Tab Name"
-                              />
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-1 gap-4">
+                              <div>
+                                <Label>Tab Name</Label>
+                                <Input
+                                  value={tab.name}
+                                  onChange={(e) => updateTab(index, { name: e.target.value })}
+                                  placeholder="Tab Name"
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label>Collection</Label>
+                                <Select
+                                  value={tab.collection_handle}
+                                  onValueChange={(value) => updateTab(index, { collection_handle: value })}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select collection" />
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-60">
+                                    {shopifyCollections.map((collection) => (
+                                      <SelectItem key={collection.handle} value={collection.handle}>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-mono text-xs text-muted-foreground">
+                                            {collection.handle}
+                                          </span>
+                                          <span>{collection.name}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div>
+                                <Label>Icon</Label>
+                                <Select
+                                  value={tab.icon || ''}
+                                  onValueChange={(value) => updateTab(index, { icon: value })}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Choose an icon" />
+                                  </SelectTrigger>
+                                  <SelectContent className="max-h-60">
+                                    {ICON_OPTIONS.map((option) => (
+                                      <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
-                            <div>
-                              <Label>Collection Handle</Label>
-                              <Input
-                                value={tab.collection_handle}
-                                onChange={(e) => updateTab(index, { collection_handle: e.target.value })}
-                                placeholder="collection-handle"
-                              />
-                            </div>
-                            <div>
-                              <Label>Icon (Emoji)</Label>
-                              <Input
-                                value={tab.icon || ''}
-                                onChange={(e) => updateTab(index, { icon: e.target.value })}
-                                placeholder="📦"
-                                maxLength={2}
-                              />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
                 </div>
               </TabsContent>
 

@@ -196,8 +196,8 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({
     // Add selection event listener
     canvas.on('selection:created', (e) => {
       const activeObject = e.selected?.[0];
-      if (activeObject && activeObject.data) {
-        const componentId = activeObject.data.componentId;
+      if (activeObject && (activeObject as any).data) {
+        const componentId = (activeObject as any).data?.componentId;
         const component = components.find(c => c.id === componentId);
         setSelectedComponent(component || null);
       }
@@ -263,7 +263,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({
           hasControls: true,
           hasBorders: true
         });
-        text.data = { componentId: component.id };
+        (text as any).data = { componentId: component.id };
         fabricCanvas.add(text);
       } else if (component.type === 'primary-button' || component.type === 'secondary-button') {
         // Create button background
@@ -281,7 +281,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({
           hasControls: true,
           hasBorders: true
         });
-        buttonBg.data = { componentId: component.id };
+        (buttonBg as any).data = { componentId: component.id };
 
         // Create button text
         const buttonText = new IText(component.content || 'Button', {

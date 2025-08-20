@@ -279,7 +279,8 @@ export const EnhancedCoverPageManager: React.FC = () => {
       {/* Cover Page Creator */}
       {showEditor && (
         <CoverPageCreator
-          onBack={() => setShowEditor(false)}
+          open={showEditor}
+          onOpenChange={setShowEditor}
           initial={editingPage}
           onSaved={() => {
             setShowEditor(false);
