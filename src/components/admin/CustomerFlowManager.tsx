@@ -40,7 +40,7 @@ interface DeliveryApp {
 
 interface PostCheckoutPage {
   id: string;
-  title: string;
+  name: string;
   slug: string;
 }
 
@@ -155,8 +155,14 @@ export const CustomerFlowManager: React.FC = () => {
   };
 
   const loadPostCheckoutPages = async () => {
-    // For now, we'll create a mock structure since post-checkout pages might not exist yet
-    setPostCheckoutPages([]);
+    const { data, error } = await supabase
+      .from('post_checkout_pages')
+      .select('id, name, slug')
+      .eq('is_active', true)
+      .order('name');
+    
+    if (error) throw error;
+    setPostCheckoutPages(data || []);
   };
 
   const loadAffiliates = async () => {
@@ -514,7 +520,7 @@ export const CustomerFlowManager: React.FC = () => {
                       <SelectItem value="">None</SelectItem>
                       {postCheckoutPages.map((page) => (
                         <SelectItem key={page.id} value={page.id}>
-                          {page.title}
+                          {page.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

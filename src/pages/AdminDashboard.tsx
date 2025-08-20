@@ -283,12 +283,16 @@ export default function AdminDashboard() {
 
           {/* Customer Flow Configuration */}
           <TabsContent value="customer-flows" className="space-y-4">
-            <CustomerFlowManager />
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <CustomerFlowManager />
+            </div>
           </TabsContent>
 
           {/* Flow Assignments */}
           <TabsContent value="flow-assignments" className="space-y-4">
-            <AffiliateFlowAssignmentManager />
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <AffiliateFlowAssignmentManager />
+            </div>
           </TabsContent>
 
           {/* Cover Pages */}
@@ -314,108 +318,112 @@ export default function AdminDashboard() {
 
           {/* Orders */}
           <TabsContent value="orders" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Orders</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RecentOrdersFeed 
-                  orders={recentOrders} 
-                  title=""
-                  onRefresh={loadDashboardData}
-                />
-              </CardContent>
-            </Card>
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Orders</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <RecentOrdersFeed 
+                    orders={recentOrders} 
+                    title=""
+                    onRefresh={loadDashboardData}
+                  />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Affiliates */}
           <TabsContent value="affiliates" className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <div>
-                <h3 className="text-lg font-medium">Affiliate Partners</h3>
-                <p className="text-sm text-muted-foreground">Manage affiliate partners and their performance</p>
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-medium">Affiliate Partners</h3>
+                  <p className="text-sm text-muted-foreground">Manage affiliate partners and their performance</p>
+                </div>
+                <AffiliateCreator onCreated={loadDashboardData} />
               </div>
-              <AffiliateCreator onCreated={loadDashboardData} />
-            </div>
-            
-            <div className="grid gap-4">
-              {affiliates.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <h4 className="text-lg font-medium mb-2">No Affiliates Yet</h4>
-                  <p className="text-muted-foreground mb-4">When affiliates sign up, they'll appear here with their performance data.</p>
-                  <Button onClick={() => window.open('/affiliate', '_blank')} variant="outline">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Go to Affiliate Signup
-                  </Button>
-                </Card>
-              ) : (
-                affiliates.map((affiliate) => (
-                  <Card key={affiliate.id} className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <h4 className="text-lg font-semibold">{affiliate.name}</h4>
-                          <Badge variant="secondary">Code: {affiliate.affiliate_code}</Badge>
-                          <Badge variant={affiliate.status === 'active' ? 'default' : 'destructive'}>
-                            {affiliate.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <h5 className="font-medium text-sm text-muted-foreground mb-2">Contact Info</h5>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2 text-sm">
-                                <Mail className="h-3 w-3" />
-                                {affiliate.email}
-                              </div>
-                              {affiliate.phone && (
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Phone className="h-3 w-3" />
-                                  {affiliate.phone}
-                                </div>
-                              )}
-                              <div className="flex items-center gap-2 text-sm">
-                                <Building className="h-3 w-3" />
-                                {affiliate.company_name}
-                              </div>
-                            </div>
+              
+              <div className="grid gap-4">
+                {affiliates.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <h4 className="text-lg font-medium mb-2">No Affiliates Yet</h4>
+                    <p className="text-muted-foreground mb-4">When affiliates sign up, they'll appear here with their performance data.</p>
+                    <Button onClick={() => window.open('/affiliate', '_blank')} variant="outline">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Go to Affiliate Signup
+                    </Button>
+                  </Card>
+                ) : (
+                  affiliates.map((affiliate) => (
+                    <Card key={affiliate.id} className="p-6">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h4 className="text-lg font-semibold">{affiliate.name}</h4>
+                            <Badge variant="secondary">Code: {affiliate.affiliate_code}</Badge>
+                            <Badge variant={affiliate.status === 'active' ? 'default' : 'destructive'}>
+                              {affiliate.status}
+                            </Badge>
                           </div>
                           
-                          <div>
-                            <h5 className="font-medium text-sm text-muted-foreground mb-2">Performance</h5>
-                            <div className="space-y-1 text-sm">
-                              <div>Revenue: {formatCurrency(affiliate.total_sales || 0)}</div>
-                              <div>Orders: {affiliate.orders_count || 0}</div>
-                              <div>Commission: {formatCurrency(affiliate.commission_unpaid || 0)} pending</div>
-                              <div>Rate: {affiliate.commission_rate || 5}%</div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <h5 className="font-medium text-sm text-muted-foreground mb-2">Contact Info</h5>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Mail className="h-3 w-3" />
+                                  {affiliate.email}
+                                </div>
+                                {affiliate.phone && (
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <Phone className="h-3 w-3" />
+                                    {affiliate.phone}
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Building className="h-3 w-3" />
+                                  {affiliate.company_name}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <h5 className="font-medium text-sm text-muted-foreground mb-2">Performance</h5>
+                              <div className="space-y-1 text-sm">
+                                <div>Revenue: {formatCurrency(affiliate.total_sales || 0)}</div>
+                                <div>Orders: {affiliate.orders_count || 0}</div>
+                                <div>Commission: {formatCurrency(affiliate.commission_unpaid || 0)} pending</div>
+                                <div>Rate: {affiliate.commission_rate || 5}%</div>
+                              </div>
                             </div>
                           </div>
                         </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => copyAffiliateLink(affiliate.affiliate_code)}
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            Copy Link
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`${CANONICAL_DOMAIN}/${affiliate.affiliate_code}`, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Visit
+                          </Button>
+                        </div>
                       </div>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => copyAffiliateLink(affiliate.affiliate_code)}
-                        >
-                          <Copy className="h-3 w-3 mr-1" />
-                          Copy Link
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(`${CANONICAL_DOMAIN}/${affiliate.affiliate_code}`, '_blank')}
-                        >
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          Visit
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))
-              )}
+                    </Card>
+                  ))
+                )}
+              </div>
             </div>
           </TabsContent>
 
