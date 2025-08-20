@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { PostCheckoutCreator } from './PostCheckoutCreator';
+import { UnifiedPostCheckoutVisualEditor } from './UnifiedPostCheckoutVisualEditor';
 
 interface PostCheckoutPage {
   id: string;
@@ -212,7 +213,7 @@ export const EnhancedPostCheckoutManager: React.FC = () => {
             Create and manage custom post-purchase experiences
           </p>
         </div>
-        <Button onClick={() => setShowEditor(true)} className="gap-2">
+        <Button onClick={handleCreateNew} className="gap-2">
           <Plus className="h-4 w-4" />
           Create Post-Checkout Page
         </Button>
@@ -256,18 +257,16 @@ export const EnhancedPostCheckoutManager: React.FC = () => {
         </Card>
       )}
 
-      {/* Post-Checkout Creator */}
-      {showEditor && (
-        <PostCheckoutCreator
-          onBack={() => setShowEditor(false)}
-          initial={editingPage}
-          onSaved={() => {
-            setShowEditor(false);
-            setEditingPage(null);
-            loadPages();
-          }}
-        />
-      )}
+      {/* Post-Checkout Visual Creator */}
+      <UnifiedPostCheckoutVisualEditor
+        open={showEditor}
+        onOpenChange={setShowEditor}
+        initial={editingPage}
+        onSaved={() => {
+          setEditingPage(null);
+          loadPages();
+        }}
+      />
 
       {/* Post-Checkout Pages List */}
       <Card>
