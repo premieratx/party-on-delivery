@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Edit, Trash2, ExternalLink, Copy, Save, Settings, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CustomPostCheckoutEditor } from './CustomPostCheckoutEditor';
 import { CANONICAL_DOMAIN, buildAppUrl, buildShortUrl } from '@/utils/links';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,18 +27,10 @@ interface DeliveryApp {
       subheadline_size?: 'sm' | 'md' | 'lg' | 'xl';
     }>;
   };
-  custom_post_checkout_config?: {
-    enabled: boolean;
-    title: string;
-    message: string;
-    cta_button_text: string;
-    cta_button_url: string;
-    background_color: string;
-    text_color: string;
-  };
   is_active: boolean;
   is_homepage?: boolean;
   created_at: string;
+  logo_url?: string;
 }
 
 interface Collection {
@@ -54,48 +45,14 @@ export function DeliveryAppManager() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingApp, setEditingApp] = useState<DeliveryApp | null>(null);
-  const [selectedAppForConfig, setSelectedAppForConfig] = useState<DeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const navigate = useNavigate();
   
-  // Form data object for easier management
-  const [formData, setFormData] = useState({
-    appName: '',
-    tabCount: 5,
-    tabs: [] as Array<{ name: string; collection_handle: string; subheadline_text?: string; subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat'; subheadline_size?: 'sm' | 'md' | 'lg' | 'xl'; }>,
-    startScreenTitle: '',
-    startScreenSubtitle: '',
-    heroHeading: '',
-    heroSubheading: '',
-    postCheckoutHeading: '',
-    postCheckoutSubheading: '',
-    postCheckoutRedirectUrl: '',
-    customPostCheckoutEnabled: false,
-    customPostCheckoutTitle: '',
-    customPostCheckoutMessage: '',
-    customPostCheckoutButtonText: '',
-    customPostCheckoutButtonUrl: '',
-    customPostCheckoutTextColor: '#000000',
-    customPostCheckoutBackgroundColor: '#ffffff',
-    occasion: 'party' // Add occasion selector
-  });
-
-  // Alias deliveryApps as apps for easier reference
-  const apps = deliveryApps;
-
-  // Form state
+  // Form state - only core delivery app functionality
   const [appName, setAppName] = useState('');
   const [tabCount, setTabCount] = useState(5);
   const [tabs, setTabs] = useState<Array<{ name: string; collection_handle: string; subheadline_text?: string; subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat'; subheadline_size?: 'sm' | 'md' | 'lg' | 'xl'; }>>([]);
-  
-  // Hero section customization
-  const [heroSectionLogo, setHeroSectionLogo] = useState<File | null>(null);
-  const [heroHeadline, setHeroHeadline] = useState('');
-  const [heroSubheading, setHeroSubheading] = useState('');
-  const [heroScrollingText, setHeroScrollingText] = useState('');
-  
-  // Clean delivery app form - only core functionality
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState<string>('');
 
@@ -136,16 +93,7 @@ export function DeliveryAppManager() {
               collection_handle: string;
               icon?: string;
             }>;
-          },
-          custom_post_checkout_config: app.custom_post_checkout_config as {
-            enabled: boolean;
-            title: string;
-            message: string;
-            cta_button_text: string;
-            cta_button_url: string;
-            background_color: string;
-            text_color: string;
-          } | undefined
+          }
         }));
         setDeliveryApps(typedApps);
       }
@@ -276,7 +224,6 @@ export function DeliveryAppManager() {
   };
   const onDragEndTab = () => setDragIndex(null);
 
-
   const createDeliveryApp = async () => {
     if (!appName.trim()) {
       toast.error('App name is required');
@@ -331,7 +278,7 @@ export function DeliveryAppManager() {
         }
       }
       
-      // Create the database entry using the correct Boat Delivery template format
+      // Create the database entry using clean format
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .insert([{
@@ -342,27 +289,6 @@ export function DeliveryAppManager() {
             tab_count: validTabs.length,
             tabs: validTabs
           },
-          main_app_config: {
-            hero_heading: heroHeadline || `Build Your ${appName} Package`,
-            hero_subheading: heroSubheading || 'Select from our curated collection of drinks and party supplies',
-            hero_scrolling_text: heroScrollingText || ''
-          },
-          post_checkout_config: {
-            heading: postCheckoutHeading || 'Thank you for your order!',
-            subheading: postCheckoutSubheading || 'We will contact you shortly to confirm delivery details.',
-            redirect_url: postCheckoutRedirectUrl || '',
-            button_text: postCheckoutButtonText || 'Order More Items'
-          },
-          // Use the correct format that matches Boat Delivery template
-          custom_post_checkout_config: {
-            enabled: false,
-            title: "",
-            message: "",
-            cta_button_text: "",
-            cta_button_url: "",
-            background_color: "#ffffff",
-            text_color: "#000000"
-          },
           is_active: true
         }])
         .select()
@@ -370,10 +296,7 @@ export function DeliveryAppManager() {
 
       if (error) throw error;
 
-      // Create the actual page files for this custom delivery app
-      await createCustomDeliveryAppPages(appSlug, appName, validTabs);
-
-      toast.success(`Delivery app "${appName}" created successfully! 🎉\nNew pages created at:\n• /${appSlug} (Start page)\n• /${appSlug}/tabs (Main app)\n• /${appSlug}/post-checkout (Thank you page)`);
+      toast.success(`Delivery app "${appName}" created successfully! 🎉`);
 
       // Type cast the new app data
       const typedApp = {
@@ -385,19 +308,11 @@ export function DeliveryAppManager() {
             collection_handle: string;
             icon?: string;
           }>;
-        },
-        custom_post_checkout_config: data.custom_post_checkout_config as {
-          enabled: boolean;
-          title: string;
-          message: string;
-          cta_button_text: string;
-          cta_button_url: string;
-          background_color: string;
-          text_color: string;
-        } | undefined
+        }
       };
       setDeliveryApps(prev => [typedApp, ...prev]);
       setIsCreating(false);
+      setIsDialogOpen(false);
 
     } catch (error: any) {
       console.error('Error creating delivery app:', error);
@@ -432,30 +347,6 @@ export function DeliveryAppManager() {
           collections_config: {
             tab_count: validTabs.length,
             tabs: validTabs
-          },
-          start_screen_config: {
-            enabled: startScreenEnabled,
-            title: startScreenTitle,
-            subtitle: startScreenSubtitle,
-            start_button_text: startButtonText,
-            checklist_item_1: checklist1,
-            checklist_item_2: checklist2,
-            checklist_item_3: checklist3,
-            checklist_item_4: checklist4,
-            checklist_item_5: checklist5,
-            background_video_url: backgroundVideoUrl,
-            logo_url: uploadedLogoUrl
-          },
-          main_app_config: {
-            hero_heading: heroHeadline || mainAppHeroHeading,
-            hero_subheading: heroSubheading,
-            hero_scrolling_text: heroScrollingText
-          },
-          post_checkout_config: {
-            heading: postCheckoutHeading,
-            subheading: postCheckoutSubheading,
-            redirect_url: postCheckoutRedirectUrl,
-            button_text: postCheckoutButtonText
           }
         })
         .eq('id', editingApp.id)
@@ -464,948 +355,247 @@ export function DeliveryAppManager() {
 
       if (error) throw error;
 
-      // Update the app in the list
+      toast.success('Delivery app updated successfully! 🎉');
+
+      // Update the list
       setDeliveryApps(prev => prev.map(app => 
-        app.id === editingApp.id 
-          ? {
-              ...data,
-              collections_config: data.collections_config as {
-                tab_count: number;
-                tabs: Array<{
-                  name: string;
-                  collection_handle: string;
-                  icon?: string;
-                }>;
-              },
-              custom_post_checkout_config: data.custom_post_checkout_config as {
-                enabled: boolean;
-                title: string;
-                message: string;
-                cta_button_text: string;
-                cta_button_url: string;
-                background_color: string;
-                text_color: string;
-              } | undefined
-            }
-          : app
+        app.id === editingApp.id ? { ...data, collections_config: data.collections_config as any } : app
       ));
       
       setIsCreating(false);
       setEditingApp(null);
-      setAppName('');
-      setTabs([]);
-      
-      // Reset customization fields
-      setStartScreenTitle('');
-      setStartScreenSubtitle('');
-      setLogoFile(null);
-      setLogoUrl('');
-      setMainAppHeroHeading('');
-      setPostCheckoutHeading('');
-      setPostCheckoutSubheading('');
-      setPostCheckoutRedirectUrl('');
-      
-      toast.success('Delivery app updated successfully!');
+      setIsDialogOpen(false);
 
     } catch (error: any) {
       console.error('Error updating delivery app:', error);
       toast.error(error.message || 'Failed to update delivery app');
     }
-
   };
 
-  const deleteApp = async (appId: string) => {
-    if (!confirm('Are you sure you want to delete this delivery app?')) return;
+  const handleEdit = (app: DeliveryApp) => {
+    setEditingApp(app);
+    setAppName(app.app_name);
+    setTabCount(app.collections_config.tab_count);
+    setTabs(app.collections_config.tabs);
+    setLogoUrl(app.logo_url || '');
+    setLogoFile(null);
+    setIsCreating(true);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (app: DeliveryApp) => {
+    if (!confirm(`Are you sure you want to delete "${app.app_name}"?`)) return;
 
     try {
       const { error } = await supabase
         .from('delivery_app_variations')
         .delete()
-        .eq('id', appId);
+        .eq('id', app.id);
 
       if (error) throw error;
 
-      setDeliveryApps(prev => prev.filter(app => app.id !== appId));
-      toast.success('Delivery app deleted');
-
-    } catch (error) {
+      setDeliveryApps(prev => prev.filter(a => a.id !== app.id));
+      toast.success('Delivery app deleted successfully');
+    } catch (error: any) {
       console.error('Error deleting delivery app:', error);
       toast.error('Failed to delete delivery app');
     }
   };
 
-  const copyAppUrl = (appSlug: string) => {
-    const url = buildAppUrl(appSlug);
-    navigator.clipboard.writeText(url);
-    toast.success('App URL copied to clipboard');
-  };
-  const createCustomDeliveryAppPages = async (appSlug: string, appName: string, validTabs: Array<{ name: string; collection_handle: string }>) => {
+  const toggleAppStatus = async (app: DeliveryApp) => {
     try {
-      // Get the config data that was just saved
-      const config = {
-        app_name: appName,
-        app_slug: appSlug,
-        collections_config: {
-          tab_count: validTabs.length,
-          tabs: validTabs
-        },
-        start_screen_config: {
-          title: startScreenTitle,
-          subtitle: startScreenSubtitle
-        },
-        main_app_config: {
-          hero_heading: mainAppHeroHeading
-        },
-        post_checkout_config: {
-          heading: postCheckoutHeading,
-          subheading: postCheckoutSubheading,
-          redirect_url: postCheckoutRedirectUrl
-        }
-      };
+      const { error } = await supabase
+        .from('delivery_app_variations')
+        .update({ is_active: !app.is_active })
+        .eq('id', app.id);
 
-      // Create customized versions of the template pages
-      await createCustomStartScreen(appSlug, config);
-      await createCustomMainApp(appSlug, config);
-      await createCustomPostCheckout(appSlug, config);
+      if (error) throw error;
+
+      setDeliveryApps(prev => prev.map(a => 
+        a.id === app.id ? { ...a, is_active: !a.is_active } : a
+      ));
       
-      console.log(`Successfully created custom pages for ${appSlug}`);
-    } catch (error) {
-      console.error('Error creating custom pages:', error);
-      throw error;
+      toast.success(`App ${!app.is_active ? 'activated' : 'deactivated'} successfully`);
+    } catch (error: any) {
+      console.error('Error toggling app status:', error);
+      toast.error('Failed to toggle app status');
     }
-  };
-
-  const createCustomStartScreen = async (appSlug: string, config: any) => {
-    // Read the template start screen component
-    const templateContent = `import React from 'react';
-import { CustomDeliveryStartScreen } from '@/components/custom-delivery/CustomDeliveryStartScreen';
-
-export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}StartScreen() {
-  const handleStartOrder = () => {
-    sessionStorage.setItem('custom-app-context', JSON.stringify({
-      appSlug: '${appSlug}',
-      appName: '${config.app_name}'
-    }));
-    window.location.href = '/${appSlug}/app';
-  };
-
-  const handleSearchProducts = () => {
-    sessionStorage.setItem('custom-app-context', JSON.stringify({
-      appSlug: '${appSlug}',
-      appName: '${config.app_name}'
-    }));
-    window.location.href = '/${appSlug}/app';
-  };
-
-  const handleGoHome = () => {
-    window.location.href = '/';
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <CustomDeliveryStartScreen
-        appName="${config.app_name}"
-        title="${config.start_screen_config?.title || config.app_name}"
-        subtitle="${config.start_screen_config?.subtitle || 'Order your party supplies for delivery'}"
-        onStartOrder={handleStartOrder}
-        onSearchProducts={handleSearchProducts}
-        onGoHome={handleGoHome}
-      />
-    </div>
-  );
-}`;
-
-    // We'll create this as a dynamic route that loads the config from database
-    // The physical file creation is handled by the routing system
-  };
-
-  const createCustomMainApp = async (appSlug: string, config: any) => {
-    // This creates the main app page with custom collections and hero heading
-    const templateContent = `import React, { useState } from 'react';
-import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
-import { CustomDeliveryCart } from '@/components/custom-delivery/CustomDeliveryCart';
-import { BottomCartBar } from '@/components/common/BottomCartBar';
-import { useWakeLock } from '@/hooks/useWakeLock';
-import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { useNavigate } from 'react-router-dom';
-
-export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}MainApp() {
-  useWakeLock();
-  const navigate = useNavigate();
-  
-  const { cartItems, addToCart, updateQuantity, removeItem, emptyCart, getTotalPrice, getTotalItems } = useUnifiedCart();
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const collectionsConfig = ${JSON.stringify(config.collections_config, null, 2)};
-
-  const handleAddToCart = (product: any) => {
-    const cartItem = {
-      id: product.id,
-      title: product.title,
-      name: product.title,
-      price: parseFloat(product.price),
-      image: product.image,
-      variant: product.variants?.[0]?.title !== 'Default Title' ? product.variants?.[0]?.title : undefined
-    };
-    
-    console.log('🛒 DeliveryAppManager: Adding product to cart:', cartItem);
-    // CRITICAL: Use ONLY updateQuantity to avoid dual cart system conflicts
-    const currentQty = cartItems.find(item => {
-      const itemId = item.productId || item.id;
-      const itemVariant = item.variant || 'default';
-      const checkVariant = cartItem.variant || 'default';
-      return itemId === cartItem.id && itemVariant === checkVariant;
-    })?.quantity || 0;
-    
-    updateQuantity(cartItem.id, cartItem.variant, currentQty + 1, cartItem);
-  };
-
-  const handleUpdateQuantity = (productId: string, variantId: string | undefined, quantity: number) => {
-    updateQuantity(productId, variantId, quantity);
-  };
-
-  const handleCheckout = () => {
-    setIsCartOpen(false);
-    sessionStorage.setItem('custom-app-context', JSON.stringify({
-      appSlug: '${appSlug}',
-      appName: '${config.app_name}'
-    }));
-    navigate('/checkout');
-  };
-
-  const cartItemsForCategories = cartItems.map(item => ({
-    id: item.id,
-    title: item.title,
-    name: item.name,
-    price: item.price,
-    image: item.image,
-    quantity: item.quantity,
-    variant: item.variant
-  }));
-
-  return (
-    <div className="min-h-screen bg-background">
-      <CustomDeliveryTabsPage
-        appName="${config.app_name}"
-        heroHeading="${config.main_app_config?.hero_heading || 'Order ' + config.app_name}"
-        collectionsConfig={collectionsConfig}
-        onAddToCart={handleAddToCart}
-        cartItemCount={getTotalItems()}
-        onOpenCart={() => setIsCartOpen(true)}
-        cartItems={cartItemsForCategories}
-        onUpdateQuantity={handleUpdateQuantity}
-        onProceedToCheckout={handleCheckout}
-        onBack={() => window.location.href = '/${appSlug}'}
-        onGoHome={() => window.location.href = '/'}
-      />
-
-      <CustomDeliveryCart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        items={cartItemsForCategories}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={(productId: string, variantId?: string) => updateQuantity(productId, variantId, 0)}
-        onEmptyCart={emptyCart}
-        onCheckout={handleCheckout}
-        totalPrice={getTotalPrice()}
-        deliveryInfo={{
-          date: null,
-          timeSlot: null,
-          address: null
-        }}
-      />
-
-      {getTotalItems() > 0 && (
-        <BottomCartBar
-          items={cartItems}
-          totalPrice={getTotalPrice()}
-          isVisible={true}
-          onOpenCart={() => setIsCartOpen(true)}
-          onCheckout={handleCheckout}
-          currentAppSlug={undefined} // Admin page doesn't have a specific app
-        />
-      )}
-    </div>
-  );
-}`;
-  };
-
-  const createCustomPostCheckout = async (appSlug: string, config: any) => {
-    // This creates the post-checkout page with custom heading, subheading, and redirect
-    const templateContent = `import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { OrderCompleteView } from '@/components/OrderCompleteView';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-
-export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}PostCheckout() {
-  const location = useLocation();
-  const { toast } = useToast();
-  
-  const [orderData, setOrderData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const postCheckoutConfig = ${JSON.stringify(config.post_checkout_config, null, 2)};
-
-  useEffect(() => {
-    const loadOrderData = async () => {
-      try {
-        // Load order data from URL params and session storage
-        const urlParams = new URLSearchParams(location.search);
-        const orderNumber = urlParams.get('order_number');
-        
-        // Get checkout data from session storage
-        const checkoutData = sessionStorage.getItem('checkout-completion-data');
-        if (checkoutData) {
-          const parsedData = JSON.parse(checkoutData);
-          
-          const orderData = {
-            order_number: orderNumber || "Processing...",
-            customer_name: parsedData.customerName?.split(' ')[0] || 'Customer',
-            total_amount: parsedData.totalAmount || 0,
-            delivery_date: parsedData.deliveryDate,
-            delivery_time: parsedData.deliveryTime,
-            line_items: parsedData.cartItems || [],
-            subtotal: parsedData.subtotal || 0,
-            delivery_address: parsedData.deliveryAddress,
-            share_token: parsedData.shareToken,
-            sales_tax: parsedData.salesTax,
-            delivery_fee: parsedData.deliveryFee,
-            tip_amount: parsedData.tipAmount,
-            applied_discount: parsedData.appliedDiscount
-          };
-          
-          setOrderData(orderData);
-          sessionStorage.removeItem('checkout-completion-data');
-          
-          toast({
-            title: "🎉 Order Complete!",
-            description: "Payment processed successfully!",
-          });
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadOrderData();
-  }, [location.search, toast]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  const handleAddMore = () => {
-    if (postCheckoutConfig?.redirect_url) {
-      window.location.href = postCheckoutConfig.redirect_url;
-    } else {
-      window.location.href = '/${appSlug}';
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      {postCheckoutConfig?.heading && (
-        <div className="text-center py-8 px-4">
-          <h1 className="text-3xl font-bold mb-2">{postCheckoutConfig.heading}</h1>
-          {postCheckoutConfig?.subheading && (
-            <p className="text-lg text-muted-foreground mb-6">{postCheckoutConfig.subheading}</p>
-          )}
-          {postCheckoutConfig?.redirect_url && (
-            <Button onClick={handleAddMore} className="mb-8">
-              Add More
-            </Button>
-          )}
-        </div>
-      )}
-      
-      <OrderCompleteView 
-        orderNumber={orderData?.order_number || "Processing..."}
-        customerName={orderData?.customer_name || 'Customer'}
-        orderItems={orderData?.line_items || []}
-        totalAmount={orderData?.total_amount || 0}
-        deliveryDate={orderData?.delivery_date}
-        deliveryTime={orderData?.delivery_time}
-        deliveryAddress={orderData?.delivery_address}
-        shareToken={orderData?.share_token}
-        isLoading={!orderData}
-        subtotal={orderData?.subtotal || 0}
-        deliveryFee={orderData?.delivery_fee || 0}
-        tipAmount={orderData?.tip_amount || 0}
-        salesTax={orderData?.sales_tax || 0}
-        appliedDiscount={orderData?.applied_discount}
-      />
-    </div>
-  );
-}`;
-  };
-
-  // Note: The actual page duplication is handled by the routing system
-  // New apps use the dynamic routing with /:appName which loads configuration
-  // from the delivery_app_variations table and customizes the template components
-
-  const handleConfigUpdated = (appId: string, newConfig: any) => {
-    setDeliveryApps(prev => 
-      prev.map(app => 
-        app.id === appId 
-          ? { ...app, custom_post_checkout_config: newConfig }
-          : app
-      )
-    );
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/admin/dashboard')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Button>
-          <div>
-            <h2 className="text-2xl font-bold">Delivery App Variations</h2>
-            <p className="text-muted-foreground">Create custom delivery apps with different collection tabs</p>
-          </div>
+        <div>
+          <h2 className="text-2xl font-bold">Delivery App Manager</h2>
+          <p className="text-muted-foreground">Create and manage delivery app variations</p>
         </div>
-        <Button 
-          onClick={initializeNewApp} 
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-lg px-6 py-3 h-auto font-bold shadow-lg"
-          size="lg"
-        >
-          <Plus className="h-5 w-5" />
-          Create New Delivery App
-        </Button>
-      </div>
-
-      {/* Main Delivery App Configuration */}
-      <Card className="border-2 border-primary/20 bg-primary/5">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-primary">Main Delivery App Configuration</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Customize the main delivery app that appears on the homepage
-              </p>
-            </div>
-            <Badge variant="outline" className="text-green-600 border-green-600">
-              Homepage
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {/* Find and edit main delivery app */}
-            {apps.find((app: any) => app.is_homepage) ? (
-              <div className="flex items-center justify-between p-3 border rounded bg-green-50">
-                <div>
-                  <div className="font-medium">{apps.find((app: any) => app.is_homepage)?.app_name}</div>
-                  <div className="text-sm text-muted-foreground">Currently set as homepage</div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.open('/', '_blank')}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    View
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={() => {
-                      const homepageApp = apps.find((app: any) => app.is_homepage);
-                      if (homepageApp) {
-                        setEditingApp(homepageApp);
-                        setAppName(homepageApp.app_name);
-                        setTabCount(homepageApp.collections_config.tab_count);
-                        setTabs(homepageApp.collections_config.tabs);
-                        const sc = (homepageApp as any).start_screen_config || {};
-                        setStartScreenTitle(sc.title || '');
-                        setStartScreenSubtitle(sc.subtitle || '');
-                        setStartButtonText(sc.start_button_text || '');
-                        setStartScreenEnabled(sc.enabled === true);
-                        setChecklist1(sc.checklist_item_1 || '');
-                        setChecklist2(sc.checklist_item_2 || '');
-                        setChecklist3(sc.checklist_item_3 || '');
-                        setChecklist4(sc.checklist_item_4 || '');
-                        setChecklist5(sc.checklist_item_5 || '');
-                        setBackgroundVideoUrl(sc.background_video_url || '');
-                        setLogoUrl(sc.logo_url || (homepageApp as any).logo_url || '');
-                        setMainAppHeroHeading((homepageApp as any).main_app_config?.hero_heading || '');
-                        setHeroHeadline((homepageApp as any).main_app_config?.hero_heading || '');
-                        setHeroSubheading((homepageApp as any).main_app_config?.hero_subheading || '');
-                        setHeroScrollingText((homepageApp as any).main_app_config?.hero_scrolling_text || '');
-                        const pc = (homepageApp as any).post_checkout_config || {};
-                        setPostCheckoutHeading(pc.heading || '');
-                        setPostCheckoutSubheading(pc.subheading || '');
-                        setPostCheckoutRedirectUrl(pc.redirect_url || '');
-                        setPostCheckoutButtonText(pc.button_text || '');
-                        setLogoFile(null);
-                        setIsCreating(true);
-                      }
-                    }}
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Customize
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 border rounded bg-yellow-50">
-                <div className="text-sm text-yellow-700">
-                  No app is currently set as homepage. The default main delivery app is being used.
-                </div>
-              </div>
-            )}
-
-            {/* Template Post-Checkout Page */}
-            <div className="flex items-center justify-between p-2 border rounded">
-              <span className="text-sm">Post-Checkout Template</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open('/order-complete', '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  View
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/order-complete')}`, '_blank')}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Edit
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Create/Edit Dialog */}
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingApp ? 'Edit Delivery App' : 'Create New Delivery App'}</DialogTitle>
-          </DialogHeader>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={initializeNewApp}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create New App
+            </Button>
+          </DialogTrigger>
           
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="app-name">App Name</Label>
-              <Input
-                id="app-name"
-                value={appName}
-                onChange={(e) => setAppName(e.target.value)}
-                placeholder="Boat Delivery App"
-              />
-            </div>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingApp ? 'Edit Delivery App' : 'Create New Delivery App'}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Basic Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="app-name">App Name</Label>
+                    <Input
+                      id="app-name"
+                      value={appName}
+                      onChange={(e) => setAppName(e.target.value)}
+                      placeholder="My Delivery App"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* What's the occasion? selector */}
-            <div>
-              <Label htmlFor="occasion">What's the occasion?</Label>
-              <Select value={formData.occasion} onValueChange={(value) => setFormData(prev => ({ ...prev, occasion: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose an occasion..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="party">Party</SelectItem>
-                  <SelectItem value="wedding">Wedding</SelectItem>
-                  <SelectItem value="corporate">Corporate Event</SelectItem>
-                  <SelectItem value="birthday">Birthday</SelectItem>
-                  <SelectItem value="holiday">Holiday Celebration</SelectItem>
-                  <SelectItem value="casual">Casual Gathering</SelectItem>
-                  <SelectItem value="formal">Formal Event</SelectItem>
-                  <SelectItem value="outdoor">Outdoor Event</SelectItem>
-                  <SelectItem value="bachelor">Bachelor/Bachelorette</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">This helps customize the app experience for the specific occasion</p>
-            </div>
-
-            <div>
-              <Label htmlFor="tab-count">Number of Tabs</Label>
-              <Select value={tabCount.toString()} onValueChange={(value) => handleTabCountChange(Number(value))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[3, 4, 5, 6, 7, 8].map(count => (
-                    <SelectItem key={count} value={count.toString()}>{count} tabs</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Configure Tabs</h3>
-              {tabs.map((tab, index) => (
-                <Card
-                  key={index}
-                  draggable
-                  onDragStart={onDragStartTab(index)}
-                  onDragOver={onDragOverTab(index)}
-                  onDrop={onDropTab(index)}
-                  onDragEnd={onDragEndTab}
-                  className={dragIndex === index ? 'ring-2 ring-primary' : ''}
-                >
-                  <CardContent className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Tab Name</Label>
-                        <Input
-                          value={tab.name}
-                          onChange={(e) => updateTab(index, 'name', e.target.value)}
-                          placeholder="Spirits"
-                        />
+              {/* Logo Upload */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>App Logo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <Label htmlFor="app-logo-upload">App Logo</Label>
+                    <Input
+                      id="app-logo-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setLogoFile(file);
+                          try { setLogoUrl(URL.createObjectURL(file)); } catch {}
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">PNG/JPG/SVG. Uploaded on save.</p>
+                    {logoUrl && (
+                      <div className="mt-2">
+                        <img src={logoUrl} alt="App logo preview" className="h-12 w-auto" />
                       </div>
-                      
-                       <div>
-                         <Label>Collection</Label>
-                         <Select
-                           value={collections.some(c => c.handle === tab.collection_handle) ? tab.collection_handle : undefined}
-                           onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                         >
-                           <SelectTrigger>
-                             <SelectValue placeholder="Select collection" />
-                           </SelectTrigger>
-                           <SelectContent className="max-h-60">
-                             {collections.map(collection => (
-                               <SelectItem key={collection.id} value={collection.handle}>
-                                 <div className="flex flex-col">
-                                   <span className="font-medium">{collection.title}</span>
-                                   <span className="text-sm text-muted-foreground">
-                                     Handle: {collection.handle} • {collection.products_count || 0} products
-                                   </span>
-                                 </div>
-                               </SelectItem>
-                             ))}
-                           </SelectContent>
-                         </Select>
-                     </div>
-                    </div>
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-2">
-                        <Label>Subheadline Message (below tabs)</Label>
-                        <Input
-                          value={(tab as any).subheadline_text || ''}
-                          onChange={(e) => updateTab(index, 'subheadline_text', e.target.value)}
-                          placeholder="e.g., Free delivery over $100 • Cold drinks available"
-                        />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Tab Configuration */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tab Configuration</CardTitle>
+                  <p className="text-sm text-muted-foreground">Configure the product category tabs</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="tab-count">Number of Tabs</Label>
+                    <Select value={tabCount.toString()} onValueChange={(value) => handleTabCountChange(parseInt(value))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
+                          <SelectItem key={num} value={num.toString()}>{num} tabs</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-3">
+                    {tabs.map((tab, index) => (
+                      <div 
+                        key={index} 
+                        className="p-3 border rounded-lg space-y-3"
+                        draggable
+                        onDragStart={onDragStartTab(index)}
+                        onDragOver={onDragOverTab(index)}
+                        onDrop={onDropTab(index)}
+                        onDragEnd={onDragEndTab}
+                      >
+                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                          <div className="w-2 h-8 bg-muted rounded cursor-move"></div>
+                          Tab {index + 1}
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor={`tab-name-${index}`}>Tab Name</Label>
+                            <Input
+                              id={`tab-name-${index}`}
+                              value={tab.name}
+                              onChange={(e) => updateTab(index, 'name', e.target.value)}
+                              placeholder="Beer"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor={`collection-${index}`}>Collection</Label>
+                            <Select 
+                              value={tab.collection_handle}
+                              onValueChange={(value) => updateTab(index, 'collection_handle', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select collection" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {collections.map(collection => (
+                                  <SelectItem key={collection.handle} value={collection.handle}>
+                                    {collection.title} ({collection.products_count || 0} products)
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <Label>Font</Label>
-                        <Select
-                          value={(tab as any).subheadline_font || 'default'}
-                          onValueChange={(value) => updateTab(index, 'subheadline_font', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Default font" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="default">Default</SelectItem>
-                            <SelectItem value="playfair">Playfair</SelectItem>
-                            <SelectItem value="oswald">Oswald</SelectItem>
-                            <SelectItem value="montserrat">Montserrat</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Size</Label>
-                        <Select
-                          value={(tab as any).subheadline_size || 'md'}
-                          onValueChange={(value) => updateTab(index, 'subheadline_size', value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="sm">Small</SelectItem>
-                            <SelectItem value="md">Medium</SelectItem>
-                            <SelectItem value="lg">Large</SelectItem>
-                            <SelectItem value="xl">XL</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="mt-2 text-xs text-muted-foreground">Drag this card to reorder tabs</div>
-                  </CardContent>
-                </Card>
-              ))}
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => {
+                  setIsCreating(false);
+                  setEditingApp(null);
+                  setAppName('');
+                  setTabs([]);
+                  setLogoFile(null);
+                  setLogoUrl('');
+                  setIsDialogOpen(false);
+                }}>
+                  Cancel
+                </Button>
+                <Button onClick={editingApp ? updateDeliveryApp : createDeliveryApp}>
+                  {editingApp ? 'Update App' : 'Create App'}
+                </Button>
+              </div>
             </div>
-
-            {/* Start Screen Customization */}
-            <Card className="border-blue-200 bg-blue-50/40">
-              <CardHeader>
-                <CardTitle className="text-blue-700">Start Screen Customization</CardTitle>
-                <p className="text-sm text-blue-600">Title, subtitle, logo, CTA text, 5-row checklist, and optional background video</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <input id="start-enabled" type="checkbox" checked={startScreenEnabled} onChange={(e) => setStartScreenEnabled(e.target.checked)} />
-                  <Label htmlFor="start-enabled">Enable Start Screen</Label>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="start-title">Start Screen Title</Label>
-                    <Input
-                      id="start-title"
-                      value={startScreenTitle}
-                      onChange={(e) => setStartScreenTitle(e.target.value)}
-                      placeholder="Welcome to ..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="start-subtitle">Start Screen Subtitle</Label>
-                    <Input
-                      id="start-subtitle"
-                      value={startScreenSubtitle}
-                      onChange={(e) => setStartScreenSubtitle(e.target.value)}
-                      placeholder="Austin's favorite alcohol delivery service"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="start-button-text">Start Button Text</Label>
-                    <Input
-                      id="start-button-text"
-                      value={startButtonText}
-                      onChange={(e) => setStartButtonText(e.target.value)}
-                      placeholder="Order Now"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="background-video-url">Background Video URL (optional)</Label>
-                    <Input
-                      id="background-video-url"
-                      value={backgroundVideoUrl}
-                      onChange={(e) => setBackgroundVideoUrl(e.target.value)}
-                      placeholder="/videos/whiskey-over-ice-5143-360.mp4"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">Provide an MP4/GIF URL for the cover screen background</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="checklist-1">Checklist Row 1</Label>
-                    <Input id="checklist-1" value={checklist1} onChange={(e) => setChecklist1(e.target.value)} placeholder="Locally Owned" />
-                  </div>
-                  <div>
-                    <Label htmlFor="checklist-2">Checklist Row 2</Label>
-                    <Input id="checklist-2" value={checklist2} onChange={(e) => setChecklist2(e.target.value)} placeholder="Same Day Delivery" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="checklist-3">Checklist Row 3</Label>
-                    <Input id="checklist-3" value={checklist3} onChange={(e) => setChecklist3(e.target.value)} placeholder="Cocktail Kits on Demand" />
-                  </div>
-                  <div>
-                    <Label htmlFor="checklist-4">Checklist Row 4</Label>
-                    <Input id="checklist-4" value={checklist4} onChange={(e) => setChecklist4(e.target.value)} placeholder="Private Event Specialists" />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="checklist-5">Checklist Row 5</Label>
-                  <Input id="checklist-5" value={checklist5} onChange={(e) => setChecklist5(e.target.value)} placeholder="Delivering All Over Austin" />
-                </div>
-
-                <div>
-                  <Label htmlFor="start-logo-upload">Start Screen Logo</Label>
-                  <Input
-                    id="start-logo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setLogoFile(file);
-                        try { setLogoUrl(URL.createObjectURL(file)); } catch {}
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">PNG/JPG/SVG. Uploaded on save.</p>
-                  {logoUrl && (
-                    <div className="mt-2">
-                      <img src={logoUrl} alt="Start screen logo preview" className="h-12 w-auto" />
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Main App Customization */}
-            <Card className="border-green-200 bg-green-50/50">
-              <CardHeader>
-                <CardTitle className="text-green-700">Main App Customization</CardTitle>
-                <p className="text-sm text-green-600">Customize the main delivery app interface</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="hero-logo-upload">Hero Section Logo</Label>
-                  <Input
-                    id="hero-logo-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setHeroSectionLogo(file);
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Upload a logo for the hero section (PNG, JPG, GIF)
-                  </p>
-                </div>
-                
-                <div>
-                  <Label htmlFor="hero-headline">Hero Headline</Label>
-                  <Input
-                    id="hero-headline"
-                    value={heroHeadline}
-                    onChange={(e) => setHeroHeadline(e.target.value)}
-                    placeholder="Build Your Party Package"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Main headline displayed in the hero section
-                  </p>
-                </div>
-                
-                <div>
-                  <Label htmlFor="hero-subheading">Hero Subheading</Label>
-                  <Input
-                    id="hero-subheading"
-                    value={heroSubheading}
-                    onChange={(e) => setHeroSubheading(e.target.value)}
-                    placeholder="Select from our curated collection of drinks and party supplies"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Supporting text displayed below the headline
-                  </p>
-                </div>
-                
-                <div>
-                  <Label htmlFor="hero-scrolling-text">Scrolling Hero Text</Label>
-                  <Input
-                    id="hero-scrolling-text"
-                    value={heroScrollingText}
-                    onChange={(e) => setHeroScrollingText(e.target.value)}
-                    placeholder="Scrolling announcement text for hero"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Text that animates across the hero area
-                  </p>
-                </div>
-                
-                <div>
-                  <Label htmlFor="hero-heading">Hero Section Heading (Legacy)</Label>
-                  <Input
-                    id="hero-heading"
-                    value={mainAppHeroHeading}
-                    onChange={(e) => setMainAppHeroHeading(e.target.value)}
-                    placeholder="Fresh Beverages Delivered to Your Boat"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Post-Checkout Customization */}
-            <Card className="border-purple-200 bg-purple-50/50">
-              <CardHeader>
-                <CardTitle className="text-purple-700">Post-Checkout Customization</CardTitle>
-                <p className="text-sm text-purple-600">Customize the order confirmation page</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="checkout-heading">Confirmation Heading</Label>
-                    <Input
-                      id="checkout-heading"
-                      value={postCheckoutHeading}
-                      onChange={(e) => setPostCheckoutHeading(e.target.value)}
-                      placeholder="Order Confirmed!"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="checkout-subheading">Confirmation Subheading</Label>
-                    <Input
-                      id="checkout-subheading"
-                      value={postCheckoutSubheading}
-                      onChange={(e) => setPostCheckoutSubheading(e.target.value)}
-                      placeholder="We'll have your drinks to you soon"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="redirect-url">Redirect Button URL</Label>
-                    <Input
-                      id="redirect-url"
-                      value={postCheckoutRedirectUrl}
-                      onChange={(e) => setPostCheckoutRedirectUrl(e.target.value)}
-                      placeholder="https://example.com/more-services"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      URL for the main button on the confirmation page
-                    </p>
-                  </div>
-                  <div>
-                    <Label htmlFor="button-text">Button Text</Label>
-                    <Input
-                      id="button-text"
-                      value={postCheckoutButtonText}
-                      onChange={(e) => setPostCheckoutButtonText(e.target.value)}
-                      placeholder="Visit Our Website"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Text displayed on the main button
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => {
-                setIsCreating(false);
-                setEditingApp(null);
-                setAppName('');
-                setTabs([]);
-                setLogoFile(null);
-                setLogoUrl('');
-              }}>
-                Cancel
-              </Button>
-              <Button onClick={editingApp ? updateDeliveryApp : createDeliveryApp}>
-                {editingApp ? 'Update App' : 'Create App'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* Delivery Apps List */}
       <div className="grid gap-4">
@@ -1454,169 +644,39 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    {/* Page URLs and Actions */}
-                    <div className="space-y-2">
-                      <h5 className="text-sm font-medium text-muted-foreground">Pages</h5>
-                      
-                      {/* Start Page Row */}
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">Start Page</span>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`/${app.app_slug}`, '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Open
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/' + app.app_slug)}`, '_blank')}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* App Page Row */}
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">App Page (Tabs)</span>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`/app/${app.app_slug}`, '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Open
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/app/' + app.app_slug)}`, '_blank')}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Post-Checkout Page Row */}
-                      <div className="flex items-center justify-between p-2 border rounded">
-                        <span className="text-sm">Post-Checkout Page</span>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`/${app.app_slug}/success`, '_blank')}
-                          >
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Open
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(`https://lovable.dev?url=${encodeURIComponent(window.location.origin + '/' + app.app_slug + '/success')}`, '_blank')}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* App Management Actions */}
-                    <div className="flex gap-2 pt-3 border-t">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => copyAppUrl(app.app_slug)}
-                      >
-                        <Copy className="h-4 w-4 mr-1" />
-                        Copy URL
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setEditingApp(app);
-                          setAppName(app.app_name);
-                          setTabCount(app.collections_config.tab_count);
-                           setTabs(app.collections_config.tabs.map(tab => ({
-                             name: tab.name,
-                             collection_handle: tab.collection_handle,
-                             subheadline_text: (tab as any).subheadline_text || '',
-                             subheadline_font: (tab as any).subheadline_font || 'default',
-                             subheadline_size: (tab as any).subheadline_size || 'md'
-                           })));
-                          
-                          // Load existing customization data from the app configuration
-                          const fullApp = app as any;
-                          const startConfig = fullApp.start_screen_config || {};
-                          setStartScreenTitle(startConfig.title || '');
-                          setStartScreenSubtitle(startConfig.subtitle || '');
-                          setStartButtonText(startConfig.start_button_text || '');
-                          setChecklist1(startConfig.checklist_item_1 || '');
-                          setChecklist2(startConfig.checklist_item_2 || '');
-                          setChecklist3(startConfig.checklist_item_3 || '');
-                          setChecklist4(startConfig.checklist_item_4 || '');
-                          setChecklist5(startConfig.checklist_item_5 || '');
-                          setBackgroundVideoUrl(startConfig.background_video_url || '');
-                          setLogoUrl(startConfig.logo_url || fullApp.logo_url || '');
-                          // Main app config
-                          const mainConfig = fullApp.main_app_config || {};
-                          setMainAppHeroHeading(mainConfig.hero_heading || '');
-                          setHeroHeadline(mainConfig.hero_heading || '');
-                          setHeroSubheading(mainConfig.hero_subheading || '');
-                          setHeroScrollingText(mainConfig.hero_scrolling_text || '');
-                          // Post-checkout config
-                          const postConfig = fullApp.post_checkout_config || {};
-                          setPostCheckoutHeading(postConfig.heading || '');
-                          setPostCheckoutSubheading(postConfig.subheading || '');
-                          setPostCheckoutRedirectUrl(postConfig.redirect_url || '');
-                          setPostCheckoutButtonText(postConfig.button_text || '');
-                          setIsCreating(true);
-                        }}
-                      >
-                        <Settings className="h-4 w-4 mr-1" />
-                        Configure
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={(app as any).is_homepage ? "destructive" : "outline"}
-                        onClick={async () => {
-                          try {
-                            const { error } = await supabase
-                              .from('delivery_app_variations')
-                              .update({ is_homepage: !(app as any).is_homepage })
-                              .eq('id', app.id);
-                            
-                            if (error) throw error;
-                            
-                            // Refresh the data to update the UI
-                            await loadData();
-                            toast.success((app as any).is_homepage ? 'Removed from homepage' : 'Set as homepage');
-                          } catch (error) {
-                            console.error('Error updating homepage status:', error);
-                            toast.error('Failed to update homepage status');
-                          }
-                        }}
-                      >
-                        {(app as any).is_homepage ? 'Remove Homepage' : 'Set as Homepage'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteApp(app.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
+                  {/* App Management Actions */}
+                  <div className="flex gap-2 pt-3 border-t">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`/app/${app.app_slug}`, '_blank')}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View App
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(app)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggleAppStatus(app)}
+                    >
+                      {app.is_active ? 'Deactivate' : 'Activate'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(app)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -1624,33 +684,6 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
           ))
         )}
       </div>
-
-      {/* Post-Checkout Configuration Dialog */}
-      <Dialog open={!!selectedAppForConfig} onOpenChange={() => setSelectedAppForConfig(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Configure Post-Checkout for "{selectedAppForConfig?.app_name}"
-            </DialogTitle>
-          </DialogHeader>
-          {selectedAppForConfig && (
-            <CustomPostCheckoutEditor
-              appId={selectedAppForConfig.id}
-              currentConfig={selectedAppForConfig.custom_post_checkout_config || {
-                enabled: false,
-                title: "",
-                message: "",
-                cta_button_text: "",
-                cta_button_url: "",
-                background_color: "#ffffff",
-                text_color: "#000000"
-              }}
-              onConfigUpdated={(newConfig) => handleConfigUpdated(selectedAppForConfig.id, newConfig)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
     </div>
   );
 }
