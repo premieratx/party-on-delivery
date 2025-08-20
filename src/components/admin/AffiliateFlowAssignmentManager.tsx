@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, ExternalLink, Eye, Users, Workflow } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, Eye, Users, Workflow, Percent, DollarSign } from 'lucide-react';
 
 interface CustomerFlow {
   id: string;
@@ -34,6 +35,10 @@ interface FlowAssignment {
   created_at: string;
   affiliate_id: string;
   customer_flow_id: string;
+  free_shipping: boolean;
+  discount_type: 'percentage' | 'dollar' | 'both' | null;
+  discount_percentage: number | null;
+  discount_dollar_amount: number | null;
   affiliates: Affiliate | null;
   customer_flows: Pick<CustomerFlow, 'id' | 'name' | 'slug' | 'is_active'> | null;
 }
@@ -48,6 +53,10 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
   const [selectedFlow, setSelectedFlow] = useState('');
   const [selectedAffiliate, setSelectedAffiliate] = useState('');
   const [shareSlug, setShareSlug] = useState('');
+  const [freeShipping, setFreeShipping] = useState(false);
+  const [discountType, setDiscountType] = useState<'percentage' | 'dollar' | 'both' | ''>('');
+  const [discountPercentage, setDiscountPercentage] = useState('');
+  const [discountDollarAmount, setDiscountDollarAmount] = useState('');
   const [saving, setSaving] = useState(false);
 
   const { toast } = useToast();
@@ -124,6 +133,7 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
       for (const assignment of assignmentData || []) {
         const assignmentDetail: FlowAssignment = {
           ...assignment,
+          discount_type: assignment.discount_type as 'percentage' | 'dollar' | 'both' | null,
           affiliates: null,
           customer_flows: null
         };
@@ -198,7 +208,11 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
         .insert({
           customer_flow_id: selectedFlow,
           affiliate_id: selectedAffiliate,
-          share_slug: shareSlug
+          share_slug: shareSlug,
+          free_shipping: freeShipping,
+          discount_type: discountType || null,
+          discount_percentage: discountPercentage ? parseFloat(discountPercentage) : null,
+          discount_dollar_amount: discountDollarAmount ? parseFloat(discountDollarAmount) : null
         });
       
       if (error) throw error;
@@ -209,6 +223,10 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
       setSelectedFlow('');
       setSelectedAffiliate('');
       setShareSlug('');
+      setFreeShipping(false);
+      setDiscountType('');
+      setDiscountPercentage('');
+      setDiscountDollarAmount('');
       
       // Reload data
       await loadData();
@@ -389,6 +407,74 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
                 </div>
               </div>
 
+              {/* Shipping and Discount Options */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-medium text-sm">Shipping & Discount Options</h4>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="freeShipping" 
+                    checked={freeShipping}
+                    onCheckedChange={(checked) => setFreeShipping(checked === true)}
+                  />
+                  <Label htmlFor="freeShipping" className="text-sm">
+                    Enable free shipping for this flow
+                  </Label>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Discount Options</Label>
+                  <Select value={discountType} onValueChange={(value) => setDiscountType(value as 'percentage' | 'dollar' | 'both' | '')}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select discount type (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No discount</SelectItem>
+                      <SelectItem value="percentage">Percentage discount</SelectItem>
+                      <SelectItem value="dollar">Dollar amount discount</SelectItem>
+                      <SelectItem value="both">Both percentage and dollar discount</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {(discountType === 'percentage' || discountType === 'both') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="discountPercentage" className="text-sm flex items-center gap-1">
+                        <Percent className="w-3 h-3" />
+                        Percentage Discount
+                      </Label>
+                      <Input
+                        id="discountPercentage"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={discountPercentage}
+                        onChange={(e) => setDiscountPercentage(e.target.value)}
+                        placeholder="e.g., 15.00"
+                      />
+                    </div>
+                  )}
+
+                  {(discountType === 'dollar' || discountType === 'both') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="discountDollarAmount" className="text-sm flex items-center gap-1">
+                        <DollarSign className="w-3 h-3" />
+                        Dollar Amount Discount
+                      </Label>
+                      <Input
+                        id="discountDollarAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={discountDollarAmount}
+                        onChange={(e) => setDiscountDollarAmount(e.target.value)}
+                        placeholder="e.g., 25.00"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <Button 
                 onClick={handleCreateAssignment}
                 disabled={saving || !selectedFlow || !selectedAffiliate || !shareSlug}
@@ -467,58 +553,76 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
                     <Card key={assignment.id} className="border">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
-                          <div className="flex-1 space-y-2">
+                          <div className="space-y-2 flex-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-semibold">
-                                {assignment.customer_flows?.name || 'Unknown Flow'}
-                              </h3>
-                              <Badge variant="outline">
-                                /{assignment.share_slug}
+                              <Badge variant={assignment.is_active ? "default" : "secondary"}>
+                                {assignment.is_active ? "Active" : "Inactive"}
                               </Badge>
-                              {assignment.is_active ? (
-                                <Badge variant="default">Active</Badge>
-                              ) : (
-                                <Badge variant="secondary">Inactive</Badge>
-                              )}
+                              <span className="font-medium">
+                                {assignment.customer_flows?.name || 'Unknown Flow'}
+                              </span>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <strong>Affiliate:</strong> {assignment.affiliates?.company_name || 'Unknown'} 
-                                <span className="text-muted-foreground">
-                                  ({assignment.affiliates?.affiliate_code || 'No code'})
-                                </span>
+                            <div className="text-sm text-muted-foreground space-y-1">
+                              <div><strong>Affiliate:</strong> {assignment.affiliates?.company_name} ({assignment.affiliates?.affiliate_code})</div>
+                              <div><strong>Share URL:</strong> /{assignment.share_slug}</div>
+                              <div><strong>Created:</strong> {new Date(assignment.created_at).toLocaleDateString()}</div>
+                              
+                              {/* Display shipping and discount info */}
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {assignment.free_shipping && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Free Shipping
+                                  </Badge>
+                                )}
+                                {assignment.discount_type === 'percentage' && assignment.discount_percentage && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {assignment.discount_percentage}% Off
+                                  </Badge>
+                                )}
+                                {assignment.discount_type === 'dollar' && assignment.discount_dollar_amount && (
+                                  <Badge variant="outline" className="text-xs">
+                                    ${assignment.discount_dollar_amount} Off
+                                  </Badge>
+                                )}
+                                {assignment.discount_type === 'both' && (
+                                  <div className="flex gap-1">
+                                    {assignment.discount_percentage && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {assignment.discount_percentage}% Off
+                                      </Badge>
+                                    )}
+                                    {assignment.discount_dollar_amount && (
+                                      <Badge variant="outline" className="text-xs">
+                                        ${assignment.discount_dollar_amount} Off
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                              <div>
-                                <strong>Flow:</strong> {assignment.customer_flows?.slug || 'Unknown'}
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <span>Created: {new Date(assignment.created_at).toLocaleDateString()}</span>
                             </div>
                           </div>
                           
-                          <div className="flex gap-2">
+                          <div className="flex items-center gap-2">
                             <Button
-                              size="sm"
                               variant="outline"
-                              asChild
-                            >
-                              <a href={`/${assignment.share_slug}`} target="_blank" rel="noopener noreferrer">
-                                <Eye className="w-4 h-4" />
-                              </a>
-                            </Button>
-                            <Button
                               size="sm"
-                              variant={assignment.is_active ? "secondary" : "default"}
+                              onClick={() => window.open(`/${assignment.share_slug}`, '_blank')}
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => toggleAssignmentStatus(assignment.id, assignment.is_active)}
                             >
                               {assignment.is_active ? 'Deactivate' : 'Activate'}
                             </Button>
+                            
                             <Button
-                              size="sm"
                               variant="destructive"
+                              size="sm"
                               onClick={() => handleDeleteAssignment(assignment.id)}
                             >
                               <Trash2 className="w-4 h-4" />

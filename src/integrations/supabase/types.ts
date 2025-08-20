@@ -146,6 +146,10 @@ export type Database = {
           affiliate_id: string
           created_at: string
           customer_flow_id: string
+          discount_dollar_amount: number | null
+          discount_percentage: number | null
+          discount_type: string | null
+          free_shipping: boolean | null
           id: string
           is_active: boolean
           share_slug: string
@@ -155,6 +159,10 @@ export type Database = {
           affiliate_id: string
           created_at?: string
           customer_flow_id: string
+          discount_dollar_amount?: number | null
+          discount_percentage?: number | null
+          discount_type?: string | null
+          free_shipping?: boolean | null
           id?: string
           is_active?: boolean
           share_slug: string
@@ -164,6 +172,10 @@ export type Database = {
           affiliate_id?: string
           created_at?: string
           customer_flow_id?: string
+          discount_dollar_amount?: number | null
+          discount_percentage?: number | null
+          discount_type?: string | null
+          free_shipping?: boolean | null
           id?: string
           is_active?: boolean
           share_slug?: string
