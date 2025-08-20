@@ -417,9 +417,9 @@ export const UnifiedPostCheckoutEditor: React.FC<UnifiedPostCheckoutEditorProps>
 
           {/* Main Content */}
           <div className="flex-1 flex overflow-hidden">
-            {/* Editor Panel */}
+          {/* Editor Panel */}
             <div className="w-96 border-r flex-shrink-0 overflow-hidden">
-              <div className="h-full overflow-y-auto p-4 custom-scrollbar">
+              <ScrollArea className="h-full p-4">
                 <Tabs defaultValue="content" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="content">Content</TabsTrigger>
@@ -644,7 +644,7 @@ export const UnifiedPostCheckoutEditor: React.FC<UnifiedPostCheckoutEditorProps>
                     </div>
                   </TabsContent>
                 </Tabs>
-              </div>
+              </ScrollArea>
             </div>
 
             {/* Preview Panel */}

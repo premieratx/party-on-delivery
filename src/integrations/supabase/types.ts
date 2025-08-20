@@ -20,6 +20,8 @@ export type Database = {
           affiliate_code: string | null
           affiliate_id: string | null
           cart_items: Json
+          checkout_url: string | null
+          contains_payment_info: boolean | null
           created_at: string
           customer_email: string | null
           customer_name: string | null
@@ -28,6 +30,7 @@ export type Database = {
           id: string
           last_activity_at: string
           session_id: string
+          session_token: string | null
           subtotal: number | null
           total_amount: number | null
           updated_at: string
@@ -37,6 +40,8 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_id?: string | null
           cart_items?: Json
+          checkout_url?: string | null
+          contains_payment_info?: boolean | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
@@ -45,6 +50,7 @@ export type Database = {
           id?: string
           last_activity_at?: string
           session_id: string
+          session_token?: string | null
           subtotal?: number | null
           total_amount?: number | null
           updated_at?: string
@@ -54,6 +60,8 @@ export type Database = {
           affiliate_code?: string | null
           affiliate_id?: string | null
           cart_items?: Json
+          checkout_url?: string | null
+          contains_payment_info?: boolean | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
@@ -62,6 +70,7 @@ export type Database = {
           id?: string
           last_activity_at?: string
           session_id?: string
+          session_token?: string | null
           subtotal?: number | null
           total_amount?: number | null
           updated_at?: string
