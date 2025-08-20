@@ -219,10 +219,10 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           confirmedCustomer={confirmedCustomer}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mt-6">
           
-          {/* Left Column - Checkout Steps */}
-          <div className="lg:col-span-2 space-y-4 lg:space-y-6">
+          {/* Left Column - Checkout Steps (Responsive Width) */}
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
             
             {/* Date & Time Step */}
             <DateTimeStep
@@ -277,8 +277,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             )}
           </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="space-y-4 order-first lg:order-last">
+          {/* Right Column - Order Summary (Sticky on Desktop) */}
+          <div className="lg:col-span-1">
+            <div className="lg:sticky lg:top-24 space-y-3 sm:space-y-4 lg:space-y-6">
             <CheckoutSummary
               cartItems={cartItems}
               subtotal={calculatedSubtotal}
@@ -302,6 +303,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               subtotal={discountedSubtotal}
               onTipChange={setTipPercentage}
             />
+            </div>
           </div>
         </div>
       </div>

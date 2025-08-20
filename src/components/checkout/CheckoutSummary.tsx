@@ -48,15 +48,20 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
         {/* Cart Items */}
         <div className="space-y-3">
           {cartItems.map((item, index) => {
-            // Clean product title - aggressive cleanup for professional appearance
+            // Clean product title - remove ALL Shopify URLs and product IDs
             const cleanTitle = item.title
-              .replace(/https?:\/\/[^\s]+/g, '') // Remove all URLs
+              .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs completely
+              .replace(/www\.[^\s]+/g, '') // Remove www URLs
               .replace(/\b\d{8,}\b/g, '') // Remove long product IDs (8+ digits)
-              .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs
+              .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs  
               .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
               .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
               .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
-              .replace(/SKU:\s*\w+/gi, '') // Remove SKU codes
+              .replace(/SKU:\s*[\w-]+/gi, '') // Remove SKU codes
+              .replace(/Product\s*ID:\s*\d+/gi, '') // Remove Product ID
+              .replace(/Handle:\s*[\w-]+/gi, '') // Remove handle references
+              .replace(/cdn\.shopify\.com[^\s]*/gi, '') // Remove Shopify CDN URLs
+              .replace(/shopify[^\s]*/gi, '') // Remove any shopify references
               .replace(/\s+/g, ' ') // Normalize whitespace
               .replace(/(\d+)\s*Pack/gi, '$1pk')
               .replace(/(\d+)\s*oz/gi, '$1oz')
@@ -65,7 +70,7 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
               .replace(/(\d+)\s*liter/gi, '$1L')
               .replace(/(\d+)\s*count/gi, '$1ct')
               .trim()
-              .replace(/^[-\s]+|[-\s]+$/g, ''); // Remove leading/trailing dashes and spaces
+              .replace(/^[-\s|]+|[-\s|]+$/g, ''); // Remove leading/trailing dashes, spaces, and pipes
             
             return (
               <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/30 rounded-lg">

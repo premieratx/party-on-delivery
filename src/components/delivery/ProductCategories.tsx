@@ -211,6 +211,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     
     console.log('🛒 ProductCategories: Adding to cart:', cartItem);
     addToCart(cartItem);
+    
+    // Also call parent handler if provided
+    if (onAddToCart) {
+      onAddToCart(cartItem);
+    }
   };
 
   const handleQuantityChange = useCallback((productId: string, variantId: string | undefined, delta: number) => {
@@ -308,7 +313,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   }, [searchQuery, handleSearch]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 lg:pb-8">
       {/* Hero Section with Background Image */}
       <div 
         className="relative h-[70vh] overflow-hidden bg-cover bg-center bg-no-repeat"
@@ -385,7 +390,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         cartItemCount={getTotalItems()}
         totalAmount={getTotalPrice()}
         onOpenCart={onOpenCart}
-        onCheckout={onCheckout}
+        onCheckout={onProceedToCheckout || onCheckout}
       />
 
       {/* Products Grid */}
@@ -431,27 +436,33 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         
                         {quantity > 0 ? (
                           <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
-                           <Button
-                             size="sm"
-                             variant="ghost"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
-                             }}
-                             className="h-8 w-8 p-0"
-                           >
+                             <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
+                                if (onUpdateQuantity) {
+                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
+                                }
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
                               <Minus className="w-4 h-4" />
                             </Button>
                             <span className="font-medium px-2">{quantity}</span>
-                           <Button
-                             size="sm"
-                             variant="ghost"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
-                             }}
-                             className="h-8 w-8 p-0"
-                           >
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
+                                if (onUpdateQuantity) {
+                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
+                                }
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
@@ -539,29 +550,35 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       
                       {quantity > 0 ? (
                          <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]" onClick={(e) => e.stopPropagation()}>
-                           <Button
-                             variant="ghost"
-                             size="icon"
-                             className="h-8 w-8"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
-                             }}
-                           >
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
+                                if (onUpdateQuantity) {
+                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
+                                }
+                              }}
+                            >
                             <Minus className="w-4 h-4" />
                           </Button>
                           <span className="font-semibold min-w-[2rem] text-center">
                             {quantity}
                           </span>
-                           <Button
-                             variant="ghost"
-                             size="icon"
-                             className="h-8 w-8"
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
-                             }}
-                           >
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
+                                if (onUpdateQuantity) {
+                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
+                                }
+                              }}
+                            >
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
@@ -584,8 +601,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         )}
 
-        {/* Remove Mobile Bottom Cart Bar since cart is now in tabs */}
-        {/* MobileBottomCartBar removed - cart and checkout are now in CombinedSearchTabs */}
+        {/* Mobile Bottom Cart - Show only when there are items and on mobile */}
+        {getTotalItems() > 0 && (
+          <MobileBottomCartBar
+            cartItemCount={getTotalItems()}
+            totalAmount={getTotalPrice()}
+            onOpenCart={onOpenCart || (() => console.log('🛒 Open cart called'))}
+            className="md:hidden"
+          />
+        )}
         
         {/* What's the Occasion? - Bottom Section */}
         <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
@@ -593,7 +617,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         </div>
 
         {/* Admin Dashboard Link */}
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center pb-20 lg:pb-8">
           <Button 
             onClick={() => navigate('/admin')}
             variant="outline"
