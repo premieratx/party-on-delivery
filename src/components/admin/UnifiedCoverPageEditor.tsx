@@ -404,996 +404,728 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     );
   };
 
-  const renderParticles = () => {
-    const theme = COVER_THEMES[selectedTheme];
-    if (!theme.particles) return null;
-
-    return (
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full opacity-20 animate-pulse"
-            style={{
-              width: Math.random() * 8 + 4 + 'px',
-              height: Math.random() * 8 + 4 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              backgroundColor: theme.particleColor,
-              animationDelay: Math.random() * 3 + 's',
-              animationDuration: (Math.random() * 3 + 2) + 's'
-            }}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  const renderLogo = (position: DraggableElement) => {
-    const theme = COVER_THEMES[selectedTheme];
-    const content = (
-      <div 
-        className="flex items-center justify-center"
-        style={{
-          filter: theme.glowColor ? `drop-shadow(0 0 20px ${theme.glowColor})` : 'none'
-        }}
-      >
-        {logoUrl ? (
-          <img 
-            src={logoUrl} 
-            alt="Logo" 
-            style={{ height: logoHeight }}
-            className="object-contain"
-          />
-        ) : (
-          <div 
-            className="w-32 h-32 rounded-full flex items-center justify-center border-2"
-            style={{ 
-              borderColor: theme.primaryColor,
-              backgroundColor: `${theme.primaryColor}20`,
-              color: theme.primaryColor
-            }}
-          >
-            LOGO
-          </div>
-        )}
-      </div>
-    );
-
-    if (!dragMode) return content;
-
-    return (
-      <Draggable
-        position={{ x: position.x, y: position.y }}
-        onStop={(_, data) => handleElementDrag(position.id, { x: data.x, y: data.y })}
-      >
-        <div className="absolute cursor-move">
-          {content}
-        </div>
-      </Draggable>
-    );
-  };
-
-  const renderTitle = (position: DraggableElement) => {
-    const theme = COVER_THEMES[selectedTheme];
-    const content = (
-      <h1 
-        className="text-4xl md:text-5xl font-bold text-center px-4"
-        style={{ 
-          color: theme.textColor,
-          textShadow: theme.glowColor ? `0 0 30px ${theme.glowColor}` : 'none'
-        }}
-      >
-        {title}
-      </h1>
-    );
-
-    if (!dragMode) return content;
-
-    return (
-      <Draggable
-        position={{ x: position.x, y: position.y }}
-        onStop={(_, data) => handleElementDrag(position.id, { x: data.x, y: data.y })}
-      >
-        <div className="absolute cursor-move">
-          {content}
-        </div>
-      </Draggable>
-    );
-  };
-
-  const renderSubtitle = (position: DraggableElement) => {
-    const theme = COVER_THEMES[selectedTheme];
-    const content = (
-      <p 
-        className="text-lg md:text-xl text-center px-4"
-        style={{ color: theme.subtitleColor }}
-      >
-        {subtitle}
-      </p>
-    );
-
-    if (!dragMode) return content;
-
-    return (
-      <Draggable
-        position={{ x: position.x, y: position.y }}
-        onStop={(_, data) => handleElementDrag(position.id, { x: data.x, y: data.y })}
-      >
-        <div className="absolute cursor-move">
-          {content}
-        </div>
-      </Draggable>
-    );
-  };
-
-  const renderChecklist = (position: DraggableElement) => {
-    const theme = COVER_THEMES[selectedTheme];
-    const content = (
-      <div className="space-y-3 px-4">
-        {checklist.filter(Boolean).map((item, idx) => (
-          <div key={idx} className="flex items-center justify-center gap-3">
-            <span style={{ color: theme.primaryColor }}>
-              {selectedTheme === 'gold' ? '🥂' : '✓'}
-            </span>
-            <span style={{ color: theme.subtitleColor }}>{item}</span>
-          </div>
-        ))}
-      </div>
-    );
-
-    if (!dragMode) return content;
-
-    return (
-      <Draggable
-        position={{ x: position.x, y: position.y }}
-        onStop={(_, data) => handleElementDrag(position.id, { x: data.x, y: data.y })}
-      >
-        <div className="absolute cursor-move">
-          {content}
-        </div>
-      </Draggable>
-    );
-  };
-
-  const renderButtons = (position: DraggableElement) => {
-    const theme = COVER_THEMES[selectedTheme];
-    const content = (
-      <div className="space-y-3 px-4">
-        {buttons.map((button, idx) => (
-          <button
-            key={idx}
-            className="w-full py-4 px-8 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105"
-            style={{
-              backgroundColor: button.style === 'filled' ? theme.buttonBg : 'transparent',
-              color: button.style === 'filled' ? theme.buttonText : (theme.buttonOutlineText || theme.primaryColor),
-              border: button.style === 'outline' ? `2px solid ${theme.buttonOutline || theme.primaryColor}` : 'none',
-              boxShadow: button.style === 'filled' ? `0 4px 15px ${theme.glowColor}` : 'none'
-            }}
-          >
-            {button.text}
-          </button>
-        ))}
-      </div>
-    );
-
-    if (!dragMode) return content;
-
-    return (
-      <Draggable
-        position={{ x: position.x, y: position.y }}
-        onStop={(_, data) => handleElementDrag(position.id, { x: data.x, y: data.y })}
-      >
-        <div className="absolute cursor-move">
-          {content}
-        </div>
-      </Draggable>
-    );
-  };
-
-  const renderPreview = () => {
-    const device = DEVICE_CONFIGS[activeDevice];
-    const theme = COVER_THEMES[selectedTheme];
-    
-    const logoPos = elementPositions.find(e => e.id === 'logo');
-    const titlePos = elementPositions.find(e => e.id === 'title');
-    const subtitlePos = elementPositions.find(e => e.id === 'subtitle');
-    const checklistPos = elementPositions.find(e => e.id === 'checklist');
-    const buttonsPos = elementPositions.find(e => e.id === 'buttons');
-
-    const isMobile = ['iphone14', 'galaxyS23', 'tablet'].includes(activeDevice);
-
-    return (
-      <div 
-        className={`flex items-center justify-center min-h-full p-4 transition-all duration-300 ${
-          isMobile ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-black' : 'bg-gray-50'
-        }`}
-        style={{
-          background: isMobile ? theme.background : 'rgb(249 250 251)'
-        }}
-      >
-        {/* Phone Frame with Responsive Design */}
-        <div
-          className={`relative overflow-hidden transition-all duration-300 ${
-            isMobile ? 'border-2 border-gray-700 shadow-2xl' : 'border border-gray-200 shadow-lg'
-          }`}
-          style={{
-            width: fullscreenPreview && isMobile ? Math.min(device.previewWidth * 1.2, 420) : Math.min(device.previewWidth, 400),
-            height: fullscreenPreview && isMobile ? Math.min(device.previewHeight * 1.2, 800) : Math.min(device.previewHeight, 750),
-            borderRadius: isMobile ? '2.5rem' : '1rem',
-            background: bgImageUrl ? `url(${bgImageUrl})` : bgVideoUrl ? 'black' : theme.background,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            boxShadow: isMobile ? 
-              `0 0 40px ${theme.glowColor}, 0 20px 60px rgba(0, 0, 0, 0.5)` : 
-              '0 4px 20px rgba(0, 0, 0, 0.1)',
-            border: isMobile ? 
-              `1px solid ${theme.primaryColor}40` : 
-              '1px solid rgb(229 231 235)'
-          }}
-        >
-          {/* Video Background */}
-          {bgVideoUrl && (
-            <video
-              autoPlay
-              loop
-              muted
-              className="absolute inset-0 w-full h-full object-cover"
-              src={bgVideoUrl}
-            />
-          )}
-          
-          {/* Particles Effect */}
-          {renderParticles()}
-          
-          {/* Content Container */}
-          <div className="relative z-10 h-full flex flex-col justify-center items-center space-y-6 p-8">
-            {!dragMode ? (
-              <>
-                {renderLogo(logoPos!)}
-                {renderTitle(titlePos!)}
-                {renderSubtitle(subtitlePos!)}
-                {renderChecklist(checklistPos!)}
-                {renderButtons(buttonsPos!)}
-              </>
-            ) : (
-              <div className="absolute inset-0">
-                {renderLogo(logoPos!)}
-                {renderTitle(titlePos!)}
-                {renderSubtitle(subtitlePos!)}
-                {renderChecklist(checklistPos!)}
-                {renderButtons(buttonsPos!)}
-              </div>
-            )}
-          </div>
-
-          {/* Phone Frame Overlay Effects */}
-          {isMobile && (
-            <>
-              {/* Glow Effect */}
-              <div 
-                className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
-                style={{
-                  background: `linear-gradient(135deg, ${theme.primaryColor}10 0%, transparent 50%, ${theme.primaryColor}05 100%)`,
-                  boxShadow: `inset 0 0 60px ${theme.glowColor}`
-                }}
-              />
-              {/* Frame Highlight */}
-              <div 
-                className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
-                style={{
-                  border: `1px solid ${theme.primaryColor}20`,
-                  background: 'linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%)'
-                }}
-              />
-            </>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const handleSave = async () => {
-    if (!title || !computedSlug) {
-      toast({ title: 'Missing required fields', description: 'Title and slug are required', variant: 'destructive' });
+    if (!title.trim()) {
+      toast({ title: 'Missing title', description: 'Please add a title for your cover page', variant: 'destructive' });
       return;
     }
-    
+
+    if (!computedSlug) {
+      toast({ title: 'Invalid slug', description: 'Please provide a valid slug', variant: 'destructive' });
+      return;
+    }
+
     setSaving(true);
     try {
-      const payload: any = {
+      const payload = {
         slug: computedSlug,
-        title,
-        subtitle: subtitle || '',
+        title: title.trim(),
+        subtitle: subtitle.trim() || null,
         logo_url: logoUrl || null,
-        logo_height: logoHeight || 160,
+        logo_height: logoHeight,
         bg_image_url: bgImageUrl || null,
         bg_video_url: bgVideoUrl || null,
-        checklist: checklist.filter(Boolean),
-        buttons: buttons,
+        checklist: checklist.filter(item => item.trim()) as any,
+        buttons: buttons as any,
         is_active: isActive,
-        is_default_homepage: false,
+        theme: selectedTheme,
         styles: {
-          theme: selectedTheme,
           element_positions: elementPositions
-        }
+        } as any
       };
 
       if (isEditing && initial?.id) {
-        const { error } = await supabase.from('cover_pages').update(payload).eq('id', initial.id);
+        const { error } = await supabase
+          .from('cover_pages')
+          .update(payload)
+          .eq('id', initial.id);
         if (error) throw error;
+        toast({ title: 'Success', description: 'Cover page updated successfully' });
       } else {
-        const { error } = await supabase.from('cover_pages').insert(payload);
+        const { error } = await supabase
+          .from('cover_pages')
+          .insert(payload);
         if (error) throw error;
+        toast({ title: 'Success', description: 'Cover page created successfully' });
       }
 
-      toast({ title: 'Saved successfully!' });
       onSaved?.();
       onOpenChange(false);
-    } catch (e: any) {
-      console.error('Save error:', e);
-      toast({ title: 'Save failed', description: e?.message || 'Unknown error occurred', variant: 'destructive' });
+    } catch (error: any) {
+      console.error('Save error:', error);
+      toast({ 
+        title: 'Save failed', 
+        description: error?.message || 'Please try again', 
+        variant: 'destructive' 
+      });
     } finally {
       setSaving(false);
     }
   };
 
-  if (!open) return null;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-       <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 overflow-hidden">
-        <div className="h-full flex flex-col">
-          {/* Header */}
-          <DialogHeader className="p-4 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                {isEditing ? `Edit: ${initial?.title}` : 'Create Cover Page'}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPreviewMode(!previewMode)}
-                >
-                  <Eye className="w-4 h-4" />
-                  {previewMode ? 'Edit' : 'Preview'}
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={saving || !title}
-                  size="sm"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save'}
-                </Button>
-              </div>
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 py-4 border-b">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-primary" />
+              {isEditing ? 'Edit' : 'Create'} Cover Page
             </DialogTitle>
-          </DialogHeader>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant={previewMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPreviewMode(!previewMode)}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                {previewMode ? 'Edit Mode' : 'Preview'}
+              </Button>
+              
+              <Button
+                onClick={handleSave}
+                disabled={saving || !title.trim()}
+                className="gap-2"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
+              </Button>
+            </div>
+          </div>
+        </DialogHeader>
 
-          {/* Hidden file inputs */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            onChange={(e) => handleFileChange(e, 'background')}
-            className="hidden"
-          />
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFileChange(e, 'logo')}
-            className="hidden"
-          />
+        <div className="flex h-[calc(95vh-80px)]">
+          {/* Editor Panel */}
+          <div className={`${previewMode ? 'w-0 overflow-hidden' : 'w-80'} transition-all duration-300 border-r bg-background`}>
+            <div className="h-full overflow-y-auto p-4 space-y-4">
+              {/* Theme Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Theme</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(COVER_THEMES).map(([key, theme]) => (
+                    <button
+                      key={key}
+                      onClick={() => setSelectedTheme(key as keyof typeof COVER_THEMES)}
+                      className={`p-3 rounded-lg border text-sm font-medium transition-all ${
+                        selectedTheme === key 
+                          ? 'border-primary bg-primary/10 ring-2 ring-primary/20' 
+                          : 'border-border hover:bg-muted'
+                      }`}
+                    >
+                      <div 
+                        className="w-full h-4 rounded mb-2"
+                        style={{ background: theme.background }}
+                      />
+                      <div className="text-left">
+                        <div className="font-semibold">{theme.name}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Main Content */}
-          <div className="flex-1 flex overflow-hidden">
-            {/* Controls Panel */}
-            <div className="w-80 border-r flex flex-col max-h-full">
-              <div className="p-4 overflow-y-auto flex-1 space-y-6 custom-scrollbar max-h-full">
-                {/* Theme Selection */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold">Theme</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {Object.entries(COVER_THEMES).map(([key, theme]) => (
+              {/* Device Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">Device Preview</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
+                    const Icon = device.icon;
+                    return (
                       <button
                         key={key}
-                        onClick={() => setSelectedTheme(key as keyof typeof COVER_THEMES)}
-                        className={`p-3 rounded-lg border text-sm font-medium transition-all ${
-                          selectedTheme === key 
-                            ? 'border-primary bg-primary/10 ring-2 ring-primary/20' 
+                        onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
+                        className={`p-2 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
+                          activeDevice === key 
+                            ? 'border-primary bg-primary/10' 
                             : 'border-border hover:bg-muted'
                         }`}
                       >
-                        <div 
-                          className="w-full h-4 rounded mb-2"
-                          style={{ background: theme.background }}
-                        />
+                        <Icon className="w-4 h-4" />
                         <div className="text-left">
-                          <div className="font-semibold">{theme.name}</div>
+                          <div>{device.name}</div>
                         </div>
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-                {/* Device Selection */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold">Device Preview</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
-                      const Icon = device.icon;
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
-                          className={`p-2 rounded-lg border text-xs font-medium transition-all flex items-center gap-2 ${
-                            activeDevice === key 
-                              ? 'border-primary bg-primary/10' 
-                              : 'border-border hover:bg-muted'
-                          }`}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <div className="text-left">
-                            <div>{device.name}</div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+              {/* Enhanced Visual Builder Controls */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold">Visual Builder</Label>
+                  <Button
+                    variant={dragMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setDragMode(!dragMode)}
+                  >
+                    <Move className="w-4 h-4 mr-2" />
+                    {dragMode ? 'Exit Drag' : 'Drag Mode'}
+                  </Button>
                 </div>
+                {dragMode && (
+                  <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+                    <p className="text-xs text-muted-foreground">
+                      💡 Drag elements in the preview to reposition them. Click "Exit Drag" when done.
+                    </p>
+                  </div>
+                )}
+              </div>
 
-                {/* Enhanced Visual Builder Controls */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Visual Builder</Label>
+              <Tabs defaultValue="content" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="templates">Templates</TabsTrigger>
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="design">Design</TabsTrigger>
+                  <TabsTrigger value="layout">Layout</TabsTrigger>
+                  <TabsTrigger value="buttons">Buttons</TabsTrigger>
+                </TabsList>
+
+                {/* Enhanced Figma Templates Tab */}
+                <TabsContent value="templates" className="space-y-4">
+                  <EnhancedFigmaTemplateLibrary 
+                    category="cover_page"
+                    onSelectTemplate={(template) => {
+                      // Apply enhanced template with animations
+                      const templateData = template.design_data;
+                      
+                      if (templateData) {
+                        // Set theme
+                        const themeKey = template.theme as keyof typeof COVER_THEMES;
+                        if (themeKey && COVER_THEMES[themeKey]) {
+                          setSelectedTheme(themeKey);
+                        } else {
+                          setSelectedTheme('gold');
+                        }
+                        
+                        // Apply content from template elements
+                        const elements = templateData.elements || [];
+                        const titleElement = elements.find((e: any) => e.id === 'title');
+                        const subtitleElement = elements.find((e: any) => e.id === 'subtitle');
+                        const checklistElement = elements.find((e: any) => e.id === 'checklist');
+                        const primaryButtonElement = elements.find((e: any) => e.id === 'primary_button');
+                        const secondaryButtonElement = elements.find((e: any) => e.id === 'secondary_button');
+                        
+                        // Apply content
+                        if (titleElement?.content) setTitle(titleElement.content);
+                        if (subtitleElement?.content) setSubtitle(subtitleElement.content);
+                        if (checklistElement?.items) setChecklist(checklistElement.items);
+                        
+                        // Apply buttons
+                        const newButtons: CoverButtonConfig[] = [];
+                        if (primaryButtonElement?.content) {
+                          newButtons.push({ 
+                            text: primaryButtonElement.content, 
+                            type: 'delivery_app' as CoverButtonType,
+                            style: 'filled' as const
+                          });
+                        }
+                        if (secondaryButtonElement?.content) {
+                          newButtons.push({ 
+                            text: secondaryButtonElement.content, 
+                            type: 'url' as CoverButtonType,
+                            url: '#collection',
+                            style: 'outline' as const
+                          });
+                        }
+                        if (newButtons.length > 0) setButtons(newButtons);
+                        
+                        // Apply element positions
+                        if (elements.length > 0) {
+                          const newPositions = elements
+                            .filter((element: any) => element.position)
+                            .map((element: any) => ({
+                              id: element.id === 'primary_button' || element.id === 'secondary_button' ? 'buttons' : element.id,
+                              type: element.id === 'primary_button' || element.id === 'secondary_button' ? 'buttons' : element.type,
+                              x: element.position.x || 50,
+                              y: element.position.y || 50
+                            }));
+                          
+                          if (newPositions.length > 0) setElementPositions(newPositions);
+                        }
+                        
+                        // Store template data for animations
+                        setTemplateData(template);
+                      }
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="content" className="space-y-4">
+                  <div>
+                    <Label>Page Slug</Label>
+                    <Input
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      placeholder="page-slug"
+                    />
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Preview URL: {CANONICAL_DOMAIN}/cover/{computedSlug}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label>Title *</Label>
+                    <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Elite Concierge"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Subtitle</Label>
+                    <Input
+                      value={subtitle}
+                      onChange={(e) => setSubtitle(e.target.value)}
+                      placeholder="Luxury Lifestyle Services"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Features List</Label>
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {checklist.map((item, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <Input
+                            value={item}
+                            onChange={(e) => {
+                              const newChecklist = [...checklist];
+                              newChecklist[idx] = e.target.value;
+                              setChecklist(newChecklist);
+                            }}
+                            placeholder={`Feature ${idx + 1}`}
+                            className="text-sm"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setChecklist(checklist.filter((_, i) => i !== idx))}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                     <Button
-                      variant={dragMode ? "default" : "outline"}
+                      variant="outline"
                       size="sm"
-                      onClick={() => setDragMode(!dragMode)}
+                      onClick={() => setChecklist([...checklist, ""])}
+                      className="mt-2"
                     >
-                      <Move className="w-4 h-4 mr-2" />
-                      {dragMode ? 'Exit Drag' : 'Drag Mode'}
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Feature
                     </Button>
                   </div>
-                  {dragMode && (
-                    <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-                      <p className="text-xs text-muted-foreground">
-                        💡 Drag elements in the preview to reposition them. Click "Exit Drag" when done.
-                      </p>
-                    </div>
-                  )}
-                </div>
 
-                <Tabs defaultValue="content" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="templates">Templates</TabsTrigger>
-                    <TabsTrigger value="content">Content</TabsTrigger>
-                    <TabsTrigger value="design">Design</TabsTrigger>
-                    <TabsTrigger value="layout">Layout</TabsTrigger>
-                    <TabsTrigger value="buttons">Buttons</TabsTrigger>
-                  </TabsList>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="is-active"
+                      checked={isActive}
+                      onCheckedChange={setIsActive}
+                    />
+                    <Label htmlFor="is-active">Page Active</Label>
+                  </div>
+                </TabsContent>
 
-          {/* NEW: Enhanced Figma Templates Tab */}
-          <TabsContent value="templates" className="space-y-4">
-            <EnhancedFigmaTemplateLibrary 
-              category="cover_page"
-              onSelectTemplate={(template) => {
-                // Apply enhanced template with animations
-                const templateData = template.design_data;
-                
-                if (templateData) {
-                  // Set theme
-                  const themeKey = template.theme as keyof typeof COVER_THEMES;
-                  if (themeKey && COVER_THEMES[themeKey]) {
-                    setSelectedTheme(themeKey);
-                  } else {
-                    setSelectedTheme('gold');
-                  }
-                  
-                  // Apply content from template elements
-                  const elements = templateData.elements || [];
-                  const titleElement = elements.find((e: any) => e.id === 'title');
-                  const subtitleElement = elements.find((e: any) => e.id === 'subtitle');
-                  const checklistElement = elements.find((e: any) => e.id === 'checklist');
-                  const primaryButtonElement = elements.find((e: any) => e.id === 'primary_button');
-                  const secondaryButtonElement = elements.find((e: any) => e.id === 'secondary_button');
-                  
-                  // Apply content
-                  if (titleElement?.content) setTitle(titleElement.content);
-                  if (subtitleElement?.content) setSubtitle(subtitleElement.content);
-                  if (checklistElement?.items) setChecklist(checklistElement.items);
-                  
-                  // Apply buttons
-                  const newButtons: CoverButtonConfig[] = [];
-                  if (primaryButtonElement?.content) {
-                    newButtons.push({ 
-                      text: primaryButtonElement.content, 
-                      type: 'delivery_app' as CoverButtonType,
-                      style: 'filled' as const
-                    });
-                  }
-                  if (secondaryButtonElement?.content) {
-                    newButtons.push({ 
-                      text: secondaryButtonElement.content, 
-                      type: 'url' as CoverButtonType,
-                      url: '#collection',
-                      style: 'outline' as const
-                    });
-                  }
-                  if (newButtons.length > 0) setButtons(newButtons);
-                  
-                  // Apply element positions
-                  if (elements.length > 0) {
-                    const newPositions = elements
-                      .filter((element: any) => element.position)
-                      .map((element: any) => ({
-                        id: element.id === 'primary_button' || element.id === 'secondary_button' ? 'buttons' : element.id,
-                        type: element.id === 'primary_button' || element.id === 'secondary_button' ? 'buttons' : element.type,
-                        x: element.position.x || 50,
-                        y: element.position.y || 50
-                      }));
+                <TabsContent value="design" className="space-y-4">
+                  {/* Enhanced Logo Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold flex items-center gap-2">
+                      <FileImage className="w-4 h-4" />
+                      Logo
+                    </Label>
                     
-                    if (newPositions.length > 0) setElementPositions(newPositions);
-                  }
-                  
-                  // Store template data for animations
-                  setTemplateData(template);
-                }
-              }}
-            />
-          </TabsContent>
-
-                  <TabsContent value="content" className="space-y-4">
-                    <div>
-                      <Label>Page Slug</Label>
-                      <Input
-                        value={slug}
-                        onChange={(e) => setSlug(e.target.value)}
-                        placeholder="page-slug"
-                      />
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Preview URL: {CANONICAL_DOMAIN}/cover/{computedSlug}
+                    {logoUrl && (
+                      <div className="p-3 bg-muted rounded-lg">
+                        <img 
+                          src={logoUrl} 
+                          alt="Logo preview" 
+                          className="w-16 h-16 object-contain mx-auto border rounded"
+                        />
                       </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <Input
+                        value={logoUrl}
+                        onChange={(e) => setLogoUrl(e.target.value)}
+                        placeholder="Logo URL or upload file below"
+                        className="text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleFileUpload('logo')}
+                        className="w-full gap-2"
+                      >
+                        <Upload className="w-4 h-4" />
+                        Upload Logo File
+                      </Button>
                     </div>
                     
                     <div>
-                      <Label>Title *</Label>
-                      <Input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Elite Concierge"
+                      <Label className="text-xs">Logo Height: {logoHeight}px</Label>
+                      <Slider
+                        value={[logoHeight]}
+                        onValueChange={([value]) => setLogoHeight(value)}
+                        min={50}
+                        max={300}
+                        step={10}
+                        className="mt-2"
                       />
                     </div>
-                    
-                    <div>
-                      <Label>Subtitle</Label>
-                      <Input
-                        value={subtitle}
-                        onChange={(e) => setSubtitle(e.target.value)}
-                        placeholder="Luxury Lifestyle Services"
-                      />
-                    </div>
+                  </div>
 
-                    <div>
-                      <Label>Features List</Label>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {checklist.map((item, idx) => (
-                          <div key={idx} className="flex gap-2">
-                            <Input
-                              value={item}
-                              onChange={(e) => {
-                                const newChecklist = [...checklist];
-                                newChecklist[idx] = e.target.value;
-                                setChecklist(newChecklist);
+                  {/* Enhanced Background Section */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold flex items-center gap-2">
+                      <FileVideo className="w-4 h-4" />
+                      Background
+                    </Label>
+                    
+                    {(bgImageUrl || bgVideoUrl) && (
+                      <div className="p-3 bg-muted rounded-lg">
+                        {bgVideoUrl ? (
+                          <video 
+                            src={bgVideoUrl} 
+                            className="w-full h-20 object-cover rounded border"
+                            muted
+                          />
+                        ) : (
+                          <img 
+                            src={bgImageUrl} 
+                            alt="Background preview" 
+                            className="w-full h-20 object-cover rounded border"
+                          />
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <Input
+                        value={bgImageUrl || bgVideoUrl}
+                        onChange={(e) => {
+                          if (e.target.value.includes('.mp4') || e.target.value.includes('.webm')) {
+                            setBgVideoUrl(e.target.value);
+                            setBgImageUrl('');
+                          } else {
+                            setBgImageUrl(e.target.value);
+                            setBgVideoUrl('');
+                          }
+                        }}
+                        placeholder="Background URL or upload file below"
+                        className="text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleFileUpload('background')}
+                        className="w-full gap-2"
+                      >
+                        <Upload className="w-4 h-4" />
+                        Upload Background File
+                      </Button>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded border">
+                      💡 Supports images (JPG, PNG, WebP) and videos (MP4, WebM)
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* Layout Tab with Positioning Sliders */}
+                <TabsContent value="layout" className="space-y-4">
+                  <div className="space-y-4">
+                    <Label className="text-sm font-semibold flex items-center gap-2">
+                      <Layout className="w-4 h-4" />
+                      Layout Templates
+                    </Label>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setElementPositions([
+                            { id: 'logo', type: 'logo', x: 50, y: 10 },
+                            { id: 'title', type: 'title', x: 50, y: 25 },
+                            { id: 'subtitle', type: 'subtitle', x: 50, y: 35 },
+                            { id: 'checklist', type: 'checklist', x: 50, y: 50 },
+                            { id: 'buttons', type: 'buttons', x: 50, y: 75 }
+                          ]);
+                        }}
+                        className="text-xs p-2 h-auto flex-col gap-1"
+                      >
+                        <div className="w-4 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-6 h-1 bg-current rounded"></div>
+                        <div className="w-5 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-3 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-4 h-1 bg-current rounded"></div>
+                        Center Classic
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setElementPositions([
+                            { id: 'logo', type: 'logo', x: 20, y: 15 },
+                            { id: 'title', type: 'title', x: 20, y: 30 },
+                            { id: 'subtitle', type: 'subtitle', x: 20, y: 40 },
+                            { id: 'checklist', type: 'checklist', x: 20, y: 55 },
+                            { id: 'buttons', type: 'buttons', x: 20, y: 75 }
+                          ]);
+                        }}
+                        className="text-xs p-2 h-auto flex-col gap-1"
+                      >
+                        <div className="w-3 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-5 h-1 bg-current rounded"></div>
+                        <div className="w-4 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-2 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-3 h-1 bg-current rounded"></div>
+                        Left Aligned
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setElementPositions([
+                            { id: 'logo', type: 'logo', x: 80, y: 15 },
+                            { id: 'title', type: 'title', x: 80, y: 30 },
+                            { id: 'subtitle', type: 'subtitle', x: 80, y: 40 },
+                            { id: 'checklist', type: 'checklist', x: 80, y: 55 },
+                            { id: 'buttons', type: 'buttons', x: 80, y: 75 }
+                          ]);
+                        }}
+                        className="text-xs p-2 h-auto flex-col gap-1"
+                      >
+                        <div className="w-3 h-1 bg-current rounded opacity-60 ml-auto"></div>
+                        <div className="w-5 h-1 bg-current rounded ml-auto"></div>
+                        <div className="w-4 h-1 bg-current rounded opacity-60 ml-auto"></div>
+                        <div className="w-2 h-1 bg-current rounded opacity-60 ml-auto"></div>
+                        <div className="w-3 h-1 bg-current rounded ml-auto"></div>
+                        Right Aligned
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setElementPositions([
+                            { id: 'logo', type: 'logo', x: 50, y: 5 },
+                            { id: 'title', type: 'title', x: 50, y: 20 },
+                            { id: 'subtitle', type: 'subtitle', x: 50, y: 30 },
+                            { id: 'checklist', type: 'checklist', x: 50, y: 45 },
+                            { id: 'buttons', type: 'buttons', x: 50, y: 85 }
+                          ]);
+                        }}
+                        className="text-xs p-2 h-auto flex-col gap-1"
+                      >
+                        <div className="w-4 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-6 h-1 bg-current rounded"></div>
+                        <div className="w-5 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-3 h-1 bg-current rounded opacity-60"></div>
+                        <div className="w-4 h-1 bg-current rounded mt-2"></div>
+                        Bottom CTA
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Precision Position Sliders */}
+                  <div className="space-y-4 pt-4 border-t border-border/50">
+                    <Label className="text-sm font-semibold flex items-center gap-2">
+                      <Settings className="w-4 h-4" />
+                      Precision Positioning
+                    </Label>
+                    
+                    {elementPositions.map((element) => (
+                      <div key={element.id} className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-medium capitalize">
+                            {element.type === 'buttons' ? 'Action Buttons' : element.type}
+                          </Label>
+                          <Badge variant="outline" className="text-xs">
+                            {Math.round(element.x)}, {Math.round(element.y)}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <Label className="text-xs text-muted-foreground">
+                              Horizontal: {Math.round(element.x)}%
+                            </Label>
+                            <Slider
+                              value={[element.x]}
+                              onValueChange={([value]) => {
+                                setElementPositions(prev => 
+                                  prev.map(el => el.id === element.id ? { ...el, x: value } : el)
+                                );
                               }}
-                              placeholder={`Feature ${idx + 1}`}
-                              className="text-sm"
+                              min={0}
+                              max={100}
+                              step={1}
+                              className="mt-1"
                             />
+                          </div>
+                          
+                          <div>
+                            <Label className="text-xs text-muted-foreground">
+                              Vertical: {Math.round(element.y)}%
+                            </Label>
+                            <Slider
+                              value={[element.y]}
+                              onValueChange={([value]) => {
+                                setElementPositions(prev => 
+                                  prev.map(el => el.id === element.id ? { ...el, y: value } : el)
+                                );
+                              }}
+                              min={0}
+                              max={100}
+                              step={1}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded border">
+                      💡 Use sliders for precise positioning or enable drag mode to move elements visually
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="buttons" className="space-y-4">
+                  <div className="space-y-4 max-h-60 overflow-y-auto">
+                    {buttons.map((button, idx) => (
+                      <Card key={idx} className="p-3">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <Label className="font-semibold text-sm">Button {idx + 1}</Label>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setChecklist(checklist.filter((_, i) => i !== idx))}
+                              onClick={() => removeButton(idx)}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                        ))}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setChecklist([...checklist, ""])}
-                        className="mt-2"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Feature
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="is-active"
-                        checked={isActive}
-                        onCheckedChange={setIsActive}
-                      />
-                      <Label htmlFor="is-active">Page Active</Label>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="design" className="space-y-4">
-                    {/* Enhanced Logo Section */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold flex items-center gap-2">
-                        <FileImage className="w-4 h-4" />
-                        Logo
-                      </Label>
-                      
-                      {logoUrl && (
-                        <div className="p-3 bg-muted rounded-lg">
-                          <img 
-                            src={logoUrl} 
-                            alt="Logo preview" 
-                            className="w-16 h-16 object-contain mx-auto border rounded"
-                          />
-                        </div>
-                      )}
-                      
-                      <div className="space-y-2">
-                        <Input
-                          value={logoUrl}
-                          onChange={(e) => setLogoUrl(e.target.value)}
-                          placeholder="Logo URL or upload file below"
-                          className="text-sm"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleFileUpload('logo')}
-                          className="w-full gap-2"
-                        >
-                          <Upload className="w-4 h-4" />
-                          Upload Logo File
-                        </Button>
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs">Logo Height: {logoHeight}px</Label>
-                        <Slider
-                          value={[logoHeight]}
-                          onValueChange={([value]) => setLogoHeight(value)}
-                          min={50}
-                          max={300}
-                          step={10}
-                          className="mt-2"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Enhanced Background Section */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold flex items-center gap-2">
-                        <FileVideo className="w-4 h-4" />
-                        Background
-                      </Label>
-                      
-                      {(bgImageUrl || bgVideoUrl) && (
-                        <div className="p-3 bg-muted rounded-lg">
-                          {bgVideoUrl ? (
-                            <video 
-                              src={bgVideoUrl} 
-                              className="w-full h-20 object-cover rounded border"
-                              muted
+                          
+                          <div>
+                            <Label className="text-xs">Button Text</Label>
+                            <Input
+                              value={button.text}
+                              onChange={(e) => updateButton(idx, { text: e.target.value })}
+                              placeholder="Button Text"
+                              className="text-sm"
                             />
-                          ) : (
-                            <img 
-                              src={bgImageUrl} 
-                              alt="Background preview" 
-                              className="w-full h-20 object-cover rounded border"
-                            />
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="space-y-2">
-                        <Input
-                          value={bgImageUrl || bgVideoUrl}
-                          onChange={(e) => {
-                            if (e.target.value.includes('.mp4') || e.target.value.includes('.webm')) {
-                              setBgVideoUrl(e.target.value);
-                              setBgImageUrl('');
-                            } else {
-                              setBgImageUrl(e.target.value);
-                              setBgVideoUrl('');
-                            }
-                          }}
-                          placeholder="Background URL or upload file below"
-                          className="text-sm"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleFileUpload('background')}
-                          className="w-full gap-2"
-                        >
-                          <Upload className="w-4 h-4" />
-                          Upload Background File
-                        </Button>
-                      </div>
-                      
-                      <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded border">
-                        💡 Supports images (JPG, PNG, WebP) and videos (MP4, WebM)
-                      </div>
-                    </div>
-                  </TabsContent>
+                          </div>
 
-                  {/* New Advanced Layout Tab */}
-                  <TabsContent value="layout" className="space-y-4">
-                    <div className="space-y-4">
-                      <Label className="text-sm font-semibold flex items-center gap-2">
-                        <Layout className="w-4 h-4" />
-                        Layout Templates
-                      </Label>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setElementPositions([
-                              { id: 'logo', type: 'logo', x: 50, y: 10 },
-                              { id: 'title', type: 'title', x: 50, y: 25 },
-                              { id: 'subtitle', type: 'subtitle', x: 50, y: 35 },
-                              { id: 'checklist', type: 'checklist', x: 50, y: 50 },
-                              { id: 'buttons', type: 'buttons', x: 50, y: 75 }
-                            ]);
-                          }}
-                          className="text-xs p-2 h-auto flex-col gap-1"
-                        >
-                          <div className="w-4 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-6 h-1 bg-current rounded"></div>
-                          <div className="w-5 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-3 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-4 h-1 bg-current rounded"></div>
-                          Center Classic
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setElementPositions([
-                              { id: 'logo', type: 'logo', x: 20, y: 15 },
-                              { id: 'title', type: 'title', x: 20, y: 30 },
-                              { id: 'subtitle', type: 'subtitle', x: 20, y: 40 },
-                              { id: 'checklist', type: 'checklist', x: 20, y: 55 },
-                              { id: 'buttons', type: 'buttons', x: 20, y: 75 }
-                            ]);
-                          }}
-                          className="text-xs p-2 h-auto flex-col gap-1"
-                        >
-                          <div className="w-3 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-5 h-1 bg-current rounded"></div>
-                          <div className="w-4 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-2 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-3 h-1 bg-current rounded"></div>
-                          Left Aligned
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setElementPositions([
-                              { id: 'logo', type: 'logo', x: 70, y: 15 },
-                              { id: 'title', type: 'title', x: 70, y: 30 },
-                              { id: 'subtitle', type: 'subtitle', x: 70, y: 40 },
-                              { id: 'checklist', type: 'checklist', x: 70, y: 55 },
-                              { id: 'buttons', type: 'buttons', x: 70, y: 75 }
-                            ]);
-                          }}
-                          className="text-xs p-2 h-auto flex-col gap-1"
-                        >
-                          <div className="w-3 h-1 bg-current rounded opacity-60 ml-auto"></div>
-                          <div className="w-5 h-1 bg-current rounded ml-auto"></div>
-                          <div className="w-4 h-1 bg-current rounded opacity-60 ml-auto"></div>
-                          <div className="w-2 h-1 bg-current rounded opacity-60 ml-auto"></div>
-                          <div className="w-3 h-1 bg-current rounded ml-auto"></div>
-                          Right Aligned
-                        </Button>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setElementPositions([
-                              { id: 'title', type: 'title', x: 50, y: 15 },
-                              { id: 'subtitle', type: 'subtitle', x: 50, y: 25 },
-                              { id: 'logo', type: 'logo', x: 50, y: 40 },
-                              { id: 'checklist', type: 'checklist', x: 50, y: 60 },
-                              { id: 'buttons', type: 'buttons', x: 50, y: 80 }
-                            ]);
-                          }}
-                          className="text-xs p-2 h-auto flex-col gap-1"
-                        >
-                          <div className="w-6 h-1 bg-current rounded"></div>
-                          <div className="w-5 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-4 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-3 h-1 bg-current rounded opacity-60"></div>
-                          <div className="w-4 h-1 bg-current rounded"></div>
-                          Title First
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <Label className="text-sm font-semibold">Element Spacing</Label>
-                        <div className="grid grid-cols-2 gap-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setElementPositions(prev => prev.map(el => ({
-                                ...el,
-                                y: el.y * 0.8
-                              })));
-                            }}
-                          >
-                            Compact
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setElementPositions(prev => prev.map(el => ({
-                                ...el,
-                                y: Math.min(90, el.y * 1.2)
-                              })));
-                            }}
-                          >
-                            Spread Out
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                        <p className="text-xs text-amber-800">
-                          💡 Use templates as starting points, then fine-tune with drag mode or manual positioning below.
-                        </p>
-                      </div>
-                    </div>
-                  </TabsContent>
+                          <div>
+                            <Label className="text-xs">Button Style</Label>
+                            <Select
+                              value={button.style || 'filled'}
+                              onValueChange={(value: 'filled' | 'outline') => updateButton(idx, { style: value })}
+                            >
+                              <SelectTrigger className="text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="filled">Filled</SelectItem>
+                                <SelectItem value="outline">Outline</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                  <TabsContent value="buttons" className="space-y-4">
-                    <div className="space-y-4 max-h-60 overflow-y-auto">
-                      {buttons.map((button, idx) => (
-                        <Card key={idx} className="p-3">
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <Label className="font-semibold text-sm">Button {idx + 1}</Label>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeButton(idx)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                            
+                          <div>
+                            <Label className="text-xs">Action Type</Label>
+                            <Select
+                              value={button.type}
+                              onValueChange={(value: CoverButtonType) => updateButton(idx, { type: value })}
+                            >
+                              <SelectTrigger className="text-sm">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="delivery_app">Delivery App</SelectItem>
+                                <SelectItem value="checkout">Checkout</SelectItem>
+                                <SelectItem value="url">Custom URL</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {button.type === 'delivery_app' && (
                             <div>
-                              <Label className="text-xs">Button Text</Label>
+                              <Label className="text-xs">App</Label>
+                              <Select
+                                value={button.app_slug || ''}
+                                onValueChange={(value) => updateButton(idx, { app_slug: value })}
+                              >
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue placeholder="Select App" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {apps.map((app) => (
+                                    <SelectItem key={app.app_slug} value={app.app_slug}>
+                                      {app.app_name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          {button.type === 'url' && (
+                            <div>
+                              <Label className="text-xs">URL</Label>
                               <Input
-                                value={button.text}
-                                onChange={(e) => updateButton(idx, { text: e.target.value })}
-                                placeholder="Button Text"
+                                value={button.url || ''}
+                                onChange={(e) => updateButton(idx, { url: e.target.value })}
+                                placeholder="https://example.com"
                                 className="text-sm"
                               />
                             </div>
-
-                            <div>
-                              <Label className="text-xs">Button Style</Label>
-                              <Select
-                                value={button.style || 'filled'}
-                                onValueChange={(value: 'filled' | 'outline') => updateButton(idx, { style: value })}
-                              >
-                                <SelectTrigger className="text-sm">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="filled">Filled</SelectItem>
-                                  <SelectItem value="outline">Outline</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label className="text-xs">Action Type</Label>
-                              <Select
-                                value={button.type}
-                                onValueChange={(value: CoverButtonType) => updateButton(idx, { type: value })}
-                              >
-                                <SelectTrigger className="text-sm">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="delivery_app">Delivery App</SelectItem>
-                                  <SelectItem value="checkout">Checkout</SelectItem>
-                                  <SelectItem value="url">Custom URL</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {button.type === 'delivery_app' && (
-                              <div>
-                                <Label className="text-xs">App</Label>
-                                <Select
-                                  value={button.app_slug || ''}
-                                  onValueChange={(value) => updateButton(idx, { app_slug: value })}
-                                >
-                                  <SelectTrigger className="text-sm">
-                                    <SelectValue placeholder="Select App" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {apps.map((app) => (
-                                      <SelectItem key={app.app_slug} value={app.app_slug}>
-                                        {app.app_name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            )}
-
-                            {button.type === 'url' && (
-                              <div>
-                                <Label className="text-xs">URL</Label>
-                                <Input
-                                  value={button.url || ''}
-                                  onChange={(e) => updateButton(idx, { url: e.target.value })}
-                                  placeholder="https://example.com"
-                                  className="text-sm"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      onClick={addButton}
-                      className="w-full"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Button
-                    </Button>
-                  </TabsContent>
-                </Tabs>
-              </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={addButton}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Button
+                  </Button>
+                </TabsContent>
+              </Tabs>
             </div>
+          </div>
 
-            {/* Preview Panel */}
-            <div className="flex-1 overflow-hidden bg-gray-50">
-              <div className="h-full overflow-y-auto p-4 custom-scrollbar">
-                <AnimatedCoverPreview
-                  title={title}
-                  subtitle={subtitle}
-                  logoUrl={logoUrl}
-                  bgImageUrl={bgImageUrl}
-                  bgVideoUrl={bgVideoUrl}
-                  checklist={checklist}
-                  buttons={buttons.map(btn => ({ ...btn, style: btn.style || 'filled' as const }))}
-                  selectedTheme={selectedTheme}
-                  activeDevice={activeDevice}
-                  dragMode={dragMode}
-                  elementPositions={elementPositions}
-                  onElementDrag={handleElementDrag}
-                  fullscreenPreview={fullscreenPreview}
-                  templateData={templateData || {}}
-                />
-              </div>
+          {/* Preview Panel */}
+          <div className="flex-1 overflow-hidden bg-gray-50">
+            <div className="h-full overflow-y-auto p-4 custom-scrollbar">
+              <AnimatedCoverPreview
+                title={title}
+                subtitle={subtitle}
+                logoUrl={logoUrl}
+                bgImageUrl={bgImageUrl}
+                bgVideoUrl={bgVideoUrl}
+                checklist={checklist}
+                buttons={buttons.map(btn => ({ ...btn, style: btn.style || 'filled' as const }))}
+                selectedTheme={selectedTheme}
+                activeDevice={activeDevice}
+                dragMode={dragMode}
+                elementPositions={elementPositions}
+                onElementDrag={handleElementDrag}
+                fullscreenPreview={fullscreenPreview}
+                templateData={templateData || {}}
+              />
             </div>
           </div>
         </div>
