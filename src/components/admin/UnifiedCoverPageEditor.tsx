@@ -40,10 +40,10 @@ import {
   Minimize2
 } from 'lucide-react';
 
-// Theme definitions
+// Enhanced Theme System
 const COVER_THEMES = {
   original: {
-    name: 'Original',
+    name: 'Original Blue',
     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     primaryColor: '#667eea',
     secondaryColor: '#764ba2',
@@ -58,7 +58,7 @@ const COVER_THEMES = {
     particleColor: '#667eea'
   },
   gold: {
-    name: 'Gold',
+    name: 'Luxury Gold',
     background: 'radial-gradient(circle at center, #1a1a1a 0%, #000000 100%)',
     primaryColor: '#F5B800',
     secondaryColor: '#FFD700',
@@ -73,7 +73,7 @@ const COVER_THEMES = {
     particleColor: '#F5B800'
   },
   platinum: {
-    name: 'Platinum',
+    name: 'Modern Platinum',
     background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
     primaryColor: '#BDC3C7',
     secondaryColor: '#ECF0F1',
@@ -86,6 +86,51 @@ const COVER_THEMES = {
     glowColor: 'rgba(189, 195, 199, 0.3)',
     particles: false,
     particleColor: '#BDC3C7'
+  },
+  ocean: {
+    name: 'Ocean Depth',
+    background: 'linear-gradient(135deg, #0077be 0%, #00a8cc 50%, #0083b0 100%)',
+    primaryColor: '#00d4ff',
+    secondaryColor: '#0077be',
+    textColor: '#ffffff',
+    subtitleColor: '#b3e5fc',
+    buttonBg: '#00d4ff',
+    buttonText: '#0077be',
+    buttonOutline: '#00d4ff',
+    buttonOutlineText: '#00d4ff',
+    glowColor: 'rgba(0, 212, 255, 0.3)',
+    particles: true,
+    particleColor: '#00d4ff'
+  },
+  sunset: {
+    name: 'Sunset Glow',
+    background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 50%, #ff9ff3 100%)',
+    primaryColor: '#ffffff',
+    secondaryColor: '#ff6b6b',
+    textColor: '#ffffff',
+    subtitleColor: '#ffe8e8',
+    buttonBg: '#ffffff',
+    buttonText: '#ff6b6b',
+    buttonOutline: '#ffffff',
+    buttonOutlineText: '#ffffff',
+    glowColor: 'rgba(255, 255, 255, 0.4)',
+    particles: false,
+    particleColor: '#ffffff'
+  },
+  forest: {
+    name: 'Forest Green',
+    background: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
+    primaryColor: '#a8e6cf',
+    secondaryColor: '#71b280',
+    textColor: '#ffffff',
+    subtitleColor: '#d4efdf',
+    buttonBg: '#a8e6cf',
+    buttonText: '#134e5e',
+    buttonOutline: '#a8e6cf',
+    buttonOutlineText: '#a8e6cf',
+    glowColor: 'rgba(168, 230, 207, 0.3)',
+    particles: false,
+    particleColor: '#a8e6cf'
   }
 };
 
@@ -747,10 +792,33 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   </div>
                 </div>
 
+                {/* Enhanced Visual Builder Controls */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Visual Builder</Label>
+                    <Button
+                      variant={dragMode ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setDragMode(!dragMode)}
+                    >
+                      <Move className="w-4 h-4 mr-2" />
+                      {dragMode ? 'Exit Drag' : 'Drag Mode'}
+                    </Button>
+                  </div>
+                  {dragMode && (
+                    <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      <p className="text-xs text-muted-foreground">
+                        💡 Drag elements in the preview to reposition them. Click "Exit Drag" when done.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <Tabs defaultValue="content" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="content">Content</TabsTrigger>
                     <TabsTrigger value="design">Design</TabsTrigger>
+                    <TabsTrigger value="layout">Layout</TabsTrigger>
                     <TabsTrigger value="buttons">Buttons</TabsTrigger>
                   </TabsList>
 
@@ -832,40 +900,79 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   </TabsContent>
 
                   <TabsContent value="design" className="space-y-4">
-                    <div>
-                      <Label>Logo</Label>
+                    {/* Enhanced Logo Section */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold flex items-center gap-2">
+                        <FileImage className="w-4 h-4" />
+                        Logo
+                      </Label>
+                      
+                      {logoUrl && (
+                        <div className="p-3 bg-muted rounded-lg">
+                          <img 
+                            src={logoUrl} 
+                            alt="Logo preview" 
+                            className="w-16 h-16 object-contain mx-auto border rounded"
+                          />
+                        </div>
+                      )}
+                      
                       <div className="space-y-2">
                         <Input
                           value={logoUrl}
                           onChange={(e) => setLogoUrl(e.target.value)}
-                          placeholder="Logo URL"
+                          placeholder="Logo URL or upload file below"
+                          className="text-sm"
                         />
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleFileUpload('logo')}
-                          className="w-full"
+                          className="w-full gap-2"
                         >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Logo
+                          <Upload className="w-4 h-4" />
+                          Upload Logo File
                         </Button>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-xs">Logo Height: {logoHeight}px</Label>
+                        <Slider
+                          value={[logoHeight]}
+                          onValueChange={([value]) => setLogoHeight(value)}
+                          min={50}
+                          max={300}
+                          step={10}
+                          className="mt-2"
+                        />
                       </div>
                     </div>
 
-                    <div>
-                      <Label>Logo Height: {logoHeight}px</Label>
-                      <Slider
-                        value={[logoHeight]}
-                        onValueChange={([value]) => setLogoHeight(value)}
-                        min={50}
-                        max={300}
-                        step={10}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Background</Label>
+                    {/* Enhanced Background Section */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold flex items-center gap-2">
+                        <FileVideo className="w-4 h-4" />
+                        Background
+                      </Label>
+                      
+                      {(bgImageUrl || bgVideoUrl) && (
+                        <div className="p-3 bg-muted rounded-lg">
+                          {bgVideoUrl ? (
+                            <video 
+                              src={bgVideoUrl} 
+                              className="w-full h-20 object-cover rounded border"
+                              muted
+                            />
+                          ) : (
+                            <img 
+                              src={bgImageUrl} 
+                              alt="Background preview" 
+                              className="w-full h-20 object-cover rounded border"
+                            />
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="space-y-2">
                         <Input
                           value={bgImageUrl || bgVideoUrl}
@@ -878,17 +985,158 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                               setBgVideoUrl('');
                             }
                           }}
-                          placeholder="Background URL"
+                          placeholder="Background URL or upload file below"
+                          className="text-sm"
                         />
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleFileUpload('background')}
-                          className="w-full"
+                          className="w-full gap-2"
                         >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Background
+                          <Upload className="w-4 h-4" />
+                          Upload Background File
                         </Button>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground p-2 bg-blue-50 rounded border">
+                        💡 Supports images (JPG, PNG, WebP) and videos (MP4, WebM)
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* New Advanced Layout Tab */}
+                  <TabsContent value="layout" className="space-y-4">
+                    <div className="space-y-4">
+                      <Label className="text-sm font-semibold flex items-center gap-2">
+                        <Layout className="w-4 h-4" />
+                        Layout Templates
+                      </Label>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setElementPositions([
+                              { id: 'logo', type: 'logo', x: 50, y: 10 },
+                              { id: 'title', type: 'title', x: 50, y: 25 },
+                              { id: 'subtitle', type: 'subtitle', x: 50, y: 35 },
+                              { id: 'checklist', type: 'checklist', x: 50, y: 50 },
+                              { id: 'buttons', type: 'buttons', x: 50, y: 75 }
+                            ]);
+                          }}
+                          className="text-xs p-2 h-auto flex-col gap-1"
+                        >
+                          <div className="w-4 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-6 h-1 bg-current rounded"></div>
+                          <div className="w-5 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-3 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-4 h-1 bg-current rounded"></div>
+                          Center Classic
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setElementPositions([
+                              { id: 'logo', type: 'logo', x: 20, y: 15 },
+                              { id: 'title', type: 'title', x: 20, y: 30 },
+                              { id: 'subtitle', type: 'subtitle', x: 20, y: 40 },
+                              { id: 'checklist', type: 'checklist', x: 20, y: 55 },
+                              { id: 'buttons', type: 'buttons', x: 20, y: 75 }
+                            ]);
+                          }}
+                          className="text-xs p-2 h-auto flex-col gap-1"
+                        >
+                          <div className="w-3 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-5 h-1 bg-current rounded"></div>
+                          <div className="w-4 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-2 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-3 h-1 bg-current rounded"></div>
+                          Left Aligned
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setElementPositions([
+                              { id: 'logo', type: 'logo', x: 70, y: 15 },
+                              { id: 'title', type: 'title', x: 70, y: 30 },
+                              { id: 'subtitle', type: 'subtitle', x: 70, y: 40 },
+                              { id: 'checklist', type: 'checklist', x: 70, y: 55 },
+                              { id: 'buttons', type: 'buttons', x: 70, y: 75 }
+                            ]);
+                          }}
+                          className="text-xs p-2 h-auto flex-col gap-1"
+                        >
+                          <div className="w-3 h-1 bg-current rounded opacity-60 ml-auto"></div>
+                          <div className="w-5 h-1 bg-current rounded ml-auto"></div>
+                          <div className="w-4 h-1 bg-current rounded opacity-60 ml-auto"></div>
+                          <div className="w-2 h-1 bg-current rounded opacity-60 ml-auto"></div>
+                          <div className="w-3 h-1 bg-current rounded ml-auto"></div>
+                          Right Aligned
+                        </Button>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setElementPositions([
+                              { id: 'title', type: 'title', x: 50, y: 15 },
+                              { id: 'subtitle', type: 'subtitle', x: 50, y: 25 },
+                              { id: 'logo', type: 'logo', x: 50, y: 40 },
+                              { id: 'checklist', type: 'checklist', x: 50, y: 60 },
+                              { id: 'buttons', type: 'buttons', x: 50, y: 80 }
+                            ]);
+                          }}
+                          className="text-xs p-2 h-auto flex-col gap-1"
+                        >
+                          <div className="w-6 h-1 bg-current rounded"></div>
+                          <div className="w-5 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-4 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-3 h-1 bg-current rounded opacity-60"></div>
+                          <div className="w-4 h-1 bg-current rounded"></div>
+                          Title First
+                        </Button>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Label className="text-sm font-semibold">Element Spacing</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setElementPositions(prev => prev.map(el => ({
+                                ...el,
+                                y: el.y * 0.8
+                              })));
+                            }}
+                          >
+                            Compact
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setElementPositions(prev => prev.map(el => ({
+                                ...el,
+                                y: Math.min(90, el.y * 1.2)
+                              })));
+                            }}
+                          >
+                            Spread Out
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                        <p className="text-xs text-amber-800">
+                          💡 Use templates as starting points, then fine-tune with drag mode or manual positioning below.
+                        </p>
                       </div>
                     </div>
                   </TabsContent>
