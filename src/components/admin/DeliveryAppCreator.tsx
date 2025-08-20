@@ -19,8 +19,12 @@ import {
   Package,
   Settings,
   Palette,
-  Layout
+  Layout,
+  Monitor,
+  Smartphone,
+  Tablet
 } from 'lucide-react';
+import { DeliveryAppWorkingPreview } from './DeliveryAppWorkingPreview';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -608,33 +612,103 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                 </div>
               </TabsContent>
 
-              {/* Preview Tab */}
+              {/* Preview Tab - Full Working Preview */}
               <TabsContent value="preview" className="flex-1 p-6">
-                <div className="h-full flex items-center justify-center">
-                  <Card className="w-full max-w-md">
-                    <CardContent className="p-6 text-center space-y-4">
-                      {logoUrl && (
-                        <img src={logoUrl} alt="Logo" className="h-12 mx-auto" />
-                      )}
-                      <div>
-                        <h3 className="text-xl font-bold">{heroHeading || appName}</h3>
-                        <p className="text-muted-foreground">{heroSubheading}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {tabs.map((tab, index) => (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            <span>{tab.icon}</span>
-                            {tab.name}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        <div>App Slug: /{appSlug}</div>
-                        <div>Status: {isActive ? 'Active' : 'Inactive'}</div>
-                        {isHomepage && <div className="text-primary font-medium">Set as Homepage</div>}
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className="h-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Live Preview</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        Real Shopify Data
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Interactive
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Device Tabs for Preview */}
+                  <Tabs defaultValue="mobile" className="h-full">
+                    <TabsList className="grid w-full grid-cols-3 max-w-md mb-4">
+                      <TabsTrigger value="mobile" className="flex items-center gap-2 text-xs">
+                        <Smartphone className="w-3 h-3" />
+                        Mobile
+                      </TabsTrigger>
+                      <TabsTrigger value="tablet" className="flex items-center gap-2 text-xs">
+                        <Tablet className="w-3 h-3" />
+                        Tablet
+                      </TabsTrigger>
+                      <TabsTrigger value="desktop" className="flex items-center gap-2 text-xs">
+                        <Monitor className="w-3 h-3" />
+                        Desktop
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <div className="h-[calc(100%-80px)] flex items-center justify-center bg-gradient-to-br from-muted/20 to-muted/40 rounded-lg">
+                      <TabsContent value="mobile" className="m-0 h-full w-full flex items-center justify-center">
+                        <DeliveryAppWorkingPreview
+                          appConfig={{
+                            app_name: appName,
+                            app_slug: appSlug,
+                            main_app_config: {
+                              hero_heading: heroHeading,
+                              hero_subheading: heroSubheading
+                            },
+                            logo_url: logoUrl,
+                            collections_config: {
+                              tab_count: tabs.length,
+                              tabs: tabs
+                            },
+                            is_active: isActive,
+                            is_homepage: isHomepage
+                          }}
+                          device="mobile"
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="tablet" className="m-0 h-full w-full flex items-center justify-center">
+                        <DeliveryAppWorkingPreview
+                          appConfig={{
+                            app_name: appName,
+                            app_slug: appSlug,
+                            main_app_config: {
+                              hero_heading: heroHeading,
+                              hero_subheading: heroSubheading
+                            },
+                            logo_url: logoUrl,
+                            collections_config: {
+                              tab_count: tabs.length,
+                              tabs: tabs
+                            },
+                            is_active: isActive,
+                            is_homepage: isHomepage
+                          }}
+                          device="tablet"
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="desktop" className="m-0 h-full w-full flex items-center justify-center">
+                        <DeliveryAppWorkingPreview
+                          appConfig={{
+                            app_name: appName,
+                            app_slug: appSlug,
+                            main_app_config: {
+                              hero_heading: heroHeading,
+                              hero_subheading: heroSubheading
+                            },
+                            logo_url: logoUrl,
+                            collections_config: {
+                              tab_count: tabs.length,
+                              tabs: tabs
+                            },
+                            is_active: isActive,
+                            is_homepage: isHomepage
+                          }}
+                          device="desktop"
+                        />
+                      </TabsContent>
+                    </div>
+                  </Tabs>
                 </div>
               </TabsContent>
             </Tabs>
