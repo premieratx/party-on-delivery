@@ -193,8 +193,8 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   }, [hasChanges, onChangesDetected]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 overflow-x-hidden">
+      <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 w-full">
         
         {/* Header with Back Button */}
         <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">

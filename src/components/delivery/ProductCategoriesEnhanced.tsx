@@ -444,7 +444,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
         {searchQuery && searchProducts.length > 0 ? (
           <>
             <h3 className="text-lg font-semibold mb-4">Search Results ({searchProducts.length})</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {searchProducts.map((product) => (
                 <EnhancedProductCard
                   key={product.id}
@@ -472,7 +472,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
               </div>
             )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            <div className={`grid ${tabs[selectedCategory]?.handle === 'cocktails' ? 'grid-cols-2' : 'grid-cols-3'} sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4`}>
               {displayProducts.map((product) => (
                 <EnhancedProductCard
                   key={product.id}
