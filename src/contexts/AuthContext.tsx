@@ -33,10 +33,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { linkSessionToUser } = useSessionTracking();
 
   useEffect(() => {
+    console.log('🔧 AuthProvider: Setting up auth state listener...');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+      (event, session) => {
+        console.log('🔥 Auth state changed:', event, session?.user?.email);
+        console.log('🔥 Session access token exists:', !!session?.access_token);
         
         setSession(session);
         setUser(session?.user ?? null);
@@ -54,6 +57,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔧 AuthProvider: Initial session check:', session?.user?.email);
+      console.log('🔧 Initial session access token exists:', !!session?.access_token);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -63,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [linkSessionToUser]);
 
   const signInWithGoogle = async (redirectTo?: string, userType: 'admin' | 'customer' | 'affiliate' = 'customer') => {
+    console.log('🔧 Starting Google sign in for:', userType);
     const baseUrl = 'https://order.partyondelivery.com';
     
     const redirectUrls = {
@@ -70,6 +76,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       customer: redirectTo ? `${baseUrl}/customer/auth?redirect=${redirectTo}` : `${baseUrl}/customer/login?redirect=dashboard`,
       affiliate: `${baseUrl}/affiliate/intro`
     };
+
+    console.log('🔧 Redirect URL:', redirectUrls[userType]);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -82,6 +90,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         skipBrowserRedirect: false,
       },
     });
+
+    if (error) {
+      console.error('🚨 OAuth error:', error);
+    }
 
     return { error };
   };
