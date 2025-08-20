@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { DeliveryAppNavigation } from '@/components/navigation/DeliveryAppNavigation';
 import { ForceProductSync } from '@/components/emergency/ForceProductSync';
-import { ComprehensiveDeliveryAppEditor } from '@/components/admin/ComprehensiveDeliveryAppEditor';
+import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
 import { Button } from '@/components/ui/button';
 
 const DeliveryAppManager = () => {
   const [showEditor, setShowEditor] = useState(false);
 
   if (showEditor) {
-    return <ComprehensiveDeliveryAppEditor onBack={() => setShowEditor(false)} />;
+    return <DeliveryAppCreator onBack={() => setShowEditor(false)} onSaved={() => setShowEditor(false)} />;
   }
 
   return (

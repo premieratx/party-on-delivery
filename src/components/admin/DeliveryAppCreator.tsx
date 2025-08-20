@@ -1,36 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect } from 'react';
+import { AdminFormLayout, AdminFormSection } from './AdminFormLayout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Plus, 
-  Minus, 
-  Upload, 
-  Eye, 
-  Save, 
-  Trash2,
-  Settings,
-  Image as ImageIcon,
-  Type,
-  Layout,
-  Palette,
-  Package
-} from 'lucide-react';
-
-interface Collection {
-  handle: string;
-  title: string;
-  products_count?: number;
-}
+import { Plus, Minus, Upload } from 'lucide-react';
 
 interface Tab {
   index: number;
@@ -45,93 +24,68 @@ interface OccasionButton {
 }
 
 interface DeliveryAppConfig {
+  id?: string;
   app_name: string;
   app_slug: string;
   logo_url?: string;
   hero_heading: string;
   hero_subheading: string;
   scrolling_text: string;
-  hero_background_image?: string;
+  hero_background_color?: string;
   is_homepage: boolean;
   is_active: boolean;
   tabs: Tab[];
   occasion_buttons: OccasionButton[];
 }
 
-export const DeliveryAppCreator = () => {
+interface DeliveryAppCreatorProps {
+  onBack?: () => void;
+  initial?: DeliveryAppConfig | null;
+  onSaved?: () => void;
+}
+
+export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
+  onBack,
+  initial,
+  onSaved
+}) => {
   const [config, setConfig] = useState<DeliveryAppConfig>({
     app_name: '',
     app_slug: '',
     hero_heading: 'Alcohol Delivery Made Easy',
     hero_subheading: 'Beer, Wine, Spirits & More Delivered to Your Door',
     scrolling_text: 'Fast Delivery • Premium Selection • Competitive Prices',
+    hero_background_color: '#ffffff',
     is_homepage: false,
     is_active: true,
     tabs: [
-      { index: 0, name: 'Beer', collection_handle: 'beer' },
-      { index: 1, name: 'Wine', collection_handle: 'wine' },
-      { index: 2, name: 'Spirits', collection_handle: 'spirits' },
-      { index: 3, name: 'Mixers', collection_handle: 'mixers' },
-      { index: 4, name: 'Party Supplies', collection_handle: 'party-supplies' }
+      { index: 0, name: 'Beer', collection_handle: 'beer-collection' },
+      { index: 1, name: 'Wine', collection_handle: 'wine-collection' },
+      { index: 2, name: 'Spirits', collection_handle: 'spirits-collection' }
     ],
     occasion_buttons: [
       { title: 'Tailgate', collection_handle: 'tailgate-beer', enabled: true },
-      { title: 'Bachelorette', collection_handle: 'bachelorette-supplies', enabled: true },
-      { title: 'Party Pack', collection_handle: 'disco-collection', enabled: true }
+      { title: 'Bachelorette', collection_handle: 'bachelorette-booze', enabled: true }
     ]
   });
 
-  const [availableCollections, setAvailableCollections] = useState<Collection[]>([]);
-  const [existingApps, setExistingApps] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedAppId, setSelectedAppId] = useState<string>('');
+  const [availableCollections, setAvailableCollections] = useState<any[]>([]);  
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  // File upload refs
-  const logoInputRef = useRef<HTMLInputElement>(null);
-  const bgImageInputRef = useRef<HTMLInputElement>(null);
+  const isEditing = !!initial?.id;
 
   useEffect(() => {
     loadCollections();
-    loadExistingApps();
-  }, []);
-
-  const uploadAsset = async (file: File, kind: 'logo' | 'bg'): Promise<string | null> => {
-    try {
-      const ext = file.name.split('.').pop() || 'png';
-      const base = (config.app_slug || 'delivery-app').slice(0, 60);
-      const fileName = `delivery-${base}-${kind}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from('cover-assets')
-        .upload(fileName, file, { cacheControl: '3600', upsert: true });
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('cover-assets')
-        .getPublicUrl(fileName);
-      
-      toast({
-        title: "Upload successful",
-        description: `${kind === 'logo' ? 'Logo' : 'Background image'} uploaded successfully`,
-      });
-      
-      return publicUrl;
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: "Upload failed", 
-        description: "Failed to upload file. Please try again.",
-        variant: "destructive"
-      });
-      return null;
+    if (initial) {
+      setConfig(initial);
     }
-  };
+  }, [initial]);
 
   const loadCollections = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('get-all-collections');
       if (error) throw error;
-      
       if (data?.success && data.collections) {
         setAvailableCollections(data.collections);
       }
@@ -140,56 +94,9 @@ export const DeliveryAppCreator = () => {
     }
   };
 
-  const loadExistingApps = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('delivery_app_variations')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setExistingApps(data || []);
-    } catch (error) {
-      console.error('Error loading existing apps:', error);
-    }
-  };
-
-  const loadExistingApp = async (appId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('delivery_app_variations')
-        .select('*')
-        .eq('id', appId)
-        .single();
-      
-      if (error) throw error;
-      
-      if (data) {
-        const collectionsConfig = data.collections_config as any || { tabs: [], tab_count: 5 };
-        const mainAppConfig = data.main_app_config as any || {};
-        
-        setConfig({
-          app_name: data.app_name,
-          app_slug: data.app_slug,
-          logo_url: data.logo_url,
-          hero_heading: mainAppConfig.hero_heading || 'Alcohol Delivery Made Easy',
-          hero_subheading: mainAppConfig.hero_subheading || 'Beer, Wine, Spirits & More Delivered to Your Door',
-          scrolling_text: mainAppConfig.scrolling_text || 'Fast Delivery • Premium Selection • Competitive Prices',
-          hero_background_image: mainAppConfig.hero_background_image,
-          is_homepage: data.is_homepage,
-          is_active: data.is_active,
-          tabs: collectionsConfig.tabs || config.tabs,
-          occasion_buttons: mainAppConfig.occasion_buttons || config.occasion_buttons
-        });
-      }
-    } catch (error) {
-      console.error('Error loading app:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load app configuration",
-        variant: "destructive"
-      });
-    }
+  const generateSlug = (name: string) => {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    setConfig(prev => ({ ...prev, app_slug: slug }));
   };
 
   const addTab = () => {
@@ -199,17 +106,19 @@ export const DeliveryAppCreator = () => {
         tabs: [...prev.tabs, { 
           index: prev.tabs.length, 
           name: 'New Tab', 
-          collection_handle: 'beer' 
+          collection_handle: availableCollections[0]?.handle || 'beer' 
         }]
       }));
     }
   };
 
   const removeTab = (index: number) => {
-    setConfig(prev => ({
-      ...prev,
-      tabs: prev.tabs.filter((_, i) => i !== index).map((tab, i) => ({ ...tab, index: i }))
-    }));
+    if (config.tabs.length > 1) {
+      setConfig(prev => ({
+        ...prev,
+        tabs: prev.tabs.filter((_, i) => i !== index).map((tab, i) => ({ ...tab, index: i }))
+      }));
+    }
   };
 
   const updateTab = (index: number, field: keyof Tab, value: string) => {
@@ -226,7 +135,7 @@ export const DeliveryAppCreator = () => {
       ...prev,
       occasion_buttons: [...prev.occasion_buttons, { 
         title: 'New Occasion', 
-        collection_handle: 'beer',
+        collection_handle: availableCollections[0]?.handle || 'beer',
         enabled: true 
       }]
     }));
@@ -248,7 +157,7 @@ export const DeliveryAppCreator = () => {
     }));
   };
 
-  const saveDeliveryApp = async () => {
+  const handleSave = async () => {
     if (!config.app_name || !config.app_slug) {
       toast({
         title: "Error",
@@ -258,7 +167,7 @@ export const DeliveryAppCreator = () => {
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     try {
       const appData = {
         app_name: config.app_name,
@@ -266,25 +175,25 @@ export const DeliveryAppCreator = () => {
         logo_url: config.logo_url,
         is_homepage: config.is_homepage,
         is_active: config.is_active,
-        collections_config: {
+        collections_config: JSON.parse(JSON.stringify({
           tabs: config.tabs,
           tab_count: config.tabs.length
-        } as any,
-        main_app_config: {
+        })),
+        main_app_config: JSON.parse(JSON.stringify({
           hero_heading: config.hero_heading,
           hero_subheading: config.hero_subheading,
           scrolling_text: config.scrolling_text,
-          hero_background_image: config.hero_background_image,
+          hero_background_color: config.hero_background_color,
           occasion_buttons: config.occasion_buttons
-        } as any
+        }))
       };
 
       let result;
-      if (selectedAppId) {
+      if (isEditing && config.id) {
         result = await supabase
           .from('delivery_app_variations')
           .update(appData)
-          .eq('id', selectedAppId);
+          .eq('id', config.id);
       } else {
         result = await supabase
           .from('delivery_app_variations')
@@ -295,17 +204,10 @@ export const DeliveryAppCreator = () => {
 
       toast({
         title: "Success",
-        description: `Delivery app ${selectedAppId ? 'updated' : 'created'} successfully`,
+        description: `Delivery app ${isEditing ? 'updated' : 'created'} successfully`,
       });
 
-      loadExistingApps();
-      
-      if (config.is_homepage) {
-        await supabase
-          .from('delivery_app_variations')
-          .update({ is_homepage: false })
-          .neq('id', selectedAppId || '');
-      }
+      onSaved?.();
 
     } catch (error) {
       console.error('Error saving delivery app:', error);
@@ -315,478 +217,239 @@ export const DeliveryAppCreator = () => {
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const generateSlug = (name: string) => {
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    setConfig(prev => ({ ...prev, app_slug: slug }));
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="flex justify-between items-center sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-4 px-6 border-b">
+    <AdminFormLayout
+      title={isEditing ? 'Edit Delivery App' : 'Create Delivery App'}
+      subtitle="Configure your delivery application settings and product tabs"
+      onBack={onBack}
+      onSave={handleSave}
+      saving={saving}
+      canSave={!!config.app_name && !!config.app_slug}
+    >
+      <AdminFormSection
+        title="Basic Information"
+        description="Set up the basic details for your delivery app"
+      >
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="app_name">App Name *</Label>
+            <Input
+              id="app_name"
+              value={config.app_name}
+              onChange={(e) => {
+                setConfig(prev => ({ ...prev, app_name: e.target.value }));
+                generateSlug(e.target.value);
+              }}
+              placeholder="My Delivery App"
+            />
+          </div>
+          <div>
+            <Label htmlFor="app_slug">App Slug *</Label>
+            <Input
+              id="app_slug"
+              value={config.app_slug}
+              onChange={(e) => setConfig(prev => ({ ...prev, app_slug: e.target.value }))}
+              placeholder="my-delivery-app"
+            />
+          </div>
+        </div>
+
         <div>
-          <h2 className="text-3xl font-bold flex items-center gap-2">
-            <Package className="h-8 w-8 text-primary" />
-            Delivery App Creator
-          </h2>
-          <p className="text-muted-foreground">Create sophisticated delivery apps with advanced collection mapping</p>
-          <Button 
-            onClick={saveDeliveryApp} 
-            disabled={loading || !config.app_name || !config.app_slug}
-            className="mt-2"
+          <Label htmlFor="logo_url">Logo URL</Label>
+          <div className="flex gap-2">
+            <Input
+              id="logo_url"
+              value={config.logo_url || ''}
+              onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
+              placeholder="https://example.com/logo.png"
+              className="flex-1"
+            />
+            <Button variant="outline">
+              <Upload className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_active"
+              checked={config.is_active}
+              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, is_active: checked }))}
+            />
+            <Label htmlFor="is_active">Active</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_homepage"
+              checked={config.is_homepage}
+              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, is_homepage: checked }))}
+            />
+            <Label htmlFor="is_homepage">Set as Homepage</Label>
+          </div>
+        </div>
+      </AdminFormSection>
+
+      <AdminFormSection
+        title="Hero Section"
+        description="Configure the main hero section of your delivery app"
+      >
+        <div>
+          <Label htmlFor="hero_heading">Hero Heading</Label>
+          <Input
+            id="hero_heading"
+            value={config.hero_heading}
+            onChange={(e) => setConfig(prev => ({ ...prev, hero_heading: e.target.value }))}
+            placeholder="Alcohol Delivery Made Easy"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="hero_subheading">Hero Subheading</Label>
+          <Input
+            id="hero_subheading"
+            value={config.hero_subheading}
+            onChange={(e) => setConfig(prev => ({ ...prev, hero_subheading: e.target.value }))}
+            placeholder="Beer, Wine, Spirits & More Delivered to Your Door"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="scrolling_text">Scrolling Text</Label>
+          <Input
+            id="scrolling_text"
+            value={config.scrolling_text}
+            onChange={(e) => setConfig(prev => ({ ...prev, scrolling_text: e.target.value }))}
+            placeholder="Fast Delivery • Premium Selection • Competitive Prices"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="hero_background_color">Background Color</Label>
+          <div className="flex gap-2">
+            <Input
+              id="hero_background_color"
+              type="color"
+              value={config.hero_background_color}
+              onChange={(e) => setConfig(prev => ({ ...prev, hero_background_color: e.target.value }))}
+              className="w-16"
+            />
+            <Input
+              value={config.hero_background_color}
+              onChange={(e) => setConfig(prev => ({ ...prev, hero_background_color: e.target.value }))}
+              className="flex-1"
+            />
+          </div>
+        </div>
+      </AdminFormSection>
+
+      <AdminFormSection
+        title="Product Tabs"
+        description="Configure the product category tabs for your delivery app"
+      >
+        <div className="space-y-4">
+          {config.tabs.map((tab, index) => (
+            <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+              <div className="flex-1 grid grid-cols-2 gap-2">
+                <Input
+                  value={tab.name}
+                  onChange={(e) => updateTab(index, 'name', e.target.value)}
+                  placeholder="Tab Name"
+                />
+                <Select
+                  value={tab.collection_handle}
+                  onValueChange={(value) => updateTab(index, 'collection_handle', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select collection" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCollections.map((collection) => (
+                      <SelectItem key={collection.handle} value={collection.handle}>
+                        {collection.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removeTab(index)}
+                disabled={config.tabs.length <= 1}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            onClick={addTab}
+            disabled={config.tabs.length >= 8}
+            className="w-full"
           >
-            <Save className="w-4 h-4 mr-2" />
-            {loading ? 'Saving...' : selectedAppId ? 'Update App' : 'Save App'}
+            <Plus className="h-4 w-4 mr-2" />
+            Add Tab
           </Button>
         </div>
-      </div>
+      </AdminFormSection>
 
-      <ScrollArea className="h-[calc(100vh-140px)]">
-        <div className="space-y-6 p-6">
-          {/* Load Existing App */}
-          <Card className="border-2 shadow-lg">
-            <CardHeader className="pb-4 bg-gradient-to-r from-primary/5 to-secondary/5">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Settings className="h-6 w-6 text-primary" />
-                Load Existing App
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <Label className="text-base font-medium">Select Existing App</Label>
-                  <Select value={selectedAppId} onValueChange={setSelectedAppId}>
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Choose an existing app to edit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {existingApps.map((app) => (
-                        <SelectItem key={app.id} value={app.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{app.app_name}</span>
-                            <span className="text-sm text-muted-foreground">
-                              /{app.app_slug} {app.is_homepage && '(HOMEPAGE)'}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => selectedAppId && loadExistingApp(selectedAppId)}
-                    disabled={!selectedAppId}
-                    className="flex-1"
-                  >
-                    Load App
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      setSelectedAppId('');
-                      setConfig({
-                        app_name: '',
-                        app_slug: '',
-                        hero_heading: 'Alcohol Delivery Made Easy',
-                        hero_subheading: 'Beer, Wine, Spirits & More Delivered to Your Door',
-                        scrolling_text: 'Fast Delivery • Premium Selection • Competitive Prices',
-                        is_homepage: false,
-                        is_active: true,
-                        tabs: [
-                          { index: 0, name: 'Beer', collection_handle: 'beer-collection' },
-                          { index: 1, name: 'Wine', collection_handle: 'wine-collection' },
-                          { index: 2, name: 'Spirits', collection_handle: 'spirits-collection' },
-                          { index: 3, name: 'Cocktails', collection_handle: 'cocktail-kits' },
-                          { index: 4, name: 'Seltzers', collection_handle: 'seltzer-collection' }
-                        ],
-                        occasion_buttons: [
-                          { title: 'Tailgate', collection_handle: 'tailgate-beer', enabled: true },
-                          { title: 'Bachelorette', collection_handle: 'bachelorette-booze', enabled: true },
-                          { title: 'Party Pack', collection_handle: 'disco-collection', enabled: true }
-                        ]
-                      });
-                    }}
-                    className="flex-1"
-                  >
-                    New App
-                  </Button>
-                </div>
+      <AdminFormSection
+        title="Occasion Buttons"
+        description="Configure special occasion buttons for quick product access"
+      >
+        <div className="space-y-4">
+          {config.occasion_buttons.map((button, index) => (
+            <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
+              <div className="flex-1 grid grid-cols-2 gap-2">
+                <Input
+                  value={button.title}
+                  onChange={(e) => updateOccasionButton(index, 'title', e.target.value)}
+                  placeholder="Button Title"
+                />
+                <Select
+                  value={button.collection_handle}
+                  onValueChange={(value) => updateOccasionButton(index, 'collection_handle', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select collection" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCollections.map((collection) => (
+                      <SelectItem key={collection.handle} value={collection.handle}>
+                        {collection.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </CardContent>
-          </Card>
-
-          <Tabs defaultValue="basic" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 h-12 bg-muted/50">
-              <TabsTrigger value="basic" className="flex items-center gap-2 h-10">
-                <Type className="w-4 h-4" />
-                Basic Info
-              </TabsTrigger>
-              <TabsTrigger value="hero" className="flex items-center gap-2 h-10">
-                <ImageIcon className="w-4 h-4" />
-                Hero Section
-              </TabsTrigger>
-              <TabsTrigger value="tabs" className="flex items-center gap-2 h-10">
-                <Layout className="w-4 h-4" />
-                Product Tabs
-              </TabsTrigger>
-              <TabsTrigger value="occasions" className="flex items-center gap-2 h-10">
-                <Palette className="w-4 h-4" />
-                Occasions
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="basic" className="space-y-6">
-              <Card className="shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Type className="h-6 w-6 text-primary" />
-                    Basic Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="app_name">App Name *</Label>
-                      <Input
-                        id="app_name"
-                        value={config.app_name}
-                        onChange={(e) => {
-                          setConfig(prev => ({ ...prev, app_name: e.target.value }));
-                          if (!config.app_slug) generateSlug(e.target.value);
-                        }}
-                        placeholder="My Delivery App"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="app_slug">App Slug *</Label>
-                      <Input
-                        id="app_slug"
-                        value={config.app_slug}
-                        onChange={(e) => setConfig(prev => ({ ...prev, app_slug: e.target.value }))}
-                        placeholder="my-delivery-app"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="logo_url">Logo</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="logo_url"
-                        value={config.logo_url || ''}
-                        onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
-                        placeholder="https://example.com/logo.png"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => logoInputRef.current?.click()}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="is_homepage"
-                        checked={config.is_homepage}
-                        onCheckedChange={(checked) => 
-                          setConfig(prev => ({ ...prev, is_homepage: !!checked }))
-                        }
-                      />
-                      <Label htmlFor="is_homepage">Set as Homepage</Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="is_active"
-                        checked={config.is_active}
-                        onCheckedChange={(checked) => 
-                          setConfig(prev => ({ ...prev, is_active: !!checked }))
-                        }
-                      />
-                      <Label htmlFor="is_active">Active</Label>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="hero" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Layout className="h-5 w-5" />
-                    Hero Section
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="hero_heading">Hero Heading</Label>
-                    <Input
-                      id="hero_heading"
-                      value={config.hero_heading}
-                      onChange={(e) => setConfig(prev => ({ ...prev, hero_heading: e.target.value }))}
-                      placeholder="Alcohol Delivery Made Easy"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="hero_subheading">Hero Subheading</Label>
-                    <Input
-                      id="hero_subheading"
-                      value={config.hero_subheading}
-                      onChange={(e) => setConfig(prev => ({ ...prev, hero_subheading: e.target.value }))}
-                      placeholder="Beer, Wine, Spirits & More Delivered to Your Door"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="scrolling_text">Scrolling Text</Label>
-                    <Input
-                      id="scrolling_text"
-                      value={config.scrolling_text}
-                      onChange={(e) => setConfig(prev => ({ ...prev, scrolling_text: e.target.value }))}
-                      placeholder="Fast Delivery • Premium Selection • Competitive Prices"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="hero_bg_image">Background Image</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="hero_bg_image"
-                        value={config.hero_background_image || ''}
-                        onChange={(e) => setConfig(prev => ({ 
-                          ...prev, 
-                          hero_background_image: e.target.value
-                        }))}
-                        placeholder="https://example.com/hero-bg.jpg"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => bgImageInputRef.current?.click()}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="tabs" className="space-y-4">
-              <Card className="border-2">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Package className="h-6 w-6 text-primary" />
-                    Product Tabs Configuration
-                  </CardTitle>
-                  <p className="text-muted-foreground mt-2">
-                    Configure which Shopify collections appear as tabs in your delivery app. You can have up to 8 tabs.
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg">Product Category Tabs ({config.tabs.length}/8)</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={addTab}
-                        disabled={config.tabs.length >= 8}
-                        size="sm"
-                        className="h-10"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Tab
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {config.tabs.map((tab, index) => (
-                      <div key={index} className="border-2 rounded-xl p-4 space-y-4 bg-muted/20">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-semibold">Tab {index + 1}</h4>
-                          <Button
-                            type="button"
-                            onClick={() => removeTab(index)}
-                            variant="outline"
-                            size="sm"
-                            disabled={config.tabs.length <= 1}
-                            className="h-8"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor={`tab_name_${index}`} className="font-medium">Tab Display Name</Label>
-                            <Input
-                              id={`tab_name_${index}`}
-                              value={tab.name}
-                              onChange={(e) => updateTab(index, 'name', e.target.value)}
-                              placeholder="e.g., Beer"
-                              className="h-12 mt-1"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor={`collection_${index}`} className="font-medium">Shopify Collection</Label>
-                            <Select
-                              value={tab.collection_handle}
-                              onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                            >
-                              <SelectTrigger className="h-12 mt-1">
-                                <SelectValue placeholder="Select collection" />
-                              </SelectTrigger>
-                              <SelectContent className="max-h-60">
-                                {availableCollections.map((collection) => (
-                                  <SelectItem key={collection.handle} value={collection.handle}>
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{collection.title}</span>
-                                      <span className="text-sm text-muted-foreground">
-                                        {collection.products_count || 0} products • Handle: {collection.handle}
-                                      </span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {config.tabs.length === 0 && (
-                      <div className="text-center py-12 bg-muted/30 rounded-xl">
-                        <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground text-lg">No tabs configured</p>
-                        <p className="text-sm text-muted-foreground mt-1">Add a tab to get started</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="occasions" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 justify-between">
-                    <div className="flex items-center gap-2">
-                      <Palette className="h-5 w-5" />
-                      "What's the Occasion?" Buttons
-                    </div>
-                    <Button onClick={addOccasionButton}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Button
-                    </Button>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Configure the occasion buttons that appear in the "What's the Occasion?" section
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {config.occasion_buttons.map((button, index) => (
-                      <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
-                        <div className="flex-1">
-                          <Label>Button Title</Label>
-                          <Input
-                            value={button.title}
-                            onChange={(e) => updateOccasionButton(index, 'title', e.target.value)}
-                            placeholder="Button Title"
-                          />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <Label>Collection</Label>
-                          <Select 
-                            value={button.collection_handle}
-                            onValueChange={(value) => updateOccasionButton(index, 'collection_handle', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableCollections.map((collection) => (
-                                <SelectItem key={collection.handle} value={collection.handle}>
-                                  {collection.title} ({collection.products_count || 0} products)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={button.enabled}
-                            onCheckedChange={(checked) => 
-                              updateOccasionButton(index, 'enabled', !!checked)
-                            }
-                          />
-                          <Label>Enabled</Label>
-                        </div>
-
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeOccasionButton(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <Switch
+                checked={button.enabled}
+                onCheckedChange={(checked) => updateOccasionButton(index, 'enabled', checked)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removeOccasionButton(index)}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            onClick={addOccasionButton}
+            className="w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Occasion Button
+          </Button>
         </div>
-      </ScrollArea>
-
-      {/* Hidden file inputs */}
-      <input
-        ref={logoInputRef}
-        type="file"
-        accept="image/*"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            const url = await uploadAsset(file, 'logo');
-            if (url) setConfig(prev => ({ ...prev, logo_url: url }));
-          }
-        }}
-        style={{ display: 'none' }}
-      />
-      <input
-        ref={bgImageInputRef}
-        type="file"
-        accept="image/*"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            const url = await uploadAsset(file, 'bg');
-            if (url) setConfig(prev => ({ ...prev, hero_background_image: url }));
-          }
-        }}
-        style={{ display: 'none' }}
-      />
-    </div>
+      </AdminFormSection>
+    </AdminFormLayout>
   );
 };
