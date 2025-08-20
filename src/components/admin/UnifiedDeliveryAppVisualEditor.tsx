@@ -90,6 +90,8 @@ interface DeliveryAppConfig {
   hero_heading?: string;
   hero_subheading?: string;
   hero_scrolling_text?: string;
+  hero_image_url?: string;
+  hero_video_url?: string;
   logo_url?: string;
   tabs: DeliveryAppTab[];
   background_color?: string;
@@ -121,6 +123,8 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
   const [appSlug, setAppSlug] = useState('');
   const [heroHeading, setHeroHeading] = useState('');
   const [heroSubheading, setHeroSubheading] = useState('');
+  const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [heroVideoUrl, setHeroVideoUrl] = useState('');
   
   const [logoUrl, setLogoUrl] = useState('');
   const [tabs, setTabs] = useState<DeliveryAppTab[]>([
@@ -135,6 +139,7 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
 
   const { toast } = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const heroInputRef = useRef<HTMLInputElement>(null);
   
   const isEditing = !!initial?.id;
   const theme = DELIVERY_THEMES[selectedTheme as keyof typeof DELIVERY_THEMES];
@@ -148,6 +153,8 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       setAppSlug(initial.app_slug || '');
       setHeroHeading(initial.hero_heading || '');
       setHeroSubheading(initial.hero_subheading || '');
+      setHeroImageUrl(initial.hero_image_url || '');
+      setHeroVideoUrl(initial.hero_video_url || '');
       
       setLogoUrl(initial.logo_url || '');
       setTabs(initial.tabs || []);
@@ -162,6 +169,8 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       setAppSlug('');
       setHeroHeading('Welcome to our Store');
       setHeroSubheading('Discover amazing products');
+      setHeroImageUrl('');
+      setHeroVideoUrl('');
       
       setLogoUrl('');
       setTabs([
@@ -253,6 +262,38 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       const { data } = supabase.storage.from('delivery-app-assets').getPublicUrl(fileName);
       setLogoUrl(data.publicUrl);
       toast({ title: 'Logo uploaded successfully!' });
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast({ title: 'Upload failed', variant: 'destructive' });
+    }
+  };
+
+  const handleHeroUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `delivery-app-${Date.now()}-hero.${ext}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('delivery-app-assets')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('delivery-app-assets').getPublicUrl(fileName);
+      
+      // Check if it's a video file
+      if (file.type.startsWith('video/')) {
+        setHeroVideoUrl(data.publicUrl);
+        setHeroImageUrl(''); // Clear image URL when video is set
+        toast({ title: 'Hero video uploaded successfully!' });
+      } else {
+        setHeroImageUrl(data.publicUrl);
+        setHeroVideoUrl(''); // Clear video URL when image is set
+        toast({ title: 'Hero image uploaded successfully!' });
+      }
     } catch (error) {
       console.error('Upload failed:', error);
       toast({ title: 'Upload failed', variant: 'destructive' });
@@ -353,6 +394,47 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
                           <img src={logoUrl} alt="Logo" className="w-16 h-16 object-contain rounded border" />
                         </div>
                       )}
+                    </div>
+
+                    <div>
+                      <Label>Hero Background</Label>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => heroInputRef.current?.click()}
+                            className="flex-1"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Image/Video/GIF
+                          </Button>
+                        </div>
+                        <div>
+                          <Input
+                            placeholder="Or enter URL"
+                            value={heroImageUrl || heroVideoUrl}
+                            onChange={(e) => {
+                              const url = e.target.value;
+                              if (url.includes('.mp4') || url.includes('.webm') || url.includes('.mov')) {
+                                setHeroVideoUrl(url);
+                                setHeroImageUrl('');
+                              } else {
+                                setHeroImageUrl(url);
+                                setHeroVideoUrl('');
+                              }
+                            }}
+                          />
+                        </div>
+                        {(heroImageUrl || heroVideoUrl) && (
+                          <div className="mt-2">
+                            {heroVideoUrl ? (
+                              <video src={heroVideoUrl} className="w-full h-16 object-cover rounded border" muted />
+                            ) : (
+                              <img src={heroImageUrl} alt="Hero" className="w-full h-16 object-cover rounded border" />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -487,12 +569,19 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
           </div>
         </div>
 
-        {/* Hidden File Input */}
+        {/* Hidden File Inputs */}
         <input
           ref={logoInputRef}
           type="file"
           accept="image/*"
           onChange={handleLogoUpload}
+          className="hidden"
+        />
+        <input
+          ref={heroInputRef}
+          type="file"
+          accept="image/*,video/*,.gif"
+          onChange={handleHeroUpload}
           className="hidden"
         />
       </DialogContent>
