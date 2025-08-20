@@ -48,11 +48,22 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
   // Reset image index when product changes or dialog opens
   React.useEffect(() => {
     if (isOpen && product) {
+      console.log('🖼️ ProductLightbox opening with product:', product.title);
       setCurrentImageIndex(0);
     }
   }, [isOpen, product?.id]);
 
-  if (!product) return null;
+  // Safety check - don't render if product is missing required data
+  if (!product || !product.id || !product.title) {
+    console.warn('❌ ProductLightbox: Invalid product data:', product);
+    return null;
+  }
+
+  // Safety check for variants
+  if (!product.variants || product.variants.length === 0) {
+    console.warn('❌ ProductLightbox: Product has no variants:', product.title);
+    return null;
+  }
 
   const variant = selectedVariant || product.variants[0];
   
@@ -60,25 +71,67 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
   const allImages = [product.image, ...(product.images || [])].filter(Boolean);
   const hasMultipleImages = allImages.length > 1;
 
+  // Safety check for image index
+  React.useEffect(() => {
+    if (currentImageIndex >= allImages.length) {
+      setCurrentImageIndex(0);
+    }
+  }, [currentImageIndex, allImages.length]);
+
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    try {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    } catch (error) {
+      console.error('Error in nextImage:', error);
+      setCurrentImageIndex(0);
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    try {
+      setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    } catch (error) {
+      console.error('Error in prevImage:', error);
+      setCurrentImageIndex(0);
+    }
+  };
+
+  const handleClose = () => {
+    try {
+      console.log('🚪 ProductLightbox closing');
+      onClose();
+    } catch (error) {
+      console.error('Error closing lightbox:', error);
+      onClose();
+    }
   };
 
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        handleClose();
+      }
+    }}>
+      <DialogContent 
+        className="max-w-2xl max-h-[90vh] overflow-y-auto p-0"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+          handleClose();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          handleClose();
+        }}
+      >
         <DialogTitle className="sr-only">{product?.title || "Product Details"}</DialogTitle>
         <DialogDescription className="sr-only">Product details and purchasing options for {product?.title || "selected item"}</DialogDescription>
+        
         {/* Close button */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 z-50 h-8 w-8 p-0 bg-white/80 hover:bg-white rounded-full shadow-md"
         >
           <X className="h-4 w-4" />
@@ -88,11 +141,23 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
           {/* Product Image Carousel */}
           <div className="relative bg-muted p-8 flex items-center justify-center min-h-[300px] md:min-h-[400px]">
             {/* Main Image */}
-            <img
-              src={allImages[currentImageIndex]}
-              alt={`${product.title} - Image ${currentImageIndex + 1}`}
-              className="w-full h-full object-contain max-w-[300px] max-h-[300px] animate-fade-in"
-            />
+            {allImages[currentImageIndex] && (
+              <img
+                src={allImages[currentImageIndex]}
+                alt={`${product.title} - Image ${currentImageIndex + 1}`}
+                className="w-full h-full object-contain max-w-[300px] max-h-[300px] animate-fade-in"
+                onError={(e) => {
+                  console.warn('Image failed to load:', allImages[currentImageIndex]);
+                  // Try to use the main product image as fallback
+                  if (currentImageIndex !== 0 && allImages[0]) {
+                    setCurrentImageIndex(0);
+                  }
+                }}
+                onLoad={() => {
+                  console.log('✅ Image loaded successfully:', allImages[currentImageIndex]);
+                }}
+              />
+            )}
             
             {/* Navigation Arrows - only show if multiple images */}
             {hasMultipleImages && (
@@ -100,7 +165,10 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={prevImage}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevImage();
+                  }}
                   className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full z-10"
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -108,7 +176,10 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={nextImage}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextImage();
+                  }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full z-10"
                 >
                   <ChevronRight className="h-5 w-5" />
@@ -122,7 +193,10 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                 {allImages.map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => setCurrentImageIndex(index)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(index);
+                    }}
                     className={`w-2 h-2 rounded-full transition-colors ${
                       index === currentImageIndex 
                         ? 'bg-white' 
@@ -191,7 +265,14 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                       variant="ghost"
                       size="sm"
                       className="h-10 w-10 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                      onClick={() => onUpdateQuantity(product.id, variant?.id, Math.max(0, cartQuantity - 1))}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        try {
+                          onUpdateQuantity(product.id, variant?.id, Math.max(0, cartQuantity - 1));
+                        } catch (error) {
+                          console.error('Error updating quantity:', error);
+                        }
+                      }}
                     >
                       <Minus size={16} />
                     </Button>
@@ -202,7 +283,14 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                       variant="ghost"
                       size="sm"
                       className="h-10 w-10 p-0 hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => onUpdateQuantity(product.id, variant?.id, cartQuantity + 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        try {
+                          onUpdateQuantity(product.id, variant?.id, cartQuantity + 1);
+                        } catch (error) {
+                          console.error('Error updating quantity:', error);
+                        }
+                      }}
                     >
                       <Plus size={16} />
                     </Button>
@@ -212,9 +300,17 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                     variant="default"
                     size="lg"
                     className="w-full text-base"
-                    onClick={() => {
-                      if (variant) {
-                        onAddToCart(product, variant);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      try {
+                        if (variant) {
+                          console.log('➕ Adding to cart:', product.title, variant);
+                          onAddToCart(product, variant);
+                        } else {
+                          console.warn('No variant available for:', product.title);
+                        }
+                      } catch (error) {
+                        console.error('Error adding to cart:', error);
                       }
                     }}
                   >
@@ -229,7 +325,7 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                   variant="outline"
                   size="lg"
                   className="flex-1 text-base"
-                  onClick={onClose}
+                  onClick={handleClose}
                 >
                   Keep Shopping
                 </Button>
@@ -238,10 +334,16 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
                   size="lg"
                   className="flex-1 text-base"
                   onClick={() => {
-                    if (onProceedToCheckout) {
-                      onProceedToCheckout();
+                    try {
+                      if (onProceedToCheckout) {
+                        console.log('🛒 Proceeding to checkout');
+                        onProceedToCheckout();
+                      }
+                      handleClose();
+                    } catch (error) {
+                      console.error('Error proceeding to checkout:', error);
+                      handleClose();
                     }
-                    onClose();
                   }}
                 >
                   Checkout

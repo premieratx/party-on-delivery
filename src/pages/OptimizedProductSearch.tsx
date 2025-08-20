@@ -508,10 +508,7 @@ export default function OptimizedProductSearch() {
           <MobileBottomCartBar
             cartItemCount={getTotalItems()}
             totalAmount={getTotalPrice()}
-            onOpenCart={() => {
-              if (onOpenCart) onOpenCart();
-              else navigate('/checkout');
-            }}
+            onOpenCart={() => setIsCartOpen(true)}
             className="md:hidden"
           />
         )}
