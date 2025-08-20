@@ -19,6 +19,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CoverPage {
@@ -313,7 +314,7 @@ export const EnhancedCoverPageManager: React.FC = () => {
     });
   };
 
-  const defaultPage = coverPages.find(page => page.is_default_homepage) || null;
+  const defaultPage = coverPages.find(page => page.is_default_homepage);
   const hasCoverPages = coverPages.length > 0;
 
   return (
@@ -329,7 +330,7 @@ export const EnhancedCoverPageManager: React.FC = () => {
         <Button 
           onClick={() => setShowCreateForm(true)}
           className="gap-2"
-          disabled={showCreateForm || editingPage}
+          disabled={showCreateForm || editingPage !== null}
         >
           <Plus className="h-4 w-4" />
           Create Cover Page

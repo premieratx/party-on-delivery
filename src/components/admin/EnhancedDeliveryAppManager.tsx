@@ -21,6 +21,7 @@ import {
   Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DeliveryApp {
@@ -379,7 +380,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     resetForm();
   };
 
-  const homepageApp = deliveryApps.find(app => app.is_homepage) || null;
+  const homepageApp = deliveryApps.find(app => app.is_homepage);
 
   return (
     <div className="space-y-6">
@@ -394,7 +395,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
         <Button 
           onClick={() => setShowCreateForm(true)}
           className="gap-2"
-          disabled={showCreateForm || editingApp}
+          disabled={showCreateForm || editingApp !== null}
         >
           <Plus className="h-4 w-4" />
           Create Delivery App
