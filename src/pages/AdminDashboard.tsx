@@ -8,6 +8,11 @@ import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { CustomerFlowBuilder } from '@/components/admin/CustomerFlowBuilder';
 import { AffiliateFlowAssignmentManager } from '@/components/admin/AffiliateFlowAssignmentManager';
 import { FullFeaturedCoverPageCreator } from '@/components/admin/FullFeaturedCoverPageCreator';
+import { CoverPageDragDropEditor } from '@/components/admin/CoverPageDragDropEditor';
+import { OptimizedCoverPageCreator } from '@/components/admin/OptimizedCoverPageCreator';
+import { CoverPagePerformanceMonitor } from '@/components/admin/CoverPagePerformanceMonitor';
+import { CoverPageTemplateLibrary } from '@/components/admin/CoverPageTemplateLibrary';
+import { CoverPageIntegratedManager } from '@/components/admin/CoverPageIntegratedManager';
 import { FullFeaturedDeliveryAppCreator } from '@/components/admin/FullFeaturedDeliveryAppCreator';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
@@ -288,7 +293,7 @@ export default function AdminDashboard() {
           {/* Cover Pages */}
           <TabsContent value="cover-pages" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <FullFeaturedCoverPageCreator />
+              <CoverPageIntegratedManager />
             </div>
           </TabsContent>
 
