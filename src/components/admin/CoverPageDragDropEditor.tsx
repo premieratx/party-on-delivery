@@ -421,8 +421,9 @@ export const CoverPageDragDropEditor: React.FC = () => {
   );
 
   const addComponent = useCallback((templateKey: keyof typeof COMPONENT_TEMPLATES) => {
+    const id = `component-${Date.now()}`;
     const baseProps = {
-      id: `component-${Date.now()}`,
+      id,
       position: { x: 0, y: 0 }
     };
     
@@ -431,48 +432,48 @@ export const CoverPageDragDropEditor: React.FC = () => {
         const newComponent: TextComponent = {
           ...baseProps,
           type: 'text',
-          content: COMPONENT_TEMPLATES.text.content,
-          size: COMPONENT_TEMPLATES.text.size,
-          style: COMPONENT_TEMPLATES.text.style
+          content: { ...COMPONENT_TEMPLATES.text.content },
+          size: { ...COMPONENT_TEMPLATES.text.size },
+          style: { ...COMPONENT_TEMPLATES.text.style }
         };
-        setComponents(prev => [...prev, newComponent]);
-        setSelectedComponent(newComponent.id);
+        setComponents(prev => [...prev, newComponent as ComponentType]);
+        setSelectedComponent(id);
         break;
       }
       case 'heading': {
         const newComponent: TextComponent = {
           ...baseProps,
           type: 'text',
-          content: COMPONENT_TEMPLATES.heading.content,
-          size: COMPONENT_TEMPLATES.heading.size,
-          style: COMPONENT_TEMPLATES.heading.style
+          content: { ...COMPONENT_TEMPLATES.heading.content },
+          size: { ...COMPONENT_TEMPLATES.heading.size },
+          style: { ...COMPONENT_TEMPLATES.heading.style }
         };
-        setComponents(prev => [...prev, newComponent]);
-        setSelectedComponent(newComponent.id);
+        setComponents(prev => [...prev, newComponent as ComponentType]);
+        setSelectedComponent(id);
         break;
       }
       case 'image': {
         const newComponent: ImageComponent = {
           ...baseProps,
           type: 'image',
-          content: COMPONENT_TEMPLATES.image.content,
-          size: COMPONENT_TEMPLATES.image.size,
-          style: COMPONENT_TEMPLATES.image.style
+          content: { ...COMPONENT_TEMPLATES.image.content },
+          size: { ...COMPONENT_TEMPLATES.image.size },
+          style: { ...COMPONENT_TEMPLATES.image.style }
         };
-        setComponents(prev => [...prev, newComponent]);
-        setSelectedComponent(newComponent.id);
+        setComponents(prev => [...prev, newComponent as ComponentType]);
+        setSelectedComponent(id);
         break;
       }
       case 'button': {
         const newComponent: ButtonComponent = {
           ...baseProps,
           type: 'button',
-          content: COMPONENT_TEMPLATES.button.content,
-          size: COMPONENT_TEMPLATES.button.size,
-          style: COMPONENT_TEMPLATES.button.style
+          content: { ...COMPONENT_TEMPLATES.button.content },
+          size: { ...COMPONENT_TEMPLATES.button.size },
+          style: { ...COMPONENT_TEMPLATES.button.style }
         };
-        setComponents(prev => [...prev, newComponent]);
-        setSelectedComponent(newComponent.id);
+        setComponents(prev => [...prev, newComponent as ComponentType]);
+        setSelectedComponent(id);
         break;
       }
       default:
