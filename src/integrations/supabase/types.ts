@@ -1694,6 +1694,7 @@ export type Database = {
           post_checkout_config: Json | null
           short_path: string | null
           start_screen_config: Json | null
+          styles: Json | null
           updated_at: string
         }
         Insert: {
@@ -1710,6 +1711,7 @@ export type Database = {
           post_checkout_config?: Json | null
           short_path?: string | null
           start_screen_config?: Json | null
+          styles?: Json | null
           updated_at?: string
         }
         Update: {
@@ -1726,6 +1728,7 @@ export type Database = {
           post_checkout_config?: Json | null
           short_path?: string | null
           start_screen_config?: Json | null
+          styles?: Json | null
           updated_at?: string
         }
         Relationships: []
