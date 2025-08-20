@@ -496,16 +496,15 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                   </Button>
                 </div>
                 
-                {showDraggablePreview ? (
-                  <DraggableCoverPreview
-                    config={{
-                      slug: computedSlug,
-                      title,
-                      subtitle,
-                      logo_url: logoUrl,
-                      logo_height: logoHeight,
-                      bg_image_url: bgImageUrl,
-                      bg_video_url: bgVideoUrl,
+                <DraggableCoverPreview
+                  config={{
+                    slug: computedSlug,
+                    title,
+                    subtitle,
+                    logo_url: logoUrl,
+                    logo_height: logoHeight,
+                    bg_image_url: bgImageUrl,
+                    bg_video_url: bgVideoUrl,
                       checklist: checklist.filter(Boolean),
                       buttons,
                       is_active: isActive,
@@ -528,16 +527,17 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                         dot_size: dotSize
                       }
                     }}
-                    onPositionChange={(elementId, x, y) => {
-                      console.log(`Element ${elementId} moved to ${x.toFixed(1)}%, ${y.toFixed(1)}%`);
-                      toast({
-                        title: "Position Updated",
-                        description: `${elementId} moved to ${x.toFixed(1)}%, ${y.toFixed(1)}%`,
-                      });
-                    }}
-                    className="w-full h-[500px]"
-                  />
-                ) : (
+                     onPositionChange={(elementId, x, y) => {
+                       console.log(`Element ${elementId} moved to ${x}, ${y}`);
+                     }}
+                   />
+                 
+                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                   <p className="text-sm text-muted-foreground flex items-center gap-2">
+                     <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                     Drag elements around to reposition them in real-time
+                   </p>
+                 </div>
 <div className="w-full flex justify-center">
   <div
     className="rounded-[24px] shadow-xl ring-1 ring-black/10 overflow-hidden overflow-y-auto bg-black relative"
@@ -658,13 +658,12 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                               ))}
                             </div>
                           )}
-                        </div>
+                         </div>
+                       </div>
                       </div>
-                     </div>
-                   </div>
-                )}
-              </CardContent>
-            </Card>
+                    </div>
+               </CardContent>
+             </Card>
 
             <Card>
               <CardContent className="space-y-4 pt-6">
