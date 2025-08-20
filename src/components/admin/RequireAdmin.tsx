@@ -9,6 +9,7 @@ interface RequireAdminProps {
 
 const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [adminContextSet, setAdminContextSet] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -45,6 +46,8 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
         }
 
         if (data?.isAdmin) {
+          console.log('✅ Admin verified and context set');
+          setAdminContextSet(true);
           setAllowed(true);
         } else {
           await supabase.auth.signOut();
@@ -63,10 +66,12 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       if (!session) {
+        setAdminContextSet(false);
         setAllowed(false);
         navigate('/affiliate/admin-login', { replace: true });
       } else {
-        // Re-check admin on sign-in
+        // Reset context state and re-check admin on sign-in
+        setAdminContextSet(false);
         setTimeout(() => {
           check();
         }, 0);
@@ -81,7 +86,7 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
     };
   }, [navigate, toast]);
 
-  if (allowed === null) {
+  if (allowed === null || !adminContextSet) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
