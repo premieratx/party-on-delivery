@@ -4037,6 +4037,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_admin_user_enhanced: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_admin_user_safe: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -4113,6 +4117,10 @@ export type Database = {
       }
       sanitize_order_payment_data: {
         Args: { payment_intent_id_param: string }
+        Returns: undefined
+      }
+      set_admin_context: {
+        Args: { admin_email: string }
         Returns: undefined
       }
       track_affiliate_order: {
