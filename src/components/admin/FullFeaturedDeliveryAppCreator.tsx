@@ -118,7 +118,10 @@ export const FullFeaturedDeliveryAppCreator: React.FC = () => {
         theme_color: formData.theme_color,
         delivery_radius: formData.delivery_radius,
         delivery_fee: formData.delivery_fee,
-        styles: formData.styles
+        hero_title: formData.hero_title,
+        hero_subtitle: formData.hero_subtitle,
+        hero_image_url: formData.hero_image_url,
+        hero_video_url: formData.hero_video_url,
       };
       
       if (selectedApp?.id) {
@@ -367,6 +370,63 @@ export const FullFeaturedDeliveryAppCreator: React.FC = () => {
                         onCheckedChange={(checked) => setFormData({ ...formData, is_default: checked })}
                       />
                       <label className="text-sm font-medium">Set as Default</label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hero Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Hero Section</h3>
+                  <div>
+                    <label className="text-sm font-medium">Hero Title</label>
+                    <Input
+                      value={formData.hero_title}
+                      onChange={(e) => setFormData({ ...formData, hero_title: e.target.value })}
+                      placeholder="Welcome to our delivery service"
+                    />
+                    <div className="mt-2">
+                      <FontSelector
+                        value={formData.styles?.hero_title}
+                        onChange={(style) => setFormData({
+                          ...formData,
+                          styles: { ...formData.styles, hero_title: style }
+                        })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Hero Subtitle</label>
+                    <Textarea
+                      value={formData.hero_subtitle}
+                      onChange={(e) => setFormData({ ...formData, hero_subtitle: e.target.value })}
+                      placeholder="Fast, reliable delivery right to your door"
+                    />
+                    <div className="mt-2">
+                      <FontSelector
+                        value={formData.styles?.hero_subtitle}
+                        onChange={(style) => setFormData({
+                          ...formData,
+                          styles: { ...formData.styles, hero_subtitle: style }
+                        })}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium">Hero Image URL</label>
+                      <Input
+                        value={formData.hero_image_url}
+                        onChange={(e) => setFormData({ ...formData, hero_image_url: e.target.value })}
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Hero Video URL</label>
+                      <Input
+                        value={formData.hero_video_url}
+                        onChange={(e) => setFormData({ ...formData, hero_video_url: e.target.value })}
+                        placeholder="https://..."
+                      />
                     </div>
                   </div>
                 </div>
