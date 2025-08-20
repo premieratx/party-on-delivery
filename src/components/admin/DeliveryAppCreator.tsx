@@ -109,51 +109,71 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const loadShopifyCollections = async () => {
     try {
       setCollectionsLoading(true);
-      const { data, error } = await supabase
-        .from('shopify_products_cache')
-        .select('data')
-        .limit(100);
+      console.log('Loading Shopify collections...');
       
-      if (error) throw error;
+      // Use the working get-all-collections edge function
+      const { data, error } = await supabase.functions.invoke('get-all-collections');
       
-      // Extract unique collections from products
-      const collectionsSet = new Set<string>();
-      const collections: any[] = [];
-      
-      data?.forEach((product: any) => {
-        if (product.data?.collections) {
-          product.data.collections.forEach((collection: any) => {
-            if (collection && typeof collection === 'string' && !collectionsSet.has(collection)) {
-              collectionsSet.add(collection);
-              collections.push({
-                handle: collection,
-                name: collection.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-              });
-            }
-          });
-        }
-      });
-      
-      // Add some default collections if none found
-      if (collections.length === 0) {
-        collections.push(
-          { handle: 'featured', name: 'Featured' },
-          { handle: 'spirits', name: 'Spirits' },
-          { handle: 'beer', name: 'Beer' },
-          { handle: 'wine', name: 'Wine' }
-        );
+      if (error) {
+        console.error('Error from get-all-collections:', error);
+        throw error;
       }
       
-      setShopifyCollections(collections.sort((a, b) => a.name.localeCompare(b.name)));
+      if (data?.collections && Array.isArray(data.collections)) {
+        console.log(`Loaded ${data.collections.length} collections from Shopify`);
+        
+        const collections = data.collections
+          .filter((collection: any) => collection.products_count > 0) // Only collections with products
+          .map((collection: any) => ({
+            handle: collection.handle,
+            name: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            products_count: collection.products_count
+          }))
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+        
+        setShopifyCollections(collections);
+        console.log('Shopify collections loaded:', collections.map(c => `${c.name} (${c.products_count} products)`));
+      } else {
+        throw new Error('No collections returned from API');
+      }
     } catch (error) {
       console.error('Error loading collections:', error);
-      // Set fallback collections
-      setShopifyCollections([
-        { handle: 'featured', name: 'Featured' },
-        { handle: 'spirits', name: 'Spirits' },
-        { handle: 'beer', name: 'Beer' },
-        { handle: 'wine', name: 'Wine' }
-      ]);
+      
+      // Fallback: try to get from cache as backup
+      try {
+        const { data: cacheData } = await supabase
+          .from('cache')
+          .select('data')
+          .like('key', 'shopify_collections%')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (cacheData?.[0]?.data && typeof cacheData[0].data === 'object' && (cacheData[0].data as any).collections) {
+          const cachedCollections = (cacheData[0].data as any).collections
+            .filter((collection: any) => collection.products_count > 0)
+            .map((collection: any) => ({
+              handle: collection.handle,
+              name: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              products_count: collection.products_count
+            }))
+            .sort((a: any, b: any) => a.name.localeCompare(b.name));
+          
+          setShopifyCollections(cachedCollections);
+          console.log('Used cached collections:', cachedCollections.length);
+        } else {
+          throw new Error('No cached collections available');
+        }
+      } catch (cacheError) {
+        console.error('Cache fallback failed:', cacheError);
+        // Set a few real collections as final fallback
+        setShopifyCollections([
+          { handle: 'spirits', name: 'Spirits', products_count: 100 },
+          { handle: 'tailgate-beer', name: 'Tailgate Beer', products_count: 62 },
+          { handle: 'cocktail-kits', name: 'Cocktail Kits', products_count: 40 },
+          { handle: 'party-supplies', name: 'Party Supplies', products_count: 46 },
+          { handle: 'champagne', name: 'Champagne', products_count: 47 }
+        ]);
+      }
     } finally {
       setCollectionsLoading(false);
     }
