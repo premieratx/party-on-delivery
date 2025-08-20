@@ -76,17 +76,17 @@ export const Checkout = () => {
 
   return (
     <CheckoutIsolation>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-20">
-        <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-20 sm:pb-8">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-6">
           {/* Header - Mobile Optimized */}
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
             <div className="flex items-center gap-2 sm:gap-4">
-              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold">Checkout</h1>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Checkout</h1>
             </div>
             
             <div className="text-right">
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                {totalItems} items
+              <div className="text-xs sm:text-sm text-muted-foreground font-medium">
+                {totalItems} {totalItems === 1 ? 'item' : 'items'}
               </div>
               <div className="text-lg sm:text-xl font-bold">
                 ${totalAmount.toFixed(2)}

@@ -196,31 +196,31 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <CreditCard className="w-5 h-5" />
           Payment Details
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         
         {/* Tip Selection */}
         <div className="space-y-3">
-          <Label className="font-medium">Add a tip for your delivery driver</Label>
+          <Label className="font-medium text-sm sm:text-base">Add a tip for your delivery driver</Label>
           
           {!showCustomTip ? (
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {calculateTipOptions().map((option) => (
                 <Button
                   key={option.label}
                   type="button"
                   variant={tipAmount === option.value ? "default" : "outline"}
                   onClick={() => handleTipSelect(option)}
-                  className="flex flex-col items-center py-3 h-auto"
+                  className="flex flex-col items-center py-2 sm:py-3 h-auto text-xs sm:text-sm"
                   size="sm"
                 >
-                  <span className="font-semibold text-xs">{option.label}</span>
-                  <span className="text-xs opacity-75">${option.value.toFixed(0)}</span>
+                  <span className="font-semibold">{option.label}</span>
+                  <span className="opacity-75">${option.value.toFixed(0)}</span>
                 </Button>
               ))}
               
@@ -228,11 +228,11 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
                 type="button"
                 variant={showCustomTip ? "default" : "outline"}
                 onClick={() => setShowCustomTip(true)}
-                className="flex flex-col items-center py-3 h-auto"
+                className="flex flex-col items-center py-2 sm:py-3 h-auto text-xs sm:text-sm col-span-2 sm:col-span-1"
                 size="sm"
               >
-                <span className="font-semibold text-xs">Custom</span>
-                <span className="text-xs opacity-75">$</span>
+                <span className="font-semibold">Custom</span>
+                <span className="opacity-75">$</span>
               </Button>
             </div>
           ) : (
@@ -243,13 +243,14 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
                 step="0.01"
                 min="0"
                 onChange={(e) => handleCustomTip(e.target.value)}
-                className="flex-1"
+                className="flex-1 h-10 sm:h-auto"
               />
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowCustomTip(false)}
                 size="sm"
+                className="h-10 sm:h-auto"
               >
                 Cancel
               </Button>
@@ -261,8 +262,8 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         <div className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label>Card Information</Label>
-              <div className="p-3 border rounded-lg bg-background">
+              <Label className="text-sm sm:text-base font-medium">Card Information</Label>
+              <div className="p-3 sm:p-4 border rounded-lg bg-background">
                 <CardElement options={{
                   style: {
                     base: {
@@ -278,14 +279,14 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
             </div>
 
             {paymentError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{paymentError}</p>
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm text-destructive">{paymentError}</p>
               </div>
             )}
 
             <Button 
               type="submit"
-              className="w-full h-12 text-lg font-semibold"
+              className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold"
               disabled={!stripe || !elements || isProcessing}
             >
               {isProcessing 

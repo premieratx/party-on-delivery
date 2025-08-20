@@ -108,7 +108,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   }, [tipAmount, onTipChange]);
 
   // Discount management
-  const handleDiscountApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
+  const handlePromoApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
     if (onDiscountChange) {
       onDiscountChange(discount);
     }
@@ -219,10 +219,10 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           confirmedCustomer={confirmedCustomer}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-4 sm:mt-6">
           
           {/* Left Column - Checkout Steps (Responsive Width) */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
             
             {/* Date & Time Step */}
             <DateTimeStep
@@ -255,57 +255,60 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             )}
 
             {/* Payment Step */}
-            {currentStep === 'payment' && confirmedDateTime && confirmedAddress && (
-              <div className="space-y-6">
-                <StripePaymentWrapper
-                  cartItems={cartItems}
-                  subtotal={discountedSubtotal}
-                  deliveryFee={finalDeliveryFee}
-                  salesTax={calculatedSalesTax}
-                  customerInfo={customerInfo}
-                  deliveryInfo={{
-                    ...deliveryInfo,
-                    address: `${addressInfo.street}, ${addressInfo.city}, ${addressInfo.state} ${addressInfo.zipCode}`,
-                    instructions: addressInfo.instructions
-                  }}
-                  appliedDiscount={appliedDiscount}
-                  onPaymentSuccess={handlePaymentSuccess}
-                  isAddingToOrder={isAddingToOrder}
-                  affiliateCode={affiliateCode}
-                />
-              </div>
+            {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
+              <StripePaymentWrapper
+                cartItems={cartItems}
+                subtotal={discountedSubtotal}
+                deliveryFee={finalDeliveryFee}
+                salesTax={calculatedSalesTax}
+                customerInfo={customerInfo}
+                deliveryInfo={deliveryInfo}
+                appliedDiscount={appliedDiscount}
+                onPaymentSuccess={handlePaymentSuccess}
+                isAddingToOrder={isAddingToOrder}
+                affiliateCode={affiliateCode}
+              />
             )}
           </div>
 
-          {/* Right Column - Order Summary (Sticky on Desktop) */}
-          <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-24 space-y-3 sm:space-y-4 lg:space-y-6">
-            <CheckoutSummary
-              cartItems={cartItems}
-              subtotal={calculatedSubtotal}
-              deliveryFee={calculatedDeliveryFee}
-              salesTax={calculatedSalesTax}
-              tipAmount={tipAmount}
-              appliedDiscount={appliedDiscount}
-              onUpdateQuantity={onUpdateQuantity}
-            />
-            
+          {/* Right Column - Order Summary */}
+          <div className="lg:col-span-1 space-y-3 sm:space-y-4">
+            {/* Order Summary - Sticky on larger screens */}
+            <div className="lg:sticky lg:top-4">
+              <CheckoutSummary
+                cartItems={cartItems}
+                subtotal={calculatedSubtotal}
+                deliveryFee={finalDeliveryFee}
+                salesTax={calculatedSalesTax}
+                tipAmount={tipAmount}
+                appliedDiscount={appliedDiscount}
+                onUpdateQuantity={onUpdateQuantity}
+              />
+            </div>
+
             {/* Promo Code Input */}
-            <PromoCodeInput
+            <PromoCodeInput 
+              onDiscountApplied={handlePromoApplied}
               appliedDiscount={appliedDiscount}
-              onDiscountApplied={handleDiscountApplied}
               cartSubtotal={calculatedSubtotal}
             />
-            
+
             {/* Tip Selector */}
             <TipSelector
               tipPercentage={tipPercentage}
               subtotal={discountedSubtotal}
               onTipChange={setTipPercentage}
             />
-            </div>
           </div>
         </div>
+        
+        {/* Completion Message */}
+        {currentStep !== 'payment' && (
+          <div className="text-center text-muted-foreground mt-6">
+            <p className="text-sm">Complete all steps to proceed with payment</p>
+          </div>
+        )}
+        
       </div>
     </div>
   );

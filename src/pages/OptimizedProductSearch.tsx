@@ -503,12 +503,18 @@ export default function OptimizedProductSearch() {
         onClose={() => setIsCartOpen(false)}
       />
 
-      {/* Bottom Cart Bar for Mobile */}
-        <MobileBottomCartBar
-          cartItemCount={getTotalItems()}
-          totalAmount={getTotalPrice()}
-          onOpenCart={() => setIsCartOpen(true)}
-        />
+        {/* Mobile Bottom Cart - Show when items exist */}
+        {getTotalItems() > 0 && (
+          <MobileBottomCartBar
+            cartItemCount={getTotalItems()}
+            totalAmount={getTotalPrice()}
+            onOpenCart={() => {
+              if (onOpenCart) onOpenCart();
+              else navigate('/checkout');
+            }}
+            className="md:hidden"
+          />
+        )}
     </div>
   );
 }

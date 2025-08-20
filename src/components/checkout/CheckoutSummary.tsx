@@ -41,12 +41,12 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Order Summary</CardTitle>
+      <CardHeader className="pb-3 sm:pb-4">
+        <CardTitle className="text-lg sm:text-xl">Order Summary</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 p-3 sm:p-6">
+      <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
         {/* Cart Items */}
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {cartItems.map((item, index) => {
             // Clean product title - remove ALL Shopify URLs and product IDs
             const cleanTitle = item.title
@@ -73,14 +73,14 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
               .replace(/^[-\s|]+|[-\s|]+$/g, ''); // Remove leading/trailing dashes, spaces, and pipes
             
             return (
-              <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/30 rounded-lg">
+              <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/20 rounded-lg border border-border/50">
                 <img 
                   src={item.image} 
                   alt={cleanTitle}
-                  className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md bg-muted flex-shrink-0"
+                  className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md bg-muted flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm sm:text-base line-clamp-2 mb-1">
+                  <h4 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1">
                     {cleanTitle}
                   </h4>
                   {item.variant && (
@@ -91,35 +91,36 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
                   </div>
                 </div>
                 
-                <div className="flex flex-col items-end gap-1 sm:gap-2 flex-shrink-0">
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   {/* Quantity Controls */}
                   {onUpdateQuantity ? (
-                    <div className="flex items-center gap-1 bg-background rounded-md p-1">
+                    <div className="flex items-center gap-1 bg-background rounded-md p-1 border border-border/30">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 sm:h-7 sm:w-7 p-0"
                         onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
+                        className="h-6 w-6 p-0 hover:bg-muted"
                       >
-                        {item.quantity === 1 ? <Trash2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                        <Minus className="w-3 h-3" />
                       </Button>
-                      <span className="text-xs sm:text-sm font-medium w-5 sm:w-6 text-center">{item.quantity}</span>
+                      <span className="text-xs font-medium min-w-[1.5rem] text-center">{item.quantity}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 sm:h-7 sm:w-7 p-0"
                         onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                        className="h-6 w-6 p-0 hover:bg-muted"
                       >
                         <Plus className="w-3 h-3" />
                       </Button>
                     </div>
                   ) : (
-                    <div className="text-xs text-muted-foreground bg-background px-2 py-1 rounded">
+                    <div className="text-xs font-medium text-center min-w-[1.5rem]">
                       Qty: {item.quantity}
                     </div>
                   )}
                   
-                  <div className="text-sm sm:text-base font-medium">
+                  {/* Item Total */}
+                  <div className="text-xs sm:text-sm font-semibold">
                     ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
                   </div>
                 </div>

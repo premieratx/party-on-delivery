@@ -119,84 +119,88 @@ export const AddressStep: React.FC<AddressStepProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Delivery Address</CardTitle>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg sm:text-xl">Delivery Address</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 sm:p-6">
         {/* Address Autocomplete */}
         <div>
-          <Label htmlFor="address-autocomplete">Address</Label>
+          <Label htmlFor="address-autocomplete" className="text-sm font-medium">Address</Label>
           {config.googleMapsEnabled ? (
             <GooglePlacesAutocomplete
               value={addressInfo.street}
               onChange={(value) => handleAddressChange('street', value)}
               onPlaceSelect={handlePlaceSelect}
               placeholder="Start typing your address..."
-              className="w-full"
+              className="w-full h-10 sm:h-auto"
             />
           ) : (
             <SimpleAddressInput
               value={addressInfo.street}
               onChange={(value) => handleAddressChange('street', value)}
               placeholder="Enter your street address..."
-              className="w-full"
+              className="w-full h-10 sm:h-auto"
             />
           )}
-          {errors.street && <p className="text-sm text-red-500 mt-1">{errors.street}</p>}
+          {errors.street && <p className="text-sm text-destructive mt-1">{errors.street}</p>}
         </div>
 
         {/* Manual Address Fields */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="city">City</Label>
+            <Label htmlFor="city" className="text-sm font-medium">City</Label>
             <Input
               id="city"
               value={addressInfo.city}
               onChange={(e) => handleAddressChange('city', e.target.value)}
               placeholder="City"
+              className="h-10 sm:h-auto"
             />
-            {errors.city && <p className="text-sm text-red-500 mt-1">{errors.city}</p>}
+            {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
           </div>
           <div>
-            <Label htmlFor="state">State</Label>
+            <Label htmlFor="state" className="text-sm font-medium">State</Label>
             <Input
               id="state"
               value={addressInfo.state}
               onChange={(e) => handleAddressChange('state', e.target.value)}
               placeholder="TX"
               maxLength={2}
+              className="h-10 sm:h-auto"
             />
-            {errors.state && <p className="text-sm text-red-500 mt-1">{errors.state}</p>}
+            {errors.state && <p className="text-sm text-destructive mt-1">{errors.state}</p>}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="zipCode">ZIP Code</Label>
+            <Label htmlFor="zipCode" className="text-sm font-medium">ZIP Code</Label>
             <Input
               id="zipCode"
               value={addressInfo.zipCode}
               onChange={(e) => handleAddressChange('zipCode', e.target.value)}
               placeholder="12345"
               maxLength={10}
+              className="h-10 sm:h-auto"
             />
-            {errors.zipCode && <p className="text-sm text-red-500 mt-1">{errors.zipCode}</p>}
+            {errors.zipCode && <p className="text-sm text-destructive mt-1">{errors.zipCode}</p>}
           </div>
         </div>
 
         <div>
-          <Label htmlFor="instructions">Delivery Instructions (Optional)</Label>
+          <Label htmlFor="instructions" className="text-sm font-medium">Delivery Instructions (Optional)</Label>
           <Textarea
             id="instructions"
             value={addressInfo.instructions || ''}
             onChange={(e) => handleAddressChange('instructions', e.target.value)}
             placeholder="Any special instructions for delivery..."
             rows={2}
+            className="resize-none"
           />
         </div>
 
         {isAddressComplete && (
-          <Button onClick={handleConfirm} className="w-full">
+          <Button onClick={handleConfirm} className="w-full h-10 sm:h-auto font-medium">
             Confirm Address
           </Button>
         )}

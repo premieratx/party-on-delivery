@@ -601,13 +601,21 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           </div>
         )}
 
-        {/* Mobile Bottom Cart - Show only when there are items and on mobile */}
+        {/* Mobile Bottom Cart - Fixed button functionality */}
         {getTotalItems() > 0 && (
           <MobileBottomCartBar
             cartItemCount={getTotalItems()}
             totalAmount={getTotalPrice()}
-            onOpenCart={onOpenCart || (() => console.log('🛒 Open cart called'))}
-            className="md:hidden"
+            onOpenCart={() => {
+              console.log('🛒 Mobile cart button clicked');
+              if (onOpenCart) {
+                onOpenCart();
+              } else {
+                // Fallback navigation to checkout
+                window.location.href = '/checkout';
+              }
+            }}
+            className="md:hidden fixed bottom-0 left-0 right-0 z-50"
           />
         )}
         
