@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  Star, 
+  Copy,
+  AlertTriangle,
+  CheckCircle
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Edit, Trash2, Home, Eye } from 'lucide-react';
+import { PostCheckoutCreator } from './PostCheckoutCreator';
 
 interface PostCheckoutPage {
   id: string;
@@ -22,33 +29,35 @@ interface PostCheckoutPage {
   updated_at: string;
 }
 
+interface PostCheckoutButton {
+  text: string;
+  url: string;
+  style: 'primary' | 'secondary';
+}
+
+interface PostCheckoutConfig {
+  id?: string;
+  title: string;
+  subtitle?: string;
+  logo_url?: string;
+  buttons: PostCheckoutButton[];
+  background_color?: string;
+  text_color?: string;
+  cover_page_id?: string;
+  affiliate_id?: string;
+  is_template?: boolean;
+  theme?: string;
+}
+
 export const EnhancedPostCheckoutManager: React.FC = () => {
   const [pages, setPages] = useState<PostCheckoutPage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingPage, setEditingPage] = useState<PostCheckoutPage | null>(null);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [editingPage, setEditingPage] = useState<PostCheckoutConfig | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    content: {
-      title: 'Order Complete!',
-      message: 'Thank you for your order. We will process it shortly.',
-      customHtml: '',
-      redirectUrl: '',
-      redirectDelay: 0
-    },
-    is_active: true
-  });
-
-  useEffect(() => {
-    loadPages();
-  }, []);
-
-  const loadPages = async () => {
+  const loadPages = useCallback(async () => {
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('post_checkout_pages')
         .select('*')
@@ -58,79 +67,48 @@ export const EnhancedPostCheckoutManager: React.FC = () => {
       setPages(data || []);
     } catch (error) {
       console.error('Error loading post-checkout pages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load post-checkout pages",
-        variant: "destructive"
-      });
+      toast.error('Failed to load post-checkout pages');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    loadPages();
+  }, [loadPages]);
+
+  const handleCreateNew = () => {
+    setEditingPage(null);
+    setShowEditor(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEdit = (page: PostCheckoutPage) => {
+    // Convert PostCheckoutPage to PostCheckoutConfig format for the editor
+    const postCheckoutConfig: PostCheckoutConfig = {
+      id: page.id,
+      title: page.content?.title || 'Order Complete!',
+      subtitle: page.content?.message || 'Thank you for your order.',
+      logo_url: '',
+      buttons: [
+        { text: 'Continue Shopping', url: '/', style: 'primary' },
+        { text: 'Track Order', url: '/orders', style: 'secondary' }
+      ],
+      background_color: '#ffffff',
+      text_color: '#000000',
+      theme: 'default'
+    };
     
-    if (!formData.name.trim() || !formData.slug.trim()) {
-      toast({
-        title: "Error",
-        description: "Name and slug are required",
-        variant: "destructive"
-      });
+    setEditingPage(postCheckoutConfig);
+    setShowEditor(true);
+  };
+
+  const handleDelete = async (page: PostCheckoutPage) => {
+    if (!confirm(`Are you sure you want to delete "${page.name}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
-      const pageData = {
-        name: formData.name.trim(),
-        slug: formData.slug.trim(),
-        content: formData.content,
-        is_active: formData.is_active
-      };
-
-      if (editingPage) {
-        const { error } = await supabase
-          .from('post_checkout_pages')
-          .update(pageData)
-          .eq('id', editingPage.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Post-checkout page updated successfully"
-        });
-      } else {
-        const { error } = await supabase
-          .from('post_checkout_pages')
-          .insert([pageData]);
-
-        if (error) throw error;
-
-        toast({
-          title: "Success", 
-          description: "Post-checkout page created successfully"
-        });
-      }
-
-      setIsCreateOpen(false);
-      setEditingPage(null);
-      resetForm();
-      loadPages();
-    } catch (error: any) {
-      console.error('Error saving post-checkout page:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save post-checkout page",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDelete = async (page: PostCheckoutPage) => {
-    if (!confirm(`Are you sure you want to delete "${page.name}"?`)) return;
-
-    try {
+      setLoading(true);
       const { error } = await supabase
         .from('post_checkout_pages')
         .delete()
@@ -138,307 +116,258 @@ export const EnhancedPostCheckoutManager: React.FC = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Post-checkout page deleted successfully"
-      });
+      toast.success('Post-checkout page deleted successfully');
       loadPages();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting post-checkout page:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete post-checkout page",
-        variant: "destructive"
-      });
+      toast.error('Failed to delete post-checkout page');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSetDefault = async (page: PostCheckoutPage) => {
     try {
+      setLoading(true);
+      
+      // First remove default from all pages
+      await supabase
+        .from('post_checkout_pages')
+        .update({ is_default: false })
+        .neq('id', page.id);
+
+      // Then set this page as default
       const { error } = await supabase
         .from('post_checkout_pages')
-        .update({ is_default: true })
+        .update({ is_default: true, is_active: true })
         .eq('id', page.id);
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: `"${page.name}" is now the default post-checkout page`
-      });
+      toast.success(`"${page.name}" is now the default post-checkout page`);
       loadPages();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error setting default post-checkout page:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to set default page",
-        variant: "destructive"
-      });
+      toast.error('Failed to set default post-checkout page');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      slug: '',
-      content: {
-        title: 'Order Complete!',
-        message: 'Thank you for your order. We will process it shortly.',
-        customHtml: '',
-        redirectUrl: '',
-        redirectDelay: 0
-      },
-      is_active: true
-    });
+  const handleToggleActive = async (page: PostCheckoutPage) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('post_checkout_pages')
+        .update({ is_active: !page.is_active })
+        .eq('id', page.id);
+
+      if (error) throw error;
+
+      toast.success(`Post-checkout page ${!page.is_active ? 'activated' : 'deactivated'}`);
+      loadPages();
+    } catch (error) {
+      console.error('Error toggling post-checkout page status:', error);
+      toast.error('Failed to update post-checkout page status');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openEditDialog = (page: PostCheckoutPage) => {
-    setEditingPage(page);
-    setFormData({
-      name: page.name,
-      slug: page.slug,
-      content: page.content,
-      is_active: page.is_active
-    });
-    setIsCreateOpen(true);
+  const handleDuplicate = async (page: PostCheckoutPage) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('post_checkout_pages')
+        .insert([{
+          name: `${page.name} (Copy)`,
+          slug: `${page.slug}-copy-${Date.now()}`,
+          content: page.content,
+          is_active: false,
+          is_default: false
+        }]);
+
+      if (error) throw error;
+
+      toast.success('Post-checkout page duplicated successfully');
+      loadPages();
+    } catch (error) {
+      console.error('Error duplicating post-checkout page:', error);
+      toast.error('Failed to duplicate post-checkout page');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  };
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">Loading post-checkout pages...</div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const defaultPage = pages.find(page => page.is_default);
+  const hasPages = pages.length > 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Enhanced Post-Checkout Manager</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage custom post-purchase experiences
-            </p>
-          </div>
-          <Dialog open={isCreateOpen} onOpenChange={(open) => {
-            setIsCreateOpen(open);
-            if (!open) {
-              setEditingPage(null);
-              resetForm();
-            }
-          }}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Page
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingPage ? 'Edit Post-Checkout Page' : 'Create Post-Checkout Page'}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Page Name</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => {
-                        const name = e.target.value;
-                        setFormData(prev => ({
-                          ...prev,
-                          name,
-                          slug: generateSlug(name)
-                        }));
-                      }}
-                      placeholder="e.g., Thank You Page"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="slug">URL Slug</Label>
-                    <Input
-                      id="slug"
-                      value={formData.slug}
-                      onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                      placeholder="e.g., thank-you"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="title">Page Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.content.title}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      content: { ...prev.content, title: e.target.value }
-                    }))}
-                    placeholder="Order Complete!"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="message">Thank You Message</Label>
-                  <Textarea
-                    id="message"
-                    value={formData.content.message}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      content: { ...prev.content, message: e.target.value }
-                    }))}
-                    placeholder="Thank you for your order..."
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="customHtml">Custom HTML (Optional)</Label>
-                  <Textarea
-                    id="customHtml"
-                    value={formData.content.customHtml}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      content: { ...prev.content, customHtml: e.target.value }
-                    }))}
-                    placeholder="<div>Custom content here...</div>"
-                    rows={4}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="redirectUrl">Redirect URL (Optional)</Label>
-                    <Input
-                      id="redirectUrl"
-                      value={formData.content.redirectUrl}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        content: { ...prev.content, redirectUrl: e.target.value }
-                      }))}
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="redirectDelay">Redirect Delay (seconds)</Label>
-                    <Input
-                      id="redirectDelay"
-                      type="number"
-                      value={formData.content.redirectDelay}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        content: { ...prev.content, redirectDelay: parseInt(e.target.value) || 0 }
-                      }))}
-                      min="0"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                  />
-                  <Label htmlFor="is_active">Active</Label>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingPage ? 'Update' : 'Create'} Page
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-2xl font-bold">Post-Checkout Manager</h3>
+          <p className="text-muted-foreground">
+            Create and manage custom post-purchase experiences
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        {pages.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No post-checkout pages created yet.</p>
-            <p className="text-sm mt-1">Create your first page to customize the post-purchase experience.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {pages.map((page) => (
-              <div key={page.id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-medium">{page.name}</h3>
-                      <Badge variant="outline" className="text-xs">
-                        /{page.slug}
-                      </Badge>
-                      {page.is_default && (
-                        <Badge variant="default">
-                          <Home className="w-3 h-3 mr-1" />
-                          Default
-                        </Badge>
-                      )}
-                      {!page.is_active && (
-                        <Badge variant="secondary">Inactive</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {page.content.title || 'No title set'}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!page.is_default && page.is_active && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSetDefault(page)}
-                      >
-                        <Home className="w-4 h-4 mr-1" />
-                        Set Default
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(`/post-checkout/${page.slug}`, '_blank')}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(page)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(page)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+        <Button onClick={() => setShowEditor(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create Post-Checkout Page
+        </Button>
+      </div>
+
+      {/* Status Banner */}
+      {hasPages ? (
+        defaultPage ? (
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span className="text-green-800">
+                  Post-checkout functionality is <strong>enabled</strong>. Default: "{defaultPage.name}"
+                </span>
               </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                <span className="text-orange-800">
+                  No default post-checkout page set. Please designate one as default.
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      ) : (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-blue-600" />
+              <span className="text-blue-800">
+                No post-checkout pages created yet. Create your first page to get started.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Post-Checkout Creator */}
+      {showEditor && (
+        <PostCheckoutCreator
+          onBack={() => setShowEditor(false)}
+          initial={editingPage}
+          onSaved={() => {
+            setShowEditor(false);
+            setEditingPage(null);
+            loadPages();
+          }}
+        />
+      )}
+
+      {/* Post-Checkout Pages List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Post-Checkout Pages ({pages.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading && pages.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p>Loading post-checkout pages...</p>
+            </div>
+          ) : pages.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">No post-checkout pages created yet</p>
+              <Button onClick={handleCreateNew} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create Your First Post-Checkout Page
+              </Button>
+            </div>
+          ) : (
+            <ScrollArea className="h-[400px]">
+              <div className="space-y-4">
+                {pages.map((page) => (
+                  <Card key={page.id} className={`${page.is_default ? 'border-primary' : ''}`}>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold">{page.name}</h4>
+                            {page.is_default && (
+                              <Badge variant="default" className="gap-1">
+                                <Star className="h-3 w-3" />
+                                Default
+                              </Badge>
+                            )}
+                            <Badge variant={page.is_active ? 'default' : 'secondary'}>
+                              {page.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {page.content?.title || 'No title set'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Slug: /post-checkout/{page.slug} • Created: {new Date(page.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleToggleActive(page)}
+                            disabled={loading}
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(page)}
+                            disabled={loading || showEditor}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDuplicate(page)}
+                            disabled={loading}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          {!page.is_default && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSetDefault(page)}
+                              disabled={loading}
+                            >
+                              <Star className="h-3 w-3" />
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(page)}
+                            disabled={loading}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };

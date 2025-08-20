@@ -16,9 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { UnifiedCoverPageEditor, type CoverPageConfig } from './UnifiedCoverPageEditor';
-import { UnifiedDeliveryAppEditor } from './UnifiedDeliveryAppEditor';
-import { UnifiedPostCheckoutEditor } from './UnifiedPostCheckoutEditor';
+import { CoverPageCreator } from './CoverPageCreator';
 
 interface CoverPage {
   id: string;
@@ -39,7 +37,19 @@ interface CoverPage {
   affiliate_slug?: string;
 }
 
-// CoverPageFormData interface removed - now using CoverPageConfig from UnifiedCoverPageEditor
+interface CoverPageConfig {
+  id?: string;
+  slug: string;
+  title: string;
+  subtitle?: string;
+  logo_url?: string;
+  bg_image_url?: string;
+  bg_video_url?: string;
+  checklist: string[];
+  buttons: any[];
+  is_active: boolean;
+  theme?: string;
+}
 
 export const EnhancedCoverPageManager: React.FC = () => {
   const [coverPages, setCoverPages] = useState<CoverPage[]>([]);
@@ -82,14 +92,12 @@ export const EnhancedCoverPageManager: React.FC = () => {
       title: page.title,
       subtitle: page.subtitle || '',
       logo_url: page.logo_url || '',
-      logo_height: page.logo_height || 160,
       bg_image_url: page.bg_image_url || '',
       bg_video_url: page.bg_video_url || '',
       checklist: Array.isArray(page.checklist) ? page.checklist : [],
       buttons: Array.isArray(page.buttons) ? page.buttons : [],
       is_active: page.is_active,
-      is_default_homepage: page.is_default_homepage,
-      styles: page.styles || {}
+      theme: page.styles?.theme || 'gold'
     };
     
     setEditingPage(coverPageConfig);
@@ -268,13 +276,16 @@ export const EnhancedCoverPageManager: React.FC = () => {
         </Card>
       )}
 
-      {/* Unified Cover Page Editor */}
+      {/* Cover Page Creator */}
       {showEditor && (
-        <UnifiedCoverPageEditor
-          open={showEditor}
-          onOpenChange={setShowEditor}
+        <CoverPageCreator
+          onBack={() => setShowEditor(false)}
           initial={editingPage}
-          onSaved={loadCoverPages}
+          onSaved={() => {
+            setShowEditor(false);
+            setEditingPage(null);
+            loadCoverPages();
+          }}
         />
       )}
 
