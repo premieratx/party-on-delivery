@@ -12,8 +12,9 @@ import { CoverPageDragDropEditor } from '@/components/admin/CoverPageDragDropEdi
 import { OptimizedCoverPageCreator } from '@/components/admin/OptimizedCoverPageCreator';
 import { CoverPagePerformanceMonitor } from '@/components/admin/CoverPagePerformanceMonitor';
 import { CoverPageTemplateLibrary } from '@/components/admin/CoverPageTemplateLibrary';
-import { CoverPageIntegratedManager } from '@/components/admin/CoverPageIntegratedManager';
-import { FullFeaturedDeliveryAppCreator } from '@/components/admin/FullFeaturedDeliveryAppCreator';
+import { EnhancedCoverPageManager } from '@/components/admin/EnhancedCoverPageManager';
+import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryAppManager';
+import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { supabase } from '@/integrations/supabase/client';
@@ -293,22 +294,21 @@ export default function AdminDashboard() {
           {/* Cover Pages */}
           <TabsContent value="cover-pages" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <CoverPageIntegratedManager />
+              <EnhancedCoverPageManager />
             </div>
           </TabsContent>
 
-          {/* Post-Checkout Creator - Temporarily disabled */}
+          {/* Post-Checkout Creator */}
           <TabsContent value="post-checkout" className="space-y-4">
-            <div className="h-[calc(100vh-200px)] overflow-y-auto p-8 text-center">
-              <h3 className="text-lg font-medium mb-2">Post-Checkout Creator</h3>
-              <p className="text-muted-foreground">Post-checkout creator will be available soon. Database schema needs to be created first.</p>
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <EnhancedPostCheckoutManager />
             </div>
           </TabsContent>
 
           {/* Delivery Apps */}
           <TabsContent value="delivery-apps" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <FullFeaturedDeliveryAppCreator />
+              <EnhancedDeliveryAppManager />
             </div>
           </TabsContent>
 
