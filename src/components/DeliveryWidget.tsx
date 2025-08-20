@@ -4,7 +4,6 @@ import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { DeliveryScheduler } from './delivery/DeliveryScheduler';
 import ProductCategories from './delivery/ProductCategories';
 import { DeliveryCart } from './delivery/DeliveryCart';
-import { RefactoredCheckoutFlow } from './checkout/RefactoredCheckoutFlow';
 import { OrderContinuation } from './OrderContinuation';
 import { AddressConfirmation } from './AddressConfirmation';
 
@@ -194,17 +193,10 @@ export const DeliveryWidget: React.FC = () => {
     try {
       console.log('=== CHECKOUT BUTTON CLICKED ===');
       console.log('cartItems length:', cartItems.length);
-      console.log('isAddingToOrder:', isAddingToOrder);
-      console.log('useSameAddress:', useSameAddress);
-      console.log('currentStep:', currentStep);
-      console.log('deliveryInfo:', deliveryInfo);
-      console.log('validLastOrderInfo:', validLastOrderInfo);
-      console.log('===================================');
       
       // Ensure we have items in cart before proceeding
       if (cartItems.length === 0) {
         console.warn('Cannot proceed to checkout with empty cart');
-        // Add toast notification for better UX
         import('@/hooks/use-toast').then(({ useToast }) => {
           const { toast } = useToast();
           toast({
@@ -216,25 +208,27 @@ export const DeliveryWidget: React.FC = () => {
         return;
       }
       
-      console.log('Cart has items, proceeding...');
+      console.log('Cart has items, proceeding to main checkout...');
       
       // Close cart if open
       setIsCartOpen(false);
-      console.log('Cart closed');
       
-      console.log('About to set checkout step...');
-      // Set checkout step immediately
-      setCurrentStep('checkout');
-      console.log('Checkout step set successfully');
+      // Store delivery app referrer for proper return navigation
+      localStorage.setItem('deliveryAppReferrer', window.location.pathname);
       
-      // Scroll to top
-      console.log('Scrolling to top...');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      console.log('Scrolled to top');
+      // Navigate to main checkout page (consistent with other delivery apps)
+      navigate('/checkout');
       
     } catch (error) {
       console.error('Error in handleCheckout:', error);
-      alert('Error in checkout: ' + error.message);
+      import('@/hooks/use-toast').then(({ useToast }) => {
+        const { toast } = useToast();
+        toast({
+          title: "Checkout Error",
+          description: "There was an error starting checkout. Please try again.",
+          variant: "destructive",
+        });
+      });
     }
   };
 
@@ -255,27 +249,12 @@ export const DeliveryWidget: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {currentStep === 'products' && (
-        <ProductCategories />
+        <ProductCategories 
+          onCheckout={handleCheckout}
+        />
       )}
 
-      {currentStep === 'checkout' && (
-        <RefactoredCheckoutFlow
-            cartItems={cartItems}
-            deliveryInfo={deliveryInfo}
-            totalPrice={getTotalPrice()}
-            onBack={handleBackToProducts}
-            onDeliveryInfoChange={setDeliveryInfo}
-            onUpdateQuantity={handleUpdateQuantity}
-            isAddingToOrder={isAddingToOrder}
-            useSameAddress={useSameAddress}
-            lastOrderInfo={validLastOrderInfo}
-            onDiscountChange={setAppliedDiscount}
-            onTipChange={setTipAmount}
-            onChangesDetected={setHasChanges}
-            appliedDiscount={appliedDiscount}
-            affiliateCode={affiliateReferral}
-          />
-      )}
+      {/* Checkout step removed - now navigates to main checkout page */}
 
       {/* Slide-out Cart */}
       <DeliveryCart
@@ -297,7 +276,7 @@ export const DeliveryWidget: React.FC = () => {
       <BottomCartBar
         items={cartItems}
         totalPrice={getTotalPrice()}
-        isVisible={currentStep === 'products' || currentStep === 'cart' || currentStep === 'checkout' || currentStep === 'address-confirmation'}
+        isVisible={currentStep === 'products' || currentStep === 'cart' || currentStep === 'address-confirmation'}
         onOpenCart={() => setIsCartOpen(true)}
         onCheckout={handleCheckout}
       />

@@ -118,6 +118,7 @@ const CustomAppView = () => {
       customSiteSlug={appSlug}
       maxProducts={50}
       forceRefresh={true}
+      onCheckout={handleCheckout}
     />
   );
 };
