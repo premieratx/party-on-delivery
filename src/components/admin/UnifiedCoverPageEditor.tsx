@@ -604,23 +604,34 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
     return (
       <div 
-        className={`flex items-center justify-center min-h-full p-4 ${
+        className={`flex items-center justify-center min-h-full p-4 transition-all duration-300 ${
           isMobile ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-black' : 'bg-gray-50'
         }`}
+        style={{
+          background: isMobile ? theme.background : 'rgb(249 250 251)'
+        }}
       >
+        {/* Phone Frame with Responsive Design */}
         <div
-          className={`relative overflow-hidden border ${
-            isMobile ? 'border-gray-700 shadow-2xl' : 'border-gray-200 shadow-lg'
+          className={`relative overflow-hidden transition-all duration-300 ${
+            isMobile ? 'border-2 border-gray-700 shadow-2xl' : 'border border-gray-200 shadow-lg'
           }`}
           style={{
-            width: fullscreenPreview && isMobile ? device.previewWidth * 1.2 : device.previewWidth,
-            height: fullscreenPreview && isMobile ? device.previewHeight * 1.2 : device.previewHeight,
-            borderRadius: isMobile ? '1.5rem' : '0.5rem',
+            width: fullscreenPreview && isMobile ? Math.min(device.previewWidth * 1.2, 420) : Math.min(device.previewWidth, 400),
+            height: fullscreenPreview && isMobile ? Math.min(device.previewHeight * 1.2, 800) : Math.min(device.previewHeight, 750),
+            borderRadius: isMobile ? '2.5rem' : '1rem',
             background: bgImageUrl ? `url(${bgImageUrl})` : bgVideoUrl ? 'black' : theme.background,
             backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            backgroundPosition: 'center',
+            boxShadow: isMobile ? 
+              `0 0 40px ${theme.glowColor}, 0 20px 60px rgba(0, 0, 0, 0.5)` : 
+              '0 4px 20px rgba(0, 0, 0, 0.1)',
+            border: isMobile ? 
+              `1px solid ${theme.primaryColor}40` : 
+              '1px solid rgb(229 231 235)'
           }}
         >
+          {/* Video Background */}
           {bgVideoUrl && (
             <video
               autoPlay
@@ -631,8 +642,10 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             />
           )}
           
+          {/* Particles Effect */}
           {renderParticles()}
           
+          {/* Content Container */}
           <div className="relative z-10 h-full flex flex-col justify-center items-center space-y-6 p-8">
             {!dragMode ? (
               <>
@@ -652,6 +665,28 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
               </div>
             )}
           </div>
+
+          {/* Phone Frame Overlay Effects */}
+          {isMobile && (
+            <>
+              {/* Glow Effect */}
+              <div 
+                className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
+                style={{
+                  background: `linear-gradient(135deg, ${theme.primaryColor}10 0%, transparent 50%, ${theme.primaryColor}05 100%)`,
+                  boxShadow: `inset 0 0 60px ${theme.glowColor}`
+                }}
+              />
+              {/* Frame Highlight */}
+              <div 
+                className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
+                style={{
+                  border: `1px solid ${theme.primaryColor}20`,
+                  background: 'linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.03) 50%, transparent 60%)'
+                }}
+              />
+            </>
+          )}
         </div>
       </div>
     );
@@ -840,60 +875,83 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                     <TabsTrigger value="buttons">Buttons</TabsTrigger>
                   </TabsList>
 
-                  {/* NEW: Figma Templates Tab */}
-                  <TabsContent value="templates" className="space-y-4">
-                    <FigmaTemplateSelector 
-                      onTemplateSelect={(templateData: any) => {
-                        // Apply template data to current form
-                        if (templateData.elements) {
-                          const template = templateData;
-                          
-                          // Set theme based on template
-                          if (template.theme?.primaryColor === '#F5B800') {
-                            setSelectedTheme('gold');
-                          } else if (template.theme?.primaryColor === '#00d4ff') {
-                            setSelectedTheme('ocean');
-                          } else if (template.theme?.primaryColor === '#ffffff') {
-                            setSelectedTheme('sunset');
-                          }
-                          
-                          // Apply element positions and content
-                          const titleElement = template.elements.find((e: any) => e.type === 'text' && e.id === 'title');
-                          const subtitleElement = template.elements.find((e: any) => e.type === 'text' && e.id === 'subtitle');
-                          const checklistElement = template.elements.find((e: any) => e.type === 'list');
-                          const buttonElement = template.elements.find((e: any) => e.type === 'button');
-                          
-                          if (titleElement) {
-                            setTitle(titleElement.content);
-                          }
-                          if (subtitleElement) {
-                            setSubtitle(subtitleElement.content);
-                          }
-                          if (checklistElement) {
-                            setChecklist(checklistElement.items || []);
-                          }
-                          if (buttonElement) {
-                            setButtons([{ 
-                              text: buttonElement.content, 
-                              type: 'delivery_app' as CoverButtonType,
-                              style: 'filled' as const
-                            }]);
-                          }
-                          
-                          // Apply element positions
-                          const newPositions = template.elements.map((element: any) => ({
-                            id: element.id === 'cta_button' ? 'buttons' : element.id,
-                            type: element.id === 'cta_button' ? 'buttons' : element.type,
-                            x: element.position.x,
-                            y: element.position.y
-                          }));
-                          setElementPositions(newPositions);
-                          
-                          toast({ title: 'Template Applied!', description: 'Figma design template loaded successfully' });
-                        }
-                      }}
-                    />
-                  </TabsContent>
+          {/* NEW: Figma Templates Tab */}
+          <TabsContent value="templates" className="space-y-4">
+            <FigmaTemplateSelector 
+              onTemplateSelect={(templateData: any) => {
+                // Apply template data to current form
+                if (templateData.elements) {
+                  const template = templateData;
+                  
+                  // Set theme based on template data
+                  if (template.theme?.primaryColor === '#F5B800') {
+                    setSelectedTheme('gold');
+                  } else if (template.theme?.primaryColor === '#00d4ff') {
+                    setSelectedTheme('ocean');
+                  } else if (template.theme?.primaryColor === '#ffffff') {
+                    setSelectedTheme('sunset');
+                  }
+                  
+                  // Apply content from template elements
+                  const titleElement = template.elements.find((e: any) => e.type === 'text' && (e.id === 'title' || e.content?.includes('ELITE') || e.content?.includes('OCEAN') || e.content?.includes('SUNSET')));
+                  const subtitleElement = template.elements.find((e: any) => e.type === 'text' && (e.id === 'subtitle' || e.content?.includes('LUXURY') || e.content?.includes('Fresh') || e.content?.includes('Glow')));
+                  const checklistElement = template.elements.find((e: any) => e.type === 'list' || e.id === 'checklist');
+                  const primaryButtonElement = template.elements.find((e: any) => e.type === 'button' && (e.id === 'primary_button' || e.content?.includes('ORDER') || e.content?.includes('DIVE')));
+                  const secondaryButtonElement = template.elements.find((e: any) => e.type === 'button' && (e.id === 'secondary_button' || e.content?.includes('VIEW') || e.content?.includes('GLOW')));
+                  
+                  // Apply content
+                  if (titleElement?.content) {
+                    setTitle(titleElement.content);
+                  }
+                  if (subtitleElement?.content) {
+                    setSubtitle(subtitleElement.content);
+                  }
+                  if (checklistElement?.items) {
+                    setChecklist(checklistElement.items);
+                  }
+                  
+                  // Apply buttons
+                  const newButtons: CoverButtonConfig[] = [];
+                  if (primaryButtonElement?.content) {
+                    newButtons.push({ 
+                      text: primaryButtonElement.content, 
+                      type: 'delivery_app' as CoverButtonType,
+                      style: 'filled' as const
+                    });
+                  }
+                  if (secondaryButtonElement?.content) {
+                    newButtons.push({ 
+                      text: secondaryButtonElement.content, 
+                      type: 'url' as CoverButtonType,
+                      url: '#collection',
+                      style: 'outline' as const
+                    });
+                  }
+                  if (newButtons.length > 0) {
+                    setButtons(newButtons);
+                  }
+                  
+                  // Apply element positions if available
+                  if (template.elements && Array.isArray(template.elements)) {
+                    const newPositions = template.elements
+                      .filter((element: any) => element.position)
+                      .map((element: any) => ({
+                        id: element.id === 'primary_button' || element.id === 'secondary_button' ? 'buttons' : element.id,
+                        type: element.id === 'primary_button' || element.id === 'secondary_button' ? 'buttons' : element.type,
+                        x: element.position.x || 50,
+                        y: element.position.y || 50
+                      }));
+                    
+                    if (newPositions.length > 0) {
+                      setElementPositions(newPositions);
+                    }
+                  }
+                  
+                  toast({ title: 'Template Applied!', description: `"${template.template_name || 'Figma template'}" loaded successfully` });
+                }
+              }}
+            />
+          </TabsContent>
 
                   <TabsContent value="content" className="space-y-4">
                     <div>
