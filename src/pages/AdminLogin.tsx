@@ -1,145 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import logoImage from '@/assets/party-on-delivery-logo.png';
-import { CANONICAL_DOMAIN } from '@/utils/links';
 
 export const AdminLogin: React.FC = () => {
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user, session } = useAuth();
 
-  useEffect(() => {
-    let mounted = true;
-    let authProcessed = false;
-    
-    const processAuth = async (email: string) => {
-      if (!mounted || authProcessed || !email) return;
-      if (sessionStorage.getItem('admin-auth-processed') === '1') return;
-      
-      authProcessed = true;
-      sessionStorage.setItem('admin-auth-processed', '1');
-      console.log(`Processing admin auth for ${email}`);
-      
-      try {
-        const { data } = await supabase.functions.invoke('verify-admin-google', {
-          body: { email }
-        });
-        
-        if (data?.isAdmin && mounted) {
-          console.log('Admin verified, redirecting to dashboard');
-          setGoogleLoading(false);
-          toast({
-            title: "Welcome!",
-            description: "Successfully logged in as admin.",
-          });
-          navigate('/admin');
-        } else if (mounted) {
-          console.log('User is not admin, signing out');
-          await supabase.auth.signOut();
-          setGoogleLoading(false);
-          toast({
-            title: "Access Denied", 
-            description: "You don't have admin access.",
-            variant: "destructive"
-          });
-        }
-      } catch (error) {
-        console.error('Admin verification error:', error);
-        if (mounted) {
-          setGoogleLoading(false);
-          toast({
-            title: "Error",
-            description: "Failed to verify admin access.",
-            variant: "destructive"
-          });
-        }
-      }
-    };
-
-    // Set up auth listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!mounted) return;
-      
-      console.log('Admin auth state change:', event, !!session?.user?.email);
-      
-      if (event === 'SIGNED_IN' && session?.user?.email) {
-        setTimeout(() => {
-          processAuth(session.user.email);
-        }, 0);
-      } else if (event === 'SIGNED_OUT') {
-        authProcessed = false;
-        sessionStorage.removeItem('admin-auth-processed');
-        setGoogleLoading(false);
-      }
-    });
-
-    // Then check for existing session
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.email && mounted) {
-          console.log('Found existing admin session');
-          await processAuth(session.user.email);
-        }
-      } catch (error) {
-        console.error('Session check error:', error);
-        setGoogleLoading(false);
-      }
-    };
-
-    checkSession();
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, [toast, navigate]);
-
-
-  const handleGoogleLogin = async () => {
-    if (googleLoading) return; // Prevent double clicks
-    
-    setGoogleLoading(true);
-    console.log('Initiating admin Google login...');
-    
+  const processAuth = async (email: string) => {
+    console.log('Processing admin auth for:', email);
     try {
-      // Use canonical domain for admin login
-      const redirectUrl = `${CANONICAL_DOMAIN}/affiliate/admin-login`;
-      console.log('Admin login redirect URL:', redirectUrl);
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
-          skipBrowserRedirect: false,
-        }
+      const { data, error } = await supabase.functions.invoke('verify-admin-google', {
+        body: { email }
       });
+
+      console.log('Admin verification response:', { data, error });
 
       if (error) {
-        console.error('OAuth initiation error:', error);
-        throw error;
+        console.error('Error verifying admin:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Failed to verify admin status. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
-      
-      // Loading state will be cleared by auth state listener
-    } catch (error: any) {
-      console.error('Google login error:', error);
+
+      if (data?.isAdmin) {
+        console.log('✅ Admin verified, redirecting to dashboard');
+        navigate('/affiliate/admin', { replace: true });
+      } else {
+        console.log('❌ Access denied - not an admin');
+        toast({
+          title: "Access Denied", 
+          description: "Your account does not have admin privileges.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error during admin verification:', error);
       toast({
-        title: "Login Error",
-        description: error.message || "Failed to sign in with Google. Please try again.",
-        variant: "destructive"
+        title: "Authentication Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
       });
-      setGoogleLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log('AdminLogin: Checking auth state');
+    
+    if (user?.email) {
+      processAuth(user.email);
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center p-4">
@@ -165,24 +85,19 @@ export const AdminLogin: React.FC = () => {
             </p>
           </div>
           
-          <Button
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
+          <GoogleAuthButton 
+            userType="admin"
             className="w-full"
             size="lg"
           >
-            {googleLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-            )}
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
             Sign in with Google
-          </Button>
+          </GoogleAuthButton>
 
           <div className="mt-6 text-center">
             <a 

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAppConfig } from '@/hooks/useAppConfig';
 import RequireAdmin from "./components/admin/RequireAdmin";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // Simple, bulletproof homepage
 import DynamicHomepage from "./pages/DynamicHomepage";
@@ -53,9 +54,10 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <BrowserRouter>
-          <GlobalCartProvider>
-            <Toaster />
-            <Sonner />
+          <AuthProvider>
+            <GlobalCartProvider>
+              <Toaster />
+              <Sonner />
             <div className="min-h-screen">
               <Suspense fallback={
                 <div className="min-h-screen flex items-center justify-center">
@@ -105,7 +107,8 @@ const App = () => {
                 </Routes>
               </Suspense>
             </div>
-          </GlobalCartProvider>
+            </GlobalCartProvider>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
