@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { UnifiedCoverPageEditor, type CoverPageConfig } from './UnifiedCoverPageEditor';
+import { UnifiedDeliveryAppEditor } from './UnifiedDeliveryAppEditor';
+import { UnifiedPostCheckoutEditor } from './UnifiedPostCheckoutEditor';
 
 interface CoverPage {
   id: string;
@@ -219,14 +221,13 @@ export const EnhancedCoverPageManager: React.FC = () => {
             Create and manage cover pages for your delivery apps
           </p>
         </div>
-        <Button 
-          onClick={handleCreateNew}
-          className="gap-2"
-          disabled={showEditor}
-        >
-          <Plus className="h-4 w-4" />
-          Create Cover Page
-        </Button>
+        {/* Enhanced Managers */}
+        <div className="flex gap-2">
+          <Button onClick={() => setShowEditor(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create Cover Page
+          </Button>
+        </div>
       </div>
 
           {/* Status Banner */}
@@ -273,7 +274,7 @@ export const EnhancedCoverPageManager: React.FC = () => {
           open={showEditor}
           onOpenChange={setShowEditor}
           initial={editingPage}
-          onSaved={handleEditorSave}
+          onSaved={loadCoverPages}
         />
       )}
 

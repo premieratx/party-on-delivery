@@ -4093,6 +4093,10 @@ export type Database = {
           table_name: string
         }[]
       }
+      verify_admin_access: {
+        Args: { user_email: string }
+        Returns: boolean
+      }
       verify_admin_password: {
         Args: { input_email: string; input_password: string }
         Returns: boolean
