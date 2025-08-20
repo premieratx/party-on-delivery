@@ -13,8 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
-import { DraggableCoverPreview } from "./DraggableCoverPreview";
-import { FigmaTemplateSelector } from "./FigmaTemplateSelector";
+import { EnhancedFigmaTemplateLibrary } from "./EnhancedFigmaTemplateLibrary";
+import { AnimatedCoverPreview } from "./AnimatedCoverPreview";
 import { CANONICAL_DOMAIN } from "@/utils/links";
 import Draggable from 'react-draggable';
 import { 
@@ -875,40 +875,30 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                     <TabsTrigger value="buttons">Buttons</TabsTrigger>
                   </TabsList>
 
-          {/* NEW: Figma Templates Tab */}
+          {/* NEW: Enhanced Figma Templates Tab */}
           <TabsContent value="templates" className="space-y-4">
-            <FigmaTemplateSelector 
-              onTemplateSelect={(templateData: any) => {
-                // Apply template data to current form
-                if (templateData.elements) {
-                  const template = templateData;
-                  
-                  // Set theme based on template data
-                  if (template.theme?.primaryColor === '#F5B800') {
-                    setSelectedTheme('gold');
-                  } else if (template.theme?.primaryColor === '#00d4ff') {
-                    setSelectedTheme('ocean');
-                  } else if (template.theme?.primaryColor === '#ffffff') {
-                    setSelectedTheme('sunset');
-                  }
+            <EnhancedFigmaTemplateLibrary 
+              category="cover_page"
+              onSelectTemplate={(template) => {
+                // Apply enhanced template with animations
+                const templateData = template.design_data;
+                
+                if (templateData) {
+                  // Set theme
+                  setSelectedTheme(template.theme || 'gold');
                   
                   // Apply content from template elements
-                  const titleElement = template.elements.find((e: any) => e.type === 'text' && (e.id === 'title' || e.content?.includes('ELITE') || e.content?.includes('OCEAN') || e.content?.includes('SUNSET')));
-                  const subtitleElement = template.elements.find((e: any) => e.type === 'text' && (e.id === 'subtitle' || e.content?.includes('LUXURY') || e.content?.includes('Fresh') || e.content?.includes('Glow')));
-                  const checklistElement = template.elements.find((e: any) => e.type === 'list' || e.id === 'checklist');
-                  const primaryButtonElement = template.elements.find((e: any) => e.type === 'button' && (e.id === 'primary_button' || e.content?.includes('ORDER') || e.content?.includes('DIVE')));
-                  const secondaryButtonElement = template.elements.find((e: any) => e.type === 'button' && (e.id === 'secondary_button' || e.content?.includes('VIEW') || e.content?.includes('GLOW')));
+                  const elements = templateData.elements || [];
+                  const titleElement = elements.find((e: any) => e.id === 'title');
+                  const subtitleElement = elements.find((e: any) => e.id === 'subtitle');
+                  const checklistElement = elements.find((e: any) => e.id === 'checklist');
+                  const primaryButtonElement = elements.find((e: any) => e.id === 'primary_button');
+                  const secondaryButtonElement = elements.find((e: any) => e.id === 'secondary_button');
                   
                   // Apply content
-                  if (titleElement?.content) {
-                    setTitle(titleElement.content);
-                  }
-                  if (subtitleElement?.content) {
-                    setSubtitle(subtitleElement.content);
-                  }
-                  if (checklistElement?.items) {
-                    setChecklist(checklistElement.items);
-                  }
+                  if (titleElement?.content) setTitle(titleElement.content);
+                  if (subtitleElement?.content) setSubtitle(subtitleElement.content);
+                  if (checklistElement?.items) setChecklist(checklistElement.items);
                   
                   // Apply buttons
                   const newButtons: CoverButtonConfig[] = [];
@@ -927,13 +917,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       style: 'outline' as const
                     });
                   }
-                  if (newButtons.length > 0) {
-                    setButtons(newButtons);
-                  }
+                  if (newButtons.length > 0) setButtons(newButtons);
                   
-                  // Apply element positions if available
-                  if (template.elements && Array.isArray(template.elements)) {
-                    const newPositions = template.elements
+                  // Apply element positions
+                  if (elements.length > 0) {
+                    const newPositions = elements
                       .filter((element: any) => element.position)
                       .map((element: any) => ({
                         id: element.id === 'primary_button' || element.id === 'secondary_button' ? 'buttons' : element.id,
@@ -942,12 +930,11 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                         y: element.position.y || 50
                       }));
                     
-                    if (newPositions.length > 0) {
-                      setElementPositions(newPositions);
-                    }
+                    if (newPositions.length > 0) setElementPositions(newPositions);
                   }
                   
-                  toast({ title: 'Template Applied!', description: `"${template.template_name || 'Figma template'}" loaded successfully` });
+                  // Store template data for animations
+                  setTemplateData(template);
                 }
               }}
             />
@@ -1384,7 +1371,22 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             {/* Preview Panel */}
             <div className="flex-1 overflow-hidden bg-gray-50">
               <div className="h-full overflow-y-auto p-4 custom-scrollbar">
-                {renderPreview()}
+                <AnimatedCoverPreview
+                  title={title}
+                  subtitle={subtitle}
+                  logoUrl={logoUrl}
+                  bgImageUrl={bgImageUrl}
+                  bgVideoUrl={bgVideoUrl}
+                  checklist={checklist}
+                  buttons={buttons}
+                  selectedTheme={selectedTheme}
+                  activeDevice={activeDevice}
+                  dragMode={dragMode}
+                  elementPositions={elementPositions}
+                  onElementDrag={handleElementDrag}
+                  fullscreenPreview={fullscreenPreview}
+                  templateData={templateData || {}}
+                />
               </div>
             </div>
           </div>
