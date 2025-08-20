@@ -15,6 +15,7 @@ import { CustomerInfoStep } from './CustomerInfoStep';
 import { CheckoutSummary } from './CheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
 import { PromoCodeInput } from './PromoCodeInput';
+import { TipSelector } from './TipSelector';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -93,10 +94,18 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   
   const calculatedSalesTax = discountedSubtotal * 0.0825; // 8.25% sales tax
   
-  // Tip management
-  const [tipAmount, setTipAmount] = useState(calculatedSubtotal * 0.10); // Default 10%
+  // Tip management - reactive to subtotal changes
+  const [tipPercentage, setTipPercentage] = useState(10); // Default 10%
+  const tipAmount = discountedSubtotal * (tipPercentage / 100);
 
   const finalTotal = discountedSubtotal + finalDeliveryFee + calculatedSalesTax + tipAmount;
+
+  // Update tip when subtotal changes (real-time updates)
+  useEffect(() => {
+    if (onTipChange) {
+      onTipChange(tipAmount);
+    }
+  }, [tipAmount, onTipChange]);
 
   // Discount management
   const handleDiscountApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
@@ -185,20 +194,21 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
-      <div className="container max-w-6xl mx-auto px-4 py-6">
+      <div className="container max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         
         {/* Header with Back Button */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={onBack}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 p-2 sm:p-3"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Cart
+            <span className="hidden sm:inline">Back to Cart</span>
+            <span className="sm:hidden">Back</span>
           </Button>
-          <h1 className="text-2xl font-bold">Checkout</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Checkout</h1>
         </div>
 
         {/* Progress Steps */}
@@ -284,6 +294,13 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               appliedDiscount={appliedDiscount}
               onDiscountApplied={handleDiscountApplied}
               cartSubtotal={calculatedSubtotal}
+            />
+            
+            {/* Tip Selector */}
+            <TipSelector
+              tipPercentage={tipPercentage}
+              subtotal={discountedSubtotal}
+              onTipChange={setTipPercentage}
             />
           </div>
         </div>

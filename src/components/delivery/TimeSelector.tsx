@@ -14,14 +14,21 @@ export const TimeSelector: React.FC<TimeSelectorProps> = ({ value, onChange, tim
       <p className="text-xs text-muted-foreground">
         Same-day delivery available with 1-hour advance notice.
       </p>
-      {/* Use native select for maximum reliability across all user types */}
+      {/* Mobile-optimized select dropdown */}
       <select
         value={value || ""}
         onChange={(e) => {
-          console.log('✅ Native select change triggered with value:', e.target.value);
+          console.log('✅ Time slot selected:', e.target.value);
           onChange(e.target.value);
         }}
-        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-12 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:text-base ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none cursor-pointer"
+        style={{ 
+          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+          backgroundPosition: 'right 0.5rem center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '1.5em 1.5em',
+          paddingRight: '2.5rem'
+        }}
       >
         <option value="" disabled>Select a time slot</option>
         {timeSlots.map((slot) => (

@@ -48,13 +48,24 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
         {/* Cart Items */}
         <div className="space-y-3">
           {cartItems.map((item, index) => {
-            // Clean product title - remove Shopify URLs and IDs, keep just the product name
+            // Clean product title - aggressive cleanup for professional appearance
             const cleanTitle = item.title
-              .replace(/https?:\/\/[^\s]+/g, '') // Remove URLs
-              .replace(/\b\d{8,}\b/g, '') // Remove long product IDs
+              .replace(/https?:\/\/[^\s]+/g, '') // Remove all URLs
+              .replace(/\b\d{8,}\b/g, '') // Remove long product IDs (8+ digits)
+              .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs
+              .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
+              .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
+              .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
+              .replace(/SKU:\s*\w+/gi, '') // Remove SKU codes
+              .replace(/\s+/g, ' ') // Normalize whitespace
               .replace(/(\d+)\s*Pack/gi, '$1pk')
               .replace(/(\d+)\s*oz/gi, '$1oz')
-              .trim();
+              .replace(/(\d+)\s*ml/gi, '$1ml')
+              .replace(/(\d+)\s*cl/gi, '$1cl')
+              .replace(/(\d+)\s*liter/gi, '$1L')
+              .replace(/(\d+)\s*count/gi, '$1ct')
+              .trim()
+              .replace(/^[-\s]+|[-\s]+$/g, ''); // Remove leading/trailing dashes and spaces
             
             return (
               <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/30 rounded-lg">
@@ -115,7 +126,7 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
         <Separator />
 
         {/* Pricing Breakdown */}
-        <div className="space-y-2 text-sm">
+        <div className="space-y-2 sm:space-y-3 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
             <span>${subtotal.toFixed(2)}</span>
@@ -167,7 +178,7 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
 
         <Separator />
         
-        <div className="flex justify-between font-bold text-lg">
+        <div className="flex justify-between font-bold text-base sm:text-lg">
           <span>Total</span>
           <span>${finalTotal.toFixed(2)}</span>
         </div>
