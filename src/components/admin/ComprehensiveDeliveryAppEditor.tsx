@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -19,11 +20,11 @@ import {
   Save, 
   Trash2,
   Settings,
-  Image as ImageIcon,
+  Package,
   Type,
   Layout,
   Palette,
-  Package
+  ArrowLeft
 } from 'lucide-react';
 
 interface Collection {
@@ -36,6 +37,10 @@ interface Tab {
   index: number;
   name: string;
   collection_handle: string;
+  icon?: string;
+  subheadline_text?: string;
+  subheadline_font?: 'default' | 'playfair' | 'oswald' | 'montserrat';
+  subheadline_size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 interface OccasionButton {
@@ -52,31 +57,45 @@ interface DeliveryAppConfig {
   hero_subheading: string;
   scrolling_text: string;
   hero_background_image?: string;
+  hero_background_video?: string;
+  hero_background_color?: string;
+  hero_gradient_start?: string;
+  hero_gradient_end?: string;
+  hero_gradient_direction?: string;
+  hero_background_type?: 'color' | 'gradient' | 'image' | 'video';
   is_homepage: boolean;
   is_active: boolean;
   tabs: Tab[];
   occasion_buttons: OccasionButton[];
 }
 
-export const DeliveryAppCreator = () => {
+interface ComprehensiveDeliveryAppEditorProps {
+  onBack?: () => void;
+}
+
+export const ComprehensiveDeliveryAppEditor: React.FC<ComprehensiveDeliveryAppEditorProps> = ({
+  onBack
+}) => {
   const [config, setConfig] = useState<DeliveryAppConfig>({
     app_name: '',
     app_slug: '',
     hero_heading: 'Alcohol Delivery Made Easy',
     hero_subheading: 'Beer, Wine, Spirits & More Delivered to Your Door',
     scrolling_text: 'Fast Delivery • Premium Selection • Competitive Prices',
+    hero_background_type: 'color',
+    hero_background_color: '#ffffff',
     is_homepage: false,
     is_active: true,
     tabs: [
-      { index: 0, name: 'Beer', collection_handle: 'beer' },
-      { index: 1, name: 'Wine', collection_handle: 'wine' },
-      { index: 2, name: 'Spirits', collection_handle: 'spirits' },
-      { index: 3, name: 'Mixers', collection_handle: 'mixers' },
-      { index: 4, name: 'Party Supplies', collection_handle: 'party-supplies' }
+      { index: 0, name: 'Beer', collection_handle: 'beer-collection' },
+      { index: 1, name: 'Wine', collection_handle: 'wine-collection' },
+      { index: 2, name: 'Spirits', collection_handle: 'spirits-collection' },
+      { index: 3, name: 'Cocktails', collection_handle: 'cocktail-kits' },
+      { index: 4, name: 'Seltzers', collection_handle: 'seltzer-collection' }
     ],
     occasion_buttons: [
       { title: 'Tailgate', collection_handle: 'tailgate-beer', enabled: true },
-      { title: 'Bachelorette', collection_handle: 'bachelorette-supplies', enabled: true },
+      { title: 'Bachelorette', collection_handle: 'bachelorette-booze', enabled: true },
       { title: 'Party Pack', collection_handle: 'disco-collection', enabled: true }
     ]
   });
@@ -137,6 +156,11 @@ export const DeliveryAppCreator = () => {
       }
     } catch (error) {
       console.error('Error loading collections:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load Shopify collections",
+        variant: "destructive"
+      });
     }
   };
 
@@ -176,6 +200,12 @@ export const DeliveryAppCreator = () => {
           hero_subheading: mainAppConfig.hero_subheading || 'Beer, Wine, Spirits & More Delivered to Your Door',
           scrolling_text: mainAppConfig.scrolling_text || 'Fast Delivery • Premium Selection • Competitive Prices',
           hero_background_image: mainAppConfig.hero_background_image,
+          hero_background_video: mainAppConfig.hero_background_video,
+          hero_background_color: mainAppConfig.hero_background_color || '#ffffff',
+          hero_gradient_start: mainAppConfig.hero_gradient_start,
+          hero_gradient_end: mainAppConfig.hero_gradient_end,
+          hero_gradient_direction: mainAppConfig.hero_gradient_direction,
+          hero_background_type: mainAppConfig.hero_background_type || 'color',
           is_homepage: data.is_homepage,
           is_active: data.is_active,
           tabs: collectionsConfig.tabs || config.tabs,
@@ -199,17 +229,19 @@ export const DeliveryAppCreator = () => {
         tabs: [...prev.tabs, { 
           index: prev.tabs.length, 
           name: 'New Tab', 
-          collection_handle: 'beer' 
+          collection_handle: availableCollections[0]?.handle || 'beer' 
         }]
       }));
     }
   };
 
   const removeTab = (index: number) => {
-    setConfig(prev => ({
-      ...prev,
-      tabs: prev.tabs.filter((_, i) => i !== index).map((tab, i) => ({ ...tab, index: i }))
-    }));
+    if (config.tabs.length > 1) {
+      setConfig(prev => ({
+        ...prev,
+        tabs: prev.tabs.filter((_, i) => i !== index).map((tab, i) => ({ ...tab, index: i }))
+      }));
+    }
   };
 
   const updateTab = (index: number, field: keyof Tab, value: string) => {
@@ -226,7 +258,7 @@ export const DeliveryAppCreator = () => {
       ...prev,
       occasion_buttons: [...prev.occasion_buttons, { 
         title: 'New Occasion', 
-        collection_handle: 'beer',
+        collection_handle: availableCollections[0]?.handle || 'beer',
         enabled: true 
       }]
     }));
@@ -275,8 +307,17 @@ export const DeliveryAppCreator = () => {
           hero_subheading: config.hero_subheading,
           scrolling_text: config.scrolling_text,
           hero_background_image: config.hero_background_image,
+          hero_background_video: config.hero_background_video,
+          hero_background_color: config.hero_background_color,
+          hero_gradient_start: config.hero_gradient_start,
+          hero_gradient_end: config.hero_gradient_end,
+          hero_gradient_direction: config.hero_gradient_direction,
+          hero_background_type: config.hero_background_type,
           occasion_buttons: config.occasion_buttons
-        } as any
+        } as any,
+        styles: {
+          theme: 'default'
+        }
       };
 
       let result;
@@ -327,17 +368,27 @@ export const DeliveryAppCreator = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="flex justify-between items-center sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-4 px-6 border-b">
-        <div>
-          <h2 className="text-3xl font-bold flex items-center gap-2">
-            <Package className="h-8 w-8 text-primary" />
-            Delivery App Creator
-          </h2>
-          <p className="text-muted-foreground">Create sophisticated delivery apps with advanced collection mapping</p>
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
+        <div className="flex items-center justify-between p-6">
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <Button variant="ghost" size="sm" onClick={onBack}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            )}
+            <div>
+              <h2 className="text-3xl font-bold flex items-center gap-2">
+                <Package className="h-8 w-8 text-primary" />
+                Delivery App Creator
+              </h2>
+              <p className="text-muted-foreground">Create sophisticated delivery apps with advanced collection mapping</p>
+            </div>
+          </div>
           <Button 
             onClick={saveDeliveryApp} 
             disabled={loading || !config.app_name || !config.app_slug}
-            className="mt-2"
+            size="lg"
           >
             <Save className="w-4 h-4 mr-2" />
             {loading ? 'Saving...' : selectedAppId ? 'Update App' : 'Save App'}
@@ -346,11 +397,11 @@ export const DeliveryAppCreator = () => {
       </div>
 
       <ScrollArea className="h-[calc(100vh-140px)]">
-        <div className="space-y-6 p-6">
+        <div className="p-6 space-y-6">
           {/* Load Existing App */}
-          <Card className="border-2 shadow-lg">
-            <CardHeader className="pb-4 bg-gradient-to-r from-primary/5 to-secondary/5">
-              <CardTitle className="flex items-center gap-2 text-xl">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Settings className="h-6 w-6 text-primary" />
                 Load Existing App
               </CardTitle>
@@ -358,9 +409,9 @@ export const DeliveryAppCreator = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <Label className="text-base font-medium">Select Existing App</Label>
+                  <Label>Select Existing App</Label>
                   <Select value={selectedAppId} onValueChange={setSelectedAppId}>
-                    <SelectTrigger className="h-12">
+                    <SelectTrigger>
                       <SelectValue placeholder="Choose an existing app to edit" />
                     </SelectTrigger>
                     <SelectContent>
@@ -395,6 +446,8 @@ export const DeliveryAppCreator = () => {
                         hero_heading: 'Alcohol Delivery Made Easy',
                         hero_subheading: 'Beer, Wine, Spirits & More Delivered to Your Door',
                         scrolling_text: 'Fast Delivery • Premium Selection • Competitive Prices',
+                        hero_background_type: 'color',
+                        hero_background_color: '#ffffff',
                         is_homepage: false,
                         is_active: true,
                         tabs: [
@@ -421,32 +474,29 @@ export const DeliveryAppCreator = () => {
           </Card>
 
           <Tabs defaultValue="basic" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 h-12 bg-muted/50">
-              <TabsTrigger value="basic" className="flex items-center gap-2 h-10">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="basic" className="flex items-center gap-2">
                 <Type className="w-4 h-4" />
                 Basic Info
               </TabsTrigger>
-              <TabsTrigger value="hero" className="flex items-center gap-2 h-10">
-                <ImageIcon className="w-4 h-4" />
+              <TabsTrigger value="hero" className="flex items-center gap-2">
+                <Palette className="w-4 h-4" />
                 Hero Section
               </TabsTrigger>
-              <TabsTrigger value="tabs" className="flex items-center gap-2 h-10">
+              <TabsTrigger value="tabs" className="flex items-center gap-2">
                 <Layout className="w-4 h-4" />
                 Product Tabs
               </TabsTrigger>
-              <TabsTrigger value="occasions" className="flex items-center gap-2 h-10">
-                <Palette className="w-4 h-4" />
+              <TabsTrigger value="occasions" className="flex items-center gap-2">
+                <Package className="w-4 h-4" />
                 Occasions
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="basic" className="space-y-6">
-              <Card className="shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Type className="h-6 w-6 text-primary" />
-                    Basic Information
-                  </CardTitle>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Basic Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -495,40 +545,33 @@ export const DeliveryAppCreator = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="is_homepage"
-                        checked={config.is_homepage}
-                        onCheckedChange={(checked) => 
-                          setConfig(prev => ({ ...prev, is_homepage: !!checked }))
-                        }
-                      />
-                      <Label htmlFor="is_homepage">Set as Homepage</Label>
-                    </div>
-
+                  <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="is_active"
                         checked={config.is_active}
-                        onCheckedChange={(checked) => 
-                          setConfig(prev => ({ ...prev, is_active: !!checked }))
-                        }
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, is_active: !!checked }))}
                       />
                       <Label htmlFor="is_active">Active</Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="is_homepage"
+                        checked={config.is_homepage}
+                        onCheckedChange={(checked) => setConfig(prev => ({ ...prev, is_homepage: !!checked }))}
+                      />
+                      <Label htmlFor="is_homepage">Set as Homepage</Label>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="hero" className="space-y-4">
+            <TabsContent value="hero" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Layout className="h-5 w-5" />
-                    Hero Section
-                  </CardTitle>
+                  <CardTitle>Hero Section Configuration</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -540,17 +583,17 @@ export const DeliveryAppCreator = () => {
                       placeholder="Alcohol Delivery Made Easy"
                     />
                   </div>
-
+                  
                   <div>
                     <Label htmlFor="hero_subheading">Hero Subheading</Label>
-                    <Input
+                    <Textarea
                       id="hero_subheading"
                       value={config.hero_subheading}
                       onChange={(e) => setConfig(prev => ({ ...prev, hero_subheading: e.target.value }))}
                       placeholder="Beer, Wine, Spirits & More Delivered to Your Door"
                     />
                   </div>
-
+                  
                   <div>
                     <Label htmlFor="scrolling_text">Scrolling Text</Label>
                     <Input
@@ -562,105 +605,143 @@ export const DeliveryAppCreator = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="hero_bg_image">Background Image</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="hero_bg_image"
-                        value={config.hero_background_image || ''}
-                        onChange={(e) => setConfig(prev => ({ 
-                          ...prev, 
-                          hero_background_image: e.target.value
-                        }))}
-                        placeholder="https://example.com/hero-bg.jpg"
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => bgImageInputRef.current?.click()}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload
-                      </Button>
-                    </div>
+                    <Label>Background Type</Label>
+                    <Select value={config.hero_background_type} onValueChange={(value) => 
+                      setConfig(prev => ({ ...prev, hero_background_type: value as any }))
+                    }>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="color">Solid Color</SelectItem>
+                        <SelectItem value="gradient">Gradient</SelectItem>
+                        <SelectItem value="image">Image</SelectItem>
+                        <SelectItem value="video">Video</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
+
+                  {config.hero_background_type === 'color' && (
+                    <div>
+                      <Label htmlFor="hero_background_color">Background Color</Label>
+                      <Input
+                        id="hero_background_color"
+                        type="color"
+                        value={config.hero_background_color}
+                        onChange={(e) => setConfig(prev => ({ ...prev, hero_background_color: e.target.value }))}
+                      />
+                    </div>
+                  )}
+
+                  {config.hero_background_type === 'gradient' && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="hero_gradient_start">Gradient Start</Label>
+                        <Input
+                          id="hero_gradient_start"
+                          type="color"
+                          value={config.hero_gradient_start}
+                          onChange={(e) => setConfig(prev => ({ ...prev, hero_gradient_start: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="hero_gradient_end">Gradient End</Label>
+                        <Input
+                          id="hero_gradient_end"
+                          type="color"
+                          value={config.hero_gradient_end}
+                          onChange={(e) => setConfig(prev => ({ ...prev, hero_gradient_end: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {config.hero_background_type === 'image' && (
+                    <div>
+                      <Label htmlFor="hero_background_image">Background Image URL</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="hero_background_image"
+                          value={config.hero_background_image || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, hero_background_image: e.target.value }))}
+                          placeholder="https://example.com/background.jpg"
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => bgImageInputRef.current?.click()}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="tabs" className="space-y-4">
-              <Card className="border-2">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Package className="h-6 w-6 text-primary" />
-                    Product Tabs Configuration
-                  </CardTitle>
-                  <p className="text-muted-foreground mt-2">
-                    Configure which Shopify collections appear as tabs in your delivery app. You can have up to 8 tabs.
-                  </p>
+            <TabsContent value="tabs" className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Product Tabs Configuration</CardTitle>
+                  <Button 
+                    onClick={addTab} 
+                    size="sm" 
+                    disabled={config.tabs.length >= 8}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Tab
+                  </Button>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg">Product Category Tabs ({config.tabs.length}/8)</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={addTab}
-                        disabled={config.tabs.length >= 8}
-                        size="sm"
-                        className="h-10"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Tab
-                      </Button>
-                    </div>
-                  </div>
-
+                <CardContent>
                   <div className="space-y-4">
+                    <div className="text-sm text-muted-foreground">
+                      Configure up to 8 product tabs. Each tab will display products from the selected Shopify collection.
+                    </div>
+                    
                     {config.tabs.map((tab, index) => (
-                      <div key={index} className="border-2 rounded-xl p-4 space-y-4 bg-muted/20">
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-semibold">Tab {index + 1}</h4>
-                          <Button
-                            type="button"
-                            onClick={() => removeTab(index)}
-                            variant="outline"
-                            size="sm"
-                            disabled={config.tabs.length <= 1}
-                            className="h-8"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
+                          <Badge variant="outline">Tab {index + 1}</Badge>
+                          {config.tabs.length > 1 && (
+                            <Button
+                              onClick={() => removeTab(index)}
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Minus className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <Label htmlFor={`tab_name_${index}`} className="font-medium">Tab Display Name</Label>
+                            <Label>Tab Name</Label>
                             <Input
-                              id={`tab_name_${index}`}
                               value={tab.name}
                               onChange={(e) => updateTab(index, 'name', e.target.value)}
-                              placeholder="e.g., Beer"
-                              className="h-12 mt-1"
+                              placeholder="Tab name"
                             />
                           </div>
                           
                           <div>
-                            <Label htmlFor={`collection_${index}`} className="font-medium">Shopify Collection</Label>
+                            <Label>Shopify Collection</Label>
                             <Select
                               value={tab.collection_handle}
                               onValueChange={(value) => updateTab(index, 'collection_handle', value)}
                             >
-                              <SelectTrigger className="h-12 mt-1">
+                              <SelectTrigger>
                                 <SelectValue placeholder="Select collection" />
                               </SelectTrigger>
-                              <SelectContent className="max-h-60">
+                              <SelectContent>
                                 {availableCollections.map((collection) => (
                                   <SelectItem key={collection.handle} value={collection.handle}>
                                     <div className="flex flex-col">
-                                      <span className="font-medium">{collection.title}</span>
-                                      <span className="text-sm text-muted-foreground">
-                                        {collection.products_count || 0} products • Handle: {collection.handle}
+                                      <span>{collection.title}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {collection.handle} ({collection.products_count || 0} products)
                                       </span>
                                     </div>
                                   </SelectItem>
@@ -669,87 +750,101 @@ export const DeliveryAppCreator = () => {
                             </Select>
                           </div>
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Subheadline Text (Optional)</Label>
+                            <Input
+                              value={tab.subheadline_text || ''}
+                              onChange={(e) => updateTab(index, 'subheadline_text', e.target.value)}
+                              placeholder="Optional subheadline"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Icon (Optional)</Label>
+                            <Input
+                              value={tab.icon || ''}
+                              onChange={(e) => updateTab(index, 'icon', e.target.value)}
+                              placeholder="🍺 (emoji or text)"
+                            />
+                          </div>
+                        </div>
                       </div>
                     ))}
-                    
-                    {config.tabs.length === 0 && (
-                      <div className="text-center py-12 bg-muted/30 rounded-xl">
-                        <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground text-lg">No tabs configured</p>
-                        <p className="text-sm text-muted-foreground mt-1">Add a tab to get started</p>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="occasions" className="space-y-4">
+            <TabsContent value="occasions" className="space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 justify-between">
-                    <div className="flex items-center gap-2">
-                      <Palette className="h-5 w-5" />
-                      "What's the Occasion?" Buttons
-                    </div>
-                    <Button onClick={addOccasionButton}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Button
-                    </Button>
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Configure the occasion buttons that appear in the "What's the Occasion?" section
-                  </p>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Occasion Buttons</CardTitle>
+                  <Button onClick={addOccasionButton} size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Button
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    <div className="text-sm text-muted-foreground">
+                      Create special occasion buttons that filter products by collection.
+                    </div>
+                    
                     {config.occasion_buttons.map((button, index) => (
-                      <div key={index} className="flex gap-4 items-end p-4 border rounded-lg">
-                        <div className="flex-1">
-                          <Label>Button Title</Label>
-                          <Input
-                            value={button.title}
-                            onChange={(e) => updateOccasionButton(index, 'title', e.target.value)}
-                            placeholder="Button Title"
-                          />
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline">Button {index + 1}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={button.enabled}
+                              onCheckedChange={(checked) => updateOccasionButton(index, 'enabled', checked)}
+                            />
+                            <Button
+                              onClick={() => removeOccasionButton(index)}
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         
-                        <div className="flex-1">
-                          <Label>Collection</Label>
-                          <Select 
-                            value={button.collection_handle}
-                            onValueChange={(value) => updateOccasionButton(index, 'collection_handle', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableCollections.map((collection) => (
-                                <SelectItem key={collection.handle} value={collection.handle}>
-                                  {collection.title} ({collection.products_count || 0} products)
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Button Title</Label>
+                            <Input
+                              value={button.title}
+                              onChange={(e) => updateOccasionButton(index, 'title', e.target.value)}
+                              placeholder="Button title"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label>Shopify Collection</Label>
+                            <Select
+                              value={button.collection_handle}
+                              onValueChange={(value) => updateOccasionButton(index, 'collection_handle', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select collection" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableCollections.map((collection) => (
+                                  <SelectItem key={collection.handle} value={collection.handle}>
+                                    <div className="flex flex-col">
+                                      <span>{collection.title}</span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {collection.handle} ({collection.products_count || 0} products)
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
-
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={button.enabled}
-                            onCheckedChange={(checked) => 
-                              updateOccasionButton(index, 'enabled', !!checked)
-                            }
-                          />
-                          <Label>Enabled</Label>
-                        </div>
-
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeOccasionButton(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>
