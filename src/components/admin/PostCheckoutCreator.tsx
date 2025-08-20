@@ -139,16 +139,33 @@ export const PostCheckoutCreator: React.FC<PostCheckoutCreatorProps> = ({
         }))
       };
 
+      // Fix table name and data structure for post_checkout_pages
+      const pageData = {
+        name: config.title,
+        slug: config.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        content: JSON.parse(JSON.stringify({
+          title: config.title,
+          subtitle: config.subtitle,
+          logo_url: config.logo_url,
+          buttons: config.buttons,
+          background_color: config.background_color,
+          text_color: config.text_color,
+          theme: config.theme
+        })),
+        is_active: true,
+        is_default: config.is_template || false
+      };
+
       let result;
       if (isEditing && config.id) {
         result = await supabase
-          .from('post_checkout_screens')
-          .update(payload)
+          .from('post_checkout_pages')
+          .update(pageData)
           .eq('id', config.id);
       } else {
         result = await supabase
-          .from('post_checkout_screens')
-          .insert(payload);
+          .from('post_checkout_pages')
+          .insert(pageData);
       }
 
       if (result.error) throw result.error;

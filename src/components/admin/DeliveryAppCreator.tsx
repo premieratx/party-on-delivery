@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { AdminFormLayout, AdminFormSection } from './AdminFormLayout';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { DeliveryAppCanvasEditor } from './DeliveryAppCanvasEditor';
+import { FigmaTemplateLibrary } from './FigmaTemplateLibrary';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Minus, Upload } from 'lucide-react';
+import { toast as sonnerToast } from 'sonner';
 
 interface Tab {
   index: number;
@@ -71,6 +66,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   const [availableCollections, setAvailableCollections] = useState<any[]>([]);  
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('templates');
   const { toast } = useToast();
 
   const isEditing = !!initial?.id;
@@ -92,69 +88,6 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
     } catch (error) {
       console.error('Error loading collections:', error);
     }
-  };
-
-  const generateSlug = (name: string) => {
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    setConfig(prev => ({ ...prev, app_slug: slug }));
-  };
-
-  const addTab = () => {
-    if (config.tabs.length < 8) {
-      setConfig(prev => ({
-        ...prev,
-        tabs: [...prev.tabs, { 
-          index: prev.tabs.length, 
-          name: 'New Tab', 
-          collection_handle: availableCollections[0]?.handle || 'beer' 
-        }]
-      }));
-    }
-  };
-
-  const removeTab = (index: number) => {
-    if (config.tabs.length > 1) {
-      setConfig(prev => ({
-        ...prev,
-        tabs: prev.tabs.filter((_, i) => i !== index).map((tab, i) => ({ ...tab, index: i }))
-      }));
-    }
-  };
-
-  const updateTab = (index: number, field: keyof Tab, value: string) => {
-    setConfig(prev => ({
-      ...prev,
-      tabs: prev.tabs.map((tab, i) => 
-        i === index ? { ...tab, [field]: value } : tab
-      )
-    }));
-  };
-
-  const addOccasionButton = () => {
-    setConfig(prev => ({
-      ...prev,
-      occasion_buttons: [...prev.occasion_buttons, { 
-        title: 'New Occasion', 
-        collection_handle: availableCollections[0]?.handle || 'beer',
-        enabled: true 
-      }]
-    }));
-  };
-
-  const removeOccasionButton = (index: number) => {
-    setConfig(prev => ({
-      ...prev,
-      occasion_buttons: prev.occasion_buttons.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateOccasionButton = (index: number, field: keyof OccasionButton, value: any) => {
-    setConfig(prev => ({
-      ...prev,
-      occasion_buttons: prev.occasion_buttons.map((button, i) => 
-        i === index ? { ...button, [field]: value } : button
-      )
-    }));
   };
 
   const handleSave = async () => {
@@ -200,13 +133,17 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
           .insert(appData);
       }
 
-      if (result.error) throw result.error;
+      if (result.error) {
+        console.error('Supabase error:', result.error);
+        throw result.error;
+      }
 
       toast({
         title: "Success",
         description: `Delivery app ${isEditing ? 'updated' : 'created'} successfully`,
       });
 
+      sonnerToast.success(`Delivery app ${isEditing ? 'updated' : 'created'} successfully!`);
       onSaved?.();
 
     } catch (error) {
@@ -216,240 +153,78 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
         description: "Failed to save delivery app",
         variant: "destructive"
       });
+      sonnerToast.error('Failed to save delivery app');
     } finally {
       setSaving(false);
     }
   };
 
+  const handleTemplateSelect = (template: any) => {
+    // Apply template data to config
+    if (template.design_data) {
+      const newConfig = {
+        ...config,
+        hero_background_color: template.design_data.colors?.background || config.hero_background_color,
+        hero_heading: template.design_data.heading || config.hero_heading,
+        hero_subheading: template.design_data.subheading || config.hero_subheading,
+      };
+      setConfig(newConfig);
+      setActiveTab('canvas');
+      sonnerToast.success(`Template "${template.name}" applied!`);
+    }
+  };
+
+  if (activeTab === 'canvas') {
+    return (
+      <div className="h-screen">
+        <div className="absolute top-4 left-4 z-10">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="templates">📐 Figma Templates</TabsTrigger>
+              <TabsTrigger value="canvas">🎨 Canvas Editor</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <DeliveryAppCanvasEditor
+          config={config}
+          onChange={setConfig}
+          onSave={handleSave}
+          saving={saving}
+          availableCollections={availableCollections}
+        />
+      </div>
+    );
+  }
+
   return (
-    <AdminFormLayout
-      title={isEditing ? 'Edit Delivery App' : 'Create Delivery App'}
-      subtitle="Configure your delivery application settings and product tabs"
-      onBack={onBack}
-      onSave={handleSave}
-      saving={saving}
-      canSave={!!config.app_name && !!config.app_slug}
-    >
-      <AdminFormSection
-        title="Basic Information"
-        description="Set up the basic details for your delivery app"
-      >
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="app_name">App Name *</Label>
-            <Input
-              id="app_name"
-              value={config.app_name}
-              onChange={(e) => {
-                setConfig(prev => ({ ...prev, app_name: e.target.value }));
-                generateSlug(e.target.value);
-              }}
-              placeholder="My Delivery App"
-            />
-          </div>
-          <div>
-            <Label htmlFor="app_slug">App Slug *</Label>
-            <Input
-              id="app_slug"
-              value={config.app_slug}
-              onChange={(e) => setConfig(prev => ({ ...prev, app_slug: e.target.value }))}
-              placeholder="my-delivery-app"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="logo_url">Logo URL</Label>
-          <div className="flex gap-2">
-            <Input
-              id="logo_url"
-              value={config.logo_url || ''}
-              onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
-              placeholder="https://example.com/logo.png"
-              className="flex-1"
-            />
-            <Button variant="outline">
-              <Upload className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
+    <div className="h-screen bg-background">
+      <div className="p-4 border-b">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="is_active"
-              checked={config.is_active}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, is_active: checked }))}
-            />
-            <Label htmlFor="is_active">Active</Label>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {isEditing ? 'Edit Delivery App' : 'Create Delivery App'}
+            </h1>
+            <p className="text-muted-foreground">
+              Choose a template to get started quickly
+            </p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="is_homepage"
-              checked={config.is_homepage}
-              onCheckedChange={(checked) => setConfig(prev => ({ ...prev, is_homepage: checked }))}
-            />
-            <Label htmlFor="is_homepage">Set as Homepage</Label>
-          </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="templates">📐 Figma Templates</TabsTrigger>
+              <TabsTrigger value="canvas">🎨 Canvas Editor</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
-      </AdminFormSection>
+      </div>
 
-      <AdminFormSection
-        title="Hero Section"
-        description="Configure the main hero section of your delivery app"
-      >
-        <div>
-          <Label htmlFor="hero_heading">Hero Heading</Label>
-          <Input
-            id="hero_heading"
-            value={config.hero_heading}
-            onChange={(e) => setConfig(prev => ({ ...prev, hero_heading: e.target.value }))}
-            placeholder="Alcohol Delivery Made Easy"
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full p-6">
+          <FigmaTemplateLibrary
+            category="delivery_app"
+            onSelectTemplate={handleTemplateSelect}
           />
         </div>
-
-        <div>
-          <Label htmlFor="hero_subheading">Hero Subheading</Label>
-          <Input
-            id="hero_subheading"
-            value={config.hero_subheading}
-            onChange={(e) => setConfig(prev => ({ ...prev, hero_subheading: e.target.value }))}
-            placeholder="Beer, Wine, Spirits & More Delivered to Your Door"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="scrolling_text">Scrolling Text</Label>
-          <Input
-            id="scrolling_text"
-            value={config.scrolling_text}
-            onChange={(e) => setConfig(prev => ({ ...prev, scrolling_text: e.target.value }))}
-            placeholder="Fast Delivery • Premium Selection • Competitive Prices"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="hero_background_color">Background Color</Label>
-          <div className="flex gap-2">
-            <Input
-              id="hero_background_color"
-              type="color"
-              value={config.hero_background_color}
-              onChange={(e) => setConfig(prev => ({ ...prev, hero_background_color: e.target.value }))}
-              className="w-16"
-            />
-            <Input
-              value={config.hero_background_color}
-              onChange={(e) => setConfig(prev => ({ ...prev, hero_background_color: e.target.value }))}
-              className="flex-1"
-            />
-          </div>
-        </div>
-      </AdminFormSection>
-
-      <AdminFormSection
-        title="Product Tabs"
-        description="Configure the product category tabs for your delivery app"
-      >
-        <div className="space-y-4">
-          {config.tabs.map((tab, index) => (
-            <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
-              <div className="flex-1 grid grid-cols-2 gap-2">
-                <Input
-                  value={tab.name}
-                  onChange={(e) => updateTab(index, 'name', e.target.value)}
-                  placeholder="Tab Name"
-                />
-                <Select
-                  value={tab.collection_handle}
-                  onValueChange={(value) => updateTab(index, 'collection_handle', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select collection" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCollections.map((collection) => (
-                      <SelectItem key={collection.handle} value={collection.handle}>
-                        {collection.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => removeTab(index)}
-                disabled={config.tabs.length <= 1}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            variant="outline"
-            onClick={addTab}
-            disabled={config.tabs.length >= 8}
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Tab
-          </Button>
-        </div>
-      </AdminFormSection>
-
-      <AdminFormSection
-        title="Occasion Buttons"
-        description="Configure special occasion buttons for quick product access"
-      >
-        <div className="space-y-4">
-          {config.occasion_buttons.map((button, index) => (
-            <div key={index} className="flex items-center gap-2 p-3 border rounded-lg">
-              <div className="flex-1 grid grid-cols-2 gap-2">
-                <Input
-                  value={button.title}
-                  onChange={(e) => updateOccasionButton(index, 'title', e.target.value)}
-                  placeholder="Button Title"
-                />
-                <Select
-                  value={button.collection_handle}
-                  onValueChange={(value) => updateOccasionButton(index, 'collection_handle', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select collection" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCollections.map((collection) => (
-                      <SelectItem key={collection.handle} value={collection.handle}>
-                        {collection.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Switch
-                checked={button.enabled}
-                onCheckedChange={(checked) => updateOccasionButton(index, 'enabled', checked)}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => removeOccasionButton(index)}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            variant="outline"
-            onClick={addOccasionButton}
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Occasion Button
-          </Button>
-        </div>
-      </AdminFormSection>
-    </AdminFormLayout>
+      </div>
+    </div>
   );
 };

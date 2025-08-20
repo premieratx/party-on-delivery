@@ -86,16 +86,16 @@ export const EnhancedPostCheckoutManager: React.FC = () => {
     // Convert PostCheckoutPage to PostCheckoutConfig format for the editor
     const postCheckoutConfig: PostCheckoutConfig = {
       id: page.id,
-      title: page.content?.title || 'Order Complete!',
-      subtitle: page.content?.message || 'Thank you for your order.',
-      logo_url: '',
-      buttons: [
+      title: page.content?.title || page.name || 'Order Complete!',
+      subtitle: page.content?.subtitle || 'Thank you for your order.',
+      logo_url: page.content?.logo_url || '',
+      buttons: page.content?.buttons || [
         { text: 'Continue Shopping', url: '/', style: 'primary' },
         { text: 'Track Order', url: '/orders', style: 'secondary' }
       ],
-      background_color: '#ffffff',
-      text_color: '#000000',
-      theme: 'default'
+      background_color: page.content?.background_color || '#ffffff',
+      text_color: page.content?.text_color || '#000000',
+      theme: page.content?.theme || 'default'
     };
     
     setEditingPage(postCheckoutConfig);

@@ -171,7 +171,10 @@ export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({
           .insert(pageData);
       }
 
-      if (result.error) throw result.error;
+      if (result.error) {
+        console.error('Supabase error:', result.error);
+        throw result.error;
+      }
 
       toast({
         title: "Success",
