@@ -20,6 +20,7 @@ interface SavedCart {
 
 export const useProgressSaver = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeIntervals, setActiveIntervals] = useState<NodeJS.Timeout[]>([]);
   const [sessionId] = useState(() => {
     let id = localStorage.getItem('sessionId');
     if (!id) {
@@ -29,6 +30,13 @@ export const useProgressSaver = () => {
     return id;
   });
   const { toast } = useToast();
+
+  // Cleanup all intervals on unmount
+  useEffect(() => {
+    return () => {
+      activeIntervals.forEach(interval => clearInterval(interval));
+    };
+  }, [activeIntervals]);
 
   // Save general progress data
   const saveProgress = useCallback(async (progressData: ProgressData) => {
@@ -319,20 +327,31 @@ export const useProgressSaver = () => {
     }
   }, [sessionId, toast]);
 
-  // Auto-save functionality
+  // Auto-save functionality with proper cleanup
   const enableAutoSave = useCallback((progressType: string, dataGetter: () => any, interval: number = 30000) => {
     const autoSaveInterval = setInterval(() => {
-      const data = dataGetter();
-      if (data) {
-        saveProgress({
-          progressType,
-          data,
-          pageContext: window.location.pathname,
-        });
+      try {
+        const data = dataGetter();
+        if (data) {
+          saveProgress({
+            progressType,
+            data,
+            pageContext: window.location.pathname,
+          });
+        }
+      } catch (error) {
+        console.warn('Auto-save failed:', error);
       }
     }, interval);
 
-    return () => clearInterval(autoSaveInterval);
+    // Store interval for cleanup
+    setActiveIntervals(prev => [...prev, autoSaveInterval]);
+    
+    // Return cleanup function
+    return () => {
+      clearInterval(autoSaveInterval);
+      setActiveIntervals(prev => prev.filter(id => id !== autoSaveInterval));
+    };
   }, [saveProgress]);
 
   return {

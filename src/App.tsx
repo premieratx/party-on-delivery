@@ -8,6 +8,7 @@ import { useAppConfig } from '@/hooks/useAppConfig';
 import RequireAdmin from "./components/admin/RequireAdmin";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { AuthProvider } from '@/contexts/AuthContext';
+import { RobustErrorBoundary } from '@/components/common/RobustErrorBoundary';
 
 // Simple, bulletproof homepage
 import DynamicHomepage from "./pages/DynamicHomepage";
@@ -52,69 +53,71 @@ const App = () => {
   const { config } = useAppConfig();
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <GlobalCartProvider>
-              <Toaster />
-              <Sonner />
-            <div className="min-h-screen">
-              <Suspense fallback={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-lg text-muted-foreground">Loading...</div>
-                </div>
-              }>
-                <Routes>
-                  {/* DYNAMIC HOMEPAGE ROUTE */}
-                  <Route path="/" element={<DynamicHomepage />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/app/:appSlug" element={<CustomAppView />} />
-                  
-                  {/* Conditionally render Voice Chat */}
-                  {config.voiceChatEnabled && (
-                    <Route path="/voice-chat" element={<VoiceChat />} />
-                  )}
-                  
-                  {/* Order completion */}
-                  <Route path="/success" element={<Success />} />
-                  <Route path="/order-complete" element={<OrderComplete />} />
-                  <Route path="/post-checkout/:appName" element={<CustomAppPostCheckout />} />
-                  <Route path="/custom-post-checkout/:appName" element={<CustomAppPostCheckout />} />
-                  <Route path="/custom-party-on-delivery-post-checkout" element={<CustomPartyOnDeliveryPostCheckout />} />
-                  
-                  {/* Affiliate Routes */}
-                  <Route path="/affiliate" element={<AffiliateIntro />} />
-                  <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
-                  <Route path="/affiliate/admin-login" element={<AdminLogin />} />
-                  <Route path="/affiliate/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-                  <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
-                  <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
-                  <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
-                  
-                  <Route path="/flow/:shareSlug" element={<AffiliateFlowLanding />} />
-                  
-                  {/* Admin Routes */}
-                  <Route path="/admin/login" element={<AdminLogin />} />
-                  <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-                  <Route path="/admin/*" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-                  <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-                  
-                  {/* Customer Routes */}
-                  <Route path="/customer/login" element={<CustomerLogin />} />
-                  <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-                  
-                  {/* Test Routes */}
-                  <Route path="/test-checkout" element={<TestCheckout />} />
-                </Routes>
-              </Suspense>
-            </div>
-            </GlobalCartProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <RobustErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <GlobalCartProvider>
+                <Toaster />
+                <Sonner />
+              <div className="min-h-screen">
+                <Suspense fallback={
+                  <div className="min-h-screen flex items-center justify-center">
+                    <div className="text-lg text-muted-foreground">Loading...</div>
+                  </div>
+                }>
+                  <Routes>
+                    {/* DYNAMIC HOMEPAGE ROUTE */}
+                    <Route path="/" element={<DynamicHomepage />} />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/app/:appSlug" element={<CustomAppView />} />
+                    
+                    {/* Conditionally render Voice Chat */}
+                    {config.voiceChatEnabled && (
+                      <Route path="/voice-chat" element={<VoiceChat />} />
+                    )}
+                    
+                    {/* Order completion */}
+                    <Route path="/success" element={<Success />} />
+                    <Route path="/order-complete" element={<OrderComplete />} />
+                    <Route path="/post-checkout/:appName" element={<CustomAppPostCheckout />} />
+                    <Route path="/custom-post-checkout/:appName" element={<CustomAppPostCheckout />} />
+                    <Route path="/custom-party-on-delivery-post-checkout" element={<CustomPartyOnDeliveryPostCheckout />} />
+                    
+                    {/* Affiliate Routes */}
+                    <Route path="/affiliate" element={<AffiliateIntro />} />
+                    <Route path="/affiliate/dashboard" element={<AffiliateDashboard />} />
+                    <Route path="/affiliate/admin-login" element={<AdminLogin />} />
+                    <Route path="/affiliate/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
+                    <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
+                    <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
+                    
+                    <Route path="/flow/:shareSlug" element={<AffiliateFlowLanding />} />
+                    
+                    {/* Admin Routes */}
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    <Route path="/admin/*" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    
+                    {/* Customer Routes */}
+                    <Route path="/customer/login" element={<CustomerLogin />} />
+                    <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+                    
+                    {/* Test Routes */}
+                    <Route path="/test-checkout" element={<TestCheckout />} />
+                  </Routes>
+                </Suspense>
+              </div>
+              </GlobalCartProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </RobustErrorBoundary>
   );
 };
 

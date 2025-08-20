@@ -126,7 +126,7 @@ export const useSmartCache = <T>(
     fetchData();
   }, [fetchData]);
 
-  // Auto refresh interval
+  // Auto refresh interval with proper cleanup
   useEffect(() => {
     if (refreshInterval > 0) {
       const interval = setInterval(() => {
@@ -134,10 +134,13 @@ export const useSmartCache = <T>(
           fetchData(true);
         }
       }, refreshInterval);
-
-      return () => clearInterval(interval);
+      
+      // Cleanup on unmount or dependency change
+      return () => {
+        clearInterval(interval);
+      };
     }
-  }, [refreshInterval, loading, lastFetch, isDataStale, fetchData]);
+  }, [refreshInterval, loading, lastFetch, fetchData]);
 
   return {
     data,

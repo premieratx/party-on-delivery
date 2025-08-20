@@ -59,7 +59,7 @@ export function useReliableStorage<T>(key: string, initialValue: T, backupKey?: 
     }
   };
 
-  // Optimized auto-save with throttling to reduce overhead
+  // Optimized auto-save with throttling and proper cleanup
   useEffect(() => {
     // Only set up interval if value has meaningful data
     if (value === initialValue) return;
@@ -67,17 +67,25 @@ export function useReliableStorage<T>(key: string, initialValue: T, backupKey?: 
     const interval = setInterval(() => {
       // Use requestIdleCallback for background saves when available
       const saveBackup = () => {
-        cacheManager.set(backupKey || `${key}_backup`, value, 24 * 60);
+        try {
+          cacheManager.set(backupKey || `${key}_backup`, value, 24 * 60);
+        } catch (error) {
+          // Silently handle storage errors to prevent crashes
+          console.warn('Background save failed:', error);
+        }
       };
 
       if ('requestIdleCallback' in window) {
         requestIdleCallback(saveBackup);
       } else {
-        saveBackup();
+        setTimeout(saveBackup, 0);
       }
     }, 120000); // Reduced frequency to every 2 minutes
 
-    return () => clearInterval(interval);
+    // Ensure cleanup on unmount
+    return () => {
+      clearInterval(interval);
+    };
   }, [value, key, backupKey, initialValue]);
 
   return [value, setValueReliably, clearValue] as const;

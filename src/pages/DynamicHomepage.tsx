@@ -36,6 +36,7 @@ export default function DynamicHomepage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
   
   console.log('🏠 DynamicHomepage render - Loading:', loading, 'Error:', error, 'App:', !!homepageApp);
   
@@ -51,6 +52,11 @@ export default function DynamicHomepage() {
 
   useEffect(() => {
     loadHomepageApp();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      setIsMounted(false);
+    };
   }, []);
 
   const loadHomepageApp = useCallback(async () => {
@@ -70,11 +76,15 @@ export default function DynamicHomepage() {
 
       if (error) {
         console.error('❌ Database error:', error);
-        setError(`Database error: ${error.message}`);
-        setHomepageApp(null);
+        if (isMounted) {
+          setError(`Database error: ${error.message}`);
+          setHomepageApp(null);
+        }
       } else if (!data) {
         console.log('⚠️ No homepage app configured');
-        setHomepageApp(null);
+        if (isMounted) {
+          setHomepageApp(null);
+        }
       } else {
         console.log('✅ Processing homepage app:', data.app_name);
         
@@ -91,15 +101,21 @@ export default function DynamicHomepage() {
         };
         
         console.log('✅ Setting homepage app:', processedApp.app_name, 'with', processedApp.collections_config.tabs.length, 'tabs');
-        setHomepageApp(processedApp);
+        if (isMounted) {
+          setHomepageApp(processedApp);
+        }
       }
     } catch (err: any) {
       console.error('❌ Unexpected error:', err);
-      setError(`System error: ${err.message}`);
-      setHomepageApp(null);
+      if (isMounted) {
+        setError(`System error: ${err.message}`);
+        setHomepageApp(null);
+      }
     } finally {
       console.log('🔄 Setting loading to false');
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   }, []);
 
