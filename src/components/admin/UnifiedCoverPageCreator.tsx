@@ -26,6 +26,7 @@ import {
   Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
+import '@/styles/cover-animations.css';
 
 // Device configurations
 const DEVICE_CONFIGS = {
@@ -174,6 +175,15 @@ interface CoverPageSettings {
   showLogo: boolean;
   logoUrl: string;
   logoFile?: File;
+  animations: {
+    enableAnimations: boolean;
+    entranceDuration: number;
+    exitDuration: number;
+    titleDelay: number;
+    subtitleDelay: number;
+    buttonDelay: number;
+    logoDelay: number;
+  };
 }
 
 const defaultSettings: CoverPageSettings = {
@@ -204,7 +214,16 @@ const defaultSettings: CoverPageSettings = {
   layout: 'center',
   opacity: 100,
   showLogo: true,
-  logoUrl: '/logo.png'
+  logoUrl: '/logo.png',
+  animations: {
+    enableAnimations: true,
+    entranceDuration: 800,
+    exitDuration: 500,
+    titleDelay: 200,
+    subtitleDelay: 400,
+    buttonDelay: 600,
+    logoDelay: 0
+  }
 };
 
 interface UnifiedCoverPageCreatorProps {
@@ -226,6 +245,8 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
     pixel7: { ...defaultSettings }
   });
   const [previewMode, setPreviewMode] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -301,6 +322,23 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
     toast.success('Cover page settings saved for all devices!');
   };
 
+  const triggerPreviewAnimation = () => {
+    setIsAnimating(true);
+    setAnimationKey(prev => prev + 1);
+    
+    // Reset animation state after entrance duration + longest delay
+    const totalDuration = currentSettings.animations.entranceDuration + Math.max(
+      currentSettings.animations.titleDelay,
+      currentSettings.animations.subtitleDelay,
+      currentSettings.animations.buttonDelay,
+      currentSettings.animations.logoDelay
+    );
+    
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, totalDuration + 100);
+  };
+
   useEffect(() => {
     const saved = localStorage.getItem('cover-page-settings');
     if (saved) {
@@ -332,8 +370,26 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
                           settings.layout === 'right' ? 'items-end text-right' :
                           'items-center text-center';
 
+    const getAnimationClasses = (elementType: 'logo' | 'title' | 'subtitle' | 'buttons') => {
+      if (!settings.animations.enableAnimations || !previewMode) return '';
+      
+      return 'cover-fade-in';
+    };
+
+    const getAnimationStyle = (elementType: 'logo' | 'title' | 'subtitle' | 'buttons') => {
+      if (!settings.animations.enableAnimations || !previewMode) return {};
+      
+      const delay = settings.animations[`${elementType === 'buttons' ? 'button' : elementType}Delay`];
+      const duration = settings.animations.entranceDuration;
+      
+      return {
+        animationDelay: `${delay}ms`,
+        animationDuration: `${duration}ms`
+      };
+    };
+
     return (
-      <div className={`${containerClass} ${alignmentClass} bg-gray-100 rounded-lg`} style={backgroundStyle}>
+      <div className={`${containerClass} ${alignmentClass} bg-gray-100 rounded-lg`} style={backgroundStyle} key={animationKey}>
         {settings.backgroundType === 'video' && (
           <video
             autoPlay
@@ -349,7 +405,8 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
             <img
               src={settings.logoUrl}
               alt="Logo"
-              className="h-16 w-auto mx-auto mb-4"
+              className={`h-16 w-auto mx-auto mb-4 ${getAnimationClasses('logo')}`}
+              style={getAnimationStyle('logo')}
             />
           )}
           
@@ -358,9 +415,10 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
               fontSize: settings.titleStyle.fontSize,
               fontWeight: settings.titleStyle.fontWeight,
               color: settings.titleStyle.color,
-              fontFamily: settings.titleStyle.fontFamily
+              fontFamily: settings.titleStyle.fontFamily,
+              ...getAnimationStyle('title')
             }}
-            className="leading-tight"
+            className={`leading-tight ${getAnimationClasses('title')}`}
           >
             {settings.title}
           </h1>
@@ -369,21 +427,25 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
             style={{
               fontSize: settings.subtitleStyle.fontSize,
               color: settings.subtitleStyle.color,
-              fontFamily: settings.subtitleStyle.fontFamily
+              fontFamily: settings.subtitleStyle.fontFamily,
+              ...getAnimationStyle('subtitle')
             }}
-            className="leading-relaxed"
+            className={`leading-relaxed ${getAnimationClasses('subtitle')}`}
           >
             {settings.subtitle}
           </p>
           
-          <div className="flex gap-4 justify-center mt-8">
+          <div 
+            className={`flex gap-4 justify-center mt-8 ${getAnimationClasses('buttons')}`}
+            style={getAnimationStyle('buttons')}
+          >
             <button
               style={{
                 background: settings.buttonStyle.background,
                 color: settings.buttonStyle.color,
                 borderRadius: settings.buttonStyle.borderRadius
               }}
-              className="px-8 py-3 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="px-8 py-3 font-semibold shadow-lg hover:shadow-xl cover-hover-scale transition-all duration-200"
             >
               {settings.primaryButtonText}
             </button>
@@ -395,7 +457,7 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
                 borderRadius: settings.buttonStyle.borderRadius,
                 border: `2px solid ${settings.buttonStyle.background}`
               }}
-              className="px-8 py-3 font-semibold hover:shadow-lg transition-all duration-200"
+              className="px-8 py-3 font-semibold hover:shadow-lg cover-hover-scale transition-all duration-200"
             >
               {settings.secondaryButtonText}
             </button>
@@ -550,7 +612,114 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
                         />
                       </div>
 
+                      {/* Animation Settings */}
+                      <Separator />
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={currentSettings.animations.enableAnimations}
+                            onCheckedChange={(checked) => updateCurrentSettings({ 
+                              animations: { ...currentSettings.animations, enableAnimations: checked }
+                            })}
+                          />
+                          <Label className="text-xs">Enable Animations</Label>
+                        </div>
+
+                        {currentSettings.animations.enableAnimations && (
+                          <div className="space-y-3 pl-4 border-l-2 border-muted">
+                            <div>
+                              <Label className="text-xs">Entrance Duration: {currentSettings.animations.entranceDuration}ms</Label>
+                              <Slider
+                                value={[currentSettings.animations.entranceDuration]}
+                                onValueChange={(value) => updateCurrentSettings({ 
+                                  animations: { ...currentSettings.animations, entranceDuration: value[0] }
+                                })}
+                                max={2000}
+                                min={200}
+                                step={100}
+                                className="w-full mt-1"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs">Exit Duration: {currentSettings.animations.exitDuration}ms</Label>
+                              <Slider
+                                value={[currentSettings.animations.exitDuration]}
+                                onValueChange={(value) => updateCurrentSettings({ 
+                                  animations: { ...currentSettings.animations, exitDuration: value[0] }
+                                })}
+                                max={2000}
+                                min={200}
+                                step={100}
+                                className="w-full mt-1"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="text-xs font-medium">Element Delays:</Label>
+                              
+                              <div>
+                                <Label className="text-xs">Logo: {currentSettings.animations.logoDelay}ms</Label>
+                                <Slider
+                                  value={[currentSettings.animations.logoDelay]}
+                                  onValueChange={(value) => updateCurrentSettings({ 
+                                    animations: { ...currentSettings.animations, logoDelay: value[0] }
+                                  })}
+                                  max={1000}
+                                  min={0}
+                                  step={50}
+                                  className="w-full mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Title: {currentSettings.animations.titleDelay}ms</Label>
+                                <Slider
+                                  value={[currentSettings.animations.titleDelay]}
+                                  onValueChange={(value) => updateCurrentSettings({ 
+                                    animations: { ...currentSettings.animations, titleDelay: value[0] }
+                                  })}
+                                  max={1000}
+                                  min={0}
+                                  step={50}
+                                  className="w-full mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Subtitle: {currentSettings.animations.subtitleDelay}ms</Label>
+                                <Slider
+                                  value={[currentSettings.animations.subtitleDelay]}
+                                  onValueChange={(value) => updateCurrentSettings({ 
+                                    animations: { ...currentSettings.animations, subtitleDelay: value[0] }
+                                  })}
+                                  max={1000}
+                                  min={0}
+                                  step={50}
+                                  className="w-full mt-1"
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Buttons: {currentSettings.animations.buttonDelay}ms</Label>
+                                <Slider
+                                  value={[currentSettings.animations.buttonDelay]}
+                                  onValueChange={(value) => updateCurrentSettings({ 
+                                    animations: { ...currentSettings.animations, buttonDelay: value[0] }
+                                  })}
+                                  max={1000}
+                                  min={0}
+                                  step={50}
+                                  className="w-full mt-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Logo Settings */}
+                      <Separator />
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <Switch
@@ -659,9 +828,66 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
             </div>
 
             {/* Preview Panel - Scrollable */}
-            <div className="flex-1 bg-gray-50 p-4 md:p-8 overflow-auto">
-              <div className="flex justify-center items-start min-h-full">
-                {renderPreview()}
+            <div className="flex-1 flex flex-col bg-gray-50">
+              {/* Preview Header */}
+              <div className="flex items-center justify-between p-4 border-b bg-background">
+                <div className="flex items-center gap-4">
+                  <Badge variant="outline" className="capitalize">{activeDevice}</Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {DEVICE_CONFIGS[activeDevice].width} × {DEVICE_CONFIGS[activeDevice].height}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setPreviewMode(!previewMode);
+                      if (!previewMode) {
+                        setTimeout(() => triggerPreviewAnimation(), 100);
+                      }
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    {previewMode ? 'Edit' : 'Preview'}
+                  </Button>
+                  {previewMode && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={triggerPreviewAnimation}
+                      className="flex items-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Replay
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetToDefaults}
+                    className="flex items-center gap-2"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Reset
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={saveAllSettings}
+                    className="flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    Save All
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Preview Content */}
+              <div className="flex-1 p-4 md:p-8 overflow-auto">
+                <div className="flex justify-center items-start min-h-full">
+                  {renderPreview()}
+                </div>
               </div>
             </div>
           </div>
