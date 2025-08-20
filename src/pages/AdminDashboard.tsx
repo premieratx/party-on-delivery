@@ -10,6 +10,7 @@ import { AffiliateFlowAssignmentManager } from '@/components/admin/AffiliateFlow
 import CoverPagesAdmin from '@/pages/CoverPagesAdmin';
 import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
 import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
+import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { supabase } from '@/integrations/supabase/client';
@@ -265,6 +266,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="customer-flows" className="px-3 py-2 text-xs sm:text-sm">🔄 Flows</TabsTrigger>
             <TabsTrigger value="flow-assignments" className="px-3 py-2 text-xs sm:text-sm">🎯 Assignments</TabsTrigger>
             <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm">🎬 Cover Pages</TabsTrigger>
+            <TabsTrigger value="post-checkout" className="px-3 py-2 text-xs sm:text-sm">✅ Post-Checkout</TabsTrigger>
             <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm">📋 Orders</TabsTrigger>
             <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm">👥 Affiliates</TabsTrigger>
             <TabsTrigger value="abandoned" className="px-3 py-2 text-xs sm:text-sm">⏰ Abandoned</TabsTrigger>
@@ -289,6 +291,13 @@ export default function AdminDashboard() {
           <TabsContent value="cover-pages" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
               <CoverPagesAdmin />
+            </div>
+          </TabsContent>
+
+          {/* Post-Checkout Creator */}
+          <TabsContent value="post-checkout" className="space-y-4">
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <EnhancedPostCheckoutCreator />
             </div>
           </TabsContent>
 

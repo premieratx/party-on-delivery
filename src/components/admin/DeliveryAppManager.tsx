@@ -95,28 +95,9 @@ export function DeliveryAppManager() {
   const [heroSubheading, setHeroSubheading] = useState('');
   const [heroScrollingText, setHeroScrollingText] = useState('');
   
-  // Start screen customization
-  const [startScreenTitle, setStartScreenTitle] = useState('');
-  const [startScreenSubtitle, setStartScreenSubtitle] = useState('');
-  const [startButtonText, setStartButtonText] = useState('');
-  const [startScreenEnabled, setStartScreenEnabled] = useState(false);
-  const [checklist1, setChecklist1] = useState('');
-  const [checklist2, setChecklist2] = useState('');
-  const [checklist3, setChecklist3] = useState('');
-  const [checklist4, setChecklist4] = useState('');
-  const [checklist5, setChecklist5] = useState('');
-  const [backgroundVideoUrl, setBackgroundVideoUrl] = useState('');
+  // Clean delivery app form - only core functionality
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState<string>('');
-  
-  // Main app customization  
-  const [mainAppHeroHeading, setMainAppHeroHeading] = useState('');
-  
-  // Post-checkout customization
-  const [postCheckoutHeading, setPostCheckoutHeading] = useState('');
-  const [postCheckoutSubheading, setPostCheckoutSubheading] = useState('');
-  const [postCheckoutRedirectUrl, setPostCheckoutRedirectUrl] = useState('');
-  const [postCheckoutButtonText, setPostCheckoutButtonText] = useState('');
 
   useEffect(() => {
     loadData();
@@ -227,27 +208,9 @@ export function DeliveryAppManager() {
       collection_handle: ''
     })));
     
-    // Reset customization fields
-    setHeroSectionLogo(null);
-    setHeroHeadline('');
-    setHeroSubheading('');
-    setStartScreenTitle('');
-    setStartScreenSubtitle('');
-    setStartButtonText('');
-    setChecklist1('');
-    setChecklist2('');
-    setChecklist3('');
-    setChecklist4('');
-    setChecklist5('');
-    setBackgroundVideoUrl('');
+    // Reset form fields
     setLogoFile(null);
     setLogoUrl('');
-    setMainAppHeroHeading('');
-    setPostCheckoutHeading('');
-    setPostCheckoutSubheading('');
-    setPostCheckoutRedirectUrl('');
-    setPostCheckoutButtonText('');
-    setPostCheckoutButtonText('');
     
     setIsCreating(true);
   };
@@ -1431,17 +1394,8 @@ export default function ${appSlug.charAt(0).toUpperCase() + appSlug.slice(1)}Pos
                 setEditingApp(null);
                 setAppName('');
                 setTabs([]);
-                // Reset customization fields
-                setHeroSectionLogo(null);
-                setHeroHeadline('');
-                setHeroSubheading('');
-                setStartScreenTitle('');
-                setStartScreenSubtitle('');
-                setMainAppHeroHeading('');
-                setPostCheckoutHeading('');
-                setPostCheckoutSubheading('');
-                setPostCheckoutRedirectUrl('');
-                setPostCheckoutButtonText('');
+                setLogoFile(null);
+                setLogoUrl('');
               }}>
                 Cancel
               </Button>
