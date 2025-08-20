@@ -76,8 +76,8 @@ export const CombinedSearchTabs = ({
   };
 
   return (
-    <div className="sticky top-0 z-40 bg-background border-b shadow-sm transition-all duration-300">
-      {/* Desktop Layout - Side by side with cart and checkout */}
+    <div className="bg-background border-b sticky top-0 z-40">
+      {/* Desktop Layout */}
       <div className="hidden md:block">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
@@ -158,7 +158,7 @@ export const CombinedSearchTabs = ({
       </div>
 
       {/* Mobile Layout with stacked cart and checkout */}
-      <div className="block md:hidden">
+      <div className="block md:hidden sticky top-0 z-40 bg-background">
         {/* First Row - Tabs and Search Icon */}
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">

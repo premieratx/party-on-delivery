@@ -333,23 +333,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       >
         <div className="absolute inset-0 bg-black/50" />
         
-        {/* Search App Button - Top Left */}
-        <div className="absolute top-4 left-4 z-20">
-          <Button 
-            onClick={() => navigate('/search')}
-            variant="outline"
-            size="sm"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
-          >
-            <Search className="w-4 h-4 mr-2" />
-            Search
-          </Button>
-        </div>
-
-        {/* Delivery App Dropdown - Top Right */}
-        <div className="absolute top-4 right-4 z-20">
-          <DeliveryAppDropdown />
-        </div>
+        {/* Search App Button and Delivery App Dropdown - HIDDEN as requested */}
         
         <div className="relative z-10 flex items-center justify-center h-full">
           <div className="text-center text-white px-4 max-w-4xl">
@@ -631,10 +615,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           />
         )}
         
-        {/* What's the Occasion? - Bottom Section */}
-        <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
-          <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
-        </div>
+        {/* What's the Occasion? - HIDDEN as requested */}
 
         {/* Admin Dashboard Link */}
         <div className="mt-8 text-center pb-20 lg:pb-8">

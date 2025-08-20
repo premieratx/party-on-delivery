@@ -491,10 +491,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
       {/* Remove Mobile Bottom Cart Bar since cart is now in tabs */}
       {/* MobileBottomCartBar removed - cart and checkout are now in CombinedSearchTabs */}
       
-      {/* What's the Occasion? - Bottom Section */}
-      <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
-        <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
-      </div>
+      {/* What's the Occasion? - HIDDEN as requested */}
 
       {/* Product Lightbox */}
       {selectedProduct && (
