@@ -209,10 +209,10 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           confirmedCustomer={confirmedCustomer}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           
           {/* Left Column - Checkout Steps */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 lg:space-y-6">
             
             {/* Date & Time Step */}
             <DateTimeStep
@@ -268,7 +268,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="space-y-4">
+          <div className="space-y-4 order-first lg:order-last">
             <CheckoutSummary
               cartItems={cartItems}
               subtotal={calculatedSubtotal}

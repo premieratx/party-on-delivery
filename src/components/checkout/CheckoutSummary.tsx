@@ -44,62 +44,72 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
       <CardHeader>
         <CardTitle>Order Summary</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 p-4 sm:p-6">
+      <CardContent className="space-y-4 p-3 sm:p-6">
         {/* Cart Items */}
         <div className="space-y-3">
-          {cartItems.map((item, index) => (
-            <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-              <img 
-                src={item.image} 
-                alt={item.title}
-                className="w-16 h-16 sm:w-12 sm:h-12 object-cover rounded-md bg-muted flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-sm line-clamp-2 mb-1">
-                  {item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz')}
-                </h4>
-                {item.variant && (
-                  <p className="text-xs text-muted-foreground mb-1">{item.variant}</p>
-                )}
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>${applyMarkup(item.price).toFixed(2)} each</span>
+          {cartItems.map((item, index) => {
+            // Clean product title - remove Shopify URLs and IDs, keep just the product name
+            const cleanTitle = item.title
+              .replace(/https?:\/\/[^\s]+/g, '') // Remove URLs
+              .replace(/\b\d{8,}\b/g, '') // Remove long product IDs
+              .replace(/(\d+)\s*Pack/gi, '$1pk')
+              .replace(/(\d+)\s*oz/gi, '$1oz')
+              .trim();
+            
+            return (
+              <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 bg-muted/30 rounded-lg">
+                <img 
+                  src={item.image} 
+                  alt={cleanTitle}
+                  className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md bg-muted flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-sm sm:text-base line-clamp-2 mb-1">
+                    {cleanTitle}
+                  </h4>
+                  {item.variant && (
+                    <p className="text-xs text-muted-foreground mb-1">{item.variant}</p>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>${applyMarkup(item.price).toFixed(2)} each</span>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                {/* Quantity Controls */}
-                {onUpdateQuantity ? (
-                  <div className="flex items-center gap-1 bg-background rounded-md p-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
-                    >
-                      {item.quantity === 1 ? <Trash2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-                    </Button>
-                    <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-xs text-muted-foreground bg-background px-2 py-1 rounded">
-                    Qty: {item.quantity}
-                  </div>
-                )}
                 
-                <div className="text-sm font-medium">
-                  ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
+                <div className="flex flex-col items-end gap-1 sm:gap-2 flex-shrink-0">
+                  {/* Quantity Controls */}
+                  {onUpdateQuantity ? (
+                    <div className="flex items-center gap-1 bg-background rounded-md p-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 sm:h-7 sm:w-7 p-0"
+                        onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
+                      >
+                        {item.quantity === 1 ? <Trash2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                      </Button>
+                      <span className="text-xs sm:text-sm font-medium w-5 sm:w-6 text-center">{item.quantity}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 sm:h-7 sm:w-7 p-0"
+                        onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground bg-background px-2 py-1 rounded">
+                      Qty: {item.quantity}
+                    </div>
+                  )}
+                  
+                  <div className="text-sm sm:text-base font-medium">
+                    ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <Separator />
