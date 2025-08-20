@@ -121,7 +121,7 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
   const [appSlug, setAppSlug] = useState('');
   const [heroHeading, setHeroHeading] = useState('');
   const [heroSubheading, setHeroSubheading] = useState('');
-  const [heroScrollingText, setHeroScrollingText] = useState('');
+  
   const [logoUrl, setLogoUrl] = useState('');
   const [tabs, setTabs] = useState<DeliveryAppTab[]>([
     { name: 'Featured', collection_handle: 'featured' },
@@ -148,7 +148,7 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       setAppSlug(initial.app_slug || '');
       setHeroHeading(initial.hero_heading || '');
       setHeroSubheading(initial.hero_subheading || '');
-      setHeroScrollingText(initial.hero_scrolling_text || '');
+      
       setLogoUrl(initial.logo_url || '');
       setTabs(initial.tabs || []);
       setBackgroundColor(initial.background_color || '#ffffff');
@@ -162,7 +162,7 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       setAppSlug('');
       setHeroHeading('Welcome to our Store');
       setHeroSubheading('Discover amazing products');
-      setHeroScrollingText('Free delivery • Quality products • Fast service');
+      
       setLogoUrl('');
       setTabs([
         { name: 'Featured', collection_handle: 'featured' },
@@ -189,7 +189,6 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
         app_slug: appSlug,
         hero_heading: heroHeading,
         hero_subheading: heroSubheading,
-        hero_scrolling_text: heroScrollingText,
         logo_url: logoUrl || null,
         collections_config: JSON.parse(JSON.stringify({
           tab_count: tabs.length,
@@ -336,14 +335,6 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
                       />
                     </div>
 
-                    <div>
-                      <Label>Scrolling Text</Label>
-                      <Input
-                        value={heroScrollingText}
-                        onChange={(e) => setHeroScrollingText(e.target.value)}
-                        placeholder="Free delivery • Quality products • Fast service"
-                      />
-                    </div>
 
                     <div>
                       <Label>Logo</Label>

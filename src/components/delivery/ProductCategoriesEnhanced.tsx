@@ -22,7 +22,7 @@ interface ProductCategoriesEnhancedProps {
   appName?: string;
   heroHeading?: string;
   heroSubheading?: string;
-  heroScrollingText?: string;
+  
   logoUrl?: string;
   heroBackgroundConfig?: {
     type?: 'image' | 'video' | 'color' | 'gradient';
@@ -70,7 +70,6 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
   appName = "Austin's Premier Party Supply Delivery",
   heroHeading = "Austin's Premier Party Supply Delivery",
   heroSubheading = "Satisfaction Guaranteed, On-Time Delivery",
-  heroScrollingText = "Let's Get It",
   logoUrl,
   heroBackgroundConfig,
   collectionsConfig,
@@ -386,13 +385,6 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
               <p className="text-xl md:text-2xl text-blue-100 mb-6">
                 {heroSubheading}
               </p>
-            )}
-            {heroScrollingText && (
-              <div className="mb-8">
-                <div className="text-2xl md:text-3xl font-bold text-yellow-300">
-                  {heroScrollingText}
-                </div>
-              </div>
             )}
           </div>
         </div>

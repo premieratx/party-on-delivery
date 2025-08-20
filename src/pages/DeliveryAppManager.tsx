@@ -8,21 +8,7 @@ const DeliveryAppManager = () => {
   const [showEditor, setShowEditor] = useState(false);
 
   if (showEditor) {
-    return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Delivery App Creator</h1>
-            <p className="text-muted-foreground">
-              Building new delivery app creator - coming soon!
-            </p>
-            <Button onClick={() => setShowEditor(false)}>
-              Back to Manager
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
+    return <DeliveryAppCreator open={showEditor} onOpenChange={setShowEditor} onSaved={() => setShowEditor(false)} />;
   }
 
   return (

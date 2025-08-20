@@ -74,19 +74,15 @@ export const AdminDashboardImproved: React.FC<AdminDashboardImprovedProps> = ({ 
 
   if (showAppCreator) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">Delivery App Creator</h1>
-            <p className="text-muted-foreground">
-              Creating new delivery app creator - coming soon!
-            </p>
-            <Button onClick={() => setShowAppCreator(false)}>
-              Back to Dashboard
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DeliveryAppCreator
+        open={showAppCreator}
+        onOpenChange={setShowAppCreator}
+        initial={editingApp}
+        onSaved={() => {
+          setShowAppCreator(false);
+          setEditingApp(null);
+        }}
+      />
     );
   }
 

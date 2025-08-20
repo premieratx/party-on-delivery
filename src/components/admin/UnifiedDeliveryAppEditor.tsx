@@ -123,7 +123,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
   const [logoUrl, setLogoUrl] = useState('');
   const [heroHeading, setHeroHeading] = useState('');
   const [heroSubheading, setHeroSubheading] = useState('');
-  const [heroScrollingText, setHeroScrollingText] = useState('');
+  
   const [isActive, setIsActive] = useState(true);
   const [isHomepage, setIsHomepage] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -155,7 +155,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setLogoUrl(initial.logo_url || '');
       setHeroHeading(initial.main_app_config?.hero_heading || '');
       setHeroSubheading(initial.main_app_config?.hero_subheading || '');
-      setHeroScrollingText(initial.main_app_config?.hero_scrolling_text || '');
+      
       setIsActive(initial.is_active ?? true);
       setIsHomepage(initial.is_homepage ?? false);
       setSelectedTheme(initial.theme || 'modern');
@@ -170,7 +170,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
       setLogoUrl('');
       setHeroHeading('Welcome to Our Store');
       setHeroSubheading('Premium delivery service');
-      setHeroScrollingText('Fast • Reliable • Premium');
+      
       setIsActive(true);
       setIsHomepage(false);
       setSelectedTheme('modern');
@@ -229,7 +229,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
         main_app_config: {
           hero_heading: heroHeading,
           hero_subheading: heroSubheading,
-          hero_scrolling_text: heroScrollingText
+          
         },
         start_screen_config: {
           enabled: false,
@@ -329,11 +329,6 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
             <p className="text-sm opacity-80">
               {heroSubheading || 'Premium delivery service'}
             </p>
-            {heroScrollingText && (
-              <div className="mt-2 text-xs font-semibold" style={{ color: theme.colors.accent }}>
-                {heroScrollingText}
-              </div>
-            )}
           </div>
 
           {/* Category Tabs Preview */}
@@ -475,14 +470,6 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
                       />
                     </div>
 
-                    <div>
-                      <Label>Scrolling Text</Label>
-                      <Input
-                        value={heroScrollingText}
-                        onChange={(e) => setHeroScrollingText(e.target.value)}
-                        placeholder="Fast • Reliable • Premium"
-                      />
-                    </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
