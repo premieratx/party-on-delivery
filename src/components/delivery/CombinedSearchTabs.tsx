@@ -134,19 +134,26 @@ export const CombinedSearchTabs = ({
               <Button
                 variant="outline"
                 onClick={onOpenCart}
-                className="flex items-center gap-2 h-10"
+                className="flex items-center gap-2 h-10 min-w-fit hover:bg-muted transition-colors"
+                disabled={cartItemCount === 0}
               >
                 <ShoppingCart className="w-4 h-4" />
-                <span>Cart ({cartItemCount})</span>
+                <span className="hidden sm:inline">Cart</span>
+                <span>({cartItemCount})</span>
               </Button>
               
               <Button
                 onClick={onCheckout}
-                className="flex items-center gap-2 h-10 checkout-blink"
+                className="flex items-center gap-2 h-10 min-w-fit bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
                 variant="default"
+                disabled={cartItemCount === 0}
               >
                 <CreditCard className="w-4 h-4" />
-                <span>Checkout</span>
+                <span className="hidden sm:inline">Checkout</span>
+                <span className="sm:hidden">Buy</span>
+                {totalAmount > 0 && (
+                  <span className="font-bold ml-1">${totalAmount.toFixed(2)}</span>
+                )}
               </Button>
             </div>
           </div>
@@ -190,11 +197,12 @@ export const CombinedSearchTabs = ({
         {/* Second Row - Cart and Checkout (Mobile Split Layout) */}
         <div className="container mx-auto px-4 pb-2">
           <div className="grid grid-cols-2 gap-2">
-            {/* Cart Button - Top */}
+            {/* Cart Button - Mobile */}
             <Button
               variant="outline"
               onClick={onOpenCart}
-              className="flex items-center justify-center gap-2 h-9 text-sm"
+              className="flex items-center justify-center gap-2 h-10 text-sm border-2 hover:bg-muted transition-colors"
+              disabled={cartItemCount === 0}
             >
               <ShoppingCart className="w-4 h-4" />
               <span>Cart ({cartItemCount})</span>
@@ -203,13 +211,18 @@ export const CombinedSearchTabs = ({
               )}
             </Button>
             
-            {/* Checkout Button - Bottom */}
+            {/* Checkout Button - Mobile */}
             <Button
               onClick={onCheckout}
-              className="flex items-center justify-center gap-2 h-9 text-sm checkout-blink"
+              className="flex items-center justify-center gap-2 h-10 text-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+              variant="default"
+              disabled={cartItemCount === 0}
             >
               <CreditCard className="w-4 h-4" />
               <span>Checkout</span>
+              {totalAmount > 0 && (
+                <span className="font-bold ml-1">${totalAmount.toFixed(2)}</span>
+              )}
             </Button>
           </div>
         </div>
