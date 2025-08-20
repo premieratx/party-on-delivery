@@ -8,7 +8,7 @@ import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Plus, Minus, ShoppingCart } from 'lucide-react';
-import { DeliveryAppDropdown } from '@/components/delivery/DeliveryAppDropdown';
+
 import { OccasionButtons } from '@/components/delivery/OccasionButtons';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { parseProductTitle } from '@/utils/productUtils';
@@ -348,14 +348,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 {heroSubheading}
               </p>
             )}
-            {/* COMPLETELY DISABLED: All scrolling text removed to fix old template issues */}
-            {/* {heroScrollingText && (
-              <div className="mb-8">
-                <div className="text-2xl md:text-3xl font-bold text-yellow-300">
-                  {heroScrollingText}
-                </div>
-              </div>
-            )} */}
           </div>
         </div>
       </div>
