@@ -1841,6 +1841,45 @@ export type Database = {
         }
         Relationships: []
       }
+      figma_design_templates: {
+        Row: {
+          created_at: string
+          design_data: Json
+          figma_file_id: string | null
+          figma_node_id: string | null
+          id: string
+          is_active: boolean
+          preview_image_url: string | null
+          template_category: string
+          template_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          design_data?: Json
+          figma_file_id?: string | null
+          figma_node_id?: string | null
+          id?: string
+          is_active?: boolean
+          preview_image_url?: string | null
+          template_category?: string
+          template_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          design_data?: Json
+          figma_file_id?: string | null
+          figma_node_id?: string | null
+          id?: string
+          is_active?: boolean
+          preview_image_url?: string | null
+          template_category?: string
+          template_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       homepage_cover_config: {
         Row: {
           cover_page_id: string | null
@@ -4019,6 +4058,10 @@ export type Database = {
       link_customer_session: {
         Args: { customer_email: string; session_token: string }
         Returns: undefined
+      }
+      load_figma_template: {
+        Args: { template_id: string }
+        Returns: Json
       }
       log_security_access: {
         Args: { details?: Json; event_type: string; table_name: string }

@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
 import { DraggableCoverPreview } from "./DraggableCoverPreview";
+import { FigmaTemplateSelector } from "./FigmaTemplateSelector";
 import { CANONICAL_DOMAIN } from "@/utils/links";
 import Draggable from 'react-draggable';
 import { 
@@ -735,6 +736,22 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </DialogTitle>
           </DialogHeader>
 
+          {/* Hidden file inputs */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={(e) => handleFileChange(e, 'background')}
+            className="hidden"
+          />
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileChange(e, 'logo')}
+            className="hidden"
+          />
+
           {/* Main Content */}
           <div className="flex-1 flex overflow-hidden">
             {/* Controls Panel */}
@@ -815,12 +832,68 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 </div>
 
                 <Tabs defaultValue="content" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="templates">Templates</TabsTrigger>
                     <TabsTrigger value="content">Content</TabsTrigger>
                     <TabsTrigger value="design">Design</TabsTrigger>
                     <TabsTrigger value="layout">Layout</TabsTrigger>
                     <TabsTrigger value="buttons">Buttons</TabsTrigger>
                   </TabsList>
+
+                  {/* NEW: Figma Templates Tab */}
+                  <TabsContent value="templates" className="space-y-4">
+                    <FigmaTemplateSelector 
+                      onTemplateSelect={(templateData: any) => {
+                        // Apply template data to current form
+                        if (templateData.elements) {
+                          const template = templateData;
+                          
+                          // Set theme based on template
+                          if (template.theme?.primaryColor === '#F5B800') {
+                            setSelectedTheme('gold');
+                          } else if (template.theme?.primaryColor === '#00d4ff') {
+                            setSelectedTheme('ocean');
+                          } else if (template.theme?.primaryColor === '#ffffff') {
+                            setSelectedTheme('sunset');
+                          }
+                          
+                          // Apply element positions and content
+                          const titleElement = template.elements.find((e: any) => e.type === 'text' && e.id === 'title');
+                          const subtitleElement = template.elements.find((e: any) => e.type === 'text' && e.id === 'subtitle');
+                          const checklistElement = template.elements.find((e: any) => e.type === 'list');
+                          const buttonElement = template.elements.find((e: any) => e.type === 'button');
+                          
+                          if (titleElement) {
+                            setTitle(titleElement.content);
+                          }
+                          if (subtitleElement) {
+                            setSubtitle(subtitleElement.content);
+                          }
+                          if (checklistElement) {
+                            setChecklist(checklistElement.items || []);
+                          }
+                          if (buttonElement) {
+                            setButtons([{ 
+                              text: buttonElement.content, 
+                              type: 'delivery_app' as CoverButtonType,
+                              style: 'filled' as const
+                            }]);
+                          }
+                          
+                          // Apply element positions
+                          const newPositions = template.elements.map((element: any) => ({
+                            id: element.id === 'cta_button' ? 'buttons' : element.id,
+                            type: element.id === 'cta_button' ? 'buttons' : element.type,
+                            x: element.position.x,
+                            y: element.position.y
+                          }));
+                          setElementPositions(newPositions);
+                          
+                          toast({ title: 'Template Applied!', description: 'Figma design template loaded successfully' });
+                        }
+                      }}
+                    />
+                  </TabsContent>
 
                   <TabsContent value="content" className="space-y-4">
                     <div>
