@@ -333,8 +333,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       >
         <div className="absolute inset-0 bg-black/50" />
         
-        {/* Search App Button and Delivery App Dropdown - HIDDEN as requested */}
-        
         <div className="relative z-10 flex items-center justify-center h-full">
           <div className="text-center text-white px-4 max-w-4xl">
             {logoUrl && (
