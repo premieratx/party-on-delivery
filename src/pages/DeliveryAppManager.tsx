@@ -8,7 +8,15 @@ const DeliveryAppManager = () => {
   const [showEditor, setShowEditor] = useState(false);
 
   if (showEditor) {
-    return <DeliveryAppCreator open={showEditor} onOpenChange={setShowEditor} onSaved={() => setShowEditor(false)} />;
+    return (
+      <div className="min-h-screen bg-background">
+        <DeliveryAppCreator 
+          open={showEditor} 
+          onOpenChange={setShowEditor} 
+          onSaved={() => setShowEditor(false)} 
+        />
+      </div>
+    );
   }
 
   return (

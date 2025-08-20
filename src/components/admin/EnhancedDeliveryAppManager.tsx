@@ -12,11 +12,14 @@ import {
   Copy,
   Home,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  ExternalLink,
+  Link
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { DeliveryAppCreator } from './DeliveryAppCreator';
 
 
 interface Tab {
@@ -59,14 +62,16 @@ interface DeliveryAppConfig {
   app_name: string;
   app_slug: string;
   logo_url?: string;
-  hero_heading: string;
-  hero_subheading: string;
-  scrolling_text: string;
-  hero_background_color?: string;
+  main_app_config: {
+    hero_heading: string;
+    hero_subheading: string;
+  };
+  collections_config: {
+    tab_count: number;
+    tabs: { name: string; collection_handle: string; icon?: string }[];
+  };
   is_homepage: boolean;
   is_active: boolean;
-  tabs: Tab[];
-  occasion_buttons: OccasionButton[];
 }
 
 export const EnhancedDeliveryAppManager: React.FC = () => {
@@ -104,27 +109,25 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
   const handleEdit = (app: DeliveryApp) => {
     // Convert DeliveryApp to DeliveryAppConfig format for the editor
-    const deliveryAppConfig: DeliveryAppConfig = {
+    const deliveryAppConfig = {
       id: app.id,
       app_name: app.app_name,
       app_slug: app.app_slug,
       logo_url: app.logo_url || '',
-      hero_heading: app.hero_title || app.app_name,
-      hero_subheading: app.hero_subtitle || 'Premium delivery service',
-      scrolling_text: 'Fast & Reliable',
-      hero_background_color: app.primary_color || '#3B82F6',
+      main_app_config: {
+        hero_heading: app.main_app_config?.hero_heading || app.hero_title || app.app_name,
+        hero_subheading: app.main_app_config?.hero_subheading || app.hero_subtitle || 'Premium delivery service'
+      },
+      collections_config: {
+        tab_count: app.collections_config?.tab_count || 3,
+        tabs: app.collections_config?.tabs || [
+          { name: 'Beer', collection_handle: 'beer', icon: '🍺' },
+          { name: 'Wine', collection_handle: 'wine', icon: '🍷' },
+          { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
+        ]
+      },
       is_homepage: app.is_homepage,
-      is_active: app.is_active,
-      tabs: [
-        { index: 0, name: 'Beer', collection_handle: 'beer' },
-        { index: 1, name: 'Wine', collection_handle: 'wine' },
-        { index: 2, name: 'Spirits', collection_handle: 'spirits' },
-        { index: 3, name: 'Mixers', collection_handle: 'mixers' }
-      ],
-      occasion_buttons: [
-        { title: 'Party', collection_handle: 'party', enabled: true },
-        { title: 'Dinner', collection_handle: 'dinner', enabled: true }
-      ]
+      is_active: app.is_active
     };
     
     setEditingApp(deliveryAppConfig);
@@ -217,7 +220,7 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     try {
       setLoading(true);
       const { error } = await supabase
-        .from('delivery_app_variations')
+        .from('delivery_app_variations')  
         .insert([{
           app_name: `${app.app_name} (Copy)`,
           app_slug: `${app.app_slug}-copy-${Date.now()}`,
@@ -248,6 +251,27 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyAppUrl = async (app: DeliveryApp) => {
+    const url = `${window.location.origin}/app/${app.app_slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(`Copied URL for ${app.app_name}`);
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      toast.success(`Copied URL for ${app.app_name}`);
+    }
+  };
+
+  const openAppUrl = (app: DeliveryApp) => {
+    window.open(`/app/${app.app_slug}`, '_blank');
   };
 
   const homepageApp = deliveryApps.find(app => app.is_homepage);
@@ -307,20 +331,19 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
         </Card>
       )}
 
-      {/* Delivery App Creator - Coming Soon */}
+      {/* Delivery App Creator */}
       {showEditor && (
-        <div className="fixed inset-0 bg-background z-50 p-4">
-          <div className="max-w-4xl mx-auto space-y-8">
-            <div className="text-center space-y-2">
-              <h1 className="text-3xl font-bold">Delivery App Creator</h1>
-              <p className="text-muted-foreground">
-                Building new delivery app creator - coming soon!
-              </p>
-              <Button onClick={() => setShowEditor(false)}>
-                Back to Manager
-              </Button>
-            </div>
-          </div>
+        <div className="min-h-screen bg-background">
+          <DeliveryAppCreator
+            open={showEditor}
+            onOpenChange={setShowEditor}
+            initial={editingApp}
+            onSaved={() => {
+              setShowEditor(false);
+              setEditingApp(null);
+              loadDeliveryApps();
+            }}
+          />
         </div>
       )}
 
@@ -366,12 +389,37 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
                           {app.business_name && (
                             <p className="text-sm text-muted-foreground mb-1">Business: {app.business_name}</p>
                           )}
-                          <p className="text-xs text-muted-foreground">
-                            Slug: /app/{app.app_slug} • Fee: ${app.delivery_fee} • Radius: {app.delivery_radius}mi
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Created: {new Date(app.created_at).toLocaleDateString()}
-                          </p>
+                          
+                          {/* App URL with copy functionality */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-sm font-mono bg-muted px-2 py-1 rounded text-primary">
+                              {window.location.origin}/app/{app.app_slug}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => copyAppUrl(app)}
+                              className="h-6 w-6 p-0"
+                              title="Copy URL"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openAppUrl(app)}
+                              className="h-6 w-6 p-0"
+                              title="Open in new tab"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex gap-4 text-xs text-muted-foreground">
+                            <span>Fee: ${app.delivery_fee || 0}</span>
+                            <span>Radius: {app.delivery_radius || 0}mi</span>
+                            <span>Created: {new Date(app.created_at).toLocaleDateString()}</span>
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <Button
