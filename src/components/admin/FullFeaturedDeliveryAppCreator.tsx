@@ -371,63 +371,6 @@ export const FullFeaturedDeliveryAppCreator: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Hero Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Hero Section</h3>
-                  <div>
-                    <label className="text-sm font-medium">Hero Title</label>
-                    <Input
-                      value={formData.hero_title}
-                      onChange={(e) => setFormData({ ...formData, hero_title: e.target.value })}
-                      placeholder="Welcome to our delivery service"
-                    />
-                    <div className="mt-2">
-                      <FontSelector
-                        value={formData.styles.hero_title}
-                        onChange={(style) => setFormData({
-                          ...formData,
-                          styles: { ...formData.styles, hero_title: style }
-                        })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Hero Subtitle</label>
-                    <Textarea
-                      value={formData.hero_subtitle}
-                      onChange={(e) => setFormData({ ...formData, hero_subtitle: e.target.value })}
-                      placeholder="Fast, reliable delivery right to your door"
-                    />
-                    <div className="mt-2">
-                      <FontSelector
-                        value={formData.styles.hero_subtitle}
-                        onChange={(style) => setFormData({
-                          ...formData,
-                          styles: { ...formData.styles, hero_subtitle: style }
-                        })}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Hero Image URL</label>
-                      <Input
-                        value={formData.hero_image_url}
-                        onChange={(e) => setFormData({ ...formData, hero_image_url: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Hero Video URL</label>
-                      <Input
-                        value={formData.hero_video_url}
-                        onChange={(e) => setFormData({ ...formData, hero_video_url: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Branding */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Branding</h3>

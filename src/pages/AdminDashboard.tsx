@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
-import { CustomerFlowBuilder } from '@/components/admin/CustomerFlowBuilder';
+import { CustomerFlowManager } from '@/components/admin/CustomerFlowManager';
 import { AffiliateFlowAssignmentManager } from '@/components/admin/AffiliateFlowAssignmentManager';
 import { FullFeaturedCoverPageCreator } from '@/components/admin/FullFeaturedCoverPageCreator';
 import { CoverPageDragDropEditor } from '@/components/admin/CoverPageDragDropEditor';
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
 
           {/* Customer Flow Configuration */}
           <TabsContent value="customer-flows" className="space-y-4">
-            <CustomerFlowBuilder />
+            <CustomerFlowManager />
           </TabsContent>
 
           {/* Flow Assignments */}

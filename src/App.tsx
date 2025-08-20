@@ -25,6 +25,7 @@ import { AffiliateIntro } from "./pages/AffiliateIntro";
 import { AffiliateDashboard } from "./pages/AffiliateDashboard";  
 import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
 import { AffiliateLanding } from "./pages/AffiliateLanding";
+import { AffiliateFlowLanding } from "./pages/AffiliateFlowLanding";
 import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 
 // Custom app pages
@@ -91,6 +92,8 @@ const App = () => {
                   <Route path="/affiliate/complete-signup" element={<AffiliateCompleteSignup />} />
                   <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                   <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
+                  
+                  <Route path="/flow/:shareSlug" element={<AffiliateFlowLanding />} />
                   
                   {/* Admin Routes */}
                   <Route path="/admin/login" element={<AdminLogin />} />
