@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Search, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Search, ShoppingCart, Plus, Minus, Filter } from 'lucide-react';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { supabase } from '@/integrations/supabase/client';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
@@ -11,12 +12,22 @@ import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { parseProductTitle } from '@/utils/productUtils';
 import { useToast } from '@/hooks/use-toast';
 
+interface FilterCategory {
+  id: string;
+  name: string;
+  handle: string;
+  productCount: number;
+}
+
 export const SearchPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [filterCategories, setFilterCategories] = useState<FilterCategory[]>([]);
+  const [isLoadingFilters, setIsLoadingFilters] = useState(true);
   const { addToCart, getTotalItems, getCartItemQuantity, updateQuantity } = useUnifiedCart();
 
   const handleBack = () => {
@@ -69,9 +80,63 @@ export const SearchPage = () => {
     updateQuantity(normalizedProductId, normalizedVariantId, newQty, cartItem);
   };
 
-  // Real-time hierarchical search
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) {
+  // Load filter categories on mount
+  useEffect(() => {
+    const loadFilterCategories = async () => {
+      try {
+        const { data: collectionsData, error } = await supabase.functions.invoke('get-all-collections');
+        
+        if (error) throw error;
+        
+        const collections = collectionsData?.collections || [];
+        
+        // Define major categories with their handles and friendly names
+        const majorCategories = [
+          { handle: 'spirits', name: 'Spirits', priority: 1 },
+          { handle: 'mixers-non-alcoholic', name: 'Mixers', priority: 2 },
+          { handle: 'tailgate-beer', name: 'Beer', priority: 3 },
+          { handle: 'seltzers-wine-champagne', name: 'Wine & Champagne', priority: 4 },
+          { handle: 'cocktail-kits', name: 'Cocktail Kits', priority: 5 },
+          { handle: 'bourbon-rye', name: 'Bourbon & Whiskey', priority: 6 },
+          { handle: 'gin-rum', name: 'Gin & Rum', priority: 7 },
+          { handle: 'tequila-mezcal', name: 'Tequila & Mezcal', priority: 8 },
+          { handle: 'all-party-supplies', name: 'Party Supplies', priority: 9 },
+          { handle: 'drinkware-bartending-tools', name: 'Bar Tools', priority: 10 }
+        ];
+
+        // Map collections to our major categories
+        const categoryMap = new Map(collections.map((c: any) => [c.handle, c]));
+        
+        const availableCategories: FilterCategory[] = majorCategories
+          .map(category => {
+            const collection = categoryMap.get(category.handle);
+            return collection ? {
+              id: category.handle,
+              name: category.name,
+              handle: category.handle,
+              productCount: (collection as any).products?.length || (collection as any).productCount || 0
+            } : null;
+          })
+          .filter((cat): cat is FilterCategory => cat !== null)
+          .sort((a, b) => b.productCount - a.productCount) // Sort by product count
+          .slice(0, 10); // Top 10 categories
+
+        setFilterCategories(availableCategories);
+      } catch (error) {
+        console.error('Failed to load filter categories:', error);
+      } finally {
+        setIsLoadingFilters(false);
+      }
+    };
+
+    loadFilterCategories();
+  }, []);
+
+  // Real-time hierarchical search with category filtering
+  const handleSearch = useCallback(async (filterOverride?: string) => {
+    const currentFilter = filterOverride ?? selectedFilter;
+    // Handle filter-only searches (no search query)
+    if (!searchQuery.trim() && currentFilter === 'all') {
       setSearchResults([]);
       setIsSearching(false);
       return;
@@ -84,16 +149,52 @@ export const SearchPage = () => {
       const { error: syncError } = await supabase.rpc('sync_shopify_to_hierarchical_categories');
       if (syncError) console.warn('Sync warning:', syncError);
 
-      // Use hierarchical search function
-      const { data: searchResults, error } = await supabase.rpc('hierarchical_product_search', {
-        search_query: searchQuery,
-        max_results: 100
-      });
+      let searchResults: any[];
+      let error: any = null;
+
+      if (searchQuery.trim()) {
+        // Use hierarchical search function for text queries
+        const { data, error: searchError } = await supabase.rpc('hierarchical_product_search', {
+          search_query: searchQuery,
+          max_results: 100
+        });
+        searchResults = data || [];
+        error = searchError;
+      } else if (currentFilter !== 'all') {
+        // Category-only filter - get products from collection
+        const { data: response, error: collectionError } = await supabase.functions.invoke('instant-product-cache', {
+          body: { 
+            collection_handle: currentFilter,
+            force_refresh: false
+          }
+        });
+        
+        if (collectionError) {
+          error = collectionError;
+          searchResults = [];
+        } else {
+          // Convert to hierarchical search format
+          searchResults = (response?.products || []).map((product: any) => ({
+            product_id: String(product.id),
+            product_title: product.title,
+            product_handle: product.handle,
+            product_type: product.product_type,
+            vendor: product.vendor,
+            collections: product.collections || [],
+            categories: [],
+            tags: product.tags || [],
+            relevance_score: 1.0,
+            match_type: 'category_filter'
+          }));
+        }
+      } else {
+        searchResults = [];
+      }
 
       if (error) throw error;
 
-      // Convert hierarchical results to match existing format
-      const formattedResults = (searchResults || []).map((result: any) => ({
+      // Convert results to match existing format
+      let formattedResults = (searchResults || []).map((result: any) => ({
         id: result.product_id,
         title: result.product_title,
         handle: result.product_handle,
@@ -109,6 +210,13 @@ export const SearchPage = () => {
         image: '', // Will be populated from cache
         variants: [] // Will be populated from cache
       }));
+
+      // Apply category filter to search results if both search and filter are active
+      if (searchQuery.trim() && currentFilter !== 'all') {
+        formattedResults = formattedResults.filter(result => 
+          result.collections?.includes(currentFilter)
+        );
+      }
 
       // Enhance with cached product data for pricing and images
       if (formattedResults.length > 0) {
@@ -131,8 +239,10 @@ export const SearchPage = () => {
         }
       }
 
-      console.log(`🔍 HIERARCHICAL SEARCH: Found ${formattedResults.length} products for "${searchQuery}"`);
-      formattedResults.forEach(r => console.log(`  - ${r.title} (${r.match_type}, score: ${r.relevance_score})`));
+      const searchType = searchQuery.trim() ? 'SEARCH' : 'FILTER';
+      const searchTerm = searchQuery.trim() || `[${currentFilter}]`;
+      console.log(`🔍 ${searchType}: Found ${formattedResults.length} products for "${searchTerm}"`);
+      formattedResults.slice(0, 5).forEach(r => console.log(`  - ${r.title} (${r.match_type})`));
       
       setSearchResults(formattedResults);
     } catch (error) {
@@ -174,12 +284,12 @@ export const SearchPage = () => {
     } finally {
       setIsSearching(false);
     }
-  }, [searchQuery, toast]);
+  }, [searchQuery, selectedFilter, toast]);
 
-  // Real-time search
+  // Real-time search with category filtering
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (searchQuery?.trim()) {
+      if (searchQuery?.trim() || selectedFilter !== 'all') {
         handleSearch();
       } else {
         setSearchResults([]);
@@ -187,7 +297,14 @@ export const SearchPage = () => {
     }, 300); // Small debounce
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, handleSearch]);
+  }, [searchQuery, selectedFilter, handleSearch]);
+
+  // Handle filter change
+  const handleFilterChange = (filterValue: string) => {
+    setSelectedFilter(filterValue);
+    // Immediately search with new filter
+    handleSearch(filterValue);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-20">
@@ -220,7 +337,7 @@ export const SearchPage = () => {
         </div>
 
         {/* Search Input */}
-        <Card className="mb-6">
+        <Card className="mb-4">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="w-5 h-5" />
@@ -241,6 +358,44 @@ export const SearchPage = () => {
           </CardContent>
         </Card>
 
+        {/* Filter Categories */}
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Filter className="w-4 h-4" />
+              Categories
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {isLoadingFilters ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <Tabs value={selectedFilter} onValueChange={handleFilterChange} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1 h-auto p-1">
+                  <TabsTrigger 
+                    value="all" 
+                    className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    All
+                  </TabsTrigger>
+                  {filterCategories.slice(0, 10).map((category) => (
+                    <TabsTrigger 
+                      key={category.id}
+                      value={category.handle}
+                      className="text-xs sm:text-sm px-2 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex flex-col items-center gap-1"
+                    >
+                      <span className="line-clamp-1">{category.name}</span>
+                      <span className="text-xs opacity-70">({category.productCount})</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Search Results */}
         {isSearching ? (
           <Card>
@@ -249,10 +404,15 @@ export const SearchPage = () => {
               <p className="text-muted-foreground">Searching products...</p>
             </CardContent>
           </Card>
-        ) : searchQuery.trim() ? (
+        ) : searchQuery.trim() || selectedFilter !== 'all' ? (
           <div>
             <h3 className="text-lg font-semibold mb-4">
-              Search Results ({searchResults.length})
+              {searchQuery.trim() ? 'Search Results' : 'Category Products'} ({searchResults.length})
+              {selectedFilter !== 'all' && (
+                <span className="text-sm text-muted-foreground ml-2">
+                  • {filterCategories.find(c => c.handle === selectedFilter)?.name}
+                </span>
+              )}
             </h3>
             {searchResults.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
@@ -349,7 +509,10 @@ export const SearchPage = () => {
                   <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                   <h3 className="text-lg font-semibold mb-2">No Results Found</h3>
                   <p className="text-muted-foreground">
-                    No products found for "{searchQuery}". Try different keywords.
+                    {searchQuery.trim() 
+                      ? `No products found for "${searchQuery}". Try different keywords or select a category filter.`
+                      : `No products found in this category. Try a different filter or search term.`
+                    }
                   </p>
                 </CardContent>
               </Card>
@@ -361,7 +524,7 @@ export const SearchPage = () => {
               <Search className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-lg font-semibold mb-2">Start Searching</h3>
               <p className="text-muted-foreground">
-                Enter a search term to find products across all delivery apps.
+                Enter a search term or select a category filter to find products across all delivery apps.
               </p>
             </CardContent>
           </Card>
