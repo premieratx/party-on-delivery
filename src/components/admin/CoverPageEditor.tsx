@@ -1,81 +1,56 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
-import { DraggableCoverPreview } from "./DraggableCoverPreview";
-import { RestoreUnifiedCoverEditor } from "./RestoreUnifiedCoverEditor";
-import { FigmaTemplateSelector } from "./FigmaTemplateSelector";
-import { CANONICAL_DOMAIN } from "@/utils/links";
-import { Wand2 } from 'lucide-react';
-// Types
-export type CoverButtonType = 'delivery_app' | 'checkout' | 'url'
-export interface CoverButtonConfig {
-  text: string;
-  type: CoverButtonType;
-  app_slug?: string;
-  openCart?: boolean;
-  url?: string;
-  bg_color?: string;
-  text_color?: string;
-  // New optional per-button options
-  affiliate_code?: string;
-  free_shipping?: boolean;
-  markup_percent?: number; // 0-50
-  // Address prefill (per-button)
-  prefill_enabled?: boolean;
-  prefill_address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
-    instructions?: string;
-  };
-  // Layout controls per button
-  offset_y?: number; // additional top margin in px
-  spacing_below?: number; // additional bottom spacing in px
-}
+import React, { useState, useEffect, useRef } from 'react';
+import { Canvas as FabricCanvas, Rect, Circle, IText, Image as FabricImage } from 'fabric';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Palette, 
+  Type, 
+  Image as ImageIcon, 
+  MousePointer, 
+  Save, 
+  Eye,
+  Smartphone,
+  Monitor,
+  Upload,
+  Link,
+  Star,
+  Zap,
+  CheckCircle
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
+interface CoverPageComponent {
+  id: string;
+  type: 'logo' | 'headline' | 'subheadline' | 'feature-list' | 'primary-button' | 'secondary-button' | 'background';
+  content?: string;
+  style?: {
+    fontSize?: number;
+    fontFamily?: string;
+    color?: string;
+    backgroundColor?: string;
+    borderColor?: string;
+    borderWidth?: number;
+  };
+  position?: { x: number; y: number };
+  size?: { width: number; height: number };
+  deliveryAppSlug?: string;
+}
 
 export interface CoverPageConfig {
   id?: string;
+  name: string;
   slug: string;
-  title: string;
-  subtitle?: string;
-  logo_url?: string;
-  logo_height?: number;
-  bg_image_url?: string;
-  bg_video_url?: string;
-  checklist: string[];
-  buttons: CoverButtonConfig[];
+  components: CoverPageComponent[];
   is_active: boolean;
-  styles?: { 
-    title_size?: number; 
-    subtitle_size?: number; 
-    checklist_size?: number; 
-    spacing_y?: number;
-    background_color?: string;
-    title_offset_y?: number;
-    subtitle_offset_y?: number;
-    checklist_offset_y?: number;
-    buttons_offset_y?: number;
-    // New layout controls
-    buttons_bottom_offset?: number;
-    buttons_spacing?: number;
-    checklist_to_buttons_offset?: number;
-    dot_spacing?: number;
-    dot_size?: number;
-    logo_offset_y?: number;
-    logo_bg_color?: string;
-    logo_bg_mode?: 'auto' | 'rectangle' | 'none';
-  };
+  is_default_homepage: boolean;
 }
 
 interface CoverPageEditorProps {
@@ -85,820 +60,545 @@ interface CoverPageEditorProps {
   onSaved?: () => void;
 }
 
-const slugify = (s: string) => s
-  .toLowerCase()
-  .replace(/[^a-z0-9\-\s]/g, "")
-  .trim()
-  .replace(/\s+/g, "-")
-  .replace(/\-+/g, "-");
-
-export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenChange, initial, onSaved }) => {
-  const isEditing = !!initial?.id;
-  const { toast } = useToast();
-
-  const [slug, setSlug] = useState(initial?.slug || "");
-  const [title, setTitle] = useState(initial?.title || "");
-  const [subtitle, setSubtitle] = useState(initial?.subtitle || "");
-  const [logoUrl, setLogoUrl] = useState(initial?.logo_url || "");
-  const [logoHeight, setLogoHeight] = useState<number>(initial?.logo_height ?? 160);
-  const [bgImageUrl, setBgImageUrl] = useState(initial?.bg_image_url || "");
-  const [bgVideoUrl, setBgVideoUrl] = useState(initial?.bg_video_url || "");
-  const [checklist, setChecklist] = useState<string[]>(initial?.checklist || ["", "", "", "", ""]);
-  const [buttons, setButtons] = useState<CoverButtonConfig[]>(initial?.buttons || []);
-  const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
-  const [isDefaultHomepage, setIsDefaultHomepage] = useState<boolean>((initial as any)?.is_default_homepage ?? false);
-  const [titleSize, setTitleSize] = useState<number>((initial as any)?.styles?.title_size ?? 32);
-  const [subtitleSize, setSubtitleSize] = useState<number>((initial as any)?.styles?.subtitle_size ?? 18);
-  const [checklistSize, setChecklistSize] = useState<number>((initial as any)?.styles?.checklist_size ?? 14);
-  const [titleOffsetY, setTitleOffsetY] = useState<number>((initial as any)?.styles?.title_offset_y ?? 0);
-  const [subtitleOffsetY, setSubtitleOffsetY] = useState<number>((initial as any)?.styles?.subtitle_offset_y ?? 0);
-  const [checklistOffsetY, setChecklistOffsetY] = useState<number>((initial as any)?.styles?.checklist_offset_y ?? 0);
-  const [buttonsOffsetY, setButtonsOffsetY] = useState<number>((initial as any)?.styles?.buttons_offset_y ?? 0);
-  const [logoOffsetY, setLogoOffsetY] = useState<number>((initial as any)?.styles?.logo_offset_y ?? 0);
-  const [backgroundColor, setBackgroundColor] = useState<string>((initial as any)?.styles?.background_color ?? "");
-  const [logoBgColor, setLogoBgColor] = useState<string>((initial as any)?.styles?.logo_bg_color ?? "");
-  const [logoBgMode, setLogoBgMode] = useState<'auto' | 'rectangle' | 'none'>((initial as any)?.styles?.logo_bg_mode ?? 'auto');
-  // New layout controls
-  const [buttonsBottomOffset, setButtonsBottomOffset] = useState<number>((initial as any)?.styles?.buttons_bottom_offset ?? 0);
-  const [buttonsSpacing, setButtonsSpacing] = useState<number>((initial as any)?.styles?.buttons_spacing ?? 12);
-  const [checklistToButtonsOffset, setChecklistToButtonsOffset] = useState<number>((initial as any)?.styles?.checklist_to_buttons_offset ?? 30);
-  const [dotSpacing, setDotSpacing] = useState<number>((initial as any)?.styles?.dot_spacing ?? 8);
-  const [dotSize, setDotSize] = useState<number>((initial as any)?.styles?.dot_size ?? 14);
-  const [apps, setApps] = useState<{ app_slug: string; app_name: string }[]>([]);
+export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({
+  open,
+  onOpenChange,
+  initial,
+  onSaved
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
+  const [selectedComponent, setSelectedComponent] = useState<CoverPageComponent | null>(null);
+  const [deliveryApps, setDeliveryApps] = useState<any[]>([]);
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('mobile');
   const [saving, setSaving] = useState(false);
-  const [slugOk, setSlugOk] = useState(true);
-  const [checkingSlug, setCheckingSlug] = useState(false);
-  const [showDraggablePreview, setShowDraggablePreview] = useState(false);
-  const [showUnifiedEditor, setShowUnifiedEditor] = useState(false);
 
-  const uploadAsset = async (file: File, kind: 'logo' | 'bg'): Promise<string | null> => {
-    try {
-      const ext = file.name.split('.').pop() || 'png';
-      const base = (computedSlug || slugify(title) || 'cover').slice(0, 60);
-      const fileName = `cover-${base}-${kind}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from('cover-assets')
-        .upload(fileName, file, { cacheControl: '3600', upsert: true });
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('cover-assets').getPublicUrl(fileName);
-      return data.publicUrl;
-    } catch (e: any) {
-      console.error('Upload failed', e);
-      toast({ title: 'Upload failed', description: e?.message || 'Try a smaller image', variant: 'destructive' });
-      return null;
+  // Form states
+  const [pageName, setPageName] = useState('');
+  const [pageSlug, setPageSlug] = useState('');
+  const [isActive, setIsActive] = useState(true);
+  const [isHomepage, setIsHomepage] = useState(false);
+
+  // Default components matching Figma design
+  const [components, setComponents] = useState<CoverPageComponent[]>([
+    {
+      id: 'background',
+      type: 'background',
+      style: {
+        backgroundColor: '#0a0a0a', // Dark space background
+      }
+    },
+    {
+      id: 'logo',
+      type: 'logo',
+      content: '/lovable-uploads/ce050856-18fd-4cf7-be92-3788db8acef8.png', // Default logo
+      position: { x: 200, y: 80 },
+      size: { width: 120, height: 120 }
+    },
+    {
+      id: 'headline',
+      type: 'headline',
+      content: 'Party On Delivery',
+      position: { x: 200, y: 220 },
+      style: {
+        fontSize: 32,
+        fontFamily: 'Inter',
+        color: '#00d4ff' // Cyan blue
+      }
+    },
+    {
+      id: 'subheadline',
+      type: 'subheadline',
+      content: 'Premium Spirits at Your Door',
+      position: { x: 200, y: 270 },
+      style: {
+        fontSize: 20,
+        fontFamily: 'Inter',
+        color: '#ffa500' // Orange/gold
+      }
+    },
+    {
+      id: 'feature-list',
+      type: 'feature-list',
+      content: '🍸 Craft cocktails & premium spirits\n🚚 Fast delivery in 30 minutes or less\n🎉 Perfect for any celebration',
+      position: { x: 200, y: 320 },
+      style: {
+        fontSize: 16,
+        fontFamily: 'Inter',
+        color: '#ffffff'
+      }
+    },
+    {
+      id: 'primary-button',
+      type: 'primary-button',
+      content: 'Start Shopping',
+      position: { x: 200, y: 450 },
+      size: { width: 300, height: 50 },
+      style: {
+        backgroundColor: '#00d4ff',
+        color: '#000000',
+        fontSize: 18,
+        fontFamily: 'Inter'
+      },
+      deliveryAppSlug: ''
+    },
+    {
+      id: 'secondary-button',
+      type: 'secondary-button',
+      content: 'Browse Menu',
+      position: { x: 200, y: 520 },
+      size: { width: 300, height: 50 },
+      style: {
+        backgroundColor: 'transparent',
+        borderColor: '#ffa500',
+        borderWidth: 2,
+        color: '#ffa500',
+        fontSize: 18,
+        fontFamily: 'Inter'
+      },
+      deliveryAppSlug: ''
     }
-  };
+  ]);
 
+  // Load delivery apps
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('delivery_app_variations')
-        .select('app_slug, app_name')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-      setApps(data as any[] || []);
-    })();
-  }, []);
+    const loadDeliveryApps = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('delivery_app_variations')
+          .select('app_slug, app_name, is_active')
+          .eq('is_active', true);
+        
+        if (error) throw error;
+        setDeliveryApps(data || []);
+      } catch (error) {
+        console.error('Error loading delivery apps:', error);
+      }
+    };
 
+    if (open) {
+      loadDeliveryApps();
+    }
+  }, [open]);
+
+  // Initialize canvas
+  useEffect(() => {
+    if (!canvasRef.current || !open) return;
+
+    const canvas = new FabricCanvas(canvasRef.current, {
+      width: previewMode === 'mobile' ? 375 : 800,
+      height: previewMode === 'mobile' ? 667 : 800,
+      backgroundColor: '#0a0a0a'
+    });
+
+    setFabricCanvas(canvas);
+
+    // Add selection event listener
+    canvas.on('selection:created', (e) => {
+      const activeObject = e.selected?.[0];
+      if (activeObject && activeObject.data) {
+        const componentId = activeObject.data.componentId;
+        const component = components.find(c => c.id === componentId);
+        setSelectedComponent(component || null);
+      }
+    });
+
+    canvas.on('selection:cleared', () => {
+      setSelectedComponent(null);
+    });
+
+    return () => {
+      canvas.dispose();
+    };
+  }, [open, previewMode]);
+
+  // Render components on canvas
+  useEffect(() => {
+    if (!fabricCanvas) return;
+
+    fabricCanvas.clear();
+    fabricCanvas.backgroundColor = '#0a0a0a';
+
+    components.forEach(component => {
+      if (component.type === 'background') return;
+
+      if (component.type === 'logo' && component.content) {
+        FabricImage.fromURL(component.content, {
+          crossOrigin: 'anonymous'
+        }).then((img) => {
+          img.set({
+            left: component.position?.x || 0,
+            top: component.position?.y || 0,
+            scaleX: (component.size?.width || 120) / (img.width || 120),
+            scaleY: (component.size?.height || 120) / (img.height || 120),
+            selectable: true,
+            hasControls: true,
+            hasBorders: true
+          });
+          // Fix Fabric.js data property
+          (img as any).data = { componentId: component.id };
+          fabricCanvas.add(img);
+        });
+      } else if (component.type === 'headline' || component.type === 'subheadline') {
+        const text = new IText(component.content || '', {
+          left: component.position?.x || 0,
+          top: component.position?.y || 0,
+          fontSize: component.style?.fontSize || 20,
+          fontFamily: component.style?.fontFamily || 'Inter',
+          fill: component.style?.color || '#ffffff',
+          selectable: true,
+          hasControls: true,
+          hasBorders: true
+        });
+        (text as any).data = { componentId: component.id };
+        fabricCanvas.add(text);
+      } else if (component.type === 'feature-list') {
+        const text = new IText(component.content || '', {
+          left: component.position?.x || 0,
+          top: component.position?.y || 0,
+          fontSize: component.style?.fontSize || 16,
+          fontFamily: component.style?.fontFamily || 'Inter',
+          fill: component.style?.color || '#ffffff',
+          selectable: true,
+          hasControls: true,
+          hasBorders: true
+        });
+        text.data = { componentId: component.id };
+        fabricCanvas.add(text);
+      } else if (component.type === 'primary-button' || component.type === 'secondary-button') {
+        // Create button background
+        const buttonBg = new Rect({
+          left: component.position?.x || 0,
+          top: component.position?.y || 0,
+          width: component.size?.width || 300,
+          height: component.size?.height || 50,
+          fill: component.style?.backgroundColor || '#00d4ff',
+          stroke: component.style?.borderColor || 'transparent',
+          strokeWidth: component.style?.borderWidth || 0,
+          rx: 8,
+          ry: 8,
+          selectable: true,
+          hasControls: true,
+          hasBorders: true
+        });
+        buttonBg.data = { componentId: component.id };
+
+        // Create button text
+        const buttonText = new IText(component.content || 'Button', {
+          left: (component.position?.x || 0) + (component.size?.width || 300) / 2,
+          top: (component.position?.y || 0) + (component.size?.height || 50) / 2,
+          fontSize: component.style?.fontSize || 18,
+          fontFamily: component.style?.fontFamily || 'Inter',
+          fill: component.style?.color || '#000000',
+          textAlign: 'center',
+          originX: 'center',
+          originY: 'center',
+          selectable: false
+        });
+
+        fabricCanvas.add(buttonBg);
+        fabricCanvas.add(buttonText);
+      }
+    });
+
+    fabricCanvas.renderAll();
+  }, [fabricCanvas, components]);
+
+  // Initialize form with existing data
   useEffect(() => {
     if (!open) return;
-    // hydrate from initial when opening
-    setSlug(initial?.slug || "");
-    setTitle(initial?.title || "");
-    setSubtitle(initial?.subtitle || "");
-    setLogoUrl(initial?.logo_url || "");
-    setLogoHeight(initial?.logo_height ?? 80);
-    setBgImageUrl(initial?.bg_image_url || "");
-    setBgVideoUrl(initial?.bg_video_url || "");
-    setChecklist(initial?.checklist && initial.checklist.length ? initial.checklist : ["", "", "", "", ""]);
-    setButtons(initial?.buttons || []);
-    setIsActive(initial?.is_active ?? true);
-    setIsDefaultHomepage((initial as any)?.is_default_homepage ?? false);
-    setSlugOk(true);
-    setTitleSize((initial as any)?.styles?.title_size ?? 32);
-    setSubtitleSize((initial as any)?.styles?.subtitle_size ?? 18);
-    setChecklistSize((initial as any)?.styles?.checklist_size ?? 14);
-    setTitleOffsetY((initial as any)?.styles?.title_offset_y ?? 0);
-    setSubtitleOffsetY((initial as any)?.styles?.subtitle_offset_y ?? 0);
-    setChecklistOffsetY((initial as any)?.styles?.checklist_offset_y ?? 0);
-    setButtonsOffsetY((initial as any)?.styles?.buttons_offset_y ?? 0);
-    setLogoOffsetY((initial as any)?.styles?.logo_offset_y ?? 0);
-    setBackgroundColor((initial as any)?.styles?.background_color ?? "");
-    setLogoBgColor((initial as any)?.styles?.logo_bg_color ?? "");
-    setLogoBgMode((initial as any)?.styles?.logo_bg_mode ?? 'auto');
-    // New layout controls hydration
-    setButtonsBottomOffset((initial as any)?.styles?.buttons_bottom_offset ?? 0);
-    setButtonsSpacing((initial as any)?.styles?.buttons_spacing ?? 12);
-    setChecklistToButtonsOffset((initial as any)?.styles?.checklist_to_buttons_offset ?? 30);
-    setDotSpacing((initial as any)?.styles?.dot_spacing ?? 8);
-    setDotSize((initial as any)?.styles?.dot_size ?? 14);
+
+    if (initial) {
+      setPageName(initial.name || '');
+      setPageSlug(initial.slug || '');
+      setIsActive(initial.is_active ?? true);
+      setIsHomepage(initial.is_default_homepage ?? false);
+      if (initial.components) {
+        setComponents(initial.components);
+      }
+    } else {
+      // Reset for new page
+      setPageName('');
+      setPageSlug('');
+      setIsActive(true);
+      setIsHomepage(false);
+      // Keep default components
+    }
   }, [open, initial]);
 
-  const computedSlug = useMemo(() => slugify(slug || title), [slug, title]);
-
-  const checkSlug = async (value: string) => {
-    if (!value) { setSlugOk(false); return; }
-    setCheckingSlug(true);
-    const s = value;
-    try {
-      // 1) Check cover_pages
-      const { data: cp } = await supabase
-        .from('cover_pages')
-        .select('id')
-        .eq('slug', s)
-        .maybeSingle();
-      if (cp && (!isEditing || cp.id !== initial?.id)) { setSlugOk(false); return; }
-      // 2) Check app short paths
-      const { data: app } = await supabase
-        .from('delivery_app_variations')
-        .select('id')
-        .eq('short_path', s)
-        .maybeSingle();
-      if (app) { setSlugOk(false); return; }
-      // 3) Check affiliates
-      const { data: aff } = await supabase
-        .from('affiliates')
-        .select('id')
-        .eq('affiliate_code', s)
-        .maybeSingle();
-      if (aff) { setSlugOk(false); return; }
-      setSlugOk(true);
-    } finally {
-      setCheckingSlug(false);
-    }
-  };
-
-  useEffect(() => { checkSlug(computedSlug); }, [computedSlug]);
-
-  const addButton = () => setButtons((prev) => [...prev, { text: `Button ${prev.length + 1}`, type: 'delivery_app' }]);
-  const removeButton = (idx: number) => setButtons((prev) => prev.filter((_, i) => i !== idx));
-
-  const updateButton = (idx: number, patch: Partial<CoverButtonConfig>) => {
-    setButtons((prev) => prev.map((b, i) => (i === idx ? { ...b, ...patch } : b)));
+  const updateComponent = (componentId: string, updates: Partial<CoverPageComponent>) => {
+    setComponents(prev => prev.map(c => 
+      c.id === componentId ? { ...c, ...updates } : c
+    ));
   };
 
   const handleSave = async () => {
-    if (!title) {
-      toast({ title: 'Missing title', description: 'Please enter a title', variant: 'destructive' });
+    if (!pageName.trim() || !pageSlug.trim()) {
+      toast.error('Page name and slug are required');
       return;
     }
-    if (!slugOk) {
-      toast({ title: 'Slug not available', description: 'Choose a different slug', variant: 'destructive' });
-      return;
-    }
+
     setSaving(true);
     try {
-      const payload: any = {
-        slug: computedSlug,
-        title,
-        subtitle,
-        logo_url: logoUrl || null,
-        logo_height: logoHeight || null,
-        bg_image_url: bgImageUrl || null,
-        bg_video_url: bgVideoUrl || null,
-        checklist: (checklist || []).filter(Boolean).slice(0, 5),
-        buttons: buttons as any,
+      const pageData = {
+        slug: pageSlug.trim(),
+        title: pageName.trim(),
         is_active: isActive,
-        is_default_homepage: isDefaultHomepage,
-        styles: { 
-          title_size: titleSize, 
-          subtitle_size: subtitleSize, 
-          checklist_size: checklistSize, 
-          spacing_y: 20,
-          title_offset_y: titleOffsetY,
-          subtitle_offset_y: subtitleOffsetY,
-          checklist_offset_y: checklistOffsetY,
-          buttons_offset_y: buttonsOffsetY,
-          // New layout controls
-          buttons_bottom_offset: buttonsBottomOffset,
-          buttons_spacing: buttonsSpacing,
-          checklist_to_buttons_offset: checklistToButtonsOffset,
-          dot_spacing: dotSpacing,
-          dot_size: dotSize,
-          logo_offset_y: logoOffsetY,
-          background_color: backgroundColor || null,
-          logo_bg_color: logoBgColor || null,
-          logo_bg_mode: logoBgMode,
-        },
+        is_default_homepage: isHomepage,
+        styles: {
+          components
+        } as any,
+        buttons: [] as any, // Will be populated from components
+        checklist: [] as any
       };
 
-      // If setting as default homepage, clear other default homepages first
-      if (isDefaultHomepage) {
-        await supabase
+      if (initial?.id) {
+        const { error } = await supabase
           .from('cover_pages')
-          .update({ is_default_homepage: false } as any)
-          .neq('id', initial?.id || 'none');
-      }
-
-      if (isEditing && initial?.id) {
-        const { error } = await supabase.from('cover_pages').update(payload as any).eq('id', initial.id);
+          .update(pageData)
+          .eq('id', initial.id);
         if (error) throw error;
+        toast.success('Cover page updated successfully!');
       } else {
-        const { error } = await supabase.from('cover_pages').insert(payload as any);
+        const { error } = await supabase
+          .from('cover_pages')
+          .insert(pageData);
         if (error) throw error;
+        toast.success('Cover page created successfully!');
       }
 
-      toast({ title: 'Saved', description: `Cover page saved successfully${isDefaultHomepage ? ' and set as default homepage' : ''}` });
       onSaved?.();
       onOpenChange(false);
-    } catch (e: any) {
-      console.error(e);
-      toast({ title: 'Save failed', description: e?.message || 'Please try again', variant: 'destructive' });
+    } catch (error: any) {
+      console.error('Save error:', error);
+      toast.error(error?.message || 'Failed to save cover page');
     } finally {
       setSaving(false);
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="text-2xl font-bold">
-            {isEditing ? 'Edit Cover Page' : 'Create New Cover Page'}
-          </DialogTitle>
-          <p className="text-muted-foreground">
-            {isEditing ? 'Update your cover page settings' : 'Design a custom cover page for your delivery app'}
-          </p>
-        </DialogHeader>
+  if (!open) return null;
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <Card className="border-2">
-              <CardContent className="space-y-6 pt-6">
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg">Basic Information</h3>
-                  <div>
-                    <Label htmlFor="title" className="font-medium">Page Title *</Label>
-                    <Input 
-                      id="title" 
-                      value={title} 
-                      onChange={(e) => setTitle(e.target.value)} 
-                      placeholder="Enter cover page title"
-                      className="h-12 mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="subtitle" className="font-medium">Subtitle</Label>
-                    <Input 
-                      id="subtitle" 
-                      value={subtitle} 
-                      onChange={(e) => setSubtitle(e.target.value)} 
-                      placeholder="Enter subtitle (optional)"
-                      className="h-12 mt-1"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label>Title Size</Label>
-                    <input type="range" min={20} max={56} value={titleSize} onChange={(e) => setTitleSize(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{titleSize}px</div>
-                  </div>
-                  <div>
-                    <Label>Subtitle Size</Label>
-                    <input type="range" min={12} max={32} value={subtitleSize} onChange={(e) => setSubtitleSize(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{subtitleSize}px</div>
-                  </div>
-                  <div>
-                    <Label>Checklist Size</Label>
-                    <input type="range" min={10} max={24} value={checklistSize} onChange={(e) => setChecklistSize(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{checklistSize}px</div>
-                  </div>
-                </div>
-                {/* Typography & Layout Offsets */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-2">
-                  <div>
-                    <Label>Logo Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={logoOffsetY} onChange={(e) => setLogoOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{logoOffsetY}px</div>
-                  </div>
-                  <div>
-                    <Label>Title Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={titleOffsetY} onChange={(e) => setTitleOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{titleOffsetY}px</div>
-                  </div>
-                  <div>
-                    <Label>Subtitle Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={subtitleOffsetY} onChange={(e) => setSubtitleOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{subtitleOffsetY}px</div>
-                  </div>
-                  <div>
-                    <Label>Checklist Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={checklistOffsetY} onChange={(e) => setChecklistOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{checklistOffsetY}px</div>
-                  </div>
-                  <div>
-                    <Label>Buttons Offset Y</Label>
-                    <input type="range" min={-120} max={120} value={buttonsOffsetY} onChange={(e) => setButtonsOffsetY(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{buttonsOffsetY}px</div>
-                  </div>
-                </div>
+  return (
+    <div className="fixed inset-0 bg-background z-50 flex">
+      {/* Left Panel - Canvas */}
+      <div className="flex-1 flex flex-col border-r">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between p-4 border-b bg-muted/50">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold">Cover Page Editor</h2>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={previewMode === 'mobile' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPreviewMode('mobile')}
+              >
+                <Smartphone className="w-4 h-4 mr-1" />
+                Mobile
+              </Button>
+              <Button
+                variant={previewMode === 'desktop' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setPreviewMode('desktop')}
+              >
+                <Monitor className="w-4 h-4 mr-1" />
+                Desktop
+              </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Page'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Canvas Container */}
+        <div className="flex-1 flex items-center justify-center p-8 bg-muted/20">
+          <div className="border border-border rounded-lg shadow-lg overflow-hidden bg-white">
+            <canvas ref={canvasRef} />
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Properties */}
+      <div className="w-80 flex flex-col border-l bg-muted/30">
+        <div className="p-4 border-b">
+          <h3 className="font-semibold">Properties</h3>
+          {selectedComponent && (
+            <Badge variant="secondary" className="mt-2">
+              {selectedComponent.type.replace('-', ' ')}
+            </Badge>
+          )}
+        </div>
+
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-6">
+            {/* Page Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Page Settings</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="logo">Logo URL</Label>
-                  <Input id="logo" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://..." />
-                </div>
-                <div>
-                  <Label htmlFor="logoUpload">Upload Logo</Label>
-                  <input
-                    id="logoUpload"
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const url = await uploadAsset(file, 'logo');
-                      if (url) setLogoUrl(url);
-                    }}
+                  <Label htmlFor="page-name">Page Name</Label>
+                  <Input
+                    id="page-name"
+                    value={pageName}
+                    onChange={(e) => setPageName(e.target.value)}
+                    placeholder="Cover Page Name"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">If no logo is provided, the default Party On Delivery logo will be used.</p>
                 </div>
                 <div>
-                  <Label htmlFor="logoHeight">Logo Height (px)</Label>
-                  <Input id="logoHeight" type="number" min={24} max={200} value={logoHeight ?? 80} onChange={(e) => setLogoHeight(Number(e.target.value) || 0)} />
+                  <Label htmlFor="page-slug">Page Slug</Label>
+                  <Input
+                    id="page-slug"
+                    value={pageSlug}
+                    onChange={(e) => setPageSlug(e.target.value)}
+                    placeholder="cover-page-slug"
+                  />
                 </div>
-                <div>
-                  <Label htmlFor="bgimg">Background Image URL</Label>
-                  <Input id="bgimg" value={bgImageUrl} onChange={(e) => setBgImageUrl(e.target.value)} placeholder="https://..." />
-                </div>
-                <div>
-                  <Label htmlFor="bgvid">Background Video URL (optional)</Label>
-                  <Input id="bgvid" value={bgVideoUrl} onChange={(e) => setBgVideoUrl(e.target.value)} placeholder="https://... or /videos/whiskey-pour-17370-360.mp4" />
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <Button variant="outline" size="sm" onClick={() => { setBgImageUrl(''); setBgVideoUrl(''); }}>Use Default Old Fashioned Image</Button>
-                    <Button variant="outline" size="sm" onClick={() => { setBgVideoUrl('/videos/whiskey-pour-17370-360.mp4'); setBgImageUrl(''); }}>Use Whiskey Pour Video</Button>
-                    <Button variant="outline" size="sm" onClick={() => { setBgVideoUrl('/videos/whiskey-over-ice-5143-360.mp4'); setBgImageUrl(''); }}>Use Whiskey Over Ice Video</Button>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="bgimgUpload">Upload Background Image</Label>
-                  <input id="bgimgUpload" type="file" accept="image/*" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const url = await uploadAsset(file, 'bg');
-                    if (url) setBgImageUrl(url);
-                  }} />
-                  <p className="text-xs text-muted-foreground mt-1">Tip: For videos, paste a URL instead. Images can be small uploads.</p>
-                </div>
-                <div>
-                  <Label>Checklist (up to 5 rows)</Label>
-                  <div className="space-y-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
+              </CardContent>
+            </Card>
+
+            {/* Component Properties */}
+            {selectedComponent && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm capitalize">
+                    {selectedComponent.type.replace('-', ' ')} Properties
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Content */}
+                  {(selectedComponent.type === 'headline' || 
+                    selectedComponent.type === 'subheadline' || 
+                    selectedComponent.type === 'primary-button' || 
+                    selectedComponent.type === 'secondary-button') && (
+                    <div>
+                      <Label>Text Content</Label>
                       <Input
-                        key={i}
-                        value={checklist[i] || ''}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setChecklist((prev) => {
-                            const next = [...prev];
-                            next[i] = v;
-                            return next;
-                          });
-                        }}
-                        placeholder={`Row ${i + 1}`}
+                        value={selectedComponent.content || ''}
+                        onChange={(e) => updateComponent(selectedComponent.id, { content: e.target.value })}
+                        placeholder="Enter text"
                       />
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  )}
+
+                  {selectedComponent.type === 'feature-list' && (
+                    <div>
+                      <Label>Feature List</Label>
+                      <Textarea
+                        value={selectedComponent.content || ''}
+                        onChange={(e) => updateComponent(selectedComponent.id, { content: e.target.value })}
+                        placeholder="🍸 Feature 1&#10;🚚 Feature 2&#10;🎉 Feature 3"
+                        rows={4}
+                      />
+                    </div>
+                  )}
+
+                  {/* Logo Upload */}
+                  {selectedComponent.type === 'logo' && (
+                    <div>
+                      <Label>Logo URL</Label>
+                      <Input
+                        value={selectedComponent.content || ''}
+                        onChange={(e) => updateComponent(selectedComponent.id, { content: e.target.value })}
+                        placeholder="https://example.com/logo.png"
+                      />
+                    </div>
+                  )}
+
+                  {/* Button App Assignment */}
+                  {(selectedComponent.type === 'primary-button' || selectedComponent.type === 'secondary-button') && (
+                    <div>
+                      <Label>Assign to Delivery App</Label>
+                      <Select
+                        value={selectedComponent.deliveryAppSlug || ''}
+                        onValueChange={(value) => updateComponent(selectedComponent.id, { deliveryAppSlug: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose delivery app" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No assignment</SelectItem>
+                          {deliveryApps.map((app) => (
+                            <SelectItem key={app.app_slug} value={app.app_slug}>
+                              {app.app_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* Color */}
+                  {selectedComponent.style?.color && (
+                    <div>
+                      <Label>Text Color</Label>
+                      <Input
+                        type="color"
+                        value={selectedComponent.style.color}
+                        onChange={(e) => updateComponent(selectedComponent.id, {
+                          style: { ...selectedComponent.style, color: e.target.value }
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  {/* Background Color */}
+                  {selectedComponent.style?.backgroundColor && (
+                    <div>
+                      <Label>Background Color</Label>
+                      <Input
+                        type="color"
+                        value={selectedComponent.style.backgroundColor}
+                        onChange={(e) => updateComponent(selectedComponent.id, {
+                          style: { ...selectedComponent.style, backgroundColor: e.target.value }
+                        })}
+                      />
+                    </div>
+                  )}
+
+                  {/* Font Size */}
+                  {selectedComponent.style?.fontSize && (
+                    <div>
+                      <Label>Font Size</Label>
+                      <Input
+                        type="number"
+                        value={selectedComponent.style.fontSize}
+                        onChange={(e) => updateComponent(selectedComponent.id, {
+                          style: { ...selectedComponent.style, fontSize: parseInt(e.target.value) }
+                        })}
+                        min="8"
+                        max="72"
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Instructions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">How to Use</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs text-muted-foreground space-y-2">
+                <p>• Click any element on the canvas to select and edit it</p>
+                <p>• Drag elements to reposition them</p>
+                <p>• Use the handles to resize elements</p>
+                <p>• Assign buttons to delivery apps using the dropdown</p>
+                <p>• Toggle between mobile and desktop preview</p>
               </CardContent>
             </Card>
           </div>
-
-          <div className="space-y-4">
-            <Card>
-              <CardContent className="space-y-3 pt-6">
-                <div>
-                  <Label htmlFor="slug">Slug (root URL)</Label>
-                  <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} onBlur={(e) => checkSlug(slugify(e.target.value))} />
-                  <div className="text-xs mt-1">
-                    {checkingSlug ? 'Checking…' : slugOk ? 'Available' : 'Not available'}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between py-1">
-                  <Label htmlFor="active">Public</Label>
-                  <Switch id="active" checked={isActive} onCheckedChange={setIsActive} />
-                </div>
-                <div className="flex items-center justify-between py-1">
-                  <Label htmlFor="defaultHomepage">Set as Default Homepage</Label>
-                  <Switch id="defaultHomepage" checked={isDefaultHomepage} onCheckedChange={setIsDefaultHomepage} />
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  When enabled, this cover page will be shown when users visit the home page (/) instead of the default delivery app.
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Label>Live Preview</Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowUnifiedEditor(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Wand2 className="w-4 h-4" />
-                    Unified Drag & Drop Editor
-                  </Button>
-                </div>
-                
-                <DraggableCoverPreview
-                  config={{
-                    slug: computedSlug,
-                    title,
-                    subtitle,
-                    logo_url: logoUrl,
-                    logo_height: logoHeight,
-                    bg_image_url: bgImageUrl,
-                    bg_video_url: bgVideoUrl,
-                      checklist: checklist.filter(Boolean),
-                      buttons,
-                      is_active: isActive,
-                      styles: {
-                        title_size: titleSize,
-                        subtitle_size: subtitleSize,
-                        checklist_size: checklistSize,
-                        title_offset_y: titleOffsetY,
-                        subtitle_offset_y: subtitleOffsetY,
-                        checklist_offset_y: checklistOffsetY,
-                        buttons_offset_y: buttonsOffsetY,
-                        logo_offset_y: logoOffsetY,
-                        background_color: backgroundColor,
-                        logo_bg_color: logoBgColor,
-                        logo_bg_mode: logoBgMode,
-                        buttons_bottom_offset: buttonsBottomOffset,
-                        buttons_spacing: buttonsSpacing,
-                        checklist_to_buttons_offset: checklistToButtonsOffset,
-                        dot_spacing: dotSpacing,
-                        dot_size: dotSize
-                      }
-                    }}
-                     onPositionChange={(elementId, x, y) => {
-                       console.log(`Element ${elementId} moved to ${x}, ${y}`);
-                     }}
-                   />
-                 
-                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                   <p className="text-sm text-muted-foreground flex items-center gap-2">
-                     <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                     Drag elements around to reposition them in real-time
-                   </p>
-                 </div>
-<div className="w-full flex justify-center">
-  <div
-    className="rounded-[24px] shadow-xl ring-1 ring-black/10 overflow-hidden overflow-y-auto bg-black relative"
-    style={{ width: 420, height: 680 }}
-  >
-                    {/* Background */}
-                    {bgImageUrl && (
-                      <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${bgImageUrl})` }}
-                        aria-hidden="true"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-black/60" style={{ backgroundColor: backgroundColor || undefined }} />
-
-                    {/* Content */}
-                    <div className="relative z-10 flex h-full flex-col items-center justify-between px-4 pt-4 pb-4">
-                      <header className="w-full text-center">
-                        {logoUrl && (
-                          <img
-                            src={logoUrl}
-                            alt="Logo preview"
-                            className="mx-auto block drop-shadow"
-                            style={{ height: logoHeight || 160 }}
-                          />
-                        )}
-                        <h3
-                          className="mt-2 text-white font-bold"
-                          style={{ fontSize: `${titleSize}px`, marginTop: titleOffsetY || 0 }}
-                        >
-                          {title || 'Title preview'}
-                        </h3>
-                        {subtitle && (
-                          <p
-                            className="text-white/90 mt-1"
-                            style={{ fontSize: `${subtitleSize}px`, marginTop: subtitleOffsetY || 0 }}
-                          >
-                            {subtitle}
-                          </p>
-                        )}
-                      </header>
-
-                      <div className="flex-1" />
-
-                      <div className="w-full max-w-[280px]">
-                        <div className="w-full mx-auto my-3" style={{ marginTop: checklistOffsetY || 0 }}>
-                          <div className="flex flex-col items-center">
-                            {(checklist || [])
-                              .filter((c) => c && c.trim())
-                              .slice(0, 5)
-                              .map((text, i, arr) => (
-                                <React.Fragment key={i}>
-                                  <p
-                                    className="text-white/90 font-semibold leading-tight animate-fade-in"
-                                    style={{ fontSize: `${checklistSize}px`, animationDelay: `${i * 120}ms`, animationFillMode: 'both', marginTop: (dotSpacing ?? 8) / 2, marginBottom: (dotSpacing ?? 8) / 2 }}
-                                  >
-                                    {text}
-                                  </p>
-                                  {i < arr.length - 1 && (
-                                    <span className="text-white/60 animate-fade-in" style={{ animationDelay: `${i * 120 + 60}ms`, animationFillMode: 'both', marginTop: (dotSpacing ?? 8) / 2, marginBottom: (dotSpacing ?? 8) / 2, fontSize: `${dotSize ?? 14}px` }} aria-hidden="true">•</span>
-                                  )}
-                                </React.Fragment>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                        {/* Gap between text block and buttons (editable) */}
-                        <div className="h-[30px]" aria-hidden="true" style={{ marginTop: buttonsOffsetY || 0, height: (checklistToButtonsOffset ?? 30) }} />
-
-                        {/* Buttons layout */}
-                        <div style={{ marginBottom: buttonsBottomOffset || 0 }}>
-                          {buttons.length <= 2 ? (
-                            <div className="flex flex-col" style={{ rowGap: buttonsSpacing || 12 }}>
-                              {buttons.map((b, i) => (
-                                <Button
-                                  key={`${b.text}-${i}`}
-                                  size="sm"
-                                  className={`w-full h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${(buttons.length === 2 && i === 1) ? 'border-2 border-white/80' : ''} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
-                                  style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined, marginTop: (b as any).offset_y || 0, marginBottom: (b as any).spacing_below || 0 }}
-                                >
-                                  {b.text}
-                                </Button>
-                              ))}
-                            </div>
-                          ) : buttons.length === 3 ? (
-                            <div className="flex flex-col" style={{ rowGap: buttonsSpacing || 12 }}>
-                              <Button
-                                size="sm"
-                                className={`w-full h-9 rounded-full font-semibold shadow ${buttons[0].bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]`}
-                                style={{ backgroundColor: buttons[0].bg_color || undefined, color: buttons[0].text_color || undefined, marginTop: (buttons[0] as any).offset_y || 0, marginBottom: (buttons[0] as any).spacing_below || 0 }}
-                              >
-                                {buttons[0].text}
-                              </Button>
-                              <div className="grid grid-cols-2" style={{ gap: buttonsSpacing || 12 }}>
-                                {buttons.slice(1).map((b, i) => (
-                                  <Button
-                                    key={`${b.text}-${i + 1}`}
-                                    size="sm"
-                                    className={`h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
-                                    style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined, marginTop: (b as any).offset_y || 0, marginBottom: (b as any).spacing_below || 0 }}
-                                  >
-                                    {b.text}
-                                  </Button>
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-2" style={{ gap: buttonsSpacing || 12 }}>
-                              {buttons.map((b, i) => (
-                                <Button
-                                  key={`${b.text}-${i}`}
-                                  size="sm"
-                                  className={`h-9 rounded-full font-semibold shadow ${b.bg_color ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'} ${i % 2 === 0 ? 'animate-[pulse_1.9s_cubic-bezier(0.4,0,0.6,1)_infinite]' : 'animate-[pulse_2.6s_cubic-bezier(0.4,0,0.6,1)_infinite]'}`}
-                                  style={{ backgroundColor: b.bg_color || undefined, color: b.text_color || undefined, marginTop: (b as any).offset_y || 0, marginBottom: (b as any).spacing_below || 0 }}
-                                >
-                                  {b.text}
-                                </Button>
-                              ))}
-                            </div>
-                          )}
-                         </div>
-                       </div>
-                      </div>
-                    </div>
-               </CardContent>
-             </Card>
-
-            <Card>
-              <CardContent className="space-y-4 pt-6">
-                <Label className="mb-2 block">Layout & Background</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Background Color</Label>
-                    <input type="color" value={backgroundColor || '#000000'} onChange={(e) => setBackgroundColor(e.target.value)} className="h-10 w-full rounded border" />
-                  </div>
-                  <div>
-                    <Label>Logo Background Mode</Label>
-                    <Select value={logoBgMode} onValueChange={(v: any) => setLogoBgMode(v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="auto">Auto Mask</SelectItem>
-                        <SelectItem value="rectangle">Rectangle</SelectItem>
-                        <SelectItem value="none">None</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Logo Background Color</Label>
-                    <input type="color" value={logoBgColor || '#000000'} onChange={(e) => setLogoBgColor(e.target.value)} className="h-10 w-full rounded border" />
-                  </div>
-                </div>
-                {/* Spacing & Positions */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-                  <div>
-                    <Label>Buttons Bottom Offset</Label>
-                    <input type="range" min={0} max={120} value={buttonsBottomOffset} onChange={(e) => setButtonsBottomOffset(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{buttonsBottomOffset}px</div>
-                  </div>
-                  <div>
-                    <Label>Buttons Spacing</Label>
-                    <input type="range" min={0} max={32} value={buttonsSpacing} onChange={(e) => setButtonsSpacing(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{buttonsSpacing}px</div>
-                  </div>
-                  <div>
-                    <Label>Checklist↔Buttons Offset</Label>
-                    <input type="range" min={0} max={120} value={checklistToButtonsOffset} onChange={(e) => setChecklistToButtonsOffset(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{checklistToButtonsOffset}px</div>
-                  </div>
-                  <div>
-                    <Label>Dot Spacing</Label>
-                    <input type="range" min={0} max={24} value={dotSpacing} onChange={(e) => setDotSpacing(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{dotSpacing}px</div>
-                  </div>
-                  <div>
-                    <Label>Dot Size</Label>
-                    <input type="range" min={8} max={28} value={dotSize} onChange={(e) => setDotSize(Number(e.target.value))} className="w-full" />
-                    <div className="text-xs text-muted-foreground">{dotSize}px</div>
-                  </div>
-                </div>
-                {/* Typography offsets moved near size controls above for a unified workflow */}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="space-y-3 pt-6">
-                <div className="flex items-center justify-between">
-                  <Label>Buttons</Label>
-                  <Button size="sm" onClick={addButton}>Add Button</Button>
-                </div>
-
-                <div className="space-y-4">
-                  {buttons.map((b, idx) => (
-                    <div key={idx} className="rounded-md border p-3 space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label>Text</Label>
-                          <Input value={b.text} onChange={(e) => updateButton(idx, { text: e.target.value })} />
-                        </div>
-                        <div>
-                          <Label>Destination</Label>
-                          <Select value={b.type} onValueChange={(v: CoverButtonType) => updateButton(idx, { type: v })}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Choose destination" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="delivery_app">Delivery App</SelectItem>
-                              <SelectItem value="checkout">Checkout</SelectItem>
-                              <SelectItem value="url">Custom URL</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {b.type === 'delivery_app' && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label>App</Label>
-                            <Select value={b.app_slug} onValueChange={(v) => updateButton(idx, { app_slug: v })}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select app" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {apps.map((a) => (
-                                  <SelectItem key={a.app_slug} value={a.app_slug}>{a.app_name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex items-center gap-2 mt-6">
-                            <Switch checked={!!b.openCart} onCheckedChange={(v) => updateButton(idx, { openCart: v })} id={`opencart-${idx}`} />
-                            <Label htmlFor={`opencart-${idx}`}>Open cart on arrival</Label>
-                          </div>
-                        </div>
-                      )}
-
-                      {b.type === 'url' && (
-                        <div>
-                          <Label>URL</Label>
-                          <Input value={b.url || ''} placeholder="https://..." onChange={(e) => updateButton(idx, { url: e.target.value })} />
-                        </div>
-                      )}
-
-{/* Per-button options */}
-<div className="grid grid-cols-2 gap-2">
-  <div>
-    <Label>Affiliate Code (override)</Label>
-    <Input value={b.affiliate_code || ''} onChange={(e) => updateButton(idx, { affiliate_code: e.target.value || undefined })} placeholder="e.g. AUSTINVIP" />
-  </div>
-  <div>
-    <Label>Markup %</Label>
-    <Input type="number" min={0} max={50} step={1} value={b.markup_percent ?? 0} onChange={(e) => updateButton(idx, { markup_percent: Number(e.target.value) })} />
-  </div>
-  <div className="flex items-center gap-2 mt-2">
-    <Switch checked={!!b.free_shipping} onCheckedChange={(v) => updateButton(idx, { free_shipping: v })} id={`freeship-${idx}`} />
-    <Label htmlFor={`freeship-${idx}`}>Offer free shipping</Label>
-  </div>
-</div>
-
-{/* Address prefill (optional per button) */}
-<div className="mt-3 space-y-2">
-  <div className="flex items-center gap-2">
-    <Switch checked={!!b.prefill_enabled} onCheckedChange={(v) => updateButton(idx, { prefill_enabled: v })} id={`prefill-${idx}`} />
-    <Label htmlFor={`prefill-${idx}`}>Prefill delivery address for this button</Label>
-  </div>
-  {b.prefill_enabled && (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="col-span-2">
-        <Label>Street</Label>
-        <Input value={b.prefill_address?.street || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), street: e.target.value } })} placeholder="123 Main St" />
-      </div>
-      <div>
-        <Label>City</Label>
-        <Input value={b.prefill_address?.city || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), city: e.target.value } })} placeholder="Austin" />
-      </div>
-      <div>
-        <Label>State</Label>
-        <Input value={b.prefill_address?.state || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), state: e.target.value } })} placeholder="TX" />
-      </div>
-      <div>
-        <Label>ZIP</Label>
-        <Input value={b.prefill_address?.zip_code || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), zip_code: e.target.value } })} placeholder="78701" />
-      </div>
-      <div>
-        <Label>Instructions (optional)</Label>
-        <Input value={b.prefill_address?.instructions || ''} onChange={(e) => updateButton(idx, { prefill_address: { ...(b.prefill_address || {}), instructions: e.target.value } })} placeholder="Gate code, unit #, etc." />
+        </ScrollArea>
       </div>
     </div>
-  )}
-</div>
-
-{/* Button colors */}
-<div className="grid grid-cols-2 gap-2">
-  <div>
-    <Label>Button Background Color</Label>
-    <input type="color" value={b.bg_color || '#0ea5e9'} onChange={(e) => updateButton(idx, { bg_color: e.target.value })} className="h-10 w-full rounded border" />
-  </div>
-  <div>
-    <Label>Button Text Color</Label>
-    <input type="color" value={b.text_color || '#ffffff'} onChange={(e) => updateButton(idx, { text_color: e.target.value })} className="h-10 w-full rounded border" />
-  </div>
-</div>
-
-{/* Button spacing & offsets */}
-<div className="grid grid-cols-2 gap-2">
-  <div>
-    <Label>Offset Y (px)</Label>
-    <Input type="number" value={b.offset_y ?? 0} onChange={(e) => updateButton(idx, { offset_y: Number(e.target.value) })} />
-  </div>
-  <div>
-    <Label>Spacing Below (px)</Label>
-    <Input type="number" value={b.spacing_below ?? 0} onChange={(e) => updateButton(idx, { spacing_below: Number(e.target.value) })} />
-  </div>
-</div>
-
-                      <div className="flex justify-end">
-                        <Button variant="destructive" size="sm" onClick={() => removeButton(idx)}>Remove</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        <div className="flex justify-between items-center gap-2 pt-4">
-          <div className="text-xs text-muted-foreground">URL: /{computedSlug || '(unsaved)'}</div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button
-              variant="secondary"
-              onClick={() => window.open(`${CANONICAL_DOMAIN}/${computedSlug}`, '_blank')}
-              disabled={!computedSlug || !slugOk}
-            >
-              Preview
-            </Button>
-            <Button onClick={handleSave} disabled={saving || !slugOk}>{saving ? 'Saving…' : 'Save'}</Button>
-          </div>
-        </div>
-
-        {/* Unified Editor Modal */}
-        <RestoreUnifiedCoverEditor
-          open={showUnifiedEditor}
-          onOpenChange={setShowUnifiedEditor}
-          initial={initial}
-          onSaved={() => {
-            setShowUnifiedEditor(false);
-            onSaved?.();
-          }}
-        />
-      </DialogContent>
-    </Dialog>
   );
 };
-
-export default CoverPageEditor;

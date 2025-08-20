@@ -24,7 +24,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-import { ImprovedCoverPageCreator } from './ImprovedCoverPageCreator';
+import { ImprovedCoverPageCreator } from './CoverPageCreator';
 import { EnhancedPostCheckoutManager } from './EnhancedPostCheckoutManager';
 import { DeliveryAppCreator } from './DeliveryAppCreator';
 
