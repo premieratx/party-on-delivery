@@ -80,37 +80,97 @@ export const SearchPage = () => {
     setIsSearching(true);
     
     try {
-      // Get all products for search using instant cache
-      const { data: response, error } = await supabase.functions.invoke('instant-product-cache', {
-        body: { 
-          collection_handle: 'all',
-          force_refresh: false
-        }
+      // First sync products to hierarchical categories
+      const { error: syncError } = await supabase.rpc('sync_shopify_to_hierarchical_categories');
+      if (syncError) console.warn('Sync warning:', syncError);
+
+      // Use hierarchical search function
+      const { data: searchResults, error } = await supabase.rpc('hierarchical_product_search', {
+        search_query: searchQuery,
+        max_results: 100
       });
 
       if (error) throw error;
 
-      const allProducts = response?.products || [];
-      
-      // Use SearchOptimizer for hierarchical search: Product Name > Collection > Category > Product Type
-      const searchIndex = allProducts.length > 0 
-        ? SearchOptimizer.buildSearchIndex(allProducts, 'global-search')
-        : [];
-        
-      const results = searchIndex.length > 0
-        ? SearchOptimizer.searchProductsWithHierarchy(searchQuery, searchIndex, 100)
-        : [];
+      // Convert hierarchical results to match existing format
+      const formattedResults = (searchResults || []).map((result: any) => ({
+        id: result.product_id,
+        title: result.product_title,
+        handle: result.product_handle,
+        product_type: result.product_type,
+        vendor: result.vendor,
+        collections: result.collections,
+        categories: result.categories,
+        tags: result.tags,
+        relevance_score: result.relevance_score,
+        match_type: result.match_type,
+        // Get additional product data from cache for pricing and images
+        price: 0, // Will be populated from cache
+        image: '', // Will be populated from cache
+        variants: [] // Will be populated from cache
+      }));
 
-      console.log(`🔍 GLOBAL SEARCH: Found ${results.length} products for "${searchQuery}"`);
-      setSearchResults(results);
+      // Enhance with cached product data for pricing and images
+      if (formattedResults.length > 0) {
+        const { data: cachedProducts, error: cacheError } = await supabase
+          .from('shopify_products_cache')
+          .select('*')
+          .in('id', formattedResults.map(r => r.id)); // Keep as strings
+
+        if (!cacheError && cachedProducts) {
+          const productMap = new Map(cachedProducts.map(p => [p.id.toString(), p]));
+          
+          formattedResults.forEach(result => {
+            const cached = productMap.get(result.id);
+            if (cached) {
+              result.price = cached.price || 0;
+              result.image = cached.image || '';
+              result.variants = Array.isArray(cached.variants) ? cached.variants : [];
+            }
+          });
+        }
+      }
+
+      console.log(`🔍 HIERARCHICAL SEARCH: Found ${formattedResults.length} products for "${searchQuery}"`);
+      formattedResults.forEach(r => console.log(`  - ${r.title} (${r.match_type}, score: ${r.relevance_score})`));
+      
+      setSearchResults(formattedResults);
     } catch (error) {
-      console.error('Search error:', error);
-      setSearchResults([]);
-      toast({
-        title: "Search Error",
-        description: "Failed to search products. Please try again.",
-        variant: "destructive"
-      });
+      console.error('Hierarchical search error:', error);
+      
+      // Fallback to original search method
+      try {
+        const { data: response, error: fallbackError } = await supabase.functions.invoke('instant-product-cache', {
+          body: { 
+            collection_handle: 'all',
+            force_refresh: false
+          }
+        });
+
+        if (fallbackError) throw fallbackError;
+
+        const allProducts = response?.products || [];
+        
+        // Use SearchOptimizer as fallback
+        const searchIndex = allProducts.length > 0 
+          ? SearchOptimizer.buildSearchIndex(allProducts, 'global-search')
+          : [];
+          
+        const results = searchIndex.length > 0
+          ? SearchOptimizer.searchProductsWithHierarchy(searchQuery, searchIndex, 100)
+          : [];
+
+        console.log(`🔍 FALLBACK SEARCH: Found ${results.length} products for "${searchQuery}"`);
+        setSearchResults(results);
+      } catch (fallbackError) {
+        console.error('Fallback search also failed:', fallbackError);
+        setSearchResults([]);
+        toast({
+          title: "Search Error",
+          description: "Failed to search products. Please try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsSearching(false);
     }

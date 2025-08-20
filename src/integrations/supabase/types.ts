@@ -2650,6 +2650,57 @@ export type Database = {
           },
         ]
       }
+      product_hierarchical_categories: {
+        Row: {
+          categories: string[] | null
+          collections: string[] | null
+          created_at: string | null
+          hierarchy_level: number | null
+          id: string
+          priority_score: number | null
+          product_handle: string | null
+          product_id: string
+          product_title: string
+          product_type: string | null
+          search_vector: unknown | null
+          tags: string[] | null
+          updated_at: string | null
+          vendor: string | null
+        }
+        Insert: {
+          categories?: string[] | null
+          collections?: string[] | null
+          created_at?: string | null
+          hierarchy_level?: number | null
+          id?: string
+          priority_score?: number | null
+          product_handle?: string | null
+          product_id: string
+          product_title: string
+          product_type?: string | null
+          search_vector?: unknown | null
+          tags?: string[] | null
+          updated_at?: string | null
+          vendor?: string | null
+        }
+        Update: {
+          categories?: string[] | null
+          collections?: string[] | null
+          created_at?: string | null
+          hierarchy_level?: number | null
+          id?: string
+          priority_score?: number | null
+          product_handle?: string | null
+          product_id?: string
+          product_title?: string
+          product_type?: string | null
+          search_vector?: unknown | null
+          tags?: string[] | null
+          updated_at?: string | null
+          vendor?: string | null
+        }
+        Relationships: []
+      }
       product_modifications: {
         Row: {
           app_synced: boolean | null
@@ -4033,6 +4084,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      hierarchical_product_search: {
+        Args: { max_results?: number; search_query: string }
+        Returns: {
+          categories: string[]
+          collections: string[]
+          match_type: string
+          product_handle: string
+          product_id: string
+          product_title: string
+          product_type: string
+          relevance_score: number
+          tags: string[]
+          vendor: string
+        }[]
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -4126,6 +4192,10 @@ export type Database = {
       set_admin_context: {
         Args: { admin_email: string }
         Returns: undefined
+      }
+      sync_shopify_to_hierarchical_categories: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       track_affiliate_order: {
         Args: {
