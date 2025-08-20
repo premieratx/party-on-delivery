@@ -11,7 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
 import { DraggableCoverPreview } from "./DraggableCoverPreview";
+import { RestoreUnifiedCoverEditor } from "./RestoreUnifiedCoverEditor";
+import { FigmaTemplateSelector } from "./FigmaTemplateSelector";
 import { CANONICAL_DOMAIN } from "@/utils/links";
+import { Wand2 } from 'lucide-react';
 // Types
 export type CoverButtonType = 'delivery_app' | 'checkout' | 'url'
 export interface CoverButtonConfig {
@@ -126,6 +129,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
   const [slugOk, setSlugOk] = useState(true);
   const [checkingSlug, setCheckingSlug] = useState(false);
   const [showDraggablePreview, setShowDraggablePreview] = useState(false);
+  const [showUnifiedEditor, setShowUnifiedEditor] = useState(false);
 
   const uploadAsset = async (file: File, kind: 'logo' | 'bg'): Promise<string | null> => {
     try {
@@ -490,9 +494,11 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowDraggablePreview(!showDraggablePreview)}
+                    onClick={() => setShowUnifiedEditor(true)}
+                    className="flex items-center gap-2"
                   >
-                    {showDraggablePreview ? 'Static Preview' : 'Draggable Preview'}
+                    <Wand2 className="w-4 h-4" />
+                    Unified Drag & Drop Editor
                   </Button>
                 </div>
                 
@@ -879,6 +885,17 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({ open, onOpenCh
             <Button onClick={handleSave} disabled={saving || !slugOk}>{saving ? 'Saving…' : 'Save'}</Button>
           </div>
         </div>
+
+        {/* Unified Editor Modal */}
+        <RestoreUnifiedCoverEditor
+          open={showUnifiedEditor}
+          onOpenChange={setShowUnifiedEditor}
+          initial={initial}
+          onSaved={() => {
+            setShowUnifiedEditor(false);
+            onSaved?.();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

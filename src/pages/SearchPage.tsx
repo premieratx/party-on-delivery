@@ -201,18 +201,27 @@ export const SearchPage = () => {
                   const { cleanTitle, packageSize } = parseProductTitle(product.title);
                   
                   return (
-                    <Card 
-                      key={product.id} 
-                      className="overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full"
-                    >
-                      <div className="aspect-square relative overflow-hidden">
-                        <OptimizedImage
-                          src={product.image}
-                          alt={cleanTitle}
-                          className="w-full h-full object-cover hover-scale"
-                        />
-                      </div>
-                      <CardContent className="p-3 flex flex-col flex-1 justify-between space-y-3">
+                <Card 
+                  key={product.id} 
+                  className="overflow-hidden hover:shadow-lg transition-all duration-200 animate-fade-in flex flex-col h-full cursor-pointer"
+                  onClick={(e) => {
+                    // Prevent navigation if clicking on buttons
+                    if ((e.target as HTMLElement).closest('button')) {
+                      e.stopPropagation();
+                      return;
+                    }
+                    // Just add to cart on click, don't navigate away
+                    handleAddToCart(product);
+                  }}
+                >
+                  <div className="aspect-square relative overflow-hidden">
+                    <OptimizedImage
+                      src={product.image}
+                      alt={cleanTitle}
+                      className="w-full h-full object-cover hover-scale"
+                    />
+                  </div>
+                  <CardContent className="p-3 flex flex-col flex-1 justify-between space-y-3">
                         <div className="space-y-1 text-center">
                           <h3 className="font-medium text-sm line-clamp-2 leading-tight">
                             {cleanTitle}
