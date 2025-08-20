@@ -90,9 +90,6 @@ export const EditableDeliveryAppManager: React.FC<EditableDeliveryAppManagerProp
         .update({
           app_name: formData.app_name,
           app_slug: formData.app_slug,
-          business_name: formData.business_name,
-          business_address: JSON.parse(formData.business_address || '{}'),
-          delivery_address: JSON.parse(formData.delivery_address || '{}'),
           is_active: formData.is_active,
           updated_at: new Date().toISOString()
         })

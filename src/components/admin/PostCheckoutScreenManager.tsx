@@ -21,7 +21,8 @@ export const PostCheckoutScreenManager = () => {
     screen_slug: '',
     title: '',
     message: '',
-    affiliate_id: ''
+    affiliate_id: '',
+    cover_page_id: ''
   });
 
   useEffect(() => {
@@ -63,12 +64,13 @@ export const PostCheckoutScreenManager = () => {
   const handleSave = async () => {
     try {
       const screenData = {
-        title: formData.title,
-        message: formData.message,
+        title: formData.title || '',
+        subtitle: formData.message || '',
         affiliate_id: formData.affiliate_id || null,
-        cover_page_id: '', // Required field - set to empty string for now
+        cover_page_id: formData.cover_page_id || null, // This needs to be a valid UUID or null
         background_color: '#ffffff',
-        text_color: '#000000'
+        text_color: '#000000',
+        styles: {}
       };
 
       if (editingScreen) {
@@ -79,6 +81,21 @@ export const PostCheckoutScreenManager = () => {
         if (error) throw error;
         toast.success('Screen updated');
       } else {
+        // For new screens, we need a valid cover_page_id - get the first available one
+        if (!screenData.cover_page_id) {
+          const { data: coverPages } = await supabase
+            .from('cover_pages')
+            .select('id')
+            .limit(1);
+          
+          if (coverPages && coverPages.length > 0) {
+            screenData.cover_page_id = coverPages[0].id;
+          } else {
+            toast.error('No cover pages available. Please create a cover page first.');
+            return;
+          }
+        }
+        
         const { error } = await supabase
           .from('post_checkout_screens')
           .insert([screenData]);

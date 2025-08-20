@@ -612,8 +612,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   };
 
   const handleSave = async () => {
-    if (!title || !slugOk) {
-      toast({ title: 'Missing required fields', variant: 'destructive' });
+    if (!title || !computedSlug) {
+      toast({ title: 'Missing required fields', description: 'Title and slug are required', variant: 'destructive' });
       return;
     }
     
@@ -622,14 +622,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       const payload: any = {
         slug: computedSlug,
         title,
-        subtitle,
+        subtitle: subtitle || '',
         logo_url: logoUrl || null,
-        logo_height: logoHeight,
+        logo_height: logoHeight || 160,
         bg_image_url: bgImageUrl || null,
         bg_video_url: bgVideoUrl || null,
-        checklist: checklist.filter(Boolean) as any,
-        buttons: buttons as any,
+        checklist: checklist.filter(Boolean),
+        buttons: buttons,
         is_active: isActive,
+        is_default_homepage: false,
         styles: {
           theme: selectedTheme,
           element_positions: elementPositions
@@ -648,7 +649,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       onSaved?.();
       onOpenChange(false);
     } catch (e: any) {
-      toast({ title: 'Save failed', description: e?.message, variant: 'destructive' });
+      console.error('Save error:', e);
+      toast({ title: 'Save failed', description: e?.message || 'Unknown error occurred', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
