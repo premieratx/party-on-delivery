@@ -221,7 +221,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
     try {
       const appData = {
         app_name: appName.trim(),
-        app_slug: appSlug.trim(),
+        app_slug: isEditing ? appSlug.trim() : `${appSlug.trim()}-${Date.now()}`,
         main_app_config: {
           hero_heading: heroHeading.trim(),
           hero_subheading: heroSubheading.trim()

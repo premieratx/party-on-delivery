@@ -133,7 +133,7 @@ export const PostCheckoutCreator: React.FC<PostCheckoutCreatorProps> = ({
       // Fix table name and data structure for post_checkout_pages
       const pageData = {
         name: config.title,
-        slug: config.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        slug: isEditing ? config.id || 'post-checkout' : `${config.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}`,
         content: JSON.parse(JSON.stringify({
           title: config.title,
           subtitle: config.subtitle,

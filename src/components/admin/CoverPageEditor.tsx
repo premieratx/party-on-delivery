@@ -79,6 +79,8 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({
   const [isActive, setIsActive] = useState(true);
   const [isHomepage, setIsHomepage] = useState(false);
 
+  const isEditing = !!initial?.id;
+
   // Default components matching Figma design
   const [components, setComponents] = useState<CoverPageComponent[]>([
     {
@@ -341,15 +343,15 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({
     setSaving(true);
     try {
       const pageData = {
-        slug: pageSlug.trim(),
         title: pageName.trim(),
-        is_active: isActive,
-        is_default_homepage: isHomepage,
+        slug: isEditing ? pageSlug.trim() : `${pageSlug.trim()}-${Date.now()}`,
         styles: {
           components
         } as any,
-        buttons: [] as any, // Will be populated from components
-        checklist: [] as any
+        buttons: [] as any,
+        checklist: [] as any,
+        is_active: isActive,
+        is_default_homepage: isHomepage
       };
 
       if (initial?.id) {

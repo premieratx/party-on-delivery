@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Save, 
   Eye, 
@@ -197,7 +198,7 @@ export const UnifiedPostCheckoutVisualEditor: React.FC<UnifiedPostCheckoutVisual
     try {
       const pageData = {
         name: title,
-        slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        slug: isEditing ? initial?.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'post-checkout' : `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}`,
         content: JSON.parse(JSON.stringify({
           title,
           subtitle: subtitle || '',
@@ -316,189 +317,200 @@ export const UnifiedPostCheckoutVisualEditor: React.FC<UnifiedPostCheckoutVisual
                     <TabsTrigger value="buttons">Buttons</TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="content" className="space-y-4">
-                    <div>
-                      <Label>Title *</Label>
-                      <Input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Order Confirmed!"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label>Subtitle</Label>
-                      <Textarea
-                        value={subtitle}
-                        onChange={(e) => setSubtitle(e.target.value)}
-                        placeholder="Thank you for your order. We'll send you updates on your delivery."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Logo</Label>
-                      <div className="flex gap-2 mt-1">
-                        <Button
-                          variant="outline"
-                          onClick={() => logoInputRef.current?.click()}
-                          className="flex-1"
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload Logo
-                        </Button>
-                      </div>
-                      {logoUrl && (
-                        <div className="mt-2">
-                          <img src={logoUrl} alt="Logo" className="w-16 h-16 object-contain rounded border" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label>Associated Cover Page</Label>
-                      <Select value={coverPageId} onValueChange={setCoverPageId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select cover page..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {coverPages.map((page) => (
-                            <SelectItem key={page.id} value={page.id}>
-                              {page.title} ({page.slug})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="is_template"
-                        checked={isTemplate}
-                        onCheckedChange={setIsTemplate}
-                      />
-                      <Label htmlFor="is_template">Use as Template</Label>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="design" className="space-y-4">
-                    <div>
-                      <Label>Theme</Label>
-                      <Select value={selectedTheme} onValueChange={setSelectedTheme}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(POST_CHECKOUT_THEMES).map(([key, theme]) => (
-                            <SelectItem key={key} value={key}>
-                              {theme.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Device Preview</Label>
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        {Object.entries(DEVICE_CONFIGS).map(([key, config]) => (
-                          <Button
-                            key={key}
-                            variant={activeDevice === key ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
-                          >
-                            {key === 'mobile' && <Smartphone className="w-4 h-4" />}
-                            {key === 'tablet' && <Tablet className="w-4 h-4" />}
-                            {key === 'desktop' && <Monitor className="w-4 h-4" />}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Background Color</Label>
-                        <Input
-                          type="color"
-                          value={backgroundColor}
-                          onChange={(e) => setBackgroundColor(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label>Text Color</Label>
-                        <Input
-                          type="color"
-                          value={textColor}
-                          onChange={(e) => setTextColor(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="buttons" className="space-y-4">
-                    {buttons.map((button, index) => (
-                      <Card key={index}>
-                        <CardContent className="p-4 space-y-3">
-                          <div className="flex justify-between items-center">
-                            <Badge variant="outline">Button {index + 1}</Badge>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeButton(index)}
-                              disabled={buttons.length <= 1}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          
+                     <TabsContent value="content" className="space-y-4">
+                      <ScrollArea className="h-[400px] pr-4">
+                        <div className="space-y-4">
                           <div>
-                            <Label>Text</Label>
+                            <Label>Title *</Label>
                             <Input
-                              value={button.text}
-                              onChange={(e) => updateButton(index, { text: e.target.value })}
-                              placeholder="Button Text"
+                              value={title}
+                              onChange={(e) => setTitle(e.target.value)}
+                              placeholder="Order Confirmed!"
                             />
                           </div>
                           
                           <div>
-                            <Label>URL</Label>
-                            <Input
-                              value={button.url}
-                              onChange={(e) => updateButton(index, { url: e.target.value })}
-                              placeholder="https://example.com or /page"
+                            <Label>Subtitle</Label>
+                            <Textarea
+                              value={subtitle}
+                              onChange={(e) => setSubtitle(e.target.value)}
+                              placeholder="Thank you for your order. We'll send you updates on your delivery."
+                              rows={3}
                             />
                           </div>
-                          
+
                           <div>
-                            <Label>Style</Label>
-                            <Select
-                              value={button.style}
-                              onValueChange={(value) => updateButton(index, { style: value as 'primary' | 'secondary' })}
-                            >
+                            <Label>Logo</Label>
+                            <div className="flex gap-2 mt-1">
+                              <Button
+                                variant="outline"
+                                onClick={() => logoInputRef.current?.click()}
+                                className="flex-1"
+                              >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload Logo
+                              </Button>
+                            </div>
+                            {logoUrl && (
+                              <div className="mt-2">
+                                <img src={logoUrl} alt="Logo" className="w-16 h-16 object-contain rounded border" />
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <Label>Associated Cover Page</Label>
+                            <Select value={coverPageId} onValueChange={setCoverPageId}>
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Select cover page..." />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="primary">Primary</SelectItem>
-                                <SelectItem value="secondary">Secondary</SelectItem>
+                                {coverPages.map((page) => (
+                                  <SelectItem key={page.id} value={page.id}>
+                                    {page.title} ({page.slug})
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    
-                    <Button
-                      onClick={addButton}
-                      disabled={buttons.length >= 4}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Button
-                    </Button>
-                  </TabsContent>
+
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="is_template"
+                              checked={isTemplate}
+                              onCheckedChange={setIsTemplate}
+                            />
+                            <Label htmlFor="is_template">Use as Template</Label>
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </TabsContent>
+
+                   <TabsContent value="design" className="space-y-4">
+                     <ScrollArea className="h-[400px] pr-4">
+                       <div className="space-y-4">
+                         <div>
+                           <Label>Theme</Label>
+                           <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                             <SelectTrigger>
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent>
+                               {Object.entries(POST_CHECKOUT_THEMES).map(([key, theme]) => (
+                                 <SelectItem key={key} value={key}>
+                                   {theme.name}
+                                 </SelectItem>
+                               ))}
+                             </SelectContent>
+                           </Select>
+                         </div>
+
+                         <div>
+                           <Label>Device Preview</Label>
+                           <div className="grid grid-cols-3 gap-2 mt-2">
+                             {Object.entries(DEVICE_CONFIGS).map(([key, config]) => (
+                               <Button
+                                 key={key}
+                                 variant={activeDevice === key ? 'default' : 'outline'}
+                                 size="sm"
+                                 onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
+                               >
+                                 {key === 'mobile' && <Smartphone className="w-4 h-4" />}
+                                 {key === 'tablet' && <Tablet className="w-4 h-4" />}
+                                 {key === 'desktop' && <Monitor className="w-4 h-4" />}
+                               </Button>
+                             ))}
+                           </div>
+                         </div>
+
+                         <div className="grid grid-cols-2 gap-4">
+                           <div>
+                             <Label>Background Color</Label>
+                             <Input
+                               type="color"
+                               value={backgroundColor}
+                               onChange={(e) => setBackgroundColor(e.target.value)}
+                             />
+                           </div>
+                           <div>
+                             <Label>Text Color</Label>
+                             <Input
+                               type="color"
+                               value={textColor}
+                               onChange={(e) => setTextColor(e.target.value)}
+                             />
+                           </div>
+                         </div>
+                       </div>
+                     </ScrollArea>
+                   </TabsContent>
+
+                   <TabsContent value="buttons" className="space-y-4">
+                     <ScrollArea className="h-[400px] pr-4">
+                       <div className="space-y-4">
+                         {buttons.map((button, index) => (
+                           <Card key={index}>
+                             <CardContent className="p-4 space-y-3">
+                               <div className="flex justify-between items-center">
+                                 <Badge variant="outline">Button {index + 1}</Badge>
+                                 <Button
+                                   size="sm"
+                                   variant="ghost"
+                                   onClick={() => removeButton(index)}
+                                   disabled={buttons.length <= 1}
+                                 >
+                                   <Trash2 className="w-4 h-4" />
+                                 </Button>
+                               </div>
+                               
+                               <div>
+                                 <Label>Text</Label>
+                                 <Input
+                                   value={button.text}
+                                   onChange={(e) => updateButton(index, { text: e.target.value })}
+                                   placeholder="Button Text"
+                                 />
+                               </div>
+                               
+                               <div>
+                                 <Label>URL</Label>
+                                 <Input
+                                   value={button.url}
+                                   onChange={(e) => updateButton(index, { url: e.target.value })}
+                                   placeholder="https://example.com or /page"
+                                 />
+                               </div>
+                               
+                               <div>
+                                 <Label>Style</Label>
+                                 <Select
+                                   value={button.style}
+                                   onValueChange={(value) => updateButton(index, { style: value as 'primary' | 'secondary' })}
+                                 >
+                                   <SelectTrigger>
+                                     <SelectValue />
+                                   </SelectTrigger>
+                                   <SelectContent>
+                                     <SelectItem value="primary">Primary</SelectItem>
+                                     <SelectItem value="secondary">Secondary</SelectItem>
+                                   </SelectContent>
+                                 </Select>
+                               </div>
+                             </CardContent>
+                           </Card>
+                         ))}
+                         
+                         <Button
+                           onClick={addButton}
+                           disabled={buttons.length >= 4}
+                           className="w-full"
+                         >
+                           <Plus className="w-4 h-4 mr-2" />
+                           Add Button
+                         </Button>
+                       </div>
+                     </ScrollArea>
+                   </TabsContent>
                 </Tabs>
               </div>
             </div>
