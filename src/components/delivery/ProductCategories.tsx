@@ -17,6 +17,7 @@ import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useProductPreloader } from '@/hooks/useProductPreloader';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
+import { ultraFastSearch } from '@/utils/ultraFastSearch';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -109,8 +110,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     return [];
   }, [collectionsConfig]);
 
-  // Preload all collections on mount for instant switching
+  // Preload all collections on mount + warm up ultra-fast search
   useEffect(() => {
+    // Warm up ultra-fast search for instant results
+    ultraFastSearch.warmUpCache().catch(console.error);
+    
     const collectionHandles = tabs.map(tab => tab.handle);
     console.log('🚀 Preloading all collections:', collectionHandles);
     preloadMultipleCollections(collectionHandles);
@@ -259,7 +263,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     updateQuantity(normalizedProductId, normalizedVariantId, newQty, cartItem);
   }, [currentTabProducts, searchProducts, getCartItemQuantity, updateQuantity]);
 
-  // Real-time hierarchical search using SearchOptimizer
+  // Real-time hierarchical search using ultra-fast search
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) {
       setSearchProducts([]);
@@ -272,31 +276,22 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     setIsSearchActive(true);
     
     try {
-      // Get all products for search using instant cache
-      const { data: response, error } = await supabase.functions.invoke('instant-product-cache', {
-        body: { 
-          collection_handle: 'all',
-          force_refresh: false
-        }
+      console.log(`🚀 ULTRA-FAST SEARCH: "${searchQuery}"`);
+      const startTime = performance.now();
+      
+      // Use ultra-fast search for sub-250ms results
+      const result = await ultraFastSearch.searchProducts(searchQuery, {
+        limit: 50
       });
 
-      if (error) throw error;
-
-      const allProducts = response?.products || [];
+      const endTime = performance.now();
+      const duration = endTime - startTime;
       
-      // Use SearchOptimizer for hierarchical search: Product Name > Collection > Category > Product Type
-      const searchIndex = allProducts.length > 0 
-        ? SearchOptimizer.buildSearchIndex(allProducts, 'delivery-search')
-        : [];
-        
-      const results = searchIndex.length > 0
-        ? SearchOptimizer.searchProductsWithHierarchy(searchQuery, searchIndex, 50)
-        : [];
-
-      console.log(`🔍 DELIVERY HIERARCHICAL SEARCH: Found ${results.length} products for "${searchQuery}" (Name > Collection > Category > Type)`);
-      setSearchProducts(results);
+      console.log(`⚡ ULTRA-FAST SEARCH COMPLETED: "${searchQuery}" - ${result.products.length} results in ${duration.toFixed(2)}ms (${result.fromCache ? 'cached' : 'fresh'})`);
+      
+      setSearchProducts(result.products);
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('Ultra-fast search error:', error);
       setSearchProducts([]);
     } finally {
       setIsSearching(false);
