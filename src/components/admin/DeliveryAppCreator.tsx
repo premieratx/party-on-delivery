@@ -337,7 +337,7 @@ export const DeliveryAppCreator = () => {
   };
 
   return (
-    <div className="space-y-6 w-full max-h-[90vh] overflow-y-auto">
+    <div className="space-y-6 w-full">
       <div className="flex justify-between items-center sticky top-0 bg-background/95 backdrop-blur-sm z-10 py-4 border-b">
         <div>
           <h2 className="text-3xl font-bold flex items-center gap-2">

@@ -287,25 +287,29 @@ export default function AdminDashboard() {
 
           {/* Cover Pages */}
           <TabsContent value="cover-pages" className="space-y-4">
-            <CoverPagesAdmin />
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <CoverPagesAdmin />
+            </div>
           </TabsContent>
 
           {/* Delivery Apps */}
           <TabsContent value="delivery-apps" className="space-y-4">
-            <Tabs defaultValue="manager" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="manager">App Manager</TabsTrigger>
-                <TabsTrigger value="creator">App Creator</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="manager">
-                <DeliveryAppManager />
-              </TabsContent>
-              
-              <TabsContent value="creator">
-                <DeliveryAppCreator />
-              </TabsContent>
-            </Tabs>
+            <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <Tabs defaultValue="manager" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="manager">App Manager</TabsTrigger>
+                  <TabsTrigger value="creator">App Creator</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="manager">
+                  <DeliveryAppManager />
+                </TabsContent>
+                
+                <TabsContent value="creator">
+                  <DeliveryAppCreator />
+                </TabsContent>
+              </Tabs>
+            </div>
           </TabsContent>
 
           {/* Orders */}
