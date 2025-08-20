@@ -120,24 +120,15 @@ export const PostCheckoutCreator: React.FC<PostCheckoutCreatorProps> = ({
 
     setSaving(true);
     try {
-      const payload = {
-        title: config.title,
-        subtitle: config.subtitle || '',
-        logo_url: config.logo_url || null,
-        button_1_text: config.buttons[0]?.text || '',
-        button_1_url: config.buttons[0]?.url || '',
-        button_2_text: config.buttons[1]?.text || '',
-        button_2_url: config.buttons[1]?.url || '',
-        background_color: config.background_color,
-        text_color: config.text_color,
-        cover_page_id: config.cover_page_id || null,
-        affiliate_id: config.affiliate_id || null,
-        is_template: config.is_template,
-        styles: JSON.parse(JSON.stringify({
-          theme: config.theme,
-          buttons: config.buttons
-        }))
-      };
+      // Ensure admin context is set before any database operations
+      const { data: authData, error: authError } = await supabase.functions.invoke('verify-admin-google', {
+        body: { email: 'brian@partyondelivery.com' } // TODO: Get from auth context
+      });
+      
+      if (authError || !authData?.isAdmin) {
+        console.error('Admin verification failed:', authError);
+        throw new Error('Admin verification failed');
+      }
 
       // Fix table name and data structure for post_checkout_pages
       const pageData = {
@@ -156,32 +147,46 @@ export const PostCheckoutCreator: React.FC<PostCheckoutCreatorProps> = ({
         is_default: config.is_template || false
       };
 
+      console.log('Saving post-checkout page data:', pageData);
+
       let result;
       if (isEditing && config.id) {
+        console.log('Updating existing post-checkout page:', config.id);
         result = await supabase
           .from('post_checkout_pages')
           .update(pageData)
           .eq('id', config.id);
       } else {
+        console.log('Creating new post-checkout page');
         result = await supabase
           .from('post_checkout_pages')
           .insert(pageData);
       }
 
-      if (result.error) throw result.error;
+      console.log('Database result:', result);
+
+      if (result.error) {
+        console.error('Supabase error details:', {
+          code: result.error.code,
+          message: result.error.message,
+          details: result.error.details,
+          hint: result.error.hint
+        });
+        throw result.error;
+      }
 
       toast({
         title: "Success",
-        description: `Post-checkout screen ${isEditing ? 'updated' : 'created'} successfully`,
+        description: `Post-checkout page ${isEditing ? 'updated' : 'created'} successfully`,
       });
 
       onSaved?.();
 
-    } catch (error) {
-      console.error('Error saving post-checkout screen:', error);
+    } catch (error: any) {
+      console.error('Error saving post-checkout page:', error);
       toast({
-        title: "Error",
-        description: "Failed to save post-checkout screen",
+        title: "Error", 
+        description: `Failed to save post-checkout page: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {

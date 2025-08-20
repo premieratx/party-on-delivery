@@ -144,6 +144,16 @@ export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({
 
     setSaving(true);
     try {
+      // Ensure admin context is set before any database operations
+      const { data: authData, error: authError } = await supabase.functions.invoke('verify-admin-google', {
+        body: { email: 'brian@partyondelivery.com' } // TODO: Get from auth context
+      });
+      
+      if (authError || !authData?.isAdmin) {
+        console.error('Admin verification failed:', authError);
+        throw new Error('Admin verification failed');
+      }
+
       const pageData = {
         slug: config.slug,
         title: config.title,
@@ -159,20 +169,31 @@ export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({
         }))
       };
 
+      console.log('Saving cover page data:', pageData);
+
       let result;
       if (isEditing && config.id) {
+        console.log('Updating existing cover page:', config.id);
         result = await supabase
           .from('cover_pages')
           .update(pageData)
           .eq('id', config.id);
       } else {
+        console.log('Creating new cover page');
         result = await supabase
           .from('cover_pages')
           .insert(pageData);
       }
 
+      console.log('Database result:', result);
+
       if (result.error) {
-        console.error('Supabase error:', result.error);
+        console.error('Supabase error details:', {
+          code: result.error.code,
+          message: result.error.message,
+          details: result.error.details,
+          hint: result.error.hint
+        });
         throw result.error;
       }
 
@@ -183,11 +204,11 @@ export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({
 
       onSaved?.();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving cover page:', error);
       toast({
         title: "Error",
-        description: "Failed to save cover page",
+        description: `Failed to save cover page: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     } finally {

@@ -50,6 +50,20 @@ serve(async (req) => {
     const isAdmin = !!adminUser;
     logStep('Admin check completed', { email, isAdmin });
 
+    // Set admin context for RLS policies if user is admin
+    if (isAdmin) {
+      const { error: contextError } = await supabaseService.rpc('set_admin_context', {
+        admin_email: email
+      });
+      
+      if (contextError) {
+        logStep('Error setting admin context', contextError);
+        // Continue anyway, as this is not critical for verification
+      } else {
+        logStep('Admin context set successfully', { email });
+      }
+    }
+
     return new Response(
       JSON.stringify({
         isAdmin,
