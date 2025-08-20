@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProductCategories } from '@/components/delivery/ProductCategories';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useGlobalCart } from '@/components/common/GlobalCartProvider';
 
 const CustomAppView = () => {
   const { appSlug } = useParams<{ appSlug: string }>();
@@ -11,7 +12,8 @@ const CustomAppView = () => {
   const [appConfig, setAppConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { cartItems } = useUnifiedCart();
+  const { cartItems, addToCart, updateQuantity, getTotalItems } = useUnifiedCart();
+  const { openCart } = useGlobalCart();
 
   useEffect(() => {
     const loadDeliveryApp = async () => {
@@ -67,6 +69,21 @@ const CustomAppView = () => {
     navigate('/checkout');
   };
 
+  const handleAddToCart = (item: any) => {
+    console.log('🛒 Adding to cart from custom app:', item);
+    addToCart(item);
+  };
+
+  const handleUpdateQuantity = (id: string, variant: string | undefined, quantity: number) => {
+    console.log('🛒 Updating quantity in custom app:', { id, variant, quantity });
+    updateQuantity(id, variant, quantity);
+  };
+
+  const handleOpenCart = () => {
+    console.log('🛒 Opening cart from custom app');
+    openCart();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -114,7 +131,12 @@ const CustomAppView = () => {
       heroScrollingText={appConfig.main_app_config?.hero_scrolling_text || "Let's Celebrate"}
       logoUrl={appConfig.logo_url}
       collectionsConfig={appConfig.collections_config}
-      cartItemCount={cartItems.length}
+      cartItemCount={getTotalItems()}
+      cartItems={cartItems}
+      onAddToCart={handleAddToCart}
+      onUpdateQuantity={handleUpdateQuantity}
+      onOpenCart={handleOpenCart}
+      onProceedToCheckout={handleCheckout}
       customSiteSlug={appSlug}
       maxProducts={50}
       forceRefresh={true}
