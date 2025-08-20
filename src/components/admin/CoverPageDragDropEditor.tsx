@@ -421,64 +421,89 @@ export const CoverPageDragDropEditor: React.FC = () => {
   );
 
   const addComponent = useCallback((templateKey: keyof typeof COMPONENT_TEMPLATES) => {
-    const template = COMPONENT_TEMPLATES[templateKey];
     const baseProps = {
       id: `component-${Date.now()}`,
       position: { x: 0, y: 0 }
     };
     
-    let newComponent: ComponentType;
-    
     switch (templateKey) {
-      case 'text':
-        newComponent = {
+      case 'text': {
+        const newComponent: TextComponent = {
           ...baseProps,
-          type: 'text' as const,
+          type: 'text',
           content: COMPONENT_TEMPLATES.text.content,
           size: COMPONENT_TEMPLATES.text.size,
           style: COMPONENT_TEMPLATES.text.style
         };
+        setComponents(prev => [...prev, newComponent]);
+        setSelectedComponent(newComponent.id);
         break;
-      case 'heading':
-        newComponent = {
+      }
+      case 'heading': {
+        const newComponent: TextComponent = {
           ...baseProps,
-          type: 'text' as const,
+          type: 'text',
           content: COMPONENT_TEMPLATES.heading.content,
           size: COMPONENT_TEMPLATES.heading.size,
           style: COMPONENT_TEMPLATES.heading.style
         };
+        setComponents(prev => [...prev, newComponent]);
+        setSelectedComponent(newComponent.id);
         break;
-      case 'image':
-        newComponent = {
+      }
+      case 'image': {
+        const newComponent: ImageComponent = {
           ...baseProps,
-          type: 'image' as const,
+          type: 'image',
           content: COMPONENT_TEMPLATES.image.content,
           size: COMPONENT_TEMPLATES.image.size,
           style: COMPONENT_TEMPLATES.image.style
         };
+        setComponents(prev => [...prev, newComponent]);
+        setSelectedComponent(newComponent.id);
         break;
-      case 'button':
-        newComponent = {
+      }
+      case 'button': {
+        const newComponent: ButtonComponent = {
           ...baseProps,
-          type: 'button' as const,
+          type: 'button',
           content: COMPONENT_TEMPLATES.button.content,
           size: COMPONENT_TEMPLATES.button.size,
           style: COMPONENT_TEMPLATES.button.style
         };
+        setComponents(prev => [...prev, newComponent]);
+        setSelectedComponent(newComponent.id);
         break;
+      }
       default:
         return;
     }
     
-    setComponents(prev => [...prev, newComponent]);
-    setSelectedComponent(newComponent.id);
     toast.success('Component added');
   }, []);
 
   const updateComponent = useCallback((id: string, updates: Partial<ComponentType>) => {
-    setComponents(prev => prev.map(comp => 
-      comp.id === id ? { ...comp, ...updates } : comp
-    ));
+    setComponents(prev => prev.map(comp => {
+      if (comp.id !== id) return comp;
+      
+      // Type-safe component update
+      switch (comp.type) {
+        case 'text': {
+          const textUpdates = updates as Partial<TextComponent>;
+          return { ...comp, ...textUpdates } as TextComponent;
+        }
+        case 'image': {
+          const imageUpdates = updates as Partial<ImageComponent>;
+          return { ...comp, ...imageUpdates } as ImageComponent;
+        }
+        case 'button': {
+          const buttonUpdates = updates as Partial<ButtonComponent>;
+          return { ...comp, ...buttonUpdates } as ButtonComponent;
+        }
+        default:
+          return comp;
+      }
+    }));
   }, []);
 
   const deleteComponent = useCallback((id: string) => {
