@@ -198,7 +198,7 @@ export interface CoverButtonConfig {
   };
   offset_y?: number;
   spacing_below?: number;
-  style?: 'filled' | 'outline';
+  style: 'filled' | 'outline';
 }
 
 export interface CoverPageConfig {
@@ -294,6 +294,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
   ]);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
+  const [templateData, setTemplateData] = useState<any>(null);
 
   // Element positions for drag mode
   const [elementPositions, setElementPositions] = useState<DraggableElement[]>([
@@ -885,7 +886,12 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 
                 if (templateData) {
                   // Set theme
-                  setSelectedTheme(template.theme || 'gold');
+                  const themeKey = template.theme as keyof typeof COVER_THEMES;
+                  if (themeKey && COVER_THEMES[themeKey]) {
+                    setSelectedTheme(themeKey);
+                  } else {
+                    setSelectedTheme('gold');
+                  }
                   
                   // Apply content from template elements
                   const elements = templateData.elements || [];
@@ -1378,7 +1384,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   bgImageUrl={bgImageUrl}
                   bgVideoUrl={bgVideoUrl}
                   checklist={checklist}
-                  buttons={buttons}
+                  buttons={buttons.map(btn => ({ ...btn, style: btn.style || 'filled' as const }))}
                   selectedTheme={selectedTheme}
                   activeDevice={activeDevice}
                   dragMode={dragMode}
