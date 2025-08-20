@@ -24,7 +24,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-import { ImprovedCoverPageCreator } from './CoverPageCreator';
+import { CoverPageCreator } from './CoverPageCreator';
 import { EnhancedPostCheckoutManager } from './EnhancedPostCheckoutManager';
 import { DeliveryAppCreator } from './DeliveryAppCreator';
 
@@ -91,7 +91,7 @@ export const AdminDashboardImproved: React.FC<AdminDashboardImprovedProps> = ({ 
 
   if (showPageCreator) {
     return (
-      <ImprovedCoverPageCreator
+      <CoverPageCreator
         open={showPageCreator}
         onOpenChange={setShowPageCreator}
         initial={editingPage}

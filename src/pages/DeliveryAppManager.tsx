@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { DeliveryAppNavigation } from '@/components/navigation/DeliveryAppNavigation';
 import { ForceProductSync } from '@/components/emergency/ForceProductSync';
 import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
+import { CustomerFlowConnector } from '@/components/admin/CustomerFlowConnector';
 import { Button } from '@/components/ui/button';
 
 const DeliveryAppManager = () => {
@@ -46,6 +47,11 @@ const DeliveryAppManager = () => {
         <div className="bg-card border rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Product Sync Management</h2>
           <ForceProductSync />
+        </div>
+
+        {/* Customer Flow Connector */}
+        <div className="bg-card border rounded-lg p-6">
+          <CustomerFlowConnector />
         </div>
 
         {/* Navigation Section */}
