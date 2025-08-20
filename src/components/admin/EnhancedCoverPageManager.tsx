@@ -1,26 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Label } from '@/components/ui/label';
 import { 
   Plus, 
   Edit, 
   Trash2, 
   Eye, 
   Star, 
-  Copy, 
-  Save,
+  Copy,
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { UnifiedCoverPageEditor, type CoverPageConfig } from './UnifiedCoverPageEditor';
 
 interface CoverPage {
   id: string;
@@ -41,34 +37,13 @@ interface CoverPage {
   affiliate_slug?: string;
 }
 
-interface CoverPageFormData {
-  title: string;
-  subtitle: string;
-  slug: string;
-  bg_image_url: string;
-  bg_video_url: string;
-  logo_url: string;
-  logo_height: number;
-  is_active: boolean;
-  is_default_homepage: boolean;
-}
+// CoverPageFormData interface removed - now using CoverPageConfig from UnifiedCoverPageEditor
 
 export const EnhancedCoverPageManager: React.FC = () => {
   const [coverPages, setCoverPages] = useState<CoverPage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingPage, setEditingPage] = useState<CoverPage | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState<CoverPageFormData>({
-    title: '',
-    subtitle: '',
-    slug: '',
-    bg_image_url: '',
-    bg_video_url: '',
-    logo_url: '',
-    logo_height: 60,
-    is_active: true,
-    is_default_homepage: false
-  });
+  const [editingPage, setEditingPage] = useState<CoverPageConfig | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
 
   const loadCoverPages = useCallback(async () => {
     try {
@@ -92,91 +67,37 @@ export const EnhancedCoverPageManager: React.FC = () => {
     loadCoverPages();
   }, [loadCoverPages]);
 
-  const handleCreate = async () => {
-    if (!formData.title.trim()) {
-      toast.error('Please enter a title');
-      return;
-    }
-
-    if (!formData.slug.trim()) {
-      setFormData(prev => ({ ...prev, slug: formData.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') }));
-    }
-
-    try {
-      setLoading(true);
-      
-      // If this is the first cover page, make it default
-      const isFirstPage = coverPages.length === 0;
-      const pageData = {
-        ...formData,
-        is_default_homepage: isFirstPage || formData.is_default_homepage,
-        buttons: [],
-        checklist: [],
-        styles: {}
-      };
-
-      const { data, error } = await supabase
-        .from('cover_pages')
-        .insert([pageData])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast.success(`Cover page created successfully${isFirstPage ? ' and set as default homepage' : ''}`);
-      setShowCreateForm(false);
-      setFormData({
-        title: '',
-        subtitle: '',
-        slug: '',
-        bg_image_url: '',
-        bg_video_url: '',
-        logo_url: '',
-        logo_height: 60,
-        is_active: true,
-        is_default_homepage: false
-      });
-      loadCoverPages();
-    } catch (error) {
-      console.error('Error creating cover page:', error);
-      toast.error('Failed to create cover page');
-    } finally {
-      setLoading(false);
-    }
+  const handleCreateNew = () => {
+    setEditingPage(null);
+    setShowEditor(true);
   };
 
-  const handleUpdate = async () => {
-    if (!editingPage) return;
+  const handleEdit = (page: CoverPage) => {
+    // Convert CoverPage to CoverPageConfig format for the editor
+    const coverPageConfig: CoverPageConfig = {
+      id: page.id,
+      slug: page.slug,
+      title: page.title,
+      subtitle: page.subtitle || '',
+      logo_url: page.logo_url || '',
+      logo_height: page.logo_height || 160,
+      bg_image_url: page.bg_image_url || '',
+      bg_video_url: page.bg_video_url || '',
+      checklist: Array.isArray(page.checklist) ? page.checklist : [],
+      buttons: Array.isArray(page.buttons) ? page.buttons : [],
+      is_active: page.is_active,
+      is_default_homepage: page.is_default_homepage,
+      styles: page.styles || {}
+    };
+    
+    setEditingPage(coverPageConfig);
+    setShowEditor(true);
+  };
 
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from('cover_pages')
-        .update({
-          title: formData.title,
-          subtitle: formData.subtitle,
-          slug: formData.slug,
-          bg_image_url: formData.bg_image_url,
-          bg_video_url: formData.bg_video_url,
-          logo_url: formData.logo_url,
-          logo_height: formData.logo_height,
-          is_active: formData.is_active,
-          is_default_homepage: formData.is_default_homepage,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', editingPage.id);
-
-      if (error) throw error;
-
-      toast.success('Cover page updated successfully');
-      setEditingPage(null);
-      loadCoverPages();
-    } catch (error) {
-      console.error('Error updating cover page:', error);
-      toast.error('Failed to update cover page');
-    } finally {
-      setLoading(false);
-    }
+  const handleEditorSave = () => {
+    setShowEditor(false);
+    setEditingPage(null);
+    loadCoverPages();
   };
 
   const handleDelete = async (page: CoverPage) => {
@@ -283,36 +204,7 @@ export const EnhancedCoverPageManager: React.FC = () => {
     }
   };
 
-  const startEdit = (page: CoverPage) => {
-    setEditingPage(page);
-    setFormData({
-      title: page.title,
-      subtitle: page.subtitle || '',
-      slug: page.slug,
-      bg_image_url: page.bg_image_url || '',
-      bg_video_url: page.bg_video_url || '',
-      logo_url: page.logo_url || '',
-      logo_height: page.logo_height || 60,
-      is_active: page.is_active,
-      is_default_homepage: page.is_default_homepage
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingPage(null);
-    setShowCreateForm(false);
-    setFormData({
-      title: '',
-      subtitle: '',
-      slug: '',
-      bg_image_url: '',
-      bg_video_url: '',
-      logo_url: '',
-      logo_height: 60,
-      is_active: true,
-      is_default_homepage: false
-    });
-  };
+  // startEdit and cancelEdit removed - handled by handleEdit and handleEditorSave
 
   const defaultPage = coverPages.find(page => page.is_default_homepage);
   const hasCoverPages = coverPages.length > 0;
@@ -328,9 +220,9 @@ export const EnhancedCoverPageManager: React.FC = () => {
           </p>
         </div>
         <Button 
-          onClick={() => setShowCreateForm(true)}
+          onClick={handleCreateNew}
           className="gap-2"
-          disabled={showCreateForm || editingPage !== null}
+          disabled={showEditor}
         >
           <Plus className="h-4 w-4" />
           Create Cover Page
@@ -375,106 +267,14 @@ export const EnhancedCoverPageManager: React.FC = () => {
         </Card>
       )}
 
-      {/* Create/Edit Form */}
-      {(showCreateForm || editingPage) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {editingPage ? `Edit Cover Page: ${editingPage.title}` : 'Create New Cover Page'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter cover page title"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="slug">URL Slug</Label>
-                <Input
-                  id="slug"
-                  value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                  placeholder="auto-generated"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subtitle">Subtitle</Label>
-              <Textarea
-                id="subtitle"
-                value={formData.subtitle}
-                onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-                placeholder="Enter subtitle (optional)"
-                rows={2}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bg_image">Background Image URL</Label>
-                <Input
-                  id="bg_image"
-                  value={formData.bg_image_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, bg_image_url: e.target.value }))}
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="logo_url">Logo URL</Label>
-                <Input
-                  id="logo_url"
-                  value={formData.logo_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
-                  placeholder="https://example.com/logo.png"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
-                />
-                <Label htmlFor="is_active">Active</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_default"
-                  checked={formData.is_default_homepage}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_default_homepage: checked }))}
-                />
-                <Label htmlFor="is_default">Set as Default Homepage</Label>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button 
-                onClick={editingPage ? handleUpdate : handleCreate}
-                disabled={loading}
-                className="gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {editingPage ? 'Update' : 'Create'}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={cancelEdit}
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Unified Cover Page Editor */}
+      {showEditor && (
+        <UnifiedCoverPageEditor
+          open={showEditor}
+          onOpenChange={setShowEditor}
+          initial={editingPage}
+          onSaved={handleEditorSave}
+        />
       )}
 
       {/* Cover Pages List */}
@@ -491,7 +291,7 @@ export const EnhancedCoverPageManager: React.FC = () => {
           ) : coverPages.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">No cover pages created yet</p>
-              <Button onClick={() => setShowCreateForm(true)} className="gap-2">
+              <Button onClick={handleCreateNew} className="gap-2">
                 <Plus className="h-4 w-4" />
                 Create Your First Cover Page
               </Button>
@@ -535,8 +335,8 @@ export const EnhancedCoverPageManager: React.FC = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => startEdit(page)}
-                            disabled={loading || editingPage !== null || showCreateForm}
+                            onClick={() => handleEdit(page)}
+                            disabled={loading || showEditor}
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
