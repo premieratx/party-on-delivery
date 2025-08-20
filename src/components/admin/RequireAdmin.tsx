@@ -35,13 +35,16 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
           return;
         }
 
-        // Verify admin via secure DB function
-        const { data: isAdmin, error } = await supabase.rpc('is_admin_user');
+        // Verify admin via edge function (same as AdminLogin)
+        const { data, error } = await supabase.functions.invoke('verify-admin-google', {
+          body: { email: session.user.email }
+        });
+        
         if (error) {
-          console.error('is_admin_user error:', error);
+          console.error('verify-admin-google error:', error);
         }
 
-        if (isAdmin) {
+        if (data?.isAdmin) {
           setAllowed(true);
         } else {
           await supabase.auth.signOut();
