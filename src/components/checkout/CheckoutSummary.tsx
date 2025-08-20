@@ -2,6 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Minus, Plus, Trash2 } from 'lucide-react';
 import { CartItem } from '../DeliveryWidget';
 
 interface CheckoutSummaryProps {
@@ -15,6 +17,7 @@ interface CheckoutSummaryProps {
     type: 'percentage' | 'free_shipping';
     value: number;
   } | null;
+  onUpdateQuantity?: (id: string, variant: string | undefined, quantity: number) => void;
 }
 
 export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
@@ -23,7 +26,8 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
   deliveryFee,
   salesTax,
   tipAmount,
-  appliedDiscount
+  appliedDiscount,
+  onUpdateQuantity
 }) => {
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
@@ -54,12 +58,41 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
                 <h4 className="font-medium text-sm line-clamp-1">
                   {item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz')}
                 </h4>
+                {item.variant && (
+                  <p className="text-xs text-muted-foreground">{item.variant}</p>
+                )}
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>Qty: {item.quantity}</span>
-                  <span>•</span>
                   <span>${applyMarkup(item.price).toFixed(2)} each</span>
                 </div>
               </div>
+              
+              {/* Quantity Controls */}
+              {onUpdateQuantity ? (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
+                  >
+                    {item.quantity === 1 ? <Trash2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                  </Button>
+                  <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">
+                  Qty: {item.quantity}
+                </div>
+              )}
+              
               <div className="text-sm font-medium">
                 ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
               </div>

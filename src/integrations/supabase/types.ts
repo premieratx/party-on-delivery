@@ -2377,6 +2377,39 @@ export type Database = {
         }
         Relationships: []
       }
+      post_checkout_pages: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       post_checkout_screens: {
         Row: {
           affiliate_id: string | null

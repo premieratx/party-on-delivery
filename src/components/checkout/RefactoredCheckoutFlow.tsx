@@ -14,6 +14,7 @@ import { AddressStep } from './AddressStep';
 import { CustomerInfoStep } from './CustomerInfoStep';
 import { CheckoutSummary } from './CheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
+import { PromoCodeInput } from './PromoCodeInput';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -96,6 +97,13 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const [tipAmount, setTipAmount] = useState(calculatedSubtotal * 0.10); // Default 10%
 
   const finalTotal = discountedSubtotal + finalDeliveryFee + calculatedSalesTax + tipAmount;
+
+  // Discount management
+  const handleDiscountApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
+    if (onDiscountChange) {
+      onDiscountChange(discount);
+    }
+  };
 
   // Step confirmation handlers
   const handleDateTimeConfirm = () => {
@@ -260,7 +268,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           </div>
 
           {/* Right Column - Order Summary */}
-          <div>
+          <div className="space-y-4">
             <CheckoutSummary
               cartItems={cartItems}
               subtotal={calculatedSubtotal}
@@ -268,6 +276,14 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               salesTax={calculatedSalesTax}
               tipAmount={tipAmount}
               appliedDiscount={appliedDiscount}
+              onUpdateQuantity={onUpdateQuantity}
+            />
+            
+            {/* Promo Code Input */}
+            <PromoCodeInput
+              appliedDiscount={appliedDiscount}
+              onDiscountApplied={handleDiscountApplied}
+              cartSubtotal={calculatedSubtotal}
             />
           </div>
         </div>
