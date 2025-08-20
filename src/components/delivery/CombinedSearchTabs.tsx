@@ -90,7 +90,7 @@ export const CombinedSearchTabs = ({
                   className="whitespace-nowrap px-4 py-2 h-10 min-w-fit flex-shrink-0 transition-all duration-200"
                   onClick={() => onTabSelect(index)}
                 >
-                  {tab.icon && <span className="mr-2">{tab.icon}</span>}
+                  <span className="mr-2 text-lg">{tab.icon || '📦'}</span>
                   <span>{tab.title}</span>
                 </Button>
               ))}
@@ -162,7 +162,7 @@ export const CombinedSearchTabs = ({
         {/* First Row - Tabs and Search Icon */}
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
-            {/* Tabs */}
+            {/* Tabs - Icon only on mobile */}
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
               {tabs.map((tab, index) => (
                 <Button
@@ -170,9 +170,9 @@ export const CombinedSearchTabs = ({
                   variant={selectedCategory === index ? "default" : "ghost"}
                   className="whitespace-nowrap text-xs px-2 py-1 h-8 min-w-fit flex-shrink-0 transition-all duration-200"
                   onClick={() => onTabSelect(index)}
+                  title={tab.title}
                 >
-                  {tab.icon && <span className="mr-1 text-xs">{tab.icon}</span>}
-                  <span className="text-xs">{tab.title}</span>
+                  <span className="text-sm">{tab.icon || '📦'}</span>
                 </Button>
               ))}
             </div>

@@ -97,13 +97,30 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const tabs = useMemo(() => {
     if (collectionsConfig?.tabs && collectionsConfig.tabs.length > 0) {
       console.log('📋 Loading delivery app tabs with Shopify collections:', collectionsConfig.tabs);
-      return collectionsConfig.tabs.map((tab, index) => ({
-        id: tab.collection_handle || `tab-${index}`,
-        title: tab.name || `Tab ${index + 1}`,
-        handle: tab.collection_handle,
-        icon: tab.icon || '📦',
-        isSearch: false
-      }));
+      return collectionsConfig.tabs.map((tab, index) => {
+        // Auto-assign relevant icons based on tab name if not provided
+        let tabIcon = tab.icon;
+        if (!tabIcon) {
+          const name = tab.name?.toLowerCase() || '';
+          if (name.includes('cocktail') || name.includes('drink') || name.includes('beverage')) tabIcon = '🍹';
+          else if (name.includes('beer') || name.includes('ale') || name.includes('lager')) tabIcon = '🍺';
+          else if (name.includes('wine') || name.includes('champagne')) tabIcon = '🍷';
+          else if (name.includes('spirit') || name.includes('whiskey') || name.includes('vodka') || name.includes('rum')) tabIcon = '🥃';
+          else if (name.includes('snack') || name.includes('food')) tabIcon = '🍿';
+          else if (name.includes('ice') || name.includes('frozen')) tabIcon = '🧊';
+          else if (name.includes('mixer') || name.includes('soda')) tabIcon = '🥤';
+          else if (name.includes('party') || name.includes('celebration')) tabIcon = '🎉';
+          else tabIcon = '📦';
+        }
+        
+        return {
+          id: tab.collection_handle || `tab-${index}`,
+          title: tab.name || `Tab ${index + 1}`,
+          handle: tab.collection_handle,
+          icon: tabIcon,
+          isSearch: false
+        };
+      });
     }
     
     console.log('❌ No delivery app configuration found - cannot load tabs');
@@ -394,7 +411,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         {isSearchActive && searchQuery && searchProducts.length > 0 ? (
           <>
             <h3 className="text-lg font-semibold mb-4">Search Results ({searchProducts.length})</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+            <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
               {searchProducts.map((product) => {
                 const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
                 const { cleanTitle, packageSize } = parseProductTitle(product.title);
@@ -505,7 +522,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+          <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             {displayProducts.map((product) => {
               const quantity = getCartItemQuantity(product.id, product.variants?.[0]?.id);
               const { cleanTitle, packageSize } = parseProductTitle(product.title);
