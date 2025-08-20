@@ -290,14 +290,14 @@ export default function AdminDashboard() {
           {/* Cover Pages */}
           <TabsContent value="cover-pages" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <CoverPagesAdmin />
+              <CoverPageCreator />
             </div>
           </TabsContent>
 
           {/* Post-Checkout Creator */}
           <TabsContent value="post-checkout" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <EnhancedPostCheckoutCreator />
+              <SimplePostCheckoutCreator />
             </div>
           </TabsContent>
 
