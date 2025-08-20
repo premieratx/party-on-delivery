@@ -591,6 +591,18 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         <div className="mt-16 mb-8 bg-muted/20 rounded-lg p-6">
           <OccasionButtons isMobile={window.innerWidth <= 768} isScrollingDown={false} />
         </div>
+
+        {/* Admin Dashboard Link */}
+        <div className="mt-8 text-center">
+          <Button 
+            onClick={() => navigate('/admin')}
+            variant="outline"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Admin Dashboard
+          </Button>
+        </div>
       </div>
 
       {/* Product Lightbox */}
