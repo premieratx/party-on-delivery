@@ -77,8 +77,8 @@ const DELIVERY_THEMES = {
 
 const DEVICE_CONFIGS = {
   mobile: { name: 'Mobile', width: 375, height: 667, className: 'w-[375px] h-[667px]' },
-  tablet: { name: 'Tablet', width: 768, height: 1024, className: 'w-[384px] h-[512px]' },
-  desktop: { name: 'Desktop', width: 1200, height: 800, className: 'w-[600px] h-[400px]' }
+  tablet: { name: 'Tablet', width: 768, height: 1024, className: 'w-[450px] h-[600px]' },
+  desktop: { name: 'Desktop', width: 1200, height: 800, className: 'w-[750px] h-[500px]' }
 };
 
 interface DeliveryAppConfig {
@@ -229,7 +229,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
         main_app_config: {
           hero_heading: heroHeading,
           hero_subheading: heroSubheading,
-          
+          logo_url: logoUrl
         },
         start_screen_config: {
           enabled: false,
@@ -311,24 +311,37 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
 
         {/* Preview Frame */}
         <div 
-          className={`${device.className} border-2 border-gray-300 rounded-lg overflow-hidden shadow-lg bg-white relative`}
+          className={`${device.className} border-2 border-gray-300 rounded-lg overflow-y-auto shadow-lg bg-white relative max-h-[80vh]`}
           style={{ background: theme.colors.background }}
         >
           {/* App Header */}
-          <div className="p-4 text-center" style={{ color: theme.colors.text }}>
+          <div className="p-4 text-center relative" style={{ color: theme.colors.text }}>
             {logoUrl && (
-              <img 
-                src={logoUrl} 
-                alt="Logo" 
-                className="w-16 h-16 mx-auto mb-4 object-contain rounded-lg"
-              />
+              <Draggable bounds="parent" defaultPosition={{ x: 0, y: 0 }}>
+                <div className="absolute cursor-move">
+                  <img 
+                    src={logoUrl} 
+                    alt="Logo" 
+                    className="w-16 h-16 object-contain rounded-lg resize-handle"
+                    style={{ 
+                      resize: 'both',
+                      minWidth: '32px',
+                      minHeight: '32px',
+                      maxWidth: '128px',
+                      maxHeight: '128px'
+                    }}
+                  />
+                </div>
+              </Draggable>
             )}
-            <h1 className="text-xl font-bold mb-2" style={{ color: theme.colors.primary }}>
-              {heroHeading || 'Welcome to Our Store'}
-            </h1>
-            <p className="text-sm opacity-80">
-              {heroSubheading || 'Premium delivery service'}
-            </p>
+            <div className={logoUrl ? 'mt-20' : ''}>
+              <h1 className="text-xl font-bold mb-2" style={{ color: theme.colors.primary }}>
+                {heroHeading || 'Welcome to Our Store'}
+              </h1>
+              <p className="text-sm opacity-80">
+                {heroSubheading || 'Premium delivery service'}
+              </p>
+            </div>
           </div>
 
           {/* Category Tabs Preview */}
@@ -369,7 +382,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full h-[95vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
         <div className="h-full flex flex-col">
           {/* Header */}
           <DialogHeader className="p-4 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
@@ -402,8 +415,8 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
           {/* Main Content */}
           <div className="flex-1 flex overflow-hidden">
             {/* Editor Panel */}
-            <div className="w-96 border-r flex-shrink-0 overflow-hidden">
-              <ScrollArea className="h-full p-4">
+            <div className="w-[400px] border-r flex-shrink-0 overflow-y-auto">
+              <div className="p-4">
                 <Tabs defaultValue="content" className="space-y-4">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="content">Content</TabsTrigger>
@@ -573,7 +586,7 @@ export const UnifiedDeliveryAppEditor: React.FC<UnifiedDeliveryAppEditorProps> =
                     </div>
                   </TabsContent>
                 </Tabs>
-              </ScrollArea>
+              </div>
             </div>
 
             {/* Preview Panel */}

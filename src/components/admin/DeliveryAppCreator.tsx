@@ -336,7 +336,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
         <div className="h-full flex flex-col">
           {/* Header */}
           <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
@@ -372,27 +372,27 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
           </DialogHeader>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
             <Tabs defaultValue="basic" className="h-full flex flex-col">
-              <div className="px-6 pt-4 border-b">
-                <TabsList className="grid w-full grid-cols-3 max-w-md">
-                  <TabsTrigger value="basic" className="flex items-center gap-2">
-                    <Settings className="w-4 h-4" />
-                    Basic Info
-                  </TabsTrigger>
-                  <TabsTrigger value="tabs" className="flex items-center gap-2">
-                    <Layout className="w-4 h-4" />
-                    Tabs & Collections
-                  </TabsTrigger>
-                  <TabsTrigger value="preview" className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    Preview
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+                <div className="px-6 pt-4 border-b">
+                  <TabsList className="grid w-full grid-cols-3 max-w-md">
+                    <TabsTrigger value="basic" className="flex items-center gap-2">
+                      <Settings className="w-4 h-4" />
+                      Basic Info
+                    </TabsTrigger>
+                    <TabsTrigger value="tabs" className="flex items-center gap-2">
+                      <Layout className="w-4 h-4" />
+                      Tabs & Collections
+                    </TabsTrigger>
+                    <TabsTrigger value="preview" className="flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      Preview
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
 
               {/* Basic Info Tab */}
-              <TabsContent value="basic" className="flex-1 p-6 overflow-y-auto">
+              <TabsContent value="basic" className="flex-1 p-6">
                 <div className="max-w-2xl mx-auto space-y-6">
                   <Card>
                     <CardHeader>
@@ -485,7 +485,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
               </TabsContent>
 
               {/* Tabs & Collections */}
-              <TabsContent value="tabs" className="flex-1 p-6 overflow-y-auto">
+              <TabsContent value="tabs" className="flex-1 p-6">
                 <div className="max-w-4xl mx-auto space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
