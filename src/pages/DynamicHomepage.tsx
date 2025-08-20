@@ -23,7 +23,6 @@ interface HomepageDeliveryApp {
   main_app_config?: {
     hero_heading?: string;
     hero_subheading?: string;
-    hero_scrolling_text?: string;
   };
   logo_url?: string;
 }
@@ -142,7 +141,6 @@ export default function DynamicHomepage() {
       appName={homepageApp.app_name}
       heroHeading={homepageApp.main_app_config?.hero_heading || homepageApp.app_name}
       heroSubheading={homepageApp.main_app_config?.hero_subheading || 'Premium delivery service'}
-      heroScrollingText={homepageApp.main_app_config?.hero_scrolling_text || 'Fast & Reliable'}
       logoUrl={homepageApp.logo_url}
       collectionsConfig={homepageApp.collections_config}
       onAddToCart={handleAddToCart}

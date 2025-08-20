@@ -128,7 +128,6 @@ const CustomAppView = () => {
       appName={appConfig.app_name}
       heroHeading={appConfig.main_app_config?.hero_heading || appConfig.app_name}
       heroSubheading={appConfig.main_app_config?.hero_subheading || "Premium Curated Experience"}
-      heroScrollingText={appConfig.main_app_config?.hero_scrolling_text || "Let's Celebrate"}
       logoUrl={appConfig.logo_url}
       collectionsConfig={appConfig.collections_config}
       cartItemCount={getTotalItems()}

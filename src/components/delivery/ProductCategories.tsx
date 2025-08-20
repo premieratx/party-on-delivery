@@ -24,7 +24,6 @@ interface ProductCategoriesProps {
   appName?: string;
   heroHeading?: string;
   heroSubheading?: string;
-  heroScrollingText?: string;
   logoUrl?: string;
   collectionsConfig?: {
     tab_count: number;
@@ -57,7 +56,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   appName = "Austin's Premier Party Supply Delivery",
   heroHeading = "Austin's Premier Party Supply Delivery",
   heroSubheading = "Satisfaction Guaranteed, On-Time Delivery",
-  heroScrollingText = "Let's Get It",
   logoUrl,
   collectionsConfig,
   onAddToCart,

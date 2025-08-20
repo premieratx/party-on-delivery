@@ -5,7 +5,6 @@ interface CustomDeliveryTabsPageProps {
   appName: string;
   heroHeading?: string;
   heroSubheading?: string;
-  heroScrollingText?: string;
   logoUrl?: string;
   collectionsConfig: {
     tab_count: number;
@@ -42,7 +41,6 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
   onProceedToCheckout,
   onBack,
   onGoHome,
-  heroScrollingText,
 }) => {
   // Use the exact same ProductCategories component as the main delivery app
   // This ensures identical layout, styling, and functionality
@@ -51,7 +49,6 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
       appName={appName}
       heroHeading={heroHeading}
       heroSubheading={heroSubheading}
-      heroScrollingText={heroScrollingText}
       logoUrl={logoUrl}
       collectionsConfig={collectionsConfig}
       onAddToCart={onAddToCart}
