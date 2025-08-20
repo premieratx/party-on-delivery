@@ -26,6 +26,7 @@ import {
   Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import '@/styles/cover-animations.css';
 
 // Device configurations
@@ -247,6 +248,7 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
   const [previewMode, setPreviewMode] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
@@ -316,10 +318,61 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
     toast.info('Reset to default settings');
   };
 
-  const saveAllSettings = () => {
-    localStorage.setItem('cover-page-settings', JSON.stringify(deviceSettings));
-    onSave?.(deviceSettings);
-    toast.success('Cover page settings saved for all devices!');
+  const saveAllSettings = async () => {
+    setIsSaving(true);
+    try {
+      // Generate a slug for the cover page
+      const slug = `cover-${Date.now()}`;
+      
+      // Save to database
+      const { data, error } = await supabase
+        .from('cover_pages')
+        .insert({
+          slug,
+          title: currentSettings.title,
+          subtitle: currentSettings.subtitle,
+          logo_url: currentSettings.logoUrl,
+          bg_image_url: currentSettings.backgroundType === 'image' ? currentSettings.backgroundValue : null,
+          bg_video_url: currentSettings.backgroundType === 'video' ? currentSettings.backgroundValue : null,
+          styles: {
+            backgroundType: currentSettings.backgroundType,
+            backgroundValue: currentSettings.backgroundValue,
+            titleStyle: currentSettings.titleStyle,
+            subtitleStyle: currentSettings.subtitleStyle,
+            buttonStyle: currentSettings.buttonStyle,
+            layout: currentSettings.layout,
+            opacity: currentSettings.opacity,
+            animations: currentSettings.animations
+          },
+          buttons: [
+            {
+              text: currentSettings.primaryButtonText,
+              url: currentSettings.primaryButtonUrl,
+              type: 'primary'
+            },
+            {
+              text: currentSettings.secondaryButtonText,
+              url: currentSettings.secondaryButtonUrl,
+              type: 'secondary'
+            }
+          ],
+          checklist: []
+        });
+
+      if (error) throw error;
+
+      // Also save to localStorage as backup
+      localStorage.setItem('cover-page-settings', JSON.stringify(deviceSettings));
+      
+      onSave?.(deviceSettings);
+      toast.success('Cover page saved successfully!');
+      
+    } catch (error) {
+      console.error('Error saving cover page:', error);
+      toast.error('Failed to save cover page. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const triggerPreviewAnimation = () => {
@@ -470,444 +523,444 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
-      <div className="min-h-full flex items-center justify-center p-2 md:p-4">
-        <div className="bg-background rounded-lg shadow-xl w-full max-w-7xl min-h-[95vh] flex flex-col my-4">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 md:p-6 border-b flex-shrink-0">
-            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-              <Layout className="w-5 h-5 md:w-6 md:h-6" />
-              Cover Page Creator
-            </h2>
-            <Button variant="ghost" onClick={onClose} className="text-lg">
-              ×
-            </Button>
-          </div>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-background rounded-lg shadow-xl w-full max-w-7xl max-h-[95vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 md:p-6 border-b flex-shrink-0">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+            <Layout className="w-5 h-5 md:w-6 md:h-6" />
+            Cover Page Creator
+          </h2>
+          <Button variant="ghost" onClick={onClose} className="text-lg">
+            ×
+          </Button>
+        </div>
 
-          <div className="flex flex-1 min-h-0">
-            {/* Settings Panel - Scrollable */}
-            <div className="w-72 md:w-80 border-r flex flex-col bg-muted/20 flex-shrink-0">
-              <div className="flex-1 overflow-y-auto">
-                <div className="p-4 md:p-6 space-y-6">
-                  {/* Device Selector */}
-                  <div className="space-y-4">
-                    <Label className="text-sm font-semibold">Device View</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
-                        const IconComponent = device.icon;
-                        return (
-                          <Button
-                            key={key}
-                            variant={activeDevice === key ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
-                            className="flex items-center gap-2 justify-start"
-                          >
-                            <IconComponent className="w-4 h-4" />
-                            <span className="text-xs">{device.name.split(' ')[0]}</span>
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  {/* Templates */}
-                  <div className="space-y-4">
-                    <Label className="text-sm font-semibold">Quick Templates</Label>
-                    <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                      {Object.entries(COVER_TEMPLATES).map(([key, template]) => (
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          {/* Settings Panel - Scrollable */}
+          <div className="w-72 md:w-80 border-r flex flex-col bg-muted/20 flex-shrink-0">
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 md:p-6 space-y-6">
+                {/* Device Selector */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-semibold">Device View</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
+                      const IconComponent = device.icon;
+                      return (
                         <Button
                           key={key}
-                          variant="outline"
+                          variant={activeDevice === key ? "default" : "outline"}
                           size="sm"
-                          onClick={() => applyTemplate(key as keyof typeof COVER_TEMPLATES)}
-                          className="text-xs h-8 justify-start"
+                          onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
+                          className="flex items-center gap-2 justify-start"
                         >
-                          {template.name}
+                          <IconComponent className="w-4 h-4" />
+                          <span className="text-xs">{device.name.split(' ')[0]}</span>
                         </Button>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-
-                  <Separator />
-
-                  {/* Settings Tabs */}
-                  <Tabs defaultValue="content" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 h-8">
-                      <TabsTrigger value="content" className="text-xs">Content</TabsTrigger>
-                      <TabsTrigger value="design" className="text-xs">Design</TabsTrigger>
-                      <TabsTrigger value="background" className="text-xs">Background</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="content" className="space-y-4 mt-4">
-                      <div>
-                        <Label className="text-xs">Title</Label>
-                        <Input
-                          value={currentSettings.title}
-                          onChange={(e) => updateCurrentSettings({ title: e.target.value })}
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs">Subtitle</Label>
-                        <Textarea
-                          value={currentSettings.subtitle}
-                          onChange={(e) => updateCurrentSettings({ subtitle: e.target.value })}
-                          rows={2}
-                          className="text-sm"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs">Primary Button</Label>
-                        <Input
-                          value={currentSettings.primaryButtonText}
-                          onChange={(e) => updateCurrentSettings({ primaryButtonText: e.target.value })}
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                      
-                      <div>
-                        <Label className="text-xs">Secondary Button</Label>
-                        <Input
-                          value={currentSettings.secondaryButtonText}
-                          onChange={(e) => updateCurrentSettings({ secondaryButtonText: e.target.value })}
-                          className="h-8 text-sm"
-                        />
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="design" className="space-y-4 mt-4">
-                      {/* Layout */}
-                      <div>
-                        <Label className="text-xs">Layout</Label>
-                        <Select 
-                          value={currentSettings.layout} 
-                          onValueChange={(value) => updateCurrentSettings({ layout: value as 'center' | 'left' | 'right' })}
-                        >
-                          <SelectTrigger className="h-8 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="center">Center</SelectItem>
-                            <SelectItem value="left">Left</SelectItem>
-                            <SelectItem value="right">Right</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Opacity */}
-                      <div>
-                        <Label className="text-xs">Opacity: {currentSettings.opacity}%</Label>
-                        <Slider
-                          value={[currentSettings.opacity]}
-                          onValueChange={(value) => updateCurrentSettings({ opacity: value[0] })}
-                          max={100}
-                          min={0}
-                          step={5}
-                          className="w-full"
-                        />
-                      </div>
-
-                      {/* Animation Settings */}
-                      <Separator />
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={currentSettings.animations.enableAnimations}
-                            onCheckedChange={(checked) => updateCurrentSettings({ 
-                              animations: { ...currentSettings.animations, enableAnimations: checked }
-                            })}
-                          />
-                          <Label className="text-xs">Enable Animations</Label>
-                        </div>
-
-                        {currentSettings.animations.enableAnimations && (
-                          <div className="space-y-3 pl-4 border-l-2 border-muted">
-                            <div>
-                              <Label className="text-xs">Entrance Duration: {currentSettings.animations.entranceDuration}ms</Label>
-                              <Slider
-                                value={[currentSettings.animations.entranceDuration]}
-                                onValueChange={(value) => updateCurrentSettings({ 
-                                  animations: { ...currentSettings.animations, entranceDuration: value[0] }
-                                })}
-                                max={2000}
-                                min={200}
-                                step={100}
-                                className="w-full mt-1"
-                              />
-                            </div>
-
-                            <div>
-                              <Label className="text-xs">Exit Duration: {currentSettings.animations.exitDuration}ms</Label>
-                              <Slider
-                                value={[currentSettings.animations.exitDuration]}
-                                onValueChange={(value) => updateCurrentSettings({ 
-                                  animations: { ...currentSettings.animations, exitDuration: value[0] }
-                                })}
-                                max={2000}
-                                min={200}
-                                step={100}
-                                className="w-full mt-1"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label className="text-xs font-medium">Element Delays:</Label>
-                              
-                              <div>
-                                <Label className="text-xs">Logo: {currentSettings.animations.logoDelay}ms</Label>
-                                <Slider
-                                  value={[currentSettings.animations.logoDelay]}
-                                  onValueChange={(value) => updateCurrentSettings({ 
-                                    animations: { ...currentSettings.animations, logoDelay: value[0] }
-                                  })}
-                                  max={1000}
-                                  min={0}
-                                  step={50}
-                                  className="w-full mt-1"
-                                />
-                              </div>
-
-                              <div>
-                                <Label className="text-xs">Title: {currentSettings.animations.titleDelay}ms</Label>
-                                <Slider
-                                  value={[currentSettings.animations.titleDelay]}
-                                  onValueChange={(value) => updateCurrentSettings({ 
-                                    animations: { ...currentSettings.animations, titleDelay: value[0] }
-                                  })}
-                                  max={1000}
-                                  min={0}
-                                  step={50}
-                                  className="w-full mt-1"
-                                />
-                              </div>
-
-                              <div>
-                                <Label className="text-xs">Subtitle: {currentSettings.animations.subtitleDelay}ms</Label>
-                                <Slider
-                                  value={[currentSettings.animations.subtitleDelay]}
-                                  onValueChange={(value) => updateCurrentSettings({ 
-                                    animations: { ...currentSettings.animations, subtitleDelay: value[0] }
-                                  })}
-                                  max={1000}
-                                  min={0}
-                                  step={50}
-                                  className="w-full mt-1"
-                                />
-                              </div>
-
-                              <div>
-                                <Label className="text-xs">Buttons: {currentSettings.animations.buttonDelay}ms</Label>
-                                <Slider
-                                  value={[currentSettings.animations.buttonDelay]}
-                                  onValueChange={(value) => updateCurrentSettings({ 
-                                    animations: { ...currentSettings.animations, buttonDelay: value[0] }
-                                  })}
-                                  max={1000}
-                                  min={0}
-                                  step={50}
-                                  className="w-full mt-1"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Logo Settings */}
-                      <Separator />
-                      <div className="space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={currentSettings.showLogo}
-                            onCheckedChange={(checked) => updateCurrentSettings({ showLogo: checked })}
-                          />
-                          <Label className="text-xs">Show Logo</Label>
-                        </div>
-                        
-                        {currentSettings.showLogo && (
-                          <div className="space-y-2">
-                            <Input
-                              value={currentSettings.logoUrl}
-                              onChange={(e) => updateCurrentSettings({ logoUrl: e.target.value })}
-                              placeholder="Logo URL"
-                              className="h-8 text-sm"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleFileUpload('logo')}
-                              className="w-full h-8 text-xs"
-                            >
-                              <Upload className="w-3 h-3 mr-1" />
-                              Upload Logo
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="background" className="space-y-4 mt-4">
-                      {/* Background Type */}
-                      <div>
-                        <Label className="text-xs">Background Type</Label>
-                        <Select 
-                          value={currentSettings.backgroundType} 
-                          onValueChange={(value) => updateCurrentSettings({ backgroundType: value as 'color' | 'gradient' | 'image' | 'video' })}
-                        >
-                          <SelectTrigger className="h-8 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="color">Solid Color</SelectItem>
-                            <SelectItem value="gradient">Gradient</SelectItem>
-                            <SelectItem value="image">Image</SelectItem>
-                            <SelectItem value="video">Video</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Background Value */}
-                      <div>
-                        <Label className="text-xs">Background Value</Label>
-                        <Input
-                          value={currentSettings.backgroundValue}
-                          onChange={(e) => updateCurrentSettings({ backgroundValue: e.target.value })}
-                          className="h-8 text-sm"
-                          placeholder={
-                            currentSettings.backgroundType === 'color' ? '#ff0000' :
-                            currentSettings.backgroundType === 'gradient' ? 'linear-gradient(...)' :
-                            'https://example.com/image.jpg'
-                          }
-                        />
-                      </div>
-
-                      {/* File Upload for Image/Video */}
-                      {(currentSettings.backgroundType === 'image' || currentSettings.backgroundType === 'video') && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleFileUpload('background')}
-                          className="w-full h-8 text-xs"
-                        >
-                          <Upload className="w-3 h-3 mr-1" />
-                          Upload {currentSettings.backgroundType}
-                        </Button>
-                      )}
-                    </TabsContent>
-                  </Tabs>
                 </div>
-              </div>
 
-              {/* Bottom Actions */}
-              <div className="border-t p-4 space-y-2">
+                <Separator />
+
+                {/* Templates */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-semibold">Quick Templates</Label>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
+                    {Object.entries(COVER_TEMPLATES).map(([key, template]) => (
+                      <Button
+                        key={key}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applyTemplate(key as keyof typeof COVER_TEMPLATES)}
+                        className="text-xs h-8 justify-start"
+                      >
+                        {template.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Settings Tabs */}
+                <Tabs defaultValue="content" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 h-8">
+                    <TabsTrigger value="content" className="text-xs">Content</TabsTrigger>
+                    <TabsTrigger value="design" className="text-xs">Design</TabsTrigger>
+                    <TabsTrigger value="background" className="text-xs">Background</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="content" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-xs">Title</Label>
+                      <Input
+                        value={currentSettings.title}
+                        onChange={(e) => updateCurrentSettings({ title: e.target.value })}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Subtitle</Label>
+                      <Textarea
+                        value={currentSettings.subtitle}
+                        onChange={(e) => updateCurrentSettings({ subtitle: e.target.value })}
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Primary Button</Label>
+                      <Input
+                        value={currentSettings.primaryButtonText}
+                        onChange={(e) => updateCurrentSettings({ primaryButtonText: e.target.value })}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Secondary Button</Label>
+                      <Input
+                        value={currentSettings.secondaryButtonText}
+                        onChange={(e) => updateCurrentSettings({ secondaryButtonText: e.target.value })}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="design" className="space-y-4 mt-4">
+                    {/* Layout */}
+                    <div>
+                      <Label className="text-xs">Layout</Label>
+                      <Select 
+                        value={currentSettings.layout} 
+                        onValueChange={(value) => updateCurrentSettings({ layout: value as 'center' | 'left' | 'right' })}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Opacity */}
+                    <div>
+                      <Label className="text-xs">Opacity: {currentSettings.opacity}%</Label>
+                      <Slider
+                        value={[currentSettings.opacity]}
+                        onValueChange={(value) => updateCurrentSettings({ opacity: value[0] })}
+                        max={100}
+                        min={0}
+                        step={5}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Animation Settings */}
+                    <Separator />
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={currentSettings.animations.enableAnimations}
+                          onCheckedChange={(checked) => updateCurrentSettings({ 
+                            animations: { ...currentSettings.animations, enableAnimations: checked }
+                          })}
+                        />
+                        <Label className="text-xs">Enable Animations</Label>
+                      </div>
+
+                      {currentSettings.animations.enableAnimations && (
+                        <div className="space-y-3 pl-4 border-l-2 border-muted">
+                          <div>
+                            <Label className="text-xs">Entrance Duration: {currentSettings.animations.entranceDuration}ms</Label>
+                            <Slider
+                              value={[currentSettings.animations.entranceDuration]}
+                              onValueChange={(value) => updateCurrentSettings({ 
+                                animations: { ...currentSettings.animations, entranceDuration: value[0] }
+                              })}
+                              max={2000}
+                              min={200}
+                              step={100}
+                              className="w-full mt-1"
+                            />
+                          </div>
+
+                          <div>
+                            <Label className="text-xs">Exit Duration: {currentSettings.animations.exitDuration}ms</Label>
+                            <Slider
+                              value={[currentSettings.animations.exitDuration]}
+                              onValueChange={(value) => updateCurrentSettings({ 
+                                animations: { ...currentSettings.animations, exitDuration: value[0] }
+                              })}
+                              max={2000}
+                              min={200}
+                              step={100}
+                              className="w-full mt-1"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium">Element Delays:</Label>
+                            
+                            <div>
+                              <Label className="text-xs">Logo: {currentSettings.animations.logoDelay}ms</Label>
+                              <Slider
+                                value={[currentSettings.animations.logoDelay]}
+                                onValueChange={(value) => updateCurrentSettings({ 
+                                  animations: { ...currentSettings.animations, logoDelay: value[0] }
+                                })}
+                                max={1000}
+                                min={0}
+                                step={50}
+                                className="w-full mt-1"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs">Title: {currentSettings.animations.titleDelay}ms</Label>
+                              <Slider
+                                value={[currentSettings.animations.titleDelay]}
+                                onValueChange={(value) => updateCurrentSettings({ 
+                                  animations: { ...currentSettings.animations, titleDelay: value[0] }
+                                })}
+                                max={1000}
+                                min={0}
+                                step={50}
+                                className="w-full mt-1"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs">Subtitle: {currentSettings.animations.subtitleDelay}ms</Label>
+                              <Slider
+                                value={[currentSettings.animations.subtitleDelay]}
+                                onValueChange={(value) => updateCurrentSettings({ 
+                                  animations: { ...currentSettings.animations, subtitleDelay: value[0] }
+                                })}
+                                max={1000}
+                                min={0}
+                                step={50}
+                                className="w-full mt-1"
+                              />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs">Buttons: {currentSettings.animations.buttonDelay}ms</Label>
+                              <Slider
+                                value={[currentSettings.animations.buttonDelay]}
+                                onValueChange={(value) => updateCurrentSettings({ 
+                                  animations: { ...currentSettings.animations, buttonDelay: value[0] }
+                                })}
+                                max={1000}
+                                min={0}
+                                step={50}
+                                className="w-full mt-1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Logo Settings */}
+                    <Separator />
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={currentSettings.showLogo}
+                          onCheckedChange={(checked) => updateCurrentSettings({ showLogo: checked })}
+                        />
+                        <Label className="text-xs">Show Logo</Label>
+                      </div>
+                      
+                      {currentSettings.showLogo && (
+                        <div className="space-y-2">
+                          <Input
+                            value={currentSettings.logoUrl}
+                            onChange={(e) => updateCurrentSettings({ logoUrl: e.target.value })}
+                            placeholder="Logo URL"
+                            className="h-8 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleFileUpload('logo')}
+                            className="w-full h-8 text-xs"
+                          >
+                            <Upload className="w-3 h-3 mr-1" />
+                            Upload Logo
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="background" className="space-y-4 mt-4">
+                    {/* Background Type */}
+                    <div>
+                      <Label className="text-xs">Background Type</Label>
+                      <Select 
+                        value={currentSettings.backgroundType} 
+                        onValueChange={(value) => updateCurrentSettings({ backgroundType: value as 'color' | 'gradient' | 'image' | 'video' })}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="color">Solid Color</SelectItem>
+                          <SelectItem value="gradient">Gradient</SelectItem>
+                          <SelectItem value="image">Image</SelectItem>
+                          <SelectItem value="video">Video</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Background Value */}
+                    <div>
+                      <Label className="text-xs">Background Value</Label>
+                      <Input
+                        value={currentSettings.backgroundValue}
+                        onChange={(e) => updateCurrentSettings({ backgroundValue: e.target.value })}
+                        className="h-8 text-sm"
+                        placeholder={
+                          currentSettings.backgroundType === 'color' ? '#ff0000' :
+                          currentSettings.backgroundType === 'gradient' ? 'linear-gradient(...)' :
+                          'https://example.com/image.jpg'
+                        }
+                      />
+                    </div>
+
+                    {/* File Upload for Image/Video */}
+                    {(currentSettings.backgroundType === 'image' || currentSettings.backgroundType === 'video') && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleFileUpload('background')}
+                        className="w-full h-8 text-xs"
+                      >
+                        <Upload className="w-3 h-3 mr-1" />
+                        Upload {currentSettings.backgroundType}
+                      </Button>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="border-t p-4 space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToDefaults}
+                className="w-full h-8 text-xs"
+              >
+                <RotateCcw className="w-3 h-3 mr-1" />
+                Reset
+              </Button>
+              <Button
+                size="sm"
+                onClick={saveAllSettings}
+                disabled={isSaving}
+                className="w-full h-8 text-xs"
+              >
+                <Save className="w-3 h-3 mr-1" />
+                {isSaving ? 'Saving...' : 'Save Cover Page'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Preview Panel - Scrollable */}
+          <div className="flex-1 flex flex-col bg-gray-50">
+            {/* Preview Header */}
+            <div className="flex items-center justify-between p-4 border-b bg-background">
+              <div className="flex items-center gap-4">
+                <Badge variant="outline" className="capitalize">{activeDevice}</Badge>
+                <span className="text-sm text-muted-foreground">
+                  {DEVICE_CONFIGS[activeDevice].width} × {DEVICE_CONFIGS[activeDevice].height}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPreviewMode(!previewMode);
+                    if (!previewMode) {
+                      setTimeout(() => triggerPreviewAnimation(), 100);
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  {previewMode ? 'Edit' : 'Preview'}
+                </Button>
+                {previewMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={triggerPreviewAnimation}
+                    className="flex items-center gap-2"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Replay
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={resetToDefaults}
-                  className="w-full h-8 text-xs"
+                  className="flex items-center gap-2"
                 >
-                  <RotateCcw className="w-3 h-3 mr-1" />
+                  <RotateCcw className="w-4 h-4" />
                   Reset
                 </Button>
                 <Button
                   size="sm"
                   onClick={saveAllSettings}
-                  className="w-full h-8 text-xs"
+                  disabled={isSaving}
+                  className="flex items-center gap-2"
                 >
-                  <Save className="w-3 h-3 mr-1" />
-                  Save All Devices
+                  <Save className="w-4 h-4" />
+                  {isSaving ? 'Saving...' : 'Save'}
                 </Button>
               </div>
             </div>
-
-            {/* Preview Panel - Scrollable */}
-            <div className="flex-1 flex flex-col bg-gray-50">
-              {/* Preview Header */}
-              <div className="flex items-center justify-between p-4 border-b bg-background">
-                <div className="flex items-center gap-4">
-                  <Badge variant="outline" className="capitalize">{activeDevice}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {DEVICE_CONFIGS[activeDevice].width} × {DEVICE_CONFIGS[activeDevice].height}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setPreviewMode(!previewMode);
-                      if (!previewMode) {
-                        setTimeout(() => triggerPreviewAnimation(), 100);
-                      }
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    {previewMode ? 'Edit' : 'Preview'}
-                  </Button>
-                  {previewMode && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={triggerPreviewAnimation}
-                      className="flex items-center gap-2"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                      Replay
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={resetToDefaults}
-                    className="flex items-center gap-2"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Reset
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={saveAllSettings}
-                    className="flex items-center gap-2"
-                  >
-                    <Save className="w-4 h-4" />
-                    Save All
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Preview Content */}
-              <div className="flex-1 p-4 md:p-8 overflow-auto">
-                <div className="flex justify-center items-start min-h-full">
-                  {renderPreview()}
-                </div>
+            
+            {/* Preview Content */}
+            <div className="flex-1 p-4 md:p-8 overflow-auto">
+              <div className="flex justify-center items-start min-h-full">
+                {renderPreview()}
               </div>
             </div>
           </div>
-          
-          {/* Hidden file inputs */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            onChange={(e) => handleFileChange(e, 'background')}
-            className="hidden"
-          />
-          <input
-            ref={logoInputRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFileChange(e, 'logo')}
-            className="hidden"
-          />
         </div>
+        
+        {/* Hidden file inputs */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          onChange={(e) => handleFileChange(e, 'background')}
+          className="hidden"
+        />
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/*"
+          onChange={(e) => handleFileChange(e, 'logo')}
+          className="hidden"
+        />
       </div>
     </div>
   );
