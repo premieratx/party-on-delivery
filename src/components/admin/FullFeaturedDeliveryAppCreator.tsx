@@ -20,6 +20,12 @@ interface FontStyle {
   color: string;
 }
 
+interface DeliveryArea {
+  name: string;
+  coordinates: number[];
+  fee: number;
+}
+
 interface DeliveryApp {
   id?: string;
   app_name: string;
@@ -27,9 +33,22 @@ interface DeliveryApp {
   logo_url: string;
   is_active: boolean;
   is_homepage?: boolean;
+  is_default?: boolean;
   theme_color?: string;
   delivery_radius?: number;
   delivery_fee?: number;
+  business_name?: string;
+  hero_title?: string;
+  hero_subtitle?: string;
+  hero_image_url?: string;
+  hero_video_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  accent_color?: string;
+  announcement_text?: string;
+  announcement_type?: string;
+  delivery_areas?: DeliveryArea[];
+  custom_css?: string;
   styles?: any;
 }
 

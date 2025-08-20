@@ -7,10 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { CustomerFlowBuilder } from '@/components/admin/CustomerFlowBuilder';
 import { AffiliateFlowAssignmentManager } from '@/components/admin/AffiliateFlowAssignmentManager';
-import CoverPagesAdmin from '@/pages/CoverPagesAdmin';
-import { DeliveryAppManager } from '@/components/admin/DeliveryAppManager';
-import { DeliveryAppCreator } from '@/components/admin/DeliveryAppCreator';
-import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
+import { FullFeaturedCoverPageCreator } from '@/components/admin/FullFeaturedCoverPageCreator';
+import { FullFeaturedDeliveryAppCreator } from '@/components/admin/FullFeaturedDeliveryAppCreator';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { supabase } from '@/integrations/supabase/client';
@@ -290,34 +288,22 @@ export default function AdminDashboard() {
           {/* Cover Pages */}
           <TabsContent value="cover-pages" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <CoverPageCreator />
+              <FullFeaturedCoverPageCreator />
             </div>
           </TabsContent>
 
-          {/* Post-Checkout Creator */}
+          {/* Post-Checkout Creator - Temporarily disabled */}
           <TabsContent value="post-checkout" className="space-y-4">
-            <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <SimplePostCheckoutCreator />
+            <div className="h-[calc(100vh-200px)] overflow-y-auto p-8 text-center">
+              <h3 className="text-lg font-medium mb-2">Post-Checkout Creator</h3>
+              <p className="text-muted-foreground">Post-checkout creator will be available soon. Database schema needs to be created first.</p>
             </div>
           </TabsContent>
 
           {/* Delivery Apps */}
           <TabsContent value="delivery-apps" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
-              <Tabs defaultValue="manager" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="manager">App Manager</TabsTrigger>
-                  <TabsTrigger value="creator">App Creator</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="manager">
-                  <DeliveryAppManager />
-                </TabsContent>
-                
-                <TabsContent value="creator">
-                  <DeliveryAppCreator />
-                </TabsContent>
-              </Tabs>
+              <FullFeaturedDeliveryAppCreator />
             </div>
           </TabsContent>
 
