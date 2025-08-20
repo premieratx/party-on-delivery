@@ -92,14 +92,48 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                     <div className="flex gap-3">
                       <img 
                         src={item.image} 
-                        alt={item.title}
+                        alt={/* Clean alt text too */
+                          item.title
+                            .replace(/gid:\/\/shopify\/[^\s]+/g, '')
+                            .replace(/https?:\/\/[^\s]+/g, '')
+                            .replace(/\b\d{6,}\b/g, '')
+                            .replace(/shopify[^\s]*/gi, '')
+                            .replace(/\s+/g, ' ')
+                            .trim()
+                        }
                         className="w-16 h-16 object-cover rounded-md bg-muted"
                       />
                       
                       <div className="flex-1 space-y-2">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h4 className="font-medium text-xs sm:text-sm line-clamp-2">{item.title}</h4>
+                            <h4 className="font-medium text-xs sm:text-sm line-clamp-2">
+                              {/* Clean product title - remove GID URLs and Shopify identifiers */}
+                              {item.title
+                                .replace(/gid:\/\/shopify\/[^\s]+/g, '') // Remove GID URLs
+                                .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs
+                                .replace(/www\.[^\s]+/g, '') // Remove www URLs
+                                .replace(/\b\d{8,}\b/g, '') // Remove long product IDs
+                                .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs
+                                .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
+                                .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
+                                .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
+                                .replace(/SKU:\s*[\w-]+/gi, '') // Remove SKU codes
+                                .replace(/Product\s*ID:\s*\d+/gi, '') // Remove Product ID
+                                .replace(/Handle:\s*[\w-]+/gi, '') // Remove handle references
+                                .replace(/cdn\.shopify\.com[^\s]*/gi, '') // Remove Shopify CDN URLs
+                                .replace(/shopify[^\s]*/gi, '') // Remove any shopify references
+                                .replace(/\s+/g, ' ') // Normalize whitespace
+                                .replace(/(\d+)\s*Pack/gi, '$1pk')
+                                .replace(/(\d+)\s*oz/gi, '$1oz')
+                                .replace(/(\d+)\s*ml/gi, '$1ml')
+                                .replace(/(\d+)\s*cl/gi, '$1cl')
+                                .replace(/(\d+)\s*liter/gi, '$1L')
+                                .replace(/(\d+)\s*count/gi, '$1ct')
+                                .trim()
+                                .replace(/^[-\s|]+|[-\s|]+$/g, '') // Remove leading/trailing dashes, spaces, and pipes
+                              }
+                            </h4>
                             <p className="product-price text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
                           </div>
                           <Button
