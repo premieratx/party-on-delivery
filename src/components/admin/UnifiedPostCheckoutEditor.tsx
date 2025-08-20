@@ -32,6 +32,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CANONICAL_DOMAIN } from '@/utils/links';
 import Draggable from 'react-draggable';
+// import { EnhancedPostCheckoutEditor } from './EnhancedPostCheckoutEditor';
 
 const POST_CHECKOUT_THEMES = {
   success: {
@@ -117,6 +118,7 @@ export const UnifiedPostCheckoutEditor: React.FC<UnifiedPostCheckoutEditorProps>
   initial,
   onSaved
 }) => {
+
   // Device and theme state
   const [activeDevice, setActiveDevice] = useState<keyof typeof DEVICE_CONFIGS>('mobile');
   const [selectedTheme, setSelectedTheme] = useState('success');

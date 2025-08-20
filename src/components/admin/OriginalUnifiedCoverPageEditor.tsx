@@ -468,9 +468,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   };
 
   const content = (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* Editor Panel */}
-      <div className={`${previewMode ? 'w-0 overflow-hidden' : 'w-80'} transition-all duration-300 border-r bg-background`}>
+      <div className={`${previewMode ? 'w-0 overflow-hidden' : 'w-96'} transition-all duration-300 border-r bg-background flex-shrink-0`}>
         <div className="h-full overflow-y-auto p-4 space-y-4">
           {/* Theme Selection */}
           <div className="space-y-3">
@@ -1048,6 +1048,24 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                               ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                      )}
+
+                      {button.type === 'delivery_app' && (
+                        <div>
+                          <Label className="text-xs">Markup Percentage</Label>
+                          <Input
+                            value={button.markup_percent || ''}
+                            onChange={(e) => updateButton(idx, { markup_percent: parseFloat(e.target.value) || 0 })}
+                            placeholder="0"
+                            type="number"
+                            min="0"
+                            max="100"
+                            className="text-sm"
+                          />
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Price markup for this delivery app destination
+                          </div>
                         </div>
                       )}
 

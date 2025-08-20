@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -182,11 +183,19 @@ export const CustomerFlowBuilder: React.FC = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setSelectedFlow(flow)}
+          >
             <Edit className="w-4 h-4 mr-2" />
             Edit Flow
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.open(`${window.location.origin}/flow/${flow.slug}`, '_blank')}
+          >
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>
@@ -287,6 +296,153 @@ export const CustomerFlowBuilder: React.FC = () => {
     );
   };
 
+  const FlowEditor = ({ flow, onSave }: { flow: CustomerFlow; onSave: () => void }) => {
+    const [editingFlow, setEditingFlow] = useState(flow);
+    const [saving, setSaving] = useState(false);
+
+    const handleSaveFlow = async () => {
+      setSaving(true);
+      try {
+        const { error } = await supabase
+          .from('customer_flows')
+          .update({
+            name: editingFlow.name,
+            slug: editingFlow.slug,
+            cover_page_id: editingFlow.cover_page_id,
+            delivery_app_id: editingFlow.delivery_app_id,
+            post_checkout_id: editingFlow.post_checkout_id,
+            is_active: editingFlow.is_active,
+            is_default: editingFlow.is_default
+          })
+          .eq('id', flow.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Flow updated successfully!"
+        });
+        onSave();
+        setSelectedFlow(null);
+      } catch (error) {
+        console.error('Error saving flow:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save flow",
+          variant: "destructive"
+        });
+      } finally {
+        setSaving(false);
+      }
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Flow Name</Label>
+            <Input
+              value={editingFlow.name}
+              onChange={(e) => setEditingFlow(prev => ({ ...prev, name: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label>URL Slug</Label>
+            <Input
+              value={editingFlow.slug}
+              onChange={(e) => setEditingFlow(prev => ({ ...prev, slug: e.target.value }))}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <Label>Cover Page</Label>
+            <Select
+              value={editingFlow.cover_page_id || ''}
+              onValueChange={(value) => setEditingFlow(prev => ({ ...prev, cover_page_id: value || undefined }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select cover page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No cover page</SelectItem>
+                {components.coverPages.map(cp => (
+                  <SelectItem key={cp.id} value={cp.id}>{cp.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Delivery App</Label>
+            <Select
+              value={editingFlow.delivery_app_id || ''}
+              onValueChange={(value) => setEditingFlow(prev => ({ ...prev, delivery_app_id: value || undefined }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select delivery app" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No delivery app</SelectItem>
+                {components.deliveryApps.map(da => (
+                  <SelectItem key={da.id} value={da.id}>{da.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Post-Checkout</Label>
+            <Select
+              value={editingFlow.post_checkout_id || ''}
+              onValueChange={(value) => setEditingFlow(prev => ({ ...prev, post_checkout_id: value || undefined }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select post-checkout" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Default post-checkout</SelectItem>
+                {components.postCheckouts.map(pc => (
+                  <SelectItem key={pc.id} value={pc.id}>{pc.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="flow-active"
+              checked={editingFlow.is_active}
+              onCheckedChange={(checked) => setEditingFlow(prev => ({ ...prev, is_active: checked }))}
+            />
+            <Label htmlFor="flow-active">Active</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="flow-default"
+              checked={editingFlow.is_default}
+              onCheckedChange={(checked) => setEditingFlow(prev => ({ ...prev, is_default: checked }))}
+            />
+            <Label htmlFor="flow-default">Default Flow</Label>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button onClick={handleSaveFlow} disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+          <Button variant="outline" onClick={() => setSelectedFlow(null)}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -311,6 +467,18 @@ export const CustomerFlowBuilder: React.FC = () => {
       </div>
 
       {isCreatingFlow && <NewFlowForm />}
+      
+      {selectedFlow && (
+        <Card className="p-6 border-primary/20 bg-primary/5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Editing Flow: {selectedFlow.name}</h3>
+            <Button variant="outline" size="sm" onClick={() => setSelectedFlow(null)}>
+              Cancel
+            </Button>
+          </div>
+          <FlowEditor flow={selectedFlow} onSave={loadAllData} />
+        </Card>
+      )}
 
       <Tabs defaultValue="flows" className="space-y-4">
         <TabsList>
