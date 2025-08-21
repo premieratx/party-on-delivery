@@ -303,10 +303,26 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       console.log(`🚀 ULTRA-FAST SEARCH: "${searchQuery}"`);
       const startTime = performance.now();
       
-      // Use ultra-fast search for sub-250ms results
-      const result = await ultraFastSearch.searchProducts(searchQuery, {
-        limit: 50
-      });
+      // Use CATEGORY-GOVERNED search for consistent results
+      const filteredProducts = allProducts
+        .map(product => {
+          const lowerQuery = searchQuery.toLowerCase();
+          const lowerCategory = (product.category || '').toLowerCase();
+          const lowerTitle = product.title.toLowerCase();
+          
+          let score = 0;
+          // CATEGORY GOVERNANCE - category matches trump everything else
+          if (lowerCategory.includes(lowerQuery)) score = 1000;
+          else if (lowerTitle.includes(lowerQuery)) score = 800;
+          else if (product.collections?.some(c => c.toLowerCase().includes(lowerQuery))) score = 600;
+          
+          return score > 0 ? { ...product, _score: score } : null;
+        })
+        .filter(Boolean)
+        .sort((a: any, b: any) => b._score - a._score)
+        .slice(0, 50);
+      
+      const result = { products: filteredProducts, fromCache: true };
 
       const endTime = performance.now();
       const duration = endTime - startTime;
