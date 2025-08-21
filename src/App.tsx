@@ -117,6 +117,9 @@ const App = () => {
                     
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
+                    
+                    {/* Dynamic slug routes - MUST be last to avoid conflicts */}
+                    <Route path="/:slug" element={<CoverPage />} />
                   </Routes>
                 </Suspense>
               </div>
