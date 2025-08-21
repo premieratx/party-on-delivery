@@ -616,6 +616,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_work_logs: {
+        Row: {
+          action_type: string
+          after_state: Json | null
+          before_state: Json | null
+          component_name: string | null
+          created_at: string
+          description: string
+          error_details: Json | null
+          file_path: string | null
+          id: string
+          session_id: string
+          success: boolean | null
+          timestamp: string
+          user_feedback: string | null
+        }
+        Insert: {
+          action_type: string
+          after_state?: Json | null
+          before_state?: Json | null
+          component_name?: string | null
+          created_at?: string
+          description: string
+          error_details?: Json | null
+          file_path?: string | null
+          id?: string
+          session_id: string
+          success?: boolean | null
+          timestamp?: string
+          user_feedback?: string | null
+        }
+        Update: {
+          action_type?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          component_name?: string | null
+          created_at?: string
+          description?: string
+          error_details?: Json | null
+          file_path?: string | null
+          id?: string
+          session_id?: string
+          success?: boolean | null
+          timestamp?: string
+          user_feedback?: string | null
+        }
+        Relationships: []
+      }
       app_state_snapshots: {
         Row: {
           app_state: Json
@@ -1034,6 +1082,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      component_health_checks: {
+        Row: {
+          component_name: string
+          created_at: string
+          dependencies: Json | null
+          file_path: string
+          id: string
+          is_legacy: boolean | null
+          issues: Json | null
+          last_checked: string
+          status: string
+          updated_at: string
+          usage_count: number | null
+        }
+        Insert: {
+          component_name: string
+          created_at?: string
+          dependencies?: Json | null
+          file_path: string
+          id?: string
+          is_legacy?: boolean | null
+          issues?: Json | null
+          last_checked?: string
+          status?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Update: {
+          component_name?: string
+          created_at?: string
+          dependencies?: Json | null
+          file_path?: string
+          id?: string
+          is_legacy?: boolean | null
+          issues?: Json | null
+          last_checked?: string
+          status?: string
+          updated_at?: string
+          usage_count?: number | null
+        }
+        Relationships: []
       }
       configuration_templates: {
         Row: {
@@ -2323,6 +2413,48 @@ export type Database = {
           status?: string
           task_id?: string
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      optimization_tracking: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          description: string
+          id: string
+          implementation_notes: Json | null
+          optimization_type: string
+          performance_metrics: Json | null
+          priority: number | null
+          status: string
+          target_component: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          implementation_notes?: Json | null
+          optimization_type: string
+          performance_metrics?: Json | null
+          priority?: number | null
+          status?: string
+          target_component: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          implementation_notes?: Json | null
+          optimization_type?: string
+          performance_metrics?: Json | null
+          priority?: number | null
+          status?: string
+          target_component?: string
           updated_at?: string
         }
         Relationships: []
@@ -4504,6 +4636,20 @@ export type Database = {
         Args: { template_id: string }
         Returns: Json
       }
+      log_ai_work: {
+        Args: {
+          p_action_type: string
+          p_after_state?: Json
+          p_before_state?: Json
+          p_component_name?: string
+          p_description?: string
+          p_error_details?: Json
+          p_file_path?: string
+          p_session_id: string
+          p_success?: boolean
+        }
+        Returns: string
+      }
       log_security_access: {
         Args: { details?: Json; event_type: string; table_name: string }
         Returns: undefined
@@ -4580,6 +4726,17 @@ export type Database = {
       trigger_shopify_bulk_sync: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      update_component_health: {
+        Args: {
+          p_component_name: string
+          p_dependencies?: Json
+          p_file_path: string
+          p_is_legacy?: boolean
+          p_issues?: Json
+          p_status?: string
+        }
+        Returns: string
       }
       update_daily_analytics: {
         Args: Record<PropertyKey, never>
