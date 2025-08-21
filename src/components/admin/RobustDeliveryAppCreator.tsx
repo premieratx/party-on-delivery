@@ -230,6 +230,20 @@ export const RobustDeliveryAppCreator: React.FC<DeliveryAppEditorProps> = ({
     try {
       setSaving(true);
       
+      // First, ensure admin context is set for RLS policies
+      console.log('🔑 Setting admin context for save operation...');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        const { error: contextError } = await supabase.rpc('set_admin_context', {
+          admin_email: user.email
+        });
+        if (contextError) {
+          console.warn('Failed to set admin context:', contextError);
+        } else {
+          console.log('✅ Admin context set for:', user.email);
+        }
+      }
+      
       const saveData = {
         app_name: appState.app_name,
         app_slug: appState.app_slug,

@@ -1,3 +1,4 @@
+import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
 import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -62,6 +63,7 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
+              <AdminAuthFix />
               <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
