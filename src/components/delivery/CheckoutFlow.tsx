@@ -1348,7 +1348,34 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                  {cartItems.map((item) => (
                    <div key={`${item.id}-${item.variant || ''}`} className="flex justify-between items-center gap-2">
                      <div className="flex-1 min-w-0">
-                       <p className="font-medium text-xs sm:text-sm line-clamp-2">{item.title.replace(/(\d+)\s*Pack/gi, '$1pk').replace(/(\d+)\s*oz/gi, '$1oz').replace(/Can/gi, '').replace(/Hard Seltzer/gi, '').replace(/\s+/g, ' ').trim()}</p>
+                       <p className="font-medium text-xs sm:text-sm line-clamp-2">
+                         {item.title
+                           .replace(/gid:\/\/shopify\/[^\s]+/g, '') // Remove GID URLs
+                           .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs
+                           .replace(/www\.[^\s]+/g, '') // Remove www URLs
+                           .replace(/\b\d{8,}\b/g, '') // Remove long product IDs
+                           .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs
+                           .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
+                           .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
+                           .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
+                           .replace(/SKU:\s*[\w-]+/gi, '') // Remove SKU codes
+                           .replace(/Product\s*ID:\s*\d+/gi, '') // Remove Product ID
+                           .replace(/Handle:\s*[\w-]+/gi, '') // Remove handle references
+                           .replace(/cdn\.shopify\.com[^\s]*/gi, '') // Remove Shopify CDN URLs
+                           .replace(/shopify[^\s]*/gi, '') // Remove any shopify references
+                           .replace(/\s+/g, ' ') // Normalize whitespace
+                           .replace(/(\d+)\s*Pack/gi, '$1pk')
+                           .replace(/(\d+)\s*oz/gi, '$1oz')
+                           .replace(/(\d+)\s*ml/gi, '$1ml')
+                           .replace(/(\d+)\s*cl/gi, '$1cl')
+                           .replace(/(\d+)\s*liter/gi, '$1L')
+                           .replace(/(\d+)\s*count/gi, '$1ct')
+                           .replace(/Can/gi, '')
+                           .replace(/Hard Seltzer/gi, '')
+                           .trim()
+                           .replace(/^[-\s|]+|[-\s|]+$/g, '') // Remove leading/trailing dashes, spaces, and pipes
+                         }
+                       </p>
                        <div className="flex items-center gap-2 mt-1">
                          <span className="product-price text-xs sm:text-sm text-primary">${applyMarkup(item.price).toFixed(2)} each</span>
                        </div>
