@@ -350,17 +350,27 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
   const uploadAsset = async (file: File, kind: 'logo' | 'bg'): Promise<string | null> => {
     try {
+      console.log(`🔄 Starting upload for ${kind}:`, file.name, file.size, 'bytes');
       const ext = file.name.split('.').pop() || 'png';
       const base = (computedSlug || slugify(title) || 'cover').slice(0, 60);
       const fileName = `cover-${base}-${kind}.${ext}`;
+      console.log(`📁 Uploading to cover-assets bucket as: ${fileName}`);
+      
       const { error: uploadError } = await supabase.storage
         .from('cover-assets')
         .upload(fileName, file, { cacheControl: '3600', upsert: true });
-      if (uploadError) throw uploadError;
+      
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
+        throw uploadError;
+      }
+      
       const { data } = supabase.storage.from('cover-assets').getPublicUrl(fileName);
+      console.log('✅ Upload successful! Public URL:', data.publicUrl);
+      toast({ title: 'Upload successful!', description: `${kind} uploaded successfully` });
       return data.publicUrl;
     } catch (e: any) {
-      console.error('Upload failed', e);
+      console.error('❌ Upload failed:', e);
       toast({ title: 'Upload failed', description: e?.message || 'Try a smaller image', variant: 'destructive' });
       return null;
     }
