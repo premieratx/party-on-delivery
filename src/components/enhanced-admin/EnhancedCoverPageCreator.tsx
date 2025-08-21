@@ -54,11 +54,17 @@ interface CoverPageConfig {
     color?: string;
     opacity?: number;
   };
-  // Typography
+  // Typography & Logo Controls
   typography?: {
     titleSize?: string;
     subtitleSize?: string;
     fontFamily?: string;
+    titleColor?: string;
+    subtitleColor?: string;
+  };
+  logoSizing?: {
+    width?: string;
+    height?: string;
   };
   // Animation Settings
   animations?: {
@@ -135,7 +141,15 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     features: DEFAULT_FEATURES,
     buttons: DEFAULT_BUTTONS,
     backgroundOverlay: { enabled: false, opacity: 0.5 },
-    typography: { titleSize: 'text-4xl md:text-5xl', subtitleSize: 'text-xl' },
+    typography: { 
+      titleSize: 'text-4xl md:text-5xl', 
+      subtitleSize: 'text-xl',
+      fontFamily: 'inherit'
+    },
+    logoSizing: {
+      width: '5rem',
+      height: '5rem'
+    },
     animations: { enabled: true, speed: 'normal', entrance: 'fade' },
     seo: {},
     analytics: {},
@@ -198,7 +212,12 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           variant: config.variant,
           logoEmoji: config.logoEmoji,
           features: config.features,
-          buttons: config.buttons
+          buttons: config.buttons,
+          typography: config.typography,
+          logoSizing: config.logoSizing,
+          customColors: config.customColors,
+          animations: config.animations,
+          backgroundOverlay: config.backgroundOverlay
         }),
         is_active: config.is_active,
         created_by: 'admin'
@@ -310,11 +329,12 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </DialogHeader>
 
           <Tabs defaultValue="template" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="template">Template</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="features">Features</TabsTrigger>
               <TabsTrigger value="buttons">Actions</TabsTrigger>
+              <TabsTrigger value="typography">Typography</TabsTrigger>
               <TabsTrigger value="styling">Styling</TabsTrigger>
               <TabsTrigger value="seo">SEO & Analytics</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -564,6 +584,179 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </TabsContent>
+
+              {/* Typography Configuration */}
+              <TabsContent value="typography" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Title Styling</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Title Size</Label>
+                        <Select
+                          value={config.typography?.titleSize || 'text-4xl md:text-5xl'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            typography: { ...prev.typography, titleSize: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text-2xl md:text-3xl">Small (2xl/3xl)</SelectItem>
+                            <SelectItem value="text-3xl md:text-4xl">Medium (3xl/4xl)</SelectItem>
+                            <SelectItem value="text-4xl md:text-5xl">Large (4xl/5xl)</SelectItem>
+                            <SelectItem value="text-5xl md:text-6xl">XL (5xl/6xl)</SelectItem>
+                            <SelectItem value="text-6xl md:text-7xl">XXL (6xl/7xl)</SelectItem>
+                            <SelectItem value="text-7xl md:text-8xl">XXXL (7xl/8xl)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Title Color (Custom)</Label>
+                        <Input
+                          value={config.typography?.titleColor || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            typography: { ...prev.typography, titleColor: e.target.value }
+                          }))}
+                          placeholder="#000000 (leave empty for theme default)"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Subtitle Styling</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Subtitle Size</Label>
+                        <Select
+                          value={config.typography?.subtitleSize || 'text-xl'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            typography: { ...prev.typography, subtitleSize: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text-sm">Small</SelectItem>
+                            <SelectItem value="text-base">Base</SelectItem>
+                            <SelectItem value="text-lg">Large</SelectItem>
+                            <SelectItem value="text-xl">XL</SelectItem>
+                            <SelectItem value="text-2xl">XXL</SelectItem>
+                            <SelectItem value="text-3xl">XXXL</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Subtitle Color (Custom)</Label>
+                        <Input
+                          value={config.typography?.subtitleColor || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            typography: { ...prev.typography, subtitleColor: e.target.value }
+                          }))}
+                          placeholder="#666666 (leave empty for theme default)"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Font Family</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Font Family</Label>
+                        <Select
+                          value={config.typography?.fontFamily || 'inherit'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            typography: { ...prev.typography, fontFamily: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="inherit">Default (Inherit)</SelectItem>
+                            <SelectItem value="font-sans">Sans Serif</SelectItem>
+                            <SelectItem value="font-serif">Serif</SelectItem>
+                            <SelectItem value="font-mono">Monospace</SelectItem>
+                            <SelectItem value="'Inter', sans-serif">Inter</SelectItem>
+                            <SelectItem value="'Poppins', sans-serif">Poppins</SelectItem>
+                            <SelectItem value="'Playfair Display', serif">Playfair Display</SelectItem>
+                            <SelectItem value="'Roboto', sans-serif">Roboto</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Logo Sizing</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Logo Width</Label>
+                        <Select
+                          value={config.logoSizing?.width || '5rem'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            logoSizing: { ...prev.logoSizing, width: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="3rem">Small (3rem)</SelectItem>
+                            <SelectItem value="4rem">Medium (4rem)</SelectItem>
+                            <SelectItem value="5rem">Large (5rem) - Default</SelectItem>
+                            <SelectItem value="6rem">XL (6rem)</SelectItem>
+                            <SelectItem value="8rem">XXL (8rem)</SelectItem>
+                            <SelectItem value="10rem">XXXL (10rem)</SelectItem>
+                            <SelectItem value="12rem">Huge (12rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Logo Height</Label>
+                        <Select
+                          value={config.logoSizing?.height || '5rem'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            logoSizing: { ...prev.logoSizing, height: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="3rem">Small (3rem)</SelectItem>
+                            <SelectItem value="4rem">Medium (4rem)</SelectItem>
+                            <SelectItem value="5rem">Large (5rem) - Default</SelectItem>
+                            <SelectItem value="6rem">XL (6rem)</SelectItem>
+                            <SelectItem value="8rem">XXL (8rem)</SelectItem>
+                            <SelectItem value="10rem">XXXL (10rem)</SelectItem>
+                            <SelectItem value="12rem">Huge (12rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 
@@ -864,6 +1057,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                     onClick: () => toast.info(`Would navigate to: ${btn.target}`)
                   }))}
                   variant={config.variant}
+                  customColors={config.customColors}
+                  typography={config.typography}
+                  logoSizing={config.logoSizing}
                   standalone={true}
                   className="rounded-lg overflow-hidden"
                 />
@@ -918,6 +1114,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               onClick: () => setPreviewOpen(false)
             }))}
             variant={config.variant}
+            customColors={config.customColors}
+            typography={config.typography}
+            logoSizing={config.logoSizing}
             onClose={() => setPreviewOpen(false)}
           />
         </DialogContent>

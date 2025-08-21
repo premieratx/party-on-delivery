@@ -34,6 +34,21 @@ interface EditableCoverScreenProps {
     accent?: string;
   };
   
+  // Typography & Sizing Controls
+  typography?: {
+    titleSize?: string;
+    subtitleSize?: string;
+    fontFamily?: string;
+    titleColor?: string;
+    subtitleColor?: string;
+  };
+  
+  // Logo customization
+  logoSizing?: {
+    width?: string;
+    height?: string;
+  };
+  
   // Layout options
   className?: string;
   onClose?: () => void;
@@ -51,6 +66,8 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   buttons = [],
   variant = 'original',
   customColors,
+  typography,
+  logoSizing,
   className,
   onClose,
   standalone = false
@@ -147,12 +164,12 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
     <div className={`${containerClass} ${className || ''}`}>
       {renderBackground()}
       
-      <div className={standalone ? 'w-full' : 'min-h-screen flex items-center justify-center p-4'}>
+      <div className="min-h-screen flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className={`relative w-full max-w-4xl ${styles.container} rounded-2xl shadow-2xl overflow-hidden`}
+          className={`relative w-full max-w-4xl mx-auto ${styles.container} rounded-2xl shadow-2xl overflow-hidden`}
         >
           {/* Frame effect for premium variants */}
           {styles.frame && (
@@ -175,10 +192,28 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
                 <img 
                   src={logoUrl} 
                   alt="Logo" 
-                  className="w-20 h-20 object-contain rounded-full shadow-xl"
+                  className={`object-contain rounded-full shadow-xl ${
+                    logoSizing?.width && logoSizing?.height 
+                      ? '' 
+                      : 'w-20 h-20'
+                  }`}
+                  style={{
+                    width: logoSizing?.width || '5rem',
+                    height: logoSizing?.height || '5rem'
+                  }}
                 />
               ) : (
-                <div className={`w-20 h-20 ${styles.logoContainer} rounded-full flex items-center justify-center shadow-xl`}>
+                <div 
+                  className={`${styles.logoContainer} rounded-full flex items-center justify-center shadow-xl ${
+                    logoSizing?.width && logoSizing?.height 
+                      ? '' 
+                      : 'w-20 h-20'
+                  }`}
+                  style={{
+                    width: logoSizing?.width || '5rem',
+                    height: logoSizing?.height || '5rem'
+                  }}
+                >
                   <span className="text-2xl">{logoEmoji}</span>
                 </div>
               )}
@@ -186,11 +221,27 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
             
             {/* Title & Subtitle */}
             <div className="space-y-4 max-w-3xl mx-auto">
-              <h1 className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${styles.titleGradient} bg-clip-text text-transparent`}>
+              <h1 
+                className={`font-bold bg-gradient-to-r ${styles.titleGradient} bg-clip-text text-transparent ${
+                  typography?.titleSize || 'text-4xl md:text-5xl'
+                }`}
+                style={{
+                  fontFamily: typography?.fontFamily || 'inherit',
+                  color: typography?.titleColor || undefined
+                }}
+              >
                 {title}
               </h1>
               
-              <p className={`text-xl ${styles.subtitleColor}`}>
+              <p 
+                className={`${typography?.subtitleSize || 'text-xl'} ${
+                  typography?.subtitleColor || styles.subtitleColor
+                }`}
+                style={{
+                  fontFamily: typography?.fontFamily || 'inherit',
+                  color: typography?.subtitleColor || undefined
+                }}
+              >
                 {subtitle}
               </p>
             </div>

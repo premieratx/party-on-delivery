@@ -82,6 +82,9 @@ const CoverPage = () => {
       features={features}
       buttons={buttons}
       variant={coverPage.theme || parsedStyles.variant || 'original'}
+      customColors={parsedStyles.customColors}
+      typography={parsedStyles.typography}
+      logoSizing={parsedStyles.logoSizing}
       standalone={true}
     />
   );

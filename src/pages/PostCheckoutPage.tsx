@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { PremiumOrderComplete } from '@/components/enhanced-checkout/PremiumOrderComplete';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -7,6 +7,27 @@ import { Loader2 } from 'lucide-react';
 
 const PostCheckoutPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  
+  // Get order data from URL parameters or session storage
+  const getOrderData = () => {
+    const orderNumber = searchParams.get('order') || 'ORDER-12345';
+    const sessionId = searchParams.get('session_id');
+    
+    return {
+      orderNumber,
+      sessionId,
+      subtotal: parseFloat(searchParams.get('subtotal') || '135.49'),
+      deliveryFee: parseFloat(searchParams.get('delivery_fee') || '5.99'),
+      total: parseFloat(searchParams.get('total') || '141.48'),
+      customerEmail: searchParams.get('customer_email'),
+      deliveryAddress: searchParams.get('delivery_address'),
+      orderItems: [],
+      deliveryInfo: null
+    };
+  };
+
+  const orderData = getOrderData();
   
   const { data: postCheckoutPage, isLoading, error } = useQuery({
     queryKey: ['post-checkout-page', slug],
@@ -47,17 +68,50 @@ const PostCheckoutPage = () => {
 
   const content = postCheckoutPage.content as any || {};
 
-  // Mock data for demonstration
-  const mockOrderItems = [
-    { name: 'Premium Wine Selection', price: 89.99, quantity: 1, image: '/placeholder.svg' },
-    { name: 'Artisan Cheese Board', price: 45.50, quantity: 1, image: '/placeholder.svg' }
+  // Use real order data when available, fallback to mock data for design purposes
+  const orderItems = orderData.orderItems || [
+    { 
+      name: 'Premium Wine Selection', 
+      price: 89.99, 
+      quantity: 1, 
+      image: '/placeholder.svg' 
+    },
+    { 
+      name: 'Artisan Cheese Board', 
+      price: 45.50, 
+      quantity: 1, 
+      image: '/placeholder.svg' 
+    }
   ];
 
-  const mockDeliveryInfo = {
-    address: '123 Main St, Austin, TX 78701',
+  const deliveryInfo = orderData.deliveryInfo || {
+    address: orderData.deliveryAddress || '123 Main St, Austin, TX 78701',
     date: 'Today',
     time: '2:00 PM - 3:00 PM',
     instructions: 'Ring doorbell, leave at door if no answer'
+  };
+
+  // Enhanced button linking system
+  const getPrimaryButtonUrl = () => {
+    const baseUrl = content.continue_shopping_url || '/';
+    
+    // Add tracking parameters for analytics
+    const params = new URLSearchParams();
+    if (orderData.sessionId) params.set('session_id', orderData.sessionId);
+    if (orderData.orderNumber) params.set('ref_order', orderData.orderNumber);
+    
+    return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+  };
+
+  const getSecondaryButtonUrl = () => {
+    const baseUrl = content.manage_order_url || '/orders';
+    
+    // Add order number for direct tracking
+    if (orderData.orderNumber && !baseUrl.includes('?')) {
+      return `${baseUrl}?order=${orderData.orderNumber}`;
+    }
+    
+    return baseUrl;
   };
 
   return (
@@ -65,21 +119,21 @@ const PostCheckoutPage = () => {
       title={content.title || 'Order Confirmed!'}
       subtitle={content.subtitle || "Thank you for your order. We'll get started on it right away."}
       logoUrl={content.logo_url}
-      orderNumber="ORDER-12345"
-      orderItems={mockOrderItems}
-      subtotal={135.49}
-      deliveryFee={5.99}
-      total={141.48}
-      deliveryInfo={mockDeliveryInfo}
+      orderNumber={orderData.orderNumber}
+      orderItems={orderItems}
+      subtotal={orderData.subtotal}
+      deliveryFee={orderData.deliveryFee}
+      total={orderData.total}
+      deliveryInfo={deliveryInfo}
       primaryButton={{
         text: content.continue_shopping_text || 'Continue Shopping',
-        url: content.continue_shopping_url || '/',
+        url: getPrimaryButtonUrl(),
         color: content.primary_button_color,
         textColor: content.primary_button_text_color
       }}
       secondaryButton={content.manage_order_text ? {
         text: content.manage_order_text,
-        url: content.manage_order_url || '/orders',
+        url: getSecondaryButtonUrl(),
         color: content.secondary_button_color,
         textColor: content.secondary_button_text_color
       } : undefined}
