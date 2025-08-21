@@ -15,8 +15,8 @@ import {
   Award,
   Rocket
 } from 'lucide-react';
-import { SimpleCoverPageCreator } from './SimpleCoverPageCreator';
-import { SimplePostCheckoutCreator } from './SimplePostCheckoutCreator';
+import { EmbeddedCoverPageCreator } from './EmbeddedCoverPageCreator';
+import { EmbeddedPostCheckoutCreator } from './EmbeddedPostCheckoutCreator';
 import CustomerFlowConfigurator from './CustomerFlowConfigurator';
 
 export default function CustomerJourneyDashboard() {
@@ -239,11 +239,7 @@ export default function CustomerJourneyDashboard() {
                 </p>
               </CardHeader>
               <CardContent className="p-6">
-                <SimpleCoverPageCreator
-                  open={true}
-                  onOpenChange={() => {}}
-                  onSaved={() => {}}
-                />
+                <EmbeddedCoverPageCreator />
               </CardContent>
             </Card>
           </TabsContent>
@@ -262,11 +258,7 @@ export default function CustomerJourneyDashboard() {
                 </p>
               </CardHeader>
               <CardContent className="p-6">
-                <SimplePostCheckoutCreator 
-                  open={true}
-                  onOpenChange={() => {}}
-                  onSaved={() => {}}
-                />
+                <EmbeddedPostCheckoutCreator />
               </CardContent>
             </Card>
           </TabsContent>
