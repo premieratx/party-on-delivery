@@ -55,6 +55,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     console.log('🚀 AdminDashboard: Component mounted, loading data...');
+    console.log('🔍 DEBUG: Window location:', window.location.pathname);
+    console.log('🔍 DEBUG: Active tab:', activeTab);
     loadDashboardData();
   }, []);
 

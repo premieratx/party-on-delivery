@@ -37,10 +37,12 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
         }
 
         // Verify admin via edge function (same as AdminLogin)
+        console.log('🔍 DEBUG: Verifying admin with email:', session.user.email);
         const { data, error } = await supabase.functions.invoke('verify-admin-google', {
           body: { email: session.user.email }
         });
         
+        console.log('🔍 DEBUG: Admin verification response:', { data, error });
         if (error) {
           console.error('verify-admin-google error:', error);
         }
