@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CreditCard, Plus, Minus, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CartItem } from '../DeliveryWidget';
+import { PromoCodeInput } from '../checkout/PromoCodeInput';
 interface PaymentFormProps {
   cartItems: CartItem[];
   subtotal: number;
@@ -392,10 +393,6 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
               <span>Sales Tax</span>
               <span>${(validSalesTax || 0).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-xs md:text-sm">
-              <span>Tip</span>
-              <span>${(validTipAmount || 0).toFixed(2)}</span>
-            </div>
             <Separator />
             <div className="flex justify-between font-semibold text-sm md:text-lg">
               <span>Total</span>
@@ -407,29 +404,21 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
 
           
 
-          {/* Discount Code Section */}
-          {setDiscountCode && handleApplyDiscount && handleRemoveDiscount && <div className="space-y-2 md:space-y-3 p-2 md:p-3 bg-muted/30 rounded-lg">
-              <Label className="text-xs md:text-sm font-medium">Discount Code</Label>
-              {!appliedDiscount ? <div className="flex gap-2">
-                  <Input placeholder="Enter code" value={discountCode} onChange={e => setDiscountCode(e.target.value.toUpperCase())} onKeyDown={e => {
-              if (e.key === 'Enter' && discountCode) {
-                handleApplyDiscount();
-              }
-            }} className="flex-1 text-xs md:text-sm" />
-                  <Button variant="outline" size="sm" onClick={handleApplyDiscount} disabled={!discountCode} className="text-xs px-2 py-1">
-                    Apply
-                  </Button>
-                </div> : <div className="flex items-center justify-between p-2 bg-green-100 rounded border border-green-300">
-                  <span className="text-xs md:text-sm font-medium text-green-800">
-                    {appliedDiscount.code} applied
-                    {appliedDiscount.type === 'percentage' && ` (${appliedDiscount.value}% off)`}
-                    {appliedDiscount.type === 'free_shipping' && ' (Free shipping)'}
-                  </span>
-                  <Button variant="ghost" size="sm" onClick={handleRemoveDiscount} className="text-green-800 hover:text-green-900 text-xs px-2 py-1">
-                    Remove
-                  </Button>
-                </div>}
-            </div>}
+          {/* Promo Code Section */}
+          {setDiscountCode && handleApplyDiscount && handleRemoveDiscount && (
+            <PromoCodeInput 
+              appliedDiscount={appliedDiscount}
+              onDiscountApplied={(discount) => {
+                if (discount) {
+                  setDiscountCode?.(discount.code);
+                } else {
+                  setDiscountCode?.('');
+                }
+                // Let the parent handle the discount logic
+              }}
+              cartSubtotal={validSubtotal}
+            />
+          )}
 
           <Separator />
 

@@ -87,31 +87,34 @@ export const FixedCoverPageCreator: React.FC<CoverPageCreatorProps> = ({
     }
   };
 
-  // Initialize form with existing data
+  // Auto-clear form when dialog opens for new creation
   useEffect(() => {
-    if (initial) {
-      setTitle(initial.title || '');
-      setSubtitle(initial.subtitle || '');
-      setSlug(initial.slug || '');
-      setLogoUrl(initial.logo_url || '');
-      setBgImageUrl(initial.bg_image_url || '');
-      setBgVideoUrl(initial.bg_video_url || '');
-      setButtons(initial.buttons || []);
-      setIsActive(initial.is_active ?? true);
-      setIsDefaultHomepage(initial.is_default_homepage ?? false);
-    } else {
-      // Reset for new cover page
-      setTitle('');
-      setSubtitle('');
-      setSlug('');
-      setLogoUrl('');
-      setBgImageUrl('');
-      setBgVideoUrl('');
-      setButtons([]);
-      setIsActive(true);
-      setIsDefaultHomepage(false);
+    if (open) {
+      if (initial) {
+        // Load existing data for editing
+        setTitle(initial.title || '');
+        setSubtitle(initial.subtitle || '');
+        setSlug(initial.slug || '');
+        setLogoUrl(initial.logo_url || '');
+        setBgImageUrl(initial.bg_image_url || '');
+        setBgVideoUrl(initial.bg_video_url || '');
+        setButtons(Array.isArray(initial.buttons) ? initial.buttons : []);
+        setIsActive(initial.is_active ?? true);
+        setIsDefaultHomepage(initial.is_default_homepage ?? false);
+      } else {
+        // Clear form for new creation
+        setTitle('');
+        setSubtitle('');
+        setSlug('');
+        setLogoUrl('');
+        setBgImageUrl('');
+        setBgVideoUrl('');
+        setButtons([]);
+        setIsActive(true);
+        setIsDefaultHomepage(false);
+      }
     }
-  }, [initial, open]);
+  }, [open, initial]);
 
   const generateSlug = (title: string) => {
     return title
