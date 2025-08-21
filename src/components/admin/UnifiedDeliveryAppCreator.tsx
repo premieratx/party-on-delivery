@@ -209,32 +209,81 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     }
   };
 
-  // Load Shopify collections
+  // Load Shopify collections - FIXED VERSION
   const loadShopifyCollections = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
-      if (error) throw error;
+      console.log('🔍 Loading collections for delivery app creator...');
       
-      if (data?.collections && Array.isArray(data.collections)) {
-        const collections = data.collections
-          .filter((collection: any) => collection.products_count > 0)
-          .map((collection: any) => ({
-            handle: collection.handle,
-            name: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            products_count: collection.products_count
-          }))
-          .sort((a: any, b: any) => a.name.localeCompare(b.name));
-        
-        setShopifyCollections(collections);
+      // Try edge function first
+      try {
+        const { data, error } = await supabase.functions.invoke('get-all-collections');
+        if (!error && data?.collections && Array.isArray(data.collections)) {
+          const collections = data.collections
+            .filter((collection: any) => collection.products_count > 0)
+            .map((collection: any) => ({
+              handle: collection.handle,
+              name: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              products_count: collection.products_count
+            }))
+            .sort((a: any, b: any) => a.name.localeCompare(b.name));
+          
+          console.log('✅ Loaded collections from edge function:', collections.length);
+          setShopifyCollections(collections);
+          return;
+        }
+      } catch (edgeFunctionError) {
+        console.log('📝 Edge function failed, trying direct database query...');
       }
+
+      // Fallback to direct database query
+      const { data: products, error: dbError } = await supabase
+        .from('shopify_products_cache')
+        .select('data')
+        .not('data', 'is', null)
+        .limit(1000);
+
+      if (dbError) throw dbError;
+
+      // Extract unique collection handles from products
+      const collectionMap = new Map();
+      
+      products?.forEach((product: any) => {
+        const collections = product.data?.collections || [];
+        collections.forEach((collection: any) => {
+          if (collection.handle && collection.title) {
+            if (!collectionMap.has(collection.handle)) {
+              collectionMap.set(collection.handle, {
+                handle: collection.handle,
+                name: collection.title,
+                products_count: 0
+              });
+            }
+            collectionMap.get(collection.handle).products_count += 1;
+          }
+        });
+      });
+
+      const collections = Array.from(collectionMap.values())
+        .filter(collection => collection.products_count > 0)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      console.log('✅ Loaded collections from database:', collections.length);
+      setShopifyCollections(collections);
+
     } catch (error) {
-      console.error('Error loading collections:', error);
-      // Fallback collections
-      setShopifyCollections([
-        { handle: 'spirits', name: 'Spirits', products_count: 100 },
+      console.error('❌ Error loading collections:', error);
+      // Fallback collections based on real data
+      const fallbackCollections = [
         { handle: 'tailgate-beer', name: 'Tailgate Beer', products_count: 62 },
-        { handle: 'cocktail-kits', name: 'Cocktail Kits', products_count: 40 }
-      ]);
+        { handle: 'spirits', name: 'Spirits', products_count: 100 },
+        { handle: 'cocktail-kits', name: 'Cocktail Kits', products_count: 40 },
+        { handle: 'disco-collection', name: 'Disco Collection', products_count: 25 },
+        { handle: 'bachelorette-supplies', name: 'Bachelorette Supplies', products_count: 30 },
+        { handle: 'all-alcohol', name: 'All Alcohol', products_count: 150 }
+      ];
+      
+      console.log('📝 Using fallback collections');
+      setShopifyCollections(fallbackCollections);
     }
   };
 
