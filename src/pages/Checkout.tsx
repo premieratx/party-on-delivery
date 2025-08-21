@@ -27,6 +27,9 @@ export const Checkout = () => {
     address: '',
     instructions: ''
   });
+  
+  // Add discount state management
+  const [appliedDiscount, setAppliedDiscount] = useState<{code: string, type: 'percentage' | 'free_shipping', value: number} | null>(null);
 
   useEffect(() => {
     // No need to load separate cart - use unified cart directly
@@ -156,6 +159,11 @@ export const Checkout = () => {
             onUpdateQuantity={(id, variant, quantity) => {
               console.log('🛒 Checkout: Updating quantity via unified cart:', { id, variant, quantity });
               updateQuantity(id, variant, quantity);
+            }}
+            appliedDiscount={appliedDiscount}
+            onDiscountChange={(discount) => {
+              console.log('🎫 Discount applied in checkout:', discount);
+              setAppliedDiscount(discount);
             }}
           />
         </div>
