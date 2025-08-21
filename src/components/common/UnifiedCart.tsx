@@ -35,10 +35,26 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     onClose();
   };
 
-  // Always scroll cart to top when opened
+  // Always scroll cart to top when opened - enhanced with multiple methods
   useEffect(() => {
     if (isOpen && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+      // Use multiple approaches to ensure scroll reset
+      const scrollContainer = scrollContainerRef.current;
+      
+      // Immediate scroll reset
+      scrollContainer.scrollTop = 0;
+      
+      // Backup with scrollTo
+      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+      
+      // Additional timeout to ensure it works even with delayed rendering
+      const timeoutId = setTimeout(() => {
+        if (scrollContainer) {
+          scrollContainer.scrollTop = 0;
+        }
+      }, 10);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [isOpen]);
 
