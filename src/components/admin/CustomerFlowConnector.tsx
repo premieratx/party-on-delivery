@@ -69,14 +69,15 @@ export const CustomerFlowConnector: React.FC = () => {
   const loadAllComponents = async () => {
     try {
       setLoading(true);
-      const [coverPagesRes, deliveryAppsRes, postCheckoutRes, affiliatesRes] = await Promise.all([
-        supabase.from('cover_pages').select('id, title, slug').eq('is_active', true),
-        supabase.from('delivery_app_variations').select('id, app_name, app_slug').eq('is_active', true),
-        supabase.from('post_checkout_pages').select('id, name, slug').eq('is_active', true),
-        supabase.from('affiliates').select('id, name, company_name, affiliate_code').eq('status', 'active')
-      ]);
+        // Load cover pages only (affiliates will be loaded via admin dashboard context)
+        const [coverPagesRes, deliveryAppsRes, postCheckoutRes] = await Promise.all([
+          supabase.from('cover_pages').select('id, title, slug').eq('is_active', true),
+          supabase.from('delivery_app_variations').select('id, app_name, app_slug').eq('is_active', true),
+          supabase.from('post_checkout_pages').select('id, name, slug').eq('is_active', true)
+          // Removed affiliates query to avoid RLS issues
+        ]);
 
-      setCoverPages(coverPagesRes.data?.map(p => ({
+        setCoverPages(coverPagesRes.data?.map(p => ({
         id: p.id,
         name: p.title,
         slug: p.slug,
@@ -100,7 +101,8 @@ export const CustomerFlowConnector: React.FC = () => {
         url: `/post-checkout/${p.slug}`
       })) || []);
 
-      setAffiliates(affiliatesRes.data || []);
+      // For now, use empty affiliates until proper edge function integration
+      setAffiliates([]);
     } catch (error) {
       console.error('Error loading components:', error);
       toast.error('Failed to load flow components');

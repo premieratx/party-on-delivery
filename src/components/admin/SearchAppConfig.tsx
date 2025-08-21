@@ -292,7 +292,7 @@ export default function SearchAppConfig() {
                         <SelectValue placeholder="Select product type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Products</SelectItem>
+                        <SelectItem value="none">All Products</SelectItem>
                         {productTypes.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             {type.value} ({type.count} products)

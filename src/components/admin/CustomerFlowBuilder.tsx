@@ -262,7 +262,7 @@ export const CustomerFlowBuilder: React.FC = () => {
                   <SelectValue placeholder="Select cover page" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No cover page</SelectItem>
+                  <SelectItem value="none">No cover page</SelectItem>
                   {components.coverPages.map(cp => (
                     <SelectItem key={cp.id} value={cp.id}>{cp.name}</SelectItem>
                   ))}
@@ -366,7 +366,7 @@ export const CustomerFlowBuilder: React.FC = () => {
                 <SelectValue placeholder="Select cover page" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No cover page</SelectItem>
+                <SelectItem value="none">No cover page</SelectItem>
                 {components.coverPages.map(cp => (
                   <SelectItem key={cp.id} value={cp.id}>{cp.name}</SelectItem>
                 ))}
@@ -384,7 +384,7 @@ export const CustomerFlowBuilder: React.FC = () => {
                 <SelectValue placeholder="Select delivery app" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No delivery app</SelectItem>
+                <SelectItem value="none">No delivery app</SelectItem>
                 {components.deliveryApps.map(da => (
                   <SelectItem key={da.id} value={da.id}>{da.name}</SelectItem>
                 ))}
@@ -402,7 +402,7 @@ export const CustomerFlowBuilder: React.FC = () => {
                 <SelectValue placeholder="Select post-checkout" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Default post-checkout</SelectItem>
+                <SelectItem value="none">Default post-checkout</SelectItem>
                 {components.postCheckouts.map(pc => (
                   <SelectItem key={pc.id} value={pc.id}>{pc.name}</SelectItem>
                 ))}

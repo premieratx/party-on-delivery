@@ -503,7 +503,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
                         <SelectValue placeholder="Select a cover page" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {availableCoverPages.map(page => (
                           <SelectItem key={page.id} value={page.id}>
                             {page.title} ({page.slug})
@@ -523,7 +523,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
                         <SelectValue placeholder="Select an affiliate" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {availableAffiliates.map(affiliate => (
                           <SelectItem key={affiliate.id} value={affiliate.id}>
                             {affiliate.name} ({affiliate.affiliate_code})

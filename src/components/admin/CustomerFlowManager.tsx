@@ -483,7 +483,7 @@ export const CustomerFlowManager: React.FC = () => {
                       <SelectValue placeholder="Select a cover page" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {coverPages.map((page) => (
                         <SelectItem key={page.id} value={page.id}>
                           {page.title}
@@ -500,7 +500,7 @@ export const CustomerFlowManager: React.FC = () => {
                       <SelectValue placeholder="Select a delivery app" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {deliveryApps.map((app) => (
                         <SelectItem key={app.id} value={app.id}>
                           {app.app_name}
@@ -517,7 +517,7 @@ export const CustomerFlowManager: React.FC = () => {
                       <SelectValue placeholder="Select a post-checkout page" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {postCheckoutPages.map((page) => (
                         <SelectItem key={page.id} value={page.id}>
                           {page.name}
@@ -618,7 +618,7 @@ export const CustomerFlowManager: React.FC = () => {
                       <SelectValue placeholder="Select discount type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="percentage">Percentage</SelectItem>
                       <SelectItem value="dollar">Dollar Amount</SelectItem>
                       <SelectItem value="both">Both</SelectItem>

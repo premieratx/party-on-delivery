@@ -423,7 +423,7 @@ export default function CustomerFlowConfigurator() {
                           <SelectValue placeholder="Select affiliate (optional)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No Affiliate</SelectItem>
+                          <SelectItem value="none">No Affiliate</SelectItem>
                           {affiliates.map((affiliate) => (
                             <SelectItem key={affiliate.id} value={affiliate.id}>
                               {affiliate.name} ({affiliate.affiliate_code})

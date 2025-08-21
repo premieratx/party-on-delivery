@@ -426,7 +426,7 @@ export const PostCheckoutScreenManager = () => {
                             <SelectValue placeholder="Select cover page..." />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {coverPages.map((page) => (
                               <SelectItem key={page.id} value={page.id}>
                                 {page.title} ({page.slug})
@@ -443,7 +443,7 @@ export const PostCheckoutScreenManager = () => {
                             <SelectValue placeholder="Select affiliate..." />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {affiliates.map((affiliate) => (
                               <SelectItem key={affiliate.id} value={affiliate.id}>
                                 {affiliate.company_name || affiliate.name} ({affiliate.affiliate_code})

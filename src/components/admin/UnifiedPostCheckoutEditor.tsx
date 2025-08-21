@@ -151,13 +151,18 @@ export const UnifiedPostCheckoutEditor: React.FC<UnifiedPostCheckoutEditorProps>
   useEffect(() => {
     if (!open) return;
     
-    // Load cover pages and affiliates
+    // Load cover pages only (affiliates will be loaded via admin dashboard context)
     Promise.all([
-      supabase.from('cover_pages').select('id, title, slug').order('created_at', { ascending: false }),
-      supabase.from('affiliates').select('id, name, company_name').order('created_at', { ascending: false })
-    ]).then(([coverPagesRes, affiliatesRes]) => {
+      supabase.from('cover_pages').select('id, title, slug').order('created_at', { ascending: false })
+    ]).then(([coverPagesRes]) => {
       setCoverPages(coverPagesRes.data || []);
-      setAffiliates(affiliatesRes.data || []);
+      // For now, use empty affiliates until proper edge function integration
+      setAffiliates([]);
+    }).catch(error => {
+      console.error('Error loading data:', error);
+      // Set empty arrays as fallback
+      setCoverPages([]);
+      setAffiliates([]);
     });
 
     if (initial) {
@@ -491,7 +496,7 @@ export const UnifiedPostCheckoutEditor: React.FC<UnifiedPostCheckoutEditorProps>
                           <SelectValue placeholder="Select affiliate..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {affiliates.map((affiliate) => (
                             <SelectItem key={affiliate.id} value={affiliate.id}>
                               {affiliate.name || affiliate.company_name}

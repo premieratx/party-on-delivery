@@ -527,7 +527,7 @@ export const CoverPageEditor: React.FC<CoverPageEditorProps> = ({
                           <SelectValue placeholder="Choose delivery app" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No assignment</SelectItem>
+                          <SelectItem value="none">No assignment</SelectItem>
                           {deliveryApps.map((app) => (
                             <SelectItem key={app.app_slug} value={app.app_slug}>
                               {app.app_name}

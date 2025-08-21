@@ -429,7 +429,7 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
                       <SelectValue placeholder="Select discount type (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No discount</SelectItem>
+                      <SelectItem value="none">No discount</SelectItem>
                       <SelectItem value="percentage">Percentage discount</SelectItem>
                       <SelectItem value="dollar">Dollar amount discount</SelectItem>
                       <SelectItem value="both">Both percentage and dollar discount</SelectItem>
