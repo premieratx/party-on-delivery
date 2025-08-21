@@ -56,6 +56,12 @@ serve(async (req) => {
 
     // **HARDCODED PROMO CODES** - High priority codes that should always work
     const hardcodedCodes: { [key: string]: PromoCode } = {
+      'PREMIER2025': {
+        code: 'PREMIER2025',
+        discount_type: 'free_shipping',
+        discount_value: 0, // Free shipping
+        is_active: true
+      },
       'FREEDELIVERY': {
         code: 'FREEDELIVERY',
         discount_type: 'fixed_amount',
@@ -97,6 +103,11 @@ serve(async (req) => {
       if (promoCode.discount_type === 'percentage') {
         discountAmount = (orderAmount * promoCode.discount_value) / 100;
         message = `${promoCode.discount_value}% discount applied!`;
+      } else if (promoCode.discount_type === 'free_shipping') {
+        // Free shipping code
+        discountAmount = 0;
+        message = 'Free shipping applied!';
+        appliesTo = 'delivery';
       } else {
         // Fixed amount applies to delivery fee
         discountAmount = promoCode.discount_value;
@@ -114,6 +125,7 @@ serve(async (req) => {
           discountValue: promoCode.discount_value,
           discountAmount: Math.round(discountAmount * 100) / 100,
           appliesTo: appliesTo,
+          isFreeShipping: promoCode.discount_type === 'free_shipping',
           message: message
         }),
         { 

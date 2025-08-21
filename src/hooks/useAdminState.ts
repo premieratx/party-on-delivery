@@ -64,7 +64,7 @@ export function useAdminState(defaultTab = 'overview') {
         lastUpdated: Date.now()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      console.log('💾 Admin state saved successfully:', { tab: tab || activeTab, dataKeys: Object.keys(data || formData) });
+      // console.log('💾 Admin state saved successfully:', { tab: tab || activeTab, dataKeys: Object.keys(data || formData) });
     } catch (error) {
       console.error('❌ Failed to save admin state:', error);
     }

@@ -23,33 +23,25 @@ export const ColdStartSolution = () => {
         await supabase.functions.invoke('keep-functions-warm', {
           body: { source: 'frontend-keepalive' }
         });
-        console.log('🔥 Functions kept warm at:', new Date().toISOString());
+        // console.log('🔥 Functions kept warm at:', new Date().toISOString());
       } catch (error) {
-        console.warn('Keep-alive failed, but continuing:', error);
+        // Silently fail keep-alive to prevent console spam
+        // console.warn('Keep-alive failed, but continuing:', error);
       }
     };
 
     // Initial warm-up
     keepFunctionsWarm();
 
-    // Set up interval - every 4 minutes (before 5min cold timeout)
-    keepAliveInterval = setInterval(keepFunctionsWarm, 4 * 60 * 1000);
+    // Set up interval - every 10 minutes (reduced frequency to prevent spam)
+    keepAliveInterval = setInterval(keepFunctionsWarm, 10 * 60 * 1000);
 
-    // Also warm up on user activity
-    const handleUserActivity = () => {
-      keepFunctionsWarm();
-    };
-
-    window.addEventListener('focus', handleUserActivity);
-    window.addEventListener('click', handleUserActivity);
-
+    // Cleanup function
     return () => {
       if (keepAliveInterval) {
         clearInterval(keepAliveInterval);
         keepAliveInterval = null;
       }
-      window.removeEventListener('focus', handleUserActivity);
-      window.removeEventListener('click', handleUserActivity);
     };
   }, []);
 

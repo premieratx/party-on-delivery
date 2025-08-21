@@ -105,11 +105,11 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     // Only save if there's actual content
     if (title.trim() || subtitle.trim() || logoUrl || backgroundImageUrl) {
       setFormValue(formKey, formState);
-      console.log('💾 Cover page auto-saved:', { 
-        formKey, 
-        title: title.trim() || 'Untitled',
-        hasContent: !!(title.trim() || subtitle.trim() || logoUrl || backgroundImageUrl)
-      });
+      // console.log('💾 Cover page auto-saved:', { 
+      //   formKey, 
+      //   title: title.trim() || 'Untitled',
+      //   hasContent: !!(title.trim() || subtitle.trim() || logoUrl || backgroundImageUrl)
+      // });
     }
   }, [
     open, initial?.id, title, subtitle, logoUrl, logoEmoji, backgroundImageUrl, backgroundVideoUrl,

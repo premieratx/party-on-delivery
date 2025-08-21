@@ -17,7 +17,6 @@ const suppressedWarnings = [
 
 const suppressedErrors = [
   'Failed to load resource: the server responded with a status of 404',
-  'hero-party-austin',
   'BE7PXuso'
 ];
 
