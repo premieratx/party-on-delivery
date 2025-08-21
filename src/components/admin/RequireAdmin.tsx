@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AdminSessionManager } from '@/utils/sessionPersistence';
 
 interface RequireAdminProps {
   children: React.ReactNode;
@@ -64,9 +65,8 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
           setAdminContextSet(true);
           setAllowed(true);
           
-          // Store admin session persistence to prevent re-verification
-          sessionStorage.setItem('admin_verified', 'true');
-          sessionStorage.setItem('admin_email', session.user.email || '');
+          // Store admin session with enhanced persistence
+          AdminSessionManager.setAdminSession(session.user.email || '');
         } else {
           await supabase.auth.signOut();
           setAllowed(false);
@@ -83,11 +83,12 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
     };
 
     // Check if already verified to avoid unnecessary calls
-    const isAlreadyVerified = sessionStorage.getItem('admin_verified') === 'true';
+    const isAlreadyVerified = AdminSessionManager.isAdminSessionValid();
     if (isAlreadyVerified && allowed === null) {
+      const session = AdminSessionManager.getAdminSession();
       setAdminContextSet(true);
       setAllowed(true);
-      console.log('🔄 Admin session restored from cache');
+      console.log('🔄 Admin session restored from persistent cache:', session?.email);
       return;
     }
 
@@ -96,8 +97,7 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
       if (!mounted) return;
       
       if (event === 'SIGNED_OUT' || !session) {
-        sessionStorage.removeItem('admin_verified');
-        sessionStorage.removeItem('admin_email');
+        AdminSessionManager.clearAdminSession();
         setAdminContextSet(false);
         setAllowed(false);
         navigate('/affiliate/admin-login', { replace: true });

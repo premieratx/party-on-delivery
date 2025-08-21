@@ -4428,6 +4428,39 @@ export type Database = {
           },
         ]
       }
+      warmup_log: {
+        Row: {
+          collections_count: number | null
+          created_at: string
+          error_message: string | null
+          id: string
+          products_count: number | null
+          status: string
+          sync_triggered: boolean | null
+          type: string
+        }
+        Insert: {
+          collections_count?: number | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          products_count?: number | null
+          status?: string
+          sync_triggered?: boolean | null
+          type: string
+        }
+        Update: {
+          collections_count?: number | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          products_count?: number | null
+          status?: string
+          sync_triggered?: boolean | null
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
