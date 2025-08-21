@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
+import { useDeliveryFee } from '@/hooks/useDeliveryFee';
 import { useToast } from '@/hooks/use-toast';
 import { useCoverPageTracking } from '@/hooks/useCoverPageTracking';
 import { usePersistentCheckout } from '@/hooks/usePersistentCheckout';
@@ -132,21 +133,19 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     }
   }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer, confirmedDateTime, confirmedAddress, confirmedCustomer]);
 
-  // Pricing calculations
+  // Pricing calculations - use proper delivery fee hook
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
-  const calculatedSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
+  const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
   
-  const calculatedDeliveryFee = calculatedSubtotal >= 200 ? calculatedSubtotal * 0.1 : 20;
-  const assignedFreeShipping = sessionStorage.getItem('shipping.free') === '1';
-  const coverPageFreeShipping = tracking.freeShippingEligible;
-  const finalDeliveryFee = (appliedDiscount?.type === 'free_shipping' || assignedFreeShipping || coverPageFreeShipping) ? 0 : calculatedDeliveryFee;
+  // Use the proper delivery fee hook that handles PREMIERE2025 and other free shipping codes
+  const finalDeliveryFee = useDeliveryFee(cartSubtotal, appliedDiscount);
   
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
-    ? calculatedSubtotal * (1 - appliedDiscount.value / 100)
-    : calculatedSubtotal;
+    ? cartSubtotal * (1 - appliedDiscount.value / 100)
+    : cartSubtotal;
   
-  const calculatedSalesTax = discountedSubtotal * 0.0825; // 8.25% sales tax
+  const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax on original subtotal
   
   // Tip management - reactive to subtotal changes
   const [tipPercentage, setTipPercentage] = useState(10); // Default 10%
@@ -335,11 +334,11 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             {/* Promo Code Section - Move Above Payment */}
             {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
               <div className="space-y-4">
-                <PromoCodeInput 
-                  onDiscountApplied={handlePromoApplied}
-                  appliedDiscount={appliedDiscount}
-                  cartSubtotal={calculatedSubtotal}
-                />
+                 <PromoCodeInput 
+                   onDiscountApplied={handlePromoApplied}
+                   appliedDiscount={appliedDiscount}
+                   cartSubtotal={cartSubtotal}
+                 />
               </div>
             )}
 
@@ -365,17 +364,17 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           <div className="xl:col-span-2 space-y-4">
             {/* Order Summary - Sticky on larger screens */}
             <div className="lg:sticky lg:top-4">
-              <ImprovedCheckoutSummary
-                cartItems={cartItems}
-                subtotal={calculatedSubtotal}
-                deliveryFee={finalDeliveryFee}
-                salesTax={calculatedSalesTax}
-                tipAmount={tipAmount}
-                appliedDiscount={appliedDiscount}
-                tipPercentage={tipPercentage}
-                onTipChange={setTipPercentage}
-                onUpdateQuantity={onUpdateQuantity}
-              />
+               <ImprovedCheckoutSummary
+                 cartItems={cartItems}
+                 subtotal={cartSubtotal}
+                 deliveryFee={finalDeliveryFee}
+                 salesTax={calculatedSalesTax}
+                 tipAmount={tipAmount}
+                 appliedDiscount={appliedDiscount}
+                 tipPercentage={tipPercentage}
+                 onTipChange={setTipPercentage}
+                 onUpdateQuantity={onUpdateQuantity}
+               />
             </div>
           </div>
         </div>

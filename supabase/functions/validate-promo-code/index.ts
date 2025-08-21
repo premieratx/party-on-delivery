@@ -75,6 +75,18 @@ serve(async (req) => {
         discount_value: 5.99,
         is_active: true,
         minimum_order_amount: 25
+      },
+      'PREMIERE2025': {
+        code: 'PREMIERE2025',
+        discount_type: 'fixed_amount',
+        discount_value: 0,
+        is_active: true
+      },
+      'PREMIER2025': {
+        code: 'PREMIER2025',
+        discount_type: 'fixed_amount',
+        discount_value: 0,
+        is_active: true
       }
     };
 
