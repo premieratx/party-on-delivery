@@ -16,7 +16,6 @@ import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCrea
 import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator';
 import { FixedPostCheckoutCreator } from '@/components/admin/FixedPostCheckoutCreator';
 import { RobustDeliveryAppCreator } from '@/components/admin/RobustDeliveryAppCreator';
-import { ComprehensiveAdminTest } from '@/components/admin/ComprehensiveAdminTest';
 import { BulletproofAdminTest } from '@/components/admin/BulletproofAdminTest';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
@@ -265,7 +264,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm">👥 Affiliates</TabsTrigger>
           </TabsList>
 
-          {/* Test Suite - FIRST TAB */}
+          {/* Bulletproof Test Suite - FIRST TAB */}
           <TabsContent value="test-suite" className="space-y-4">
             <BulletproofAdminTest />
           </TabsContent>

@@ -1,45 +1,42 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.55.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const url = new URL(req.url);
-    const slug = url.pathname.split('/').pop();
-    
-    if (!slug) {
-      throw new Error('No slug provided');
-    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    console.log(`🔍 Testing cover page preview for slug: ${slug}`);
-    
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const supabase = createClient(supabaseUrl, supabaseKey)
+    const { slug } = await req.json();
 
-    // Get cover page data
-    const { data: coverPage, error } = await supabase
+    console.log(`🧪 Testing cover page preview for slug: ${slug}`);
+
+    // Check if cover page exists
+    const { data: coverPage, error: fetchError } = await supabase
       .from('cover_pages')
       .select('*')
       .eq('slug', slug)
       .eq('is_active', true)
       .single();
 
-    if (error || !coverPage) {
+    if (fetchError || !coverPage) {
+      console.error('❌ Cover page not found:', fetchError);
       return new Response(
         JSON.stringify({
           success: false,
           error: 'Cover page not found',
-          slug,
-          debug: { error, coverPage }
+          slug: slug,
+          debug: fetchError
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -48,56 +45,78 @@ serve(async (req) => {
       );
     }
 
-    // Test preview functionality
-    const previewData = {
-      id: coverPage.id,
-      slug: coverPage.slug,
-      title: coverPage.title,
-      subtitle: coverPage.subtitle,
-      theme: coverPage.theme,
-      buttons: coverPage.buttons,
-      checklist: coverPage.checklist,
-      styles: coverPage.styles,
-      logo_url: coverPage.logo_url,
-      bg_image_url: coverPage.bg_image_url,
-      bg_video_url: coverPage.bg_video_url,
-      is_active: coverPage.is_active,
-      preview_url: `https://order.partyondelivery.com/cover/${slug}`,
-      created_at: coverPage.created_at
-    };
+    console.log('✅ Cover page found:', coverPage.title);
 
-    console.log(`✅ Cover page preview test successful for: ${slug}`);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        cover_page: previewData,
-        preview_status: 'ready',
-        message: `Cover page "${coverPage.title}" is ready for preview`,
-        test_results: {
-          database_access: 'pass',
-          data_complete: 'pass',
-          preview_ready: 'pass'
+    // Test the actual preview URL
+    const previewUrl = `https://order.partyondelivery.com/cover/${slug}`;
+    
+    try {
+      const response = await fetch(previewUrl, { 
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Supabase-Functions-Test'
         }
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      });
+
+      const isAccessible = response.ok;
+      
+      console.log(`🌐 Preview URL test - Status: ${response.status}, OK: ${isAccessible}`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          coverPage: {
+            id: coverPage.id,
+            title: coverPage.title,
+            slug: coverPage.slug,
+            is_active: coverPage.is_active,
+            affiliate_slug: coverPage.affiliate_slug
+          },
+          previewUrl,
+          previewAccessible: isAccessible,
+          httpStatus: response.status,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+
+    } catch (urlError) {
+      console.error('❌ Preview URL test failed:', urlError);
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Preview URL not accessible',
+          coverPage: {
+            id: coverPage.id,
+            title: coverPage.title,
+            slug: coverPage.slug
+          },
+          previewUrl,
+          previewAccessible: false,
+          urlError: urlError.message,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 503
+        }
+      );
+    }
 
   } catch (error) {
-    console.error('❌ Cover page preview test error:', error);
-    
+    console.error('❌ Cover page test error:', error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'Preview test failed',
-        test_results: {
-          database_access: 'fail',
-          error_details: error
-        }
+        error: error.message,
+        timestamp: new Date().toISOString()
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500
+        status: 500 
       }
     );
   }

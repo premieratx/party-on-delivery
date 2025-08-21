@@ -106,33 +106,47 @@ export const RobustDeliveryAppCreator: React.FC<DeliveryAppEditorProps> = ({
   const loadCollections = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading Shopify collections...');
+      
       const { data, error } = await supabase.functions.invoke('get-all-collections');
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Collections API error:', error);
+        throw error;
+      }
       
-      if (data?.success && data.collections) {
+      if (data?.success && data.collections && data.collections.length > 0) {
+        console.log(`✅ Loaded ${data.collections.length} collections from ${data.source}`);
         setCollections(data.collections);
         toast({
-          title: "Collections Loaded",
-          description: `Found ${data.collections.length} collections from ${data.source}`,
+          title: "Collections Loaded Successfully",
+          description: `Found ${data.collections.length} Shopify collections`,
         });
       } else {
-        throw new Error('No collections found');
+        console.warn('⚠️ No collections returned, using fallback data');
+        throw new Error('No collections found in API response');
       }
     } catch (error: any) {
-      console.error('Error loading collections:', error);
+      console.error('❌ Error loading collections:', error);
+      
+      // Enhanced fallback with more realistic Shopify collections
+      const fallbackCollections = [
+        { handle: 'beer', title: 'Premium Beer Collection', products_count: 150 },
+        { handle: 'spirits', title: 'Premium Spirits', products_count: 120 },
+        { handle: 'wine', title: 'Fine Wine Selection', products_count: 200 },
+        { handle: 'cocktail-mixers', title: 'Cocktail Mixers', products_count: 75 },
+        { handle: 'party-essentials', title: 'Party Essentials', products_count: 90 },
+        { handle: 'tailgate-beer', title: 'Tailgate Beer', products_count: 95 },
+        { handle: 'craft-cocktails', title: 'Craft Cocktail Kits', products_count: 65 }
+      ];
+      
+      setCollections(fallbackCollections);
+      
       toast({
-        title: "Collection Load Error",
-        description: "Using fallback collections. Please check Shopify connection.",
+        title: "Using Fallback Collections",
+        description: "Shopify collections unavailable. Using sample data for testing.",
         variant: "destructive"
       });
-      // Use fallback collections
-      setCollections([
-        { handle: 'spirits', title: 'Premium Spirits', products_count: 120 },
-        { handle: 'tailgate-beer', title: 'Tailgate Beer', products_count: 95 },
-        { handle: 'cocktail-kits', title: 'Cocktail Kits', products_count: 65 },
-        { handle: 'party-supplies', title: 'Party Supplies', products_count: 85 }
-      ]);
     } finally {
       setLoading(false);
     }
