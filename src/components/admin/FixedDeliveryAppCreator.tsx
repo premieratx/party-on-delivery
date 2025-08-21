@@ -337,8 +337,8 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] w-full overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
             {initial ? 'Edit' : 'Create'} Delivery App
@@ -346,14 +346,14 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
             <TabsTrigger value="basic">Basic Settings</TabsTrigger>
             <TabsTrigger value="tabs">Collection Tabs</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 min-h-0">
-            <TabsContent value="basic" className="space-y-4 h-full overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <TabsContent value="basic" className="space-y-4 p-1">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="appName">App Name *</Label>
