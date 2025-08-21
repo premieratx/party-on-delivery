@@ -8,8 +8,9 @@ const corsHeaders = {
 };
 
 const logStep = (step: string, details?: any) => {
+  const timestamp = new Date().toISOString();
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-SHOPIFY-ORDER] ${step}${detailsStr}`);
+  console.log(`[${timestamp}][SHOPIFY-ORDER] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -18,91 +19,105 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Function started");
+    logStep("=== CREATE SHOPIFY ORDER STARTED ===");
 
     const body = await req.json();
-    logStep("Request body received", { bodyKeys: Object.keys(body) });
+    logStep("Request received", { 
+      method: req.method,
+      bodyKeys: Object.keys(body),
+      hasPaymentIntentId: !!body.paymentIntentId,
+      hasSessionId: !!body.sessionId
+    });
     
-    const { paymentIntentId, isAddingToOrder, useSameAddress, sessionId } = body;
+    const { paymentIntentId, sessionId } = body;
     if (!paymentIntentId && !sessionId) {
-      logStep("ERROR: Missing required parameters");
+      logStep("ERROR: Missing payment identifier");
       throw new Error("Payment Intent ID or Session ID is required");
     }
 
-    logStep("Payment Intent ID received", { 
-      paymentIntentId, 
-      isAddingToOrder, 
-      useSameAddress, 
-      sessionId,
-      bodyKeys: Object.keys(body)
-    });
-
-    // Initialize Stripe
+    // Validate environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
+    const shopifyStore = Deno.env.get("SHOPIFY_STORE_URL") || "premier-concierge.myshopify.com";
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
     if (!stripeKey) {
-      logStep("ERROR: STRIPE_SECRET_KEY missing");
+      logStep("ERROR: STRIPE_SECRET_KEY not configured");
       throw new Error("STRIPE_SECRET_KEY is not set");
     }
-    logStep("Stripe key found");
+    if (!shopifyToken) {
+      logStep("ERROR: SHOPIFY_ADMIN_API_ACCESS_TOKEN not configured");
+      throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not set");
+    }
+    if (!supabaseUrl || !supabaseServiceKey) {
+      logStep("ERROR: Supabase credentials not configured");
+      throw new Error("Supabase credentials are not set");
+    }
 
+    logStep("Environment variables validated");
+
+    // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Get payment details from Stripe (either PaymentIntent or CheckoutSession)
+    // Get payment details from Stripe
     let metadata;
+    let paymentAmount = 0;
+    
     try {
       if (paymentIntentId) {
         logStep("Retrieving PaymentIntent", { paymentIntentId });
         const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
         if (paymentIntent.status !== 'succeeded') {
           logStep("ERROR: Payment not completed", { status: paymentIntent.status });
-          throw new Error("Payment not completed");
+          throw new Error(`Payment not completed. Status: ${paymentIntent.status}`);
         }
         metadata = paymentIntent.metadata;
-        logStep("Stripe payment intent retrieved", { status: paymentIntent.status });
+        paymentAmount = paymentIntent.amount / 100; // Convert cents to dollars
+        logStep("PaymentIntent retrieved successfully", { 
+          status: paymentIntent.status,
+          amount: paymentAmount,
+          metadataKeys: Object.keys(metadata || {})
+        });
       } else if (sessionId) {
         logStep("Retrieving Checkout Session", { sessionId });
         const session = await stripe.checkout.sessions.retrieve(sessionId);
         if (session.payment_status !== 'paid') {
           logStep("ERROR: Payment not completed", { status: session.payment_status });
-          throw new Error("Payment not completed");
+          throw new Error(`Payment not completed. Status: ${session.payment_status}`);
         }
         metadata = session.metadata;
-        logStep("Stripe checkout session retrieved", { status: session.payment_status });
-      } else {
-        logStep("ERROR: No payment method specified");
-        throw new Error("No payment method specified");
+        paymentAmount = (session.amount_total || 0) / 100; // Convert cents to dollars
+        logStep("Checkout Session retrieved successfully", { 
+          status: session.payment_status,
+          amount: paymentAmount,
+          metadataKeys: Object.keys(metadata || {})
+        });
       }
     } catch (stripeError) {
-      logStep("ERROR: Stripe API call failed", { error: stripeError.message });
+      logStep("ERROR: Stripe API call failed", { 
+        error: stripeError.message,
+        stack: stripeError.stack 
+      });
       throw new Error(`Stripe API error: ${stripeError.message}`);
     }
 
-    // Get Shopify credentials
-    const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-    const rawShopifyStore = Deno.env.get("SHOPIFY_STORE_URL") || "premier-concierge.myshopify.com";
-    
-    // Ensure URL has proper protocol for API calls
-    const shopifyStore = rawShopifyStore.includes('://') 
-      ? rawShopifyStore.replace(/^https?:\/\//, '') // Remove any existing protocol
-      : rawShopifyStore;
-    
-    if (!shopifyToken) {
-      throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not configured");
+    if (!metadata) {
+      logStep("ERROR: No metadata received from Stripe");
+      throw new Error("No payment metadata found");
     }
 
-    // Parse cart items from metadata - with database fallback for large orders
+    // Parse cart items and order details
     let cartItems = [];
-    let amountSource = 'metadata'; // Track where amounts come from
-    let draftAmounts = null;
-    
-    // First try to get cart data AND amounts from order_drafts if referenced
-    if (metadata?.order_draft_id) {
+    let orderAmounts = {};
+
+    // Try to get from order_drafts first
+    if (metadata.order_draft_id) {
       try {
-        const supabaseClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-          { auth: { autoRefreshToken: false, persistSession: false } }
-        );
+        logStep("Loading order data from database", { orderDraftId: metadata.order_draft_id });
+        const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: { autoRefreshToken: false, persistSession: false }
+        });
         
         const { data: orderDraft, error } = await supabaseClient
           .from('order_drafts')
@@ -111,973 +126,379 @@ serve(async (req) => {
           .single();
           
         if (!error && orderDraft?.draft_data) {
-          if (orderDraft.draft_data.cart_items) {
-            cartItems = orderDraft.draft_data.cart_items;
-            logStep("Cart items loaded from order_drafts", { 
-              orderDraftId: metadata.order_draft_id,
-              itemCount: cartItems.length 
-            });
-          }
-          
-          // Use amounts from order_drafts if available (amounts are stored in cents, convert to dollars)
-          if (orderDraft.draft_data.subtotal !== undefined) {
-            draftAmounts = {
-              subtotal: (orderDraft.draft_data.subtotal || 0) / 100,
-              delivery_fee: (orderDraft.draft_data.delivery_fee || 0) / 100,
-              sales_tax: (orderDraft.draft_data.sales_tax || 0) / 100,
-              tip_amount: (orderDraft.draft_data.tip_amount || 0) / 100,
-              total_amount: orderDraft.total_amount || 0 // Already stored in dollars
-            };
-            amountSource = 'order_drafts';
-            logStep("Amounts loaded from order_drafts", { draftAmounts, amountSource });
-          }
+          cartItems = orderDraft.draft_data.cart_items || [];
+          orderAmounts = {
+            subtotal: (orderDraft.draft_data.subtotal || 0) / 100,
+            delivery_fee: (orderDraft.draft_data.delivery_fee || 0) / 100,
+            sales_tax: (orderDraft.draft_data.sales_tax || 0) / 100,
+            tip_amount: (orderDraft.draft_data.tip_amount || 0) / 100,
+            total_amount: orderDraft.total_amount || 0
+          };
+          logStep("Order data loaded from database", { 
+            itemCount: cartItems.length,
+            totalAmount: orderAmounts.total_amount
+          });
         }
       } catch (dbError) {
-        logStep("Failed to load data from order_drafts", dbError);
+        logStep("WARNING: Failed to load from order_drafts", { error: dbError.message });
       }
     }
     
-    // Fallback: try to parse from metadata (for backward compatibility)
-    if (!cartItems || cartItems.length === 0) {
+    // Fallback to metadata
+    if (cartItems.length === 0) {
       try {
-        if (metadata?.cart_items) {
+        if (metadata.cart_items) {
           cartItems = JSON.parse(metadata.cart_items);
           logStep("Cart items parsed from metadata", { itemCount: cartItems.length });
         }
       } catch (parseError) {
-        logStep("Failed to parse cart_items from metadata", parseError);
+        logStep("ERROR: Failed to parse cart_items from metadata", { error: parseError.message });
       }
     }
-    
-    // Final validation with detailed logging
-    if (!cartItems || cartItems.length === 0) {
-      logStep("CRITICAL: No cart items found anywhere", { 
-        availableMetadataKeys: Object.keys(metadata || {}),
-        orderDraftId: metadata?.order_draft_id,
-        isGroupOrder: !!metadata?.group_order_token,
-        groupOrderToken: metadata?.group_order_token
-      });
-      throw new Error("No cart items found. Check order_drafts table and metadata structure.");
-    }
-    
-    logStep("Cart items successfully loaded", { 
-      itemCount: cartItems.length,
-      source: metadata?.order_draft_id ? 'order_drafts' : 'metadata'
-    });
-    
-    const deliveryDate = metadata?.delivery_date;
-    const deliveryTime = metadata?.delivery_time;
-    const deliveryAddress = metadata?.delivery_address;
-    const deliveryInstructions = metadata?.delivery_instructions;
-    const customerName = metadata?.customer_name;
-    const customerPhone = metadata?.customer_phone;
-    const customerEmail = metadata?.customer_email;
-    const groupOrderNumber = metadata?.group_order_number;
-    const groupOrderToken = metadata?.group_order_token; // New: detect if joining existing order
-    const discountCode = metadata?.discount_code;
-    const discountAmount = metadata?.discount_amount;
-    
-    // Use amounts from order_drafts if available, otherwise fall back to metadata
-    const subtotal = draftAmounts?.subtotal ?? parseFloat(metadata?.subtotal || '0');
-    const shippingFee = draftAmounts?.delivery_fee ?? parseFloat(metadata?.delivery_fee || '0');
-    const salesTax = draftAmounts?.sales_tax ?? parseFloat(metadata?.sales_tax || '0');
-    const tipAmount = draftAmounts?.tip_amount ?? parseFloat(metadata?.tip_amount || '0');
-    const totalAmount = draftAmounts?.total_amount ?? parseFloat(metadata?.total_amount || '0');
-    
-    // CRITICAL: Verify amounts match to prevent pricing errors
-    const calculatedTotal = Math.round((subtotal + shippingFee + salesTax + tipAmount) * 100) / 100;
-    const totalDifference = Math.abs(totalAmount - calculatedTotal);
-    
-    logStep("Amount validation", {
-      subtotal: subtotal.toFixed(2),
-      shippingFee: shippingFee.toFixed(2),
-      salesTax: salesTax.toFixed(2), 
-      tipAmount: tipAmount.toFixed(2),
-      totalAmount: totalAmount.toFixed(2),
-      calculatedTotal: calculatedTotal.toFixed(2),
-      difference: totalDifference.toFixed(4),
-      amountSource: amountSource
-    });
-    
-    if (totalDifference > 0.02) { // Allow for minor rounding differences
-      // Log detailed breakdown for debugging
-      logStep("ERROR: Amount mismatch detected", {
-        metadataSubtotal: metadata?.subtotal,
-        metadataDeliveryFee: metadata?.delivery_fee,
-        metadataSalesTax: metadata?.sales_tax,
-        metadataTipAmount: metadata?.tip_amount,
-        metadataTotalAmount: metadata?.total_amount,
-        parsedSubtotal: subtotal.toFixed(2),
-        parsedDeliveryFee: shippingFee.toFixed(2),
-        parsedSalesTax: salesTax.toFixed(2),
-        parsedTipAmount: tipAmount.toFixed(2),
-        parsedTotalAmount: totalAmount.toFixed(2),
-        calculatedTotal: calculatedTotal.toFixed(2),
-        difference: totalDifference.toFixed(4),
-        amountSource: amountSource
-      });
-      
-      throw new Error(`Shopify order amount mismatch: Total $${totalAmount.toFixed(2)} doesn't match calculated total $${calculatedTotal.toFixed(2)}. Difference: $${totalDifference.toFixed(4)}`);
-    }
-    
-    // Validate reasonable amount range
-    if (totalAmount < 0.50 || totalAmount > 10000) {
-      throw new Error(`Invalid order amount: $${totalAmount.toFixed(2)}. Must be between $0.50 and $10,000.00`);
-    }
-    
-    logStep("Amount validation passed", { 
-      finalTotal: totalAmount.toFixed(2),
-      calculatedTotal: calculatedTotal.toFixed(2),
-      amountSource: amountSource
-    });
-    // Prefer body-provided affiliateCode, else fall back to Stripe metadata affiliate_code or discount_code
-    const affiliateCode = body.affiliateCode || metadata?.affiliate_code || metadata?.discount_code || undefined;
-    const commissionPercent = typeof body.commissionPercent === 'number' ? body.commissionPercent : undefined;
 
-    logStep("Metadata parsed", { 
-      itemCount: cartItems.length, 
-      deliveryDate, 
-      deliveryTime,
+    if (cartItems.length === 0) {
+      logStep("CRITICAL ERROR: No cart items found", { 
+        metadataKeys: Object.keys(metadata),
+        hasOrderDraftId: !!metadata.order_draft_id
+      });
+      throw new Error("No cart items found in order");
+    }
+
+    // Get order amounts (fallback to metadata if not from database)
+    if (!orderAmounts.total_amount) {
+      orderAmounts = {
+        subtotal: parseFloat(metadata.subtotal || '0'),
+        delivery_fee: parseFloat(metadata.delivery_fee || '0'),
+        sales_tax: parseFloat(metadata.sales_tax || '0'),
+        tip_amount: parseFloat(metadata.tip_amount || '0'),
+        total_amount: parseFloat(metadata.total_amount || '0')
+      };
+      logStep("Using amounts from metadata", orderAmounts);
+    }
+
+    // Validate amounts match payment
+    const calculatedTotal = Math.round((orderAmounts.subtotal + orderAmounts.delivery_fee + orderAmounts.sales_tax + orderAmounts.tip_amount) * 100) / 100;
+    const totalDifference = Math.abs(paymentAmount - calculatedTotal);
+    
+    if (totalDifference > 0.02) {
+      logStep("ERROR: Amount mismatch", {
+        paymentAmount,
+        calculatedTotal,
+        difference: totalDifference,
+        breakdown: orderAmounts
+      });
+      throw new Error(`Payment amount mismatch: Payment $${paymentAmount} vs Order $${calculatedTotal}`);
+    }
+
+    logStep("Amount validation passed", { 
+      paymentAmount,
+      calculatedTotal,
+      difference: totalDifference
+    });
+
+    // Extract customer and delivery info
+    const customerName = metadata.customer_name || '';
+    const customerEmail = metadata.customer_email || '';
+    const customerPhone = metadata.customer_phone || '';
+    const deliveryDate = metadata.delivery_date || '';
+    const deliveryTime = metadata.delivery_time || '';
+    const deliveryAddress = metadata.delivery_address || '';
+    const deliveryInstructions = metadata.delivery_instructions || '';
+
+    logStep("Order details extracted", {
       customerName,
       customerEmail,
-      customerPhone,
-      deliveryAddress,
-      deliveryInstructions,
-      discountCode,
-      discountAmount,
-      subtotal,
-      shippingFee,
-      salesTax,
-      tipAmount,
-      totalAmount
+      deliveryDate,
+      deliveryTime,
+      itemCount: cartItems.length
     });
 
-    // **GROUP ORDER DETECTION AND HANDLING**
-    let isJoiningGroupOrder = false;
-    let originalGroupOrderId = null;
-    let shareToken = null;
-    
-    // Generate a unique share token for EVERY order (not just group orders)
-    const crypto = globalThis.crypto;
-    const array = new Uint8Array(16);
-    crypto.getRandomValues(array);
-    const defaultShareToken = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
-    
-    if (groupOrderToken) {
-      logStep("🔄 GROUP ORDER DETECTED - Processing group order join", { 
-        groupOrderToken,
-        customerEmail,
-        customerName,
-        cartItemsCount: cartItems.length,
-        subtotal
-      });
-      
-      try {
-      // Use the fixed cache upsert function to prevent duplicates
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-        { auth: { autoRefreshToken: false, persistSession: false } }
+    // Create customer in Shopify
+    const nameParts = customerName.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Parse delivery address
+    const addressParts = deliveryAddress.split(',').map(p => p.trim());
+    const street = addressParts[0] || '';
+    const city = addressParts[1] || '';
+    const stateZip = addressParts[2] || '';
+    const state = stateZip.split(' ')[0] || '';
+    const zip = stateZip.split(' ')[1] || '';
+
+    logStep("Creating Shopify customer", { firstName, lastName, email: customerEmail });
+
+    let shopifyCustomerId = null;
+    try {
+      const customerData = {
+        customer: {
+          first_name: firstName,
+          last_name: lastName,
+          email: customerEmail,
+          phone: customerPhone,
+          note: `Delivery order - ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
+          addresses: [{
+            address1: street,
+            city: city,
+            province: state,
+            country: "US",
+            zip: zip,
+            phone: customerPhone
+          }]
+        }
+      };
+
+      const customerResponse = await fetch(
+        `https://${shopifyStore}/admin/api/2024-10/customers.json`,
+        {
+          method: 'POST',
+          headers: {
+            'X-Shopify-Access-Token': shopifyToken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(customerData),
+        }
       );
 
-      logStep("Supabase client initialized");
-
-        // Try to join the existing group order
-        const { data: joinResult, error: joinError } = await supabaseClient.rpc('join_group_order', {
-          p_share_token: groupOrderToken,
-          p_customer_email: customerEmail,
-          p_customer_name: customerName,
-          p_line_items: cartItems,
-          p_subtotal: subtotal
-        });
-
-        if (joinError) {
-          logStep("Error joining group order", joinError);
-        } else if (joinResult && joinResult.success) {
-          isJoiningGroupOrder = true;
-          originalGroupOrderId = joinResult.original_order_id;
-          shareToken = joinResult.share_token;
-          logStep("Successfully joined group order", { 
-            originalOrderId: originalGroupOrderId,
-            shareToken: shareToken 
-          });
-        } else {
-          logStep("Group order join failed", joinResult);
-        }
-      } catch (groupError) {
-        logStep("Exception in group order handling", groupError);
-      }
-    }
-    
-    // If not joining a group order, use the generated default share token
-    if (!shareToken) {
-      shareToken = defaultShareToken;
-      logStep("Using generated share token for new order", { shareToken });
-    }
-    
-    // Enhanced affiliate tracking calculations
-    let affiliateCommissionAmount = 0;
-    let discountType = '';
-    let totalOrderValue = 0;
-    let actualDiscountApplied = 0;
-    
-    // Calculate total order value and affiliate commission
-    if (cartItems.length > 0) {
-      totalOrderValue = cartItems.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
-    }
-    
-    if (discountCode) {
-      if (discountCode === 'PREMIER2025') {
-        discountType = 'free_shipping';
-        actualDiscountApplied = shippingFee;
-        affiliateCommissionAmount = Math.round((totalOrderValue * 0.05) * 100) / 100; // 5% commission on order value
-      } else if (discountCode === 'PARTYON10') {
-        discountType = 'percentage_discount';
-        actualDiscountApplied = Math.round((totalOrderValue * 0.10) * 100) / 100; // 10% discount
-        affiliateCommissionAmount = Math.round((totalOrderValue * 0.08) * 100) / 100; // 8% commission on order value
+      if (customerResponse.ok) {
+        const customerResult = await customerResponse.json();
+        shopifyCustomerId = customerResult.customer.id;
+        logStep("Shopify customer created", { customerId: shopifyCustomerId });
       } else {
-        // Future affiliate codes - default to 5% commission
-        discountType = 'affiliate_code';
-        actualDiscountApplied = parseFloat(discountAmount || '0');
-        affiliateCommissionAmount = Math.round((totalOrderValue * 0.05) * 100) / 100;
+        const errorText = await customerResponse.text();
+        logStep("Customer creation failed, continuing", { 
+          status: customerResponse.status,
+          error: errorText
+        });
       }
+    } catch (customerError) {
+      logStep("Customer creation error", { error: customerError.message });
     }
 
-
-    // Parse delivery address components
-    const parseAddress = (fullAddress: string) => {
-      const parts = fullAddress.split(',').map(part => part.trim());
-      return {
-        street: parts[0] || '',
-        city: parts[1] || '',
-        stateZip: parts[2] || '',
-        state: parts[2]?.split(' ')[0] || '',
-        zip: parts[2]?.split(' ')[1] || ''
-      };
-    };
-
-    const addressParts = parseAddress(deliveryAddress || '');
-
-    // Create customer in Shopify
-    const customerData = {
-      customer: {
-        first_name: customerName?.split(' ')[0] || '',
-        last_name: customerName?.split(' ').slice(1).join(' ') || '',
-        email: customerEmail || '',
-        phone: customerPhone || '',
-        note: `Customer created from delivery order. Delivery scheduled: ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
-        addresses: [{
-          address1: addressParts.street,
-          city: addressParts.city,
-          province: addressParts.state,
-          country: "US",
-          zip: addressParts.zip,
-          phone: customerPhone || ''
-        }]
-      }
-    };
-
-    const customerResponse = await fetch(
-      `https://${shopifyStore}/admin/api/2024-10/customers.json`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Shopify-Access-Token': shopifyToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(customerData),
-      }
-    );
-
-    let shopifyCustomer;
-    if (customerResponse.ok) {
-      const customerResult = await customerResponse.json();
-      shopifyCustomer = customerResult.customer;
-      logStep("Shopify customer created", { customerId: shopifyCustomer.id });
-    } else {
-      logStep("Customer creation failed, continuing without customer", { 
-        status: customerResponse.status 
-      });
-    }
-
-    // Prepare line items for Shopify order with proper inventory management
+    // Prepare line items for Shopify
     const lineItems = [];
     
-    // Process each cart item to create proper Shopify line items
     for (const item of cartItems) {
-      // If item has Shopify product/variant IDs, use them for proper inventory tracking
-      if (item.id && item.id.includes('gid://shopify/Product/')) {
-        // Extract Shopify product ID from GID
-        const productId = item.id.replace('gid://shopify/Product/', '');
-        
-        // For products with variants, we need to find the correct variant
-        if (item.variant && item.variant.includes('gid://shopify/ProductVariant/')) {
-          const variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
-          lineItems.push({
-            variant_id: parseInt(variantId),
-            quantity: item.quantity,
-            price: item.price.toString()
-          });
-        } else {
-          // Use product without specific variant
-          lineItems.push({
-            title: item.title || item.name,
-            price: item.price.toString(),
-            quantity: item.quantity,
-            requires_shipping: true,
-            product_id: parseInt(productId)
-          });
+      const lineItem: any = {
+        title: item.title || item.name || 'Unknown Item',
+        price: item.price.toString(),
+        quantity: item.quantity || 1,
+        requires_shipping: true
+      };
+
+      // Handle Shopify product/variant IDs (clean up GIDs)
+      if (item.id && typeof item.id === 'string') {
+        if (item.id.includes('gid://shopify/Product/')) {
+          const productId = item.id.replace('gid://shopify/Product/', '');
+          if (!isNaN(parseInt(productId))) {
+            lineItem.product_id = parseInt(productId);
+          }
         }
-      } else {
-        // Fallback for items without Shopify IDs (custom items)
-        lineItems.push({
-          title: item.title || item.name,
-          price: item.price.toString(),
-          quantity: item.quantity,
-          requires_shipping: true
-        });
       }
+
+      if (item.variant && typeof item.variant === 'string') {
+        if (item.variant.includes('gid://shopify/ProductVariant/')) {
+          const variantId = item.variant.replace('gid://shopify/ProductVariant/', '');
+          if (!isNaN(parseInt(variantId))) {
+            lineItem.variant_id = parseInt(variantId);
+            delete lineItem.product_id; // Use variant_id instead
+          }
+        }
+      }
+
+      lineItems.push(lineItem);
     }
 
-    // Hidden markup: add as a separate taxable line item in Shopify
-    try {
-      const originalSubtotalFromItems = cartItems.reduce((sum: number, it: any) => sum + (parseFloat(it.price || '0') * (it.quantity || 1)), 0);
-      const markupAmount = Math.max(0, subtotal - originalSubtotalFromItems);
-      if (markupAmount > 0.004) { // >= half cent
-        lineItems.push({
-          title: 'Markup',
-          price: markupAmount.toFixed(2),
-          quantity: 1,
-          taxable: true,
-          requires_shipping: false
-        });
-        logStep('Added markup line item', { markupAmount: markupAmount.toFixed(2) });
-      }
-    } catch (e) {
-      logStep('Markup calculation error (continuing without markup line)', { message: e instanceof Error ? e.message : String(e) });
-    }
-
-    // Ensure driver tip is represented as a non-taxable line item so Shopify totals match Stripe
-    if (tipAmount > 0.004) { // >= half cent
+    // Add shipping fee as line item
+    if (orderAmounts.delivery_fee > 0) {
       lineItems.push({
-        title: 'Driver Tip (Gratuity)',
-        price: tipAmount.toFixed(2),
+        title: "Delivery Fee",
+        price: orderAmounts.delivery_fee.toString(),
         quantity: 1,
-        taxable: false,
-        requires_shipping: false
+        requires_shipping: false,
+        taxable: false
       });
-      logStep('Added driver tip line item', { tipAmount: tipAmount.toFixed(2) });
     }
 
+    // Add tip as line item
+    if (orderAmounts.tip_amount > 0) {
+      lineItems.push({
+        title: "Tip",
+        price: orderAmounts.tip_amount.toString(),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
 
-    // Create order in Shopify with proper totals structure
+    logStep("Line items prepared", { 
+      itemCount: lineItems.length,
+      totalLineItemValue: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0)
+    });
+
+    // Generate unique order number
+    const orderNumber = `PO-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+
+    // Create Shopify order
     const orderData = {
       order: {
-        customer: shopifyCustomer ? { id: shopifyCustomer.id } : undefined,
+        line_items: lineItems,
+        customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
         billing_address: {
-          first_name: customerName?.split(' ')[0] || '',
-          last_name: customerName?.split(' ').slice(1).join(' ') || '',
-          address1: addressParts.street,
-          city: addressParts.city,
-          province: addressParts.state,
+          first_name: firstName,
+          last_name: lastName,
+          address1: street,
+          city: city,
+          province: state,
           country: "US",
-          zip: addressParts.zip,
-          phone: customerPhone || '',
+          zip: zip,
+          phone: customerPhone
         },
         shipping_address: {
-          first_name: customerName?.split(' ')[0] || '',
-          last_name: customerName?.split(' ').slice(1).join(' ') || '',
-          address1: addressParts.street,
-          city: addressParts.city,
-          province: addressParts.state,
+          first_name: firstName,
+          last_name: lastName,
+          address1: street,
+          city: city,
+          province: state,
           country: "US",
-          zip: addressParts.zip,
-          phone: customerPhone || '',
+          zip: zip,
+          phone: customerPhone
         },
-        email: customerEmail || '',
-        phone: customerPhone || '',
-        financial_status: 'paid',
-        fulfillment_status: 'unfulfilled',
-        
-        // Set line items (products only - NO tip here)
-        line_items: lineItems,
-        
-        
-        // Proper Shopify shipping lines structure
-        shipping_lines: shippingFee > 0 ? [{
-          title: "Local Delivery",
-          price: shippingFee.toFixed(2),
-          code: "LOCAL_DELIVERY"
-        }] : [],
-        
-        // Proper Shopify tax lines structure (calculated on subtotal only, not tip)
-        tax_lines: salesTax > 0 ? [{
-          title: "Sales Tax",
-          price: salesTax.toFixed(2),
-          rate: 0.0825
-        }] : [],
-        
-        // Apply discount codes: always record the code for attribution, even if $0 free_shipping
-        ...(discountCode && {
-          discount_codes: [{
-            code: discountCode,
-            amount: Math.abs(parseFloat(discountAmount || '0')).toFixed(2),
-            type: discountType === 'percentage_discount' ? 'percentage' : 'code'
-          }]
-        }),
-        
-        // Set totals to match Stripe charge exactly - precision formatting
-        subtotal_price: subtotal.toFixed(2),
-        total_tax: salesTax.toFixed(2),
-        total_shipping_price_set: {
-          shop_money: {
-            amount: shippingFee.toFixed(2),
-            currency_code: "USD"
-          },
-          presentment_money: {
-            amount: shippingFee.toFixed(2),
-            currency_code: "USD"
-          }
-        },
-        
-        // Tip is now represented as a non-taxable line item to ensure totals/revenue include gratuity
-        // Do not set total_tip_received or tip_lines to avoid double counting
-
-        
-        // Ensure exact price matching for order totals
-        current_total_price: totalAmount.toFixed(2),
-        total_price: totalAmount.toFixed(2),
-        total_price_set: {
-          shop_money: {
-            amount: totalAmount.toFixed(2),
-            currency_code: "USD"
-          },
-          presentment_money: {
-            amount: totalAmount.toFixed(2),
-            currency_code: "USD"
-          }
-        },
-        note: `🚚 DELIVERY ORDER 🚚
-📅 Delivery Date: ${deliveryDate}
-⏰ Delivery Time: ${deliveryTime}
-📍 Delivery Address: ${deliveryAddress}
-${deliveryInstructions ? `📝 Special Instructions: ${deliveryInstructions}` : ''}
-${discountCode ? `🎟️ Discount Code Used: ${discountCode} (${actualDiscountApplied > 0 ? `$${actualDiscountApplied.toFixed(2)} ${discountType === 'free_shipping' ? 'shipping discount' : 'off'}` : ''})` : ''}
-💳 Stripe Payment ID: ${paymentIntentId}
-✅ Payment Status: Paid
-
-💰 PAYMENT BREAKDOWN (MATCHES STRIPE CHARGE):
-Subtotal: $${subtotal.toFixed(2)}
-${discountCode ? `Discount (${discountCode}): -$${Math.abs(parseFloat(discountAmount || '0')).toFixed(2)}` : ''}
-Shipping: $${shippingFee.toFixed(2)}
-Taxes: $${salesTax.toFixed(2)}
-Tip: $${tipAmount.toFixed(2)}
-TOTAL CHARGED: $${totalAmount.toFixed(2)}
-
-🏷️ RECOMSALE AFFILIATE TRACKING:
-${discountCode ? `📊 Affiliate Code: ${discountCode}
-💰 Commission Amount: $${affiliateCommissionAmount.toFixed(2)}
-📈 Order Value: $${totalOrderValue.toFixed(2)}
-🔖 Discount Type: ${discountType}
-💵 Discount Applied: $${actualDiscountApplied.toFixed(2)}
-🎯 Attribution: ${discountCode}-tracking-${Date.now()}` : 'No affiliate code used'}`,
-        tags: `delivery-order,stripe-payment${discountCode ? `,discount-${discountCode}` : ''}${tipAmount > 0 ? ',has-tip' : ''}`,
-        note_attributes: [
-          {
-            name: "Stripe Payment Total",
-            value: `$${totalAmount.toFixed(2)}`
-          },
-          {
-            name: "Subtotal",
-            value: `$${subtotal.toFixed(2)}`
-          },
-          {
-            name: "Delivery Fee",
-            value: `$${shippingFee.toFixed(2)}`
-          },
-          {
-            name: "Sales Tax",
-            value: `$${salesTax.toFixed(2)}`
-          },
-            {
-              name: "Driver Tip (Gratuity)",
-              value: `$${tipAmount.toFixed(2)}`
-            },
-          ...(discountCode ? [
-            {
-              name: "RecomSale Affiliate Code",
-              value: discountCode
-            },
-            {
-              name: "Affiliate Commission Amount",
-              value: `$${affiliateCommissionAmount.toFixed(2)}`
-            },
-            {
-              name: "Order Value for Commission",
-              value: `$${totalOrderValue.toFixed(2)}`
-            },
-            {
-              name: "Discount Type",
-              value: discountType
-            },
-            {
-              name: "Actual Discount Applied",
-              value: `$${actualDiscountApplied.toFixed(2)}`
-            },
-            {
-              name: "RecomSale Tracking ID",
-              value: `${discountCode}-${Date.now()}`
-            },
-            {
-              name: "Attribution Timestamp",
-              value: new Date().toISOString()
-            }
-            ] : []),
-            ...(typeof commissionPercent === 'number' && commissionPercent > 0 ? [
-              {
-                name: "Commission Percent",
-                value: `${commissionPercent}`
-              }
-            ] : [])
-         ]
+        email: customerEmail,
+        phone: customerPhone,
+        note: `Delivery: ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
+        tags: "delivery-order,paid",
+        name: orderNumber,
+        financial_status: "paid",
+        fulfillment_status: "unfulfilled",
+        total_tax: orderAmounts.sales_tax.toString(),
+        currency: "USD",
+        source_name: "delivery-app"
       }
     };
 
     logStep("Creating Shopify order", { 
-      lineItemCount: lineItems.length,
-      shopifyStore: shopifyStore,
-      hasToken: !!shopifyToken,
-      url: `https://${shopifyStore}/admin/api/2024-10/orders.json`
+      orderNumber,
+      totalAmount: orderAmounts.total_amount,
+      lineItemCount: lineItems.length
     });
 
-    const orderResponse = await fetch(
-      `https://${shopifyStore}/admin/api/2024-10/orders.json`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Shopify-Access-Token': shopifyToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      }
-    );
-
-    if (!orderResponse.ok) {
-      const errorText = await orderResponse.text();
-      logStep("Shopify order creation failed", { 
-        status: orderResponse.status, 
-        statusText: orderResponse.statusText,
-        error: errorText,
-        shopifyStore: shopifyStore,
-        url: `https://${shopifyStore}/admin/api/2024-10/orders.json`,
-        hasToken: !!shopifyToken,
-        tokenLength: shopifyToken?.length || 0
-      });
-      
-      // Log the order data for debugging
-      logStep("Failed order data", { 
-        orderData: JSON.stringify(orderData, null, 2)
-      });
-      
-      throw new Error(`Failed to create Shopify order (${orderResponse.status}): ${errorText}`);
-    }
-
-    const orderResult = await orderResponse.json();
-    logStep("Shopify order created successfully", { 
-      orderId: orderResult.order.id,
-      orderNumber: orderResult.order.order_number 
-    });
-
-    // Track affiliate referral if affiliate code is provided
-    if (affiliateCode) {
-      try {
-        logStep('Tracking affiliate referral', { affiliateCode });
-        
-        const supabaseService = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-          { auth: { persistSession: false } }
-        );
-
-        const { data: trackingResult, error: trackingError } = await supabaseService.functions.invoke('track-affiliate-referral', {
-          body: {
-            affiliateCode: affiliateCode,
-            orderData: orderResult.order,
-            customerEmail: customerEmail,
-            orderId: orderResult.order.id.toString(),
-            commissionPercent
-          }
-        });
-
-        if (trackingError) {
-          logStep('Error tracking affiliate referral', trackingError);
-        } else {
-          logStep('Affiliate referral tracked', trackingResult);
-        }
-      } catch (affiliateError) {
-        logStep('Error in affiliate tracking', affiliateError);
-        // Don't fail the order creation if affiliate tracking fails
-      }
-    }
-
-    // Store order group info in Supabase for potential future orders
     try {
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      const orderResponse = await fetch(
+        `https://${shopifyStore}/admin/api/2024-10/orders.json`,
         {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
+          method: 'POST',
+          headers: {
+            'X-Shopify-Access-Token': shopifyToken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
         }
       );
 
-      let orderGroupId;
-      let isNewGroup = false;
-
-      // If this is a group order (friend adding to existing order), find the original order group
-      if (groupOrderNumber) {
-        const { data: originalOrder } = await supabaseClient
-          .from('shopify_orders')
-          .select('order_group_id')
-          .eq('shopify_order_number', groupOrderNumber)
-          .single();
-        
-        if (originalOrder?.order_group_id) {
-          orderGroupId = originalOrder.order_group_id;
-          logStep('Found existing order group for group order', { orderGroupId, groupOrderNumber });
-        }
+      if (!orderResponse.ok) {
+        const errorText = await orderResponse.text();
+        logStep("ERROR: Shopify order creation failed", {
+          status: orderResponse.status,
+          statusText: orderResponse.statusText,
+          error: errorText
+        });
+        throw new Error(`Shopify API error (${orderResponse.status}): ${errorText}`);
       }
 
-      // If not a group order or if group order lookup failed, check for existing group by customer
-      if (!orderGroupId) {
-        const { data: existingGroup } = await supabaseClient
-          .from('order_groups')
-          .select('id')
-          .eq('customer_email', customerEmail)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+      const orderResult = await orderResponse.json();
+      const shopifyOrder = orderResult.order;
 
-        orderGroupId = existingGroup?.id;
-      }
+      logStep("✅ Shopify order created successfully", {
+        shopifyOrderId: shopifyOrder.id,
+        orderNumber: shopifyOrder.name,
+        totalPrice: shopifyOrder.total_price,
+        status: shopifyOrder.financial_status
+      });
 
-      // Create new order group if none exists
-      if (!orderGroupId) {
-        const { data: newGroup, error: groupError } = await supabaseClient
-          .from('order_groups')
-          .insert({
-            customer_email: customerEmail,
-            customer_name: customerName || '',
-            customer_phone: customerPhone || '',
-            delivery_address: addressParts.street || '',
-            delivery_city: addressParts.city || '',
-            delivery_state: addressParts.state || '',
-            delivery_zip: addressParts.zip || '',
-            delivery_instructions: deliveryInstructions || ''
-          })
-          .select('id')
-          .single();
+      // Store order in our database
+      try {
+        const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+          auth: { autoRefreshToken: false, persistSession: false }
+        });
 
-        if (groupError) {
-          logStep('Error creating order group', groupError);
-        } else {
-          orderGroupId = newGroup?.id;
-          isNewGroup = true;
-          logStep('Created new order group', { orderGroupId });
-        }
-      }
-
-      // Add this Shopify order to the group
-      if (orderGroupId) {
-        const { error: orderError } = await supabaseClient
-          .from('shopify_orders')
-          .insert({
-            order_group_id: orderGroupId,
-            shopify_order_id: orderResult.order.id.toString(),
-            shopify_order_number: orderResult.order.order_number?.toString() || '',
-            amount: parseFloat((orderResult.order.total_price || 0).toString()),
-            currency: orderResult.order.currency || 'USD',
-            status: 'completed'
-          });
-
-        if (orderError) {
-          logStep('Error linking order to group', orderError);
-        } else {
-          logStep('Order linked to group successfully', { orderGroupId });
-        }
-
-        // Update Shopify order with group information
-        try {
-          let groupTags = isNewGroup ? 'delivery-group-1' : `delivery-group-${orderGroupId?.slice(-8)}`;
-          
-          // Add group bundle tag if this is a group order
-          if (isJoiningGroupOrder || shareToken) {
-            groupTags += ', group-bundle';
-          }
-          
-          // Build tags array based on order type
-          const tagArray = [groupTags];
-          
-          // Add discount tags if applicable
-          if (discountCode) {
-            tagArray.push(`discount-${discountCode}`, `affiliate-${discountCode}`);
-          }
-          
-          // Check if this is a bundle order (second order to same address/time)
-          const isBundleOrder = isAddingToOrder && useSameAddress;
-          
-          if (isBundleOrder) {
-            // This is a second order being added - mark as bundle-order-placed
-            tagArray.push('bundle-order-placed', 'delivery-bundle', 'free-shipping');
-          } else {
-            // This is a first purchase - mark as bundle-ready
-            tagArray.push('bundle-ready');
-          }
-          
-          const newTags = tagArray.join(', ');
-          
-          const updateUrl = `https://${shopifyStore}/admin/api/2024-10/orders/${orderResult.order.id}.json`;
-          
-          await fetch(updateUrl, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Shopify-Access-Token': shopifyToken
-            },
-            body: JSON.stringify({
-              order: {
-                id: orderResult.order.id,
-                tags: `${orderResult.order.tags || ''}, ${newTags}`.replace(/^, /, ''),
-                note: `${orderResult.order.note || ''}
-
-🔗 ORDER GROUP: ${orderGroupId}
-📦 BUNDLING: This order can be bundled with other orders in the same group for delivery efficiency.
-${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" used for affiliate sales tracking.` : ''}`
-              }
-            })
-          });
-          
-          logStep('Updated Shopify order with group info', { groupTags, orderGroupId });
-        } catch (updateError) {
-          logStep('Error updating Shopify order with group info', updateError);
-        }
-      }
-    } catch (supabaseError) {
-      logStep('Error with Supabase operations', supabaseError);
-      // Don't fail the order creation if Supabase operations fail
-    }
-
-    // Store customer order in database for dashboard tracking
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-    
-    // ALWAYS create customer order record for ALL orders (individual and group)
-    try {
-      // Check if order already exists to prevent duplicates
-      const { data: existingOrder } = await supabaseClient
-        .from('customer_orders')
-        .select('id, share_token')
-        .or(`session_id.eq.${sessionId || paymentIntentId},shopify_order_id.eq.${orderResult.order.id.toString()}`)
-        .maybeSingle();
-
-      let customerOrder;
-      if (existingOrder) {
-        logStep('Order already exists, skipping duplicate creation', { existingOrderId: existingOrder.id });
-        shareToken = existingOrder.share_token;
-        customerOrder = existingOrder;
-      } else {
-        const customerOrderData = {
-          order_number: orderResult.order.order_number,
-          customer_id: null, // Will be linked when user logs in
-          session_id: sessionId || paymentIntentId,
+        const orderRecord = {
+          order_number: orderNumber,
+          session_id: paymentIntentId || sessionId,
+          shopify_order_id: shopifyOrder.id.toString(),
           delivery_date: deliveryDate,
           delivery_time: deliveryTime,
           delivery_address: {
-            street: addressParts.street,
-            city: addressParts.city,
-            state: addressParts.state,
-            zipCode: addressParts.zip,
-            instructions: deliveryInstructions
+            street,
+            city,
+            state,
+            zip,
+            full_address: deliveryAddress,
+            email: customerEmail,
+            phone: customerPhone
           },
           line_items: cartItems,
-          subtotal: subtotal,
-          delivery_fee: shippingFee,
-          total_amount: totalAmount,
-          shopify_order_id: orderResult.order.id.toString(),
-          status: 'confirmed',
-          affiliate_code: affiliateCode,
-          affiliate_id: null, // Will be populated by affiliate tracking
-          is_group_order: isJoiningGroupOrder,
-          group_order_id: isJoiningGroupOrder ? originalGroupOrderId : null,
-          // ALWAYS set the share_token for ALL orders (group or individual)
-          share_token: shareToken,
-          is_shareable: true, // Always make orders shareable
+          subtotal: orderAmounts.subtotal,
+          delivery_fee: orderAmounts.delivery_fee,
+          total_amount: orderAmounts.total_amount,
+          special_instructions: deliveryInstructions,
+          status: 'paid'
         };
 
-        const { data: newOrder, error: customerOrderError } = await supabaseClient
+        const { error: dbError } = await supabaseClient
           .from('customer_orders')
-          .insert(customerOrderData)
-          .select('share_token, id')
-          .single();
+          .insert(orderRecord);
 
-        if (!customerOrderError && newOrder) {
-          shareToken = newOrder.share_token; // Get the generated or existing share_token
-          customerOrder = newOrder;
-          logStep('Customer order record created', { 
-            shareToken, 
-            orderId: newOrder.id,
-            isGroupOrder: isJoiningGroupOrder,
-            orderType: isJoiningGroupOrder ? 'group-addition' : 'new-order',
-            isShareable: true
-          });
+        if (dbError) {
+          logStep("WARNING: Failed to store order in database", { error: dbError.message });
         } else {
-          logStep('Error creating customer order record', customerOrderError);
+          logStep("Order stored in database successfully");
         }
+      } catch (dbError) {
+        logStep("WARNING: Database storage error", { error: dbError.message });
       }
-    } catch (orderStoreError) {
-      logStep('Exception storing customer order', orderStoreError);
-    }
 
-    // Send group order confirmation email with share link
-    try {
-      const emailData = {
-        orderDetails: {
-          orderNumber: orderResult.order.order_number,
-          deliveryDate,
-          deliveryTime,
-          deliveryAddress,
-          deliveryInstructions
-        },
-        customerInfo: {
-          name: customerName,
-          email: customerEmail,
-          phone: customerPhone
-        },
-        deliveryInfo: {
-          date: deliveryDate,
-          timeSlot: deliveryTime,
-          address: deliveryAddress,
-          instructions: deliveryInstructions
-        },
-        cartItems: cartItems,
-        paymentInfo: {
-          subtotal: subtotal,
-          deliveryFee: shippingFee,
-          salesTax: salesTax,
-          tipAmount: tipAmount,
-          discountCode: discountCode,
-          discountAmount: parseFloat(discountAmount || '0'),
-          total: totalAmount
-        },
-        shopifyOrderInfo: {
-          shopifyOrderId: orderResult.order.id,
-          orderNumber: orderResult.order.order_number
-        },
-        shareToken: shareToken,
-        isGroupOrder: isJoiningGroupOrder,
-        groupParticipants: [] // Will be populated for joined orders
-      };
+      logStep("=== CREATE SHOPIFY ORDER COMPLETED SUCCESSFULLY ===");
 
-      // Use the new group order confirmation function
-      const emailResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-group-order-confirmation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-          'apikey': Deno.env.get('SUPABASE_ANON_KEY') || ''
-        },
-        body: JSON.stringify(emailData)
+      return new Response(
+        JSON.stringify({
+          success: true,
+          shopify_order_id: shopifyOrder.id,
+          order_number: orderNumber,
+          shopify_order_name: shopifyOrder.name,
+          total_amount: orderAmounts.total_amount,
+          message: "Order created successfully in Shopify"
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+
+    } catch (shopifyError) {
+      logStep("ERROR: Shopify order creation failed", {
+        error: shopifyError.message,
+        stack: shopifyError.stack
       });
-
-      if (emailResponse.ok) {
-        logStep('Group order confirmation email sent successfully');
-      } else {
-        const emailError = await emailResponse.text();
-        logStep('Failed to send group order confirmation email', { error: emailError });
-      }
-    } catch (emailError) {
-      logStep('Error sending group order confirmation email', emailError);
-      // Don't fail the order creation if email fails
+      throw shopifyError;
     }
-
-    // Send SMS notification
-    try {
-      if (customerPhone) {
-        const smsMessage = `Thank you for ordering from Party On Delivery, we've got your order! Add more items with FREE shipping using code PREMIER2025: ${Deno.env.get('SUPABASE_URL')?.replace('/functions/v1', '').replace('https://acmlfzfliqupwxwoefdq.supabase.co', 'https://party-on-delivery.lovable.app')}`;
-        
-        const smsResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-ghl-sms`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`,
-            'apikey': Deno.env.get('SUPABASE_ANON_KEY') || ''
-          },
-          body: JSON.stringify({
-            phone: customerPhone,
-            message: smsMessage
-          })
-        });
-
-        if (smsResponse.ok) {
-          logStep('SMS notification sent successfully');
-        } else {
-          const smsError = await smsResponse.text();
-          logStep('Failed to send SMS notification', { error: smsError });
-        }
-      }
-    } catch (smsError) {
-      logStep('Error sending SMS notification', smsError);
-      // Don't fail the order creation if SMS fails
-    }
-
-    // Order creation completed successfully
-    logStep("Shopify order creation completed", {
-      shopifyOrderId: orderResult.order.id,
-      orderNumber: orderResult.order.order_number,
-      customerEmail: customerEmail
-    });
-
-    // Payment completed successfully - no cleanup needed
-    logStep("Order creation completed successfully", { 
-      shopifyOrderId: orderResult.order.id,
-      orderNumber: orderResult.order.order_number
-    });
-
-    return new Response(JSON.stringify({ 
-      success: true,
-      shopifyOrderId: orderResult.order.id,
-      orderNumber: orderResult.order.order_number,
-      order: orderResult.order
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
-    
-    logStep("ERROR in create-shopify-order", { 
-      message: errorMessage,
-      stack: errorStack,
-      name: error instanceof Error ? error.name : 'Unknown',
-      cause: error instanceof Error ? error.cause : undefined
+    logStep("=== CRITICAL ERROR ===", {
+      error: error.message,
+      stack: error.stack
     });
-    
-    console.error("Full error details:", error);
-    
-    return new Response(JSON.stringify({ 
-      error: errorMessage,
-      details: errorStack,
-      function: 'create-shopify-order'
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        details: "Check edge function logs for detailed error information"
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      }
+    );
   }
 });
