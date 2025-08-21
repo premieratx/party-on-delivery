@@ -67,44 +67,92 @@ Deno.serve(async (req) => {
       const collectionsMap = new Map();
       
       productsData.forEach((product: any) => {
+        // Try multiple data structures for collections
+        let productCollections = [];
+        
+        // Method 1: Direct collections array in data
         if (product.data?.collections && Array.isArray(product.data.collections)) {
-          product.data.collections.forEach((collection: any) => {
-            if (collection && collection.handle && typeof collection.handle === 'string') {
-              const existing = collectionsMap.get(collection.handle) || { count: 0 };
-              collectionsMap.set(collection.handle, {
-                handle: collection.handle,
-                title: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          productCollections = product.data.collections;
+        }
+        // Method 2: Collections as collection_handles array
+        else if (product.data?.collection_handles && Array.isArray(product.data.collection_handles)) {
+          productCollections = product.data.collection_handles.map((handle: string) => ({
+            handle: handle,
+            title: handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            id: `gid://shopify/Collection/${handle}`
+          }));
+        }
+        // Method 3: Try to extract from product object directly
+        else if (product.collection_handles && Array.isArray(product.collection_handles)) {
+          productCollections = product.collection_handles.map((handle: string) => ({
+            handle: handle,
+            title: handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            id: `gid://shopify/Collection/${handle}`
+          }));
+        }
+        // Method 4: Extract from JSON string if data is stringified
+        else if (typeof product.data === 'string') {
+          try {
+            const parsed = JSON.parse(product.data);
+            if (parsed.collections && Array.isArray(parsed.collections)) {
+              productCollections = parsed.collections;
+            } else if (parsed.collection_handles && Array.isArray(parsed.collection_handles)) {
+              productCollections = parsed.collection_handles.map((handle: string) => ({
+                handle: handle,
+                title: handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                id: `gid://shopify/Collection/${handle}`
+              }));
+            }
+          } catch (e) {
+            console.log('Failed to parse stringified product data');
+          }
+        }
+        
+        productCollections.forEach((collection: any) => {
+          if (collection && (collection.handle || collection)) {
+            const handle = typeof collection === 'string' ? collection : collection.handle;
+            const title = typeof collection === 'string' ? 
+              collection.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) :
+              (collection.title || collection.name || handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+            
+            if (handle && typeof handle === 'string') {
+              const existing = collectionsMap.get(handle) || { count: 0 };
+              collectionsMap.set(handle, {
+                handle: handle,
+                title: title,
                 products_count: existing.count + 1,
-                id: collection.id || `gid://shopify/Collection/${Math.random().toString(36).substr(2, 9)}`
+                id: collection.id || `gid://shopify/Collection/${handle}`
               });
             }
-          });
-        }
+          }
+        });
       });
 
       const extractedCollections = Array.from(collectionsMap.values())
         .filter(c => c.products_count > 0)
         .sort((a, b) => b.products_count - a.products_count);
 
-      console.log(`✅ Extracted ${extractedCollections.length} collections from products`);
+      console.log(`✅ Extracted ${extractedCollections.length} collections from products using enhanced extraction`);
+      
+      if (extractedCollections.length > 0) {
+        // Cache the extracted collections
+        await supabase
+          .from('cache')
+          .upsert({
+            key: 'shopify_collections_all',
+            data: extractedCollections,
+            expires_at: Date.now() + (15 * 60 * 1000) // 15 minutes
+          });
 
-      // Cache the extracted collections
-      await supabase
-        .from('cache')
-        .upsert({
-          key: 'shopify_collections_all',
-          data: extractedCollections,
-          expires_at: Date.now() + (15 * 60 * 1000) // 15 minutes
-        });
-
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          collections: extractedCollections,
-          source: 'extracted'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            collections: extractedCollections,
+            source: 'extracted_enhanced'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Final fallback - return default collections

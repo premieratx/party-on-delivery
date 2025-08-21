@@ -480,7 +480,14 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                         />
                       </div>
 
-                      <div>
+                       <div>
+                        <input
+                          ref={logoInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
                         <Label>App Logo</Label>
                         <div className="flex gap-3 mt-2">
                           <Button
@@ -763,15 +770,6 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
             </Tabs>
           </div>
         </div>
-
-        {/* Hidden File Input */}
-        <input
-          ref={logoInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleLogoUpload}
-          className="hidden"
-        />
       </DialogContent>
     </Dialog>
   );

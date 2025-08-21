@@ -253,10 +253,46 @@ export const PostCheckoutCreator: React.FC<PostCheckoutCreatorProps> = ({
                 placeholder="https://example.com/logo.png"
                 className="flex-1"
               />
-              <Button variant="outline">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  // Create a temporary file input for upload
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (!file) return;
+                    
+                    try {
+                      const ext = file.name.split('.').pop() || 'png';
+                      const fileName = `post-checkout-${Date.now()}-logo.${ext}`;
+                      
+                      const { error: uploadError } = await supabase.storage
+                        .from('delivery-app-assets')
+                        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+                      
+                      if (uploadError) throw uploadError;
+                      
+                      const { data } = supabase.storage.from('delivery-app-assets').getPublicUrl(fileName);
+                      setConfig(prev => ({ ...prev, logo_url: data.publicUrl }));
+                      toast({ title: 'Logo uploaded successfully!' });
+                    } catch (error) {
+                      console.error('Upload failed:', error);
+                      toast({ title: 'Upload failed', variant: 'destructive' });
+                    }
+                  };
+                  input.click();
+                }}
+              >
                 <Upload className="h-4 w-4" />
               </Button>
             </div>
+            {config.logo_url && (
+              <div className="mt-2">
+                <img src={config.logo_url} alt="Logo preview" className="h-12 object-contain rounded border p-1" />
+              </div>
+            )}
           </div>
         </AdminFormSection>
 
