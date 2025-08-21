@@ -189,9 +189,9 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
                 <h2 className="text-xl font-bold">
                   {initial ? `Edit: ${initial.title}` : 'Create Cover Page'}
                 </h2>
-                <p className="text-sm text-muted-foreground font-normal">
+                <DialogDescription id="dialog-description" className="text-sm text-muted-foreground font-normal">
                   Pixel-perfect Figma-based design with cohesive theming
-                </p>
+                </DialogDescription>
               </div>
               <Button
                 onClick={handleSave}

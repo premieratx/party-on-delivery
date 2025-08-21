@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -500,9 +500,9 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                   <h2 className="text-xl font-bold">
                     {isEditing ? `Edit: ${initial?.app_name}` : 'Create Delivery App'}
                   </h2>
-                  <p className="text-sm text-muted-foreground font-normal" id="dialog-description">
+                  <DialogDescription id="dialog-description" className="text-sm text-muted-foreground font-normal">
                     Content-only editing with cohesive theming
-                  </p>
+                  </DialogDescription>
                 </div>
               </div>
               <Button
