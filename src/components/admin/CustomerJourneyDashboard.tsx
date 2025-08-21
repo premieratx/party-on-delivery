@@ -15,8 +15,8 @@ import {
   Award,
   Rocket
 } from 'lucide-react';
-import { EnhancedCoverPageCreator } from '../enhanced-admin/EnhancedCoverPageCreator';
-import EnhancedPostCheckoutCreator from './EnhancedPostCheckoutCreator';
+import { SimpleCoverPageCreator } from './SimpleCoverPageCreator';
+import { SimplePostCheckoutCreator } from './SimplePostCheckoutCreator';
 import CustomerFlowConfigurator from './CustomerFlowConfigurator';
 
 export default function CustomerJourneyDashboard() {
@@ -238,8 +238,8 @@ export default function CustomerJourneyDashboard() {
                   Full customization with logo sizing, typography, colors, and button configuration.
                 </p>
               </CardHeader>
-              <CardContent className="p-0">
-                <EnhancedCoverPageCreator
+              <CardContent className="p-6">
+                <SimpleCoverPageCreator
                   open={true}
                   onOpenChange={() => {}}
                   onSaved={() => {}}
@@ -262,7 +262,11 @@ export default function CustomerJourneyDashboard() {
                 </p>
               </CardHeader>
               <CardContent className="p-6">
-                <EnhancedPostCheckoutCreator />
+                <SimplePostCheckoutCreator 
+                  open={true}
+                  onOpenChange={() => {}}
+                  onSaved={() => {}}
+                />
               </CardContent>
             </Card>
           </TabsContent>
