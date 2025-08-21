@@ -67,15 +67,15 @@ Deno.serve(async (req) => {
       const collectionsMap = new Map();
       
       productsData.forEach((product: any) => {
-        if (product.data?.collections) {
-          product.data.collections.forEach((collectionHandle: string) => {
-            if (collectionHandle && typeof collectionHandle === 'string') {
-              const existing = collectionsMap.get(collectionHandle) || { count: 0 };
-              collectionsMap.set(collectionHandle, {
-                handle: collectionHandle,
-                title: collectionHandle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        if (product.data?.collections && Array.isArray(product.data.collections)) {
+          product.data.collections.forEach((collection: any) => {
+            if (collection && collection.handle && typeof collection.handle === 'string') {
+              const existing = collectionsMap.get(collection.handle) || { count: 0 };
+              collectionsMap.set(collection.handle, {
+                handle: collection.handle,
+                title: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
                 products_count: existing.count + 1,
-                id: `gid://shopify/Collection/${Math.random().toString(36).substr(2, 9)}`
+                id: collection.id || `gid://shopify/Collection/${Math.random().toString(36).substr(2, 9)}`
               });
             }
           });
