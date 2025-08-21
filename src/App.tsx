@@ -118,8 +118,8 @@ const App = () => {
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
                     
-                    {/* Dynamic slug routes - REMOVED to fix homepage popup issue */}
-                    {/* <Route path="/:slug" element={<CoverPageWithBackground />} /> */}
+                    {/* Dynamic slug routes - restored but only for valid slugs to prevent homepage conflict */}
+                    <Route path="/:slug" element={<CoverPageWithBackground />} />
                   </Routes>
                 </Suspense>
               </div>
