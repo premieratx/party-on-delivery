@@ -16,8 +16,6 @@ import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCrea
 import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator';
 import { FixedPostCheckoutCreator } from '@/components/admin/FixedPostCheckoutCreator';
 import { RobustDeliveryAppCreator } from '@/components/admin/RobustDeliveryAppCreator';
-import { BulletproofAdminTest } from '@/components/admin/BulletproofAdminTest';
-import { AdminDashboardTest } from '@/components/admin/AdminDashboardTest';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -190,6 +188,230 @@ export default function AdminDashboard() {
   }
 
   return (
-    <AdminDashboardTest />
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground">Admin Dashboard</h1>
+            <p className="text-muted-foreground mt-2">Manage your business operations</p>
+          </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+
+        {/* Dashboard Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalOrders}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalCustomers}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Products</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalProducts}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Tabs */}
+        <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
+            <TabsTrigger value="covers">Cover Pages</TabsTrigger>
+            <TabsTrigger value="delivery">Delivery Apps</TabsTrigger>
+            <TabsTrigger value="checkout">Post-Checkout</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <RecentOrdersFeed orders={recentOrders} />
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="h-5 w-5" />
+                    Top Affiliates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {affiliates.slice(0, 5).map((affiliate: any) => (
+                      <div key={affiliate.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                        <div>
+                          <div className="font-medium">{affiliate.name}</div>
+                          <div className="text-sm text-muted-foreground">{affiliate.orders_count} orders</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold">{formatCurrency(affiliate.total_sales)}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {formatCurrency(affiliate.commission_unpaid)} pending
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="affiliates" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Affiliate Management</h2>
+              <AffiliateCreator />
+            </div>
+            
+            <div className="grid gap-6">
+              <AffiliateFlowAssignmentManager />
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Active Affiliates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {affiliates.map((affiliate: any) => (
+                      <div key={affiliate.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div>
+                            <div className="font-medium">{affiliate.name}</div>
+                            <div className="text-sm text-muted-foreground flex items-center gap-4">
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                {affiliate.email}
+                              </span>
+                              {affiliate.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" />
+                                  {affiliate.phone}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="font-bold">{formatCurrency(affiliate.total_sales)}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {affiliate.orders_count} orders • {affiliate.commission_rate}% commission
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="ml-2">
+                            {formatCurrency(affiliate.commission_unpaid)} pending
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyAffiliateLink(affiliate.affiliate_code)}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="covers" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Cover Page Management</h2>
+              <Button onClick={() => setShowCoverCreator(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Cover Page
+              </Button>
+            </div>
+            <EnhancedCoverPageManager />
+          </TabsContent>
+
+          <TabsContent value="delivery" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Delivery App Management</h2>
+              <Button onClick={() => setShowDeliveryCreator(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Delivery App
+              </Button>
+            </div>
+            <EnhancedDeliveryAppManager />
+          </TabsContent>
+
+          <TabsContent value="checkout" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Post-Checkout Management</h2>
+              <Button onClick={() => setShowPostCheckoutCreator(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Post-Checkout
+              </Button>
+            </div>
+            <EnhancedPostCheckoutManager />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-6">
+            <div className="grid gap-6">
+              <CustomerFlowManager />
+              <HomepageAppSwitcher />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Creator Modals */}
+      {showCoverCreator && (
+        <FixedCoverPageCreator 
+          open={showCoverCreator}
+          onOpenChange={setShowCoverCreator}
+        />
+      )}
+      
+      {showDeliveryCreator && (
+        <RobustDeliveryAppCreator 
+          open={showDeliveryCreator}
+          onOpenChange={setShowDeliveryCreator}
+        />
+      )}
+      
+      {showPostCheckoutCreator && (
+        <FixedPostCheckoutCreator 
+          open={showPostCheckoutCreator}
+          onOpenChange={setShowPostCheckoutCreator}
+        />
+      )}
+    </div>
   );
 }
