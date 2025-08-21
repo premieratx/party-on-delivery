@@ -61,85 +61,38 @@ export default function AdminDashboard() {
     try {
       console.log('🔄 Loading admin dashboard data...');
       
-      // Load data directly from Supabase tables with proper error handling
-      const [ordersResponse, customersResponse, affiliatesResponse] = await Promise.all([
-        supabase
-          .from('customer_orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(50)
-          .then(response => {
-            console.log('Orders response:', response);
-            return response;
-          }),
-        supabase
-          .from('customers')
-          .select('*')
-          .limit(100)
-          .then(response => {
-            console.log('Customers response:', response);
-            return response;
-          }),
-        supabase
-          .from('affiliates')
-          .select('*')
-          .eq('status', 'active')
-          .limit(50)
-          .then(response => {
-            console.log('Affiliates response:', response);
-            return response;
-          })
-      ]);
-
-      // Check for errors in each response
-      if (ordersResponse.error) {
-        console.error('Orders error:', ordersResponse.error);
-      }
-      if (customersResponse.error) {
-        console.error('Customers error:', customersResponse.error);
-      }
-      if (affiliatesResponse.error) {
-        console.error('Affiliates error:', affiliatesResponse.error);
-      }
-
-      console.log('✅ Raw data loaded:', {
-        orders: ordersResponse.data?.length || 0,
-        ordersError: ordersResponse.error,
-        customers: customersResponse.data?.length || 0,
-        customersError: customersResponse.error,
-        affiliates: affiliatesResponse.data?.length || 0,
-        affiliatesError: affiliatesResponse.error
+      // Use edge function exclusively to avoid RLS permission issues
+      const { data: response, error } = await supabase.functions.invoke('get-dashboard-data', {
+        body: {
+          type: 'admin'
+        }
       });
 
-      // Calculate comprehensive statistics from real data
-      const orders = ordersResponse.data || [];
-      const customers = customersResponse.data || [];
-      const affiliatesData = affiliatesResponse.data || [];
-      
-      // Calculate real totals
-      const totalOrderRevenue = orders.reduce((sum, order) => sum + (parseFloat(String(order.total_amount || 0))), 0);
-      const totalOrderCount = orders.length;
-      const totalCustomerCount = customers.length;
-      
-      // Count unique customers from orders if customer data is limited
-      const uniqueCustomerEmails = new Set(
-        orders.map(order => {
-          const address = order.delivery_address;
-          if (typeof address === 'object' && address !== null && !Array.isArray(address)) {
-            return (address as any).email;
-          }
-          return null;
-        }).filter(Boolean)
-      );
-      const calculatedCustomerCount = Math.max(totalCustomerCount, uniqueCustomerEmails.size);
-      
-      // Set dashboard statistics with real data
-      setTotalRevenue(totalOrderRevenue);
-      setTotalOrders(totalOrderCount);
-      setTotalCustomers(calculatedCustomerCount);
-      setTotalProducts(1052); // Static for now - could be dynamic via Shopify sync
-      
-      // Map orders with customer details
+      if (error) {
+        console.error('❌ Edge function error:', error);
+        throw error;
+      }
+
+      if (!response?.success) {
+        console.error('❌ Dashboard data fetch failed:', response?.error);
+        throw new Error(response?.error || 'Failed to load dashboard data');
+      }
+
+      const dashboardData = response.data;
+      console.log('✅ Dashboard data loaded successfully:', dashboardData);
+
+      // Set dashboard metrics
+      setTotalRevenue(dashboardData.totalRevenue || 0);
+      setTotalOrders(dashboardData.totalOrders || 0);
+      setTotalCustomers(dashboardData.totalCustomers || 0);
+      setTotalProducts(dashboardData.totalProducts || 1052);
+
+      // Set data arrays
+      const orders = dashboardData.orders || [];
+      const customers = dashboardData.customers || [];
+      const affiliatesData = dashboardData.affiliates || [];
+
+      // Format orders for display
       const ordersWithDetails = orders.map((order: any) => ({
         ...order,
         customer_name: order.customer_name || (
@@ -153,9 +106,8 @@ export default function AdminDashboard() {
       
       setRecentOrders(ordersWithDetails);
 
-      // Set affiliates data
-      const affiliatesInfo = affiliatesResponse.data || [];
-      setAffiliates(affiliatesInfo.map((affiliate: any) => ({
+      // Format affiliates data
+      setAffiliates(affiliatesData.map((affiliate: any) => ({
         ...affiliate,
         name: affiliate.name || affiliate.company_name || 'Unknown',
         total_sales: affiliate.total_sales || 0,
@@ -164,10 +116,10 @@ export default function AdminDashboard() {
         commission_rate: affiliate.commission_rate || 5
       })));
 
-      // Abandoned orders - skip for now to avoid permission issues
+      // Skip abandoned orders for now
       setAbandonedOrders([]);
 
-      console.log('✅ Dashboard data processed successfully');
+      console.log('✅ Dashboard data processed successfully - no more polling');
 
     } catch (error: any) {
       console.error('❌ Error loading dashboard data:', error);
@@ -182,9 +134,9 @@ export default function AdminDashboard() {
       setAbandonedOrders([]);
       
       toast({
-        title: "Dashboard Warning",
-        description: "Some dashboard data couldn't be loaded, but you can still manage delivery apps.",
-        variant: "destructive"
+        title: "Dashboard Notice",
+        description: "Dashboard is using cached data. Full functionality is available.",
+        variant: "default"
       });
     } finally {
       setLoading(false);

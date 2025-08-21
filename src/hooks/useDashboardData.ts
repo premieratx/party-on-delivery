@@ -29,7 +29,9 @@ export function useDashboardData(options: UseDashboardDataOptions) {
       setLoading(true);
       setError(null);
 
-      // Use the edge function instead of RPC to match AdminDashboard
+      console.log('🔄 Fetching dashboard data via edge function...');
+
+      // Use the edge function exclusively to avoid RLS issues
       const { data: response, error } = await supabase.functions.invoke('get-dashboard-data', {
         body: {
           type: options.type,
@@ -39,18 +41,22 @@ export function useDashboardData(options: UseDashboardDataOptions) {
       });
 
       if (error) {
+        console.error('Edge function error:', error);
         throw new Error(error.message || String(error));
       }
 
       if (!response?.success) {
+        console.error('Dashboard data fetch failed:', response?.error);
         throw new Error(response?.error || 'Failed to load dashboard data');
       }
 
+      console.log('✅ Dashboard data loaded successfully:', response.data);
       setData(response.data);
       setLastUpdated(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      console.error('Dashboard data fetch error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      console.error('Dashboard data fetch error:', errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
