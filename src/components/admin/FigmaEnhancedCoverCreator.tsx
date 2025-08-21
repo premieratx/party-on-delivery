@@ -12,10 +12,7 @@ import { Eye, Save, Copy, Settings2, Palette, Layout, Sparkles } from 'lucide-re
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Import Figma components
-import CoverScreen from '@/components/figma-cover/CoverScreen';
-import CoverScreenVariant1 from '@/components/figma-cover/CoverScreenVariant1';
-import CoverScreenVariant2 from '@/components/figma-cover/CoverScreenVariant2';
+// Import Figma components - Removed old cover screens per user request
 
 interface FigmaEnhancedCoverCreatorProps {
   open: boolean;
@@ -45,32 +42,9 @@ interface CoverPageConfig {
   is_active: boolean;
 }
 
-const FIGMA_TEMPLATES = [
-  {
-    id: 'original',
-    name: 'Original',
-    description: 'Clean, modern design with gradient accents',
-    component: CoverScreen,
-    badge: '✨ Classic',
-    colors: ['from-primary/5', 'via-accent/10', 'to-secondary/5']
-  },
-  {
-    id: 'gold',
-    name: 'Gold Tier',
-    description: 'Premium gold theme for luxury experiences',
-    component: CoverScreenVariant1,
-    badge: '🏆 Premium',
-    colors: ['from-amber-400', 'to-yellow-500']
-  },
-  {
-    id: 'platinum',
-    name: 'Platinum Elite',
-    description: 'Ultra-premium platinum design',
-    component: CoverScreenVariant2,
-    badge: '💎 Elite',
-    colors: ['from-slate-600', 'to-zinc-600']
-  }
-];
+  const FIGMA_TEMPLATES = [
+    // Templates disabled - old cover screens removed per user request
+  ];
 
 const DEFAULT_BUTTONS = [
   { text: 'Start Shopping', type: 'delivery_app', target: '', style: 'primary' },
@@ -244,7 +218,7 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
     }));
   };
 
-  const PreviewComponent = FIGMA_TEMPLATES.find(t => t.id === config.template)?.component || CoverScreen;
+  const PreviewComponent = null; // Templates disabled per user request
 
   return (
     <>
@@ -283,28 +257,13 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
             {/* Template Selection */}
             <TabsContent value="template" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {FIGMA_TEMPLATES.map((template) => (
-                  <Card 
-                    key={template.id}
-                    className={`cursor-pointer transition-all hover:shadow-lg ${
-                      config.template === template.id ? 'ring-2 ring-primary' : ''
-                    }`}
-                    onClick={() => handleTemplateSelect(template.id as any)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{template.name}</CardTitle>
-                        <Badge variant="secondary" className="text-xs">
-                          {template.badge}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
-                      <div className={`h-20 rounded-lg bg-gradient-to-r ${template.colors.join(' ')} border`} />
-                    </CardContent>
-                  </Card>
-                ))}
+                <div className="text-center p-8 border rounded-lg">
+                  <p className="text-muted-foreground">
+                    Old template system has been disabled.
+                    <br />
+                    Use the enhanced cover page creator instead.
+                  </p>
+                </div>
               </div>
             </TabsContent>
 
@@ -509,7 +468,7 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
               {/* Mini Preview */}
               <div className="border rounded-lg p-4 bg-muted/30">
                 <div className="text-center space-y-2">
-                  <Badge variant="outline">Template: {FIGMA_TEMPLATES.find(t => t.id === config.template)?.name}</Badge>
+                  <Badge variant="outline">Enhanced Cover System Active</Badge>
                   <h3 className="text-lg font-semibold">{config.title}</h3>
                   <p className="text-sm text-muted-foreground">{config.subtitle}</p>
                   <div className="flex justify-center gap-2 mt-4">
@@ -556,9 +515,14 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
         </DialogContent>
       </Dialog>
 
-      {/* Full Screen Preview */}
+      {/* Full Screen Preview - Disabled */}
       {previewOpen && (
-        <PreviewComponent onClose={() => setPreviewOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg">
+            <p className="text-center">Preview disabled - old template system removed</p>
+            <Button onClick={() => setPreviewOpen(false)} className="mt-4 w-full">Close</Button>
+          </div>
+        </div>
       )}
     </>
   );
