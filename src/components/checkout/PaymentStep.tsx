@@ -21,6 +21,8 @@ interface PaymentStepProps {
   onPaymentSuccess: (paymentIntentId?: string) => void;
   isAddingToOrder?: boolean;
   affiliateCode?: string;
+  tipAmount?: number;
+  onTipChange?: (amount: number) => void;
 }
 
 const tipOptions = [
@@ -40,20 +42,28 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
   appliedDiscount,
   onPaymentSuccess,
   isAddingToOrder = false,
-  affiliateCode
+  affiliateCode,
+  tipAmount: externalTipAmount,
+  onTipChange: externalOnTipChange
 }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Stripe should always be available when this component renders
-  // since it's wrapped by StripePaymentWrapper
-  
-  // Tip management
-  const [tipAmount, setTipAmount] = useState(subtotal * 0.10); // Default 10%
+  // Tip management - use external tip if provided, otherwise internal
+  const [internalTipAmount, setInternalTipAmount] = useState(subtotal * 0.10);
   const [tipType, setTipType] = useState<'percentage' | 'custom'>('percentage');
   const [showCustomTip, setShowCustomTip] = useState(false);
+  
+  const tipAmount = externalTipAmount !== undefined ? externalTipAmount : internalTipAmount;
+  const setTipAmount = (amount: number) => {
+    if (externalOnTipChange) {
+      externalOnTipChange(amount);
+    } else {
+      setInternalTipAmount(amount);
+    }
+  };
 
   // Calculate tip options based on subtotal
   const calculateTipOptions = () => {

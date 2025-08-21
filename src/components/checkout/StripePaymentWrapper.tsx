@@ -17,6 +17,8 @@ interface StripePaymentWrapperProps {
   onPaymentSuccess: (paymentIntentId?: string) => void;
   isAddingToOrder?: boolean;
   affiliateCode?: string;
+  tipAmount?: number;
+  onTipChange?: (amount: number) => void;
 }
 
 export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props) => {
@@ -25,7 +27,7 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
   const [hasError, setHasError] = useState(false);
   const { config } = useAppConfig();
 
-  const total = props.subtotal + props.deliveryFee + props.salesTax;
+  const total = props.subtotal + props.deliveryFee + props.salesTax + (props.tipAmount || 0);
 
   useEffect(() => {
     let mounted = true;
@@ -117,18 +119,24 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
   // NEVER show fallback - force Stripe to work or show error
   if (hasError) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-        <p className="text-sm text-red-600 font-medium">Stripe Payment System Error</p>
-        <p className="text-xs text-red-500 mt-1">
-          The payment system failed to initialize. Please refresh the page or contact support.
-        </p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded"
-        >
-          Refresh Page
-        </button>
-      </div>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600 font-medium">Stripe Payment System Error</p>
+          <p className="text-xs text-red-500 mt-1">
+            The payment system failed to initialize. Please refresh the page or contact support.
+          </p>
+          <Button 
+            onClick={() => {
+              // Force re-initialization instead of page reload
+              setIsLoading(true);
+              setHasError(false);
+            }}
+            size="sm"
+            variant="destructive"
+            className="mt-2"
+          >
+            Retry Payment System
+          </Button>
+        </div>
     );
   }
   

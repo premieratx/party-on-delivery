@@ -132,7 +132,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     }
   }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer, confirmedDateTime, confirmedAddress, confirmedCustomer]);
 
-  // Pricing calculations - use proper delivery fee hook
+  // Pricing calculations - use proper delivery fee hook with tip support
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const cartSubtotal = cartItems.reduce((total, item) => total + (applyMarkup(item.price) * item.quantity), 0);
@@ -146,7 +146,9 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   
   const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax on original subtotal
 
-  const finalTotal = discountedSubtotal + finalDeliveryFee + calculatedSalesTax;
+  // FIXED: Add tip amount back to total calculation
+  const [tipAmount, setTipAmount] = useState(0);
+  const finalTotal = discountedSubtotal + finalDeliveryFee + calculatedSalesTax + tipAmount;
 
   // Discount management
   const handlePromoApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
@@ -342,6 +344,11 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               onPaymentSuccess={handlePaymentSuccess}
               isAddingToOrder={isAddingToOrder}
               affiliateCode={affiliateCode}
+              tipAmount={tipAmount}
+              onTipChange={(amount) => {
+                setTipAmount(amount);
+                if (onTipChange) onTipChange(amount);
+              }}
             />
             )}
           </div>
