@@ -13,7 +13,7 @@ export function useAdminState(defaultTab = 'overview') {
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
-  // Load state from localStorage on mount - PREVENT RELOAD ON TAB SWITCH
+  // Load state from localStorage on mount - PREVENT TAB SWITCHING
   useEffect(() => {
     const loadStoredState = () => {
       try {
@@ -22,13 +22,11 @@ export function useAdminState(defaultTab = 'overview') {
           const parsed: AdminState = JSON.parse(stored);
           const now = Date.now();
           
-          // Only clear if data is older than 24 hours, NOT when switching tabs
+          // Only restore form data, NOT activeTab to prevent auto-switching
           if (now - parsed.lastUpdated < STORAGE_EXPIRY) {
-            setActiveTab(parsed.activeTab || defaultTab);
             setFormData(parsed.formData || {});
-            console.log('🔄 Restored admin state:', { activeTab: parsed.activeTab, formDataKeys: Object.keys(parsed.formData || {}) });
+            console.log('🔄 Restored admin form data only:', { formDataKeys: Object.keys(parsed.formData || {}) });
           } else {
-            // Only clear expired state  
             localStorage.removeItem(STORAGE_KEY);
             console.log('⏰ Cleared expired admin state');
           }
@@ -39,7 +37,6 @@ export function useAdminState(defaultTab = 'overview') {
       }
     };
 
-    // Load state immediately
     loadStoredState();
 
     // Prevent reload on browser tab focus/blur events

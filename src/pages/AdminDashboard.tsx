@@ -53,46 +53,19 @@ export default function AdminDashboard() {
   const [showCoverCreator, setShowCoverCreator] = useState(false);
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
 
-  // Prevent dashboard reload on tab switching - load data only once
+  // Prevent dashboard reload on tab switching - load data only ONCE
   useEffect(() => {
     console.log('🚀 AdminDashboard: Component mounted, loading data...');
     console.log('🔍 DEBUG: Window location:', window.location.pathname);
     console.log('🔍 DEBUG: Active tab:', activeTab);
     
-    // Only load data if we haven't loaded it before (prevent reload on tab switch)
-    if (!sessionStorage.getItem('admin_dashboard_loaded')) {
-      loadDashboardData();
-      sessionStorage.setItem('admin_dashboard_loaded', 'true');
-    }
-
-    // Prevent component from remounting on browser tab events
-    const handleVisibilityChange = () => {
-      // Do nothing - just prevent default browser behavior
-      return false;
-    };
-
-    const handleFocus = () => {
-      // Do nothing - just prevent reload
-      return false;
-    };
-
-    const handleBlur = () => {
-      // Do nothing - just prevent reload  
-      return false;
-    };
-
-    // Add event listeners to prevent reload behavior
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
+    // Load data immediately on mount - no session storage delays
+    loadDashboardData();
 
     return () => {
-      // Clean up event listeners
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
+      // Cleanup function - prevent memory leaks
     };
-  }, []); // Empty dependency array to prevent unnecessary re-runs
+  }, []); // Empty dependency array to prevent re-runs
 
   const loadDashboardData = async () => {
     try {
@@ -189,6 +162,7 @@ export default function AdminDashboard() {
       setAbandonedOrders([]);
 
       console.log('✅ Dashboard data processed successfully - ready to display');
+      setLoading(false); // FIX: Actually finish loading
 
     } catch (error: any) {
       console.error('❌ Error loading dashboard data:', error);
