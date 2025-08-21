@@ -34,8 +34,8 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
         <div className="flex-1 min-h-0">
           <OriginalEditor
-            open={true}
-            onOpenChange={() => {}}
+            open={open}
+            onOpenChange={onOpenChange}
             initial={initial}
             onSaved={onSaved}
             embedded={true}
