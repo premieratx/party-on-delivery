@@ -13,6 +13,7 @@ import { CheckCircle, Save, Eye, ExternalLink, Upload, Loader2 } from 'lucide-re
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { PremiumOrderComplete } from '@/components/enhanced-checkout/PremiumOrderComplete';
+import { DEFAULT_POST_CHECKOUT_TEMPLATE, createPostCheckoutFromTemplate } from '../templates/PostCheckoutTemplates';
 
 interface EnhancedPostCheckoutCreatorProps {
   open: boolean;
@@ -81,16 +82,31 @@ interface PostCheckoutConfig {
 }
 
 const THEMES = [
-  { value: 'success', label: 'Success Green', color: '#22c55e', preview: 'bg-green-100' },
   { value: 'celebration', label: 'Celebration Gold', color: '#f59e0b', preview: 'bg-amber-100' },
+  { value: 'success', label: 'Success Green', color: '#22c55e', preview: 'bg-green-100' },
   { value: 'premium', label: 'Premium Blue', color: '#3b82f6', preview: 'bg-blue-100' },
   { value: 'elegant', label: 'Elegant Purple', color: '#8b5cf6', preview: 'bg-purple-100' }
 ];
 
 const VARIANTS = [
-  { value: 'original', label: 'Original', description: 'Clean, modern design' },
-  { value: 'gold', label: 'Gold Tier', description: 'Premium gold styling' },
-  { value: 'platinum', label: 'Platinum Elite', description: 'Ultra-premium design' }
+  { 
+    value: 'gold', 
+    label: 'Gold Premium', 
+    description: 'Luxury gold styling with premium features',
+    badge: '🏆 Premium'
+  },
+  { 
+    value: 'platinum', 
+    label: 'Platinum Elite', 
+    description: 'Ultra-premium platinum design',
+    badge: '💎 Elite'
+  },
+  { 
+    value: 'original', 
+    label: 'Classic Design', 
+    description: 'Clean, modern design',
+    badge: '✨ Classic'
+  }
 ];
 
 // Mock data for preview
@@ -113,23 +129,27 @@ export const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorPr
   onSaved
 }) => {
   const [config, setConfig] = useState<PostCheckoutConfig>({
-    name: 'Order Confirmed',
+    name: 'Enhanced Demo Order Complete',
     slug: '',
-    title: 'Order Confirmed!',
-    subtitle: "Thank you for your order. We'll get started on it right away.",
-    theme: 'success',
-    variant: 'original',
+    title: 'Order Confirmed! 🎉',
+    subtitle: 'Thank you for choosing our premium service. Your order is being prepared with the utmost care.',
+    theme: 'celebration',
+    variant: 'gold',
     primaryButton: {
-      text: 'Continue Shopping',
-      url: '/'
+      text: 'Continue Premium Shopping',
+      url: '/checkout',
+      color: '#d4af37',
+      textColor: '#000000'
     },
     secondaryButton: {
-      text: 'Track Order',
-      url: '/orders'
+      text: 'Track My Order',
+      url: '/orders',
+      color: '#8b5cf6',
+      textColor: '#ffffff'
     },
     showOrderDetails: true,
     showDeliveryInfo: true,
-    showShareOptions: false,
+    showShareOptions: true,
     showOrderNumber: true,
     showEstimatedDelivery: true,
     animations: { enabled: true, celebrationEffect: true, entranceAnimation: 'fade' },

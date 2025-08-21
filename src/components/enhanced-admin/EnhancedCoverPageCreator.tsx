@@ -13,6 +13,7 @@ import { Eye, Save, Copy, Settings2, Palette, Layout, Sparkles, Plus, Trash2, Ex
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { EditableCoverScreen } from '@/components/enhanced-cover/EditableCoverScreen';
+import { DEFAULT_COVER_TEMPLATE, TEMPLATE_VARIANTS, createCoverPageFromTemplate } from '../templates/CoverPageTemplates';
 
 interface EnhancedCoverPageCreatorProps {
   open: boolean;
@@ -106,25 +107,28 @@ interface CoverPageConfig {
 
 const VARIANT_TEMPLATES = [
   {
-    id: 'original',
-    name: 'Original',
-    description: 'Clean, modern design with gradient accents',
-    badge: '✨ Classic',
-    preview: 'bg-gradient-to-r from-blue-100 to-purple-100'
-  },
-  {
     id: 'gold',
-    name: 'Gold Tier',
-    description: 'Premium gold theme for luxury experiences',
+    name: 'Gold Premium',
+    description: 'Luxury gold design with premium styling',
     badge: '🏆 Premium',
-    preview: 'bg-gradient-to-r from-amber-200 to-yellow-200'
+    preview: 'bg-gradient-to-r from-amber-200 to-yellow-200',
+    colors: { primary: '#d4af37', secondary: '#8b5cf6', accent: '#f59e0b' }
   },
   {
     id: 'platinum',
     name: 'Platinum Elite',
     description: 'Ultra-premium platinum design',
     badge: '💎 Elite',
-    preview: 'bg-gradient-to-r from-slate-200 to-zinc-200'
+    preview: 'bg-gradient-to-r from-slate-200 to-zinc-200',
+    colors: { primary: '#71717a', secondary: '#3b82f6', accent: '#6366f1' }
+  },
+  {
+    id: 'original',
+    name: 'Classic Blue',
+    description: 'Clean, modern design with blue accents',
+    badge: '✨ Classic',
+    preview: 'bg-gradient-to-r from-blue-100 to-purple-100',
+    colors: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4' }
   }
 ];
 
@@ -145,46 +149,66 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   initial,
   onSaved
 }) => {
-  const [config, setConfig] = useState<CoverPageConfig>({
-    slug: '',
-    title: 'Party On Delivery',
-    subtitle: "Austin's exclusive concierge delivery service",
-    logoEmoji: '🎉',
-    variant: 'original',
-    features: DEFAULT_FEATURES,
-    buttons: DEFAULT_BUTTONS,
-    backgroundOverlay: { enabled: false, opacity: 0.5 },
-    typography: { 
-      titleSize: 'text-4xl md:text-5xl', 
-      subtitleSize: 'text-xl',
-      fontFamily: 'inherit'
-    },
-    logoSizing: {
-      width: '5rem',
-      height: '5rem'
-    },
-    positioning: {
-      logoMarginTop: '0',
-      logoMarginBottom: '0',
-      titleMarginTop: '0', 
-      titleMarginBottom: '0',
-      subtitleMarginTop: '0',
-      subtitleMarginBottom: '0',
-      featuresMarginTop: '0',
-      featuresMarginBottom: '0',
-      buttonsMarginTop: '0',
-      buttonsMarginBottom: '0'
-    },
-    animations: { enabled: true, speed: 'normal', entrance: 'fade' },
-    seo: {},
-    analytics: {},
-    scheduling: {},
-    is_active: true
+  const [config, setConfig] = useState<CoverPageConfig>(() => {
+    // Initialize with the gold template as default
+    const template = createCoverPageFromTemplate('gold');
+    return {
+      slug: '',
+      title: template.title,
+      subtitle: template.subtitle,
+      logoEmoji: template.styles.logoEmoji,
+      variant: 'gold' as const,
+      features: template.styles.features,
+      buttons: template.buttons,
+      backgroundOverlay: { enabled: false, opacity: 0.5 },
+      typography: { 
+        titleSize: 'text-4xl md:text-5xl', 
+        subtitleSize: 'text-xl',
+        fontFamily: 'inherit'
+      },
+      logoSizing: {
+        width: '5rem',
+        height: '5rem'
+      },
+      positioning: {
+        logoMarginTop: '0',
+        logoMarginBottom: '0',
+        titleMarginTop: '0', 
+        titleMarginBottom: '0',
+        subtitleMarginTop: '0',
+        subtitleMarginBottom: '0',
+        featuresMarginTop: '0',
+        featuresMarginBottom: '0',
+        buttonsMarginTop: '0',
+        buttonsMarginBottom: '0'
+      },
+      customColors: template.styles.customColors,
+      animations: { enabled: true, speed: 'normal' as const, entrance: 'fade' as const },
+      seo: {},
+      analytics: {},
+      scheduling: {},
+      is_active: true
+    };
   });
   
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [standalonePath, setStandalonePath] = useState<string>('');
+
+  // Helper function to load template
+  const loadTemplate = (templateName: 'gold' | 'platinum' | 'original') => {
+    const template = createCoverPageFromTemplate(templateName);
+    setConfig(prev => ({
+      ...prev,
+      title: template.title,
+      subtitle: template.subtitle,
+      variant: templateName,
+      features: template.styles.features,
+      buttons: template.buttons,
+      logoEmoji: template.styles.logoEmoji,
+      customColors: template.styles.customColors
+    }));
+  };
 
   useEffect(() => {
     if (initial) {
@@ -372,13 +396,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               <TabsContent value="template" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {VARIANT_TEMPLATES.map((template) => (
-                    <Card 
-                      key={template.id}
-                      className={`cursor-pointer transition-all hover:shadow-lg ${
-                        config.variant === template.id ? 'ring-2 ring-primary' : ''
-                      }`}
-                      onClick={() => setConfig(prev => ({ ...prev, variant: template.id as any }))}
-                    >
+                     <Card 
+                       key={template.id}
+                       className={`cursor-pointer transition-all hover:shadow-lg ${
+                         config.variant === template.id ? 'ring-2 ring-primary' : ''
+                       }`}
+                       onClick={() => loadTemplate(template.id as 'gold' | 'platinum' | 'original')}
+                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-lg">{template.name}</CardTitle>
@@ -388,8 +412,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
-                        <div className={`h-20 rounded-lg ${template.preview} border`} />
+                         <p className="text-sm text-muted-foreground mb-4">{template.description}</p>
+                         <div className={`h-20 rounded-lg ${template.preview} border relative overflow-hidden`}>
+                           <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                           <div className="absolute bottom-2 left-2 text-xs font-medium opacity-75">
+                             {config.variant === template.id && "✓ Active Template"}
+                           </div>
+                         </div>
                       </CardContent>
                     </Card>
                   ))}
