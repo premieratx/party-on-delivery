@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -281,12 +281,15 @@ export const FixedCoverPageCreator: React.FC<CoverPageCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] w-full overflow-hidden">
+      <DialogContent className="max-w-6xl max-h-[90vh] w-full overflow-hidden" aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Layout className="w-5 h-5" />
             {initial ? 'Edit' : 'Create'} Cover Page
           </DialogTitle>
+          <DialogDescription id="dialog-description">
+            Design and build custom cover pages with drag-and-drop components and live preview.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="flex-1 flex flex-col min-h-0">

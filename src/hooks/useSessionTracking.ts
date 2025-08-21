@@ -8,6 +8,15 @@ export const useSessionTracking = () => {
   
   const linkSessionToUser = async (userEmail: string) => {
     try {
+      // Skip session linking in admin contexts to avoid unnecessary processing
+      const isAdminContext = window.location.pathname.includes('/admin') || 
+                            userEmail === 'brian@partyondelivery.com' ||
+                            localStorage.getItem('adminSession');
+      
+      if (isAdminContext) {
+        return; // Skip session linking for admin users
+      }
+
       // Get valid session IDs from localStorage - be more selective
       const sessionKeys = new Set<string>(); // Use Set to avoid duplicates
       
@@ -43,9 +52,16 @@ export const useSessionTracking = () => {
         }
       }
 
-      // Only process if we have valid session tokens
+      // Only process if we have valid session tokens and we're in a customer context
       if (sessionKeys.size === 0) {
-        console.log('No valid session tokens found to link');
+        // Don't log in admin contexts to avoid console spam
+        const isAdminContext = window.location.pathname.includes('/admin') || 
+                              userEmail === 'brian@partyondelivery.com' ||
+                              localStorage.getItem('adminSession');
+        
+        if (!isAdminContext) {
+          console.log('No valid session tokens found to link');
+        }
         return;
       }
 

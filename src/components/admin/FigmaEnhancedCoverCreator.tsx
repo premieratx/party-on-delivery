@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -223,7 +223,7 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto" style={{ fontSize: '14px' }}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto" style={{ fontSize: '14px' }} aria-describedby="dialog-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -232,6 +232,9 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
                 Following System Guidelines
               </Badge>
             </DialogTitle>
+            <DialogDescription id="dialog-description">
+              Create professional cover pages using Figma-based templates and enhanced design tools.
+            </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="template" className="w-full">
