@@ -125,6 +125,10 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
   const [heroImageUrl, setHeroImageUrl] = useState('');
   const [heroVideoUrl, setHeroVideoUrl] = useState('');
   
+  // Collections loading
+  const [availableCollections, setAvailableCollections] = useState<Array<{handle: string, title: string, products_count: number}>>([]);
+  const [collectionsLoading, setCollectionsLoading] = useState(false);
+  
   const [logoUrl, setLogoUrl] = useState('');
   const [tabs, setTabs] = useState<DeliveryAppTab[]>([
     { name: 'Featured', collection_handle: 'featured' },
@@ -143,6 +147,49 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
   const isEditing = !!initial?.id;
   const theme = DELIVERY_THEMES[selectedTheme as keyof typeof DELIVERY_THEMES];
   const device = DEVICE_CONFIGS[activeDevice];
+
+  // Load collections when dialog opens
+  useEffect(() => {
+    const loadCollections = async () => {
+      if (!open) return;
+      
+      setCollectionsLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('get-all-collections');
+        if (error) {
+          console.error('Error loading collections:', error);
+          toast({ 
+            title: 'Collections load failed', 
+            description: 'Using fallback collections', 
+            variant: 'destructive' 
+          });
+          // Fallback collections
+          setAvailableCollections([
+            { handle: 'spirits', title: 'Premium Spirits', products_count: 120 },
+            { handle: 'tailgate-beer', title: 'Tailgate Beer', products_count: 95 },
+            { handle: 'cocktail-kits', title: 'Cocktail Kits', products_count: 65 },
+            { handle: 'champagne', title: 'Champagne & Sparkling', products_count: 55 },
+            { handle: 'whiskey', title: 'Whiskey & Bourbon', products_count: 75 },
+            { handle: 'vodka', title: 'Premium Vodka', products_count: 45 },
+            { handle: 'tequila', title: 'Tequila & Mezcal', products_count: 35 }
+          ]);
+        } else {
+          setAvailableCollections(data?.collections || []);
+        }
+      } catch (err) {
+        console.error('Collections loading error:', err);
+        toast({ 
+          title: 'Error loading collections',
+          description: 'Please refresh and try again',
+          variant: 'destructive' 
+        });
+      } finally {
+        setCollectionsLoading(false);
+      }
+    };
+
+    loadCollections();
+  }, [open, toast]);
 
   useEffect(() => {
     if (!open) return;
@@ -252,6 +299,13 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       const ext = file.name.split('.').pop() || 'png';
       const fileName = `delivery-app-${Date.now()}-logo.${ext}`;
       
+      // Ensure bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (!buckets?.find(bucket => bucket.name === 'delivery-app-assets')) {
+        const { error: bucketError } = await supabase.storage.createBucket('delivery-app-assets', { public: true });
+        if (bucketError) console.warn('Bucket creation failed:', bucketError);
+      }
+      
       const { error: uploadError } = await supabase.storage
         .from('delivery-app-assets')
         .upload(fileName, file, { cacheControl: '3600', upsert: true });
@@ -263,7 +317,7 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       toast({ title: 'Logo uploaded successfully!' });
     } catch (error) {
       console.error('Upload failed:', error);
-      toast({ title: 'Upload failed', variant: 'destructive' });
+      toast({ title: 'Upload failed', description: 'Please try again or contact support', variant: 'destructive' });
     }
   };
 
@@ -274,6 +328,13 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
     try {
       const ext = file.name.split('.').pop() || 'jpg';
       const fileName = `delivery-app-${Date.now()}-hero.${ext}`;
+      
+      // Ensure bucket exists
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (!buckets?.find(bucket => bucket.name === 'delivery-app-assets')) {
+        const { error: bucketError } = await supabase.storage.createBucket('delivery-app-assets', { public: true });
+        if (bucketError) console.warn('Bucket creation failed:', bucketError);
+      }
       
       const { error: uploadError } = await supabase.storage
         .from('delivery-app-assets')
@@ -295,7 +356,7 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      toast({ title: 'Upload failed', variant: 'destructive' });
+      toast({ title: 'Upload failed', description: 'Please try again or contact support', variant: 'destructive' });
     }
   };
 
@@ -527,11 +588,39 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
                           </div>
                           
                           <div>
-                            <Label>Collection Handle</Label>
+                            <Label>Collection</Label>
+                            {collectionsLoading ? (
+                              <div className="flex items-center gap-2 p-2 text-sm text-muted-foreground">
+                                <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                                Loading collections...
+                              </div>
+                            ) : (
+                              <Select
+                                value={tab.collection_handle}
+                                onValueChange={(value) => updateTab(index, { collection_handle: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select collection" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableCollections.map((collection) => (
+                                    <SelectItem key={collection.handle} value={collection.handle}>
+                                      <div className="flex justify-between items-center w-full">
+                                        <span>{collection.title}</span>
+                                        <Badge variant="secondary" className="ml-2 text-xs">
+                                          {collection.products_count} items
+                                        </Badge>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
                             <Input
+                              className="mt-1 text-xs"
                               value={tab.collection_handle}
                               onChange={(e) => updateTab(index, { collection_handle: e.target.value })}
-                              placeholder="collection-handle"
+                              placeholder="Or enter handle manually"
                             />
                           </div>
                         </CardContent>
