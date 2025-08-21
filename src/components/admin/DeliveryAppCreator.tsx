@@ -109,18 +109,18 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const loadShopifyCollections = async () => {
     try {
       setCollectionsLoading(true);
-      console.log('Loading Shopify collections...');
+      console.log('🔄 Loading Shopify collections for delivery app creator...');
       
       // Use the working get-all-collections edge function
       const { data, error } = await supabase.functions.invoke('get-all-collections');
       
       if (error) {
-        console.error('Error from get-all-collections:', error);
+        console.error('❌ Error from get-all-collections:', error);
         throw error;
       }
       
       if (data?.collections && Array.isArray(data.collections)) {
-        console.log(`Loaded ${data.collections.length} collections from Shopify`);
+        console.log(`✅ Loaded ${data.collections.length} collections from Shopify`);
         
         const collections = data.collections
           .filter((collection: any) => collection.products_count > 0) // Only collections with products
@@ -590,18 +590,28 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                                   <SelectTrigger>
                                     <SelectValue placeholder="Select collection" />
                                   </SelectTrigger>
-                                  <SelectContent className="max-h-60">
-                                    {shopifyCollections.map((collection) => (
-                                      <SelectItem key={collection.handle} value={collection.handle}>
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-mono text-xs text-muted-foreground">
-                                            {collection.handle}
-                                          </span>
-                                          <span>{collection.name}</span>
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
+                                   <SelectContent className="max-h-60 bg-background border z-50">
+                                     {collectionsLoading ? (
+                                       <SelectItem value="loading" disabled>
+                                         Loading collections...
+                                       </SelectItem>
+                                     ) : shopifyCollections.length === 0 ? (
+                                       <SelectItem value="no-collections" disabled>
+                                         No collections found
+                                       </SelectItem>
+                                     ) : (
+                                       shopifyCollections.map((collection) => (
+                                         <SelectItem key={collection.handle} value={collection.handle}>
+                                           <div className="flex items-center gap-2">
+                                             <span className="font-medium">{collection.name}</span>
+                                             <span className="text-xs text-muted-foreground">
+                                               ({collection.products_count} products)
+                                             </span>
+                                           </div>
+                                         </SelectItem>
+                                       ))
+                                     )}
+                                   </SelectContent>
                                 </Select>
                               </div>
                               
@@ -614,13 +624,13 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                                   <SelectTrigger>
                                     <SelectValue placeholder="Choose an icon" />
                                   </SelectTrigger>
-                                  <SelectContent className="max-h-60">
-                                    {ICON_OPTIONS.map((option) => (
-                                      <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
+                                   <SelectContent className="max-h-60 bg-background border z-50">
+                                     {ICON_OPTIONS.map((option) => (
+                                       <SelectItem key={option.value} value={option.value}>
+                                         {option.label}
+                                       </SelectItem>
+                                     ))}
+                                   </SelectContent>
                                 </Select>
                               </div>
                             </div>

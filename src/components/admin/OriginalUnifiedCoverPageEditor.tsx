@@ -422,6 +422,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     }
 
     setSaving(true);
+    console.log('🔄 Saving cover page...', { title, slug: computedSlug, isEditing, initialId: initial?.id });
     try {
       const payload = {
         slug: computedSlug,
@@ -447,12 +448,14 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
           .update(payload)
           .eq('id', initial.id);
         if (error) throw error;
+        console.log('✅ Cover page updated successfully');
         toast({ title: 'Success', description: 'Cover page updated successfully' });
       } else {
         const { error } = await supabase
           .from('cover_pages')
           .insert(payload);
         if (error) throw error;
+        console.log('✅ Cover page created successfully');
         toast({ title: 'Success', description: 'Cover page created successfully' });
       }
 
