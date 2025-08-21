@@ -3,27 +3,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Bug } from 'lucide-react';
 
-interface Props {
+interface RobustErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
-interface State {
+interface RobustErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   retryCount: number;
 }
 
-export class RobustErrorBoundary extends Component<Props, State> {
+export class RobustErrorBoundary extends Component<RobustErrorBoundaryProps, RobustErrorBoundaryState> {
   private retryTimeout: NodeJS.Timeout | null = null;
 
-  constructor(props: Props) {
+  constructor(props: RobustErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null, retryCount: 0 };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(error: Error): Partial<RobustErrorBoundaryState> {
     return { hasError: true, error };
   }
 

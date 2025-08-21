@@ -13,6 +13,3 @@ interface CoverPageCreatorProps {
 export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({ onBack, ...props }) => {
   return <SimpleCoverPageCreator {...props} />;
 };
-
-// Export both for compatibility
-export const ImprovedCoverPageCreator = CoverPageCreator;

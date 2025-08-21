@@ -3,21 +3,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
-interface Props {
+interface ErrorBoundaryWithRetryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
   retryCount: number;
 }
 
-export class ErrorBoundaryWithRetry extends Component<Props, State> {
-  constructor(props: Props) {
+export class ErrorBoundaryWithRetry extends Component<ErrorBoundaryWithRetryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryWithRetryProps) {
     super(props);
     this.state = {
       hasError: false,
@@ -27,7 +27,7 @@ export class ErrorBoundaryWithRetry extends Component<Props, State> {
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return {
       hasError: true,
       error

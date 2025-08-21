@@ -10,7 +10,7 @@ import { AffiliateFlowAssignmentManager } from '@/components/admin/AffiliateFlow
 import { EnhancedCoverPageManager } from '@/components/admin/EnhancedCoverPageManager';
 import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryAppManager';
 import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
-import AffiliateCreator from '@/components/admin/AffiliateCreator';
+import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator';
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';

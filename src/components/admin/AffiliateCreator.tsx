@@ -195,4 +195,4 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
   );
 };
 
-export default AffiliateCreator;
+
