@@ -47,170 +47,170 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
       />
       
       {/* Cart Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5" />
-              Your Cart ({cartItems.length})
-            </h2>
-            <div className="flex gap-2">
-              {cartItems.length > 0 && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={emptyCart}
-                  title="Empty Cart"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
-              <Button variant="ghost" size="icon" onClick={onClose}>
-                <X className="w-5 h-5" />
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col">
+        
+        {/* Fixed Header */}
+        <div className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5" />
+            Your Cart ({cartItems.length})
+          </h2>
+          <div className="flex gap-2">
+            {cartItems.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={emptyCart}
+                title="Empty Cart"
+              >
+                <Trash2 className="w-4 h-4" />
               </Button>
-            </div>
+            )}
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="w-5 h-5" />
+            </Button>
           </div>
+        </div>
 
-          {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 space-y-4">
-              {cartItems.length === 0 ? (
-                <div className="text-center py-12">
-                  <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Your cart is empty</p>
-                  <p className="text-sm text-muted-foreground">Add some products to get started</p>
-                </div>
-              ) : (
-                cartItems.map((item) => (
-                  <Card key={`${item.id}-${item.variant || ''}`} className="p-4">
-                    <div className="flex gap-3">
-                      <img 
-                        src={item.image} 
-                        alt={/* Clean alt text too */
-                          item.title
-                            .replace(/gid:\/\/shopify\/[^\s]+/g, '')
-                            .replace(/https?:\/\/[^\s]+/g, '')
-                            .replace(/\b\d{6,}\b/g, '')
-                            .replace(/shopify[^\s]*/gi, '')
-                            .replace(/\s+/g, ' ')
-                            .trim()
-                        }
-                        className="w-16 h-16 object-cover rounded-md bg-muted"
-                      />
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="p-4 space-y-4">
+            {cartItems.length === 0 ? (
+              <div className="text-center py-12">
+                <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Your cart is empty</p>
+                <p className="text-sm text-muted-foreground">Add some products to get started</p>
+              </div>
+            ) : (
+              cartItems.map((item) => (
+                <Card key={`${item.id}-${item.variant || ''}`} className="p-4">
+                  <div className="flex gap-3">
+                    <img 
+                      src={item.image} 
+                      alt={/* Clean alt text too */
+                        item.title
+                          .replace(/gid:\/\/shopify\/[^\s]+/g, '')
+                          .replace(/https?:\/\/[^\s]+/g, '')
+                          .replace(/\b\d{6,}\b/g, '')
+                          .replace(/shopify[^\s]*/gi, '')
+                          .replace(/\s+/g, ' ')
+                          .trim()
+                      }
+                      className="w-16 h-16 object-cover rounded-md bg-muted"
+                    />
+                    
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-medium text-xs sm:text-sm line-clamp-2">
+                            {/* Clean product title - remove GID URLs and Shopify identifiers */}
+                            {item.title
+                              .replace(/gid:\/\/shopify\/[^\s]+/g, '') // Remove GID URLs
+                              .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs
+                              .replace(/www\.[^\s]+/g, '') // Remove www URLs
+                              .replace(/\b\d{8,}\b/g, '') // Remove long product IDs
+                              .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs
+                              .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
+                              .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
+                              .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
+                              .replace(/SKU:\s*[\w-]+/gi, '') // Remove SKU codes
+                              .replace(/Product\s*ID:\s*\d+/gi, '') // Remove Product ID
+                              .replace(/Handle:\s*[\w-]+/gi, '') // Remove handle references
+                              .replace(/cdn\.shopify\.com[^\s]*/gi, '') // Remove Shopify CDN URLs
+                              .replace(/shopify[^\s]*/gi, '') // Remove any shopify references
+                              .replace(/\s+/g, ' ') // Normalize whitespace
+                              .replace(/(\d+)\s*Pack/gi, '$1pk')
+                              .replace(/(\d+)\s*oz/gi, '$1oz')
+                              .replace(/(\d+)\s*ml/gi, '$1ml')
+                              .replace(/(\d+)\s*cl/gi, '$1cl')
+                              .replace(/(\d+)\s*liter/gi, '$1L')
+                              .replace(/(\d+)\s*count/gi, '$1ct')
+                              .trim()
+                              .replace(/^[-\s|]+|[-\s|]+$/g, '') // Remove leading/trailing dashes, spaces, and pipes
+                            }
+                          </h4>
+                          <p className="product-price text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeItem(item.id, item.variant)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
                       
-                      <div className="flex-1 space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-medium text-xs sm:text-sm line-clamp-2">
-                              {/* Clean product title - remove GID URLs and Shopify identifiers */}
-                              {item.title
-                                .replace(/gid:\/\/shopify\/[^\s]+/g, '') // Remove GID URLs
-                                .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs
-                                .replace(/www\.[^\s]+/g, '') // Remove www URLs
-                                .replace(/\b\d{8,}\b/g, '') // Remove long product IDs
-                                .replace(/\b\d{7}\b/g, '') // Remove 7-digit product IDs
-                                .replace(/\b\d{6}\b/g, '') // Remove 6-digit product IDs
-                                .replace(/\|\s*\d+/g, '') // Remove | followed by numbers
-                                .replace(/ID:\s*\d+/gi, '') // Remove ID: followed by numbers
-                                .replace(/SKU:\s*[\w-]+/gi, '') // Remove SKU codes
-                                .replace(/Product\s*ID:\s*\d+/gi, '') // Remove Product ID
-                                .replace(/Handle:\s*[\w-]+/gi, '') // Remove handle references
-                                .replace(/cdn\.shopify\.com[^\s]*/gi, '') // Remove Shopify CDN URLs
-                                .replace(/shopify[^\s]*/gi, '') // Remove any shopify references
-                                .replace(/\s+/g, ' ') // Normalize whitespace
-                                .replace(/(\d+)\s*Pack/gi, '$1pk')
-                                .replace(/(\d+)\s*oz/gi, '$1oz')
-                                .replace(/(\d+)\s*ml/gi, '$1ml')
-                                .replace(/(\d+)\s*cl/gi, '$1cl')
-                                .replace(/(\d+)\s*liter/gi, '$1L')
-                                .replace(/(\d+)\s*count/gi, '$1ct')
-                                .trim()
-                                .replace(/^[-\s|]+|[-\s|]+$/g, '') // Remove leading/trailing dashes, spaces, and pipes
-                              }
-                            </h4>
-                            <p className="product-price text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeItem(item.id, item.variant)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-3.5 w-3.5 sm:h-5 sm:w-5"
+                          onClick={() => updateQuantity(item.id, item.variant, item.quantity - 1)}
+                        >
+                          <Minus className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                        </Button>
                         
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-3.5 w-3.5 sm:h-5 sm:w-5"
-                            onClick={() => updateQuantity(item.id, item.variant, item.quantity - 1)}
-                          >
-                            <Minus className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                          </Button>
-                          
-                          <Badge variant="secondary" className="min-w-[24px] sm:min-w-[40px] justify-center text-xs">
-                            {item.quantity}
-                          </Badge>
-                          
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-3.5 w-3.5 sm:h-5 sm:w-5"
-                            onClick={() => updateQuantity(item.id, item.variant, item.quantity + 1)}
-                          >
-                            <Plus className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                          </Button>
-                        </div>
+                        <Badge variant="secondary" className="min-w-[24px] sm:min-w-[40px] justify-center text-xs">
+                          {item.quantity}
+                        </Badge>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-3.5 w-3.5 sm:h-5 sm:w-5"
+                          onClick={() => updateQuantity(item.id, item.variant, item.quantity + 1)}
+                        >
+                          <Plus className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                        </Button>
                       </div>
                     </div>
-                  </Card>
-                ))
-              )}
-            </div>
-
-            {/* Order Summary */}
-            {cartItems.length > 0 && (
-              <div className="border-t p-4">
-                <h3 className="font-semibold mb-3">Order Summary</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
-                    <span>${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sales Tax (8.25%)</span>
-                    <span>${salesTax.toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total</span>
-                    <span>${finalTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
+                </Card>
+              ))
             )}
           </div>
 
-          {/* Sticky Checkout Button */}
+          {/* Order Summary - Scrollable with content */}
           {cartItems.length > 0 && (
-            <div className="sticky bottom-0 border-t p-4 bg-background shadow-lg">
-              <Button 
-                className="w-full checkout-blink bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg py-6"
-                size="lg" 
-                onClick={handleCheckout}
-              >
-                Proceed to Checkout - ${finalTotal.toFixed(2)}
-              </Button>
+            <div className="border-t p-4 bg-muted/30">
+              <h3 className="font-semibold mb-3">Order Summary</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
+                  <span>${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Sales Tax (8.25%)</span>
+                  <span>${salesTax.toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total</span>
+                  <span>${finalTotal.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
+
+        {/* Sticky Checkout Button - Always at Bottom */}
+        {cartItems.length > 0 && (
+          <div className="sticky bottom-0 left-0 right-0 border-t p-4 bg-background shadow-lg z-20">
+            <Button 
+              className="w-full checkout-blink bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg py-6"
+              size="lg" 
+              onClick={handleCheckout}
+            >
+              Proceed to Checkout - ${finalTotal.toFixed(2)}
+            </Button>
+          </div>
+        )}
+        
       </div>
     </>
   );

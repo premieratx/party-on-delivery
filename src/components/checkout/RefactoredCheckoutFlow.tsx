@@ -267,7 +267,28 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               </>
             )}
 
-            {/* Payment Step */}
+            {/* Promo Code & Tip Section - Move Above Payment */}
+            {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Promo Code Input */}
+                  <PromoCodeInput 
+                    onDiscountApplied={handlePromoApplied}
+                    appliedDiscount={appliedDiscount}
+                    cartSubtotal={calculatedSubtotal}
+                  />
+                  
+                  {/* Tip Selector */}
+                  <TipSelector
+                    tipPercentage={tipPercentage}
+                    subtotal={discountedSubtotal}
+                    onTipChange={setTipPercentage}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Payment Step - Now Last */}
             {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
               <StripePaymentWrapper
                 cartItems={cartItems}
@@ -299,22 +320,6 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 onUpdateQuantity={onUpdateQuantity}
               />
             </div>
-
-            {/* Promo Code Input - Move above payment */}
-            {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
-              <PromoCodeInput 
-                onDiscountApplied={handlePromoApplied}
-                appliedDiscount={appliedDiscount}
-                cartSubtotal={calculatedSubtotal}
-              />
-            )}
-
-            {/* Tip Selector */}
-            <TipSelector
-              tipPercentage={tipPercentage}
-              subtotal={discountedSubtotal}
-              onTipChange={setTipPercentage}
-            />
           </div>
         </div>
         
