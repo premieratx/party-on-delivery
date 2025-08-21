@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -39,6 +39,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
   tipAmount = 0,
   onEmptyCart
   }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   // Calculate pricing with simple logic to avoid hooks issues
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
@@ -61,10 +62,10 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
 
   if (!isOpen) return null;
 
-  // Scroll to top when cart opens
-  React.useEffect(() => {
-    if (isOpen) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Always scroll cart to top when opened
+  useEffect(() => {
+    if (isOpen && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
     }
   }, [isOpen]);
 
@@ -77,7 +78,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
       />
       
       {/* Cart Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right" onLoad={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+       <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
@@ -103,7 +104,7 @@ export const DeliveryCart: React.FC<DeliveryCartProps> = ({
           </div>
 
           {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain">
             <div className="p-4 space-y-4">
               {items.length === 0 ? (
                 <div className="text-center py-12">

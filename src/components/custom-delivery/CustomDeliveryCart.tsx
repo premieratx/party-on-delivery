@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,10 +30,18 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
   deliveryInfo,
   onEmptyCart
 }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
+
+  // Always scroll cart to top when opened
+  useEffect(() => {
+    if (isOpen && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [isOpen]);
 
   if (items.length === 0) {
     return (
@@ -79,7 +87,7 @@ export const CustomDeliveryCart: React.FC<CustomDeliveryCartProps> = ({
             </SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain">
             <div className="p-6 space-y-4">
               {items.map((item) => (
                 <Card key={`${item.id}-${item.variant || 'default'}`} className="overflow-hidden">

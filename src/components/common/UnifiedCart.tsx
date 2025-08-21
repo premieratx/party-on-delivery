@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -18,6 +18,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
 }) => {
   const navigate = useNavigate();
   const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice } = useUnifiedCart();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Calculate pricing
   const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -34,7 +35,12 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     onClose();
   };
 
-  // No auto-scroll when cart opens - let user stay at current position
+  // Always scroll cart to top when opened
+  useEffect(() => {
+    if (isOpen && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -73,7 +79,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain">
           <div className="p-4 space-y-4">
             {cartItems.length === 0 ? (
               <div className="text-center py-12">
