@@ -287,3 +287,5 @@ export const DeliveryWidget: React.FC = () => {
     </div>
   );
 };
+
+export default DeliveryWidget;

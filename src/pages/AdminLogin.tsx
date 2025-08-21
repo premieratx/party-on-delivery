@@ -16,6 +16,22 @@ export const AdminLogin: React.FC = () => {
   const processAuth = async (email: string) => {
     console.log('Processing admin auth for:', email);
     try {
+      // Check admin users table directly first
+      const { data: adminCheck, error: adminError } = await supabase
+        .from('admin_users')
+        .select('email')
+        .eq('email', email)
+        .single();
+
+      console.log('Direct admin check:', { adminCheck, adminError });
+
+      if (adminCheck?.email) {
+        console.log('✅ Admin verified directly, redirecting to dashboard');
+        navigate('/admin', { replace: true });
+        return;
+      }
+
+      // Fallback to edge function
       const { data, error } = await supabase.functions.invoke('verify-admin-google', {
         body: { email }
       });
