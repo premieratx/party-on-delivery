@@ -10,22 +10,28 @@ import { Plus, Edit, Trash2, ExternalLink, Save, Upload, Eye } from 'lucide-reac
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
+import { createPostCheckoutFromTemplate } from '../templates/PostCheckoutTemplates';
 
 interface PostCheckoutScreen {
   id?: string;
+  name: string;
   title: string;
   subtitle: string;
-  logo_url: string;
-  background_image_url: string;
-  background_video_url: string;
-  primary_button_text: string;
-  primary_button_url: string;
-  secondary_button_text: string;
-  secondary_button_url: string;
-  custom_message: string;
-  text_color: string;
-  background_color: string;
+  slug?: string;
+  content: {
+    logo_url?: string;
+    background_image_url?: string;
+    background_video_url?: string;
+    primary_button_text?: string;
+    primary_button_url?: string;
+    secondary_button_text?: string;
+    secondary_button_url?: string;
+    custom_message?: string;
+    text_color?: string;
+    background_color?: string;
+  };
   is_active: boolean;
+  is_default?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -38,21 +44,27 @@ export default function EnhancedPostCheckoutCreator() {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Form state
-  const [formData, setFormData] = useState<PostCheckoutScreen>({
-    title: '',
-    subtitle: '',
-    logo_url: '',
-    background_image_url: '',
-    background_video_url: '',
-    primary_button_text: '',
-    primary_button_url: '',
-    secondary_button_text: '',
-    secondary_button_url: '',
-    custom_message: '',
-    text_color: '#000000',
-    background_color: '#ffffff',
-    is_active: true
+  // Form state - Initialize with template
+  const [formData, setFormData] = useState<PostCheckoutScreen>(() => {
+    const template = createPostCheckoutFromTemplate('gold');
+    return {
+      name: template.name,
+      title: template.title,
+      subtitle: template.subtitle,
+      content: {
+        logo_url: template.content.logo_url,
+        background_image_url: '',
+        background_video_url: '',
+        primary_button_text: template.content.continue_shopping_text,
+        primary_button_url: template.content.continue_shopping_url,
+        secondary_button_text: template.content.manage_order_text,
+        secondary_button_url: template.content.manage_order_url,
+        custom_message: template.content.thankYouMessage,
+        text_color: template.content.primary_button_text_color,
+        background_color: '#ffffff',
+      },
+      is_active: true
+    };
   });
 
   // File upload states
@@ -65,8 +77,28 @@ export default function EnhancedPostCheckoutCreator() {
 
   const loadPostCheckoutScreens = async () => {
     try {
-      // For now, show empty state since table is new
-      setPostCheckoutScreens([]);
+      const { data, error } = await supabase
+        .from('post_checkout_pages')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Transform database data to match our interface
+      const transformedData = data?.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        title: item.title,
+        subtitle: item.subtitle,
+        slug: item.slug,
+        content: typeof item.content === 'string' ? JSON.parse(item.content) : item.content,
+        is_active: item.is_active,
+        is_default: item.is_default,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      })) || [];
+      
+      setPostCheckoutScreens(transformedData);
     } catch (error: any) {
       console.error('Error loading post-checkout screens:', error);
       toast.error('Failed to load post-checkout screens');
@@ -97,6 +129,16 @@ export default function EnhancedPostCheckoutCreator() {
     }
   };
 
+  const updateFormField = (field: keyof PostCheckoutScreen['content'], value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      content: {
+        ...prev.content,
+        [field]: value
+      }
+    }));
+  };
+
   const handleSave = async () => {
     if (!formData.title.trim()) {
       toast.error('Title is required');
@@ -104,8 +146,8 @@ export default function EnhancedPostCheckoutCreator() {
     }
 
     try {
-      let logoUrl = formData.logo_url;
-      let backgroundImageUrl = formData.background_image_url;
+      let logoUrl = formData.content.logo_url || '';
+      let backgroundImageUrl = formData.content.background_image_url || '';
 
       // Upload logo if provided
       if (logoFile) {
@@ -122,25 +164,40 @@ export default function EnhancedPostCheckoutCreator() {
       }
 
       const screenData = {
-        ...formData,
-        logo_url: logoUrl,
-        background_image_url: backgroundImageUrl,
+        name: formData.title,
+        title: formData.title,
+        subtitle: formData.subtitle,
+        content: {
+          ...formData.content,
+          logo_url: logoUrl,
+          background_image_url: backgroundImageUrl,
+        },
+        slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        is_active: formData.is_active
       };
 
       let result;
       if (isEditing && selectedScreen?.id) {
-        // For now, just show success - will implement database operations later
-        result = screenData;
+        result = await supabase
+          .from('post_checkout_pages')
+          .update(screenData)
+          .eq('id', selectedScreen.id)
+          .select()
+          .single();
       } else {
-        // For now, just show success - will implement database operations later
-        result = { ...screenData, id: 'temp-' + Date.now() };
+        result = await supabase
+          .from('post_checkout_pages')
+          .insert([screenData])
+          .select()
+          .single();
       }
 
+      if (result.error) throw result.error;
+
       toast.success(isEditing ? 'Post-checkout screen updated!' : 'Post-checkout screen created!');
-      setPostCheckoutScreens(prev => isEditing 
-        ? prev.map(screen => screen.id === selectedScreen?.id ? result : screen)
-        : [result, ...prev]
-      );
+      
+      // Reload the list to get fresh data
+      await loadPostCheckoutScreens();
       handleReset();
       setIsDialogOpen(false);
 
@@ -152,7 +209,11 @@ export default function EnhancedPostCheckoutCreator() {
 
   const handleEdit = (screen: PostCheckoutScreen) => {
     setSelectedScreen(screen);
-    setFormData(screen);
+    // Transform the screen data to match the form structure
+    setFormData({
+      ...screen,
+      content: screen.content || {}
+    });
     setIsEditing(true);
     setIsDialogOpen(true);
   };
@@ -161,7 +222,13 @@ export default function EnhancedPostCheckoutCreator() {
     if (!confirm('Are you sure you want to delete this post-checkout screen?')) return;
 
     try {
-      // For now, just remove from state - will implement database operations later
+      const { error } = await supabase
+        .from('post_checkout_pages')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
       setPostCheckoutScreens(prev => prev.filter(screen => screen.id !== id));
       toast.success('Post-checkout screen deleted');
     } catch (error: any) {
@@ -171,19 +238,23 @@ export default function EnhancedPostCheckoutCreator() {
   };
 
   const handleReset = () => {
+    const template = createPostCheckoutFromTemplate('gold');
     setFormData({
-      title: '',
-      subtitle: '',
-      logo_url: '',
-      background_image_url: '',
-      background_video_url: '',
-      primary_button_text: '',
-      primary_button_url: '',
-      secondary_button_text: '',
-      secondary_button_url: '',
-      custom_message: '',
-      text_color: '#000000',
-      background_color: '#ffffff',
+      name: template.name,
+      title: template.title,
+      subtitle: template.subtitle,
+      content: {
+        logo_url: template.content.logo_url,
+        background_image_url: '',
+        background_video_url: '',
+        primary_button_text: template.content.continue_shopping_text,
+        primary_button_url: template.content.continue_shopping_url,
+        secondary_button_text: template.content.manage_order_text,
+        secondary_button_url: template.content.manage_order_url,
+        custom_message: template.content.thankYouMessage,
+        text_color: template.content.primary_button_text_color,
+        background_color: '#ffffff',
+      },
       is_active: true
     });
     setSelectedScreen(null);
@@ -193,9 +264,9 @@ export default function EnhancedPostCheckoutCreator() {
   };
 
   const handlePreview = (screen: PostCheckoutScreen) => {
-    // Create a preview URL or open in new tab
-    const previewData = encodeURIComponent(JSON.stringify(screen));
-    window.open(`/post-checkout-preview?data=${previewData}`, '_blank');
+    // Create a preview URL based on the screen slug or ID
+    const slug = screen.slug || screen.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'preview';
+    window.open(`/post-checkout/${slug}`, '_blank');
   };
 
   if (loading) {
@@ -261,8 +332,8 @@ export default function EnhancedPostCheckoutCreator() {
                     <Label htmlFor="custom_message">Custom Message</Label>
                     <Textarea
                       id="custom_message"
-                      value={formData.custom_message}
-                      onChange={(e) => setFormData({ ...formData, custom_message: e.target.value })}
+                      value={formData.content.custom_message || ''}
+                      onChange={(e) => updateFormField('custom_message', e.target.value)}
                       placeholder="Add any additional message or instructions..."
                       rows={3}
                     />
@@ -295,8 +366,8 @@ export default function EnhancedPostCheckoutCreator() {
                       <Label htmlFor="logo_url">Or Logo URL</Label>
                       <Input
                         id="logo_url"
-                        value={formData.logo_url}
-                        onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
+                        value={formData.content.logo_url || ''}
+                        onChange={(e) => updateFormField('logo_url', e.target.value)}
                         placeholder="https://example.com/logo.png"
                       />
                     </div>
@@ -320,8 +391,8 @@ export default function EnhancedPostCheckoutCreator() {
                       <Label htmlFor="background_image_url">Or Background Image URL</Label>
                       <Input
                         id="background_image_url"
-                        value={formData.background_image_url}
-                        onChange={(e) => setFormData({ ...formData, background_image_url: e.target.value })}
+                        value={formData.content.background_image_url || ''}
+                        onChange={(e) => updateFormField('background_image_url', e.target.value)}
                         placeholder="https://example.com/background.jpg"
                       />
                     </div>
@@ -331,8 +402,8 @@ export default function EnhancedPostCheckoutCreator() {
                     <Label htmlFor="background_video_url">Background Video URL</Label>
                     <Input
                       id="background_video_url"
-                      value={formData.background_video_url}
-                      onChange={(e) => setFormData({ ...formData, background_video_url: e.target.value })}
+                      value={formData.content.background_video_url || ''}
+                      onChange={(e) => updateFormField('background_video_url', e.target.value)}
                       placeholder="https://example.com/background-video.mp4"
                     />
                     <p className="text-xs text-muted-foreground mt-1">MP4 format recommended</p>
@@ -351,8 +422,8 @@ export default function EnhancedPostCheckoutCreator() {
                       <Label htmlFor="primary_button_text">Primary Button Text</Label>
                       <Input
                         id="primary_button_text"
-                        value={formData.primary_button_text}
-                        onChange={(e) => setFormData({ ...formData, primary_button_text: e.target.value })}
+                        value={formData.content.primary_button_text || ''}
+                        onChange={(e) => updateFormField('primary_button_text', e.target.value)}
                         placeholder="Continue Shopping"
                       />
                     </div>
@@ -360,8 +431,8 @@ export default function EnhancedPostCheckoutCreator() {
                       <Label htmlFor="primary_button_url">Primary Button URL</Label>
                       <Input
                         id="primary_button_url"
-                        value={formData.primary_button_url}
-                        onChange={(e) => setFormData({ ...formData, primary_button_url: e.target.value })}
+                        value={formData.content.primary_button_url || ''}
+                        onChange={(e) => updateFormField('primary_button_url', e.target.value)}
                         placeholder="https://example.com"
                       />
                     </div>
@@ -372,8 +443,8 @@ export default function EnhancedPostCheckoutCreator() {
                       <Label htmlFor="secondary_button_text">Secondary Button Text</Label>
                       <Input
                         id="secondary_button_text"
-                        value={formData.secondary_button_text}
-                        onChange={(e) => setFormData({ ...formData, secondary_button_text: e.target.value })}
+                        value={formData.content.secondary_button_text || ''}
+                        onChange={(e) => updateFormField('secondary_button_text', e.target.value)}
                         placeholder="Track Order"
                       />
                     </div>
@@ -381,8 +452,8 @@ export default function EnhancedPostCheckoutCreator() {
                       <Label htmlFor="secondary_button_url">Secondary Button URL</Label>
                       <Input
                         id="secondary_button_url"
-                        value={formData.secondary_button_url}
-                        onChange={(e) => setFormData({ ...formData, secondary_button_url: e.target.value })}
+                        value={formData.content.secondary_button_url || ''}
+                        onChange={(e) => updateFormField('secondary_button_url', e.target.value)}
                         placeholder="https://tracking.example.com"
                       />
                     </div>
@@ -402,13 +473,13 @@ export default function EnhancedPostCheckoutCreator() {
                       <div className="flex gap-2">
                         <Input
                           type="color"
-                          value={formData.text_color}
-                          onChange={(e) => setFormData({ ...formData, text_color: e.target.value })}
+                          value={formData.content.text_color || '#000000'}
+                          onChange={(e) => updateFormField('text_color', e.target.value)}
                           className="w-16 h-10"
                         />
                         <Input
-                          value={formData.text_color}
-                          onChange={(e) => setFormData({ ...formData, text_color: e.target.value })}
+                          value={formData.content.text_color || '#000000'}
+                          onChange={(e) => updateFormField('text_color', e.target.value)}
                           placeholder="#000000"
                           className="flex-1"
                         />
@@ -420,13 +491,13 @@ export default function EnhancedPostCheckoutCreator() {
                       <div className="flex gap-2">
                         <Input
                           type="color"
-                          value={formData.background_color}
-                          onChange={(e) => setFormData({ ...formData, background_color: e.target.value })}
+                          value={formData.content.background_color || '#ffffff'}
+                          onChange={(e) => updateFormField('background_color', e.target.value)}
                           className="w-16 h-10"
                         />
                         <Input
-                          value={formData.background_color}
-                          onChange={(e) => setFormData({ ...formData, background_color: e.target.value })}
+                          value={formData.content.background_color || '#ffffff'}
+                          onChange={(e) => updateFormField('background_color', e.target.value)}
                           placeholder="#ffffff"
                           className="flex-1"
                         />
@@ -445,30 +516,30 @@ export default function EnhancedPostCheckoutCreator() {
                   <div 
                     className="p-6 rounded-lg border min-h-[200px] flex flex-col items-center justify-center text-center space-y-4"
                     style={{ 
-                      backgroundColor: formData.background_color,
-                      color: formData.text_color,
-                      backgroundImage: formData.background_image_url ? `url(${formData.background_image_url})` : 'none',
+                      backgroundColor: formData.content.background_color || '#ffffff',
+                      color: formData.content.text_color || '#000000',
+                      backgroundImage: formData.content.background_image_url ? `url(${formData.content.background_image_url})` : 'none',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }}
                   >
-                    {formData.logo_url && (
-                      <img src={formData.logo_url} alt="Logo" className="h-12 w-auto" />
+                    {formData.content.logo_url && (
+                      <img src={formData.content.logo_url} alt="Logo" className="h-12 w-auto" />
                     )}
                     <h3 className="text-xl font-bold">{formData.title || 'Your Title Here'}</h3>
                     <p>{formData.subtitle || 'Your subtitle here'}</p>
-                    {formData.custom_message && (
-                      <p className="text-sm opacity-90">{formData.custom_message}</p>
+                    {formData.content.custom_message && (
+                      <p className="text-sm opacity-90">{formData.content.custom_message}</p>
                     )}
                     <div className="flex gap-3">
-                      {formData.primary_button_text && (
+                      {formData.content.primary_button_text && (
                         <Button variant="default" size="sm">
-                          {formData.primary_button_text}
+                          {formData.content.primary_button_text}
                         </Button>
                       )}
-                      {formData.secondary_button_text && (
+                      {formData.content.secondary_button_text && (
                         <Button variant="outline" size="sm">
-                          {formData.secondary_button_text}
+                          {formData.content.secondary_button_text}
                         </Button>
                       )}
                     </div>
@@ -508,7 +579,19 @@ export default function EnhancedPostCheckoutCreator() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle>{screen.title}</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      {screen.title}
+                      {screen.slug && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(`/post-checkout/${screen.slug}`, '_blank')}
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          View Live
+                        </Button>
+                      )}
+                    </CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">{screen.subtitle}</p>
                   </div>
                   <Badge variant={screen.is_active ? 'default' : 'secondary'}>

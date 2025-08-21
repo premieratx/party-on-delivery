@@ -4,9 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { UnifiedCoverPageEditor as OriginalEditor } from "./OriginalUnifiedCoverPageEditor";
-import { OptimizedAnimatedPreview } from "./OptimizedAnimatedPreview";
-import { FigmaTemplateSelector } from "./FigmaTemplateSelector";
+import { EnhancedCoverPageCreator } from "../enhanced-admin/EnhancedCoverPageCreator";
 import { Wand2, Layout, Sparkles, Eye } from 'lucide-react';
 
 interface UnifiedCoverPageEditorProps {
@@ -23,26 +21,12 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   onSaved
 }) => {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full flex flex-col overflow-hidden">
-        <DialogHeader className="flex-shrink-0 pb-4 border-b">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-primary" />
-            Professional Cover Page Editor
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="flex-1 min-h-0">
-          <OriginalEditor
-            open={open}
-            onOpenChange={onOpenChange}
-            initial={initial}
-            onSaved={onSaved}
-            embedded={true}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <EnhancedCoverPageCreator
+      open={open}
+      onOpenChange={onOpenChange}
+      initial={initial}
+      onSaved={onSaved}
+    />
   );
 };
 

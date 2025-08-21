@@ -35,8 +35,8 @@ const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout")
 const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomPartyOnDeliveryPostCheckout"));
 
 // Enhanced standalone pages
-const CoverPage = lazy(() => import("./pages/CoverPage"));
-const PostCheckoutPage = lazy(() => import("./pages/PostCheckoutPage"));
+import CoverPage from '@/pages/CoverPage';
+import PostCheckoutPage from '@/pages/PostCheckoutPage';
 
 // Admin pages - using direct imports since they use named exports
 import { AdminLogin } from "./pages/AdminLogin";

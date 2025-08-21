@@ -278,7 +278,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         result = await supabase
           .from('cover_pages')
           .update(pageData)
-          .eq('id', config.id);
+          .eq('id', config.id)
+          .select()
+          .single();
       } else {
         result = await supabase
           .from('cover_pages')
@@ -289,8 +291,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
       if (result.error) throw result.error;
 
-      // Set standalone path for new pages
+      // Set standalone path and update config ID for new pages
       if (!config.id && result.data) {
+        setConfig(prev => ({ ...prev, id: result.data.id }));
         setStandalonePath(`/cover/${result.data.slug}`);
       } else if (config.id) {
         setStandalonePath(`/cover/${config.slug}`);
