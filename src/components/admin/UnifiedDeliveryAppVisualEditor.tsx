@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { VisualCanvasEditor } from './VisualCanvasEditor';
 
 const DELIVERY_THEMES = {
   modern: {
@@ -553,18 +552,23 @@ export const UnifiedDeliveryAppVisualEditor: React.FC<UnifiedDeliveryAppVisualEd
               </div>
             </div>
 
-            {/* Right Panel - Visual Canvas */}
-            <div className="flex-1">
-              <VisualCanvasEditor
-                width={device.width}
-                height={device.height}
-                backgroundColor={backgroundColor}
-                elements={canvasElements}
-                onElementsChange={setCanvasElements}
-                onBackgroundChange={setBackgroundColor}
-                theme={theme}
-                className="h-full"
-              />
+            {/* Right Panel - Live Preview */}
+            <div className="flex-1 bg-gray-50 p-4">
+              <div className="text-center text-muted-foreground">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8" style={{ width: device.width, height: device.height, maxWidth: '100%', maxHeight: '100%', margin: '0 auto' }}>
+                  <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-lg font-semibold mb-2">Live Preview</h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    {device.name} View ({device.width}×{device.height})
+                  </p>
+                  <div className="space-y-2 text-left">
+                    <p><strong>App:</strong> {appName || 'App Name'}</p>
+                    <p><strong>Heading:</strong> {heroHeading || 'Hero Heading'}</p>
+                    <p><strong>Theme:</strong> {theme.name}</p>
+                    <p><strong>Tabs:</strong> {tabs.length} configured</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
