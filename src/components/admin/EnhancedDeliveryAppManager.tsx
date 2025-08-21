@@ -472,6 +472,20 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Editor Modal */}
+      {showEditor && (
+        <FixedDeliveryAppCreator 
+          open={showEditor}
+          onOpenChange={setShowEditor}
+          initial={editingApp}
+          onSaved={() => {
+            setShowEditor(false);
+            setEditingApp(null);
+            loadDeliveryApps();
+          }}
+        />
+      )}
     </div>
   );
 };
