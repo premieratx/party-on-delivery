@@ -670,6 +670,77 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
             <Card>
               <CardHeader>
+                <CardTitle>Element Positioning</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Headline Size: {headlineSize}px</Label>
+                    <Slider
+                      value={[headlineSize]}
+                      onValueChange={(value) => setHeadlineSize(value[0])}
+                      min={24}
+                      max={72}
+                      step={2}
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Title Offset: {headlineVerticalPos}px</Label>
+                      <Slider
+                        value={[headlineVerticalPos]}
+                        onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                        min={-50}
+                        max={50}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Subtitle Offset: {subtitleVerticalPos}px</Label>
+                      <Slider
+                        value={[subtitleVerticalPos]}
+                        onValueChange={(value) => setSubtitleVerticalPos(value[0])}
+                        min={-50}
+                        max={50}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Features Offset: {featuresVerticalPos}px</Label>
+                      <Slider
+                        value={[featuresVerticalPos]}
+                        onValueChange={(value) => setFeaturesVerticalPos(value[0])}
+                        min={-50}
+                        max={50}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Buttons Offset: {buttonsVerticalPos}px</Label>
+                      <Slider
+                        value={[buttonsVerticalPos]}
+                        onValueChange={(value) => setButtonsVerticalPos(value[0])}
+                        min={-50}
+                        max={50}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>Features</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">

@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Minus, Upload, Eye } from 'lucide-react';
@@ -21,6 +22,10 @@ interface PostCheckoutConfig {
   title: string;
   subtitle?: string;
   logo_url?: string;
+  logo_position?: { x: number; y: number };
+  title_position?: { x: number; y: number };
+  subtitle_position?: { x: number; y: number };
+  buttons_position?: { x: number; y: number };
   buttons: PostCheckoutButton[];
   background_color?: string;
   text_color?: string;
@@ -238,21 +243,94 @@ export const PostCheckoutCreator: React.FC<PostCheckoutCreatorProps> = ({
           />
         </div>
 
-        <div>
-          <Label htmlFor="logo_url">Logo URL</Label>
-          <div className="flex gap-2">
-            <Input
-              id="logo_url"
-              value={config.logo_url}
-              onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
-              placeholder="https://example.com/logo.png"
-              className="flex-1"
-            />
-            <Button variant="outline">
-              <Upload className="h-4 w-4" />
-            </Button>
+          <div>
+            <Label htmlFor="logo_url">Logo URL</Label>
+            <div className="flex gap-2">
+              <Input
+                id="logo_url"
+                value={config.logo_url}
+                onChange={(e) => setConfig(prev => ({ ...prev, logo_url: e.target.value }))}
+                placeholder="https://example.com/logo.png"
+                className="flex-1"
+              />
+              <Button variant="outline">
+                <Upload className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        </AdminFormSection>
+
+        <AdminFormSection
+          title="Element Positioning"
+          description="Control the position of elements on your post-checkout screen"
+        >
+          <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm w-20">Logo:</span>
+                <Slider
+                  value={[config.logo_position?.y || 10]}
+                  onValueChange={([value]) => setConfig(prev => ({ 
+                    ...prev, 
+                    logo_position: { x: prev.logo_position?.x || 50, y: value }
+                  }))}
+                  max={90}
+                  min={5}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-sm w-12">{config.logo_position?.y || 10}%</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm w-20">Title:</span>
+                <Slider
+                  value={[config.title_position?.y || 30]}
+                  onValueChange={([value]) => setConfig(prev => ({ 
+                    ...prev, 
+                    title_position: { x: prev.title_position?.x || 50, y: value }
+                  }))}
+                  max={90}
+                  min={10}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-sm w-12">{config.title_position?.y || 30}%</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm w-20">Subtitle:</span>
+                <Slider
+                  value={[config.subtitle_position?.y || 40]}
+                  onValueChange={([value]) => setConfig(prev => ({ 
+                    ...prev, 
+                    subtitle_position: { x: prev.subtitle_position?.x || 50, y: value }
+                  }))}
+                  max={90}
+                  min={15}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-sm w-12">{config.subtitle_position?.y || 40}%</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm w-20">Buttons:</span>
+                <Slider
+                  value={[config.buttons_position?.y || 70]}
+                  onValueChange={([value]) => setConfig(prev => ({ 
+                    ...prev, 
+                    buttons_position: { x: prev.buttons_position?.x || 50, y: value }
+                  }))}
+                  max={95}
+                  min={50}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-sm w-12">{config.buttons_position?.y || 70}%</span>
+              </div>
+            </div>
+          </div>
       </AdminFormSection>
 
       <AdminFormSection

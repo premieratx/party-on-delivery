@@ -21,6 +21,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { ultraFastSearch } from '@/utils/ultraFastSearch';
+import { supabase } from '@/integrations/supabase/client';
 export default function OptimizedProductSearch() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,27 +47,15 @@ export default function OptimizedProductSearch() {
   const [hideFilters, setHideFilters] = useState(false);
   const lastYRef = useRef(0);
 
-  // Categories for filtering (based on Shopify product types)
-  const categories = [
-    { id: 'all', label: 'All Products', productType: null as string | null },
-    { id: 'spirits', label: 'Spirits', productType: 'spirits' },
-    { id: 'beer', label: 'Beer', productType: 'beer' },
-    { id: 'wine', label: 'Wine', productType: 'wine' },
-    { id: 'seltzer', label: 'Seltzer', productType: 'seltzer' },
-    { id: 'mixers', label: 'Mixers & N/A', productType: 'mixers' }
-  ];
-
-  // Spirit types visible when Spirits is selected
-  const spiritTypes = [
-    { id: 'all', label: 'All Spirits' },
-    { id: 'whiskey', label: 'Whiskey' },
-    { id: 'vodka', label: 'Vodka' },
-    { id: 'gin', label: 'Gin' },
-    { id: 'rum', label: 'Rum' },
-    { id: 'tequila', label: 'Tequila' },
-    { id: 'mezcal', label: 'Mezcal' },
-    { id: 'liqueurs', label: 'Liqueurs' },
-  ];
+  // Dynamic categories from hierarchical categorization system
+  const [categories, setCategories] = useState([
+    { id: 'all', label: 'All Products', productType: null as string | null }
+  ]);
+  
+  // Dynamic subcategories (product types) based on selected category
+  const [subcategories, setSubcategories] = useState<Array<{ id: string; label: string; count?: number }>>([
+    { id: 'all', label: 'All' }
+  ]);
 
   // Get cart item quantity for a specific product
   const getCartItemQuantity = (productId: string, variantId?: string) => {
@@ -115,14 +104,57 @@ export default function OptimizedProductSearch() {
     }
   };
 
-  // Ultra-fast search with instant results + preload all products
+  // Load hierarchical categories from Supabase and products
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
       setError(null);
       
       try {
-        console.log('🚀 Loading initial products with ultra-fast search...');
+        console.log('🚀 Loading hierarchical categories and products...');
+        
+        // Load categories from hierarchical system
+        const { data: hierarchicalData, error: hierarchicalError } = await supabase
+          .from('product_hierarchical_categories')
+          .select('categories, product_type, COUNT(*) as count')
+          .neq('categories', ['other']);
+        
+        if (!hierarchicalError && hierarchicalData) {
+          console.log('📊 Hierarchical data loaded:', hierarchicalData);
+          
+          // Extract unique main categories
+          const categoryMap = new Map();
+          categoryMap.set('all', { id: 'all', label: 'All Products', count: 0 });
+          
+          hierarchicalData.forEach((item: any) => {
+            if (item.categories && item.categories.length > 0) {
+              const mainCategory = item.categories[0];
+              const friendlyName = mainCategory === 'beer' ? 'Beer' :
+                                mainCategory === 'wine' ? 'Wine' :
+                                mainCategory === 'spirits' ? 'Spirits' :
+                                mainCategory === 'mixers' ? 'Mixers' :
+                                mainCategory === 'snacks' ? 'Snacks' :
+                                mainCategory.charAt(0).toUpperCase() + mainCategory.slice(1);
+              
+              if (!categoryMap.has(mainCategory)) {
+                categoryMap.set(mainCategory, { 
+                  id: mainCategory, 
+                  label: friendlyName, 
+                  productType: mainCategory,
+                  count: 0 
+                });
+              }
+            }
+          });
+          
+          const dynamicCategories = [
+            { id: 'all', label: 'All Products', productType: null },
+            ...Array.from(categoryMap.values()).filter(cat => cat.id !== 'all')
+          ];
+          
+          console.log('🏷️ Dynamic categories:', dynamicCategories);
+          setCategories(dynamicCategories);
+        }
         
         // Warm up ultra-fast search cache for instant results
         await ultraFastSearch.warmUpCache();
@@ -150,7 +182,7 @@ export default function OptimizedProductSearch() {
         productCollectionsRef.current = collectionMap;
         
       } catch (err) {
-        console.error('Failed to load initial products:', err);
+        console.error('Failed to load initial data:', err);
         setError('Failed to load products. Please try refreshing the page.');
       } finally {
         setLoading(false);
@@ -159,6 +191,59 @@ export default function OptimizedProductSearch() {
 
     loadInitialData();
   }, []);
+  
+  // Load subcategories when category changes
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      if (selectedCategory === 'all') {
+        setSubcategories([{ id: 'all', label: 'All' }]);
+        return;
+      }
+      
+      try {
+        const { data: subcategoryData, error } = await supabase
+          .from('product_hierarchical_categories')
+          .select('product_type, COUNT(*) as count')
+          .contains('categories', [selectedCategory])
+          .not('product_type', 'is', null)
+          .neq('product_type', '');
+        
+        if (!error && subcategoryData) {
+          const subcategoryMap = new Map();
+          subcategoryMap.set('all', { id: 'all', label: 'All', count: 0 });
+          
+          subcategoryData.forEach((item: any) => {
+            if (item.product_type) {
+              // Clean up product type names
+              let cleanName = item.product_type;
+              if (cleanName.toLowerCase().includes('liquor')) cleanName = 'Liquor & Spirits';
+              if (cleanName.toLowerCase().includes('beer and seltzer')) cleanName = 'Beer & Seltzers';
+              
+              subcategoryMap.set(item.product_type, {
+                id: item.product_type,
+                label: cleanName,
+                count: item.count || 0
+              });
+            }
+          });
+          
+          const dynamicSubcategories = [
+            { id: 'all', label: 'All' },
+            ...Array.from(subcategoryMap.values())
+              .filter(sub => sub.id !== 'all')
+              .sort((a, b) => (b.count || 0) - (a.count || 0)) // Sort by count descending
+          ];
+          
+          console.log(`🎯 Subcategories for ${selectedCategory}:`, dynamicSubcategories);
+          setSubcategories(dynamicSubcategories);
+        }
+      } catch (error) {
+        console.error('Failed to load subcategories:', error);
+      }
+    };
+    
+    loadSubcategories();
+  }, [selectedCategory]);
 
   // Ultra-fast search with <250ms results
   useEffect(() => {
@@ -206,35 +291,16 @@ export default function OptimizedProductSearch() {
           });
         }
 
-        // Spirits category: subcategories based on product type and keywords
-        if (selectedCategory === 'spirits') {
-          const norm = (s: any) => String(s || '').trim().toLowerCase();
-          const spiritKeywordSets: Record<string, string[]> = {
-            all: ['whiskey','whisky','bourbon','rye','scotch','vodka','gin','rum','tequila','mezcal','brandy','cognac','liqueur','liqueurs','amaro','aperitif','digestif','cordial'],
-            whiskey: ['whiskey','whisky','bourbon','rye','scotch'],
-            vodka: ['vodka'],
-            gin: ['gin'],
-            rum: ['rum'],
-            tequila: ['tequila'],
-            mezcal: ['mezcal'],
-            liqueurs: ['liqueur','liqueurs','amaro','aperitif','digestif','cordial'],
-          };
-          const keys = spiritKeywordSets[selectedSpirit as keyof typeof spiritKeywordSets] || spiritKeywordSets.all;
-
+        // Apply subcategory filter if selected
+        if (selectedSpirit !== 'all') {
           base = allProducts.filter((p) => {
-            const type = norm(p.product_type || p.productType);
-            const title = norm(p.title);
-            const tagsArr = Array.isArray(p.tags)
-              ? p.tags.map((t: any) => norm(t))
-              : norm(p.tags || '').split(',').map((t: any) => norm(t)).filter(Boolean);
+            const productType = (p.product_type || '').toLowerCase();
+            const title = (p.title || '').toLowerCase();
+            const selectedSubtype = selectedSpirit.toLowerCase();
             
-            // Check if product type contains 'spirit' or title/tags match spirit keywords
-            const isSpirit = type.includes('spirit') || keys.some(k => 
-              type.includes(k) || title.includes(k) || tagsArr.some(tag => tag.includes(k))
-            );
-            
-            if (selectedSpirit === 'all') return isSpirit;
-            return isSpirit && keys.some(k => type.includes(k) || title.includes(k) || tagsArr.some(tag => tag.includes(k)));
+            return productType.includes(selectedSubtype) || 
+                   title.includes(selectedSubtype) ||
+                   productType === selectedSubtype;
           });
         }
 
@@ -346,7 +412,7 @@ export default function OptimizedProductSearch() {
         </div>
       </div>
 
-      {selectedCategory === 'spirits' && (
+      {selectedCategory !== 'all' && subcategories.length > 1 && (
         <div className="border-b bg-background/95 backdrop-blur-md sticky top-[9.75rem] z-40">
           <div className="container mx-auto px-4 py-2">
             <RadioGroup
@@ -354,15 +420,15 @@ export default function OptimizedProductSearch() {
               onValueChange={setSelectedSpirit}
               className="flex flex-wrap gap-2"
             >
-              {spiritTypes.map((t) => (
-                <div key={t.id} className="flex items-center">
-                  <RadioGroupItem value={t.id} id={`sp-${t.id}`} className="sr-only" />
-                  <Label
-                    htmlFor={`sp-${t.id}`}
-                    className={`px-3 py-2 rounded-md border cursor-pointer text-sm ${selectedSpirit === t.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground border-input hover:bg-accent'}`}
-                  >
-                    {t.label}
-                  </Label>
+              {subcategories.map((subcat) => (
+                <div key={subcat.id} className="flex items-center">
+                  <RadioGroupItem value={subcat.id} id={`sub-${subcat.id}`} className="sr-only" />
+                    <Label
+                      htmlFor={`sub-${subcat.id}`}
+                      className={`px-3 py-2 rounded-md border cursor-pointer text-sm ${selectedSpirit === subcat.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-foreground border-input hover:bg-accent'}`}
+                    >
+                      {subcat.label} {subcat.count ? `(${subcat.count})` : ''}
+                    </Label>
                 </div>
               ))}
             </RadioGroup>
