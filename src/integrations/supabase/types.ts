@@ -4336,6 +4336,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_system_guidelines: {
+        Args: { p_guideline_type?: string }
+        Returns: Json
+      }
       hierarchical_product_search: {
         Args: { max_results?: number; search_query: string }
         Returns: {
