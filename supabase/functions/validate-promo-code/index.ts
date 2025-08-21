@@ -54,70 +54,74 @@ serve(async (req) => {
       );
     }
 
-      // Check for hardcoded test codes first
-      const testCodes: { [key: string]: PromoCode } = {
-        'SAVE10': {
-          code: 'SAVE10',
-          discount_type: 'percentage',
-          discount_value: 10,
-          is_active: true
-        },
-        'WELCOME20': {
-          code: 'WELCOME20',
-          discount_type: 'percentage',
-          discount_value: 20,
-          is_active: true,
-          minimum_order_amount: 50
-        },
-        'FREESHIP': {
-          code: 'FREESHIP',
-          discount_type: 'fixed_amount',
-          discount_value: 0,
-          is_active: true,
-          minimum_order_amount: 25
-        },
-        'FREEDELIVERY': {
-          code: 'FREEDELIVERY',
-          discount_type: 'fixed_amount',
-          discount_value: 0,
-          is_active: true
-        },
-        'PREMIERE2025': {
-          code: 'PREMIERE2025',
-          discount_type: 'fixed_amount',
-          discount_value: 0,
-          is_active: true
-        },
-        'PREMIER2025': {
-          code: 'PREMIER2025',
-          discount_type: 'fixed_amount', 
-          discount_value: 0,
-          is_active: true
-        }
-      };
+    // **HARDCODED PROMO CODES** - High priority codes that should always work
+    const hardcodedCodes: { [key: string]: PromoCode } = {
+      'FREEDELIVERY': {
+        code: 'FREEDELIVERY',
+        discount_type: 'fixed_amount',
+        discount_value: 20, // Covers typical delivery fee
+        is_active: true
+      },
+      'FREESHIP': {
+        code: 'FREESHIP', 
+        discount_type: 'fixed_amount',
+        discount_value: 20,
+        is_active: true
+      },
+      'WELCOME10': {
+        code: 'WELCOME10',
+        discount_type: 'percentage', 
+        discount_value: 10,
+        is_active: true
+      },
+      'SAVE15': {
+        code: 'SAVE15',
+        discount_type: 'percentage',
+        discount_value: 15, 
+        is_active: true
+      }
+    };
 
     const upperCode = code.toUpperCase();
-    
-    // Check test codes first
-    if (testCodes[upperCode]) {
-      const promoCode = testCodes[upperCode];
-      
-      // Validate minimum order amount
-      if (promoCode.minimum_order_amount && orderAmount < promoCode.minimum_order_amount) {
-        return new Response(
-          JSON.stringify({ 
-            valid: false, 
-            error: `Minimum order amount of $${promoCode.minimum_order_amount} required` 
-          }),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
 
+    // Check hardcoded codes first (always prioritized)
+    if (hardcodedCodes[upperCode]) {
+      const promoCode = hardcodedCodes[upperCode];
+      console.log('✅ Using hardcoded promo code:', code);
+      
       // Calculate discount and determine message
       let discountAmount = 0;
+      let message = '';
+      let appliesTo = 'subtotal';
+      
+      if (promoCode.discount_type === 'percentage') {
+        discountAmount = (orderAmount * promoCode.discount_value) / 100;
+        message = `${promoCode.discount_value}% discount applied!`;
+      } else {
+        // Fixed amount applies to delivery fee
+        discountAmount = promoCode.discount_value;
+        message = promoCode.discount_value > 0 
+          ? `$${promoCode.discount_value} discount applied!`
+          : 'Free delivery applied!';
+        appliesTo = 'delivery';
+      }
+      
+      return new Response(
+        JSON.stringify({
+          valid: true,
+          code: promoCode.code,
+          discountType: promoCode.discount_type,
+          discountValue: promoCode.discount_value,
+          discountAmount: Math.round(discountAmount * 100) / 100,
+          appliesTo: appliesTo,
+          message: message
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
       let message = '';
       
       if (promoCode.discount_type === 'percentage') {

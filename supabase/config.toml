@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.get-dashboard-data]
 verify_jwt = false
+
+[functions.keep-functions-warm]
+verify_jwt = false

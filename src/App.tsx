@@ -1,4 +1,5 @@
 import { AdminAuthFix } from '@/components/admin/AdminAuthFix';
+import ColdStartSolution from '@/components/admin/ColdStartSolution';
 import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -64,6 +65,7 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <AdminAuthFix />
+              <ColdStartSolution />
               <GlobalCartProvider>
                 <Toaster />
                 <Sonner />
@@ -119,8 +121,8 @@ const App = () => {
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
                     
-                    {/* Dynamic slug routes - REMOVED to prevent homepage conflicts */}
-                    {/* <Route path="/:slug" element={<CoverPageWithBackground />} /> */}
+                    {/* Dynamic slug routes for cover pages - FIXED */}
+                    <Route path="/:slug" element={<CoverPageWithBackground />} />
                   </Routes>
                 </Suspense>
               </div>
