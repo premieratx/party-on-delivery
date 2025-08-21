@@ -304,7 +304,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
       const startTime = performance.now();
       
       // Use CATEGORY-GOVERNED search for consistent results
-      const filteredProducts = allProducts
+      const filteredProducts = currentTabProducts
         .map(product => {
           const lowerQuery = searchQuery.toLowerCase();
           const lowerCategory = (product.category || '').toLowerCase();
@@ -314,7 +314,8 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           // CATEGORY GOVERNANCE - category matches trump everything else
           if (lowerCategory.includes(lowerQuery)) score = 1000;
           else if (lowerTitle.includes(lowerQuery)) score = 800;
-          else if (product.collections?.some(c => c.toLowerCase().includes(lowerQuery))) score = 600;
+           else if (Array.isArray(product.collection_handles) && 
+                    product.collection_handles.some(c => String(c).toLowerCase().includes(lowerQuery))) score = 600;
           
           return score > 0 ? { ...product, _score: score } : null;
         })

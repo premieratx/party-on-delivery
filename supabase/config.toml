@@ -1,5 +1,8 @@
 project_id = "acmlfzfliqupwxwoefdq"
 
+[functions.cache-warmer]
+verify_jwt = false
+
 [functions.cleanup-payment-data]
 verify_jwt = false
 

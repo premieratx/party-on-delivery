@@ -4767,6 +4767,10 @@ export type Database = {
         Args: { input_email: string; input_password: string }
         Returns: boolean
       }
+      warm_system_cache: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
