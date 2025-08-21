@@ -12,6 +12,9 @@ import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryA
 import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
+import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCreator';
+import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator';
+import { FixedPostCheckoutCreator } from '@/components/admin/FixedPostCheckoutCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +49,9 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { activeTab, updateActiveTab } = useAdminState('overview');
+  const [showDeliveryCreator, setShowDeliveryCreator] = useState(false);
+  const [showCoverCreator, setShowCoverCreator] = useState(false);
+  const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -308,6 +314,12 @@ export default function AdminDashboard() {
           {/* Cover Pages */}
           <TabsContent value="cover-pages" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="mb-4">
+                <Button onClick={() => setShowCoverCreator(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Cover Page
+                </Button>
+              </div>
               <EnhancedCoverPageManager />
             </div>
           </TabsContent>
@@ -315,6 +327,12 @@ export default function AdminDashboard() {
           {/* Post-Checkout Creator */}
           <TabsContent value="post-checkout" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="mb-4">
+                <Button onClick={() => setShowPostCheckoutCreator(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Post-Checkout Page
+                </Button>
+              </div>
               <EnhancedPostCheckoutManager />
             </div>
           </TabsContent>
@@ -322,6 +340,12 @@ export default function AdminDashboard() {
           {/* Delivery Apps */}
           <TabsContent value="delivery-apps" className="space-y-4">
             <div className="h-[calc(100vh-200px)] overflow-y-auto">
+              <div className="mb-4">
+                <Button onClick={() => setShowDeliveryCreator(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Delivery App
+                </Button>
+              </div>
               <EnhancedDeliveryAppManager />
             </div>
           </TabsContent>
@@ -491,6 +515,11 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Fixed Admin Creators */}
+      <FixedDeliveryAppCreator open={showDeliveryCreator} onOpenChange={setShowDeliveryCreator} onSaved={loadDashboardData} />
+      <FixedCoverPageCreator open={showCoverCreator} onOpenChange={setShowCoverCreator} onSaved={loadDashboardData} />
+      <FixedPostCheckoutCreator open={showPostCheckoutCreator} onOpenChange={setShowPostCheckoutCreator} onSaved={loadDashboardData} />
     </div>
   );
 }
