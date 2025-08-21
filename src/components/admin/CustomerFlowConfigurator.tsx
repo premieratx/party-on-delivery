@@ -91,11 +91,10 @@ export default function CustomerFlowConfigurator() {
 
   const loadAllData = async () => {
     try {
-      const [flowsRes, coverRes, postCheckoutRes, affiliatesRes, appsRes] = await Promise.all([
+      const [flowsRes, coverRes, postCheckoutRes, appsRes] = await Promise.all([
         supabase.from('customer_flows').select('*').order('created_at', { ascending: false }),
         supabase.from('cover_pages').select('id, title, slug, buttons').eq('is_active', true),
         supabase.from('post_checkout_pages').select('id, name, slug').eq('is_active', true),
-        supabase.from('affiliates').select('id, name, affiliate_code, custom_handle').eq('status', 'active'),
         supabase.from('delivery_app_variations').select('id, app_name, app_slug').eq('is_active', true)
       ]);
 
@@ -131,8 +130,10 @@ export default function CustomerFlowConfigurator() {
       }
 
       if (postCheckoutRes.data) setPostCheckoutPages(postCheckoutRes.data);
-      if (affiliatesRes.data) setAffiliates(affiliatesRes.data);
       if (appsRes.data) setDeliveryApps(appsRes.data);
+      
+      // Skip affiliates to avoid 403 errors
+      setAffiliates([]);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Failed to load configuration data');

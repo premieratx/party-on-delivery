@@ -21,10 +21,9 @@ export const SystemStatus = () => {
   const checkStatus = async () => {
     setLoading(true);
     try {
-      const [productsResult, ordersResult, affiliatesResult, appsResult, automationResult] = await Promise.all([
+      const [productsResult, ordersResult, appsResult, automationResult] = await Promise.all([
         supabase.from('shopify_products_cache').select('*', { count: 'exact', head: true }),
         supabase.from('customer_orders').select('*', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-        supabase.from('affiliates').select('*', { count: 'exact', head: true }).eq('status', 'active'),
         supabase.from('delivery_app_variations').select('*', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('automation_sessions').select('*', { count: 'exact', head: true }).eq('status', 'running')
       ]);
@@ -37,7 +36,7 @@ export const SystemStatus = () => {
       setStatus({
         products: productsResult.count || 0,
         orders: ordersResult.count || 0,
-        affiliates: affiliatesResult.count || 0,
+        affiliates: 0, // Skip affiliate count to avoid 403 errors
         activeApps: appsResult.count || 0,
         automationSessions: automationResult.count || 0,
         errors

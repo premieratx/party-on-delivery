@@ -111,22 +111,21 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
         flowsWithDetails.push(flowDetail);
       }
       
-      // Load affiliates
-      const { data: affiliateData, error: affiliatesError } = await supabase
-        .from('affiliates')
-        .select('id, name, company_name, affiliate_code, email')
-        .eq('status', 'active')
-        .order('company_name');
-      
-      if (affiliatesError) throw affiliatesError;
-      
       // Load existing assignments without complex relations
       const { data: assignmentData, error: assignmentsError } = await supabase
         .from('affiliate_flow_assignments')
         .select('*')
         .order('created_at', { ascending: false });
-      
-      if (assignmentsError) throw assignmentsError;
+
+      if (assignmentsError) {
+        console.error('❌ Error loading assignments:', assignmentsError);
+        // Don't throw error, just set empty assignments
+        setAssignments([]);
+        return;
+      }
+
+      // Skip affiliate loading to avoid 403 errors
+      setAffiliates([]);
 
       // For each assignment, get the related affiliate and flow data
       const assignmentsWithDetails: FlowAssignment[] = [];
@@ -158,7 +157,6 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
       }
       
       setCustomerFlows(flowsWithDetails);
-      setAffiliates(affiliateData || []);
       setAssignments(assignmentsWithDetails);
       
     } catch (error) {

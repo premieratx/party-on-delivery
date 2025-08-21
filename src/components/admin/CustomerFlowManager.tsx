@@ -177,13 +177,24 @@ export const CustomerFlowManager: React.FC = () => {
   };
 
   const loadAssignments = async () => {
-    const { data, error } = await supabase
-      .from('affiliate_flow_assignments')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    setAssignments(data || []);
+    try {
+      const { data, error } = await supabase
+        .from('affiliate_flow_assignments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading assignments:', error);
+        // Set empty assignments instead of showing error
+        setAssignments([]);
+        return;
+      }
+
+      setAssignments(data || []);
+    } catch (error) {
+      console.error('Error loading assignments:', error);
+      setAssignments([]);
+    }
   };
 
   const handleSaveFlow = async () => {

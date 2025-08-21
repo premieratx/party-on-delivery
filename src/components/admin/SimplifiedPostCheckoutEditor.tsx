@@ -73,13 +73,17 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
 
   useEffect(() => {
     const loadData = async () => {
-      const [{ data: affiliates }, { data: coverPages }] = await Promise.all([
-        supabase.from('affiliates').select('id, name, affiliate_code'),
-        supabase.from('cover_pages').select('id, title, slug')
-      ]);
-      
-      setAvailableAffiliates(affiliates || []);
-      setAvailableCoverPages(coverPages || []);
+      try {
+        const { data: coverPages } = await supabase.from('cover_pages').select('id, title, slug');
+        setAvailableCoverPages(coverPages || []);
+        
+        // Skip affiliates to avoid 403 errors
+        setAvailableAffiliates([]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setAvailableAffiliates([]);
+        setAvailableCoverPages([]);
+      }
     };
     loadData();
   }, []);

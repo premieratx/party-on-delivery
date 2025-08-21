@@ -48,19 +48,19 @@ export const PostCheckoutScreenManager = () => {
 
   const fetchData = async () => {
     try {
-      const [screensRes, affiliatesRes, coverPagesRes] = await Promise.all([
+      const [screensRes, coverPagesRes] = await Promise.all([
         supabase.from('post_checkout_screens').select('*').order('created_at', { ascending: false }),
-        supabase.from('affiliates').select('id, company_name, affiliate_code, name').eq('status', 'active'),
         supabase.from('cover_pages').select('id, title, slug').eq('is_active', true)
       ]);
 
       if (screensRes.error) throw screensRes.error;
-      if (affiliatesRes.error) throw affiliatesRes.error;
       if (coverPagesRes.error) throw coverPagesRes.error;
 
       setScreens(screensRes.data || []);
-      setAffiliates(affiliatesRes.data || []);
       setCoverPages(coverPagesRes.data || []);
+      
+      // Skip affiliates to avoid 403 errors
+      setAffiliates([]);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');

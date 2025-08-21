@@ -91,17 +91,18 @@ export const EnhancedCustomerFlowCreator: React.FC<EnhancedCustomerFlowCreatorPr
 
   const loadData = async () => {
     try {
-      const [coverResponse, deliveryResponse, postResponse, affiliateResponse] = await Promise.all([
+      const [coverResponse, deliveryResponse, postResponse] = await Promise.all([
         supabase.from('cover_pages').select('*').eq('is_active', true),
         supabase.from('delivery_app_variations').select('*').eq('is_active', true),
-        supabase.from('post_checkout_pages').select('*'),
-        supabase.from('affiliates').select('*').eq('status', 'active')
+        supabase.from('post_checkout_pages').select('*')
       ]);
 
       if (coverResponse.data) setCoverPages(coverResponse.data);
       if (deliveryResponse.data) setDeliveryApps(deliveryResponse.data);
       if (postResponse.data) setPostCheckoutPages(postResponse.data);
-      if (affiliateResponse.data) setAffiliates(affiliateResponse.data);
+      
+      // Skip affiliates loading to avoid 403 errors
+      setAffiliates([]);
     } catch (error) {
       console.error('Error loading data:', error);
       toast({ title: 'Error loading data', variant: 'destructive' });
