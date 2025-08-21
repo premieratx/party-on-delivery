@@ -145,6 +145,13 @@ const DEFAULT_BUTTONS = [
   { text: 'Browse Collections', type: 'secondary' as const, target: '' }
 ];
 
+const COMMON_EMOJIS = [
+  '⭐', '🎉', '🚀', '💎', '🔥', '✨', '⚡', '🏪', '🍸', '🎯',
+  '🎊', '💫', '🌟', '🎁', '🏆', '💪', '🔝', '📱', '💻', '🎵',
+  '🏅', '🎪', '🎨', '🎭', '🎬', '📸', '🎤', '🎧', '🎮', '🃏',
+  '🍀', '🌈', '☀️', '🌙', '❄️', '🌊', '🔔', '⏰', '📍', '🎄'
+];
+
 export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> = ({
   open,
   onOpenChange,
@@ -249,25 +256,76 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
   useEffect(() => {
     if (initial) {
+      console.log('🔍 Loading initial cover page data:', initial);
+      
       // Parse existing data
       const parsedFeatures = typeof initial.checklist === 'string' ? 
         JSON.parse(initial.checklist || '[]') : initial.checklist || [];
       const parsedButtons = typeof initial.buttons === 'string' ? 
         JSON.parse(initial.buttons || '[]') : initial.buttons || [];
+      const parsedStyles = typeof initial.styles === 'string' ? 
+        JSON.parse(initial.styles || '{}') : initial.styles || {};
+
+      console.log('📝 Parsed data:', {
+        features: parsedFeatures,
+        buttons: parsedButtons,
+        styles: parsedStyles
+      });
       
       setConfig(prev => ({
         ...prev,
-        ...initial,
-        variant: initial.theme || initial.variant || 'original',
+        id: initial.id,
+        slug: initial.slug,
+        title: initial.title,
+        subtitle: initial.subtitle,
+        logoUrl: initial.logo_url,
+        backgroundImageUrl: initial.bg_image_url,
+        backgroundVideoUrl: initial.bg_video_url,
+        variant: initial.theme || initial.variant || parsedStyles.variant || 'original',
         features: parsedFeatures.length > 0 ? 
           parsedFeatures.map((item: any, index: number) => ({
-            emoji: DEFAULT_FEATURES[index]?.emoji || '⭐',
+            emoji: parsedStyles.features?.[index]?.emoji || item.emoji || '⭐',
             title: typeof item === 'string' ? item : item.title || '',
             description: typeof item === 'string' ? 'Premium feature' : item.description || ''
           })) : DEFAULT_FEATURES,
         buttons: parsedButtons.length > 0 ? parsedButtons : DEFAULT_BUTTONS,
-        logoEmoji: initial.logoEmoji || '🎉'
+        logoEmoji: parsedStyles.logoEmoji || initial.logoEmoji || '🎉',
+        // Restore all styling configurations
+        logoSizing: parsedStyles.logoSizing || {
+          width: '5rem',
+          height: '5rem'
+        },
+        typography: parsedStyles.typography || {
+          titleSize: 'text-4xl md:text-5xl',
+          subtitleSize: 'text-xl',
+          fontFamily: 'inherit'
+        },
+        positioning: parsedStyles.positioning || {
+          logoMarginTop: '0',
+          logoMarginBottom: '0',
+          titleMarginTop: '0',
+          titleMarginBottom: '0',
+          subtitleMarginTop: '0',
+          subtitleMarginBottom: '0',
+          featuresMarginTop: '0',
+          featuresMarginBottom: '0',
+          buttonsMarginTop: '0',
+          buttonsMarginBottom: '0'
+        },
+        customColors: parsedStyles.customColors || {},
+        animations: parsedStyles.animations || {
+          enabled: true,
+          speed: 'normal' as const,
+          entrance: 'fade' as const
+        },
+        backgroundOverlay: parsedStyles.backgroundOverlay || {
+          enabled: false,
+          opacity: 0.5
+        },
+        is_active: initial.is_active !== undefined ? initial.is_active : true
       }));
+
+      console.log('✅ Cover page data loaded and config updated');
     }
   }, [initial]);
 
@@ -311,7 +369,21 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         created_by: 'admin'
       };
 
-      console.log('💾 Saving page data:', pageData);
+      console.log('💾 Saving page data with enhanced logging:', pageData);
+      console.log('🔍 Button data being saved:', JSON.stringify(config.buttons, null, 2));
+      console.log('🔍 logoSizing being saved:', config.logoSizing);
+      console.log('🔍 Full styles object:', JSON.stringify({
+        variant: config.variant,
+        logoEmoji: config.logoEmoji,
+        features: config.features,
+        buttons: config.buttons,
+        typography: config.typography,
+        logoSizing: config.logoSizing,
+        positioning: config.positioning,
+        customColors: config.customColors,
+        animations: config.animations,
+        backgroundOverlay: config.backgroundOverlay
+      }, null, 2));
 
       let result;
       if (config.id) {
@@ -332,6 +404,12 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       }
 
       console.log('💾 Save result:', result);
+      if (result.data) {
+        console.log('✅ Saved data verification:', {
+          buttons: result.data.buttons,
+          styles: result.data.styles
+        });
+      }
 
       if (result.error) throw result.error;
 
@@ -581,15 +659,33 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                   {config.features.map((feature, index) => (
                     <Card key={index}>
                       <CardContent className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div>
-                            <Label>Emoji</Label>
-                            <Input
-                              value={feature.emoji}
-                              onChange={(e) => updateFeature(index, 'emoji', e.target.value)}
-                              placeholder="⭐"
-                            />
-                          </div>
+                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                           <div>
+                             <Label>Emoji</Label>
+                             <div className="flex gap-2">
+                               <Select
+                                 value={feature.emoji}
+                                 onValueChange={(value) => updateFeature(index, 'emoji', value)}
+                               >
+                                 <SelectTrigger className="w-20">
+                                   <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent className="z-[9999] bg-background border shadow-lg max-h-48">
+                                   {COMMON_EMOJIS.map((emoji) => (
+                                     <SelectItem key={emoji} value={emoji}>
+                                       {emoji}
+                                     </SelectItem>
+                                   ))}
+                                 </SelectContent>
+                               </Select>
+                               <Input
+                                 value={feature.emoji}
+                                 onChange={(e) => updateFeature(index, 'emoji', e.target.value)}
+                                 placeholder="⭐"
+                                 className="w-16 text-center"
+                               />
+                             </div>
+                           </div>
                           <div>
                             <Label>Title</Label>
                             <Input
