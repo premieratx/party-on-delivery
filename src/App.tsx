@@ -34,6 +34,10 @@ const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
 const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomPartyOnDeliveryPostCheckout"));
 
+// Enhanced standalone pages
+const CoverPage = lazy(() => import("./pages/CoverPage"));
+const PostCheckoutPage = lazy(() => import("./pages/PostCheckoutPage"));
+
 // Admin pages - using direct imports since they use named exports
 import { AdminLogin } from "./pages/AdminLogin";
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -73,6 +77,10 @@ const App = () => {
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
+                    
+                    {/* Enhanced standalone pages */}
+                    <Route path="/cover/:slug" element={<CoverPage />} />
+                    <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
                     
                     {/* Conditionally render Voice Chat */}
                     {config.voiceChatEnabled && (

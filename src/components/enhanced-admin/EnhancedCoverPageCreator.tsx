@@ -43,6 +43,45 @@ interface CoverPageConfig {
     color?: string;
     textColor?: string;
   }>;
+  // Advanced Styling
+  customColors?: {
+    primary?: string;
+    secondary?: string;
+    accent?: string;
+  };
+  backgroundOverlay?: {
+    enabled: boolean;
+    color?: string;
+    opacity?: number;
+  };
+  // Typography
+  typography?: {
+    titleSize?: string;
+    subtitleSize?: string;
+    fontFamily?: string;
+  };
+  // Animation Settings
+  animations?: {
+    enabled: boolean;
+    speed?: 'slow' | 'normal' | 'fast';
+    entrance?: 'fade' | 'slide' | 'scale';
+  };
+  // SEO Settings
+  seo?: {
+    metaDescription?: string;
+    keywords?: string;
+    ogImage?: string;
+  };
+  // Analytics
+  analytics?: {
+    trackingCode?: string;
+    conversionPixel?: string;
+  };
+  // Scheduling
+  scheduling?: {
+    publishAt?: string;
+    unpublishAt?: string;
+  };
   is_active: boolean;
 }
 
@@ -95,6 +134,12 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     variant: 'original',
     features: DEFAULT_FEATURES,
     buttons: DEFAULT_BUTTONS,
+    backgroundOverlay: { enabled: false, opacity: 0.5 },
+    typography: { titleSize: 'text-4xl md:text-5xl', subtitleSize: 'text-xl' },
+    animations: { enabled: true, speed: 'normal', entrance: 'fade' },
+    seo: {},
+    analytics: {},
+    scheduling: {},
     is_active: true
   });
   
@@ -265,11 +310,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </DialogHeader>
 
           <Tabs defaultValue="template" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="template">Template</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="features">Features</TabsTrigger>
               <TabsTrigger value="buttons">Actions</TabsTrigger>
+              <TabsTrigger value="styling">Styling</TabsTrigger>
+              <TabsTrigger value="seo">SEO & Analytics</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
 
@@ -517,6 +564,288 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </TabsContent>
+
+              {/* Advanced Styling */}
+              <TabsContent value="styling" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Custom Colors</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Primary Color</Label>
+                        <Input
+                          value={config.customColors?.primary || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            customColors: { ...prev.customColors, primary: e.target.value }
+                          }))}
+                          placeholder="#3b82f6"
+                        />
+                      </div>
+                      <div>
+                        <Label>Secondary Color</Label>
+                        <Input
+                          value={config.customColors?.secondary || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            customColors: { ...prev.customColors, secondary: e.target.value }
+                          }))}
+                          placeholder="#8b5cf6"
+                        />
+                      </div>
+                      <div>
+                        <Label>Accent Color</Label>
+                        <Input
+                          value={config.customColors?.accent || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            customColors: { ...prev.customColors, accent: e.target.value }
+                          }))}
+                          placeholder="#f59e0b"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Background Overlay</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={config.backgroundOverlay?.enabled || false}
+                          onCheckedChange={(checked) => setConfig(prev => ({ 
+                            ...prev, 
+                            backgroundOverlay: { ...prev.backgroundOverlay, enabled: checked }
+                          }))}
+                        />
+                        <Label>Enable Background Overlay</Label>
+                      </div>
+                      <div>
+                        <Label>Overlay Color</Label>
+                        <Input
+                          value={config.backgroundOverlay?.color || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            backgroundOverlay: { ...prev.backgroundOverlay, color: e.target.value }
+                          }))}
+                          placeholder="#000000"
+                        />
+                      </div>
+                      <div>
+                        <Label>Overlay Opacity</Label>
+                        <Input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={config.backgroundOverlay?.opacity || 0.5}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            backgroundOverlay: { ...prev.backgroundOverlay, opacity: parseFloat(e.target.value) }
+                          }))}
+                        />
+                        <span className="text-sm text-muted-foreground">{config.backgroundOverlay?.opacity || 0.5}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Typography</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Title Size</Label>
+                        <Select
+                          value={config.typography?.titleSize || 'text-4xl md:text-5xl'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            typography: { ...prev.typography, titleSize: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text-3xl md:text-4xl">Small</SelectItem>
+                            <SelectItem value="text-4xl md:text-5xl">Medium</SelectItem>
+                            <SelectItem value="text-5xl md:text-6xl">Large</SelectItem>
+                            <SelectItem value="text-6xl md:text-7xl">Extra Large</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Font Family</Label>
+                        <Select
+                          value={config.typography?.fontFamily || 'font-sans'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            typography: { ...prev.typography, fontFamily: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="font-sans">Sans Serif</SelectItem>
+                            <SelectItem value="font-serif">Serif</SelectItem>
+                            <SelectItem value="font-mono">Monospace</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Animations</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={config.animations?.enabled || true}
+                          onCheckedChange={(checked) => setConfig(prev => ({ 
+                            ...prev, 
+                            animations: { ...prev.animations, enabled: checked }
+                          }))}
+                        />
+                        <Label>Enable Animations</Label>
+                      </div>
+                      <div>
+                        <Label>Animation Speed</Label>
+                        <Select
+                          value={config.animations?.speed || 'normal'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            animations: { ...prev.animations, speed: value as any }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="slow">Slow</SelectItem>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="fast">Fast</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* SEO & Analytics */}
+              <TabsContent value="seo" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>SEO Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Meta Description</Label>
+                        <Textarea
+                          value={config.seo?.metaDescription || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            seo: { ...prev.seo, metaDescription: e.target.value }
+                          }))}
+                          placeholder="A concise description for search engines"
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label>Keywords</Label>
+                        <Input
+                          value={config.seo?.keywords || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            seo: { ...prev.seo, keywords: e.target.value }
+                          }))}
+                          placeholder="keyword1, keyword2, keyword3"
+                        />
+                      </div>
+                      <div>
+                        <Label>Open Graph Image URL</Label>
+                        <Input
+                          value={config.seo?.ogImage || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            seo: { ...prev.seo, ogImage: e.target.value }
+                          }))}
+                          placeholder="https://example.com/og-image.jpg"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Analytics & Tracking</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Google Analytics Code</Label>
+                        <Input
+                          value={config.analytics?.trackingCode || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            analytics: { ...prev.analytics, trackingCode: e.target.value }
+                          }))}
+                          placeholder="G-XXXXXXXXXX"
+                        />
+                      </div>
+                      <div>
+                        <Label>Conversion Pixel</Label>
+                        <Textarea
+                          value={config.analytics?.conversionPixel || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            analytics: { ...prev.analytics, conversionPixel: e.target.value }
+                          }))}
+                          placeholder="Facebook Pixel or other tracking code"
+                          rows={3}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Content Scheduling</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Publish Date</Label>
+                        <Input
+                          type="datetime-local"
+                          value={config.scheduling?.publishAt || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            scheduling: { ...prev.scheduling, publishAt: e.target.value }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Unpublish Date</Label>
+                        <Input
+                          type="datetime-local"
+                          value={config.scheduling?.unpublishAt || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            scheduling: { ...prev.scheduling, unpublishAt: e.target.value }
+                          }))}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
 

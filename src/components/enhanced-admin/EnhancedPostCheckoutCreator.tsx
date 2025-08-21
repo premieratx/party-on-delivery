@@ -42,9 +42,41 @@ interface PostCheckoutConfig {
     color?: string;
     textColor?: string;
   };
+  // Display Options
   showOrderDetails: boolean;
   showDeliveryInfo: boolean;
   showShareOptions: boolean;
+  showOrderNumber: boolean;
+  showEstimatedDelivery: boolean;
+  // Custom Messages
+  thankYouMessage?: string;
+  nextStepsMessage?: string;
+  // Advanced Styling
+  customStyling?: {
+    backgroundColor?: string;
+    textColor?: string;
+    cardBackground?: string;
+    borderRadius?: string;
+  };
+  // Animation Settings
+  animations?: {
+    enabled: boolean;
+    celebrationEffect: boolean;
+    entranceAnimation: 'fade' | 'slide' | 'bounce';
+  };
+  // Contact & Support
+  supportContact?: {
+    phone?: string;
+    email?: string;
+    hours?: string;
+  };
+  // Social Proof
+  testimonial?: {
+    enabled: boolean;
+    text?: string;
+    author?: string;
+    rating?: number;
+  };
   is_default: boolean;
 }
 
@@ -98,6 +130,9 @@ export const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorPr
     showOrderDetails: true,
     showDeliveryInfo: true,
     showShareOptions: false,
+    showOrderNumber: true,
+    showEstimatedDelivery: true,
+    animations: { enabled: true, celebrationEffect: true, entranceAnimation: 'fade' },
     is_default: false
   });
   
@@ -286,10 +321,12 @@ export const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorPr
           </DialogHeader>
 
           <Tabs defaultValue="content" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="buttons">Actions</TabsTrigger>
               <TabsTrigger value="design">Design</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
 
@@ -589,6 +626,268 @@ export const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorPr
                             <div className="text-sm text-muted-foreground">{variant.description}</div>
                           </div>
                         ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Advanced Settings */}
+              <TabsContent value="advanced" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Custom Messages</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Thank You Message</Label>
+                        <Textarea
+                          value={config.thankYouMessage || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, thankYouMessage: e.target.value }))}
+                          placeholder="Thank you for choosing us! Your order is being processed."
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label>Next Steps Message</Label>
+                        <Textarea
+                          value={config.nextStepsMessage || ''}
+                          onChange={(e) => setConfig(prev => ({ ...prev, nextStepsMessage: e.target.value }))}
+                          placeholder="What happens next: We'll prepare your order and send delivery updates."
+                          rows={3}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Custom Styling</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Background Color</Label>
+                        <Input
+                          value={config.customStyling?.backgroundColor || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            customStyling: { ...prev.customStyling, backgroundColor: e.target.value }
+                          }))}
+                          placeholder="#ffffff"
+                        />
+                      </div>
+                      <div>
+                        <Label>Text Color</Label>
+                        <Input
+                          value={config.customStyling?.textColor || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            customStyling: { ...prev.customStyling, textColor: e.target.value }
+                          }))}
+                          placeholder="#000000"
+                        />
+                      </div>
+                      <div>
+                        <Label>Card Background</Label>
+                        <Input
+                          value={config.customStyling?.cardBackground || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            customStyling: { ...prev.customStyling, cardBackground: e.target.value }
+                          }))}
+                          placeholder="#f8f9fa"
+                        />
+                      </div>
+                      <div>
+                        <Label>Border Radius</Label>
+                        <Select
+                          value={config.customStyling?.borderRadius || 'rounded-lg'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            customStyling: { ...prev.customStyling, borderRadius: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="rounded-none">None</SelectItem>
+                            <SelectItem value="rounded-sm">Small</SelectItem>
+                            <SelectItem value="rounded-lg">Medium</SelectItem>
+                            <SelectItem value="rounded-xl">Large</SelectItem>
+                            <SelectItem value="rounded-full">Full</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Animation Effects</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={config.animations?.enabled || true}
+                          onCheckedChange={(checked) => setConfig(prev => ({ 
+                            ...prev, 
+                            animations: { ...prev.animations, enabled: checked }
+                          }))}
+                        />
+                        <Label>Enable Animations</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={config.animations?.celebrationEffect || true}
+                          onCheckedChange={(checked) => setConfig(prev => ({ 
+                            ...prev, 
+                            animations: { ...prev.animations, celebrationEffect: checked }
+                          }))}
+                        />
+                        <Label>Celebration Effects</Label>
+                      </div>
+                      <div>
+                        <Label>Entrance Animation</Label>
+                        <Select
+                          value={config.animations?.entranceAnimation || 'fade'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            animations: { ...prev.animations, entranceAnimation: value as any }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fade">Fade In</SelectItem>
+                            <SelectItem value="slide">Slide In</SelectItem>
+                            <SelectItem value="bounce">Bounce In</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Social Proof</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={config.testimonial?.enabled || false}
+                          onCheckedChange={(checked) => setConfig(prev => ({ 
+                            ...prev, 
+                            testimonial: { ...prev.testimonial, enabled: checked }
+                          }))}
+                        />
+                        <Label>Show Testimonial</Label>
+                      </div>
+                      <div>
+                        <Label>Testimonial Text</Label>
+                        <Textarea
+                          value={config.testimonial?.text || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            testimonial: { ...prev.testimonial, text: e.target.value }
+                          }))}
+                          placeholder="Amazing service! Fast delivery and great quality."
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label>Author Name</Label>
+                        <Input
+                          value={config.testimonial?.author || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            testimonial: { ...prev.testimonial, author: e.target.value }
+                          }))}
+                          placeholder="Sarah M."
+                        />
+                      </div>
+                      <div>
+                        <Label>Rating (1-5)</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={config.testimonial?.rating || 5}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            testimonial: { ...prev.testimonial, rating: parseInt(e.target.value) }
+                          }))}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* Additional Settings */}
+              <TabsContent value="settings" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Contact & Support</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Support Phone</Label>
+                        <Input
+                          value={config.supportContact?.phone || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            supportContact: { ...prev.supportContact, phone: e.target.value }
+                          }))}
+                          placeholder="+1 (555) 123-4567"
+                        />
+                      </div>
+                      <div>
+                        <Label>Support Email</Label>
+                        <Input
+                          value={config.supportContact?.email || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            supportContact: { ...prev.supportContact, email: e.target.value }
+                          }))}
+                          placeholder="support@company.com"
+                        />
+                      </div>
+                      <div>
+                        <Label>Support Hours</Label>
+                        <Input
+                          value={config.supportContact?.hours || ''}
+                          onChange={(e) => setConfig(prev => ({ 
+                            ...prev, 
+                            supportContact: { ...prev.supportContact, hours: e.target.value }
+                          }))}
+                          placeholder="Mon-Fri 9AM-6PM CST"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Display Options</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={config.showOrderNumber}
+                          onCheckedChange={(checked) => setConfig(prev => ({ ...prev, showOrderNumber: checked }))}
+                        />
+                        <Label>Show Order Number</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={config.showEstimatedDelivery}
+                          onCheckedChange={(checked) => setConfig(prev => ({ ...prev, showEstimatedDelivery: checked }))}
+                        />
+                        <Label>Show Estimated Delivery</Label>
                       </div>
                     </CardContent>
                   </Card>
