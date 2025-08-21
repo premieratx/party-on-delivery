@@ -19,24 +19,26 @@ export const TipSelector: React.FC<TipSelectorProps> = ({
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Driver Tip</CardTitle>
+      <CardHeader className="pb-2 sm:pb-3">
+        <CardTitle className="text-sm sm:text-base">Driver Tip</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+      <CardContent className="space-y-2 sm:space-y-3">
+        {/* Mobile: Single compact row */}
+        <div className="flex flex-wrap gap-1 sm:gap-2">
           {tipPresets.map((percentage) => (
             <Button
               key={percentage}
               variant={tipPercentage === percentage ? "default" : "outline"}
               size="sm"
               onClick={() => onTipChange(percentage)}
-              className="text-xs sm:text-sm h-8 sm:h-9"
+              className="text-xs h-7 px-2 sm:text-sm sm:h-9 sm:px-3 flex-1 min-w-0"
             >
               {percentage === 0 ? 'No Tip' : `${percentage}%`}
             </Button>
           ))}
         </div>
         
+        {/* Custom tip input - more compact on mobile */}
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -46,7 +48,7 @@ export const TipSelector: React.FC<TipSelectorProps> = ({
               const value = parseFloat(e.target.value) || 0;
               onTipChange(Math.max(0, Math.min(50, value))); // Cap at 50%
             }}
-            className="flex-1 h-8 sm:h-9 text-xs sm:text-sm"
+            className="flex-1 h-7 sm:h-9 text-xs sm:text-sm"
             min="0"
             max="50"
           />

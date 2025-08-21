@@ -146,7 +146,7 @@ export const CombinedSearchTabs = ({
         sizeClasses = "text-xs px-2 py-1.5 h-8 gap-1 min-w-[3rem]";
         break;
       case 'icon-only':
-        sizeClasses = "text-xs p-2 h-8 w-8 min-w-[2rem]";
+        sizeClasses = "text-xs px-1 py-2 h-8 gap-0.5 min-w-[2.5rem]";
         break;
       default:
         sizeClasses = "text-sm px-3 py-2 h-9 gap-1.5";
@@ -172,7 +172,8 @@ export const CombinedSearchTabs = ({
   };
 
   const shouldShowText = () => {
-    return tabLayout !== 'icon-only';
+    // Always show text on mobile, even in compact modes
+    return true;
   };
 
   // Auto-expand search when user starts typing
@@ -304,14 +305,13 @@ export const CombinedSearchTabs = ({
                   <span className={`flex-shrink-0 ${getIconSize()}`}>
                     {tab.icon || '📦'}
                   </span>
-                  {shouldShowText() && (
-                    <span className={`truncate transition-all duration-300 ${
-                      tabLayout === 'minimal' ? 'max-w-[3rem]' : 
-                      tabLayout === 'compact' ? 'max-w-[4rem]' : 'max-w-[8rem]'
-                    }`}>
-                      {tab.title}
-                    </span>
-                  )}
+                   <span className={`truncate transition-all duration-300 flex-1 ${
+                     tabLayout === 'minimal' ? 'text-[10px] max-w-[2.5rem]' : 
+                     tabLayout === 'compact' ? 'text-xs max-w-[3.5rem]' :
+                     tabLayout === 'icon-only' ? 'text-[9px] max-w-[2rem]' : 'max-w-[8rem]'
+                   }`}>
+                     {tab.title}
+                   </span>
                 </Button>
               ))}
             </div>

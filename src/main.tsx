@@ -2,6 +2,8 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+// Import console cleanup utilities
+import './utils/console-cleanup'
 
 // Clear any cached references
 if (typeof window !== 'undefined') {

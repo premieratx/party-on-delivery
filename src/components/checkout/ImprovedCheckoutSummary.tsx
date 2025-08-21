@@ -82,49 +82,49 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
             const cleanedTitle = cleanTitle(item.title);
             
             return (
-              <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex justify-between items-center py-2 border-b border-border/30">
+              <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex items-center gap-2 py-2 border-b border-border/30">
+                {/* Mobile-optimized single row layout */}
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm leading-tight">
+                  <div className="font-medium text-xs sm:text-sm leading-tight truncate">
                     {cleanedTitle}
                   </div>
                   {item.variant && !item.variant.includes('gid://') && item.variant !== 'default' && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-[10px] sm:text-xs text-muted-foreground truncate">
                       {item.variant}
                     </div>
                   )}
                 </div>
                 
-                <div className="flex items-center gap-3 text-sm">
-                  <span>${applyMarkup(item.price).toFixed(2)}</span>
-                  
+                {/* Mobile: Compact quantity and price on same line */}
+                <div className="flex items-center gap-2 text-xs">
                   {/* Quantity Controls */}
                   {onUpdateQuantity ? (
-                    <div className="flex items-center gap-1 bg-background rounded border">
+                    <div className="flex items-center gap-0.5 bg-background rounded border">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                       >
-                        <Minus className="w-3 h-3" />
+                        <Minus className="w-2 h-2" />
                       </Button>
-                      <span className="text-sm font-medium min-w-[1.5rem] text-center">
+                      <span className="text-xs font-medium min-w-[1rem] text-center">
                         {item.quantity}
                       </span>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 p-0"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-2 h-2" />
                       </Button>
                     </div>
                   ) : (
-                    <span className="text-sm">Qty: {item.quantity}</span>
+                    <span className="text-xs">×{item.quantity}</span>
                   )}
                   
-                  <span className="font-semibold min-w-[4rem] text-right">
+                  <span className="font-semibold text-xs text-right min-w-[2.5rem]">
                     ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
                   </span>
                 </div>

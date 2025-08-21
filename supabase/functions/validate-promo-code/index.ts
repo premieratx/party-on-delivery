@@ -76,6 +76,12 @@ serve(async (req) => {
           is_active: true,
           minimum_order_amount: 25
         },
+        'FREEDELIVERY': {
+          code: 'FREEDELIVERY',
+          discount_type: 'fixed_amount',
+          discount_value: 0,
+          is_active: true
+        },
         'PREMIERE2025': {
           code: 'PREMIERE2025',
           discount_type: 'fixed_amount',

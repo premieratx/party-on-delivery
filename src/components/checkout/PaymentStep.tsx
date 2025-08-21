@@ -209,14 +209,14 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
           <Label className="font-medium text-sm sm:text-base">Add a tip for your delivery driver</Label>
           
           {!showCustomTip ? (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            <div className="flex flex-wrap gap-1 sm:gap-2">
               {calculateTipOptions().map((option) => (
                 <Button
                   key={option.label}
                   type="button"
                   variant={tipAmount === option.value ? "default" : "outline"}
                   onClick={() => handleTipSelect(option)}
-                  className="flex flex-col items-center py-2 sm:py-3 h-auto text-xs sm:text-sm"
+                  className="flex flex-col items-center py-1 sm:py-3 h-auto text-xs sm:text-sm flex-1 min-w-0"
                   size="sm"
                 >
                   <span className="font-semibold">{option.label}</span>
@@ -228,7 +228,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
                 type="button"
                 variant={showCustomTip ? "default" : "outline"}
                 onClick={() => setShowCustomTip(true)}
-                className="flex flex-col items-center py-2 sm:py-3 h-auto text-xs sm:text-sm col-span-2 sm:col-span-1"
+                className="flex flex-col items-center py-1 sm:py-3 h-auto text-xs sm:text-sm"
                 size="sm"
               >
                 <span className="font-semibold">Custom</span>
