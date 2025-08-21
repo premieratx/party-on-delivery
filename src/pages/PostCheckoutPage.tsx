@@ -57,18 +57,12 @@ const PostCheckoutPage = () => {
         
         <div className="space-y-4">
           <h1 className="text-4xl font-bold" style={{ color: content.text_color || '#000000' }}>
-            {postCheckoutPage.title}
+            {postCheckoutPage.name}
           </h1>
           <p className="text-xl" style={{ color: content.text_color || '#666666' }}>
-            {postCheckoutPage.subtitle}
+            {content.custom_message || 'Thank you for your order!'}
           </p>
         </div>
-
-        {content.custom_message && (
-          <p className="text-lg opacity-90" style={{ color: content.text_color || '#666666' }}>
-            {content.custom_message}
-          </p>
-        )}
 
         <div className="flex gap-4 justify-center">
           {content.primary_button_text && content.primary_button_url && (
