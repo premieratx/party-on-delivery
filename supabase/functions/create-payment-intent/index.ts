@@ -48,11 +48,15 @@ serve(async (req) => {
 
     console.log('💰 Creating payment intent for amount:', amount, 'cents');
     
-    // Initialize Supabase first for logging
+    // Initialize Supabase and Stripe
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+    
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    });
     
     // Log payment intent initiation
     await logEvent(supabase, 'payment_intent_initiated', 'create_intent', {
@@ -67,17 +71,6 @@ serve(async (req) => {
     if (!amount || amount < 50 || amount > 1000000) {
       throw new Error(`Invalid amount: ${amount}. Must be between 50 and 1000000 cents.`);
     }
-
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    });
-
-    // Initialize Supabase for order storage
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
 
     // Store order draft with correct column structure
     const orderDraft = {
@@ -148,7 +141,23 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Payment intent creation failed:', error);
+    console.error('💥 Payment intent creation failed:', error);
+    
+    // Log the error for debugging
+    const executionTime = Date.now() - startTime;
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      await logEvent(supabase, 'payment_intent_failed', 'create_intent', {}, { 
+        error: error.message,
+        stack: error.stack 
+      }, executionTime);
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
