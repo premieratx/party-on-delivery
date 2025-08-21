@@ -28,7 +28,7 @@ export const AccessibleDialog: React.FC<AccessibleDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={className} aria-describedby={hideDescription ? undefined : "dialog-description"}>
+      <DialogContent className={className} {...(hideDescription ? {} : { 'aria-describedby': "dialog-description" })}>
         <DialogHeader>
           {hideTitle ? (
             <VisuallyHidden>
