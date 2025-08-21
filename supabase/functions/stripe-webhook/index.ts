@@ -61,15 +61,8 @@ serve(async (req) => {
           await processOrderWithRetry(paymentIntent.id);
           console.log('✅ Shopify order created successfully');
           
-          // 🔒 SECURITY: Clean up payment data after successful processing
-          try {
-            await supabase.rpc('sanitize_order_payment_data', {
-              payment_intent_id_param: paymentIntent.id
-            });
-            console.log('🔒 Payment data sanitized successfully');
-          } catch (sanitizeError) {
-            console.log('⚠️ Warning: Failed to sanitize payment data:', sanitizeError);
-          }
+          // Webhook processing completed successfully
+          console.log('✅ Webhook processing completed');
         } catch (processError) {
           console.log('🚨 Order processing failed after retries, but payment succeeded:', processError);
           
