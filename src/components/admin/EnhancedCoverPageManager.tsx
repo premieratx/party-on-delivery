@@ -137,12 +137,18 @@ export const EnhancedCoverPageManager: React.FC = () => {
   const handleSetDefault = async (page: CoverPage) => {
     try {
       setLoading(true);
+      console.log('🔧 Setting default cover page:', page.title, page.id);
       
       // First remove default from all pages
-      await supabase
+      const { error: clearError } = await supabase
         .from('cover_pages')
         .update({ is_default_homepage: false })
         .neq('id', page.id);
+
+      if (clearError) {
+        console.error('❌ Error clearing defaults:', clearError);
+        throw clearError;
+      }
 
       // Then set this page as default
       const { error } = await supabase
@@ -150,8 +156,12 @@ export const EnhancedCoverPageManager: React.FC = () => {
         .update({ is_default_homepage: true, is_active: true })
         .eq('id', page.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error setting default:', error);
+        throw error;
+      }
 
+      console.log('✅ Successfully set default cover page');
       toast.success(`"${page.title}" is now the default homepage cover page`);
       loadCoverPages();
     } catch (error) {

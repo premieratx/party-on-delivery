@@ -39,6 +39,8 @@ const CoverPageWithBackground = () => {
     queryFn: async () => {
       if (!slug) throw new Error('No slug provided');
       
+      console.log('🔍 Loading cover page with slug:', slug);
+      
       const { data, error } = await supabase
         .from('cover_pages')
         .select('*')
@@ -46,7 +48,17 @@ const CoverPageWithBackground = () => {
         .eq('is_active', true)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error loading cover page:', error);
+        throw error;
+      }
+      
+      if (data) {
+        console.log('✅ Cover page loaded successfully:', data.title);
+      } else {
+        console.log('❌ No cover page found for slug:', slug);
+      }
+      
       return data;
     },
     enabled: !!slug
