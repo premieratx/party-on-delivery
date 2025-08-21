@@ -14,6 +14,7 @@ interface ImprovedDateTimeStepProps {
   deliveryInfo: DeliveryInfo;
   onDeliveryInfoChange: (info: DeliveryInfo) => void;
   onConfirm: () => void;
+  onEdit?: () => void;
   isConfirmed: boolean;
 }
 
@@ -35,6 +36,7 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
   deliveryInfo,
   onDeliveryInfoChange,
   onConfirm,
+  onEdit,
   isConfirmed
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -90,8 +92,10 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
   };
 
   const handleEdit = () => {
-    // Allow editing by resetting confirmation state
-    window.location.reload();
+    // Allow editing by resetting confirmation state via parent
+    if (onEdit) {
+      onEdit();
+    }
   };
 
   const isDateTimeComplete = selectedDate && deliveryInfo.timeSlot;

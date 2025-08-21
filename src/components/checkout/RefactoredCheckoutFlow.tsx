@@ -240,6 +240,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               deliveryInfo={deliveryInfo}
               onDeliveryInfoChange={onDeliveryInfoChange}
               onConfirm={handleDateTimeConfirm}
+              onEdit={() => setConfirmedDateTime(false)}
               isConfirmed={confirmedDateTime}
             />
 

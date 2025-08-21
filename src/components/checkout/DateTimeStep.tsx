@@ -65,7 +65,11 @@ export const DateTimeStep: React.FC<DateTimeStepProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.location.reload()} // Simple way to reset and allow editing
+            onClick={() => {
+              // Reset confirmation state to allow editing
+              onDeliveryInfoChange({ ...deliveryInfo, date: deliveryInfo.date, timeSlot: deliveryInfo.timeSlot });
+              // This will trigger the parent to set isConfirmed to false
+            }}
             className="text-xs"
           >
             Edit
