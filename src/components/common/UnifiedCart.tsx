@@ -34,12 +34,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     onClose();
   };
 
-  // Scroll to top when cart opens
-  React.useEffect(() => {
-    if (isOpen) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [isOpen]);
+  // No auto-scroll when cart opens - let user stay at current position
 
   if (!isOpen) return null;
 
