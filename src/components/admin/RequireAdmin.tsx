@@ -15,10 +15,16 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let checkInProgress = false;
 
     const check = async () => {
+      if (checkInProgress) {
+        console.log('🔍 Admin check already in progress, skipping duplicate');
+        return;
+      }
+      checkInProgress = true;
+
       try {
-        // Ensure listener is set up first to avoid missed events
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
 
@@ -33,6 +39,12 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
           if (window.location.pathname !== '/affiliate/admin-login') {
             navigate('/affiliate/admin-login', { replace: true });
           }
+          return;
+        }
+
+        // Skip verification if already verified to avoid redundant calls
+        if (allowed === true && adminContextSet) {
+          console.log('✅ Admin already verified, skipping duplicate check');
           return;
         }
 
@@ -61,26 +73,31 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
         console.error('Admin guard error:', e);
         setAllowed(false);
         navigate('/affiliate/admin-login', { replace: true });
+      } finally {
+        checkInProgress = false;
       }
     };
 
-    // Set up auth state listener to react to login/logout
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Set up auth state listener to react to login/logout only
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-      if (!session) {
+      
+      if (event === 'SIGNED_OUT' || !session) {
         setAdminContextSet(false);
         setAllowed(false);
         navigate('/affiliate/admin-login', { replace: true });
-      } else {
-        // Reset context state and re-check admin on sign-in
-        setAdminContextSet(false);
+      } else if (event === 'SIGNED_IN' && !adminContextSet) {
+        // Only re-check on new sign-in, not on existing sessions
         setTimeout(() => {
           check();
-        }, 0);
+        }, 100);
       }
     });
 
-    check();
+    // Initial check only if not already verified
+    if (allowed === null) {
+      check();
+    }
 
     return () => {
       mounted = false;

@@ -155,18 +155,6 @@ class UltraFastSearchClient {
 // Export singleton instance
 export const ultraFastSearch = UltraFastSearchClient.getInstance();
 
-// Auto warm-up on import
-if (typeof window !== 'undefined') {
-  // Warm up cache on first interaction or after a short delay
-  const warmUpOnReady = () => {
-    setTimeout(() => {
-      ultraFastSearch.warmUpCache().catch(console.error);
-    }, 100);
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', warmUpOnReady);
-  } else {
-    warmUpOnReady();
-  }
-}
+// Lazy warm-up - only warm up cache when actually needed for search
+// This prevents unnecessary 1+ second delays on app startup
+// Cache will be warmed up automatically on first search if needed
