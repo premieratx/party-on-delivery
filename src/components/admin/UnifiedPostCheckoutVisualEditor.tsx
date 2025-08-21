@@ -286,7 +286,12 @@ export const UnifiedPostCheckoutVisualEditor: React.FC<UnifiedPostCheckoutVisual
             <DialogTitle className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
-                {isEditing ? `Edit: ${initial?.title}` : 'Create Post-Checkout Screen'}
+                <div>
+                  <h3>{isEditing ? `Edit: ${initial?.title}` : 'Create Post-Checkout Screen'}</h3>
+                  <DialogDescription id="dialog-description" className="text-sm text-muted-foreground">
+                    Design custom post-purchase experiences with visual editor
+                  </DialogDescription>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -307,9 +312,6 @@ export const UnifiedPostCheckoutVisualEditor: React.FC<UnifiedPostCheckoutVisual
                 </Button>
               </div>
             </DialogTitle>
-            <DialogDescription id="dialog-description">
-              Create professional post-purchase experiences with custom themes and interactive elements.
-            </DialogDescription>
           </DialogHeader>
 
           {/* Main Content */}

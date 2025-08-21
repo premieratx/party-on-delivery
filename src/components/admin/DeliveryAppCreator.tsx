@@ -386,9 +386,9 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                   <h2 className="text-xl font-bold">
                     {isEditing ? `Edit: ${initial?.app_name}` : 'Create Delivery App'}
                   </h2>
-                  <p className="text-sm text-muted-foreground font-normal">
+                  <DialogDescription id="dialog-description" className="text-sm text-muted-foreground font-normal">
                     Configure your delivery app with custom tabs and collections
-                  </p>
+                  </DialogDescription>
                 </div>
               </div>
               <div className="flex items-center gap-2">
