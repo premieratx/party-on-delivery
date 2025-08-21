@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 
 import { CoverPageCreator } from './CoverPageCreator';
+import { FigmaEnhancedCoverCreator } from './FigmaEnhancedCoverCreator';
 import { EnhancedPostCheckoutManager } from './EnhancedPostCheckoutManager';
 import { DeliveryAppCreator } from './DeliveryAppCreator';
 
@@ -91,7 +92,7 @@ export const AdminDashboardImproved: React.FC<AdminDashboardImprovedProps> = ({ 
 
   if (showPageCreator) {
     return (
-      <CoverPageCreator
+      <FigmaEnhancedCoverCreator
         open={showPageCreator}
         onOpenChange={setShowPageCreator}
         initial={editingPage}

@@ -1110,6 +1110,42 @@ export type Database = {
           },
         ]
       }
+      cover_page_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          preview_url: string | null
+          template_config: Json
+          template_name: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          preview_url?: string | null
+          template_config?: Json
+          template_name: string
+          template_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          preview_url?: string | null
+          template_config?: Json
+          template_name?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cover_pages: {
         Row: {
           affiliate_assigned_slug: string | null
