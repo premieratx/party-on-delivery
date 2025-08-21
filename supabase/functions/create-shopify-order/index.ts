@@ -62,7 +62,12 @@ serve(async (req) => {
 
     // Get Shopify credentials
     const shopifyToken = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-    const shopifyStore = Deno.env.get("SHOPIFY_STORE_URL")?.replace("https://", "") || "premier-concierge.myshopify.com";
+    const rawShopifyStore = Deno.env.get("SHOPIFY_STORE_URL") || "premier-concierge.myshopify.com";
+    
+    // Ensure URL has proper protocol for API calls
+    const shopifyStore = rawShopifyStore.includes('://') 
+      ? rawShopifyStore.replace(/^https?:\/\//, '') // Remove any existing protocol
+      : rawShopifyStore;
     
     if (!shopifyToken) {
       throw new Error("SHOPIFY_ADMIN_API_ACCESS_TOKEN is not configured");

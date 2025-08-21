@@ -15,6 +15,7 @@ import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
+import { useAdminState } from '@/hooks/useAdminState';
 import { 
   Users, 
   Package, 
@@ -44,6 +45,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { activeTab, updateActiveTab } = useAdminState('overview');
 
   useEffect(() => {
     loadDashboardData();
@@ -165,13 +167,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/affiliate/admin-login');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
+  const handleLogout = () => {
+    navigate('/order-continuation');
   };
 
   const copyAffiliateLink = (affiliateCode: string) => {
@@ -258,7 +255,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Main Tabs */}
-        <Tabs defaultValue="homepage" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-4">
           <TabsList className="grid grid-cols-4 md:grid-cols-8 gap-1 w-full h-auto flex-wrap p-2">
             <TabsTrigger value="homepage" className="px-3 py-2 text-xs sm:text-sm">🏠 Homepage</TabsTrigger>
             <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm">🚚 Apps</TabsTrigger>

@@ -15,7 +15,7 @@ const OrderContinuation = () => {
   };
 
   const handleAdminLogin = () => {
-    navigate('/admin/dashboard');
+    navigate('/admin');
   };
 
   return (

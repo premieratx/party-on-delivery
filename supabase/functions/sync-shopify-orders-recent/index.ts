@@ -51,11 +51,14 @@ serve(async (req) => {
     since.setDate(since.getDate() - days);
     const created_at_min = since.toISOString();
 
-    const shopUrl = Deno.env.get("SHOPIFY_STORE_URL");
+    const rawShopUrl = Deno.env.get("SHOPIFY_STORE_URL");
     const token = Deno.env.get("SHOPIFY_ADMIN_API_ACCESS_TOKEN");
-    if (!shopUrl || !token) {
+    if (!rawShopUrl || !token) {
       throw new Error("Shopify credentials are not configured");
     }
+
+    // Ensure URL has proper protocol
+    const shopUrl = rawShopUrl.startsWith('http') ? rawShopUrl : `https://${rawShopUrl}`;
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
