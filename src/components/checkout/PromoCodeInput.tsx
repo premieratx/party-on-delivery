@@ -45,6 +45,7 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
       // Enhanced hardcoded promo codes that work everywhere
       const codeUpper = promoCode.trim().toUpperCase();
       const hardcodedCodes = {
+        'PREMIERE2025': { type: 'free_shipping', value: 0 },
         'PREMIER2025': { type: 'free_shipping', value: 0 },
         'FREESHIP': { type: 'free_shipping', value: 0 },
         'SAVE10': { type: 'percentage', value: 10 },
