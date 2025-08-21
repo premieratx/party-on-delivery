@@ -300,12 +300,14 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
               />
             </div>
 
-            {/* Promo Code Input */}
-            <PromoCodeInput 
-              onDiscountApplied={handlePromoApplied}
-              appliedDiscount={appliedDiscount}
-              cartSubtotal={calculatedSubtotal}
-            />
+            {/* Promo Code Input - Move above payment */}
+            {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
+              <PromoCodeInput 
+                onDiscountApplied={handlePromoApplied}
+                appliedDiscount={appliedDiscount}
+                cartSubtotal={calculatedSubtotal}
+              />
+            )}
 
             {/* Tip Selector */}
             <TipSelector
@@ -324,6 +326,30 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
         )}
         
       </div>
+
+      {/* Sticky Mobile Checkout Button */}
+      {currentStep === 'payment' && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t p-4 lg:hidden">
+          <Button 
+            onClick={() => {
+              // Find and click the payment form submit button
+              const form = document.querySelector('form');
+              if (form) {
+                // Create a submit event to trigger the form submission
+                const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                form.dispatchEvent(submitEvent);
+              }
+            }}
+            className="w-full h-12 text-base font-semibold"
+            size="lg"
+          >
+            Pay ${finalTotal.toFixed(2)}
+          </Button>
+        </div>
+      )}
+      
+      {/* Add bottom padding for mobile when sticky button is shown */}
+      <div className={`${currentStep === 'payment' ? 'pb-20 lg:pb-0' : ''}`} />
     </div>
   );
 };

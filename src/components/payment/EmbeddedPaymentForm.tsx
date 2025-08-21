@@ -371,111 +371,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 md:space-y-6">
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-3 md:space-y-6">
-          {/* Tip Selection - Condensed or Full */}
-          {tipConfirmed ? <div className="p-2 border border-green-500 rounded-lg bg-green-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Driver Tip: ${(confirmedTipAmount || 0).toFixed(2)}</span>
-                  {customTipConfirmed && <Badge variant="secondary" className="text-xs">Custom</Badge>}
-                </div>
-                <Button type="button" variant="outline" size="sm" onClick={handleEditTip} className="text-xs px-2 py-1 h-auto">
-                  <Edit className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
-              </div>
-            </div> : <div className="space-y-2">
-              <Label className="text-sm font-semibold">Add a tip for your delivery driver</Label>
-              <div className="grid grid-cols-5 gap-1 w-full">
-                {tipOptions.map(tip => <Button key={tip.label} type="button" variant={tipAmount === tip.value && !showCustomTip && tipType === 'percentage' ? "default" : "outline"} onClick={() => {
-              if (externalSetTipAmount) {
-                externalSetTipAmount(tip.value, 'percentage', tip.percentage);
-              } else {
-                setInternalTipAmount(tip.value);
-                setInternalTipType('percentage');
-                setInternalTipPercentage(tip.percentage);
-              }
-              setHasUserSetTip(true); // Mark that user has interacted with tip
-              setShowCustomTip(false);
-              setTipConfirmed(false);
-              setCustomTipConfirmed(false);
-            }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
-                    <span className="font-semibold">{tip.label}</span>
-                    <span className="text-xs opacity-75">${(tip.value || 0).toFixed(0)}</span>
-                  </Button>)}
-                <Button type="button" variant={showCustomTip ? "default" : "outline"} onClick={() => {
-              setShowCustomTip(true);
-              setHasUserSetTip(true); // Mark that user has interacted with tip
-              if (externalSetTipAmount) {
-                externalSetTipAmount(0, 'custom');
-              } else {
-                setInternalTipAmount(0);
-                setInternalTipType('custom');
-              }
-              setTipConfirmed(false);
-              setCustomTipConfirmed(false);
-            }} className="text-xs flex flex-col items-center py-2 px-1 h-auto">
-                  <span className="font-semibold">Custom</span>
-                  <span className="text-xs opacity-75">$</span>
-                </Button>
-              </div>
-              {showCustomTip && <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="customTip" className="text-sm whitespace-nowrap">Custom tip:</Label>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm">$</span>
-                       <Input id="customTip" type="text" placeholder="0.00" value={tipAmount === 0 ? '' : tipAmount.toString()} onChange={e => {
-                  const value = e.target.value;
-                  // Allow typing numbers and decimal point
-                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                    const numValue = parseFloat(value) || 0;
-                    if (externalSetTipAmount) {
-                      externalSetTipAmount(numValue, 'custom');
-                    } else {
-                      setInternalTipAmount(numValue);
-                      setInternalTipType('custom');
-                    }
-                    setHasUserSetTip(true); // Mark that user has interacted with tip
-                  }
-                 }} onBlur={e => {
-                  // Format to 2 decimal places on blur if there's a value
-                  const value = parseFloat(e.target.value) || 0;
-                  if (externalSetTipAmount) {
-                    externalSetTipAmount(value, 'custom');
-                  } else {
-                    setInternalTipAmount(value);
-                    setInternalTipType('custom');
-                  }
-                  setHasUserSetTip(true);
-                 }} onKeyDown={e => {
-                  if (e.key === 'Tab' || e.key === 'Enter') {
-                    const value = parseFloat(e.currentTarget.value) || 0;
-                    if (externalSetTipAmount) {
-                      externalSetTipAmount(value, 'custom');
-                    } else {
-                      setInternalTipAmount(value);
-                      setInternalTipType('custom');
-                    }
-                    setHasUserSetTip(true);
-                  }
-                }} className="w-16 text-sm" />
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="confirmCustomTip" checked={customTipConfirmed} onCheckedChange={checked => {
-                if (checked && tipAmount > 0) {
-                  handleCustomTipConfirm();
-                }
-              }} disabled={tipAmount === 0} />
-                    <Label htmlFor="confirmCustomTip" className="text-sm">
-                      Confirm tip: ${(tipAmount || 0).toFixed(2)}
-                    </Label>
-                  </div>
-                </div>}
-            </div>}
-
-          <Separator />
-
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-6">
           {/* Order Summary */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs md:text-sm">
@@ -547,7 +443,7 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
 
           {paymentError && <div className="text-red-600 text-sm">{paymentError}</div>}
 
-          <Button type="button" disabled={!stripe || isProcessing} className="w-full text-xs md:text-sm" size="lg" onClick={(e) => handleSubmit(e as any)}>
+          <Button type="submit" disabled={!stripe || isProcessing} className="w-full text-xs md:text-sm" size="lg">
             {isProcessing ? 'Processing...' : `Complete Payment - $${(total || 0).toFixed(2)}`}
           </Button>
         </form>

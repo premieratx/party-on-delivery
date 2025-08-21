@@ -62,6 +62,14 @@ export const DateTimeStep: React.FC<DateTimeStepProps> = ({
             <CheckCircle className="w-5 h-5 text-green-500" />
             Delivery Date & Time
           </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()} // Simple way to reset and allow editing
+            className="text-xs"
+          >
+            Edit
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
