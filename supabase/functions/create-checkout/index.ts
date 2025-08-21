@@ -131,12 +131,12 @@ serve(async (req) => {
         delivery_address: fullDeliveryAddress,
         delivery_instructions: deliveryInfo?.specialInstructions || '',
         
-        // Order amounts
-        subtotal: (subtotal * 100).toString(), // Convert to cents
-        delivery_fee: (deliveryFee * 100).toString(),
-        sales_tax: (salesTax * 100).toString(),
-        tip_amount: (tipAmount * 100).toString(),
-        total_amount: (totalAmount / 100).toString(), // Total is already in cents
+        // Order amounts (all in dollars for consistency)
+        subtotal: subtotal.toString(),
+        delivery_fee: deliveryFee.toString(),
+        sales_tax: salesTax.toString(),
+        tip_amount: tipAmount.toString(),
+        total_amount: (totalAmount / 100).toString(), // Convert cents back to dollars
         
         // Cart items (JSON string)
         cart_items: JSON.stringify(cartItems),

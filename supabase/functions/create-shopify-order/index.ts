@@ -167,14 +167,13 @@ serve(async (req) => {
     // Get order amounts (fallback to metadata if not from database)
     if (!orderAmounts.total_amount) {
       orderAmounts = {
-        // Convert from cents to dollars (metadata stores amounts in cents)
-        subtotal: parseFloat(metadata.subtotal || '0') / 100,
-        delivery_fee: parseFloat(metadata.delivery_fee || '0') / 100,
-        sales_tax: parseFloat(metadata.sales_tax || '0') / 100,
-        tip_amount: parseFloat(metadata.tip_amount || '0') / 100,
-        total_amount: parseFloat(metadata.total_amount || '0') // Total is already in dollars
+        subtotal: parseFloat(metadata.subtotal || '0'),
+        delivery_fee: parseFloat(metadata.delivery_fee || '0'),
+        sales_tax: parseFloat(metadata.sales_tax || '0'),
+        tip_amount: parseFloat(metadata.tip_amount || '0'),
+        total_amount: parseFloat(metadata.total_amount || '0')
       };
-      logStep("Using amounts from metadata (converted from cents)", orderAmounts);
+      logStep("Using amounts from metadata", orderAmounts);
     }
 
     // FIX: Don't recalculate total - use the stored total_amount directly
