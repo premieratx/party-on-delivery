@@ -53,20 +53,34 @@ export default function AdminDashboard() {
   const [showCoverCreator, setShowCoverCreator] = useState(false);
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
 
-  // Prevent dashboard reload on tab switching - load data only ONCE
+  // Prevent dashboard reload on tab switching - load data only ONCE with keep-warm
   useEffect(() => {
     console.log('🚀 AdminDashboard: Component mounted, loading data...');
     console.log('🔍 DEBUG: Window location:', window.location.pathname);
     console.log('🔍 DEBUG: Active tab:', activeTab);
     
-    // Load data immediately on mount - no session storage delays
-    loadDashboardData();
+    // Keep functions warm first to prevent timeouts
+    const warmUpAndLoad = async () => {
+      try {
+        console.log('🔥 Warming up edge functions...');
+        await supabase.functions.invoke('keep-warm');
+        console.log('✅ Functions warmed, loading dashboard data...');
+      } catch (error) {
+        console.warn('⚠️ Keep-warm failed, proceeding with data load:', error);
+      }
+      
+      // Load data immediately
+      loadDashboardData();
+    };
+    
+    warmUpAndLoad();
 
     return () => {
       // Cleanup function - prevent memory leaks
     };
   }, []); // Empty dependency array to prevent re-runs
 
+  // Enhanced load dashboard data with error handling and no reload loops
   const loadDashboardData = async () => {
     try {
       console.log('🔄 Loading admin dashboard data...');
@@ -162,7 +176,6 @@ export default function AdminDashboard() {
       setAbandonedOrders([]);
 
       console.log('✅ Dashboard data processed successfully - ready to display');
-      setLoading(false); // FIX: Actually finish loading
 
     } catch (error: any) {
       console.error('❌ Error loading dashboard data:', error);

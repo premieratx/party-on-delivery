@@ -320,6 +320,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       // Clear auto-save data on successful save
       const formKey = initial?.id ? `cover_edit_${initial.id}` : 'cover_create_new';
       setFormValue(formKey, null);
+      
+      console.log('✅ Cover page saved successfully and auto-save cleared');
 
       onSaved?.();
       onOpenChange(false);

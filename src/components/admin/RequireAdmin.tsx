@@ -48,7 +48,7 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
           return;
         }
 
-        // Verify admin via edge function (same as AdminLogin)
+        // Verify admin via edge function (same as AdminLogin) - SINGLE CALL ONLY
         console.log('🔍 DEBUG: Verifying admin with email:', session.user.email);
         const { data, error } = await supabase.functions.invoke('verify-admin-google', {
           body: { email: session.user.email }
@@ -60,9 +60,13 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
         }
 
         if (data?.isAdmin) {
-          console.log('✅ Admin verified and context set');
+          console.log('✅ Admin verified and context set - PERSISTING SESSION');
           setAdminContextSet(true);
           setAllowed(true);
+          
+          // Store admin session persistence to prevent re-verification
+          sessionStorage.setItem('admin_verified', 'true');
+          sessionStorage.setItem('admin_email', session.user.email || '');
         } else {
           await supabase.auth.signOut();
           setAllowed(false);
@@ -78,15 +82,26 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
       }
     };
 
+    // Check if already verified to avoid unnecessary calls
+    const isAlreadyVerified = sessionStorage.getItem('admin_verified') === 'true';
+    if (isAlreadyVerified && allowed === null) {
+      setAdminContextSet(true);
+      setAllowed(true);
+      console.log('🔄 Admin session restored from cache');
+      return;
+    }
+
     // Set up auth state listener to react to login/logout only
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       
       if (event === 'SIGNED_OUT' || !session) {
+        sessionStorage.removeItem('admin_verified');
+        sessionStorage.removeItem('admin_email');
         setAdminContextSet(false);
         setAllowed(false);
         navigate('/affiliate/admin-login', { replace: true });
-      } else if (event === 'SIGNED_IN' && !adminContextSet) {
+      } else if (event === 'SIGNED_IN' && !adminContextSet && !isAlreadyVerified) {
         // Only re-check on new sign-in, not on existing sessions
         setTimeout(() => {
           check();
@@ -95,7 +110,7 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
     });
 
     // Initial check only if not already verified
-    if (allowed === null) {
+    if (allowed === null && !isAlreadyVerified) {
       check();
     }
 
@@ -103,7 +118,7 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate, toast]); // Removed allowed and adminContextSet from dependencies to prevent loops
 
   if (allowed === null || !adminContextSet) {
     return (

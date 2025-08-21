@@ -50,9 +50,10 @@ export const DirectProductSync: React.FC = () => {
         const newCount = await checkProducts();
         console.log(`📊 New product count: ${newCount}`);
         
-        // Refresh page if successful
+        // Refresh interface without reloading page
         if (newCount > 0) {
-          setTimeout(() => window.location.reload(), 2000);
+          console.log('✅ Products synced successfully, refreshing components');
+          window.dispatchEvent(new CustomEvent('products-updated'));
         }
       } else {
         throw new Error(data?.error || 'Sync returned no data');

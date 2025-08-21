@@ -95,11 +95,19 @@ export function useAdminState(defaultTab = 'overview') {
     });
   }, [activeTab, saveState]);
 
-  // Clear all state
+  // Clear all state - WITH ADMIN SESSION PROTECTION
   const clearState = useCallback(() => {
+    // Protect admin session from being cleared accidentally 
+    const isAdminSession = sessionStorage.getItem('admin_verified') === 'true';
+    if (isAdminSession) {
+      console.log('🛡️ Protected admin state from being cleared');
+      return;
+    }
+    
     setActiveTab(defaultTab);
     setFormData({});
     localStorage.removeItem(STORAGE_KEY);
+    console.log('🗑️ Admin state cleared (non-protected session)');
   }, [defaultTab]);
 
   return {

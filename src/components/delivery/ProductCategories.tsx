@@ -635,7 +635,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                 onOpenCart();
               } else {
                 // Fallback navigation to checkout
-                window.location.href = '/checkout';
+                navigate('/checkout');
               }
             }}
             className="md:hidden fixed bottom-0 left-0 right-0 z-50"

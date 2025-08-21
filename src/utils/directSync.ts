@@ -43,12 +43,13 @@ export const forceDirectSync = async () => {
       }
     }
 
-    // Clear caches
+    // Clear caches and dispatch update event instead of reloading
     localStorage.removeItem('products-cache');
     localStorage.removeItem('collections-cache');
     
-    console.log('🎉 DIRECT SYNC COMPLETE - RELOADING PAGE');
-    setTimeout(() => window.location.reload(), 1000);
+    console.log('🎉 DIRECT SYNC COMPLETE - UPDATING COMPONENTS');
+    window.dispatchEvent(new CustomEvent('products-updated'));
+    window.dispatchEvent(new CustomEvent('collections-updated'));
     
   } catch (error) {
     console.error('❌ Direct sync failed:', error);

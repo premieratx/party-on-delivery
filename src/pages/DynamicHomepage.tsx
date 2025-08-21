@@ -114,7 +114,7 @@ export default function DynamicHomepage() {
   };
 
   const handleGoHome = () => {
-    window.location.reload();
+    navigate('/');
   };
   
   if (loading) {
