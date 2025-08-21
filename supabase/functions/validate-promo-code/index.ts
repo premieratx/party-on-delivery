@@ -122,38 +122,8 @@ serve(async (req) => {
         }
       );
     }
-      let message = '';
-      
-      if (promoCode.discount_type === 'percentage') {
-        discountAmount = (orderAmount * promoCode.discount_value) / 100;
-        message = `${promoCode.discount_value}% discount applied!`;
-      } else if (promoCode.discount_value === 0) {
-        // This is a free shipping code
-        discountAmount = 0;
-        message = `Free shipping applied!`;
-      } else {
-        discountAmount = promoCode.discount_value;
-        message = `$${promoCode.discount_value} discount applied!`;
-      }
 
-      return new Response(
-        JSON.stringify({ 
-          valid: true, 
-          code: promoCode.code,
-          discount_type: promoCode.discount_type,
-          discount_value: promoCode.discount_value,
-          discount_amount: Math.round(discountAmount * 100) / 100,
-          is_free_shipping: promoCode.discount_type === 'fixed_amount' && promoCode.discount_value === 0,
-          message: message
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    // If not a test code, check database (if promo_codes table exists)
+    // If not a hardcoded code, check database (if promo_codes table exists)
     try {
       const { data: promoCode, error } = await supabase
         .from('promo_codes')
