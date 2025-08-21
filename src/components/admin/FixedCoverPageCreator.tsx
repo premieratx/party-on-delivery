@@ -63,6 +63,7 @@ export const FixedCoverPageCreator: React.FC<CoverPageCreatorProps> = ({
   
   // Loading state
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [deliveryApps, setDeliveryApps] = useState<Array<{id: string, app_name: string, app_slug: string}>>([]);
 
   // Load delivery apps for button targets
@@ -217,6 +218,64 @@ export const FixedCoverPageCreator: React.FC<CoverPageCreatorProps> = ({
     }
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `cover-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('cover-assets')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('cover-assets')
+        .getPublicUrl(fileName);
+
+      setLogoUrl(urlData.publicUrl);
+      
+      toast({
+        title: "Success",
+        description: "Logo uploaded successfully"
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload logo",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[90vh] w-full overflow-hidden">
@@ -270,13 +329,60 @@ export const FixedCoverPageCreator: React.FC<CoverPageCreatorProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="logoUrl">Logo URL</Label>
-                  <Input
-                    id="logoUrl"
-                    value={logoUrl}
-                    onChange={(e) => setLogoUrl(e.target.value)}
-                    placeholder="https://example.com/logo.png"
-                  />
+                  <Label htmlFor="logoUrl">Logo</Label>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        id="logoUrl"
+                        value={logoUrl}
+                        onChange={(e) => setLogoUrl(e.target.value)}
+                        placeholder="https://example.com/logo.png or upload below"
+                        className="flex-1"
+                      />
+                      {logoUrl && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setLogoUrl('')}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                          disabled={uploading}
+                        />
+                        <Button type="button" variant="outline" size="sm" disabled={uploading}>
+                          {uploading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-4 h-4 mr-2" />
+                              Upload Logo
+                            </>
+                          )}
+                        </Button>
+                      </label>
+                      
+                      {logoUrl && (
+                        <div className="flex items-center gap-2">
+                          <img src={logoUrl} alt="Logo preview" className="w-8 h-8 object-contain rounded" />
+                          <span className="text-xs text-muted-foreground">Preview</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="bgImageUrl">Background Image URL</Label>
