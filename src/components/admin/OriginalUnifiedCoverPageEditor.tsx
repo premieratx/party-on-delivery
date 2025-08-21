@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import CoverStartScreen from "@/components/custom-delivery/CoverStartScreen";
 import { EnhancedFigmaTemplateLibrary } from "./EnhancedFigmaTemplateLibrary";
 import { AnimatedCoverPreview } from "./AnimatedCoverPreview";
+import { MobileFirstCoverPreview } from "./MobileFirstCoverPreview";
 import { CANONICAL_DOMAIN } from "@/utils/links";
 import Draggable from 'react-draggable';
 import { 
@@ -472,29 +473,53 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       {/* Editor Panel */}
       <div className={`${previewMode ? 'w-0 overflow-hidden' : 'w-96'} transition-all duration-300 border-r bg-background flex-shrink-0`}>
         <div className="h-full overflow-y-auto p-4 space-y-4">
-          {/* Theme Selection */}
+          {/* Page Configuration */}
           <div className="space-y-3">
-            <Label className="text-sm font-semibold">Theme</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(COVER_THEMES).map(([key, theme]) => (
-                <button
-                  key={key}
-                  onClick={() => setSelectedTheme(key as keyof typeof COVER_THEMES)}
-                  className={`p-3 rounded-lg border text-sm font-medium transition-all ${
-                    selectedTheme === key 
-                      ? 'border-primary bg-primary/10 ring-2 ring-primary/20' 
-                      : 'border-border hover:bg-muted'
-                  }`}
-                >
-                  <div 
-                    className="w-full h-4 rounded mb-2"
-                    style={{ background: theme.background }}
-                  />
-                  <div className="text-left">
-                    <div className="font-semibold">{theme.name}</div>
-                  </div>
-                </button>
-              ))}
+            <Label className="text-sm font-semibold">Page Settings</Label>
+            
+            <div>
+              <Label className="text-xs">Page Title *</Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Elite Concierge"
+                className="text-sm"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs">Custom Page Slug</Label>
+              <div className="space-y-1">
+                <Input
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder="custom-slug-name"
+                  className="text-sm"
+                />
+                <div className="text-xs text-muted-foreground">
+                  Preview URL: {window.location.origin}/cover/{computedSlug}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs">Subtitle</Label>
+              <Textarea
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="Luxury Lifestyle Services"
+                rows={2}
+                className="text-sm"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="is-active"
+                checked={isActive}
+                onCheckedChange={setIsActive}
+              />
+              <Label htmlFor="is-active" className="text-xs">Active & Published</Label>
             </div>
           </div>
 
@@ -1031,42 +1056,45 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       </div>
 
                       {button.type === 'delivery_app' && (
-                        <div>
-                          <Label className="text-xs">App</Label>
-                          <Select
-                            value={button.app_slug || ''}
-                            onValueChange={(value) => updateButton(idx, { app_slug: value })}
-                          >
-                            <SelectTrigger className="text-sm">
-                              <SelectValue placeholder="Select App" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {apps.map((app) => (
-                                <SelectItem key={app.app_slug} value={app.app_slug}>
-                                  {app.app_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
-                      {button.type === 'delivery_app' && (
-                        <div>
-                          <Label className="text-xs">Markup Percentage</Label>
-                          <Input
-                            value={button.markup_percent || ''}
-                            onChange={(e) => updateButton(idx, { markup_percent: parseFloat(e.target.value) || 0 })}
-                            placeholder="0"
-                            type="number"
-                            min="0"
-                            max="100"
-                            className="text-sm"
-                          />
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Price markup for this delivery app destination
+                        <>
+                          <div>
+                            <Label className="text-xs">App</Label>
+                            <Select
+                              value={button.app_slug || ''}
+                              onValueChange={(value) => updateButton(idx, { app_slug: value })}
+                            >
+                              <SelectTrigger className="text-sm">
+                                <SelectValue placeholder="Select App" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {apps.map((app) => (
+                                  <SelectItem key={app.app_slug} value={app.app_slug}>
+                                    {app.app_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                        </div>
+                          
+                          <div>
+                            <Label className="text-xs">Markup Percentage</Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={button.markup_percent || ''}
+                                onChange={(e) => updateButton(idx, { markup_percent: parseFloat(e.target.value) || 0 })}
+                                placeholder="0"
+                                type="number"
+                                min="0"
+                                max="100"
+                                className="text-sm"
+                              />
+                              <span className="text-xs text-muted-foreground">%</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Price markup for this delivery app destination
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       {button.type === 'url' && (
@@ -1101,22 +1129,35 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       {/* Preview Panel */}
       <div className="flex-1 overflow-hidden bg-gray-50">
         <div className="h-full overflow-y-auto p-4 custom-scrollbar">
-          <AnimatedCoverPreview
-            title={title}
-            subtitle={subtitle}
-            logoUrl={logoUrl}
-            bgImageUrl={bgImageUrl}
-            bgVideoUrl={bgVideoUrl}
-            checklist={checklist}
-            buttons={buttons.map(btn => ({ ...btn, style: btn.style || 'filled' as const }))}
-            selectedTheme={selectedTheme}
-            activeDevice={activeDevice}
-            dragMode={dragMode}
-            elementPositions={elementPositions}
-            onElementDrag={handleElementDrag}
-            fullscreenPreview={fullscreenPreview}
-            templateData={templateData || {}}
-          />
+          {activeDevice === 'iphone14' || activeDevice === 'galaxyS23' ? (
+            <MobileFirstCoverPreview
+              title={title}
+              subtitle={subtitle}
+              logoUrl={logoUrl}
+              checklist={checklist}
+              buttons={buttons.map(btn => ({ ...btn, style: btn.style || 'filled' as const }))}
+              selectedTheme={selectedTheme}
+              elementPositions={elementPositions}
+              dragMode={dragMode}
+            />
+          ) : (
+            <AnimatedCoverPreview
+              title={title}
+              subtitle={subtitle}
+              logoUrl={logoUrl}
+              bgImageUrl={bgImageUrl}
+              bgVideoUrl={bgVideoUrl}
+              checklist={checklist}
+              buttons={buttons.map(btn => ({ ...btn, style: btn.style || 'filled' as const }))}
+              selectedTheme={selectedTheme}
+              activeDevice={activeDevice}
+              dragMode={dragMode}
+              elementPositions={elementPositions}
+              onElementDrag={handleElementDrag}
+              fullscreenPreview={fullscreenPreview}
+              templateData={templateData || {}}
+            />
+          )}
         </div>
       </div>
 
