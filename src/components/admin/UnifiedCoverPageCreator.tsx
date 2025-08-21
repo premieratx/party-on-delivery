@@ -243,7 +243,10 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
                         <Input
                           id="title"
                           value={title}
-                          onChange={(e) => setTitle(e.target.value)}
+                          onChange={(e) => {
+                            console.log('Title input changed:', e.target.value);
+                            setTitle(e.target.value);
+                          }}
                           placeholder="Premium Delivery Experience"
                         />
                       </div>
