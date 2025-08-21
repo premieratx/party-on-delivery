@@ -25,15 +25,15 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
   disabled = false
 }) => {
   const sizeClasses = {
-    sm: 'h-8 w-8 text-sm',
-    md: 'h-10 w-10 text-base',
-    lg: 'h-12 w-12 text-lg'
+    sm: 'h-6 w-8 text-xs rounded-full',
+    md: 'h-7 w-9 text-sm rounded-full',
+    lg: 'h-8 w-10 text-base rounded-full'
   };
 
   const textSizeClasses = {
-    sm: 'text-sm px-2 min-w-[2rem]',
-    md: 'text-base px-3 min-w-[3rem]',
-    lg: 'text-lg px-4 min-w-[4rem]'
+    sm: 'text-xs px-1 min-w-[1.5rem] font-semibold',
+    md: 'text-sm px-2 min-w-[2rem] font-semibold',
+    lg: 'text-base px-2 min-w-[2.5rem] font-semibold'
   };
 
   const handleIncrease = () => {
@@ -72,22 +72,22 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
 
   // Show quantity controls
   return (
-    <div className={cn('flex items-center justify-center gap-2 bg-muted rounded-lg p-1', className)}>
+    <div className={cn('flex items-center justify-center gap-1 bg-muted rounded-full px-1 py-0.5', className)}>
       <Button
         variant="ghost"
         size="sm"
         className={cn(
           sizeClasses[size],
-          'p-0 hover:bg-destructive hover:text-destructive-foreground'
+          'p-0 hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center'
         )}
         onClick={handleDecrease}
         disabled={disabled}
       >
-        <Minus size={size === 'sm' ? 14 : size === 'lg' ? 18 : 16} />
+        <Minus size={size === 'sm' ? 10 : size === 'lg' ? 14 : 12} />
       </Button>
       
       <span className={cn(
-        'font-medium text-center',
+        'font-medium text-center flex items-center justify-center',
         textSizeClasses[size]
       )}>
         {quantity}
@@ -98,12 +98,12 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
         size="sm"
         className={cn(
           sizeClasses[size],
-          'p-0 hover:bg-primary hover:text-primary-foreground'
+          'p-0 hover:bg-primary hover:text-primary-foreground flex items-center justify-center'
         )}
         onClick={handleIncrease}
         disabled={disabled}
       >
-        <Plus size={size === 'sm' ? 14 : size === 'lg' ? 18 : 16} />
+        <Plus size={size === 'sm' ? 10 : size === 'lg' ? 14 : 12} />
       </Button>
     </div>
   );
