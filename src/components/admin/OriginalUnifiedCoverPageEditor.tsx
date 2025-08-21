@@ -314,6 +314,9 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Debug logging
+  console.log('🔍 Cover Editor render - title:', title, 'subtitle:', subtitle, 'previewMode:', previewMode);
+
   // Form management
   const [apps, setApps] = useState<{ app_slug: string; app_name: string }[]>([]);
   const [saving, setSaving] = useState(false);
@@ -503,23 +506,28 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             
             <div>
               <Label className="text-xs">Page Title *</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Elite Concierge"
-                className="text-sm"
-              />
+                <Input
+                  value={title}
+                  onChange={(e) => {
+                    console.log('🔄 Main Title changing from:', title, 'to:', e.target.value);
+                    setTitle(e.target.value);
+                  }}
+                  placeholder="Elite Concierge"
+                />
             </div>
 
             <div>
               <Label className="text-xs">Custom Page Slug</Label>
               <div className="space-y-2">
-                <Input
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="custom-slug-name"
-                  className="text-sm"
-                />
+                  <Input
+                    value={slug}
+                    onChange={(e) => {
+                      console.log('🔄 Slug changing from:', slug, 'to:', e.target.value);
+                      setSlug(e.target.value);
+                    }}
+                    placeholder="custom-slug-name"
+                    className="text-sm"
+                  />
                 <div className="text-xs text-muted-foreground">
                   Preview URL: {window.location.origin}/cover/{computedSlug}
                 </div>
@@ -538,13 +546,16 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             <div>
               <Label className="text-xs">Subtitle</Label>
               <div className="space-y-2">
-                <Textarea
-                  value={subtitle}
-                  onChange={(e) => setSubtitle(e.target.value)}
-                  placeholder="Luxury Lifestyle Services"
-                  rows={2}
-                  className="text-sm"
-                />
+                  <Textarea
+                    value={subtitle}
+                    onChange={(e) => {
+                      console.log('🔄 Subtitle changing from:', subtitle, 'to:', e.target.value);
+                      setSubtitle(e.target.value);
+                    }}
+                    placeholder="Luxury Lifestyle Services"
+                    rows={2}
+                    className="text-sm"
+                  />
                 <div>
                   <Label className="text-xs">Width: {subtitle.length > 40 ? 'Full' : 'Auto'}</Label>
                   <div className="text-xs text-muted-foreground">
