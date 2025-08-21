@@ -274,6 +274,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 subtotal={discountedSubtotal}
                 deliveryFee={finalDeliveryFee}
                 salesTax={calculatedSalesTax}
+                tipAmount={tipAmount}
                 customerInfo={customerInfo}
                 deliveryInfo={deliveryInfo}
                 appliedDiscount={appliedDiscount}
