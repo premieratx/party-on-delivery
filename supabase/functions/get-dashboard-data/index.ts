@@ -20,7 +20,7 @@ serve(async (req) => {
     logStep("Dashboard data request started");
 
     // Handle both query params (GET) and body params (POST)
-    let dashboardType, userEmail, affiliateCode;
+    let dashboardType, userEmail, affiliateCode, loadAssignments = false;
     
     if (req.method === 'POST') {
       try {
@@ -28,18 +28,21 @@ serve(async (req) => {
         dashboardType = body.type || 'admin';
         userEmail = body.email;
         affiliateCode = body.affiliateCode;
+        loadAssignments = body.loadAssignments || false;
       } catch (error) {
         // If no valid JSON body, treat as GET request
         const url = new URL(req.url);
         dashboardType = url.searchParams.get('type') || 'admin';
         userEmail = url.searchParams.get('email');
         affiliateCode = url.searchParams.get('affiliateCode');
+        loadAssignments = url.searchParams.get('loadAssignments') === 'true';
       }
     } else {
       const url = new URL(req.url);
       dashboardType = url.searchParams.get('type') || 'admin';
       userEmail = url.searchParams.get('email');
       affiliateCode = url.searchParams.get('affiliateCode');
+      loadAssignments = url.searchParams.get('loadAssignments') === 'true';
     }
 
     // Initialize Supabase with service role for full access
@@ -52,7 +55,7 @@ serve(async (req) => {
     let dashboardData: any = {};
 
     if (dashboardType === 'admin') {
-      dashboardData = await getAdminDashboardData(supabase);
+      dashboardData = await getAdminDashboardData(supabase, loadAssignments);
     } else if (dashboardType === 'customer') {
       if (!userEmail) throw new Error("Customer email required for customer dashboard");
       dashboardData = await getCustomerDashboardData(supabase, userEmail);
@@ -101,8 +104,8 @@ serve(async (req) => {
   }
 });
 
-async function getAdminDashboardData(supabase: any) {
-  logStep("Fetching admin dashboard data");
+async function getAdminDashboardData(supabase: any, loadAssignments: boolean = false) {
+  logStep("Fetching admin dashboard data", { loadAssignments });
 
   try {
     // Simplified query to avoid complex joins that might fail
@@ -155,11 +158,35 @@ async function getAdminDashboardData(supabase: any) {
       return sum + (isNaN(commission) ? 0 : commission);
     }, 0);
 
+    // Load assignments if requested
+    let assignments = [];
+    if (loadAssignments) {
+      logStep("Loading affiliate flow assignments");
+      
+      try {
+        const { data: assignmentData, error: assignmentsError } = await supabase
+          .from('affiliate_flow_assignments')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (assignmentsError) {
+          logStep("Assignments query error", assignmentsError);
+        } else {
+          assignments = assignmentData || [];
+          logStep("Assignments loaded successfully", { count: assignments.length });
+        }
+      } catch (error) {
+        logStep("Error loading assignments", error);
+        assignments = [];
+      }
+    }
+
     return {
       orders: safeOrders,
       customers: safeCustomers,
       affiliates: safeAffiliates,
       affiliateReferrals: [],
+      assignments: assignments,
       totalRevenue,
       totalOrders,
       totalCustomers,

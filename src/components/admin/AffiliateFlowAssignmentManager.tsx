@@ -91,12 +91,21 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
         };
 
         if (flow.cover_page_id) {
-          const { data: coverPage } = await supabase
-            .from('cover_pages')
-            .select('title, slug')
-            .eq('id', flow.cover_page_id)
-            .single();
-          flowDetail.cover_pages = coverPage;
+          try {
+            const { data: coverPage, error: coverError } = await supabase
+              .from('cover_pages')
+              .select('title, slug')
+              .eq('id', flow.cover_page_id)
+              .maybeSingle();
+            
+            if (!coverError && coverPage) {
+              flowDetail.cover_pages = coverPage;
+            } else {
+              console.warn('⚠️ Cover page not found for ID:', flow.cover_page_id);
+            }
+          } catch (error) {
+            console.warn('⚠️ Error loading cover page:', error);
+          }
         }
 
         if (flow.delivery_app_id) {
@@ -111,21 +120,30 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
         flowsWithDetails.push(flowDetail);
       }
       
-      // Load existing assignments without complex relations
-      const { data: assignmentData, error: assignmentsError } = await supabase
-        .from('affiliate_flow_assignments')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Use edge function to load assignments with admin context
+      console.log('🔄 Loading affiliate assignments via edge function...');
+      
+      const { data: response, error: edgeError } = await supabase.functions.invoke('get-dashboard-data', {
+        body: {
+          type: 'admin',
+          loadAssignments: true
+        }
+      });
 
-      if (assignmentsError) {
-        console.error('❌ Error loading assignments:', assignmentsError);
-        // Don't throw error, just set empty assignments
+      if (edgeError || !response?.success) {
+        console.error('❌ Error loading assignments via edge function:', edgeError || response?.error);
+        // Fallback: try direct query but handle gracefully
         setAssignments([]);
+        setAffiliates([]);
         return;
       }
 
-      // Skip affiliate loading to avoid 403 errors
-      setAffiliates([]);
+      // Extract assignment data from admin dashboard response
+      const assignmentData = response.data?.assignments || [];
+      const affiliatesData = response.data?.affiliates || [];
+      
+      console.log('✅ Assignments loaded via edge function:', assignmentData.length);
+      setAffiliates(affiliatesData);
 
       // For each assignment, get the related affiliate and flow data
       const assignmentsWithDetails: FlowAssignment[] = [];
@@ -137,21 +155,28 @@ export const AffiliateFlowAssignmentManager: React.FC = () => {
           customer_flows: null
         };
 
-        // Get affiliate data
-        const { data: affiliate } = await supabase
-          .from('affiliates')
-          .select('id, name, company_name, affiliate_code, email')
-          .eq('id', assignment.affiliate_id)
-          .single();
-        assignmentDetail.affiliates = affiliate;
+        // Use affiliates data from edge function instead of direct query
+        const affiliate = affiliatesData.find(a => a.id === assignment.affiliate_id);
+        assignmentDetail.affiliates = affiliate || null;
 
-        // Get flow data
-        const { data: flow } = await supabase
-          .from('customer_flows')
-          .select('id, name, slug, is_active')
-          .eq('id', assignment.customer_flow_id)
-          .single();
-        assignmentDetail.customer_flows = flow;
+        // Get flow data safely
+        try {
+          const { data: flow, error: flowError } = await supabase
+            .from('customer_flows')
+            .select('id, name, slug, is_active')
+            .eq('id', assignment.customer_flow_id)
+            .maybeSingle();
+          
+          if (!flowError && flow) {
+            assignmentDetail.customer_flows = flow;
+          } else {
+            console.warn('⚠️ Customer flow not found for ID:', assignment.customer_flow_id);
+            assignmentDetail.customer_flows = null;
+          }
+        } catch (error) {
+          console.warn('⚠️ Error loading customer flow:', error);
+          assignmentDetail.customer_flows = null;
+        }
 
         assignmentsWithDetails.push(assignmentDetail);
       }

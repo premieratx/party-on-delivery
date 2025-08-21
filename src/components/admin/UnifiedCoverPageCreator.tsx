@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -181,7 +181,7 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden" aria-describedby="dialog-description">
         <div className="h-full flex flex-col">
           <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
             <DialogTitle className="flex items-center justify-between">
@@ -207,6 +207,9 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
                 {isLoading ? 'Saving...' : 'Save Cover'}
               </Button>
             </DialogTitle>
+            <DialogDescription id="dialog-description">
+              Build custom cover pages with theming, content management, and live preview.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden">
