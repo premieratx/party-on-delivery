@@ -19,22 +19,25 @@ export const ColdStartSolution = () => {
   useEffect(() => {
     const keepFunctionsWarm = async () => {
       try {
-        // Call our keep-warm function every 4 minutes
-        await supabase.functions.invoke('keep-functions-warm', {
-          body: { source: 'frontend-keepalive' }
-        });
-        // console.log('🔥 Functions kept warm at:', new Date().toISOString());
+        // Only call keep-warm in production to prevent development CORS issues
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          await supabase.functions.invoke('keep-functions-warm', {
+            body: { source: 'frontend-keepalive' }
+          });
+        }
       } catch (error) {
-        // Silently fail keep-alive to prevent console spam and CORS errors
-        // Don't log anything to avoid flooding console
+        // Completely silent - no logging at all
       }
     };
 
-    // Initial warm-up
-    keepFunctionsWarm();
-
-    // Set up interval - every 10 minutes (reduced frequency to prevent spam)
-    keepAliveInterval = setInterval(keepFunctionsWarm, 10 * 60 * 1000);
+    // Only run in production
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      // Initial warm-up
+      keepFunctionsWarm();
+      
+      // Set up interval - every 15 minutes (further reduced frequency)
+      keepAliveInterval = setInterval(keepFunctionsWarm, 15 * 60 * 1000);
+    }
 
     // Cleanup function
     return () => {
