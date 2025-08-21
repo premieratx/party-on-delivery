@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Monitor, Smartphone, Tablet } from 'lucide-react';
 
 interface ResponsivePreviewProps {
@@ -8,103 +9,95 @@ interface ResponsivePreviewProps {
   title?: string;
 }
 
-type DeviceType = 'desktop' | 'tablet' | 'mobile-lg' | 'mobile-md' | 'mobile-sm';
+type DeviceType = 'desktop' | 'tablet' | 'mobile' | 'galaxy';
 
-const deviceSpecs = {
+const deviceConfigs = {
   desktop: {
     name: 'Desktop',
     icon: Monitor,
     width: '100%',
     height: '600px',
-    maxWidth: '1200px'
+    className: 'border-2 border-muted rounded-lg'
   },
   tablet: {
     name: 'Tablet',
     icon: Tablet,
     width: '768px',
-    height: '600px',
-    maxWidth: '768px'
+    height: '1024px',
+    className: 'border-2 border-muted rounded-lg'
   },
-  'mobile-lg': {
-    name: 'iPhone 14 Plus',
-    icon: Smartphone,
-    width: '414px',
-    height: '600px',
-    maxWidth: '414px'
-  },
-  'mobile-md': {
+  mobile: {
     name: 'iPhone 14',
     icon: Smartphone,
     width: '390px',
-    height: '600px',
-    maxWidth: '390px'
+    height: '844px',
+    className: 'border-2 border-muted rounded-[2rem] border-gray-800'
   },
-  'mobile-sm': {
-    name: 'iPhone SE',
+  galaxy: {
+    name: 'Samsung Galaxy S23',
     icon: Smartphone,
-    width: '375px',
-    height: '600px',
-    maxWidth: '375px'
+    width: '360px',
+    height: '780px',
+    className: 'border-2 border-muted rounded-[1.5rem] border-gray-800'
   }
 };
 
 export const ResponsivePreview: React.FC<ResponsivePreviewProps> = ({
   children,
-  title = "Live Preview"
+  title = "Preview"
 }) => {
-  const [selectedDevice, setSelectedDevice] = useState<DeviceType>('mobile-md');
-  const device = deviceSpecs[selectedDevice];
-  const IconComponent = device.icon;
+  const [activeDevice, setActiveDevice] = useState<DeviceType>('desktop');
+
+  const currentConfig = deviceConfigs[activeDevice];
+  const IconComponent = currentConfig.icon;
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-4">
+    <Card>
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <IconComponent className="w-5 h-5" />
-            {title}
-          </CardTitle>
-          <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
-            {Object.entries(deviceSpecs).map(([key, spec]) => {
-              const Icon = spec.icon;
+          <CardTitle className="text-lg">{title}</CardTitle>
+          <div className="flex gap-2">
+            {Object.entries(deviceConfigs).map(([key, config]) => {
+              const Icon = config.icon;
               return (
                 <Button
                   key={key}
-                  variant={selectedDevice === key ? 'default' : 'ghost'}
+                  variant={activeDevice === key ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setSelectedDevice(key as DeviceType)}
-                  className="h-8 px-2"
-                  title={spec.name}
+                  onClick={() => setActiveDevice(key as DeviceType)}
+                  className="flex items-center gap-2"
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="ml-1 text-xs hidden sm:inline">
-                    {key === 'desktop' ? 'Desktop' : 
-                     key === 'tablet' ? 'Tablet' : 
-                     key.includes('lg') ? 'L' :
-                     key.includes('md') ? 'M' : 'S'}
-                  </span>
+                  {config.name}
                 </Button>
               );
             })}
           </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          {device.name} • {device.width === '100%' ? 'Responsive' : device.width}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="flex items-center gap-1">
+            <IconComponent className="w-3 h-3" />
+            {currentConfig.name}
+          </Badge>
+          <Badge variant="secondary">
+            {currentConfig.width} × {currentConfig.height}
+          </Badge>
         </div>
       </CardHeader>
-      
-      <CardContent className="flex-1 flex items-center justify-center bg-muted/10 rounded-lg overflow-hidden p-4">
-        <div 
-          className="bg-background rounded-lg shadow-lg overflow-hidden border transition-all duration-300"
-          style={{
-            width: device.width,
-            height: device.height,
-            maxWidth: device.maxWidth,
-            minHeight: '400px'
-          }}
-        >
-          <div className="w-full h-full overflow-auto">
-            {children}
+      <CardContent>
+        <div className="flex justify-center p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg">
+          <div
+            className={`${currentConfig.className} overflow-hidden bg-white dark:bg-gray-900 shadow-xl`}
+            style={{
+              width: currentConfig.width,
+              height: currentConfig.height,
+              maxWidth: '100%',
+              resize: activeDevice === 'desktop' ? 'both' : 'none'
+            }}
+          >
+            <div className="w-full h-full overflow-auto">
+              {children}
+            </div>
           </div>
         </div>
       </CardContent>

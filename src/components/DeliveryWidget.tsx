@@ -234,6 +234,7 @@ export const DeliveryWidget: React.FC = () => {
           title: "Checkout Error",
           description: "There was an error starting checkout. Please try again.",
           variant: "destructive",
+        });
       });
     }
   };
