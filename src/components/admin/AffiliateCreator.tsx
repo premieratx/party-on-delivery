@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Loader2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -127,9 +127,12 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
       <DialogTrigger asChild>
         <Button size="sm"><Plus className="w-4 h-4 mr-2"/>Add Affiliate</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle>New Affiliate</DialogTitle>
+          <DialogDescription id="dialog-description">
+            Create a new affiliate account with commission settings and optional delivery app assignment.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3">
           <div className="grid grid-cols-2 gap-3">

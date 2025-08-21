@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -351,9 +351,12 @@ export const ComprehensiveUnifiedFlowCreator: React.FC<ComprehensiveUnifiedFlowC
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden" aria-describedby="dialog-description">
         <div className="h-full flex flex-col">
           <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
+            <DialogDescription id="dialog-description" className="sr-only">
+              Create a comprehensive customer flow with cover page, delivery app, and post-checkout experience.
+            </DialogDescription>
             <DialogTitle className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold flex items-center gap-2">

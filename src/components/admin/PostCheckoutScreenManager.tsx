@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
@@ -219,11 +219,14 @@ export const PostCheckoutScreenManager = () => {
               Create Screen
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogContent className="max-w-4xl max-h-[90vh]" aria-describedby="dialog-description">
             <DialogHeader>
               <DialogTitle>
                 {editingScreen ? `Edit: ${editingScreen.title}` : 'Create Post-Checkout Screen'}
               </DialogTitle>
+              <DialogDescription id="dialog-description">
+                Configure post-checkout screens with custom styling, buttons, and affiliate assignments.
+              </DialogDescription>
             </DialogHeader>
             
             <ScrollArea className="h-[70vh] pr-4">
