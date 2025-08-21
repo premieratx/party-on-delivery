@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -282,11 +282,14 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full h-[90vh] flex flex-col">
+      <DialogContent className="max-w-7xl w-full h-[90vh] flex flex-col" aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle>
             {initial?.id ? 'Edit Post-Checkout Page' : 'Create Post-Checkout Page'}
           </DialogTitle>
+          <DialogDescription id="dialog-description">
+            Create custom post-purchase thank you pages with personalized messages and actions.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 flex gap-6 overflow-hidden">
