@@ -45,31 +45,37 @@ export const usePersistentCheckout = () => {
 
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load persistent data on mount
+  // Load persistent data on mount - optimized for speed
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(CHECKOUT_STORAGE_KEY);
-      if (saved) {
-        const data: PersistentCheckoutData = JSON.parse(saved);
-        
-        // Check if data is not expired
-        if (Date.now() - data.lastUsed < EXPIRATION_TIME) {
-          setCustomerInfo(data.customerInfo);
-          setAddressInfo(data.addressInfo);
-        } else {
-          // Clean up expired data
-          localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+    const loadData = () => {
+      try {
+        const saved = localStorage.getItem(CHECKOUT_STORAGE_KEY);
+        if (saved) {
+          const data: PersistentCheckoutData = JSON.parse(saved);
+          
+          // Check if data is not expired
+          if (Date.now() - data.lastUsed < EXPIRATION_TIME) {
+            // Load data synchronously for instant display
+            setCustomerInfo(data.customerInfo);
+            setAddressInfo(data.addressInfo);
+            console.log('✅ Fast checkout: Loaded saved data instantly');
+          } else {
+            // Clean up expired data
+            localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+          }
         }
+      } catch (error) {
+        console.warn('Failed to load persistent checkout data:', error);
+        localStorage.removeItem(CHECKOUT_STORAGE_KEY);
       }
-    } catch (error) {
-      console.warn('Failed to load persistent checkout data:', error);
-      localStorage.removeItem(CHECKOUT_STORAGE_KEY);
-    } finally {
       setIsLoaded(true);
-    }
+    };
+
+    // Load immediately, no setTimeout
+    loadData();
   }, []);
 
-  // Save data whenever it changes (debounced)
+  // Save data whenever it changes (faster debounced)
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -87,7 +93,7 @@ export const usePersistentCheckout = () => {
           console.warn('Failed to save persistent checkout data:', error);
         }
       }
-    }, 1000); // Debounce saves by 1 second
+    }, 300); // Faster save - 300ms debounce
 
     return () => clearTimeout(timeoutId);
   }, [customerInfo, addressInfo, isLoaded]);

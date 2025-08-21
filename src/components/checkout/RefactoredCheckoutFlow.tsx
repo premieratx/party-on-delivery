@@ -7,9 +7,11 @@ import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 import { useToast } from '@/hooks/use-toast';
 import { useCoverPageTracking } from '@/hooks/useCoverPageTracking';
+import { usePersistentCheckout } from '@/hooks/usePersistentCheckout';
 
 // Import our new modular components
 import { CheckoutSteps } from './CheckoutSteps';
+import { FastCheckoutHeader } from './FastCheckoutHeader';
 import { ImprovedDateTimeStep } from './ImprovedDateTimeStep';
 import { AddressStep } from './AddressStep';
 import { CustomerInfoStep } from './CustomerInfoStep';
@@ -54,6 +56,12 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { tracking } = useCoverPageTracking();
+  const { 
+    customerInfo: persistedCustomer, 
+    addressInfo: persistedAddress, 
+    hasSavedData, 
+    isLoaded: persistentDataLoaded 
+  } = usePersistentCheckout();
   
   // Custom hooks for state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
@@ -65,7 +73,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     affiliateCode 
   });
 
-  // Extract checkout flow state
+  // Extract checkout flow state FIRST
   const { 
     currentStep, 
     setCurrentStep,
@@ -80,6 +88,49 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     isCustomerComplete,
     hasChanges
   } = checkoutFlow;
+
+  // Auto-populate from persisted data on mount
+  useEffect(() => {
+    if (persistentDataLoaded && hasSavedData()) {
+      // Instantly populate from saved data
+      if (persistedCustomer.email) {
+        setCustomerInfo(persistedCustomer);
+      }
+      if (persistedAddress.address) {
+        // Convert address string to AddressInfo format
+        const parts = persistedAddress.address.split(',').map(s => s.trim());
+        const stateZip = parts[2]?.split(' ') || [];
+        const addressToUse = {
+          street: parts[0] || '',
+          city: parts[1] || '',
+          state: stateZip[0] || '',
+          zipCode: stateZip[1] || '',
+          instructions: persistedAddress.instructions || ''
+        };
+        setAddressInfo(addressToUse);
+      }
+    }
+  }, [persistentDataLoaded, persistedCustomer, persistedAddress, setCustomerInfo, setAddressInfo]);
+
+  // Fast auto-advance through completed steps
+  useEffect(() => {
+    if (persistentDataLoaded && hasSavedData()) {
+      // If we have complete delivery info, auto-confirm it
+      if (deliveryInfo.date && deliveryInfo.timeSlot && !confirmedDateTime) {
+        setTimeout(() => setConfirmedDateTime(true), 100);
+      }
+      
+      // If we have complete address, auto-confirm it
+      if (persistedAddress.address && !confirmedAddress) {
+        setTimeout(() => setConfirmedAddress(true), 200);
+      }
+      
+      // If we have complete customer info, auto-confirm it
+      if (persistedCustomer.email && persistedCustomer.firstName && !confirmedCustomer) {
+        setTimeout(() => setConfirmedCustomer(true), 300);
+      }
+    }
+  }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer, confirmedDateTime, confirmedAddress, confirmedCustomer]);
 
   // Pricing calculations
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
@@ -122,10 +173,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     if (isDateTimeComplete) {
       setConfirmedDateTime(true);
       setCurrentStep('address');
-      toast({
-        title: "Date & Time Confirmed",
-        description: "Please confirm your delivery address.",
-      });
+      // No toast for speed - just auto-advance
     }
   };
 
@@ -135,10 +183,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       // Customer info is handled inline with address step
       setConfirmedCustomer(true);
       setCurrentStep('payment');
-      toast({
-        title: "Address & Contact Confirmed", 
-        description: "Ready for payment.",
-      });
+      // No toast for speed - just auto-advance
     }
   };
 
@@ -146,11 +191,15 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     if (isCustomerComplete) {
       setConfirmedCustomer(true);
       setCurrentStep('payment');
-      toast({
-        title: "Contact Information Confirmed",
-        description: "Ready for payment.",
-      });
+      // No toast for speed - just auto-advance
     }
+  };
+
+  const handleEditAll = () => {
+    setConfirmedDateTime(false);
+    setConfirmedAddress(false);
+    setConfirmedCustomer(false);
+    setCurrentStep('datetime');
   };
 
   const handlePaymentSuccess = (paymentIntentId?: string) => {
@@ -219,8 +268,18 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             <span className="hidden sm:inline">Back to Cart</span>
             <span className="sm:hidden">Back</span>
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold">Checkout</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">
+            {hasSavedData() ? 'Fast Checkout' : 'Checkout'}
+          </h1>
         </div>
+
+        {/* Fast Checkout Header - Shows saved info condensed */}
+        <FastCheckoutHeader
+          customerInfo={persistedCustomer}
+          deliveryInfo={deliveryInfo}
+          hasSavedData={hasSavedData()}
+          onEditAll={handleEditAll}
+        />
 
         {/* Progress Steps */}
         <CheckoutSteps
