@@ -175,16 +175,19 @@ export const UnifiedFlowCreatorDashboard: React.FC = () => {
     if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return;
 
     try {
-      const tableMap = {
-        'delivery': 'delivery_app_variations',
-        'cover': 'cover_pages',
-        'post-checkout': 'post_checkout_pages'
-      };
+      let query;
+      
+      if (type === 'delivery') {
+        query = supabase.from('delivery_app_variations').delete().eq('id', item.id);
+      } else if (type === 'cover') {
+        query = supabase.from('cover_pages').delete().eq('id', item.id);
+      } else if (type === 'post-checkout') {
+        query = supabase.from('post_checkout_pages').delete().eq('id', item.id);
+      } else {
+        throw new Error('Invalid type');
+      }
 
-      const { error } = await supabase
-        .from(tableMap[type])
-        .delete()
-        .eq('id', item.id);
+      const { error } = await query;
 
       if (error) throw error;
       

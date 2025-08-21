@@ -76,7 +76,7 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
       if (initial.buttons && Array.isArray(initial.buttons)) {
         setButtons(initial.buttons.slice(0, 2).map((btn: any, index: number) => ({
           text: btn.text || btn.title || (index === 0 ? 'Order Now' : 'Learn More'),
-          type: (index === 0 ? 'primary' : 'secondary') as const,
+          type: index === 0 ? 'primary' as const : 'secondary' as const,
           url: btn.url || btn.link || (index === 0 ? '/delivery' : '/about')
         })));
       }
