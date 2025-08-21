@@ -61,10 +61,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []); // Remove linkSessionToUser dependency to stop infinite loop
 
   const signInWithGoogle = async (redirectTo?: string, userType: 'admin' | 'customer' | 'affiliate' = 'customer') => {
-    const baseUrl = 'https://order.partyondelivery.com';
+    const baseUrl = window.location.origin;
     
     const redirectUrls = {
-      admin: `${baseUrl}/affiliate/admin-login`,
+      admin: `${baseUrl}/admin/login`,
       customer: redirectTo ? `${baseUrl}/customer/auth?redirect=${redirectTo}` : `${baseUrl}/customer/login?redirect=dashboard`,
       affiliate: `${baseUrl}/affiliate/intro`
     };

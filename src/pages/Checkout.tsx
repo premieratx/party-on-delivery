@@ -61,8 +61,19 @@ export const Checkout = () => {
                 Looks like you haven't added any items to your cart yet.
               </p>
               <Button onClick={() => {
-                const referrer = localStorage.getItem('deliveryAppReferrer') || '/';
-                navigate(referrer);
+                try {
+                  const lastDeliveryApp = localStorage.getItem('last-delivery-app-url') || 
+                                        localStorage.getItem('deliveryAppReferrer');
+                  
+                  if (lastDeliveryApp && lastDeliveryApp !== '/checkout') {
+                    navigate(lastDeliveryApp);
+                  } else {
+                    navigate('/');
+                  }
+                } catch (error) {
+                  console.warn('Navigation error, using fallback:', error);
+                  navigate('/');
+                }
               }} className="w-full sm:w-auto">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Products
@@ -116,9 +127,23 @@ export const Checkout = () => {
             }}
             totalPrice={totalAmount}
             onBack={() => {
-              const override = (() => { try { return sessionStorage.getItem('home-override'); } catch { return null; } })();
-              const referrer = localStorage.getItem('deliveryAppReferrer');
-              navigate(override || referrer || '/');
+              // Enhanced back navigation to return to the correct delivery app
+              try {
+                const lastDeliveryApp = localStorage.getItem('last-delivery-app-url') || 
+                                      localStorage.getItem('deliveryAppReferrer') ||
+                                      sessionStorage.getItem('home-override');
+                
+                if (lastDeliveryApp && lastDeliveryApp !== '/checkout' && lastDeliveryApp !== window.location.pathname) {
+                  navigate(lastDeliveryApp);
+                } else {
+                  // Fallback to stored referrer or home
+                  const referrer = localStorage.getItem('deliveryAppReferrer') || '/';
+                  navigate(referrer);
+                }
+              } catch (error) {
+                console.warn('Navigation error, using fallback:', error);
+                navigate('/');
+              }
             }}
             onDeliveryInfoChange={(info) => {
               setDeliveryInfo({

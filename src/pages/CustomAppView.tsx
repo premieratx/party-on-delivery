@@ -61,11 +61,19 @@ const CustomAppView = () => {
   }, [appSlug]);
 
   const handleCheckout = () => {
-    localStorage.setItem('deliveryAppReferrer', `/app/${appSlug}`);
-    localStorage.setItem('app-context', JSON.stringify({
-      appSlug: appConfig?.app_slug || appSlug,
-      appName: appConfig?.app_name || appSlug
-    }));
+    // Enhanced referrer tracking for proper "Back to Cart" functionality
+    const currentUrl = `/app/${appSlug}`;
+    try {
+      localStorage.setItem('last-delivery-app-url', currentUrl);
+      localStorage.setItem('deliveryAppReferrer', currentUrl);
+      localStorage.setItem('app-context', JSON.stringify({
+        appSlug: appConfig?.app_slug || appSlug,
+        appName: appConfig?.app_name || appSlug
+      }));
+      console.log('Stored delivery app referrer:', currentUrl);
+    } catch (error) {
+      console.warn('Failed to store delivery app referrer:', error);
+    }
     navigate('/checkout');
   };
 

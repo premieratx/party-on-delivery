@@ -101,8 +101,15 @@ export default function DynamicHomepage() {
 
   const handleProceedToCheckout = () => {
     console.log('🛒 Navigating to checkout from homepage');
-    // Store current delivery app referrer for back navigation
-    localStorage.setItem('deliveryAppReferrer', window.location.pathname);
+    // Enhanced referrer tracking for proper "Back to Cart" functionality
+    const currentUrl = window.location.pathname + window.location.search;
+    try {
+      localStorage.setItem('last-delivery-app-url', currentUrl);
+      localStorage.setItem('deliveryAppReferrer', currentUrl);
+      console.log('Stored delivery app referrer:', currentUrl);
+    } catch (error) {
+      console.warn('Failed to store delivery app referrer:', error);
+    }
     navigate('/checkout');
   };
 

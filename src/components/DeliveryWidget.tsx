@@ -213,8 +213,15 @@ export const DeliveryWidget: React.FC = () => {
       // Close cart if open
       setIsCartOpen(false);
       
-      // Store delivery app referrer for proper return navigation
-      localStorage.setItem('deliveryAppReferrer', window.location.pathname);
+      // Enhanced referrer tracking for proper "Back to Cart" functionality
+      const currentUrl = window.location.pathname + window.location.search;
+      try {
+        localStorage.setItem('last-delivery-app-url', currentUrl);
+        localStorage.setItem('deliveryAppReferrer', currentUrl);
+        console.log('Stored delivery app referrer:', currentUrl);
+      } catch (error) {
+        console.warn('Failed to store delivery app referrer:', error);
+      }
       
       // Navigate to main checkout page (consistent with other delivery apps)
       navigate('/checkout');
@@ -227,12 +234,9 @@ export const DeliveryWidget: React.FC = () => {
           title: "Checkout Error",
           description: "There was an error starting checkout. Please try again.",
           variant: "destructive",
-        });
       });
     }
   };
-
-  // Group order join flow removed for cleanup
 
   if (currentStep === 'order-continuation') {
     return (

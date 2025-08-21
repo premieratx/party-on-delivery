@@ -10,10 +10,10 @@ import { useCoverPageTracking } from '@/hooks/useCoverPageTracking';
 
 // Import our new modular components
 import { CheckoutSteps } from './CheckoutSteps';
-import { DateTimeStep } from './DateTimeStep';
+import { ImprovedDateTimeStep } from './ImprovedDateTimeStep';
 import { AddressStep } from './AddressStep';
 import { CustomerInfoStep } from './CustomerInfoStep';
-import { CheckoutSummary } from './CheckoutSummary';
+import { ImprovedCheckoutSummary } from './ImprovedCheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
 import { PromoCodeInput } from './PromoCodeInput';
 import { TipSelector } from './TipSelector';
@@ -230,13 +230,13 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
           confirmedCustomer={confirmedCustomer}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mt-4 sm:mt-6">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 lg:gap-6 mt-4 sm:mt-6">
           
-          {/* Left Column - Checkout Steps (Responsive Width) */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+          {/* Left Column - Checkout Steps (Wider on Large Screens) */}
+          <div className="xl:col-span-3 space-y-4">
             
             {/* Date & Time Step */}
-            <DateTimeStep
+            <ImprovedDateTimeStep
               deliveryInfo={deliveryInfo}
               onDeliveryInfoChange={onDeliveryInfoChange}
               onConfirm={handleDateTimeConfirm}
@@ -285,11 +285,11 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             )}
           </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="lg:col-span-1 space-y-3 sm:space-y-4">
+          {/* Right Column - Order Summary (Better Width) */}
+          <div className="xl:col-span-2 space-y-4">
             {/* Order Summary - Sticky on larger screens */}
             <div className="lg:sticky lg:top-4">
-              <CheckoutSummary
+              <ImprovedCheckoutSummary
                 cartItems={cartItems}
                 subtotal={calculatedSubtotal}
                 deliveryFee={finalDeliveryFee}

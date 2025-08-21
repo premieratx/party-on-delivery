@@ -34,7 +34,7 @@ export const AdminLogin: React.FC = () => {
 
       if (data?.isAdmin) {
         console.log('✅ Admin verified, redirecting to dashboard');
-        navigate('/affiliate/admin', { replace: true });
+        navigate('/admin', { replace: true });
       } else {
         console.log('❌ Access denied - not an admin');
         toast({
