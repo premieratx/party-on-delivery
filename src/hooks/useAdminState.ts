@@ -39,20 +39,7 @@ export function useAdminState(defaultTab = 'overview') {
 
     loadStoredState();
 
-    // Prevent reload on browser tab focus/blur events
-    const preventReload = (e: Event) => {
-      e.preventDefault();
-      return false;
-    };
-
-    // Add event listeners to prevent unnecessary reloads
-    window.addEventListener('beforeunload', preventReload);
-    document.addEventListener('visibilitychange', preventReload);
-
-    return () => {
-      window.removeEventListener('beforeunload', preventReload);
-      document.removeEventListener('visibilitychange', preventReload);
-    };
+    // No event listeners needed - they were blocking user interactions
   }, []); // Keep empty dependency array to prevent clearing on tab switches
 
   // Save state to localStorage - debounced to prevent spam
