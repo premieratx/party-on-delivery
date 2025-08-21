@@ -19,38 +19,45 @@ Deno.serve(async (req) => {
 
     console.log('🔄 Fetching Shopify collections from cache...');
 
-    // Try to get fresh collections from cache first
-    const { data: cacheData } = await supabase
-      .from('cache')
-      .select('data')
-      .eq('key', 'shopify_collections_all')
-      .gt('expires_at', Math.floor(Date.now() / 1000) * 1000)
-      .order('created_at', { ascending: false })
-      .limit(1);
+    // Try to get collections from multiple cache sources
+    const cacheKeys = ['shopify_collections_all', 'shopify-collections', 'shopify-collections-metadata'];
+    
+    for (const key of cacheKeys) {
+      const { data: cacheData } = await supabase
+        .from('cache')
+        .select('data')
+        .eq('key', key)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    if (cacheData?.[0]?.data) {
-      console.log('✅ Found fresh collections in cache');
-      const collections = Array.isArray(cacheData[0].data) 
-        ? cacheData[0].data 
-        : (cacheData[0].data as any)?.collections || [];
+      if (cacheData?.[0]?.data) {
+        console.log(`✅ Found collections in cache under key: ${key}`);
+        const collections = Array.isArray(cacheData[0].data) 
+          ? cacheData[0].data 
+          : (cacheData[0].data as any)?.collections || [];
 
-      const validCollections = collections
-        .filter((c: any) => c && c.handle && (c.products_count > 0 || c.product_count > 0))
-        .map((c: any) => ({
-          handle: c.handle,
-          title: c.title || c.name || c.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          products_count: c.products_count || c.product_count || 0,
-          id: c.id
-        }));
+        if (collections.length > 0) {
+          const validCollections = collections
+            .filter((c: any) => c && c.handle && (c.products_count > 0 || c.product_count > 0 || !c.hasOwnProperty('products_count')))
+            .map((c: any) => ({
+              handle: c.handle,
+              title: c.title || c.name || c.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              products_count: c.products_count || c.product_count || 0,
+              id: c.id
+            }));
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          collections: validCollections,
-          source: 'cache'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+          if (validCollections.length > 0) {
+            return new Response(
+              JSON.stringify({ 
+                success: true, 
+                collections: validCollections,
+                source: `cache-${key}`
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+      }
     }
 
     console.log('🔄 No fresh cache found, fetching from Shopify...');
@@ -70,11 +77,15 @@ Deno.serve(async (req) => {
         // Try multiple data structures for collections
         let productCollections = [];
         
-        // Method 1: Direct collections array in data
+        // Method 1: Direct collections array in data (FIXED - this is the main structure)
         if (product.data?.collections && Array.isArray(product.data.collections)) {
           productCollections = product.data.collections;
         }
-        // Method 2: Collections as collection_handles array
+        // Method 2: Collections nested deeper in data
+        else if (product.data?.data?.collections && Array.isArray(product.data.data.collections)) {
+          productCollections = product.data.data.collections;
+        }
+        // Method 3: Collections as collection_handles array
         else if (product.data?.collection_handles && Array.isArray(product.data.collection_handles)) {
           productCollections = product.data.collection_handles.map((handle: string) => ({
             handle: handle,
@@ -82,7 +93,7 @@ Deno.serve(async (req) => {
             id: `gid://shopify/Collection/${handle}`
           }));
         }
-        // Method 3: Try to extract from product object directly
+        // Method 4: Try to extract from product object directly
         else if (product.collection_handles && Array.isArray(product.collection_handles)) {
           productCollections = product.collection_handles.map((handle: string) => ({
             handle: handle,
@@ -90,7 +101,7 @@ Deno.serve(async (req) => {
             id: `gid://shopify/Collection/${handle}`
           }));
         }
-        // Method 4: Extract from JSON string if data is stringified
+        // Method 5: Extract from JSON string if data is stringified
         else if (typeof product.data === 'string') {
           try {
             const parsed = JSON.parse(product.data);
@@ -135,13 +146,13 @@ Deno.serve(async (req) => {
       console.log(`✅ Extracted ${extractedCollections.length} collections from products using enhanced extraction`);
       
       if (extractedCollections.length > 0) {
-        // Cache the extracted collections
+        // Cache the extracted collections with longer TTL
         await supabase
           .from('cache')
           .upsert({
             key: 'shopify_collections_all',
             data: extractedCollections,
-            expires_at: Date.now() + (15 * 60 * 1000) // 15 minutes
+            expires_at: Date.now() + (60 * 60 * 1000) // 1 hour
           });
 
         return new Response(
