@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { EditableCoverScreen } from "@/components/enhanced-cover/EditableCoverScreen";
+import { CoverPagePreview } from './CoverPagePreview';
 import { Loader2, Save, Settings, Palette, Eye, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { UNIFIED_THEMES, type ThemeConfig, migrateLegacyTheme } from '@/lib/themeSystem';
 
@@ -467,12 +467,12 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
                   </div>
                   
                   <div className="flex-1 flex items-center justify-center bg-muted/10 rounded-lg overflow-hidden">
-                    <EditableCoverScreen
-                      variant={theme}
+                    <CoverPagePreview
                       title={title || 'Premium Delivery Experience'}
                       subtitle={subtitle || 'Experience luxury delivery service'}
                       logoUrl={logoUrl}
                       backgroundImageUrl={backgroundImageUrl}
+                      theme={theme}
                       features={features}
                       buttons={buttons}
                     />

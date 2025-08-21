@@ -4,6 +4,7 @@ import { EnhancedCustomerFlowCreator } from '@/components/admin/EnhancedCustomer
 import { DeliveryAppNavigation } from '@/components/navigation/DeliveryAppNavigation';
 import { ForceProductSync } from '@/components/emergency/ForceProductSync';
 import { CustomerFlowConnector } from '@/components/admin/CustomerFlowConnector';
+import { TestIntegrationButton } from '@/components/admin/TestIntegrationButton';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
@@ -13,6 +14,9 @@ const DeliveryAppManager = () => {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-8">
+        {/* System Integration Test */}
+        <TestIntegrationButton />
+
         {/* Enhanced Customer Flow Creator */}
         <div className="bg-card border rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
