@@ -249,11 +249,14 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto" style={{ fontSize: '14px' }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Figma Enhanced Cover Page Creator
+              <Badge variant="secondary" className="text-xs">
+                Following System Guidelines
+              </Badge>
             </DialogTitle>
           </DialogHeader>
 
