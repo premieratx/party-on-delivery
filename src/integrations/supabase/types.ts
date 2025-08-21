@@ -1171,6 +1171,7 @@ export type Database = {
           subtitle: string | null
           theme: string | null
           title: string
+          unified_theme: string | null
           updated_at: string
         }
         Insert: {
@@ -1197,6 +1198,7 @@ export type Database = {
           subtitle?: string | null
           theme?: string | null
           title: string
+          unified_theme?: string | null
           updated_at?: string
         }
         Update: {
@@ -1223,6 +1225,7 @@ export type Database = {
           subtitle?: string | null
           theme?: string | null
           title?: string
+          unified_theme?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1788,6 +1791,7 @@ export type Database = {
           short_path: string | null
           start_screen_config: Json | null
           styles: Json | null
+          theme: string | null
           updated_at: string
         }
         Insert: {
@@ -1805,6 +1809,7 @@ export type Database = {
           short_path?: string | null
           start_screen_config?: Json | null
           styles?: Json | null
+          theme?: string | null
           updated_at?: string
         }
         Update: {
@@ -1822,6 +1827,7 @@ export type Database = {
           short_path?: string | null
           start_screen_config?: Json | null
           styles?: Json | null
+          theme?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2002,6 +2008,61 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      flow_themes: {
+        Row: {
+          cover_page_id: string | null
+          created_at: string | null
+          delivery_app_id: string | null
+          flow_name: string
+          id: string
+          post_checkout_page_id: string | null
+          theme: string
+          updated_at: string | null
+        }
+        Insert: {
+          cover_page_id?: string | null
+          created_at?: string | null
+          delivery_app_id?: string | null
+          flow_name: string
+          id?: string
+          post_checkout_page_id?: string | null
+          theme?: string
+          updated_at?: string | null
+        }
+        Update: {
+          cover_page_id?: string | null
+          created_at?: string | null
+          delivery_app_id?: string | null
+          flow_name?: string
+          id?: string
+          post_checkout_page_id?: string | null
+          theme?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_themes_cover_page_id_fkey"
+            columns: ["cover_page_id"]
+            isOneToOne: false
+            referencedRelation: "cover_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_themes_delivery_app_id_fkey"
+            columns: ["delivery_app_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_app_variations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_themes_post_checkout_page_id_fkey"
+            columns: ["post_checkout_page_id"]
+            isOneToOne: false
+            referencedRelation: "post_checkout_pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       homepage_cover_config: {
         Row: {
@@ -2548,6 +2609,7 @@ export type Database = {
           is_default: boolean
           name: string
           slug: string
+          theme: string | null
           updated_at: string
         }
         Insert: {
@@ -2558,6 +2620,7 @@ export type Database = {
           is_default?: boolean
           name: string
           slug: string
+          theme?: string | null
           updated_at?: string
         }
         Update: {
@@ -2568,6 +2631,7 @@ export type Database = {
           is_default?: boolean
           name?: string
           slug?: string
+          theme?: string | null
           updated_at?: string
         }
         Relationships: []
