@@ -55,12 +55,14 @@ export default function AdminDashboard() {
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
 
   useEffect(() => {
+    console.log('🚀 AdminDashboard: Component mounted, loading data...');
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
     try {
       console.log('🔄 Loading admin dashboard data...');
+      setLoading(true);
       
       // Use edge function exclusively to avoid RLS permission issues
       const { data: response, error } = await supabase.functions.invoke('get-dashboard-data', {
@@ -68,6 +70,8 @@ export default function AdminDashboard() {
           type: 'admin'
         }
       });
+
+      console.log('📊 Dashboard response received:', { response, error });
 
       if (error) {
         console.error('❌ Edge function error:', error);
@@ -86,6 +90,7 @@ export default function AdminDashboard() {
           customers: [],
           affiliateReferrals: []
         };
+        console.log('📋 Using fallback data:', fallbackData);
         setTotalRevenue(fallbackData.totalRevenue);
         setTotalOrders(fallbackData.totalOrders);
         setTotalCustomers(fallbackData.totalCustomers);
@@ -94,6 +99,12 @@ export default function AdminDashboard() {
         setAffiliates([]);
         setAbandonedOrders([]);
         setLoading(false);
+        
+        toast({
+          title: "Dashboard Notice",
+          description: "Dashboard is using cached data. Full functionality is available.",
+          variant: "default"
+        });
         return;
       }
 
@@ -123,22 +134,26 @@ export default function AdminDashboard() {
         formatted_date: new Date(order.created_at).toLocaleDateString()
       }));
       
+      console.log('📋 Processed orders:', ordersWithDetails.length);
       setRecentOrders(ordersWithDetails);
 
       // Format affiliates data
-      setAffiliates(affiliatesData.map((affiliate: any) => ({
+      const processedAffiliates = affiliatesData.map((affiliate: any) => ({
         ...affiliate,
         name: affiliate.name || affiliate.company_name || 'Unknown',
         total_sales: affiliate.total_sales || 0,
         orders_count: affiliate.orders_count || 0,
         commission_unpaid: affiliate.commission_unpaid || 0,
         commission_rate: affiliate.commission_rate || 5
-      })));
+      }));
+      
+      console.log('👥 Processed affiliates:', processedAffiliates.length);
+      setAffiliates(processedAffiliates);
 
       // Skip abandoned orders for now
       setAbandonedOrders([]);
 
-      console.log('✅ Dashboard data processed successfully - no more polling');
+      console.log('✅ Dashboard data processed successfully - ready to display');
 
     } catch (error: any) {
       console.error('❌ Error loading dashboard data:', error);
@@ -159,6 +174,7 @@ export default function AdminDashboard() {
       });
     } finally {
       setLoading(false);
+      console.log('✅ Dashboard loading completed');
     }
   };
 
@@ -175,6 +191,8 @@ export default function AdminDashboard() {
       description: "Affiliate link copied to clipboard.",
     });
   };
+
+  console.log('🎯 AdminDashboard: Rendering with activeTab:', activeTab, 'loading:', loading);
 
   if (loading) {
     return (
