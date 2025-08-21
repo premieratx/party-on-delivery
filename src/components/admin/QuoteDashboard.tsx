@@ -4,11 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UnifiedQuoteCreator } from "./UnifiedQuoteCreator";
 import { QuoteManager } from "./QuoteManager";
-import { AIQuoteGenerator } from "./AIQuoteGenerator";
-import { FileText, Brain, Users, Settings } from "lucide-react";
+import { FileText, Users, Settings } from "lucide-react";
 
 export const QuoteDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('generator');
+  const [activeTab, setActiveTab] = useState('manual');
 
   return (
     <div className="space-y-6">
@@ -24,11 +23,7 @@ export const QuoteDashboard: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="generator" className="flex items-center gap-2">
-                <Brain className="w-4 h-4" />
-                AI Generator
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="manual" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Manual Creator
@@ -42,10 +37,6 @@ export const QuoteDashboard: React.FC = () => {
                 Affiliate Tools
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="generator" className="mt-6">
-              <AIQuoteGenerator />
-            </TabsContent>
 
             <TabsContent value="manual" className="mt-6">
               <UnifiedQuoteCreator source="admin" />

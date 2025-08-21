@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ interface DeliveryApp {
 }
 
 export const DeliveryAppNavigation: React.FC = () => {
+  const navigate = useNavigate();
   const [apps, setApps] = useState<DeliveryApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [productCount, setProductCount] = useState<number>(0);
@@ -180,20 +182,12 @@ export const DeliveryAppNavigation: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               <Button 
-                onClick={() => window.open('/admin', '_blank')}
+                onClick={() => navigate('/admin')}
                 variant="outline"
                 className="w-full justify-start"
               >
                 <Users className="h-4 w-4 mr-2" />
                 Admin Dashboard
-              </Button>
-              <Button 
-                onClick={() => window.open('/delivery-app-manager', '_blank')}
-                variant="outline"
-                className="w-full justify-start"
-              >
-                <Package className="h-4 w-4 mr-2" />
-                App Manager
               </Button>
             </CardContent>
           </Card>

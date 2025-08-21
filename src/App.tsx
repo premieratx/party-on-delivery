@@ -20,7 +20,6 @@ const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const TestCheckout = lazy(() => import("./pages/TestCheckout"));
-const VoiceChat = lazy(() => import("./pages/VoiceChat"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
@@ -34,7 +33,6 @@ import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 // Custom app pages
 const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
-const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomPartyOnDeliveryPostCheckout"));
 
 // Enhanced standalone pages
 import CoverPageWithBackground from '@/components/cover/CoverPageWithBackground';
@@ -86,17 +84,10 @@ const App = () => {
                     <Route path="/cover/:slug" element={<CoverPageWithBackground />} />
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
                     
-                    {/* Conditionally render Voice Chat */}
-                    {config.voiceChatEnabled && (
-                      <Route path="/voice-chat" element={<VoiceChat />} />
-                    )}
-                    
-                    {/* Order completion */}
+                    {/* Order completion - standardized routes */}
                     <Route path="/success" element={<Success />} />
                     <Route path="/order-complete" element={<OrderComplete />} />
                     <Route path="/post-checkout/:appName" element={<CustomAppPostCheckout />} />
-                    <Route path="/custom-post-checkout/:appName" element={<CustomAppPostCheckout />} />
-                    <Route path="/custom-party-on-delivery-post-checkout" element={<CustomPartyOnDeliveryPostCheckout />} />
                     
                     {/* Affiliate Routes */}
                     <Route path="/affiliate" element={<AffiliateIntro />} />

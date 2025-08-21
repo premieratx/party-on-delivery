@@ -48,7 +48,6 @@ const navigationItems: NavItem[] = [
   { icon: Settings, label: 'Admin Panel', href: '/admin', show: 'admin', category: 'admin' },
   { icon: Search, label: 'Search Products', href: '/search', show: 'admin', category: 'admin' },
   { icon: Package, label: 'Product Management', href: '/admin/product-management', show: 'admin', category: 'admin' },
-  { icon: Settings, label: 'Delivery Apps', href: '/admin/delivery-app-manager', show: 'admin', category: 'admin' },
   { icon: Users, label: 'Group Orders', href: '/group', show: 'admin', category: 'admin' },
   // { icon: Gift, label: 'Party Planner', href: '/plan-my-party', show: 'admin', category: 'admin' }, // removed
 ];
