@@ -83,8 +83,19 @@ export const CustomDeliveryAppsGrid: React.FC<CustomDeliveryAppsGridProps> = ({
           {apps.map((app) => (
             <Card
               key={app.id}
-              className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer group"
-              onClick={() => onAppSelect(app.app_slug)}
+              className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer group hover:scale-105 hover:shadow-xl"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // Safe click handling - either show lightbox or do nothing destructive
+                console.log(`Selected app: ${app.app_name} (${app.app_slug})`);
+                // Only call onAppSelect if it's safe to do so
+                try {
+                  onAppSelect?.(app.app_slug);
+                } catch (error) {
+                  console.error('Error in onAppSelect:', error);
+                }
+              }}
             >
               <CardContent className="p-4 text-center">
                 {app.logo_url ? (
