@@ -1133,6 +1133,7 @@ export type Database = {
           slug: string
           styles: Json
           subtitle: string | null
+          theme: string | null
           title: string
           updated_at: string
         }
@@ -1158,6 +1159,7 @@ export type Database = {
           slug: string
           styles?: Json
           subtitle?: string | null
+          theme?: string | null
           title: string
           updated_at?: string
         }
@@ -1183,6 +1185,7 @@ export type Database = {
           slug?: string
           styles?: Json
           subtitle?: string | null
+          theme?: string | null
           title?: string
           updated_at?: string
         }
@@ -4312,6 +4315,14 @@ export type Database = {
       link_customer_session: {
         Args: { customer_email: string; session_token: string }
         Returns: undefined
+      }
+      link_customer_session_enhanced: {
+        Args: {
+          customer_email: string
+          order_data?: Json
+          session_token: string
+        }
+        Returns: Json
       }
       load_figma_template: {
         Args: { template_id: string }

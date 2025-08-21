@@ -94,45 +94,52 @@ const CustomerDashboard = () => {
         console.warn('Shopify sync (customer) skipped:', e);
       }
 
-      // Load or create customer profile
+      // Use enhanced customer session linking function
+      console.log('🔄 Linking customer session for:', session.user.email);
+      const { data: linkResult, error: linkError } = await supabase.functions.invoke('link-customer-session-enhanced', {
+        body: {
+          customerEmail: session.user.email!,
+          sessionToken: session.access_token,
+          orderData: {
+            customer_name: [session.user.user_metadata?.first_name, session.user.user_metadata?.last_name]
+              .filter(Boolean)
+              .join(' ') || session.user.user_metadata?.name || '',
+            customer_phone: session.user.user_metadata?.phone || ''
+          }
+        }
+      });
+
+      if (linkError) {
+        console.warn('Customer linking warning:', linkError);
+      } else {
+        console.log('✅ Customer session linked:', linkResult);
+      }
+
+      // Load customer data
       const { data: customerData, error: customerError } = await supabase
         .from('customers')
         .select('*')
         .eq('email', session.user.email)
         .maybeSingle();
 
-      if (customerError && customerError.code !== 'PGRST116') {
-        throw customerError;
+      if (customerError) {
+        console.error('Error loading customer data:', customerError);
       }
 
-      if (!customerData) {
-        // Create new customer profile
-        const fullName = [session.user.user_metadata?.first_name, session.user.user_metadata?.last_name]
+      setCustomer({
+        id: customerData?.id || 'temp',
+        email: session.user.email!,
+        name: customerData?.name || [session.user.user_metadata?.first_name, session.user.user_metadata?.last_name]
           .filter(Boolean)
-          .join(' ') || session.user.user_metadata?.name || null;
-        const { data: newCustomer, error: createError } = await supabase
-          .from('customers')
-          .insert({
-            email: session.user.email!,
-            google_id: session.user.id,
-            name: fullName,
-          })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        setCustomer({
-          ...newCustomer,
-          total_orders: 0,
-          total_spent: 0
-        });
-      } else {
-        setCustomer({
-          ...customerData,
-          total_orders: 0,
-          total_spent: 0
-        });
-      }
+          .join(' ') || session.user.user_metadata?.name || '',
+        phone: customerData?.phone,
+        google_id: customerData?.google_id,
+        default_address: customerData?.default_address,
+        created_at: customerData?.created_at,
+        updated_at: customerData?.updated_at,
+        total_orders: 0,
+        total_spent: 0
+      });
 
       // First, try to link any recent sessions to this customer before loading orders
       await linkSessionToUser(session.user.email!);

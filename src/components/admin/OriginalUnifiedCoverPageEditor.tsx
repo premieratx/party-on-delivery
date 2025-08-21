@@ -436,10 +436,16 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         buttons: buttons as any,
         is_active: isActive,
         free_shipping_enabled: freeShippingEnabled,
-        theme: selectedTheme,
+        theme: selectedTheme || 'default',
         styles: {
-          element_positions: elementPositions
-        } as any
+          element_positions: elementPositions,
+          title_size: 48,
+          subtitle_size: 20,
+          checklist_size: 16
+        } as any,
+        created_by: 'admin',
+        flow_name: title.trim(),
+        flow_description: subtitle.trim() || null
       };
 
       if (isEditing && initial?.id) {
@@ -451,11 +457,12 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         console.log('✅ Cover page updated successfully');
         toast({ title: 'Success', description: 'Cover page updated successfully' });
       } else {
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from('cover_pages')
-          .insert(payload);
+          .insert(payload)
+          .select();
         if (error) throw error;
-        console.log('✅ Cover page created successfully');
+        console.log('✅ Cover page created successfully:', data);
         toast({ title: 'Success', description: 'Cover page created successfully' });
       }
 
@@ -464,10 +471,10 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         onOpenChange(false);
       }
     } catch (error: any) {
-      console.error('Save error:', error);
+      console.error('❌ Cover page save error:', error);
       toast({ 
         title: 'Save failed', 
-        description: error?.message || 'Please try again', 
+        description: error?.message || 'Please check all fields and try again', 
         variant: 'destructive' 
       });
     } finally {
