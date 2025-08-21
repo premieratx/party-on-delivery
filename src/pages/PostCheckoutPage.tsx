@@ -4,15 +4,52 @@ import { PremiumOrderComplete } from '@/components/enhanced-checkout/PremiumOrde
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 const PostCheckoutPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
   
-  // Get order data from URL parameters or session storage
+  // Central Time Zone handling
+  const CENTRAL_TIMEZONE = 'America/Chicago'; // Handles CST/CDT automatically
+  
+  // Get order data from URL parameters or session storage with proper timezone handling
   const getOrderData = () => {
     const orderNumber = searchParams.get('order') || 'ORDER-12345';
     const sessionId = searchParams.get('session_id');
+    
+    // Parse delivery date/time with Central Time Zone precision
+    const rawDeliveryDate = searchParams.get('delivery_date');
+    const rawDeliveryTime = searchParams.get('delivery_time');
+    
+    let deliveryDate = 'Today';
+    let deliveryTime = '2:00 PM - 3:00 PM';
+    
+    if (rawDeliveryDate && rawDeliveryTime) {
+      try {
+        // Create a date object in Central Time
+        const deliveryDateTime = new Date(`${rawDeliveryDate}T${rawDeliveryTime}`);
+        
+        // Convert to Central Time zone
+        const centralDateTime = toZonedTime(deliveryDateTime, CENTRAL_TIMEZONE);
+        
+        // Format for display (keeping it in Central Time)
+        deliveryDate = format(centralDateTime, 'EEEE, MMMM do, yyyy');
+        deliveryTime = format(centralDateTime, 'h:mm a') + ' CT';
+        
+        // If it's today, show "Today" instead
+        const today = toZonedTime(new Date(), CENTRAL_TIMEZONE);
+        if (format(centralDateTime, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) {
+          deliveryDate = 'Today';
+        }
+      } catch (error) {
+        console.warn('Failed to parse delivery date/time:', error);
+        // Fallback to raw values if parsing fails
+        deliveryDate = rawDeliveryDate;
+        deliveryTime = rawDeliveryTime;
+      }
+    }
     
     return {
       orderNumber,
@@ -22,6 +59,9 @@ const PostCheckoutPage = () => {
       total: parseFloat(searchParams.get('total') || '141.48'),
       customerEmail: searchParams.get('customer_email'),
       deliveryAddress: searchParams.get('delivery_address'),
+      deliveryDate,
+      deliveryTime,
+      deliveryInstructions: searchParams.get('delivery_instructions'),
       orderItems: [],
       deliveryInfo: null
     };
@@ -86,9 +126,9 @@ const PostCheckoutPage = () => {
 
   const deliveryInfo = orderData.deliveryInfo || {
     address: orderData.deliveryAddress || '123 Main St, Austin, TX 78701',
-    date: 'Today',
-    time: '2:00 PM - 3:00 PM',
-    instructions: 'Ring doorbell, leave at door if no answer'
+    date: orderData.deliveryDate,
+    time: orderData.deliveryTime,
+    instructions: orderData.deliveryInstructions || 'Ring doorbell, leave at door if no answer'
   };
 
   // Enhanced button linking system

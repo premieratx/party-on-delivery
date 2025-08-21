@@ -66,6 +66,19 @@ interface CoverPageConfig {
     width?: string;
     height?: string;
   };
+  // Layout & Positioning Controls
+  positioning?: {
+    logoMarginTop?: string;
+    logoMarginBottom?: string;
+    titleMarginTop?: string;
+    titleMarginBottom?: string;
+    subtitleMarginTop?: string;
+    subtitleMarginBottom?: string;
+    featuresMarginTop?: string;
+    featuresMarginBottom?: string;
+    buttonsMarginTop?: string;
+    buttonsMarginBottom?: string;
+  };
   // Animation Settings
   animations?: {
     enabled: boolean;
@@ -150,6 +163,18 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       width: '5rem',
       height: '5rem'
     },
+    positioning: {
+      logoMarginTop: '0',
+      logoMarginBottom: '0',
+      titleMarginTop: '0', 
+      titleMarginBottom: '0',
+      subtitleMarginTop: '0',
+      subtitleMarginBottom: '0',
+      featuresMarginTop: '0',
+      featuresMarginBottom: '0',
+      buttonsMarginTop: '0',
+      buttonsMarginBottom: '0'
+    },
     animations: { enabled: true, speed: 'normal', entrance: 'fade' },
     seo: {},
     analytics: {},
@@ -215,6 +240,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           buttons: config.buttons,
           typography: config.typography,
           logoSizing: config.logoSizing,
+          positioning: config.positioning,
           customColors: config.customColors,
           animations: config.animations,
           backgroundOverlay: config.backgroundOverlay
@@ -329,12 +355,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </DialogHeader>
 
           <Tabs defaultValue="template" className="flex-1 flex flex-col min-h-0">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="template">Template</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="features">Features</TabsTrigger>
               <TabsTrigger value="buttons">Actions</TabsTrigger>
               <TabsTrigger value="typography">Typography</TabsTrigger>
+              <TabsTrigger value="positioning">Spacing</TabsTrigger>
               <TabsTrigger value="styling">Styling</TabsTrigger>
               <TabsTrigger value="seo">SEO & Analytics</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
@@ -760,6 +787,225 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                 </div>
               </TabsContent>
 
+              {/* Positioning Controls */}
+              <TabsContent value="positioning" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Logo Positioning</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Logo Top Margin</Label>
+                        <Select
+                          value={config.positioning?.logoMarginTop || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, logoMarginTop: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="0.5rem">Small (0.5rem)</SelectItem>
+                            <SelectItem value="1rem">Medium (1rem)</SelectItem>
+                            <SelectItem value="1.5rem">Large (1.5rem)</SelectItem>
+                            <SelectItem value="2rem">XL (2rem)</SelectItem>
+                            <SelectItem value="3rem">XXL (3rem)</SelectItem>
+                            <SelectItem value="4rem">XXXL (4rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Logo Bottom Margin</Label>
+                        <Select
+                          value={config.positioning?.logoMarginBottom || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, logoMarginBottom: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="0.5rem">Small (0.5rem)</SelectItem>
+                            <SelectItem value="1rem">Medium (1rem)</SelectItem>
+                            <SelectItem value="1.5rem">Large (1.5rem)</SelectItem>
+                            <SelectItem value="2rem">XL (2rem)</SelectItem>
+                            <SelectItem value="3rem">XXL (3rem)</SelectItem>
+                            <SelectItem value="4rem">XXXL (4rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Title Positioning</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Title Top Margin</Label>
+                        <Select
+                          value={config.positioning?.titleMarginTop || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, titleMarginTop: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="0.5rem">Small (0.5rem)</SelectItem>
+                            <SelectItem value="1rem">Medium (1rem)</SelectItem>
+                            <SelectItem value="1.5rem">Large (1.5rem)</SelectItem>
+                            <SelectItem value="2rem">XL (2rem)</SelectItem>
+                            <SelectItem value="3rem">XXL (3rem)</SelectItem>
+                            <SelectItem value="4rem">XXXL (4rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Title Bottom Margin</Label>
+                        <Select
+                          value={config.positioning?.titleMarginBottom || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, titleMarginBottom: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="0.5rem">Small (0.5rem)</SelectItem>
+                            <SelectItem value="1rem">Medium (1rem)</SelectItem>
+                            <SelectItem value="1.5rem">Large (1.5rem)</SelectItem>
+                            <SelectItem value="2rem">XL (2rem)</SelectItem>
+                            <SelectItem value="3rem">XXL (3rem)</SelectItem>
+                            <SelectItem value="4rem">XXXL (4rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Subtitle Positioning</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Subtitle Top Margin</Label>
+                        <Select
+                          value={config.positioning?.subtitleMarginTop || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, subtitleMarginTop: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="0.5rem">Small (0.5rem)</SelectItem>
+                            <SelectItem value="1rem">Medium (1rem)</SelectItem>
+                            <SelectItem value="1.5rem">Large (1.5rem)</SelectItem>
+                            <SelectItem value="2rem">XL (2rem)</SelectItem>
+                            <SelectItem value="3rem">XXL (3rem)</SelectItem>
+                            <SelectItem value="4rem">XXXL (4rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Subtitle Bottom Margin</Label>
+                        <Select
+                          value={config.positioning?.subtitleMarginBottom || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, subtitleMarginBottom: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="0.5rem">Small (0.5rem)</SelectItem>
+                            <SelectItem value="1rem">Medium (1rem)</SelectItem>
+                            <SelectItem value="1.5rem">Large (1.5rem)</SelectItem>
+                            <SelectItem value="2rem">XL (2rem)</SelectItem>
+                            <SelectItem value="3rem">XXL (3rem)</SelectItem>
+                            <SelectItem value="4rem">XXXL (4rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Features & Buttons Positioning</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label>Features Top Margin</Label>
+                        <Select
+                          value={config.positioning?.featuresMarginTop || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, featuresMarginTop: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="1rem">Small (1rem)</SelectItem>
+                            <SelectItem value="2rem">Medium (2rem)</SelectItem>
+                            <SelectItem value="3rem">Large (3rem)</SelectItem>
+                            <SelectItem value="4rem">XL (4rem)</SelectItem>
+                            <SelectItem value="6rem">XXL (6rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Buttons Top Margin</Label>
+                        <Select
+                          value={config.positioning?.buttonsMarginTop || '0'}
+                          onValueChange={(value) => setConfig(prev => ({ 
+                            ...prev, 
+                            positioning: { ...prev.positioning, buttonsMarginTop: value }
+                          }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="0">None (0)</SelectItem>
+                            <SelectItem value="1rem">Small (1rem)</SelectItem>
+                            <SelectItem value="2rem">Medium (2rem)</SelectItem>
+                            <SelectItem value="3rem">Large (3rem)</SelectItem>
+                            <SelectItem value="4rem">XL (4rem)</SelectItem>
+                            <SelectItem value="6rem">XXL (6rem)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
               {/* Advanced Styling */}
               <TabsContent value="styling" className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1060,6 +1306,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                   customColors={config.customColors}
                   typography={config.typography}
                   logoSizing={config.logoSizing}
+                  positioning={config.positioning}
                   standalone={true}
                   className="rounded-lg overflow-hidden"
                 />
@@ -1117,6 +1364,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
             customColors={config.customColors}
             typography={config.typography}
             logoSizing={config.logoSizing}
+            positioning={config.positioning}
             onClose={() => setPreviewOpen(false)}
           />
         </DialogContent>

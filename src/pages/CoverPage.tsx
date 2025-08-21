@@ -85,6 +85,7 @@ const CoverPage = () => {
       customColors={parsedStyles.customColors}
       typography={parsedStyles.typography}
       logoSizing={parsedStyles.logoSizing}
+      positioning={parsedStyles.positioning}
       standalone={true}
     />
   );

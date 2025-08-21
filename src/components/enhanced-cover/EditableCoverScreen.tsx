@@ -49,6 +49,20 @@ interface EditableCoverScreenProps {
     height?: string;
   };
   
+  // Layout & Positioning Controls
+  positioning?: {
+    logoMarginTop?: string;
+    logoMarginBottom?: string;
+    titleMarginTop?: string;
+    titleMarginBottom?: string;
+    subtitleMarginTop?: string;
+    subtitleMarginBottom?: string;
+    featuresMarginTop?: string;
+    featuresMarginBottom?: string;
+    buttonsMarginTop?: string;
+    buttonsMarginBottom?: string;
+  };
+  
   // Layout options
   className?: string;
   onClose?: () => void;
@@ -68,6 +82,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   customColors,
   typography,
   logoSizing,
+  positioning,
   className,
   onClose,
   standalone = false
@@ -131,7 +146,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   
   const containerClass = standalone ? 
     `min-h-screen flex items-center justify-center p-4 ${styles.backdrop}` :
-    `fixed inset-0 z-50 ${styles.backdrop} backdrop-blur-sm`;
+    `fixed inset-0 z-50 ${styles.backdrop} backdrop-blur-sm flex items-center justify-center p-4`;
 
   const renderBackground = () => {
     if (backgroundVideoUrl) {
@@ -164,13 +179,12 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
     <div className={`${containerClass} ${className || ''}`}>
       {renderBackground()}
       
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className={`relative w-full max-w-4xl mx-auto ${styles.container} rounded-2xl shadow-2xl overflow-hidden`}
-        >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className={`relative w-full max-w-4xl mx-auto ${styles.container} rounded-2xl shadow-2xl overflow-hidden`}
+      >
           {/* Frame effect for premium variants */}
           {styles.frame && (
             <div className={`absolute inset-0 ${styles.frame} p-1 rounded-2xl`}>
@@ -179,15 +193,31 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
           )}
           
           {/* Content */}
-          <div className={`relative ${styles.inner} p-8 md:p-12 text-center space-y-8`}>
+          <div 
+            className={`relative ${styles.inner} p-8 md:p-12 text-center space-y-8`}
+            style={{ textAlign: 'center' }}
+          >
             
             {/* Premium Badge */}
-            <div className={`inline-block px-4 py-2 ${styles.badge} font-bold rounded-full text-sm shadow-lg`}>
+            <div 
+              className={`inline-block px-4 py-2 ${styles.badge} font-bold rounded-full text-sm shadow-lg mx-auto`}
+              style={{ textAlign: 'center', display: 'inline-block' }}
+            >
               {styles.badgeText}
             </div>
             
             {/* Logo Section */}
-            <div className="flex justify-center">
+            <div 
+              className="flex justify-center items-center"
+              style={{
+                marginTop: positioning?.logoMarginTop || '0',
+                marginBottom: positioning?.logoMarginBottom || '0',
+                textAlign: 'center',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+            >
               {logoUrl ? (
                 <img 
                   src={logoUrl} 
@@ -220,14 +250,20 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
             </div>
             
             {/* Title & Subtitle */}
-            <div className="space-y-4 max-w-3xl mx-auto">
+            <div 
+              className="space-y-4 max-w-3xl mx-auto text-center"
+              style={{ textAlign: 'center' }}
+            >
               <h1 
                 className={`font-bold bg-gradient-to-r ${styles.titleGradient} bg-clip-text text-transparent ${
                   typography?.titleSize || 'text-4xl md:text-5xl'
-                }`}
+                } text-center`}
                 style={{
                   fontFamily: typography?.fontFamily || 'inherit',
-                  color: typography?.titleColor || undefined
+                  color: typography?.titleColor || undefined,
+                  marginTop: positioning?.titleMarginTop || '0',
+                  marginBottom: positioning?.titleMarginBottom || '0',
+                  textAlign: 'center'
                 }}
               >
                 {title}
@@ -236,10 +272,13 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
               <p 
                 className={`${typography?.subtitleSize || 'text-xl'} ${
                   typography?.subtitleColor || styles.subtitleColor
-                }`}
+                } text-center`}
                 style={{
                   fontFamily: typography?.fontFamily || 'inherit',
-                  color: typography?.subtitleColor || undefined
+                  color: typography?.subtitleColor || undefined,
+                  marginTop: positioning?.subtitleMarginTop || '0',
+                  marginBottom: positioning?.subtitleMarginBottom || '0',
+                  textAlign: 'center'
                 }}
               >
                 {subtitle}
@@ -248,7 +287,13 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
             
             {/* Features Grid */}
             {features.length > 0 && (
-              <div className="w-full max-w-4xl mx-auto">
+              <div 
+                className="w-full max-w-4xl mx-auto"
+                style={{
+                  marginTop: positioning?.featuresMarginTop || '0',
+                  marginBottom: positioning?.featuresMarginBottom || '0'
+                }}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {features.map((feature, index) => (
                     <motion.div
@@ -267,7 +312,16 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
             
             {/* Action Buttons */}
             {buttons.length > 0 && (
-              <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg mx-auto">
+              <div 
+                className="flex flex-col sm:flex-row gap-4 w-full max-w-lg mx-auto justify-center items-center"
+                style={{
+                  marginTop: positioning?.buttonsMarginTop || '0',
+                  marginBottom: positioning?.buttonsMarginBottom || '0',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
                 {buttons.map((button, index) => {
                   const buttonStyles = getButtonStyles(button, variant);
                   return (
@@ -293,7 +347,6 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
           {/* Shimmer overlay */}
           <div className={`absolute inset-0 bg-gradient-to-r ${styles.shimmer} animate-shimmer pointer-events-none`} />
         </motion.div>
-      </div>
     </div>
   );
 };
