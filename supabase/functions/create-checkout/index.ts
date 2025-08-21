@@ -7,10 +7,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Enhanced logging function
+async function logEvent(supabase: any, eventType: string, operation: string, data: any, error?: any) {
+  try {
+    await supabase.rpc('log_system_event', {
+      p_event_type: eventType,
+      p_service_name: 'stripe_checkout',
+      p_operation: operation,
+      p_request_data: data,
+      p_error_details: error,
+      p_severity: error ? 'error' : 'info'
+    });
+  } catch (logError) {
+    console.error('Failed to log event:', logError);
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const startTime = Date.now();
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  );
 
   try {
     const { 
@@ -26,13 +48,30 @@ serve(async (req) => {
     } = await req.json();
 
     console.log('🛒 Creating Stripe checkout session...');
+    
+    // Log checkout initiation
+    await logEvent(supabase, 'checkout_initiated', 'create_session', {
+      cart_items_count: cartItems?.length || 0,
+      subtotal,
+      delivery_fee: deliveryFee,
+      sales_tax: salesTax,
+      tip_amount: tipAmount,
+      affiliate_code: affiliateCode
+    });
 
     // Calculate total
     const totalAmount = Math.round((subtotal + deliveryFee + salesTax + tipAmount) * 100);
 
     // Validate amount
     if (totalAmount < 50 || totalAmount > 1000000) {
-      throw new Error(`Invalid total: $${(totalAmount / 100).toFixed(2)}`);
+      const error = new Error(`Invalid total: $${(totalAmount / 100).toFixed(2)}`);
+      await logEvent(supabase, 'checkout_validation_failed', 'amount_validation', {
+        total_amount: totalAmount,
+        subtotal,
+        delivery_fee: deliveryFee,
+        sales_tax: salesTax
+      }, error);
+      throw error;
     }
 
     // Initialize Stripe

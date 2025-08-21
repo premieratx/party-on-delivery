@@ -7,11 +7,30 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Enhanced logging function
+async function logEvent(supabase: any, eventType: string, operation: string, data: any, error?: any, executionTime?: number) {
+  try {
+    await supabase.rpc('log_system_event', {
+      p_event_type: eventType,
+      p_service_name: 'stripe_payment_intent',
+      p_operation: operation,
+      p_request_data: data,
+      p_error_details: error,
+      p_execution_time_ms: executionTime,
+      p_severity: error ? 'error' : 'info'
+    });
+  } catch (logError) {
+    console.error('Failed to log event:', logError);
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  
   try {
     const { 
       amount, 
@@ -28,6 +47,21 @@ serve(async (req) => {
     } = await req.json();
 
     console.log('💰 Creating payment intent for amount:', amount, 'cents');
+    
+    // Initialize Supabase first for logging
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    // Log payment intent initiation
+    await logEvent(supabase, 'payment_intent_initiated', 'create_intent', {
+      amount,
+      currency,
+      cart_items_count: cartItems?.length || 0,
+      customer_email: customerInfo?.email,
+      affiliate_code: affiliateCode
+    });
 
     // Validate amount
     if (!amount || amount < 50 || amount > 1000000) {

@@ -1603,6 +1603,48 @@ export type Database = {
         }
         Relationships: []
       }
+      data_integrity_checks: {
+        Row: {
+          actual_result: Json | null
+          check_name: string
+          check_type: string
+          completed_at: string | null
+          created_at: string
+          discrepancy_details: Json | null
+          expected_result: Json | null
+          id: string
+          severity: string | null
+          status: string
+          table_name: string | null
+        }
+        Insert: {
+          actual_result?: Json | null
+          check_name: string
+          check_type: string
+          completed_at?: string | null
+          created_at?: string
+          discrepancy_details?: Json | null
+          expected_result?: Json | null
+          id?: string
+          severity?: string | null
+          status?: string
+          table_name?: string | null
+        }
+        Update: {
+          actual_result?: Json | null
+          check_name?: string
+          check_type?: string
+          completed_at?: string | null
+          created_at?: string
+          discrepancy_details?: Json | null
+          expected_result?: Json | null
+          id?: string
+          severity?: string | null
+          status?: string
+          table_name?: string | null
+        }
+        Relationships: []
+      }
       delivery_addresses: {
         Row: {
           city: string
@@ -3641,6 +3683,102 @@ export type Database = {
         }
         Relationships: []
       }
+      system_audit_log: {
+        Row: {
+          created_at: string
+          error_details: Json | null
+          event_type: string
+          execution_time_ms: number | null
+          id: string
+          ip_address: string | null
+          operation: string
+          request_data: Json | null
+          response_data: Json | null
+          service_name: string
+          session_id: string | null
+          severity: string | null
+          user_agent: string | null
+          user_email: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_details?: Json | null
+          event_type: string
+          execution_time_ms?: number | null
+          id?: string
+          ip_address?: string | null
+          operation: string
+          request_data?: Json | null
+          response_data?: Json | null
+          service_name: string
+          session_id?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_details?: Json | null
+          event_type?: string
+          execution_time_ms?: number | null
+          id?: string
+          ip_address?: string | null
+          operation?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          service_name?: string
+          session_id?: string | null
+          severity?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
+      }
+      system_backups: {
+        Row: {
+          backup_location: string | null
+          backup_name: string
+          backup_size_bytes: number | null
+          backup_type: string
+          checksum: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_verified: boolean | null
+          metadata: Json | null
+          tables_included: string[]
+          verified_at: string | null
+        }
+        Insert: {
+          backup_location?: string | null
+          backup_name: string
+          backup_size_bytes?: number | null
+          backup_type: string
+          checksum?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          tables_included?: string[]
+          verified_at?: string | null
+        }
+        Update: {
+          backup_location?: string | null
+          backup_name?: string
+          backup_size_bytes?: number | null
+          backup_type?: string
+          checksum?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_verified?: boolean | null
+          metadata?: Json | null
+          tables_included?: string[]
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       system_documentation: {
         Row: {
           content: Json
@@ -4190,6 +4328,23 @@ export type Database = {
       log_slow_operation: {
         Args: { p_duration_ms: number; p_operation: string }
         Returns: undefined
+      }
+      log_system_event: {
+        Args: {
+          p_error_details?: Json
+          p_event_type: string
+          p_execution_time_ms?: number
+          p_ip_address?: string
+          p_operation: string
+          p_request_data?: Json
+          p_response_data?: Json
+          p_service_name: string
+          p_session_id?: string
+          p_severity?: string
+          p_user_agent?: string
+          p_user_email?: string
+        }
+        Returns: string
       }
       monitor_security_status: {
         Args: Record<PropertyKey, never>
