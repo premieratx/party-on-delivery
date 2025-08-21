@@ -48,39 +48,46 @@ const PostCheckoutPage = () => {
   const content = typeof postCheckoutPage.content === 'string' ? 
     JSON.parse(postCheckoutPage.content) : postCheckoutPage.content;
 
+  // Extract buttons from content
+  const buttons = content.buttons || [];
+  const primaryButton = buttons[0] || { text: "Continue Shopping", url: "/checkout" };
+  const secondaryButton = buttons[1] || { text: "Track Order", url: "/orders" };
+
   return (
     <div className="min-h-screen">
       <PremiumOrderComplete
-        title={postCheckoutPage.name}
+        title={content.title || postCheckoutPage.name}
         subtitle={content.subtitle || "Thank you for your order!"}
         logoUrl={postCheckoutPage.logo_url || content.logo_url}
-        orderNumber="ORD-2024-001"
-        orderItems={[
+        orderNumber={content.orderNumber || "ORD-2024-001"}
+        orderItems={content.orderItems || [
           { name: 'Sample Product', price: 29.99, quantity: 1 }
         ]}
-        subtotal={29.99}
-        deliveryFee={5.00}
-        total={34.99}
+        subtotal={content.orderTotal?.subtotal || 29.99}
+        deliveryFee={content.orderTotal?.delivery || 0.00}
+        total={content.orderTotal?.total || 34.99}
         deliveryInfo={{
-          address: '123 Sample St, Austin, TX 78701',
+          address: content.deliveryAddress ? 
+            `${content.deliveryAddress.street}, ${content.deliveryAddress.city}, ${content.deliveryAddress.state} ${content.deliveryAddress.zip}` :
+            '123 Sample St, Austin, TX 78701',
           date: 'Today',
-          time: '2:00 PM - 4:00 PM'
+          time: content.estimatedDelivery || '2:00 PM - 4:00 PM'
         }}
         primaryButton={{
-          text: content.primary_button_text || "Continue Shopping",
-          url: content.primary_button_url || "/checkout",
-          color: content.primary_button_color || "#d4af37",
-          textColor: content.primary_button_text_color || "#000000"
+          text: primaryButton.text,
+          url: primaryButton.url,
+          color: primaryButton.color || "#d4af37",
+          textColor: primaryButton.textColor || "#000000"
         }}
         secondaryButton={{
-          text: content.secondary_button_text || "Track Order",
-          url: content.secondary_button_url || "/orders",
-          color: content.secondary_button_color || "#8b5cf6",
-          textColor: content.secondary_button_text_color || "#ffffff"
+          text: secondaryButton.text,
+          url: secondaryButton.url,
+          color: secondaryButton.color || "#8b5cf6",
+          textColor: secondaryButton.textColor || "#ffffff"
         }}
         showOrderDetails={content.show_order_details !== false}
         showDeliveryInfo={content.show_delivery_info !== false}
-        showShareOptions={content.show_share_options || false}
+        showShareOptions={content.showSocialShare || false}
         theme={content.theme || "celebration"}
         variant={content.variant || "gold"}
         standalone={true}
