@@ -19,7 +19,7 @@ import {
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { DeliveryAppCreator } from './DeliveryAppCreator';
+import { FixedDeliveryAppCreator } from './FixedDeliveryAppCreator';
 
 
 interface Tab {
@@ -333,18 +333,16 @@ export const EnhancedDeliveryAppManager: React.FC = () => {
 
       {/* Delivery App Creator */}
       {showEditor && (
-        <div className="min-h-screen bg-background">
-          <DeliveryAppCreator
-            open={showEditor}
-            onOpenChange={setShowEditor}
-            initial={editingApp}
-            onSaved={() => {
-              setShowEditor(false);
-              setEditingApp(null);
-              loadDeliveryApps();
-            }}
-          />
-        </div>
+        <FixedDeliveryAppCreator
+          open={showEditor}
+          onOpenChange={setShowEditor}
+          initial={editingApp}
+          onSaved={() => {
+            setShowEditor(false);
+            setEditingApp(null);
+            loadDeliveryApps();
+          }}
+        />
       )}
 
       {/* Delivery Apps List */}

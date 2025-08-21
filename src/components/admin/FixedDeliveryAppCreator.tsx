@@ -345,15 +345,15 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="basic" className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+        <Tabs defaultValue="basic" className="flex-1 flex flex-col">
+          <TabsList className="grid w-full grid-cols-3 flex-shrink-0 mx-6 mt-4">
             <TabsTrigger value="basic">Basic Settings</TabsTrigger>
             <TabsTrigger value="tabs">Collection Tabs</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <TabsContent value="basic" className="space-y-4 p-1">
+          <ScrollArea className="flex-1 p-6">
+            <TabsContent value="basic" className="space-y-4 mt-0">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="appName">App Name *</Label>
@@ -588,9 +588,9 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                 </div>
               </div>
             </TabsContent>
-          </div>
+          </ScrollArea>
 
-          <div className="flex justify-end gap-2 pt-4 border-t">
+          <div className="flex justify-end gap-2 p-6 border-t flex-shrink-0">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

@@ -773,7 +773,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               </CardContent>
             </Card>
 
-            <div className="flex justify-end space-x-2 pb-6">
+            <div className="flex justify-end space-x-2 pb-6 border-t pt-6">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
@@ -789,9 +789,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </div>
 
           {/* Live Preview */}
-          <div className="w-1/2 border-l pl-6">
+          <div className="w-1/2 border-l pl-6 overflow-hidden">
             <div className="h-full flex flex-col">
-              <h3 className="text-lg font-medium mb-4">Live Preview</h3>
+              <h3 className="text-lg font-medium mb-4 flex-shrink-0">Live Preview</h3>
               <div className="flex-1 overflow-hidden rounded-lg border bg-muted/10">
                 <div className="w-full h-full scale-[0.4] origin-top-left" style={{ width: '250%', height: '250%' }}>
                   <EditableCoverScreen
@@ -833,6 +833,20 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="flex justify-end space-x-2 p-6 border-t flex-shrink-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            {initial?.id ? 'Update' : 'Create'} Cover Page
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
