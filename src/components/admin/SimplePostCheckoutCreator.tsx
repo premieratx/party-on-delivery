@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2 } from 'lucide-react';
 
 interface SimplePostCheckoutCreatorProps {
   open: boolean;
@@ -23,6 +24,7 @@ const PostCheckoutPreview: React.FC<{
   content: {
     logo_url?: string;
     custom_message?: string;
+    messages?: string[];
     primary_button_text?: string;
     primary_button_url?: string;
     secondary_button_text?: string;
@@ -30,7 +32,15 @@ const PostCheckoutPreview: React.FC<{
     background_color?: string;
     text_color?: string;
   };
-}> = ({ name, content }) => {
+  logoSize?: number;
+  headlineSize?: number;
+  positioning?: {
+    logoVerticalPos?: number;
+    headlineVerticalPos?: number;
+    messagesVerticalPos?: number;
+    buttonsVerticalPos?: number;
+  };
+}> = ({ name, content, logoSize = 64, headlineSize = 32, positioning = {} }) => {
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4"
@@ -38,19 +48,53 @@ const PostCheckoutPreview: React.FC<{
     >
       <div className="text-center space-y-6 max-w-2xl mx-auto">
         {content.logo_url && (
-          <img src={content.logo_url} alt="Logo" className="h-16 w-auto mx-auto" />
+          <div style={{ marginTop: `${positioning.logoVerticalPos || 0}rem` }}>
+            <img 
+              src={content.logo_url} 
+              alt="Logo" 
+              className="mx-auto" 
+              style={{ height: `${logoSize}px`, width: 'auto' }}
+            />
+          </div>
         )}
         
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold" style={{ color: content.text_color || '#000000' }}>
+        <div className="space-y-4" style={{ marginTop: `${positioning.headlineVerticalPos || 0}rem` }}>
+          <h1 
+            className="font-bold" 
+            style={{ 
+              color: content.text_color || '#000000',
+              fontSize: `${headlineSize}px`
+            }}
+          >
             {name}
           </h1>
-          <p className="text-xl" style={{ color: content.text_color || '#666666' }}>
-            {content.custom_message || 'Thank you for your order!'}
-          </p>
+          
+          <div 
+            className="space-y-3"
+            style={{ marginTop: `${positioning.messagesVerticalPos || 0}rem` }}
+          >
+            {content.messages && content.messages.length > 0 ? (
+              content.messages.map((message, index) => (
+                <p 
+                  key={index}
+                  className="text-xl" 
+                  style={{ color: content.text_color || '#666666' }}
+                >
+                  {message}
+                </p>
+              ))
+            ) : (
+              <p className="text-xl" style={{ color: content.text_color || '#666666' }}>
+                {content.custom_message || 'Thank you for your order!'}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="flex gap-4 justify-center">
+        <div 
+          className="flex gap-4 justify-center"
+          style={{ marginTop: `${positioning.buttonsVerticalPos || 0}rem` }}
+        >
           {content.primary_button_text && content.primary_button_url && (
             <button className="px-6 py-3 rounded-lg font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90">
               {content.primary_button_text}
@@ -81,6 +125,7 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
   const [name, setName] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [customMessage, setCustomMessage] = useState('');
+  const [messages, setMessages] = useState(['']);
   const [primaryButtonText, setPrimaryButtonText] = useState('');
   const [primaryButtonUrl, setPrimaryButtonUrl] = useState('');
   const [secondaryButtonText, setSecondaryButtonText] = useState('');
@@ -88,6 +133,14 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [textColor, setTextColor] = useState('#000000');
   const [isActive, setIsActive] = useState(true);
+
+  // Size and positioning controls
+  const [logoSize, setLogoSize] = useState(64);
+  const [headlineSize, setHeadlineSize] = useState(32);
+  const [logoVerticalPos, setLogoVerticalPos] = useState(0);
+  const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
+  const [messagesVerticalPos, setMessagesVerticalPos] = useState(0);
+  const [buttonsVerticalPos, setButtonsVerticalPos] = useState(0);
 
   // Load initial data
   useEffect(() => {
@@ -100,12 +153,26 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
 
       setLogoUrl(content.logo_url || '');
       setCustomMessage(content.custom_message || '');
+      setMessages(content.messages || ['']);
       setPrimaryButtonText(content.primary_button_text || '');
       setPrimaryButtonUrl(content.primary_button_url || '');
       setSecondaryButtonText(content.secondary_button_text || '');
       setSecondaryButtonUrl(content.secondary_button_url || '');
       setBackgroundColor(content.background_color || '#ffffff');
       setTextColor(content.text_color || '#000000');
+
+      // Load sizing and positioning
+      if (content.sizing) {
+        setLogoSize(content.sizing.logoSize || 64);
+        setHeadlineSize(content.sizing.headlineSize || 32);
+      }
+      
+      if (content.positioning) {
+        setLogoVerticalPos(content.positioning.logoVerticalPos || 0);
+        setHeadlineVerticalPos(content.positioning.headlineVerticalPos || 0);
+        setMessagesVerticalPos(content.positioning.messagesVerticalPos || 0);
+        setButtonsVerticalPos(content.positioning.buttonsVerticalPos || 0);
+      }
     }
   }, [initial, open]);
 
@@ -133,12 +200,23 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
       const content = {
         logo_url: logoUrl,
         custom_message: customMessage,
+        messages: messages.filter(m => m.trim()),
         primary_button_text: primaryButtonText,
         primary_button_url: primaryButtonUrl,
         secondary_button_text: secondaryButtonText,
         secondary_button_url: secondaryButtonUrl,
         background_color: backgroundColor,
-        text_color: textColor
+        text_color: textColor,
+        sizing: {
+          logoSize,
+          headlineSize
+        },
+        positioning: {
+          logoVerticalPos,
+          headlineVerticalPos,
+          messagesVerticalPos,
+          buttonsVerticalPos
+        }
       };
 
       const postCheckoutData = {
@@ -193,6 +271,7 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
   const previewContent = {
     logo_url: logoUrl,
     custom_message: customMessage || 'Thank you for your order!',
+    messages: messages.filter(m => m.trim()),
     primary_button_text: primaryButtonText,
     primary_button_url: primaryButtonUrl,
     secondary_button_text: secondaryButtonText,
@@ -237,6 +316,52 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
                     placeholder="We'll contact you shortly to confirm delivery details."
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Additional Messages</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {messages.map((message, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Textarea
+                      value={message}
+                      onChange={(e) => {
+                        const newMessages = [...messages];
+                        newMessages[index] = e.target.value;
+                        setMessages(newMessages);
+                      }}
+                      placeholder="Additional message..."
+                      rows={2}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (messages.length > 1) {
+                          setMessages(messages.filter((_, i) => i !== index));
+                        }
+                      }}
+                      disabled={messages.length <= 1}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMessages([...messages, ''])}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Message
+                </Button>
 
                 <div className="space-y-2">
                   <Label htmlFor="logoUrl">Logo URL</Label>
@@ -345,6 +470,92 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
 
             <Card>
               <CardHeader>
+                <CardTitle>Size Controls</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Logo Size: {logoSize}px</Label>
+                  <Slider
+                    value={[logoSize]}
+                    onValueChange={(value) => setLogoSize(value[0])}
+                    min={32}
+                    max={150}
+                    step={4}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Headline Size: {headlineSize}px</Label>
+                  <Slider
+                    value={[headlineSize]}
+                    onValueChange={(value) => setHeadlineSize(value[0])}
+                    min={18}
+                    max={60}
+                    step={2}
+                    className="w-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Vertical Positioning</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Logo Position: {logoVerticalPos}rem</Label>
+                  <Slider
+                    value={[logoVerticalPos]}
+                    onValueChange={(value) => setLogoVerticalPos(value[0])}
+                    min={-4}
+                    max={4}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Headline Position: {headlineVerticalPos}rem</Label>
+                  <Slider
+                    value={[headlineVerticalPos]}
+                    onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                    min={-4}
+                    max={4}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Messages Position: {messagesVerticalPos}rem</Label>
+                  <Slider
+                    value={[messagesVerticalPos]}
+                    onValueChange={(value) => setMessagesVerticalPos(value[0])}
+                    min={-4}
+                    max={4}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Buttons Position: {buttonsVerticalPos}rem</Label>
+                  <Slider
+                    value={[buttonsVerticalPos]}
+                    onValueChange={(value) => setButtonsVerticalPos(value[0])}
+                    min={-4}
+                    max={4}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>Settings</CardTitle>
               </CardHeader>
               <CardContent>
@@ -383,6 +594,14 @@ export const SimplePostCheckoutCreator: React.FC<SimplePostCheckoutCreatorProps>
                   <PostCheckoutPreview
                     name={name || 'Thank You for Your Order!'}
                     content={previewContent}
+                    logoSize={logoSize}
+                    headlineSize={headlineSize}
+                    positioning={{
+                      logoVerticalPos,
+                      headlineVerticalPos,
+                      messagesVerticalPos,
+                      buttonsVerticalPos
+                    }}
                   />
                 </div>
               </div>

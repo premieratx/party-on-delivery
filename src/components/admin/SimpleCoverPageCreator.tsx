@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EditableCoverScreen } from "@/components/enhanced-cover/EditableCoverScreen";
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2 } from 'lucide-react';
 
 interface SimpleCoverPageCreatorProps {
   open: boolean;
@@ -47,6 +48,15 @@ export const SimpleCoverPageCreator: React.FC<SimpleCoverPageCreatorProps> = ({
   ]);
   const [isActive, setIsActive] = useState(true);
 
+  // Size and positioning controls
+  const [logoSize, setLogoSize] = useState(80); // pixels
+  const [headlineSize, setHeadlineSize] = useState(48); // pixels
+  const [logoVerticalPos, setLogoVerticalPos] = useState(0); // margin-top in rem
+  const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0); // margin-top in rem
+  const [subtitleVerticalPos, setSubtitleVerticalPos] = useState(0); // margin-top in rem
+  const [featuresVerticalPos, setFeaturesVerticalPos] = useState(0); // margin-top in rem
+  const [buttonsVerticalPos, setButtonsVerticalPos] = useState(0); // margin-top in rem
+
   // Load initial data
   useEffect(() => {
     if (initial && open) {
@@ -80,6 +90,20 @@ export const SimpleCoverPageCreator: React.FC<SimpleCoverPageCreatorProps> = ({
 
       if (parsedStyles.logoEmoji) {
         setLogoEmoji(parsedStyles.logoEmoji);
+      }
+
+      // Load sizing and positioning data
+      if (parsedStyles.sizing) {
+        setLogoSize(parsedStyles.sizing.logoSize || 80);
+        setHeadlineSize(parsedStyles.sizing.headlineSize || 48);
+      }
+      
+      if (parsedStyles.positioning) {
+        setLogoVerticalPos(parsedStyles.positioning.logoVerticalPos || 0);
+        setHeadlineVerticalPos(parsedStyles.positioning.headlineVerticalPos || 0);
+        setSubtitleVerticalPos(parsedStyles.positioning.subtitleVerticalPos || 0);
+        setFeaturesVerticalPos(parsedStyles.positioning.featuresVerticalPos || 0);
+        setButtonsVerticalPos(parsedStyles.positioning.buttonsVerticalPos || 0);
       }
     }
   }, [initial, open]);
@@ -118,7 +142,18 @@ export const SimpleCoverPageCreator: React.FC<SimpleCoverPageCreatorProps> = ({
         styles: JSON.stringify({
           variant,
           logoEmoji,
-          features: features.map(f => ({ emoji: f.emoji }))
+          features: features.map(f => ({ emoji: f.emoji })),
+          sizing: {
+            logoSize,
+            headlineSize
+          },
+          positioning: {
+            logoVerticalPos,
+            headlineVerticalPos,
+            subtitleVerticalPos,
+            featuresVerticalPos,
+            buttonsVerticalPos
+          }
         }),
         is_active: isActive
       };
@@ -296,19 +331,44 @@ export const SimpleCoverPageCreator: React.FC<SimpleCoverPageCreatorProps> = ({
                         }}
                       />
                     </div>
-                    <div className="col-span-2 space-y-2">
-                      <Label>Description</Label>
-                      <Input
-                        value={feature.description}
-                        onChange={(e) => {
-                          const newFeatures = [...features];
-                          newFeatures[index].description = e.target.value;
-                          setFeatures(newFeatures);
+                    <div className="col-span-2 space-y-2 flex items-end gap-2">
+                      <div className="flex-1">
+                        <Label>Description</Label>
+                        <Input
+                          value={feature.description}
+                          onChange={(e) => {
+                            const newFeatures = [...features];
+                            newFeatures[index].description = e.target.value;
+                            setFeatures(newFeatures);
+                          }}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (features.length > 1) {
+                            setFeatures(features.filter((_, i) => i !== index));
+                          }
                         }}
-                      />
+                        disabled={features.length <= 1}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
+                
+                <Button
+                  type="button"
+                  variant="outline" 
+                  onClick={() => setFeatures([...features, { emoji: '⭐', title: 'New Feature', description: 'Feature description' }])}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Feature
+                </Button>
               </CardContent>
             </Card>
 
@@ -368,6 +428,104 @@ export const SimpleCoverPageCreator: React.FC<SimpleCoverPageCreatorProps> = ({
 
             <Card>
               <CardHeader>
+                <CardTitle>Size Controls</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Logo Size: {logoSize}px</Label>
+                  <Slider
+                    value={[logoSize]}
+                    onValueChange={(value) => setLogoSize(value[0])}
+                    min={40}
+                    max={200}
+                    step={5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Headline Size: {headlineSize}px</Label>
+                  <Slider
+                    value={[headlineSize]}
+                    onValueChange={(value) => setHeadlineSize(value[0])}
+                    min={24}
+                    max={80}
+                    step={2}
+                    className="w-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Vertical Positioning</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Logo Position: {logoVerticalPos}rem</Label>
+                  <Slider
+                    value={[logoVerticalPos]}
+                    onValueChange={(value) => setLogoVerticalPos(value[0])}
+                    min={-5}
+                    max={5}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Headline Position: {headlineVerticalPos}rem</Label>
+                  <Slider
+                    value={[headlineVerticalPos]}
+                    onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                    min={-5}
+                    max={5}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Subtitle Position: {subtitleVerticalPos}rem</Label>
+                  <Slider
+                    value={[subtitleVerticalPos]}
+                    onValueChange={(value) => setSubtitleVerticalPos(value[0])}
+                    min={-5}
+                    max={5}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Features Position: {featuresVerticalPos}rem</Label>
+                  <Slider
+                    value={[featuresVerticalPos]}
+                    onValueChange={(value) => setFeaturesVerticalPos(value[0])}
+                    min={-5}
+                    max={5}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Buttons Position: {buttonsVerticalPos}rem</Label>
+                  <Slider
+                    value={[buttonsVerticalPos]}
+                    onValueChange={(value) => setButtonsVerticalPos(value[0])}
+                    min={-5}
+                    max={5}
+                    step={0.5}
+                    className="w-full"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>Settings</CardTitle>
               </CardHeader>
               <CardContent>
@@ -416,6 +574,20 @@ export const SimpleCoverPageCreator: React.FC<SimpleCoverPageCreatorProps> = ({
                       onClick: () => console.log(`Button clicked: ${btn.text}`)
                     }))}
                     variant={variant}
+                    logoSizing={{
+                      width: `${logoSize}px`,
+                      height: `${logoSize}px`
+                    }}
+                    typography={{
+                      titleSize: `${headlineSize}px`
+                    }}
+                    positioning={{
+                      logoMarginTop: `${logoVerticalPos}rem`,
+                      titleMarginTop: `${headlineVerticalPos}rem`,
+                      subtitleMarginTop: `${subtitleVerticalPos}rem`,
+                      featuresMarginTop: `${featuresVerticalPos}rem`,
+                      buttonsMarginTop: `${buttonsVerticalPos}rem`
+                    }}
                     standalone={true}
                   />
                 </div>

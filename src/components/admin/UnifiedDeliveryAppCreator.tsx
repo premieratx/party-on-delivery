@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -178,6 +179,15 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   const [saving, setSaving] = useState(false);
   const [shopifyCollections, setShopifyCollections] = useState<any[]>([]);
   const [previewDevice, setPreviewDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
+
+  // Size and positioning controls
+  const [logoSize, setLogoSize] = useState(64);
+  const [headlineSize, setHeadlineSize] = useState(24);
+  const [logoVerticalPos, setLogoVerticalPos] = useState(0);
+  const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
+  const [subheadlineVerticalPos, setSubheadlineVerticalPos] = useState(0);
+  const [tabsVerticalPos, setTabsVerticalPos] = useState(0);
+  const [buttonsVerticalPos, setButtonsVerticalPos] = useState(0);
 
   const { toast } = useToast();
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -591,6 +601,106 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                           </div>
                         </div>
                       ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Size Controls */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Size Controls</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Logo Size: {logoSize}px</Label>
+                        <Slider
+                          value={[logoSize]}
+                          onValueChange={(value) => setLogoSize(value[0])}
+                          min={32}
+                          max={120}
+                          step={4}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Headline Size: {headlineSize}px</Label>
+                        <Slider
+                          value={[headlineSize]}
+                          onValueChange={(value) => setHeadlineSize(value[0])}
+                          min={16}
+                          max={48}
+                          step={2}
+                          className="w-full"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Positioning Controls */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Vertical Positioning</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Logo Position: {logoVerticalPos}rem</Label>
+                        <Slider
+                          value={[logoVerticalPos]}
+                          onValueChange={(value) => setLogoVerticalPos(value[0])}
+                          min={-3}
+                          max={3}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Headline Position: {headlineVerticalPos}rem</Label>
+                        <Slider
+                          value={[headlineVerticalPos]}
+                          onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                          min={-3}
+                          max={3}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Subheadline Position: {subheadlineVerticalPos}rem</Label>
+                        <Slider
+                          value={[subheadlineVerticalPos]}
+                          onValueChange={(value) => setSubheadlineVerticalPos(value[0])}
+                          min={-3}
+                          max={3}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Tabs Position: {tabsVerticalPos}rem</Label>
+                        <Slider
+                          value={[tabsVerticalPos]}
+                          onValueChange={(value) => setTabsVerticalPos(value[0])}
+                          min={-3}
+                          max={3}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Buttons Position: {buttonsVerticalPos}rem</Label>
+                        <Slider
+                          value={[buttonsVerticalPos]}
+                          onValueChange={(value) => setButtonsVerticalPos(value[0])}
+                          min={-3}
+                          max={3}
+                          step={0.5}
+                          className="w-full"
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
