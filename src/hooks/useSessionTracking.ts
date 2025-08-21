@@ -49,10 +49,15 @@ export const useSessionTracking = () => {
       // Link each session to the user
       for (const sessionKey of Array.from(sessionKeys)) {
         if (sessionKey && sessionKey.trim()) {
-          await supabase.rpc('link_customer_session', {
-            customer_email: userEmail,
-            session_token: sessionKey.trim()
-          });
+          try {
+            await supabase.rpc('link_customer_session', {
+              customer_email: userEmail,
+              session_token: sessionKey.trim()
+            });
+          } catch (rpcError) {
+            console.error('Failed to link session token:', sessionKey, rpcError);
+            // Continue with other sessions even if one fails
+          }
         }
       }
 
