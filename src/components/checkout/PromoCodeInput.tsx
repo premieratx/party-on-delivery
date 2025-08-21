@@ -42,67 +42,59 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
     
     setIsValidating(true);
     try {
-      // Enhanced hardcoded promo codes that work everywhere
-      const codeUpper = promoCode.trim().toUpperCase();
-      const hardcodedCodes = {
-        'PREMIER2025': { type: 'free_shipping', value: 0 },
-        'FREESHIP': { type: 'free_shipping', value: 0 },
-        'SAVE10': { type: 'percentage', value: 10 },
-        'WELCOME15': { type: 'percentage', value: 15 },
-        'VIP20': { type: 'percentage', value: 20 }
-      };
+      console.log('🎫 Validating promo code:', promoCode.trim().toUpperCase());
+      
+      // Call the actual Supabase validation function
+      const { data, error } = await supabase.functions.invoke('validate-promo-code', {
+        body: {
+          code: promoCode.trim().toUpperCase(),
+          orderAmount: cartSubtotal
+        }
+      });
 
-      if (hardcodedCodes[codeUpper as keyof typeof hardcodedCodes]) {
-        const codeConfig = hardcodedCodes[codeUpper as keyof typeof hardcodedCodes];
-        const discount = { 
-          code: codeUpper, 
-          type: codeConfig.type as 'free_shipping' | 'percentage', 
-          value: codeConfig.value 
-        };
-        onDiscountApplied(discount);
-        setPromoCode('');
+      console.log('🎫 Promo validation response:', { data, error });
+
+      if (error) {
+        console.error('🎫 Promo validation error:', error);
         toast({
-          title: "Promo Code Applied!",
-          description: `${discount.code} - ${discount.type === 'percentage' ? discount.value + '% off' : 'Free shipping'}`
+          title: "Validation Error",
+          description: "Unable to validate promo code. Please try again.",
+          variant: "destructive",
         });
         return;
       }
 
-      // For any other code, treat as valid for now (real validation can be added later)
-      const isLikelyValid = /^[A-Z0-9]{4,12}$/.test(codeUpper);
-      
-      if (isLikelyValid) {
-        const discount = { 
-          code: codeUpper, 
-          type: 'percentage' as const,
-          value: 10 // Default 10% off for unknown codes
+      if (data.valid) {
+        // Convert backend response to frontend format
+        const discount = {
+          code: data.code,
+          type: data.discount_type === 'fixed_amount' && data.discount_value === 0 
+            ? 'free_shipping' as const
+            : data.discount_type === 'percentage' 
+              ? 'percentage' as const
+              : 'free_shipping' as const,
+          value: data.discount_type === 'percentage' ? data.discount_value : 0
         };
+        
         onDiscountApplied(discount);
         setPromoCode('');
         toast({
           title: "Promo Code Applied!",
-          description: `${discount.code} - ${discount.value}% off`
+          description: data.message || `${discount.code} applied successfully!`
         });
       } else {
         toast({
           title: "Invalid Promo Code",
-          description: "This promo code format is not valid.",
+          description: data.error || "This promo code is not valid or has expired.",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Error validating promo code:', error);
-      // Even if validation fails, apply the code with default discount
-      const discount = { 
-        code: promoCode.trim().toUpperCase(), 
-        type: 'percentage' as const,
-        value: 5 // Small default discount
-      };
-      onDiscountApplied(discount);
-      setPromoCode('');
+      console.error('🎫 Promo code validation failed:', error);
       toast({
-        title: "Promo Code Applied!",
-        description: `${discount.code} - ${discount.value}% off`
+        title: "Validation Failed",
+        description: "Unable to validate promo code. Please try again later.",
+        variant: "destructive",
       });
     } finally {
       setIsValidating(false);
