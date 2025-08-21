@@ -12,6 +12,8 @@ interface ImprovedCheckoutSummaryProps {
   deliveryFee: number;
   salesTax: number;
   tipAmount: number;
+  tipPercentage: number;
+  onTipChange: (percentage: number) => void;
   appliedDiscount?: {
     code: string;
     type: 'percentage' | 'free_shipping';
@@ -26,6 +28,8 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
   deliveryFee,
   salesTax,
   tipAmount,
+  tipPercentage,
+  onTipChange,
   appliedDiscount,
   onUpdateQuantity
 }) => {
@@ -158,9 +162,30 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
           })}
         </div>
 
-        <Separator />
-
-        {/* Pricing Breakdown - Better Spacing */}
+        <Separator className="my-3" />
+        
+        {/* Driver Tip Section */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Driver Tip</span>
+          </div>
+          
+          <div className="grid grid-cols-5 gap-1">
+            {[0, 10, 15, 20, 25].map((percentage) => (
+              <Button
+                key={percentage}
+                variant={tipPercentage === percentage ? "default" : "outline"}
+                size="sm"
+                onClick={() => onTipChange(percentage)}
+                className="text-xs h-7"
+              >
+                {percentage === 0 ? 'No Tip' : `${percentage}%`}
+              </Button>
+            ))}
+          </div>
+        </div>
+        
+        <Separator className="my-3" />
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Subtotal</span>

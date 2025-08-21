@@ -131,88 +131,88 @@ export const AddressStep: React.FC<AddressStepProps> = ({
 
   return (
     <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg sm:text-xl">Delivery Address</CardTitle>
+      <CardHeader className="pb-3 sm:pb-4 p-3 sm:p-6">
+        <CardTitle className="text-base sm:text-lg">Delivery Address</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 p-4 sm:p-6">
+      <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
         {/* Address Autocomplete */}
         <div>
-          <Label htmlFor="address-autocomplete" className="text-sm font-medium">Address</Label>
+          <Label htmlFor="address-autocomplete" className="text-xs sm:text-sm font-medium">Address</Label>
           {config.googleMapsEnabled ? (
             <GooglePlacesAutocomplete
               value={addressInfo.street}
               onChange={(value) => handleAddressChange('street', value)}
               onPlaceSelect={handlePlaceSelect}
               placeholder="Start typing your address..."
-              className="w-full h-10 sm:h-auto"
+              className="w-full h-8 sm:h-10"
             />
           ) : (
             <SimpleAddressInput
               value={addressInfo.street}
               onChange={(value) => handleAddressChange('street', value)}
               placeholder="Enter your street address..."
-              className="w-full h-10 sm:h-auto"
+              className="w-full h-8 sm:h-10"
             />
           )}
-          {errors.street && <p className="text-sm text-destructive mt-1">{errors.street}</p>}
+          {errors.street && <p className="text-xs text-destructive mt-1">{errors.street}</p>}
         </div>
 
         {/* Manual Address Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <Label htmlFor="city" className="text-sm font-medium">City</Label>
+            <Label htmlFor="city" className="text-xs sm:text-sm font-medium">City</Label>
             <Input
               id="city"
               value={addressInfo.city}
               onChange={(e) => handleAddressChange('city', e.target.value)}
               placeholder="City"
-              className="h-10 sm:h-auto"
+              className="h-8 sm:h-10"
             />
-            {errors.city && <p className="text-sm text-destructive mt-1">{errors.city}</p>}
+            {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
           </div>
           <div>
-            <Label htmlFor="state" className="text-sm font-medium">State</Label>
+            <Label htmlFor="state" className="text-xs sm:text-sm font-medium">State</Label>
             <Input
               id="state"
               value={addressInfo.state}
               onChange={(e) => handleAddressChange('state', e.target.value)}
               placeholder="TX"
               maxLength={2}
-              className="h-10 sm:h-auto"
+              className="h-8 sm:h-10"
             />
-            {errors.state && <p className="text-sm text-destructive mt-1">{errors.state}</p>}
+            {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <Label htmlFor="zipCode" className="text-sm font-medium">ZIP Code</Label>
+            <Label htmlFor="zipCode" className="text-xs sm:text-sm font-medium">ZIP Code</Label>
             <Input
               id="zipCode"
               value={addressInfo.zipCode}
               onChange={(e) => handleAddressChange('zipCode', e.target.value)}
               placeholder="12345"
               maxLength={10}
-              className="h-10 sm:h-auto"
+              className="h-8 sm:h-10"
             />
-            {errors.zipCode && <p className="text-sm text-destructive mt-1">{errors.zipCode}</p>}
+            {errors.zipCode && <p className="text-xs text-destructive mt-1">{errors.zipCode}</p>}
           </div>
         </div>
 
         <div>
-          <Label htmlFor="instructions" className="text-sm font-medium">Delivery Instructions (Optional)</Label>
+          <Label htmlFor="instructions" className="text-xs sm:text-sm font-medium">Delivery Instructions (Optional)</Label>
           <Textarea
             id="instructions"
             value={addressInfo.instructions || ''}
             onChange={(e) => handleAddressChange('instructions', e.target.value)}
             placeholder="Any special instructions for delivery..."
             rows={2}
-            className="resize-none"
+            className="resize-none text-xs sm:text-sm"
           />
         </div>
 
         {isAddressComplete && (
-          <Button onClick={handleConfirm} className="w-full h-10 sm:h-auto font-medium">
+          <Button onClick={handleConfirm} className="w-full h-8 sm:h-10 font-medium text-xs sm:text-sm">
             Confirm Address
           </Button>
         )}

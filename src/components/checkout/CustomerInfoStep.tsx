@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, CheckCircle } from 'lucide-react';
+import { User, CheckCircle, Edit2 } from 'lucide-react';
 import { CustomerInfo } from '@/hooks/useCustomerInfo';
 import { validateEmail, validatePhoneNumber, formatPhoneNumber, getEmailErrorMessage, getPhoneErrorMessage } from '@/utils/validation';
 
@@ -68,10 +68,10 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
 
   if (isConfirmed && isCustomerComplete) {
     return (
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <CheckCircle className="w-5 h-5 text-green-500" />
+      <Card className="border-green-200 bg-green-50/30">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
             Contact Information
           </CardTitle>
           <Button
@@ -80,16 +80,17 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
             onClick={() => {
               onEdit?.();
             }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 h-7 sm:h-8 text-xs sm:text-sm"
           >
-            Edit Info
+            <Edit2 className="w-3 h-3" />
+            Edit
           </Button>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-1 text-sm">
-            <div>{customerInfo.firstName} {customerInfo.lastName}</div>
-            <div>{customerInfo.email}</div>
-            <div>{customerInfo.phone}</div>
+        <CardContent className="p-3 sm:p-6">
+          <div className="space-y-1 text-xs sm:text-sm">
+            <div className="font-medium">{customerInfo.firstName} {customerInfo.lastName}</div>
+            <div className="text-muted-foreground">{customerInfo.email}</div>
+            <div className="text-muted-foreground">{customerInfo.phone}</div>
           </div>
         </CardContent>
       </Card>
@@ -98,62 +99,66 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <User className="w-5 h-5" />
+      <CardHeader className="p-3 sm:p-6">
+        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <User className="w-4 h-4 sm:w-5 sm:h-5" />
           Contact Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <Label htmlFor="firstName">First Name</Label>
+            <Label htmlFor="firstName" className="text-xs sm:text-sm font-medium">First Name</Label>
             <Input
               id="firstName"
               value={customerInfo.firstName}
               onChange={(e) => handleInfoChange('firstName', e.target.value)}
               placeholder="First name"
+              className="h-8 sm:h-10 text-xs sm:text-sm"
             />
-            {errors.firstName && <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>}
+            {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
           </div>
           <div>
-            <Label htmlFor="lastName">Last Name</Label>
+            <Label htmlFor="lastName" className="text-xs sm:text-sm font-medium">Last Name</Label>
             <Input
               id="lastName"
               value={customerInfo.lastName}
               onChange={(e) => handleInfoChange('lastName', e.target.value)}
               placeholder="Last name"
+              className="h-8 sm:h-10 text-xs sm:text-sm"
             />
-            {errors.lastName && <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>}
+            {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
           </div>
         </div>
 
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-xs sm:text-sm font-medium">Email</Label>
           <Input
             id="email"
             type="email"
             value={customerInfo.email}
             onChange={(e) => handleInfoChange('email', e.target.value)}
             placeholder="your@email.com"
+            className="h-8 sm:h-10 text-xs sm:text-sm"
           />
-          {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
         </div>
 
         <div>
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone" className="text-xs sm:text-sm font-medium">Phone Number</Label>
           <Input
             id="phone"
             type="tel"
             value={customerInfo.phone}
             onChange={(e) => handleInfoChange('phone', e.target.value)}
             placeholder="(555) 123-4567"
+            className="h-8 sm:h-10 text-xs sm:text-sm"
           />
-          {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
+          {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
         </div>
 
         {isCustomerComplete && (
-          <Button onClick={handleConfirm} className="w-full">
+          <Button onClick={handleConfirm} className="w-full h-8 sm:h-10 text-xs sm:text-sm">
             Confirm Contact Information
           </Button>
         )}

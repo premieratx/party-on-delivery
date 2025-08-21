@@ -136,29 +136,29 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CalendarIcon className="w-5 h-5" />
+      <CardHeader className="pb-3 px-3 pt-3 sm:px-6 sm:pt-6">
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+          <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5" />
           Select Delivery Date & Time
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Responsive Grid for Date and Time */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           
           {/* Date Selection - Constrained Width */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Delivery Date</label>
+            <label className="text-xs sm:text-sm font-medium text-foreground">Delivery Date</label>
             <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full justify-start text-left font-normal h-11",
+                    "w-full justify-start text-left font-normal h-9 sm:h-11 text-xs sm:text-sm",
                     !selectedDate && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span className="truncate">
                     {selectedDate ? format(selectedDate, 'EEE, MMM d, yyyy') : 'Select delivery date'}
                   </span>
@@ -188,18 +188,18 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
 
           {/* Time Selection - Constrained Width */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Delivery Time</label>
+            <label className="text-xs sm:text-sm font-medium text-foreground">Delivery Time</label>
             <Select
               value={deliveryInfo.timeSlot || ''}
               onValueChange={handleTimeSlotSelect}
               disabled={!selectedDate}
             >
-              <SelectTrigger className="w-full h-11">
+              <SelectTrigger className="w-full h-9 sm:h-11 text-xs sm:text-sm">
                 <SelectValue placeholder="Select delivery time" />
               </SelectTrigger>
               <SelectContent>
                 {timeSlots.map((slot) => (
-                  <SelectItem key={slot} value={slot}>
+                  <SelectItem key={slot} value={slot} className="text-xs sm:text-sm">
                     {slot}
                   </SelectItem>
                 ))}
@@ -213,7 +213,7 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
           <div className="pt-2">
             <Button 
               onClick={onConfirm} 
-              className="w-full h-11 font-semibold"
+              className="w-full h-9 sm:h-11 font-semibold text-xs sm:text-sm"
               size="lg"
             >
               Confirm Date & Time
@@ -222,7 +222,7 @@ export const ImprovedDateTimeStep: React.FC<ImprovedDateTimeStepProps> = ({
         )}
 
         {/* Helpful Text */}
-        <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
+        <div className="text-xs text-muted-foreground bg-muted/30 p-2 sm:p-3 rounded-lg">
           <p>• Same-day delivery available until 2 hours before cutoff</p>
           <p>• Your delivery preferences will be saved for future orders</p>
         </div>

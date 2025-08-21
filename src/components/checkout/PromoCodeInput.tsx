@@ -124,16 +124,16 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
   };
 
   return (
-    <Card>
-      <CardContent className="p-4 space-y-4">
+    <Card className="mb-4">
+      <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
         {appliedDiscount ? (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Tag className="w-4 h-4 text-green-600" />
-              <Badge variant="outline" className="text-green-600 border-green-600">
+              <Badge variant="outline" className="text-green-600 border-green-600 text-xs">
                 {appliedDiscount.code}
               </Badge>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 {appliedDiscount.type === 'percentage' 
                   ? `${appliedDiscount.value}% off` 
                   : 'Free shipping'
@@ -144,15 +144,15 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
               variant="ghost"
               size="sm"
               onClick={removeDiscount}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3" />
             </Button>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Tag className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+              <Tag className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Have a promo code?</span>
             </div>
             <div className="flex gap-2">
@@ -162,15 +162,16 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 onKeyPress={handleKeyPress}
                 disabled={isValidating}
-                className="flex-1"
+                className="flex-1 h-8 sm:h-10 text-xs sm:text-sm"
               />
               <Button
                 onClick={validatePromoCode}
                 disabled={isValidating || !promoCode.trim()}
                 size="sm"
+                className="h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm"
               >
                 {isValidating ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
                 ) : (
                   'Apply'
                 )}

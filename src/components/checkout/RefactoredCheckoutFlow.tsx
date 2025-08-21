@@ -251,7 +251,10 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                   addressInfo={addressInfo}
                   setAddressInfo={setAddressInfo}
                   onConfirm={handleAddressConfirm}
-                  onEdit={() => setCurrentStep('address')}
+                  onEdit={() => {
+                    setConfirmedAddress(false);
+                    setConfirmedCustomer(false);
+                  }}
                   isConfirmed={confirmedAddress}
                 />
                 
@@ -261,31 +264,23 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                     customerInfo={customerInfo}
                     setCustomerInfo={setCustomerInfo}
                     onConfirm={handleCustomerConfirm}
-                    onEdit={() => setCurrentStep('address')}
+                    onEdit={() => {
+                      setConfirmedCustomer(false);
+                    }}
                     isConfirmed={confirmedCustomer}
                   />
                 )}
               </>
             )}
 
-            {/* Promo Code & Tip Section - Move Above Payment */}
+            {/* Promo Code Section - Move Above Payment */}
             {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Promo Code Input */}
-                  <PromoCodeInput 
-                    onDiscountApplied={handlePromoApplied}
-                    appliedDiscount={appliedDiscount}
-                    cartSubtotal={calculatedSubtotal}
-                  />
-                  
-                  {/* Tip Selector */}
-                  <TipSelector
-                    tipPercentage={tipPercentage}
-                    subtotal={discountedSubtotal}
-                    onTipChange={setTipPercentage}
-                  />
-                </div>
+                <PromoCodeInput 
+                  onDiscountApplied={handlePromoApplied}
+                  appliedDiscount={appliedDiscount}
+                  cartSubtotal={calculatedSubtotal}
+                />
               </div>
             )}
 
@@ -318,6 +313,8 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                 salesTax={calculatedSalesTax}
                 tipAmount={tipAmount}
                 appliedDiscount={appliedDiscount}
+                tipPercentage={tipPercentage}
+                onTipChange={setTipPercentage}
                 onUpdateQuantity={onUpdateQuantity}
               />
             </div>
