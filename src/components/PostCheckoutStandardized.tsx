@@ -112,6 +112,12 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
                     <span>{formatCurrency(salesTaxAmount)}</span>
                   </div>
                 )}
+                {typeof tipAmount === 'number' && tipAmount > 0 && (
+                  <div className="flex justify-between">
+                    <span>Driver Tip</span>
+                    <span>{formatCurrency(tipAmount)}</span>
+                  </div>
+                )}
                 {typeof discountAmount === 'number' && discountAmount > 0 && (
                   <div className="flex justify-between">
                     <span>Discount{discountCode ? ` (${discountCode})` : ''}</span>

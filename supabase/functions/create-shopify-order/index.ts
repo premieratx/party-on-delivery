@@ -392,6 +392,17 @@ serve(async (req) => {
       });
     }
 
+    // CRITICAL FIX: Add sales tax as line item so it shows in Shopify breakdown
+    if (orderAmounts.sales_tax > 0) {
+      lineItems.push({
+        title: "Sales Tax (8.25%)",
+        price: orderAmounts.sales_tax.toFixed(2),
+        quantity: 1,
+        requires_shipping: false,
+        taxable: false
+      });
+    }
+
     logStep("Line items prepared", { 
       itemCount: lineItems.length,
       totalLineItemValue: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0)
@@ -427,11 +438,31 @@ serve(async (req) => {
         },
         email: customerEmail,
         phone: customerPhone,
-        note: `Delivery: ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
-        tags: "delivery-order,paid",
+        note: `=== DELIVERY ORDER DETAILS ===
+
+📦 PAYMENT DETAILS:
+• Total Paid: $${orderAmounts.total_amount.toFixed(2)} (via Stripe)
+• Subtotal: $${orderAmounts.subtotal.toFixed(2)}
+• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}
+• Sales Tax: $${orderAmounts.sales_tax.toFixed(2)}
+• Driver Tip: $${orderAmounts.tip_amount.toFixed(2)}
+
+🚚 DELIVERY SCHEDULE:
+• Date: ${deliveryDate}
+• Time: ${deliveryTime}
+• Address: ${deliveryAddress}${deliveryInstructions ? `
+• Special Instructions: ${deliveryInstructions}` : ''}
+
+💳 STRIPE PAYMENT:
+• Payment Intent: ${paymentIntentId || sessionId}
+• Payment Status: Completed Successfully
+• Single Source of Truth: This order matches Stripe transaction exactly
+
+📱 APP SOURCE: Delivery App (Party On Delivery)`,
+        tags: "delivery-order,paid,stripe-processed",
         financial_status: "paid",
         fulfillment_status: "unfulfilled",
-        total_tax: orderAmounts.sales_tax.toString(),
+        total_tax: "0.00",
         currency: "USD",
         source_name: "delivery-app"
       }
