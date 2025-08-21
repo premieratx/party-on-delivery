@@ -493,7 +493,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
             <div>
               <Label className="text-xs">Custom Page Slug</Label>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
@@ -503,17 +503,46 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 <div className="text-xs text-muted-foreground">
                   Preview URL: {window.location.origin}/cover/{computedSlug}
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`/cover/${computedSlug}`, '_blank')}
+                  className="w-full gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Open in New Tab
+                </Button>
               </div>
             </div>
 
             <div>
               <Label className="text-xs">Subtitle</Label>
-              <Textarea
-                value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
-                placeholder="Luxury Lifestyle Services"
-                rows={2}
-                className="text-sm"
+              <div className="space-y-2">
+                <Textarea
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
+                  placeholder="Luxury Lifestyle Services"
+                  rows={2}
+                  className="text-sm"
+                />
+                <div>
+                  <Label className="text-xs">Width: {subtitle.length > 40 ? 'Full' : 'Auto'}</Label>
+                  <div className="text-xs text-muted-foreground">
+                    Keep under 40 characters for single line
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs">Logo Height: {logoHeight}px</Label>
+              <Slider
+                value={[logoHeight]}
+                onValueChange={([value]) => setLogoHeight(value)}
+                min={50}
+                max={300}
+                step={10}
+                className="mt-2"
               />
             </div>
 
@@ -524,6 +553,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 onCheckedChange={setIsActive}
               />
               <Label htmlFor="is-active" className="text-xs">Active & Published</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="free-shipping"
+                checked={freeShippingEnabled}
+                onCheckedChange={setFreeShippingEnabled}
+              />
+              <Label htmlFor="free-shipping" className="text-xs">Enable Free Shipping for this cover page</Label>
             </div>
           </div>
 
@@ -1263,7 +1301,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
           </div>
         </DialogHeader>
 
-        <div className="h-[calc(95vh-80px)]">
+        <div className="h-[calc(95vh-80px)] overflow-y-auto">
           {content}
         </div>
       </DialogContent>
