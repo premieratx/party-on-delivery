@@ -162,19 +162,27 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       console.warn('Failed to clear checkout session:', error);
     }
 
-    // Navigate to success page
-    navigate('/order-complete', { 
-      state: { 
-        paymentIntentId,
-        orderDetails: {
-          cartItems,
-          customerInfo,
-          deliveryInfo,
-          total: finalTotal,
-          appliedDiscount
-        }
-      }
-    });
+    // Store checkout completion data for the OrderComplete page
+    const checkoutCompletionData = {
+      cartItems,
+      customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
+      customerEmail: customerInfo.email,
+      deliveryAddress: deliveryInfo,
+      deliveryDate: deliveryInfo.date,
+      deliveryTime: deliveryInfo.timeSlot,
+      totalAmount: finalTotal,
+      subtotal: discountedSubtotal,
+      deliveryFee: finalDeliveryFee,
+      salesTax: calculatedSalesTax,
+      tipAmount: tipAmount,
+      paymentIntentId,
+      appliedDiscount
+    };
+    
+    sessionStorage.setItem('checkout-completion-data', JSON.stringify(checkoutCompletionData));
+    
+    // Navigate to order complete page with payment intent in URL
+    navigate(`/order-complete?payment_intent=${paymentIntentId}`);
   };
 
   // Auto-progression logic
