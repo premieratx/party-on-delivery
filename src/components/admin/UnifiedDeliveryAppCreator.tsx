@@ -375,22 +375,45 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
     const file = event.target.files?.[0];
     if (!file) return;
     
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: 'Invalid file type', description: 'Please upload a valid image file (JPG, PNG, GIF, or WebP)', variant: 'destructive' });
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'File too large', description: 'File size must be less than 5MB', variant: 'destructive' });
+      return;
+    }
+    
     try {
-      const ext = file.name.split('.').pop() || 'png';
-      const fileName = `delivery-app-${Date.now()}-logo.${ext}`;
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const fileName = `delivery-app-logo-${Date.now()}.${ext}`;
+      
+      // Check if bucket exists, create if not
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (!buckets?.find(bucket => bucket.name === 'delivery-app-assets')) {
+        await supabase.storage.createBucket('delivery-app-assets', { public: true });
+      }
       
       const { error: uploadError } = await supabase.storage
         .from('delivery-app-assets')
-        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+        .upload(fileName, file, { 
+          cacheControl: '3600', 
+          upsert: false,
+          contentType: file.type
+        });
       
       if (uploadError) throw uploadError;
       
       const { data } = supabase.storage.from('delivery-app-assets').getPublicUrl(fileName);
       setLogoUrl(data.publicUrl);
       toast({ title: 'Logo uploaded successfully!' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error);
-      toast({ title: 'Upload failed', variant: 'destructive' });
+      toast({ title: 'Upload failed', description: error.message || 'Unknown error occurred', variant: 'destructive' });
     }
   };
 
