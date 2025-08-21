@@ -43,6 +43,8 @@ interface CoverPageConfig {
     target: string;
     color?: string;
     textColor?: string;
+    linkType?: 'custom' | 'delivery_app';
+    deliveryAppId?: string;
   }>;
   // Advanced Styling
   customColors?: {
@@ -194,6 +196,40 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [standalonePath, setStandalonePath] = useState<string>('');
+  
+  // Fetch delivery apps for button assignment
+  const [deliveryApps, setDeliveryApps] = useState<Array<{
+    id: string;
+    app_name: string;
+    app_slug: string;
+  }>>([]);
+
+  useEffect(() => {
+    const loadDeliveryApps = async () => {
+      try {
+        console.log('🔍 Loading delivery apps for button assignment...');
+        const { data, error } = await supabase
+          .from('delivery_app_variations')
+          .select('id, app_name, app_slug')
+          .eq('is_active', true)
+          .order('app_name');
+
+        if (error) {
+          console.error('❌ Error loading delivery apps:', error);
+          throw error;
+        }
+        
+        console.log('✅ Loaded delivery apps:', data?.length);
+        setDeliveryApps(data || []);
+      } catch (error) {
+        console.error('Error loading delivery apps:', error);
+      }
+    };
+
+    if (open) {
+      loadDeliveryApps();
+    }
+  }, [open]);
 
   // Helper function to load template
   const loadTemplate = (templateName: 'gold' | 'platinum' | 'original') => {
@@ -354,10 +390,15 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   };
 
   const addButton = () => {
-    console.log('Adding button...');
+    console.log('🔧 Adding button...');
     setConfig(prev => ({
       ...prev,
-      buttons: [...prev.buttons, { text: '', type: 'primary', target: '' }]
+      buttons: [...prev.buttons, { 
+        text: 'New Button', 
+        type: 'primary' as const, 
+        target: '',
+        linkType: 'custom' as const
+      }]
     }));
   };
 
@@ -583,67 +624,115 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
               {/* Button Configuration */}
               <TabsContent value="buttons" className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <Label>Action Buttons</Label>
-                  <Button size="sm" onClick={addButton}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Button
-                  </Button>
-                </div>
+                 <div className="flex items-center justify-between">
+                   <Label>Action Buttons (Max 2)</Label>
+                   <Button 
+                     size="sm" 
+                     onClick={addButton}
+                     disabled={config.buttons.length >= 2}
+                   >
+                     <Plus className="w-4 h-4 mr-2" />
+                     Add Button {config.buttons.length < 2 && `(${2 - config.buttons.length} remaining)`}
+                   </Button>
+                 </div>
                 
                 <div className="space-y-4">
                   {config.buttons.map((button, index) => (
                     <Card key={index}>
                       <CardContent className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                          <div>
-                            <Label>Button Text</Label>
-                            <Input
-                              value={button.text}
-                              onChange={(e) => updateButton(index, 'text', e.target.value)}
-                              placeholder="Button text"
-                            />
-                          </div>
-                          <div>
-                            <Label>Type</Label>
-                            <Select
-                              value={button.type}
-                              onValueChange={(value) => updateButton(index, 'type', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="z-[9999]">
-                                <SelectItem value="primary">Primary</SelectItem>
-                                <SelectItem value="secondary">Secondary</SelectItem>
-                                <SelectItem value="tertiary">Tertiary</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label>Target URL</Label>
-                            <Input
-                              value={button.target}
-                              onChange={(e) => updateButton(index, 'target', e.target.value)}
-                              placeholder="https://example.com"
-                            />
-                          </div>
-                          <div>
-                            <Label>Custom Color</Label>
-                            <Input
-                              value={button.color || ''}
-                              onChange={(e) => updateButton(index, 'color', e.target.value)}
-                              placeholder="#000000"
-                            />
-                          </div>
-                          <div>
-                            <Label>Text Color</Label>
-                            <Input
-                              value={button.textColor || ''}
-                              onChange={(e) => updateButton(index, 'textColor', e.target.value)}
-                              placeholder="#ffffff"
-                            />
-                          </div>
+                         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                           <div>
+                             <Label>Button Text</Label>
+                             <Input
+                               value={button.text}
+                               onChange={(e) => updateButton(index, 'text', e.target.value)}
+                               placeholder="Button text"
+                             />
+                           </div>
+                           <div>
+                             <Label>Type</Label>
+                             <Select
+                               value={button.type}
+                               onValueChange={(value) => updateButton(index, 'type', value)}
+                             >
+                               <SelectTrigger>
+                                 <SelectValue />
+                               </SelectTrigger>
+                               <SelectContent className="z-[9999] bg-background border shadow-lg">
+                                 <SelectItem value="primary">Primary</SelectItem>
+                                 <SelectItem value="secondary">Secondary</SelectItem>
+                                 <SelectItem value="tertiary">Tertiary</SelectItem>
+                               </SelectContent>
+                             </Select>
+                           </div>
+                           <div className="col-span-2">
+                             <Label>Link Assignment</Label>
+                             <div className="grid grid-cols-2 gap-2">
+                               <Select
+                                 value={button.linkType || 'custom'}
+                                 onValueChange={(value) => {
+                                   updateButton(index, 'linkType', value);
+                                   if (value === 'delivery_app' && !button.target.startsWith('/app/')) {
+                                     updateButton(index, 'target', '');
+                                   }
+                                 }}
+                               >
+                                 <SelectTrigger>
+                                   <SelectValue placeholder="Link type" />
+                                 </SelectTrigger>
+                                 <SelectContent className="z-[9999] bg-background border shadow-lg">
+                                   <SelectItem value="custom">Custom URL</SelectItem>
+                                   <SelectItem value="delivery_app">Delivery App</SelectItem>
+                                 </SelectContent>
+                               </Select>
+                               
+                               {button.linkType === 'delivery_app' ? (
+                                 <Select
+                                   value={button.deliveryAppId || ''}
+                                   onValueChange={(value) => {
+                                     const selectedApp = deliveryApps.find(app => app.id === value);
+                                     if (selectedApp) {
+                                       updateButton(index, 'deliveryAppId', value);
+                                       updateButton(index, 'target', `/app/${selectedApp.app_slug}`);
+                                     }
+                                   }}
+                                 >
+                                   <SelectTrigger>
+                                     <SelectValue placeholder="Select app" />
+                                   </SelectTrigger>
+                                   <SelectContent className="z-[9999] bg-background border shadow-lg max-h-48 overflow-y-auto">
+                                     {deliveryApps.map((app) => (
+                                       <SelectItem key={app.id} value={app.id}>
+                                         {app.app_name}
+                                       </SelectItem>
+                                     ))}
+                                   </SelectContent>
+                                 </Select>
+                               ) : (
+                                 <Input
+                                   value={button.target}
+                                   onChange={(e) => updateButton(index, 'target', e.target.value)}
+                                   placeholder="https://example.com or /page"
+                                 />
+                               )}
+                             </div>
+                           </div>
+                           <div>
+                             <Label>Custom Color</Label>
+                             <Input
+                               value={button.color || ''}
+                               onChange={(e) => updateButton(index, 'color', e.target.value)}
+                               placeholder="#000000"
+                             />
+                           </div>
+                           <div>
+                             <Label>Text Color</Label>
+                             <Input
+                               value={button.textColor || ''}
+                               onChange={(e) => updateButton(index, 'textColor', e.target.value)}
+                               placeholder="#ffffff"
+                             />
+                           </div>
                           <div className="flex items-end">
                             <Button
                               size="sm"
