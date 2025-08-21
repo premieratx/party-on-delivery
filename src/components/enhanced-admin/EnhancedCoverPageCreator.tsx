@@ -236,6 +236,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   }, [initial]);
 
   const handleSave = async () => {
+    console.log('💾 Saving cover page...', config);
     if (!config.slug.trim()) {
       toast.error('Please enter a page slug');
       return;
@@ -274,8 +275,11 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         created_by: 'admin'
       };
 
+      console.log('💾 Saving page data:', pageData);
+
       let result;
       if (config.id) {
+        console.log('📝 Updating existing page:', config.id);
         result = await supabase
           .from('cover_pages')
           .update(pageData)
@@ -283,12 +287,15 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           .select()
           .single();
       } else {
+        console.log('✨ Creating new page');
         result = await supabase
           .from('cover_pages')
           .insert([pageData])
           .select()
           .single();
       }
+
+      console.log('💾 Save result:', result);
 
       if (result.error) throw result.error;
 
@@ -303,7 +310,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       toast.success(config.id ? 'Cover page updated!' : 'Cover page created!');
       onSaved?.();
     } catch (error) {
-      console.error('Error saving cover page:', error);
+      console.error('❌ Error saving cover page:', error);
       toast.error('Failed to save cover page');
     } finally {
       setSaving(false);
@@ -311,6 +318,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   };
 
   const updateFeature = (index: number, field: string, value: string) => {
+    console.log(`Updating feature ${index}, field: ${field}, value: ${value}`);
     setConfig(prev => ({
       ...prev,
       features: prev.features.map((feature, i) =>
@@ -328,6 +336,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   };
 
   const removeFeature = (index: number) => {
+    console.log(`Removing feature ${index}`);
     setConfig(prev => ({
       ...prev,
       features: prev.features.filter((_, i) => i !== index)
@@ -335,6 +344,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   };
 
   const updateButton = (index: number, field: string, value: any) => {
+    console.log(`Updating button ${index}, field: ${field}, value: ${value}`);
     setConfig(prev => ({
       ...prev,
       buttons: prev.buttons.map((button, i) =>
@@ -352,6 +362,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   };
 
   const removeButton = (index: number) => {
+    console.log(`Removing button ${index}`);
     setConfig(prev => ({
       ...prev,
       buttons: prev.buttons.filter((_, i) => i !== index)

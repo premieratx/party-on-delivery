@@ -89,6 +89,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
   }, []);
 
   const handleSave = async () => {
+    console.log('💾 Saving post-checkout screen...', config);
     if (!config.title.trim()) {
       toast({
         title: "Missing title", 
@@ -102,6 +103,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
     
     try {
       if (config.id) {
+        console.log('📝 Updating existing post-checkout screen:', config.id);
         const { error } = await supabase
           .from('post_checkout_screens')
           .update(config)
@@ -110,6 +112,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
         if (error) throw error;
         toast({ title: "Post-checkout screen updated successfully!" });
       } else {
+        console.log('✨ Creating new post-checkout screen');
         const configWithCoverPage = {
           ...config,
           cover_page_id: config.cover_page_id || null
@@ -125,7 +128,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
       onSaved?.();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Save error:', error);
+      console.error('❌ Save error:', error);
       toast({
         title: "Save failed",
         description: error.message,
@@ -166,6 +169,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
   };
 
   const addButton = () => {
+    console.log('Adding post-checkout button...');
     setConfig(prev => ({
       ...prev,
       buttons: [...prev.buttons, { text: "New Button", url: "/" }]
@@ -173,6 +177,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
   };
 
   const updateButton = (index: number, field: keyof PostCheckoutButton, value: string) => {
+    console.log(`Updating post-checkout button ${index}, field: ${field}, value: ${value}`);
     setConfig(prev => ({
       ...prev,
       buttons: prev.buttons.map((btn, i) => 
@@ -182,6 +187,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
   };
 
   const removeButton = (index: number) => {
+    console.log(`Removing post-checkout button ${index}`);
     setConfig(prev => ({
       ...prev,
       buttons: prev.buttons.filter((_, i) => i !== index)

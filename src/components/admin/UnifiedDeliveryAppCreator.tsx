@@ -287,6 +287,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   }, [appName, isEditing]);
 
   const handleSave = async () => {
+    console.log('💾 Saving delivery app...', { appName, appSlug, theme });
     if (!appName.trim() || !appSlug.trim()) {
       toast({
         title: 'Missing required fields',
@@ -324,6 +325,8 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         is_homepage: isHomepage
       };
 
+      console.log('💾 Saving delivery app data:', appData);
+
       if (isEditing && initial?.id) {
         const { error } = await supabase
           .from('delivery_app_variations')
@@ -342,7 +345,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
       onSaved?.();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Save error:', error);
+      console.error('❌ Save error:', error);
       toast({
         title: 'Save failed',
         description: error?.message || 'Unknown error occurred',
@@ -354,18 +357,21 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
   };
 
   const addTab = () => {
+    console.log('Adding delivery app tab...');
     if (tabs.length < 8) {
       setTabs([...tabs, { name: 'New Tab', collection_handle: 'new-collection', icon: '📦' }]);
     }
   };
 
   const removeTab = (index: number) => {
+    console.log(`Removing tab ${index}`);
     if (tabs.length > 1) {
       setTabs(tabs.filter((_, i) => i !== index));
     }
   };
 
   const updateTab = (index: number, updates: Partial<DeliveryAppTab>) => {
+    console.log(`Updating tab ${index}:`, updates);
     const updated = [...tabs];
     updated[index] = { ...updated[index], ...updates };
     setTabs(updated);
