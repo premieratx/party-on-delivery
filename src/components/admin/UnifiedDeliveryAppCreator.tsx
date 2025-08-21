@@ -584,7 +584,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="z-[9999]">
                                   {shopifyCollections.map((collection) => (
                                     <SelectItem key={collection.handle} value={collection.handle}>
                                       {collection.name} ({collection.products_count})
@@ -602,13 +602,13 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                                 <SelectTrigger>
                                   <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {ICON_OPTIONS.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
+                              <SelectContent className="z-[9999]">
+                                {ICON_OPTIONS.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
                               </Select>
                             </div>
                             <div className="flex items-end">

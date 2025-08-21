@@ -368,7 +368,7 @@ export default function CustomerFlowConfigurator() {
                         <SelectTrigger>
                           <SelectValue placeholder="Select cover page" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[9999]">
                           {coverPages.map((page) => (
                             <SelectItem key={page.id} value={page.id}>
                               {page.title} (/{page.slug})
@@ -387,7 +387,7 @@ export default function CustomerFlowConfigurator() {
                         <SelectTrigger>
                           <SelectValue placeholder="Select post-checkout page" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[9999]">
                           {postCheckoutPages.map((page) => (
                             <SelectItem key={page.id} value={page.id}>
                               {page.name} (/{page.slug})
@@ -423,7 +423,7 @@ export default function CustomerFlowConfigurator() {
                         <SelectTrigger>
                           <SelectValue placeholder="Select affiliate (optional)" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="z-[9999]">
                           <SelectItem value="none">No Affiliate</SelectItem>
                           {affiliates.map((affiliate) => (
                             <SelectItem key={affiliate.id} value={affiliate.id}>
@@ -481,7 +481,7 @@ export default function CustomerFlowConfigurator() {
                                   <SelectTrigger className="h-8">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="z-[9999]">
                                     <SelectItem value="delivery_app">Delivery App</SelectItem>
                                     <SelectItem value="collection">Collection</SelectItem>
                                     <SelectItem value="external_url">External URL</SelectItem>
@@ -499,7 +499,7 @@ export default function CustomerFlowConfigurator() {
                                     <SelectTrigger className="h-8">
                                       <SelectValue placeholder="Select app" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="z-[9999]">
                                       {deliveryApps.map((app) => (
                                         <SelectItem key={app.id} value={app.app_slug}>
                                           {app.app_name}

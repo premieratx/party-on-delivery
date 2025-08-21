@@ -506,7 +506,7 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
                       <SelectTrigger>
                         <SelectValue placeholder="Select a cover page" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[9999]">
                         <SelectItem value="none">None</SelectItem>
                         {availableCoverPages.map(page => (
                           <SelectItem key={page.id} value={page.id}>

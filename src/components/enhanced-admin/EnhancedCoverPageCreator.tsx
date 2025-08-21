@@ -197,6 +197,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
   // Helper function to load template
   const loadTemplate = (templateName: 'gold' | 'platinum' | 'original') => {
+    console.log('Loading template:', templateName);
     const template = createCoverPageFromTemplate(templateName);
     setConfig(prev => ({
       ...prev,
@@ -319,6 +320,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   };
 
   const addFeature = () => {
+    console.log('Adding feature...');
     setConfig(prev => ({
       ...prev,
       features: [...prev.features, { emoji: '⭐', title: '', description: '' }]
@@ -342,6 +344,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   };
 
   const addButton = () => {
+    console.log('Adding button...');
     setConfig(prev => ({
       ...prev,
       buttons: [...prev.buttons, { text: '', type: 'primary', target: '' }]
@@ -599,7 +602,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="z-[9999]">
                                 <SelectItem value="primary">Primary</SelectItem>
                                 <SelectItem value="secondary">Secondary</SelectItem>
                                 <SelectItem value="tertiary">Tertiary</SelectItem>
@@ -666,7 +669,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[9999]">
                             <SelectItem value="text-2xl md:text-3xl">Small (2xl/3xl)</SelectItem>
                             <SelectItem value="text-3xl md:text-4xl">Medium (3xl/4xl)</SelectItem>
                             <SelectItem value="text-4xl md:text-5xl">Large (4xl/5xl)</SelectItem>
@@ -707,7 +710,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[9999]">
                             <SelectItem value="text-sm">Small</SelectItem>
                             <SelectItem value="text-base">Base</SelectItem>
                             <SelectItem value="text-lg">Large</SelectItem>
@@ -748,7 +751,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[9999]">
                             <SelectItem value="inherit">Default (Inherit)</SelectItem>
                             <SelectItem value="font-sans">Sans Serif</SelectItem>
                             <SelectItem value="font-serif">Serif</SelectItem>
@@ -780,7 +783,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[9999]">
                             <SelectItem value="3rem">Small (3rem)</SelectItem>
                             <SelectItem value="4rem">Medium (4rem)</SelectItem>
                             <SelectItem value="5rem">Large (5rem) - Default</SelectItem>
@@ -803,7 +806,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="z-[9999]">
                             <SelectItem value="3rem">Small (3rem)</SelectItem>
                             <SelectItem value="4rem">Medium (4rem)</SelectItem>
                             <SelectItem value="5rem">Large (5rem) - Default</SelectItem>
