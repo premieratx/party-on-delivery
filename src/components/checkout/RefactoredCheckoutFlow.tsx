@@ -19,7 +19,6 @@ import { CustomerInfoStep } from './CustomerInfoStep';
 import { ImprovedCheckoutSummary } from './ImprovedCheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
 import { PromoCodeInput } from './PromoCodeInput';
-import { TipSelector } from './TipSelector';
 
 interface RefactoredCheckoutFlowProps {
   cartItems: CartItem[];
@@ -146,19 +145,8 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
     : cartSubtotal;
   
   const calculatedSalesTax = cartSubtotal * 0.0825; // 8.25% sales tax on original subtotal
-  
-  // Tip management - reactive to subtotal changes
-  const [tipPercentage, setTipPercentage] = useState(10); // Default 10%
-  const tipAmount = discountedSubtotal * (tipPercentage / 100);
 
-  const finalTotal = discountedSubtotal + finalDeliveryFee + calculatedSalesTax + tipAmount;
-
-  // Update tip when subtotal changes (real-time updates)
-  useEffect(() => {
-    if (onTipChange) {
-      onTipChange(tipAmount);
-    }
-  }, [tipAmount, onTipChange]);
+  const finalTotal = discountedSubtotal + finalDeliveryFee + calculatedSalesTax;
 
   // Discount management
   const handlePromoApplied = (discount: {code: string, type: 'percentage' | 'free_shipping', value: number} | null) => {
@@ -222,7 +210,6 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
       subtotal: discountedSubtotal,
       deliveryFee: finalDeliveryFee,
       salesTax: calculatedSalesTax,
-      tipAmount: tipAmount,
       paymentIntentId,
       appliedDiscount
     };
@@ -344,19 +331,18 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
 
             {/* Payment Step - Now Last */}
             {(currentStep === 'payment' || (confirmedDateTime && confirmedAddress && confirmedCustomer)) && (
-              <StripePaymentWrapper
-                cartItems={cartItems}
-                subtotal={discountedSubtotal}
-                deliveryFee={finalDeliveryFee}
-                salesTax={calculatedSalesTax}
-                tipAmount={tipAmount}
-                customerInfo={customerInfo}
-                deliveryInfo={deliveryInfo}
-                appliedDiscount={appliedDiscount}
-                onPaymentSuccess={handlePaymentSuccess}
-                isAddingToOrder={isAddingToOrder}
-                affiliateCode={affiliateCode}
-              />
+            <StripePaymentWrapper
+              cartItems={cartItems}
+              subtotal={discountedSubtotal}
+              deliveryFee={finalDeliveryFee}
+              salesTax={calculatedSalesTax}
+              customerInfo={customerInfo}
+              deliveryInfo={deliveryInfo}
+              appliedDiscount={appliedDiscount}
+              onPaymentSuccess={handlePaymentSuccess}
+              isAddingToOrder={isAddingToOrder}
+              affiliateCode={affiliateCode}
+            />
             )}
           </div>
 
@@ -369,10 +355,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                  subtotal={cartSubtotal}
                  deliveryFee={finalDeliveryFee}
                  salesTax={calculatedSalesTax}
-                 tipAmount={tipAmount}
                  appliedDiscount={appliedDiscount}
-                 tipPercentage={tipPercentage}
-                 onTipChange={setTipPercentage}
                  onUpdateQuantity={onUpdateQuantity}
                />
             </div>

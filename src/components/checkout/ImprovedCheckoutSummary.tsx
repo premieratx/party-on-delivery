@@ -11,9 +11,6 @@ interface ImprovedCheckoutSummaryProps {
   subtotal: number;
   deliveryFee: number;
   salesTax: number;
-  tipAmount: number;
-  tipPercentage: number;
-  onTipChange: (percentage: number) => void;
   appliedDiscount?: {
     code: string;
     type: 'percentage' | 'free_shipping';
@@ -27,9 +24,6 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
   subtotal,
   deliveryFee,
   salesTax,
-  tipAmount,
-  tipPercentage,
-  onTipChange,
   appliedDiscount,
   onUpdateQuantity
 }) => {
@@ -41,7 +35,7 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
     : subtotal;
   
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
-  const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax + tipAmount;
+  const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax;
 
   // Enhanced product title cleaning for better display
   const cleanTitle = (title: string) => {
@@ -82,80 +76,57 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Cart Items - Better Spacing */}
-        <div className="space-y-3 max-h-60 overflow-y-auto">
+        {/* Cart Items - Show ALL products without images */}
+        <div className="space-y-2">
           {cartItems.map((item, index) => {
             const cleanedTitle = cleanTitle(item.title);
             
             return (
-              <div key={`${item.id}-${item.variant || ''}-${index}`} className="bg-muted/20 rounded-lg p-3 border border-border/30">
-                <div className="flex gap-3">
-                  {/* Product Image */}
-                  <div className="flex-shrink-0">
-                    <img 
-                      src={item.image || '/placeholder.svg'} 
-                      alt={cleanedTitle}
-                      className="w-14 h-14 object-cover rounded-md bg-muted"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
+              <div key={`${item.id}-${item.variant || ''}-${index}`} className="flex justify-between items-center py-2 border-b border-border/30">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm leading-tight">
+                    {cleanedTitle}
                   </div>
+                  {item.variant && !item.variant.includes('gid://') && item.variant !== 'default' && (
+                    <div className="text-xs text-muted-foreground">
+                      {item.variant}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-3 text-sm">
+                  <span>${applyMarkup(item.price).toFixed(2)}</span>
                   
-                  {/* Product Details */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm leading-tight mb-1 line-clamp-2">
-                      {cleanedTitle}
-                    </h4>
-                    
-                    {item.variant && !item.variant.includes('gid://') && item.variant !== 'default' && (
-                      <p className="text-xs text-muted-foreground mb-2">
-                        {item.variant}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs text-muted-foreground">
-                        ${applyMarkup(item.price).toFixed(2)} each
-                      </div>
-                      
-                      {/* Quantity Controls */}
-                      {onUpdateQuantity ? (
-                        <div className="flex items-center gap-1 bg-background rounded border">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
-                            className="h-7 w-7 p-0"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="text-sm font-medium min-w-[2rem] text-center">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                            className="h-7 w-7 p-0"
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="text-sm font-medium">
-                          Qty: {item.quantity}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Item Total */}
-                    <div className="text-right mt-1">
-                      <span className="text-sm font-semibold">
-                        ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
+                  {/* Quantity Controls */}
+                  {onUpdateQuantity ? (
+                    <div className="flex items-center gap-1 bg-background rounded border">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onUpdateQuantity(item.id, item.variant, Math.max(0, item.quantity - 1))}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      <span className="text-sm font-medium min-w-[1.5rem] text-center">
+                        {item.quantity}
                       </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
                     </div>
-                  </div>
+                  ) : (
+                    <span className="text-sm">Qty: {item.quantity}</span>
+                  )}
+                  
+                  <span className="font-semibold min-w-[4rem] text-right">
+                    ${(applyMarkup(item.price) * item.quantity).toFixed(2)}
+                  </span>
                 </div>
               </div>
             );
@@ -164,28 +135,7 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
 
         <Separator className="my-3" />
         
-        {/* Driver Tip Section */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Driver Tip</span>
-          </div>
-          
-          <div className="grid grid-cols-5 gap-1">
-            {[0, 10, 15, 20, 25].map((percentage) => (
-              <Button
-                key={percentage}
-                variant={tipPercentage === percentage ? "default" : "outline"}
-                size="sm"
-                onClick={() => onTipChange(percentage)}
-                className="text-xs h-7"
-              >
-                {percentage === 0 ? 'No Tip' : `${percentage}%`}
-              </Button>
-            ))}
-          </div>
-        </div>
-        
-        <Separator className="my-3" />
+        {/* Pricing Details */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Subtotal</span>
@@ -229,13 +179,6 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
             <span>Sales Tax (8.25%)</span>
             <span className="font-medium">${salesTax.toFixed(2)}</span>
           </div>
-          
-          {tipAmount > 0 && (
-            <div className="flex justify-between text-sm">
-              <span>Tip</span>
-              <span className="font-medium">${tipAmount.toFixed(2)}</span>
-            </div>
-          )}
         </div>
 
         <Separator className="my-4" />

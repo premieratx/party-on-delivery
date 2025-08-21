@@ -11,7 +11,6 @@ interface StripePaymentWrapperProps {
   subtotal: number;
   deliveryFee: number;
   salesTax: number;
-  tipAmount: number; // ADD TIP AMOUNT
   customerInfo: any;
   deliveryInfo: any;
   appliedDiscount?: any;
@@ -26,7 +25,7 @@ export const StripePaymentWrapper: React.FC<StripePaymentWrapperProps> = (props)
   const [hasError, setHasError] = useState(false);
   const { config } = useAppConfig();
 
-  const total = props.subtotal + props.deliveryFee + props.salesTax + props.tipAmount;
+  const total = props.subtotal + props.deliveryFee + props.salesTax;
 
   useEffect(() => {
     let mounted = true;
