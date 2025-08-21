@@ -337,7 +337,7 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] overflow-hidden">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
@@ -352,7 +352,7 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 p-6">
+          <ScrollArea className="flex-1 p-6 max-h-[calc(90vh-120px)]">
             <TabsContent value="basic" className="space-y-4 mt-0">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -470,7 +470,7 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
               </div>
             </TabsContent>
 
-            <TabsContent value="tabs" className="h-full overflow-y-auto">
+            <TabsContent value="tabs" className="space-y-4 mt-0">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-semibold">Collection Tabs</h3>
