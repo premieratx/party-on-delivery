@@ -228,14 +228,14 @@ export const UnifiedPostCheckoutCreator: React.FC<UnifiedPostCheckoutCreatorProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto flex flex-col">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto flex flex-col" aria-describedby="dialog-description">
         <DialogHeader className="flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
             <DialogTitle className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">
                   {initial ? `Edit: ${initial.name}` : 'Create Post-Checkout Page'}
                 </h2>
-                <p className="text-sm text-muted-foreground font-normal">
+                <p className="text-sm text-muted-foreground font-normal" id="dialog-description">
                   Pixel-perfect order completion experience with cohesive theming
                 </p>
               </div>

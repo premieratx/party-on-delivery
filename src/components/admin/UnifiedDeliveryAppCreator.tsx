@@ -490,7 +490,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden" aria-describedby="dialog-description">
         <div className="h-full flex flex-col">
           <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
             <DialogTitle className="flex items-center justify-between">
@@ -500,7 +500,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                   <h2 className="text-xl font-bold">
                     {isEditing ? `Edit: ${initial?.app_name}` : 'Create Delivery App'}
                   </h2>
-                  <p className="text-sm text-muted-foreground font-normal">
+                  <p className="text-sm text-muted-foreground font-normal" id="dialog-description">
                     Content-only editing with cohesive theming
                   </p>
                 </div>
