@@ -162,28 +162,29 @@ export const CombinedSearchTabs = ({
         {/* First Row - Tabs and Search Icon */}
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
-            {/* Tabs - Icon only on mobile */}
+            {/* Tabs - Show titles with icons until space runs out */}
             <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
               {tabs.map((tab, index) => (
                 <Button
                   key={tab.id}
                   variant={selectedCategory === index ? "default" : "ghost"}
-                  className="whitespace-nowrap text-xs px-2 py-1 h-8 min-w-fit flex-shrink-0 transition-all duration-200"
+                  className="whitespace-nowrap text-xs px-2 py-1 h-8 min-w-fit flex-shrink-0 transition-all duration-200 flex items-center gap-1"
                   onClick={() => onTabSelect(index)}
                   title={tab.title}
                 >
-                  <span className="text-sm">{tab.icon || '📦'}</span>
+                  <span className="text-sm flex-shrink-0">{tab.icon || '📦'}</span>
+                  <span className="hidden min-[480px]:inline">{tab.title}</span>
                 </Button>
               ))}
             </div>
             
-            {/* Search Icon */}
+            {/* Search Icon - Move into cart row on mobile */}
             {showSearch && !isSearchExpanded && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSearchIconClick}
-                className="ml-2 flex-shrink-0 h-8 w-8 p-0"
+                className="ml-2 flex-shrink-0 h-8 w-8 p-0 hidden"
               >
                 <Search className="w-4 h-4" />
               </Button>
@@ -191,34 +192,50 @@ export const CombinedSearchTabs = ({
           </div>
         </div>
 
-        {/* Second Row - Cart and Checkout (Mobile Split Layout) */}
+        {/* Second Row - Cart, Checkout, and Search Icons (Mobile) */}
         <div className="container mx-auto px-4 pb-2">
-          <div className="grid grid-cols-2 gap-2">
-            {/* Cart Button - Mobile */}
+          <div className="flex items-center gap-2">
+            {/* Search Icon - Now in same row as cart/checkout */}
+            {showSearch && !isSearchExpanded && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSearchIconClick}
+                className="flex-shrink-0 h-10 w-10 p-0 border-2 border-muted"
+                title="Search"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Cart Button - Mobile (Icon only) */}
             <Button
               variant="outline"
               onClick={onOpenCart}
-              className="flex items-center justify-center gap-2 h-10 text-sm border-2 hover:bg-muted transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 h-10 text-sm border-2 hover:bg-muted transition-colors"
               disabled={cartItemCount === 0}
             >
               <ShoppingCart className="w-4 h-4" />
-              <span>Cart ({cartItemCount})</span>
+              {cartItemCount > 0 && (
+                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
               {totalAmount > 0 && (
-                <span className="font-bold">${totalAmount.toFixed(2)}</span>
+                <span className="font-bold text-xs">${totalAmount.toFixed(2)}</span>
               )}
             </Button>
             
-            {/* Checkout Button - Mobile */}
+            {/* Checkout Button - Mobile (Icon only) */}
             <Button
               onClick={onCheckout}
-              className="flex items-center justify-center gap-2 h-10 text-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+              className="flex-1 flex items-center justify-center gap-1 h-10 text-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
               variant="default"
               disabled={cartItemCount === 0}
             >
               <CreditCard className="w-4 h-4" />
-              <span>Checkout</span>
               {totalAmount > 0 && (
-                <span className="font-bold ml-1">${totalAmount.toFixed(2)}</span>
+                <span className="font-bold text-xs">${totalAmount.toFixed(2)}</span>
               )}
             </Button>
           </div>

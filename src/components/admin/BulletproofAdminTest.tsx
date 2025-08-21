@@ -58,7 +58,7 @@ export const BulletproofAdminTest = () => {
         updateTest(name, { 
           status: 'pass', 
           message: result.message || 'Test passed',
-          details: result.details || null,
+          details: (result as any).details || null,
           duration 
         });
       } catch (error: any) {
