@@ -8,60 +8,76 @@ export const useSessionTracking = () => {
   
   const linkSessionToUser = async (userEmail: string) => {
     try {
-      // Get all session IDs from localStorage that might need linking
+      // Get valid session IDs from localStorage - be more selective
       const sessionKeys = new Set<string>(); // Use Set to avoid duplicates
       
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.includes('session_') || key?.includes('checkout_') || key?.includes('order_')) {
-          sessionKeys.add(localStorage.getItem(key) || key);
-        }
-      }
-
+      // Only get specific session-related items
+      const storedSessionId = localStorage.getItem('lastOrderSessionId');
+      const storedPaymentIntent = localStorage.getItem('lastPaymentIntent');
+      
       // Also check for current session ID from URL params
       const urlParams = new URLSearchParams(window.location.search);
       const currentSessionId = urlParams.get('session_id');
-      if (currentSessionId) {
+      
+      // Add valid session identifiers only
+      if (storedSessionId && (storedSessionId.startsWith('cs_') || storedSessionId.startsWith('pi_'))) {
+        sessionKeys.add(storedSessionId);
+      }
+      
+      if (storedPaymentIntent && (storedPaymentIntent.startsWith('cs_') || storedPaymentIntent.startsWith('pi_'))) {
+        sessionKeys.add(storedPaymentIntent);
+      }
+      
+      if (currentSessionId && (currentSessionId.startsWith('cs_') || currentSessionId.startsWith('pi_'))) {
         sessionKeys.add(currentSessionId);
       }
 
-      // Check for stored order session IDs
-      const storedSessionId = localStorage.getItem('lastOrderSessionId');
-      if (storedSessionId) {
-        sessionKeys.add(storedSessionId);
-      }
-
-      // Check for stored payment intent IDs
-      const storedPaymentIntent = localStorage.getItem('lastPaymentIntent');
-      if (storedPaymentIntent) {
-        sessionKeys.add(storedPaymentIntent);
-      }
-
-      // Get any existing stripe session IDs and payment intent IDs from recent localStorage entries
+      // Get any Stripe session IDs and payment intent IDs from localStorage values (not keys)
       const allKeys = Object.keys(localStorage);
       for (const key of allKeys) {
         const value = localStorage.getItem(key);
-        if (value && (value.startsWith('cs_') || value.startsWith('pi_'))) { // Stripe session IDs and payment intent IDs
-          sessionKeys.add(value);
-        }
-      }
-
-      // Link each session to the user
-      for (const sessionKey of Array.from(sessionKeys)) {
-        if (sessionKey && sessionKey.trim()) {
-          try {
-            await supabase.rpc('link_customer_session', {
-              customer_email: userEmail,
-              session_token: sessionKey.trim()
-            });
-          } catch (rpcError) {
-            console.error('Failed to link session token:', sessionKey, rpcError);
-            // Continue with other sessions even if one fails
+        if (value && typeof value === 'string' && value.length < 200) { // Avoid JSON objects and long strings
+          if (value.startsWith('cs_') || value.startsWith('pi_')) { // Stripe session IDs and payment intent IDs
+            sessionKeys.add(value);
           }
         }
       }
 
-      console.log('Linked session tokens to user:', userEmail, Array.from(sessionKeys));
+      // Only process if we have valid session tokens
+      if (sessionKeys.size === 0) {
+        console.log('No valid session tokens found to link');
+        return;
+      }
+
+      // Link each session to the user with better error handling
+      const successfulLinks = [];
+      const failedLinks = [];
+      
+      for (const sessionKey of Array.from(sessionKeys)) {
+        if (sessionKey && sessionKey.trim() && sessionKey.length > 10) { // Basic validation
+          try {
+            const { error } = await supabase.rpc('link_customer_session', {
+              customer_email: userEmail,
+              session_token: sessionKey.trim()
+            });
+            
+            if (error) {
+              console.error('RPC error linking session:', sessionKey, error);
+              failedLinks.push(sessionKey);
+            } else {
+              successfulLinks.push(sessionKey);
+            }
+          } catch (rpcError) {
+            console.error('Failed to link session token:', sessionKey, rpcError);
+            failedLinks.push(sessionKey);
+          }
+        }
+      }
+
+      console.log('Linked session tokens to user:', userEmail, successfulLinks);
+      if (failedLinks.length > 0) {
+        console.warn('Failed to link some sessions:', failedLinks);
+      }
     } catch (error) {
       console.error('Error linking sessions to user:', error);
     }
