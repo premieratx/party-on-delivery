@@ -50,7 +50,11 @@ export const GuidelinesViewer: React.FC<GuidelinesViewerProps> = ({ className = 
           .order('title');
 
         if (error) throw error;
-        setGuidelines(data || []);
+        setGuidelines((data || []).map(item => ({
+          ...item,
+          rules: Array.isArray(item.rules) ? item.rules.map(r => String(r)) : [],
+          examples: Array.isArray(item.examples) ? item.examples : []
+        })));
       } catch (error) {
         console.error('Error loading guidelines:', error);
       } finally {
