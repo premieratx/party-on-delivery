@@ -24,9 +24,7 @@ const CustomPartyOnDeliveryStartScreen = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // DISABLED TO PREVENT PRELOADING
-    console.log('🚫 CustomPartyOnDeliveryStartScreen loadAppConfig DISABLED');
-    setLoading(false);
+    // Set static config without loading states
     setAppConfig({
       app_name: 'Party On Delivery & Concierge',
       app_slug: 'party-on-delivery---concierge-',
@@ -35,6 +33,7 @@ const CustomPartyOnDeliveryStartScreen = () => {
         subtitle: 'Premium party supplies and alcohol delivered to your door'
       }
     });
+    setLoading(false);
   }, []);
 
   const handleStartOrder = () => {
@@ -68,10 +67,10 @@ const CustomPartyOnDeliveryStartScreen = () => {
             {/* Title */}
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {loading ? 'Loading...' : (appConfig?.start_screen_config?.title || appConfig?.app_name || 'Party On Delivery & Concierge')}
+                {appConfig?.start_screen_config?.title || appConfig?.app_name || 'Party On Delivery & Concierge'}
               </h1>
               <p className="text-gray-600">
-                {loading ? 'Please wait...' : (appConfig?.start_screen_config?.subtitle || 'Premium party supplies and alcohol delivered to your door')}
+                {appConfig?.start_screen_config?.subtitle || 'Premium party supplies and alcohol delivered to your door'}
               </p>
             </div>
 
