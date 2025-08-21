@@ -17,12 +17,9 @@ export const useProductPreloader = () => {
   const [cache, setCache] = useState<ProductCache>(globalProductCache);
 
   const preloadCollection = useCallback(async (collectionHandle: string) => {
-    console.log(`⚡ INSTANT: Preloading collection: ${collectionHandle}`);
-    
     // Check if already cached and not expired
     const existing = globalProductCache[collectionHandle];
     if (existing && Date.now() - existing.lastUpdated < CACHE_DURATION) {
-      console.log(`✅ INSTANT HIT: Using cached data for ${collectionHandle}`);
       return existing.products;
     }
     
@@ -35,7 +32,7 @@ export const useProductPreloader = () => {
     setCache({ ...globalProductCache });
 
     try {
-      // Use instant cache for 0.2s loading
+      // Use instant cache for fast loading
       const { data, error } = await supabase.functions.invoke('instant-product-cache', {
         body: {
           collection_handle: collectionHandle,
@@ -46,9 +43,8 @@ export const useProductPreloader = () => {
       if (error) throw error;
 
       const products = data?.products || [];
-      console.log(`⚡ INSTANT: Loaded ${products.length} products for ${collectionHandle} in ${data?.load_time || 'fast'}`);
       
-      // Update cache
+      // Update cache - silent success
       globalProductCache[collectionHandle] = {
         products,
         lastUpdated: Date.now(),
@@ -74,9 +70,8 @@ export const useProductPreloader = () => {
         if (fallbackError) throw fallbackError;
 
         const products = data?.products || [];
-        console.log(`🔄 FALLBACK: Loaded ${products.length} products for ${collectionHandle}`);
         
-        // Update cache
+        // Update cache - silent success
         globalProductCache[collectionHandle] = {
           products,
           lastUpdated: Date.now(),

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, ShoppingCart, CreditCard } from 'lucide-react';
+import { Search, ShoppingCart, CreditCard, Check } from 'lucide-react';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
+import { safePrice, formatPrice } from '@/utils/safeCalculations';
 
 // Preload critical images
 const preloadImage = (src: string): Promise<void> => {
@@ -224,57 +225,57 @@ export const CombinedSearchTabs = ({
               ))}
             </div>
             
-            {/* Search Bar with Cart and Checkout */}
+            {/* Search Bar with Cart and Checkout - Prioritize tabs visibility */}
             {showSearch && (
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <div className="flex items-center gap-2 ml-2">
+                {/* Compact Search Bar - shrinks first */}
+                <div className="relative min-w-[120px] max-w-[200px] flex-shrink-2">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                     onFocus={handleSearchFocus}
                     onBlur={handleSearchBlur}
-                    className="pl-10 h-10 bg-muted/50 border-muted-foreground/20 focus:border-primary transition-colors"
+                    className="pl-8 pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus:border-primary transition-colors"
                   />
                   {isSearching && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>
                   )}
                 </div>
                 
-                {/* Cart and Checkout Buttons */}
-                <div className="flex items-center gap-2">
-                  {/* Cart Button */}
+                {/* Compact Cart and Checkout - shrink to icons on smaller screens */}
+                <div className="flex items-center gap-1">
+                  {/* Cart Button - Compact */}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onOpenCart}
-                    className="h-10 px-3 bg-background/50 hover:bg-background border-muted-foreground/20 hover:border-primary/50"
+                    className="h-8 px-2 text-xs bg-background/50 hover:bg-background border-muted-foreground/20 hover:border-primary/50 flex-shrink-0"
                   >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Cart</span>
+                    <ShoppingCart className="w-3 h-3 mr-1" />
+                    <span className="hidden lg:inline text-xs">Cart</span>
                     {cartItemCount > 0 && (
-                      <span className="ml-1 text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+                      <span className="ml-1 text-[10px] bg-primary text-primary-foreground rounded-full px-1 py-0.5 min-w-[1rem] h-4 flex items-center justify-center">
                         {cartItemCount}
                       </span>
                     )}
                   </Button>
                   
-                  {/* Checkout Button */}
+                  {/* Checkout Button - Compact with checkmark */}
                   {cartItemCount > 0 && (
                     <Button
                       size="sm"
                       onClick={onCheckout}
-                      className="h-10 px-4 bg-primary hover:bg-primary/90 text-primary-foreground"
+                      className="h-8 px-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
                     >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      <span className="hidden sm:inline">Checkout</span>
-                      <span className="sm:hidden">Pay</span>
-                      <span className="ml-2 font-semibold">
-                        ${totalAmount?.toFixed(2)}
+                      <Check className="w-3 h-3 mr-1" />
+                      <span className="hidden xl:inline text-xs">Checkout</span>
+                      <span className="text-xs font-semibold ml-1">
+                        ${formatPrice(safePrice(totalAmount))}
                       </span>
                     </Button>
                   )}
@@ -318,50 +319,50 @@ export const CombinedSearchTabs = ({
           </div>
         </div>
 
-        {/* Second Row - Cart, Checkout, and Search Icons (Mobile) */}
+        {/* Second Row - Cart, Checkout, and Search Icons (Mobile) - Maximize space usage */}
         <div className="container mx-auto px-4 pb-2">
-          <div className="flex items-center gap-2">
-            {/* Search Icon - Now in same row as cart/checkout */}
+          <div className="flex items-center gap-2 w-full">
+            {/* Search Icon - Compact */}
             {showSearch && !isSearchExpanded && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSearchIconClick}
-                className="flex-shrink-0 h-10 w-10 p-0 border-2 border-muted"
+                className="flex-shrink-0 h-10 w-10 p-0 border border-muted hover:border-primary transition-colors"
                 title="Search"
               >
                 <Search className="w-4 h-4" />
               </Button>
             )}
             
-            {/* Cart Button - Mobile (Icon only) */}
+            {/* Cart Button - Mobile (Maximize space, show quantity and total) */}
             <Button
               variant="outline"
               onClick={onOpenCart}
-              className="flex-1 flex items-center justify-center gap-1 h-10 text-sm border-2 hover:bg-muted transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 h-10 text-sm border hover:bg-muted transition-colors min-w-0"
               disabled={cartItemCount === 0}
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-4 h-4 flex-shrink-0" />
               {cartItemCount > 0 && (
-                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
+                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center flex-shrink-0">
                   {cartItemCount}
                 </span>
               )}
               {totalAmount > 0 && (
-                <span className="font-bold text-xs">${totalAmount.toFixed(2)}</span>
+                <span className="font-bold text-sm truncate">${formatPrice(safePrice(totalAmount))}</span>
               )}
             </Button>
             
-            {/* Checkout Button - Mobile (Icon only) */}
+            {/* Checkout Button - Mobile (Checkmark + total, maximize space) */}
             <Button
               onClick={onCheckout}
-              className="flex-1 flex items-center justify-center gap-1 h-10 text-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+              className="flex-1 flex items-center justify-center gap-2 h-10 text-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 shadow-sm hover:shadow-md min-w-0"
               variant="default"
               disabled={cartItemCount === 0}
             >
-              <CreditCard className="w-4 h-4" />
+              <Check className="w-4 h-4 flex-shrink-0" />
               {totalAmount > 0 && (
-                <span className="font-bold text-xs">${totalAmount.toFixed(2)}</span>
+                <span className="font-bold text-sm truncate">${formatPrice(safePrice(totalAmount))}</span>
               )}
             </Button>
           </div>

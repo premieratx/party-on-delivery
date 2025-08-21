@@ -79,16 +79,10 @@ export const useUnifiedCart = () => {
       return;
     }
     
+    // Reduced logging - only log critical operations
     const qty = Math.max(0, Math.floor(Number(newQuantity) || 0));
     const normalizedVariant = normalizeVariant(variant);
     const nid = normalizeId(id);
-    
-    console.log('🛒 updateQuantity ATOMIC:', { 
-      id: nid, 
-      variant: normalizedVariant, 
-      newQuantity: qty,
-      operation: qty === 0 ? 'REMOVE' : qty > 0 ? 'SET' : 'INVALID'
-    });
     
     setCartItems(currentItems => {
       // Find existing item using strict matching
@@ -101,7 +95,6 @@ export const useUnifiedCart = () => {
       if (qty <= 0) {
         // REMOVE operation
         if (existingIndex >= 0) {
-          console.log('🛒 ATOMIC REMOVE:', id, normalizedVariant);
           return currentItems.filter((_, index) => index !== existingIndex);
         }
         return currentItems;
@@ -109,7 +102,6 @@ export const useUnifiedCart = () => {
       
       if (existingIndex >= 0) {
         // UPDATE operation
-        console.log('🛒 ATOMIC UPDATE:', id, normalizedVariant, 'quantity:', qty);
         const newItems = [...currentItems];
         newItems[existingIndex] = { 
           ...newItems[existingIndex], 
@@ -118,7 +110,6 @@ export const useUnifiedCart = () => {
         return newItems;
       } else if (productData) {
         // CREATE operation with bulletproof data validation
-        console.log('🛒 ATOMIC CREATE:', nid, normalizedVariant, 'quantity:', qty);
         const newItem: UnifiedCartItem = {
           id: nid,
           productId: nid,
@@ -150,15 +141,8 @@ export const useUnifiedCart = () => {
       return;
     }
     
-    console.log('🛒 addToCart ATOMIC:', { 
-      id: item.id, 
-      variant: normalizeVariant(item.variant), 
-      title: item.title 
-    });
-    
     // Get current quantity from current state
     const currentQty = cartItems.find(cartItem => matchesItem(cartItem, item.id, item.variant))?.quantity || 0;
-    console.log('🛒 ATOMIC INCREMENT from', currentQty, 'to', currentQty + 1);
     
     // Use updateQuantity with product data (atomic operation)
     updateQuantity(item.id, item.variant, currentQty + 1, item);

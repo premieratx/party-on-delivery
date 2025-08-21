@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { X, Plus, Minus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { parseProductTitle } from '@/utils/productUtils';
+import { safePrice, formatPrice } from '@/utils/safeCalculations';
+import { withCartErrorBoundary } from '@/components/common/RobustCartErrorBoundary';
 import DOMPurify from 'dompurify';
 
 interface ShopifyProduct {
@@ -33,7 +35,7 @@ interface ProductLightboxProps {
   onProceedToCheckout?: () => void;
 }
 
-export const ProductLightbox: React.FC<ProductLightboxProps> = ({
+const ProductLightboxComponent: React.FC<ProductLightboxProps> = ({
   product,
   isOpen,
   onClose,
@@ -232,7 +234,7 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
               
               {/* Price */}
               <Badge variant="secondary" className="text-lg font-semibold mb-4 px-3 py-1">
-                ${(variant?.price || 0).toFixed(2)}
+                ${formatPrice(safePrice(variant?.price))}
               </Badge>
 
               {/* Description */}
@@ -356,3 +358,5 @@ export const ProductLightbox: React.FC<ProductLightboxProps> = ({
     </Dialog>
   );
 };
+
+export const ProductLightbox = withCartErrorBoundary(ProductLightboxComponent);

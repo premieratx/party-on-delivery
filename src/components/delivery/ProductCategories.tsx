@@ -254,14 +254,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     const currentQty = getCartItemQuantity(normalizedProductId, normalizedVariantId);
     const newQty = Math.max(0, currentQty + delta);
     
-    console.log('🛒 ProductCategories: handleQuantityChange', {
-      productId: normalizedProductId,
-      variantId: normalizedVariantId,
-      currentQty,
-      delta,
-      newQty
-    });
-    
     // FIXED: Get product from source data (not displayProducts to avoid circular dependency)
     const product = [...(currentTabProducts || []), ...searchProducts].find(p => String(p.id) === normalizedProductId);
     
