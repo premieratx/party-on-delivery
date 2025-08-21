@@ -11,7 +11,9 @@ import {
   Star, 
   Copy,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  ExternalLink,
+  Link2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
@@ -200,6 +202,27 @@ export const EnhancedPostCheckoutManager: React.FC = () => {
     }
   };
 
+  const copyPageUrl = async (page: PostCheckoutPage) => {
+    const url = `https://order.partyondelivery.com/post-checkout/${page.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(`Copied URL for ${page.name}`);
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      toast.success(`Copied URL for ${page.name}`);
+    }
+  };
+
+  const openPageUrl = (page: PostCheckoutPage) => {
+    window.open(`/post-checkout/${page.slug}`, '_blank');
+  };
+
   const defaultPage = pages.find(page => page.is_default);
   const hasPages = pages.length > 0;
 
@@ -310,8 +333,31 @@ export const EnhancedPostCheckoutManager: React.FC = () => {
                           <p className="text-sm text-muted-foreground mb-1">
                             {page.content?.title || 'No title set'}
                           </p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-xs font-mono bg-muted px-2 py-1 rounded text-primary">
+                              https://order.partyondelivery.com/post-checkout/{page.slug}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => copyPageUrl(page)}
+                              className="h-5 w-5 p-0"
+                              title="Copy URL"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => openPageUrl(page)}
+                              className="h-5 w-5 p-0"
+                              title="Open in new tab"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          </div>
                           <p className="text-xs text-muted-foreground">
-                            Slug: /post-checkout/{page.slug} • Created: {new Date(page.created_at).toLocaleDateString()}
+                            Created: {new Date(page.created_at).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="flex gap-2">

@@ -12,7 +12,9 @@ import {
   Download,
   Upload,
   Edit,
-  Trash2
+  Trash2,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { UnifiedCoverPageEditor, type CoverPageConfig, type CoverButtonConfig } from '@/components/admin/UnifiedCoverPageEditor';
 import { HomepageCoverSettings } from '@/components/admin/HomepageCoverSettings';
@@ -126,6 +128,33 @@ export default function CoverPagesAdmin() {
     } catch (error) {
       console.error('Error deleting cover page:', error);
       toast.error('Failed to delete cover page');
+    }
+  };
+
+  const copyCoverUrl = async (projectId: string) => {
+    const coverPage = coverPages.find(p => p.id === projectId);
+    if (coverPage) {
+      const url = `https://order.partyondelivery.com/cover/${coverPage.slug}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success(`Copied URL for ${coverPage.title}`);
+      } catch (error) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = url;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast.success(`Copied URL for ${coverPage.title}`);
+      }
+    }
+  };
+
+  const openCoverUrl = (projectId: string) => {
+    const coverPage = coverPages.find(p => p.id === projectId);
+    if (coverPage) {
+      window.open(`/cover/${coverPage.slug}`, '_blank');
     }
   };
 
@@ -272,6 +301,30 @@ export default function CoverPagesAdmin() {
                           </Badge>
                         </div>
                         
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="text-sm font-mono bg-muted px-2 py-1 rounded text-primary">
+                            https://order.partyondelivery.com/cover/{coverPages.find(p => p.id === project.id)?.slug}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyCoverUrl(project.id)}
+                            className="h-5 w-5 p-0"
+                            title="Copy URL"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openCoverUrl(project.id)}
+                            className="h-5 w-5 p-0"
+                            title="Open in new tab"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>Created: {project.createdAt}</span>
                           <span>Modified: {project.lastModified}</span>
@@ -295,15 +348,10 @@ export default function CoverPagesAdmin() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            const coverPage = coverPages.find(p => p.id === project.id);
-                            if (coverPage) {
-                              window.open(`/cover/${coverPage.slug}`, '_blank');
-                            }
-                          }}
-                          title="Preview"
+                          onClick={() => openCoverUrl(project.id)}
+                          title="Open Live URL"
                         >
-                          <Eye className="w-4 h-4" />
+                          <ExternalLink className="w-4 h-4" />
                         </Button>
                         
                         <Button

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Eye, Trash2 } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, Copy, ExternalLink } from 'lucide-react';
 
 const CoverPageManager = () => {
   const [showEditor, setShowEditor] = useState(false);
@@ -51,6 +51,33 @@ const CoverPageManager = () => {
     setShowEditor(false);
     setSelectedPage(null);
     loadCoverPages();
+  };
+
+  const copyCoverUrl = async (page: any) => {
+    const url = `https://order.partyondelivery.com/cover/${page.slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: 'URL Copied',
+        description: `Copied URL for ${page.title}`
+      });
+    } catch (error) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      toast({
+        title: 'URL Copied',
+        description: `Copied URL for ${page.title}`
+      });
+    }
+  };
+
+  const openCoverUrl = (page: any) => {
+    window.open(`/cover/${page.slug}`, '_blank');
   };
 
   const handleDelete = async (pageId: string) => {
@@ -174,6 +201,30 @@ const CoverPageManager = () => {
                       </p>
                     )}
                     
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-xs font-mono bg-muted px-2 py-1 rounded text-primary">
+                        https://order.partyondelivery.com/cover/{page.slug}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyCoverUrl(page)}
+                        className="h-5 w-5 p-0"
+                        title="Copy URL"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => openCoverUrl(page)}
+                        className="h-5 w-5 p-0"
+                        title="Open in new tab"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
                     <div className="flex gap-2 pt-2">
                       <Button 
                         size="sm" 
@@ -187,11 +238,11 @@ const CoverPageManager = () => {
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => window.open(`/${page.slug}`, '_blank')}
+                        onClick={() => openCoverUrl(page)}
                         className="gap-1"
                       >
-                        <Eye className="h-3 w-3" />
-                        Preview
+                        <ExternalLink className="h-3 w-3" />
+                        Live
                       </Button>
                       <Button 
                         size="sm" 

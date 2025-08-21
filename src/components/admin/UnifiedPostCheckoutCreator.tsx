@@ -228,9 +228,8 @@ export const UnifiedPostCheckoutCreator: React.FC<UnifiedPostCheckoutCreatorProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
-        <div className="h-full flex flex-col">
-          <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto flex flex-col">
+        <DialogHeader className="flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
             <DialogTitle className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">
@@ -256,9 +255,9 @@ export const UnifiedPostCheckoutCreator: React.FC<UnifiedPostCheckoutCreatorProp
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-hidden">
-            <Tabs defaultValue="content" className="h-full flex flex-col">
-              <div className="px-6 pt-4 border-b">
+          <div className="flex-1 overflow-y-auto">
+            <Tabs defaultValue="content" className="flex flex-col">
+              <div className="px-6 pt-4 border-b flex-shrink-0">
                 <TabsList className="grid w-full grid-cols-3 max-w-md">
                   <TabsTrigger value="content" className="flex items-center gap-2">
                     <Settings className="w-4 h-4" />
@@ -275,7 +274,7 @@ export const UnifiedPostCheckoutCreator: React.FC<UnifiedPostCheckoutCreatorProp
                 </TabsList>
               </div>
 
-              <TabsContent value="content" className="flex-1 overflow-y-auto p-6">
+              <TabsContent value="content" className="p-6">
                 <div className="max-w-2xl mx-auto space-y-6">
                   <Card>
                     <CardHeader>
@@ -366,7 +365,7 @@ export const UnifiedPostCheckoutCreator: React.FC<UnifiedPostCheckoutCreatorProp
                 </div>
               </TabsContent>
 
-              <TabsContent value="theme" className="flex-1 overflow-y-auto p-6">
+              <TabsContent value="theme" className="p-6">
                 <div className="max-w-2xl mx-auto">
                   <Card>
                     <CardHeader>
@@ -409,7 +408,7 @@ export const UnifiedPostCheckoutCreator: React.FC<UnifiedPostCheckoutCreatorProp
                 </div>
               </TabsContent>
 
-              <TabsContent value="preview" className="flex-1 overflow-hidden p-6">
+              <TabsContent value="preview" className="p-6">
                 <div className="h-full flex flex-col">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Live Preview</h3>
@@ -457,7 +456,6 @@ export const UnifiedPostCheckoutCreator: React.FC<UnifiedPostCheckoutCreatorProp
               </TabsContent>
             </Tabs>
           </div>
-        </div>
       </DialogContent>
     </Dialog>
   );
