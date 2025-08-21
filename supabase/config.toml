@@ -3,6 +3,9 @@ project_id = "acmlfzfliqupwxwoefdq"
 [functions.cache-warmer]
 verify_jwt = false
 
+[functions.keep-alive-scheduler]
+verify_jwt = false
+
 [functions.cleanup-payment-data]
 verify_jwt = false
 
@@ -28,4 +31,19 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.process-order-complete]
+verify_jwt = false
+
+[functions.get-unified-products]
+verify_jwt = false
+
+[functions.ultra-fast-search]
+verify_jwt = false
+
+[functions.fetch-shopify-products]
+verify_jwt = false
+
+[functions.validate-promo-code]
+verify_jwt = false
+
+[functions.get-dashboard-data]
 verify_jwt = false

@@ -4723,6 +4723,10 @@ export type Database = {
         }
         Returns: string
       }
+      trigger_keep_alive: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       trigger_shopify_bulk_sync: {
         Args: Record<PropertyKey, never>
         Returns: Json
