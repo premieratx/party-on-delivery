@@ -5,16 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { useSessionTracking } from '@/hooks/useSessionTracking';
-import { useDashboardSync } from '@/hooks/useDashboardSync';
-import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
 import { formatCurrency } from '@/utils/currency';
-import { CalendarDays, MapPin, Package, Share2, LogOut, MessageSquare, ChevronDown, RefreshCw, ChevronUp } from 'lucide-react';
+import { CalendarDays, MapPin, Package, LogOut, MessageSquare, ChevronDown, RefreshCw, ChevronUp, User, Mail } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
-import { formatInAppTimezone, toAppTimezone } from '@/utils/timezoneManager';
+import { formatInAppTimezone } from '@/utils/timezoneManager';
 
 interface Customer {
   id: string | number;
@@ -42,7 +39,6 @@ interface Order {
   special_instructions?: string;
   line_items: any;
   created_at: string;
-  share_token?: string;
   customer_id?: string;
   session_id?: string;
   shopify_order_id?: string;
@@ -58,7 +54,7 @@ const CustomerDashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [expandedOrderItems, setExpandedOrderItems] = useState<Set<string>>(new Set());
-  const [showFullOrderSummary, setShowFullOrderSummary] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     loadCustomerData();
@@ -70,24 +66,6 @@ const CustomerDashboard = () => {
       }
     };
   }, []);
-
-  // Set up dashboard sync
-  const { refreshDashboardData } = useDashboardSync({
-    dashboardType: 'customer',
-    userEmail: customer?.email,
-    onOrderUpdate: (order) => {
-      setOrders(prevOrders => {
-        const exists = prevOrders.some(o => o.id === order.id);
-        if (!exists) {
-          return [order, ...prevOrders];
-        }
-        return prevOrders.map(o => o.id === order.id ? order : o);
-      });
-    },
-    onCustomerUpdate: (updatedCustomer) => {
-      setCustomer(prev => ({ ...prev, ...updatedCustomer }));
-    }
-  });
 
   const loadCustomerData = async (isRefresh = false) => {
     try {
@@ -101,9 +79,14 @@ const CustomerDashboard = () => {
         return;
       }
 
+      // Set user info for display
+      setUser(session.user);
+
       // Sync Shopify orders for this customer for the last 3 days
       try {
-        await supabase.functions.invoke('sync-shopify-orders-recent', { body: { days: 3, customerEmail: session.user.email } });
+        await supabase.functions.invoke('sync-shopify-orders-recent', { 
+          body: { days: 3, customerEmail: session.user.email } 
+        });
       } catch (e) {
         console.warn('Shopify sync (customer) skipped:', e);
       }
@@ -150,119 +133,40 @@ const CustomerDashboard = () => {
 
       // First, try to link any recent sessions to this customer before loading orders
       await linkSessionToUser(session.user.email!);
+
+      // Load orders directly by email address - simple and reliable
+      console.log('Loading orders for customer:', session.user.email);
       
-      // Refetch customer data to get updated session tokens after linking
-      const { data: updatedCustomerData } = await supabase
-        .from('customers')
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('customer_orders')
         .select('*')
-        .eq('email', session.user.email)
-        .single();
+        .eq('delivery_address->>email', session.user.email)
+        .order('created_at', { ascending: false });
+
+      if (ordersError) throw ordersError;
       
-      const currentCustomer = updatedCustomerData || customerData;
+      // Remove duplicates based on shopify_order_id and id
+      const uniqueOrders = ordersData?.reduce((acc, order) => {
+        const existingOrder = acc.find(o => 
+          (o.shopify_order_id && o.shopify_order_id === order.shopify_order_id) ||
+          o.id === order.id
+        );
+        if (!existingOrder) {
+          acc.push(order);
+        }
+        return acc;
+      }, [] as any[]);
       
-      // Use the unified dashboard data service for customer orders
-      const { data: dashboardData, error: dashboardError } = await supabase.functions.invoke('get-dashboard-data', {
-        body: { 
-          type: 'customer', 
-          email: session.user.email 
-        }
-      });
+      setOrders(uniqueOrders || []);
+      console.log('Loaded', uniqueOrders?.length || 0, 'orders for customer');
 
-      if (dashboardError) {
-        console.error('Dashboard data error:', dashboardError);
-        // Fallback to direct queries if service fails
-        let ordersQuery = supabase
-          .from('customer_orders')
-          .select('*');
-        
-        if (currentCustomer?.id) {
-          // Create a comprehensive filter for all possible ways to find customer orders
-          const filters = [`customer_id.eq.${currentCustomer.id}`];
-          
-          // Add session tokens if they exist (handle missing property)
-          if ((currentCustomer as any).session_tokens && (currentCustomer as any).session_tokens.length > 0) {
-            (currentCustomer as any).session_tokens.forEach((token: string) => {
-              if (token && token.trim()) {
-                filters.push(`session_id.eq.${token}`);
-              }
-            });
-          }
-          
-          // Add group order sharing - find orders with same share_token
-          filters.push(`delivery_address->>email.eq.${session.user.email}`);
-          
-          // Also look for orders that have been shared with this user (group orders)
-          const { data: sharedOrders } = await supabase
-            .from('customer_orders')
-            .select('share_token')
-            .or(`customer_id.eq.${currentCustomer.id},delivery_address->>email.eq.${session.user.email}`)
-            .not('share_token', 'is', null);
-          
-          if (sharedOrders && sharedOrders.length > 0) {
-            const shareTokens = sharedOrders.map(o => `share_token.eq.${o.share_token}`);
-            if (shareTokens.length > 0) {
-              filters.push(...shareTokens);
-            }
-          }
-          
-          ordersQuery = ordersQuery.or(filters.join(','));
-        } else {
-          // Fallback if no customer data - search by email and look for group orders
-          const emailFilter = `delivery_address->>email.eq.${session.user.email}`;
-          
-          // Also look for group orders where this email might be in group_participants
-          const { data: groupOrders } = await supabase
-            .from('customer_orders')
-            .select('id, share_token')
-            .contains('group_participants', [{ email: session.user.email }]);
-          
-          if (groupOrders && groupOrders.length > 0) {
-            const groupFilters = groupOrders.map(o => `id.eq.${o.id}`);
-            ordersQuery = ordersQuery.or([emailFilter, ...groupFilters].join(','));
-          } else {
-            ordersQuery = ordersQuery.or(emailFilter);
-          }
-        }
-        
-        const { data: ordersData, error: ordersError } = await ordersQuery
-          .order('created_at', { ascending: false });
-
-        if (ordersError) throw ordersError;
-        
-        // Remove duplicates based on shopify_order_id and id
-        const uniqueOrders = ordersData?.reduce((acc, order) => {
-          const existingOrder = acc.find(o => 
-            (o.shopify_order_id && o.shopify_order_id === order.shopify_order_id) ||
-            o.id === order.id
-          );
-          if (!existingOrder) {
-            acc.push(order);
-          }
-          return acc;
-        }, [] as any[]);
-        
-        setOrders(uniqueOrders || []);
-      } else if (dashboardData.error) {
-        throw new Error(dashboardData.error);
-      } else {
-        // Use dashboard service data
-        setOrders(dashboardData.data.orders || []);
-        // Update customer stats if available
-        if (dashboardData.data.customers && dashboardData.data.customers[0]) {
-          setCustomer(prev => ({
-            ...prev,
-            ...dashboardData.data.customers[0]
-          }));
-        }
-      }
-
-      // Set up real-time subscription for new orders - listen to all orders for this user
+      // Set up real-time subscription for new orders
       const channel = supabase
         .channel('customer-orders-changes')
         .on(
           'postgres_changes',
           {
-            event: '*', // Listen to all changes
+            event: '*',
             schema: 'public',
             table: 'customer_orders'
           },
@@ -271,15 +175,13 @@ const CustomerDashboard = () => {
             const order = payload.new as Order;
             
             // Check if this order belongs to current customer
-            const belongsToCustomer = order.customer_id === String(currentCustomer?.id) ||
-              ((currentCustomer as any)?.session_tokens && (currentCustomer as any).session_tokens.includes(order.session_id)) ||
-              (order.delivery_address && typeof order.delivery_address === 'object' && 
-               order.delivery_address.email === session.user.email);
+            const belongsToCustomer = order.delivery_address && 
+              typeof order.delivery_address === 'object' && 
+              order.delivery_address.email === session.user.email;
             
             if (belongsToCustomer) {
               if (payload.eventType === 'INSERT') {
                 setOrders(prevOrders => {
-                  // Avoid duplicates based on both id and shopify_order_id
                   const isDuplicate = prevOrders.some(o => 
                     o.id === order.id || 
                     (o.shopify_order_id && order.shopify_order_id && o.shopify_order_id === order.shopify_order_id)
@@ -324,26 +226,9 @@ const CustomerDashboard = () => {
       setIsLoading(false);
       setIsRefreshing(false);
       
-      // Check if user should be redirected to group order dashboard
-      const groupOrderJoinDecision = localStorage.getItem('groupOrderJoinDecision');
-      const originalGroupOrderData = localStorage.getItem('originalGroupOrderData');
-      
-      if (groupOrderJoinDecision === 'yes' && originalGroupOrderData && customer) {
-        try {
-          const groupData = JSON.parse(originalGroupOrderData);
-          if (groupData.shareToken) {
-            // Clean up localStorage
-            localStorage.removeItem('groupOrderJoinDecision');
-            localStorage.removeItem('originalGroupOrderData');
-            
-            // Redirect to group order dashboard
-            navigate(`/order/${groupData.shareToken}`);
-            return;
-          }
-        } catch (error) {
-          console.error('Error parsing group order data:', error);
-        }
-      }
+      // Clean up any old localStorage
+      localStorage.removeItem('groupOrderJoinDecision');
+      localStorage.removeItem('originalGroupOrderData');
     }
   };
 
@@ -357,19 +242,17 @@ const CustomerDashboard = () => {
   };
 
   const handleTextUs = () => {
-    const phoneNumber = '7373719700'; // Customer service phone number
+    const phoneNumber = '7373719700';
     const customerName = customer?.first_name && customer?.last_name 
       ? `${customer.first_name} ${customer.last_name}` 
       : customer?.email || 'Customer';
     const message = `Hi! I need to make changes to my order. Customer: ${customerName} (${customer?.email})`;
     
-    // Check if on mobile device
     const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     if (isMobile) {
       window.location.href = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
     } else {
-      // For desktop, copy message and show instructions
       navigator.clipboard.writeText(`${phoneNumber}: ${message}`);
       toast({
         title: "Message Copied",
@@ -378,789 +261,262 @@ const CustomerDashboard = () => {
     }
   };
 
-  // Create combined order summary grouped by product collections
-  const getCombinedOrderSummary = () => {
-    const allItems: any[] = [];
-    const orderMap = new Map();
-    const itemDedupeMap = new Map(); // For removing duplicates
+  const toggleOrderItemsExpansion = (orderId: string) => {
+    setExpandedOrderItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
+  const getOrderStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'confirmed':
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const formatDateTime = (date: string, time?: string) => {
+    try {
+      const deliveryDate = new Date(date);
+      const formattedDate = formatInAppTimezone(deliveryDate, 'EEE, MMM d');
+      return time ? `${formattedDate} at ${time}` : formattedDate;
+    } catch (error) {
+      return `${date}${time ? ` at ${time}` : ''}`;
+    }
+  };
+
+  const getDeliveryStatus = (order: Order) => {
+    if (order.status === 'delivered') {
+      return 'Delivered';
+    }
     
-    orders.forEach(order => {
-      orderMap.set(order.id, {
-        order_number: order.order_number,
-        customer_name: `${customer?.first_name || ''} ${customer?.last_name || ''}`.trim(),
-        delivery_date: order.delivery_date,
-        delivery_time: order.delivery_time,
-        delivery_address: order.delivery_address,
-        created_at: order.created_at
-      });
+    if (!order.delivery_date) {
+      return 'Date TBD';
+    }
+    
+    try {
+      const deliveryDate = new Date(order.delivery_date);
+      const today = new Date();
+      const daysDiff = differenceInDays(deliveryDate, today);
       
-      (order.line_items || []).forEach((item: any) => {
-        // Create a unique key for deduplication based on product details
-        const itemKey = `${item.title}-${item.price}-${order.id}-${item.variant_id || ''}`;
-        
-        // Push detailed (non-consolidated) copy with delivery info
-        allItems.push({
-          ...item,
-          order_id: order.id,
-          order_number: order.order_number,
-          order_created_at: order.created_at,
-          order_delivery_date: order.delivery_date,
-          order_delivery_time: order.delivery_time,
-        });
-        
-        // Only add to consolidated map if we haven't seen this exact item from this order before
-        if (!itemDedupeMap.has(itemKey)) {
-          itemDedupeMap.set(itemKey, true);
-        }
-      });
-    });
-    
-    // Group detailed items by product category (no consolidation so we can show delivery per item)
-    const groupedDetailed = allItems.reduce((groups, item) => {
-      let category = 'Other';
-      const title = (item.title || '').toLowerCase();
-      if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
-          title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
-        category = 'Beer';
-      } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
-                 title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
-        category = 'Liquor';
-      } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
-                 title.includes('truly') || title.includes('high noon')) {
-        category = 'Seltzers';
-      } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
-        category = 'Wine & Champagne';
-      } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
-                 title.includes('cosmopolitan') || title.includes('mojito')) {
-        category = 'Cocktails';
+      if (daysDiff < 0) {
+        return 'Past Due';
+      } else if (daysDiff === 0) {
+        return 'Today';
+      } else if (daysDiff === 1) {
+        return 'Tomorrow';
+      } else {
+        return `In ${daysDiff} days`;
       }
-      if (!groups[category]) groups[category] = [];
-      groups[category].push(item);
-      return groups;
-    }, {} as Record<string, any[]>);
-
-    // Build consolidated grouping for totals display
-    const groupedItems = allItems.reduce((groups, item) => {
-      let category = 'Other';
-      const title = (item.title || '').toLowerCase();
-      if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
-          title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
-        category = 'Beer';
-      } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
-                 title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
-        category = 'Liquor';
-      } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
-                 title.includes('truly') || title.includes('high noon')) {
-        category = 'Seltzers';
-      } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
-        category = 'Wine & Champagne';
-      } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
-                 title.includes('cosmopolitan') || title.includes('mojito')) {
-        category = 'Cocktails';
-      }
-      if (!groups[category]) groups[category] = [];
-      groups[category].push(item);
-      return groups;
-    }, {} as Record<string, any[]>);
-
-    // Further consolidate identical products across different orders by combining quantities
-    Object.keys(groupedItems).forEach(category => {
-      const consolidatedItems = new Map();
-      groupedItems[category].forEach((item: any) => {
-        const productKey = `${item.title}-${item.price}`;
-        if (consolidatedItems.has(productKey)) {
-          const existingItem: any = consolidatedItems.get(productKey);
-          existingItem.quantity += item.quantity;
-          if (!existingItem.order_numbers) existingItem.order_numbers = [existingItem.order_number];
-          if (!existingItem.order_numbers.includes(item.order_number)) {
-            existingItem.order_numbers.push(item.order_number);
-          }
-        } else {
-          consolidatedItems.set(productKey, { ...item });
-        }
-      });
-      groupedItems[category] = Array.from(consolidatedItems.values()).sort((a: any, b: any) => a.title.localeCompare(b.title));
-    });
-    
-    return { groupedItems, groupedDetailed, orderMap };
-  };
-
-  const toggleOrderItems = (orderId: string) => {
-    const newExpanded = new Set(expandedOrderItems);
-    if (newExpanded.has(orderId)) {
-      newExpanded.delete(orderId);
-    } else {
-      newExpanded.add(orderId);
+    } catch (error) {
+      return 'Date TBD';
     }
-    setExpandedOrderItems(newExpanded);
-  };
-
-  const handleShareOrder = (order: Order) => {
-    // Create a link to share this specific order using its share_token
-    const shareUrl = `${window.location.origin}/order/${order.share_token}`;
-    const deliveryDateFormatted = formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do');
-    const message = `Hey! I ordered drinks for delivery on ${deliveryDateFormatted} at ${order.delivery_time} to ${order.delivery_address?.street}, ${order.delivery_address?.city}, ${order.delivery_address?.state}. Join my order here: ${shareUrl}`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: 'Join My Delivery Order',
-        text: message,
-        url: shareUrl,
-      });
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      toast({
-        title: "Group Link Copied",
-        description: "Share this link for others to join your delivery order!",
-      });
-    }
-  };
-
-  const handleCopyGroupLink = () => {
-    // Create a general group ordering link with free shipping
-    const groupUrl = `${window.location.origin}/?discount=FREESHIPPING&group=true`;
-    
-    navigator.clipboard.writeText(groupUrl);
-    toast({
-      title: "Group Link Copied",
-      description: "Share this link with friends for group ordering with free shipping!",
-    });
-  };
-
-  const getDaysUntilDelivery = (deliveryDate: string) => {
-    const today = toAppTimezone(new Date());
-    const delivery = toAppTimezone(deliveryDate);
-    return differenceInDays(delivery, today);
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
-  const activeOrders = orders.filter(order => 
-    order.status !== 'delivered' && order.delivery_date && 
-    new Date(order.delivery_date) >= new Date()
-  );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {customer?.first_name || 'Customer'}!
-              </h1>
-              <p className="text-sm text-muted-foreground">{customer?.email}</p>
+    <div className="min-h-screen bg-background">
+      {/* User Info Header */}
+      <div className="bg-card border-b">
+        <div className="max-w-6xl mx-auto p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-lg font-semibold text-primary">
+                  {user?.user_metadata?.first_name?.[0] || user?.email?.[0]?.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold">
+                  {user?.user_metadata?.first_name && user?.user_metadata?.last_name 
+                    ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+                    : customer?.name || 'Welcome'}
+                </h1>
+                <p className="text-muted-foreground text-sm flex items-center gap-2">
+                  <Mail className="h-3 w-3" />
+                  {user?.email} • {orders.length} order{orders.length !== 1 ? 's' : ''}
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => loadCustomerData(true)} 
-                disabled={isRefreshing}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            </div>
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Group Ordering Action */}
-        <div className="mb-6">
-          <Card className="border-dashed border-2 border-primary/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-lg mb-1">Start Group Order</h3>
-                  <p className="text-muted-foreground text-sm">Share this link with friends to order together with free shipping!</p>
-                </div>
-                <Button onClick={handleCopyGroupLink} className="flex items-center gap-2">
-                  <Share2 className="h-4 w-4" />
-                  Copy Group Link
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="max-w-6xl mx-auto p-6 space-y-8">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button 
+            onClick={handleAddToOrder}
+            className="bg-primary hover:bg-primary/90"
+          >
+            <Package className="mr-2 h-4 w-4" />
+            Place New Order
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleTextUs}
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Need Help? Text Us
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => loadCustomerData(true)}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" />
+            )}
+            Refresh
+          </Button>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Orders</p>
-                  <p className="text-2xl font-bold">{customer?.total_orders || 0}</p>
-                </div>
-                <Package className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Spent</p>
-                  <p className="text-2xl font-bold">{formatCurrency(customer?.total_spent || 0)}</p>
-                </div>
-                <CalendarDays className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Orders</p>
-                  <p className="text-2xl font-bold">{activeOrders.length}</p>
-                </div>
-                <MapPin className="h-8 w-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Full Order Summary Dropdown */}
-        {orders.length > 0 && (
-          <div className="mb-8">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Complete Order Summary</CardTitle>
-                    <CardDescription>All items across all orders, organized by category</CardDescription>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowFullOrderSummary(!showFullOrderSummary)}
-                    className="flex items-center gap-2"
-                  >
-                    {showFullOrderSummary ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    {showFullOrderSummary ? 'Hide' : 'Show'} Full Summary
-                  </Button>
-                </div>
-              </CardHeader>
-              <Collapsible open={showFullOrderSummary} onOpenChange={setShowFullOrderSummary}>
-                <CollapsibleContent>
-                  <CardContent>
-                    {(() => {
-                      const { groupedItems } = getCombinedOrderSummary();
-                      const totalItems = Object.values(groupedItems).flat().length;
-                      const totalValue = Object.values(groupedItems).flat().reduce((sum: number, item: any) => sum + (Number(item.price) * Number(item.quantity)), 0);
-                      
-                          return (
-                            <div className="space-y-6">
-                              <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
-                                <div>
-                                  <p className="font-semibold text-lg">Total Summary</p>
-                                  <p className="text-sm text-muted-foreground">{totalItems} items across {orders.length} orders</p>
-                                </div>
-                                <p className="text-xl font-bold">{formatCurrency(Number(totalValue) || 0)}</p>
-                              </div>
-
-                              {/* All Purchases by Category (detailed, with delivery dates) */}
-                              {(() => {
-                                const { groupedDetailed } = getCombinedOrderSummary();
-                                const categories = Object.keys(groupedDetailed);
-                                if (categories.length === 0) return null;
-                                return (
-                                  <div className="space-y-4">
-                                    <h4 className="font-semibold">All Purchases by Category</h4>
-                                    {categories.map((category) => (
-                                      <div key={category} className="space-y-2">
-                                        <h5 className="font-medium text-sm text-primary border-b pb-1">{category}</h5>
-                                        <div className="space-y-1 pl-3">
-                                          {groupedDetailed[category]
-                                            .sort((a: any, b: any) => new Date(a.order_delivery_date || a.order_created_at).getTime() - new Date(b.order_delivery_date || b.order_created_at).getTime())
-                                            .map((item: any, idx: number) => (
-                                              <div key={`${category}-${idx}`} className="flex justify-between items-center py-1 text-sm">
-                                                <div className="flex flex-col">
-                                                  <span className="font-medium">{item.quantity}x {item.title}</span>
-                                                  <span className="text-xs text-muted-foreground">Order #{item.order_number} • {item.order_delivery_date ? `${formatInAppTimezone(item.order_delivery_date, 'MMM d, yyyy')}${item.order_delivery_time ? ` at ${item.order_delivery_time}` : ''}` : formatInAppTimezone(item.order_created_at, 'MMM d, yyyy')}</span>
-                                                </div>
-                                                <span className="font-medium">{formatCurrency(Number(item.price) * Number(item.quantity))}</span>
-                                              </div>
-                                            ))}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })()}
-
-                               {/* Show individual orders with their items */}
-                               {orders.map((order) => (
-                                 <div key={order.id} className="space-y-4 border rounded-lg p-4 mb-4">
-                                   <div className="flex justify-between items-start">
-                                     <div>
-                                       <h4 className="font-semibold text-primary text-lg">Order #{order.order_number}</h4>
-                                       <div className="text-sm text-muted-foreground space-y-1">
-                                         <p>Ordered by: <span className="font-medium">{`${customer?.first_name || ''} ${customer?.last_name || ''}`.trim() || customer?.email}</span></p>
-                                          <p>Date: <span className="font-medium">{formatInAppTimezone(order.created_at, 'EEEE, MMMM do, yyyy')}</span></p>
-                                          {order.delivery_date && order.delivery_time && (
-                                            <p>Delivery: <span className="font-medium">{formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do')} at {order.delivery_time}</span></p>
-                                          )}
-                                       </div>
-                                     </div>
-                                     <div className="text-right">
-                                       <p className="font-bold text-lg">{formatCurrency(order.total_amount)}</p>
-                                       <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                                         {order.status}
-                                       </Badge>
-                                     </div>
-                                   </div>
-                                   
-                                   {/* Group items by category for this specific order */}
-                                   <div className="space-y-3">
-                                     {(() => {
-                                       const orderItems = order.line_items || [];
-                                       const categorizedItems = orderItems.reduce((groups: any, item: any) => {
-                                         let category = 'Other';
-                                         const title = item.title.toLowerCase();
-                                         
-                                         if (title.includes('beer') || title.includes('ipa') || title.includes('ale') || title.includes('lager') || 
-                                             title.includes('modelo') || title.includes('miller') || title.includes('coors') || title.includes('lone star')) {
-                                           category = 'Beer';
-                                         } else if (title.includes('vodka') || title.includes('whiskey') || title.includes('rum') || title.includes('gin') || 
-                                                    title.includes('tequila') || title.includes('bourbon') || title.includes('scotch')) {
-                                           category = 'Liquor';
-                                         } else if (title.includes('seltzer') || title.includes('hard seltzer') || title.includes('white claw') || 
-                                                    title.includes('truly') || title.includes('high noon')) {
-                                           category = 'Seltzers';
-                                         } else if (title.includes('wine') || title.includes('champagne') || title.includes('prosecco') || title.includes('rosé')) {
-                                           category = 'Wine & Champagne';
-                                         } else if (title.includes('cocktail') || title.includes('margarita') || title.includes('daiquiri') || 
-                                                    title.includes('cosmopolitan') || title.includes('mojito')) {
-                                           category = 'Cocktails';
-                                         }
-                                         
-                                         if (!groups[category]) groups[category] = [];
-                                         groups[category].push(item);
-                                         return groups;
-                                       }, {});
-                                       
-                                       return Object.entries(categorizedItems).map(([category, items]) => (
-                                         <div key={category} className="space-y-1">
-                                           <h5 className="font-medium text-sm text-primary border-b pb-1">{category}</h5>
-                                           <div className="space-y-1 pl-3">
-                                             {(items as any[]).map((item, index) => (
-                                               <div key={`${order.id}-${index}`} className="flex justify-between items-center py-1 text-sm">
-                                                 <span className="font-medium">{item.quantity}x {item.title}</span>
-                                                 <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                                               </div>
-                                             ))}
-                                           </div>
-                                         </div>
-                                       ));
-                                     })()}
-                                   </div>
-                                 </div>
-                               ))}
-                            </div>
-                          );
-                    })()}
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
+        {/* Orders Section */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Your Orders</h2>
+            <Badge variant="secondary">{orders.length} total</Badge>
           </div>
-        )}
 
-        {/* Live Recent Orders Feed */}
-        <div className="mb-8">
-          <RecentOrdersFeed 
-            orders={orders.slice(0, 5)} 
-            title="Recent Orders"
-            showCustomerInfo={false}
-            onRefresh={refreshDashboardData}
-            refreshInterval={30000}
-          />
-        </div>
-
-        {/* Active Orders */}
-        {activeOrders.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Upcoming Deliveries</h2>
-            <div className="space-y-4">
-              {activeOrders.map((order) => (
-                <Card key={order.id} className="border-l-4 border-l-primary">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg">Order #{order.order_number}</CardTitle>
-                        <CardDescription>
-                          {order.delivery_date && (
-                            <span className="flex items-center gap-2 mt-2">
-                               <CalendarDays className="h-4 w-4" />
-                               {formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do, yyyy')} 
-                               {order.delivery_time && ` at ${order.delivery_time}`}
-                               <Badge variant="secondary">
-                                 {getDaysUntilDelivery(order.delivery_date)} days to go
-                              </Badge>
-                            </span>
-                          )}
-                        </CardDescription>
-                      </div>
-                      <Badge variant={order.status === 'confirmed' ? 'default' : 'secondary'}>
-                        {order.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Delivery Address */}
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">Delivery Address</p>
-                          <p className="text-sm text-muted-foreground">
-                            {order.delivery_address.street}, {order.delivery_address.city}, {order.delivery_address.state} {order.delivery_address.zipCode}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Order Items */}
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-medium">Items ({order.line_items.length})</p>
-                          <p className="text-sm text-muted-foreground">
-                            Ordered on {formatInAppTimezone(order.created_at, 'MMM d, yyyy \'at\' h:mm a')}
-                          </p>
-                        </div>
-                        
-                        {order.line_items.length === 1 ? (
-                          <div className="flex justify-between text-sm py-2 px-3 bg-muted/30 rounded">
-                            <div>
-                              <span className="font-medium">{order.line_items[0].quantity}x {order.line_items[0].title}</span>
-                              <div className="text-xs text-muted-foreground">
-                                Ordered by <span className="font-medium text-base">{customer?.first_name} {customer?.last_name}</span>
-                              </div>
-                            </div>
-                            <span className="font-medium">{formatCurrency(order.line_items[0].price * order.line_items[0].quantity)}</span>
-                          </div>
-                        ) : order.line_items.length <= 3 ? (
-                          <div className="space-y-1">
-                            {order.line_items.map((item: any, index: number) => (
-                              <div key={index} className="flex justify-between text-sm py-1 px-2 bg-muted/20 rounded">
-                                <div>
-                                  <span className="font-medium">{item.quantity}x {item.title}</span>
-                                  <div className="text-xs text-muted-foreground">
-                                    Ordered by <span className="font-medium">{customer?.first_name} {customer?.last_name}</span>
-                                  </div>
-                                </div>
-                                <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="space-y-1 mb-2">
-                              {order.line_items.slice(0, 2).map((item: any, index: number) => (
-                                <div key={index} className="flex justify-between text-sm py-1 px-2 bg-muted/20 rounded">
-                                  <div>
-                                    <span className="font-medium">{item.quantity}x {item.title}</span>
-                                    <div className="text-xs text-muted-foreground">
-                                      Ordered by <span className="font-medium">{customer?.first_name} {customer?.last_name}</span>
-                                    </div>
-                                  </div>
-                                  <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                                </div>
-                              ))}
-                            </div>
-                            <Collapsible open={expandedOrderItems.has(order.id)} onOpenChange={() => toggleOrderItems(order.id)}>
-                              <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm" className="w-full">
-                                  {expandedOrderItems.has(order.id) ? (
-                                    <>Hide {order.line_items.length - 2} more items <ChevronUp className="h-4 w-4 ml-1" /></>
-                                  ) : (
-                                    <>Show {order.line_items.length - 2} more items <ChevronDown className="h-4 w-4 ml-1" /></>
-                                  )}
-                                </Button>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <div className="space-y-1 mt-2">
-                                  {order.line_items.slice(2).map((item: any, index: number) => (
-                                    <div key={index + 2} className="flex justify-between text-sm py-1 px-2 bg-muted/20 rounded">
-                                      <div>
-                                        <span className="font-medium">{item.quantity}x {item.title}</span>
-                                        <div className="text-xs text-muted-foreground">
-                                          Ordered by <span className="font-medium">{customer?.first_name} {customer?.last_name}</span>
-                                        </div>
-                                      </div>
-                                      <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          </div>
-                        )}
-                      </div>
-
-                      <Separator />
-
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-semibold">Total: {formatCurrency(order.total_amount)}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleShareOrder(order)}
-                            className="flex items-center gap-2"
-                          >
-                            <Share2 className="h-4 w-4" />
-                            Copy Group Link
-                          </Button>
-                           <Button
-                            size="sm"
-                            onClick={handleAddToOrder}
-                            className="flex items-center gap-2"
-                          >
-                            <Package className="h-4 w-4" />
-                            Add to Order
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Combined Order Summary - Only show if multiple orders */}
-        {orders.length > 1 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Complete Order Summary</h2>
-            <Card>
-              <CardHeader>
-                <CardTitle>All Items Combined</CardTitle>
-                <CardDescription>
-                  Summary of all orders placed by your group
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  const { groupedItems, orderMap } = getCombinedOrderSummary();
-                  const firstOrder = orders[0];
-                  
-                  return (
-                    <div className="space-y-4">
-                      {/* Delivery Info */}
-                      {firstOrder?.delivery_date && (
-                        <div className="bg-muted/50 p-4 rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <CalendarDays className="h-4 w-4" />
-                             <span className="font-medium">
-                               Delivery: {formatInAppTimezone(firstOrder.delivery_date, 'EEEE, MMMM do, yyyy')}
-                               {firstOrder.delivery_time && ` at ${firstOrder.delivery_time}`}
-                            </span>
-                          </div>
-                          <div className="flex items-start gap-2">
-                            <MapPin className="h-4 w-4 mt-1" />
-                            <span className="text-sm">
-                              {firstOrder.delivery_address.street}, {firstOrder.delivery_address.city}, {firstOrder.delivery_address.state} {firstOrder.delivery_address.zipCode}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Items List by Category */}
-                      <div>
-                        <h4 className="font-medium mb-3">Items by Category</h4>
-                        <div className="space-y-4 max-h-80 overflow-y-auto">
-                          {Object.entries(groupedItems).map(([category, items]) => (
-                            <div key={category}>
-                              <h5 className="font-medium text-sm text-primary mb-2">{category}</h5>
-                              <div className="space-y-1 pl-4">
-                                {(items as any[]).map((item, index) => (
-                                  <div key={index} className="flex justify-between items-center py-1 px-2 bg-muted/20 rounded text-sm">
-                                    <div className="flex-1">
-                                      <span className="font-medium">{item.quantity}x {item.title}</span>
-                                      <span className="text-xs text-muted-foreground ml-2">
-                                        {item.order_numbers ? 
-                                          `(Orders #${item.order_numbers.join(', #')} - ${item.customer_name})` :
-                                          `(Order #${item.order_number} - ${item.customer_name})`
-                                        }
-                                      </span>
-                                    </div>
-                                    <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      <div className="flex justify-between items-center">
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleTextUs}
-                            className="flex items-center gap-2"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                            Text Us for Changes
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={handleAddToOrder}
-                            className="flex items-center gap-2"
-                          >
-                            <Package className="h-4 w-4" />
-                            Add to Order
-                          </Button>
-                        </div>
-                        <div className="text-right">
-                           <p className="text-lg font-bold">
-                             Total: {formatCurrency(orders.reduce((sum, order) => sum + order.total_amount, 0))}
-                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            {orders.length} separate orders
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Individual Orders - Show all in full detail */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Order History</h2>
           {orders.length === 0 ? (
             <Card>
-              <CardContent className="text-center py-8">
-                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <CardContent className="py-12 text-center">
+                <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">No orders yet</h3>
                 <p className="text-muted-foreground mb-4">
-                  Start your first order to see it here
+                  Ready to place your first order?
                 </p>
                 <Button onClick={handleAddToOrder}>
-                  Start Shopping
+                  Place Your First Order
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {orders.map((order) => (
-                <Card key={order.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                       <div>
-                         <CardTitle>Order #{order.order_number}</CardTitle>
-                         <CardDescription>
-                           <div className="flex items-center gap-2 mb-1">
-                             Ordered on {formatInAppTimezone(order.created_at, 'MMMM do, yyyy \'at\' h:mm a')}
-                           </div>
-                           {order.delivery_date && (
-                             <span className="flex items-center gap-2">
-                                <CalendarDays className="h-4 w-4" />
-                                Delivery: {formatInAppTimezone(order.delivery_date, 'EEEE, MMMM do')} 
-                                {order.delivery_time && ` at ${order.delivery_time}`}
-                             </span>
-                           )}
-                         </CardDescription>
-                       </div>
-                      <div className="text-right">
-                        <Badge variant={order.status === 'delivered' ? 'default' : 'secondary'}>
-                          {order.status}
+                <Card key={order.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">
+                          Order #{order.order_number}
+                        </CardTitle>
+                        <CardDescription>
+                          Placed on {formatInAppTimezone(new Date(order.created_at), 'PPp')}
+                        </CardDescription>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <Badge className={getOrderStatusColor(order.status)}>
+                          {order.status || 'Pending'}
                         </Badge>
-                        <p className="text-lg font-semibold mt-1">{formatCurrency(order.total_amount)}</p>
+                        <div className="text-lg font-semibold">
+                          {formatCurrency(order.total_amount)}
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {/* Delivery Address */}
-                      {order.delivery_address && (
-                        <div className="flex items-start gap-2">
-                          <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">Delivery Address</p>
-                            <p className="text-sm text-muted-foreground">
-                              {order.delivery_address.street}, {order.delivery_address.city}, {order.delivery_address.state} {order.delivery_address.zipCode}
-                            </p>
-                            {order.special_instructions && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Instructions: {order.special_instructions}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
 
-                       {/* Order Items */}
-                       <div>
-                         <h4 className="font-medium mb-3">Items ({order.line_items?.length || 0})</h4>
-                         <div className="space-y-2">
-                           {order.line_items && order.line_items.length > 0 ? (
-                             order.line_items.map((item: any, index: number) => (
-                               <div key={index} className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
-                                 <div className="flex-1">
-                                    <span className="font-medium">{item.quantity}x {item.title}</span>
-                                    <span className="text-sm text-muted-foreground block">
-                                      {formatCurrency(item.price)} each • Ordered by <span className="font-medium text-base">{customer?.first_name} {customer?.last_name}</span>
-                                    </span>
-                                  </div>
-                                  <span className="font-medium">{formatCurrency(item.price * item.quantity)}</span>
-                               </div>
-                             ))
-                           ) : (
-                             <div className="text-center py-4 text-muted-foreground">
-                               <Package className="h-8 w-8 mx-auto mb-2" />
-                               <p>No items found for this order</p>
-                               <p className="text-sm">This may be due to a data sync issue</p>
-                             </div>
-                           )}
-                         </div>
-                       </div>
-
-                      <Separator />
-
-                      <div className="flex justify-between items-center">
-                         <div className="text-sm text-muted-foreground">
-                           {order.line_items?.length || 0} items • Order total: {formatCurrency(order.total_amount)}
-                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleTextUs}
-                          className="flex items-center gap-2"
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          Text Us for Changes
-                        </Button>
+                  <CardContent className="space-y-4">
+                    {/* Delivery Information */}
+                    <div className="flex items-start space-x-4 text-sm">
+                      <div className="flex items-center space-x-2 min-w-0 flex-1">
+                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                        <span>
+                          {order.delivery_date 
+                            ? formatDateTime(order.delivery_date, order.delivery_time)
+                            : 'Delivery date TBD'
+                          }
+                        </span>
+                        <Badge variant="secondary" className="ml-2">
+                          {getDeliveryStatus(order)}
+                        </Badge>
                       </div>
                     </div>
+
+                    {/* Delivery Address */}
+                    {order.delivery_address && (
+                      <div className="flex items-start space-x-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <span className="text-muted-foreground">
+                          {typeof order.delivery_address === 'string' 
+                            ? order.delivery_address
+                            : `${order.delivery_address.street || ''}, ${order.delivery_address.city || ''}, ${order.delivery_address.state || ''} ${order.delivery_address.zipCode || ''}`
+                          }
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Order Items Toggle */}
+                    {order.line_items && order.line_items.length > 0 && (
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-between p-0 h-auto font-normal"
+                            onClick={() => toggleOrderItemsExpansion(order.id)}
+                          >
+                            <span className="text-sm text-muted-foreground">
+                              {order.line_items.length} item{order.line_items.length !== 1 ? 's' : ''}
+                            </span>
+                            {expandedOrderItems.has(order.id) ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-3 pt-3 border-t space-y-2">
+                            {order.line_items.map((item: any, index: number) => (
+                              <div key={index} className="flex justify-between items-center text-sm">
+                                <span>{item.quantity}× {item.title}</span>
+                                <span className="font-medium">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+
+                    {/* Special Instructions */}
+                    {order.special_instructions && (
+                      <div className="text-sm">
+                        <span className="font-medium">Special Instructions: </span>
+                        <span className="text-muted-foreground">{order.special_instructions}</span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
