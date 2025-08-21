@@ -83,7 +83,7 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
                   <h4 className="font-medium text-xs sm:text-sm line-clamp-2 mb-1">
                     {cleanTitle}
                   </h4>
-                  {item.variant && (
+                  {item.variant && !item.variant.includes('gid://') && item.variant !== 'default' && (
                     <p className="text-xs text-muted-foreground mb-1">{item.variant}</p>
                   )}
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">

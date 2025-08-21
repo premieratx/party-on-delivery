@@ -43,10 +43,27 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
     setIsValidating(true);
     
     try {
-      // Call the validate-voucher edge function
+      // First check for hardcoded promo codes
+      const codeUpper = promoCode.trim().toUpperCase();
+      if (codeUpper === 'PREMIER2025' || codeUpper === 'FREESHIP') {
+        const discount = {
+          code: codeUpper,
+          type: 'free_shipping' as const,
+          value: 100
+        };
+        onDiscountApplied(discount);
+        setPromoCode('');
+        toast({
+          title: "Promo Code Applied!",
+          description: `${discount.code} - Free shipping`
+        });
+        return;
+      }
+
+      // Call the validate-voucher edge function for database codes
       const { data, error } = await supabase.functions.invoke('validate-voucher', {
         body: {
-          voucher_code: promoCode.trim().toUpperCase(),
+          voucher_code: codeUpper,
           cart_subtotal: cartSubtotal
         }
       });

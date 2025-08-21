@@ -157,7 +157,7 @@ export const CustomDeliveryAppWidget: React.FC = () => {
         quantity: Math.max(1, item.quantity), // Ensure quantity is at least 1
         image: item.image,
         productId: item.id,
-        variant: item.variant || 'gid://shopify/ProductVariant/default',
+        variant: item.variant && !item.variant.includes('gid://') ? item.variant : null,
         category: 'delivery-app',
         eventName: 'Custom Delivery',
         name: item.title
