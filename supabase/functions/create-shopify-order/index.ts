@@ -21,8 +21,11 @@ serve(async (req) => {
     logStep("Function started");
 
     const body = await req.json();
+    logStep("Request body received", { bodyKeys: Object.keys(body) });
+    
     const { paymentIntentId, isAddingToOrder, useSameAddress, sessionId } = body;
     if (!paymentIntentId && !sessionId) {
+      logStep("ERROR: Missing required parameters");
       throw new Error("Payment Intent ID or Session ID is required");
     }
 
@@ -36,28 +39,42 @@ serve(async (req) => {
 
     // Initialize Stripe
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      logStep("ERROR: STRIPE_SECRET_KEY missing");
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
+    logStep("Stripe key found");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Get payment details from Stripe (either PaymentIntent or CheckoutSession)
     let metadata;
-    if (paymentIntentId) {
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      if (paymentIntent.status !== 'succeeded') {
-        throw new Error("Payment not completed");
+    try {
+      if (paymentIntentId) {
+        logStep("Retrieving PaymentIntent", { paymentIntentId });
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        if (paymentIntent.status !== 'succeeded') {
+          logStep("ERROR: Payment not completed", { status: paymentIntent.status });
+          throw new Error("Payment not completed");
+        }
+        metadata = paymentIntent.metadata;
+        logStep("Stripe payment intent retrieved", { status: paymentIntent.status });
+      } else if (sessionId) {
+        logStep("Retrieving Checkout Session", { sessionId });
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        if (session.payment_status !== 'paid') {
+          logStep("ERROR: Payment not completed", { status: session.payment_status });
+          throw new Error("Payment not completed");
+        }
+        metadata = session.metadata;
+        logStep("Stripe checkout session retrieved", { status: session.payment_status });
+      } else {
+        logStep("ERROR: No payment method specified");
+        throw new Error("No payment method specified");
       }
-      metadata = paymentIntent.metadata;
-      logStep("Stripe payment intent retrieved", { status: paymentIntent.status });
-    } else if (sessionId) {
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-      if (session.payment_status !== 'paid') {
-        throw new Error("Payment not completed");
-      }
-      metadata = session.metadata;
-      logStep("Stripe checkout session retrieved", { status: session.payment_status });
-    } else {
-      throw new Error("No payment method specified");
+    } catch (stripeError) {
+      logStep("ERROR: Stripe API call failed", { error: stripeError.message });
+      throw new Error(`Stripe API error: ${stripeError.message}`);
     }
 
     // Get Shopify credentials
