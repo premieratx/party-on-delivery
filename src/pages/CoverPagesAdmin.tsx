@@ -17,7 +17,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { UnifiedCoverPageEditor, type CoverPageConfig, type CoverButtonConfig } from '@/components/admin/UnifiedCoverPageEditor';
-import { HomepageCoverSettings } from '@/components/admin/HomepageCoverSettings';
+import { HomepageCoverDisabled } from '@/components/admin/HomepageCoverDisabled';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -223,9 +223,9 @@ export default function CoverPagesAdmin() {
           </CardHeader>
         </Card>
 
-        {/* Homepage Cover Modal Settings */}
+        {/* Homepage Cover Modal Settings - DISABLED */}
         <div className="mb-6">
-          <HomepageCoverSettings />
+          <HomepageCoverDisabled />
         </div>
 
         {/* Features Overview */}

@@ -121,8 +121,8 @@ const App = () => {
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
                     
-                    {/* Dynamic slug routes for cover pages - FIXED */}
-                    <Route path="/:slug" element={<CoverPageWithBackground />} />
+                    {/* Dynamic slug routes for cover pages - DISABLED TO PREVENT HOMEPAGE INTERFERENCE */}
+                    {/* <Route path="/:slug" element={<CoverPageWithBackground />} /> */}
                   </Routes>
                 </Suspense>
               </div>
