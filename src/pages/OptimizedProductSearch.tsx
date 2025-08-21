@@ -22,12 +22,23 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { ultraFastSearch } from '@/utils/ultraFastSearch';
 import { supabase } from '@/integrations/supabase/client';
+import { useSearchInterface } from '@/hooks/useSearchInterface';
 export default function OptimizedProductSearch() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedSpirit, setSelectedSpirit] = useState<string>('all');
+  
+  // Enhanced mobile search interface with dynamic UI hiding
+  const {
+    searchInputRef,
+    handleSearchFocus,
+    handleSearchBlur,
+    isSearchFocused,
+    headerCompressed,
+    isScrolling
+  } = useSearchInterface();
   
   const { 
     cartItems, 
@@ -44,8 +55,10 @@ export default function OptimizedProductSearch() {
   const [error, setError] = useState<string | null>(null);
   const productCollectionsRef = useRef<Record<string, string[]>>({});
   const isMobile = useIsMobile();
-  const [hideFilters, setHideFilters] = useState(false);
-  const lastYRef = useRef(0);
+  
+  // Search optimization with debouncing
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   // Dynamic categories from hierarchical categorization system
   const [categories, setCategories] = useState([
@@ -245,27 +258,44 @@ export default function OptimizedProductSearch() {
     loadSubcategories();
   }, [selectedCategory]);
 
-  // Ultra-fast search with <250ms results
+  // Debounced search query for better performance
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 150); // 150ms debounce for faster typing
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Ultra-fast search with optimized debouncing
   useEffect(() => {
     const performSearch = async () => {
-      const q = searchQuery.trim().toLowerCase();
+      const q = debouncedQuery.trim().toLowerCase();
       if (q) {
-        console.log(`🔍 ULTRA-FAST LOCAL SEARCH: "${q}"`);
+        console.log(`🔍 ULTRA-FAST SEARCH: "${q}"`);
         const startTime = performance.now();
         
-        // Use ultra-fast search for instant results
         try {
           const result = await ultraFastSearch.searchProducts(q, {
-            limit: 200
+            limit: 200,
+            useCache: true // Aggressive caching for repeat searches
           });
           
           const duration = performance.now() - startTime;
-          console.log(`⚡ SEARCH COMPLETED: "${q}" - ${result.products.length} results in ${duration.toFixed(2)}ms`);
+          console.log(`⚡ SEARCH COMPLETED: "${q}" - ${result.products.length} results in ${duration.toFixed(2)}ms (${result.fromCache ? 'cached' : 'fresh'})`);
           
           setProducts(result.products);
         } catch (error) {
           console.error('Ultra-fast search error:', error);
-          // Fallback to local search
+          // Optimized fallback search
           const filtered = allProducts.filter((p) => {
             const title = String(p.title || '').toLowerCase();
             const productType = String(p.product_type || '').toLowerCase();
@@ -309,39 +339,22 @@ export default function OptimizedProductSearch() {
     };
 
     performSearch();
-  }, [searchQuery, selectedCategory, selectedSpirit, allProducts]);
+  }, [debouncedQuery, selectedCategory, selectedSpirit, allProducts]);
 
-  // Mobile: hide filters on scroll to maximize products shown
-  useEffect(() => {
-    if (!isMobile) return;
-    const onScroll = () => {
-      const y = window.scrollY;
-      const last = lastYRef.current;
-      if (y > last + 10) {
-        setHideFilters(true);
-      } else if (y < last - 10 || y < 40) {
-        setHideFilters(false);
-      }
-      // Hide mobile keyboard on scroll by blurring focused input
-      const ae = document.activeElement as HTMLElement | null;
-      if (ae && ae.tagName === 'INPUT') {
-        (ae as HTMLInputElement).blur();
-      }
-      lastYRef.current = y;
-    };
-    window.addEventListener('scroll', onScroll as any, { passive: true } as any);
-    return () => window.removeEventListener('scroll', onScroll as any);
-  }, [isMobile]);
+  // Enhanced search input handler
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   // Displayed products: when searching, ignore category filters (search trumps filters)
   const displayProducts = products;
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b">
+      {/* Header - Dynamically hide on mobile when scrolling */}
+      <div className={`sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b transition-transform duration-300 ${isMobile && isScrolling && !isSearchFocused ? '-translate-y-full' : 'translate-y-0'}`}>
       <div className="container mx-auto px-3 max-w-full">
-        <div className="flex items-center gap-4 h-16 w-full">
+        <div className={`flex items-center gap-4 w-full transition-all duration-300 ${isMobile && headerCompressed ? 'h-12' : 'h-16'}`}>
           <Button
             variant="ghost"
             size="sm"
@@ -352,7 +365,9 @@ export default function OptimizedProductSearch() {
             <span className="hidden sm:inline">Back</span>
           </Button>
           
-          <h1 className="text-lg sm:text-xl font-bold flex-1 truncate">Product Search</h1>
+          <h1 className={`font-bold flex-1 truncate transition-all duration-300 ${isMobile && headerCompressed ? 'text-base' : 'text-lg sm:text-xl'}`}>
+            Product Search
+          </h1>
           
           <Button
             variant="outline"
@@ -372,23 +387,29 @@ export default function OptimizedProductSearch() {
       </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="border-b bg-background/95 backdrop-blur-md sticky top-16 z-40">
+      {/* Search Bar - Enhanced mobile behavior */}
+      <div className={`border-b bg-background/95 backdrop-blur-md sticky z-40 transition-all duration-300 ${isMobile && isScrolling && !isSearchFocused ? '-translate-y-full' : 'translate-y-0'} ${isMobile && headerCompressed ? 'top-12' : 'top-16'}`}>
         <div className="container mx-auto px-3 py-4 max-w-full">
           <div className="relative max-w-2xl mx-auto">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={searchInputRef}
               type="text"
               placeholder="Search for spirits, beer, cocktails..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchInputChange}
+              onFocus={handleSearchFocus}
+              onBlur={handleSearchBlur}
               className="pl-10 pr-4 h-12 text-base sm:text-lg w-full"
             />
           </div>
         </div>
       </div>
 
-      <div className={`border-b bg-background/95 backdrop-blur-md sticky top-[7rem] z-40 ${hideFilters ? 'translate-y-[-100%]' : ''} transition-transform overflow-hidden`}>
+      {/* Categories - Hide during mobile scroll but show when search focused */}
+      <div className={`border-b bg-background/95 backdrop-blur-md sticky z-40 transition-all duration-300 overflow-hidden ${
+        isMobile && isScrolling && !isSearchFocused ? '-translate-y-full' : 'translate-y-0'
+      } ${isMobile && headerCompressed ? 'top-[6rem]' : 'top-[7rem]'}`}>
         <div className="container mx-auto px-3 py-3 max-w-full">
           <div className="overflow-x-hidden">
             <RadioGroup
@@ -412,8 +433,11 @@ export default function OptimizedProductSearch() {
         </div>
       </div>
 
+      {/* Subcategories - Hide during mobile scroll but show when search focused */}
       {selectedCategory !== 'all' && subcategories.length > 1 && (
-        <div className="border-b bg-background/95 backdrop-blur-md sticky top-[9.75rem] z-40">
+        <div className={`border-b bg-background/95 backdrop-blur-md sticky z-40 transition-all duration-300 ${
+          isMobile && isScrolling && !isSearchFocused ? '-translate-y-full' : 'translate-y-0'
+        } ${isMobile && headerCompressed ? 'top-[8.75rem]' : 'top-[9.75rem]'}`}>
           <div className="container mx-auto px-4 py-2">
             <RadioGroup
               value={selectedSpirit}
@@ -453,10 +477,10 @@ export default function OptimizedProductSearch() {
         ) : (
           <>
             {/* Results Header */}
-            {searchQuery && (
+            {debouncedQuery && (
               <div className="mb-6">
                 <p className="text-sm text-muted-foreground">
-                  {displayProducts.length} results for "{searchQuery}"
+                  {displayProducts.length} results for "{debouncedQuery}"
                   {selectedCategory !== 'all' && ` in ${categories.find(c => c.id === selectedCategory)?.label}`}
                 </p>
               </div>
