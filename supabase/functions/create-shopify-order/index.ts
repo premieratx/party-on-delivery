@@ -176,53 +176,30 @@ serve(async (req) => {
       logStep("Using amounts from metadata", orderAmounts);
     }
 
-    // FIX: Convert payment amount to the same unit as order amounts
-    // If order amounts are very small (< 1), they might be in cents/100 format
-    // If payment amount is much larger, convert it to dollars
-    let normalizedPaymentAmount = paymentAmount;
-    let normalizedOrderAmounts = { ...orderAmounts };
+    // FIX: Don't recalculate total - use the stored total_amount directly
+    // The individual breakdown amounts are often corrupted/wrong, but total_amount is correct
+    const calculatedTotal = orderAmounts.total_amount;
+    const totalDifference = Math.abs(paymentAmount - calculatedTotal);
     
-    // Check if amounts seem to be in different units
-    if (orderAmounts.total_amount > 0 && paymentAmount / orderAmounts.total_amount > 50) {
-      // Payment is likely in cents, convert to dollars
-      normalizedPaymentAmount = paymentAmount / 100;
-      logStep("Converted payment amount from cents to dollars", { 
-        originalAmount: paymentAmount, 
-        convertedAmount: normalizedPaymentAmount 
-      });
-    } else if (orderAmounts.total_amount > 0 && orderAmounts.total_amount / paymentAmount > 50) {
-      // Order amounts might be in cents, but this is less likely
-      normalizedOrderAmounts = {
-        subtotal: orderAmounts.subtotal / 100,
-        delivery_fee: orderAmounts.delivery_fee / 100,
-        sales_tax: orderAmounts.sales_tax / 100,
-        tip_amount: orderAmounts.tip_amount / 100,
-        total_amount: orderAmounts.total_amount / 100
-      };
-      logStep("Converted order amounts from cents to dollars", { 
-        original: orderAmounts, 
-        converted: normalizedOrderAmounts 
-      });
-    }
-
-    // Validate amounts match payment using normalized values
-    const calculatedTotal = Math.round((normalizedOrderAmounts.subtotal + normalizedOrderAmounts.delivery_fee + normalizedOrderAmounts.sales_tax + normalizedOrderAmounts.tip_amount) * 100) / 100;
-    const totalDifference = Math.abs(normalizedPaymentAmount - calculatedTotal);
+    logStep("Using stored total_amount directly", {
+      paymentAmount,
+      storedTotalAmount: calculatedTotal,
+      difference: totalDifference,
+      breakdown: orderAmounts
+    });
     
     if (totalDifference > 0.02) {
       logStep("ERROR: Amount mismatch", {
-        originalPaymentAmount: paymentAmount,
-        normalizedPaymentAmount,
+        paymentAmount,
         calculatedTotal,
         difference: totalDifference,
-        originalOrderAmounts: orderAmounts,
-        normalizedOrderAmounts
+        breakdown: orderAmounts
       });
-      throw new Error(`Payment amount mismatch: Payment $${normalizedPaymentAmount} vs Order $${calculatedTotal}`);
+      throw new Error(`Payment amount mismatch: Payment $${paymentAmount} vs Order $${calculatedTotal}`);
     }
 
     logStep("Amount validation passed", { 
-      normalizedPaymentAmount,
+      paymentAmount,
       calculatedTotal,
       difference: totalDifference
     });
