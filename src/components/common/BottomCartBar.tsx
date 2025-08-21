@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, CreditCard, Search, Package } from 'lucide-react';
 import { UnifiedCartItem } from '@/hooks/useUnifiedCart';
 import { DeliveryAppSelector } from '@/components/delivery/DeliveryAppSelector';
+import { safeNumber, formatPrice, calculateTotal, calculateTotalItems } from '@/utils/safeCalculations';
+import { withCartErrorBoundary } from './RobustCartErrorBoundary';
 
 interface BottomCartBarProps {
   items: UnifiedCartItem[];
@@ -16,7 +18,7 @@ interface BottomCartBarProps {
   currentAppSlug?: string;
 }
 
-export const BottomCartBar: React.FC<BottomCartBarProps> = ({
+export const BottomCartBar = withCartErrorBoundary<BottomCartBarProps>(({
   items,
   totalPrice,
   isVisible,
@@ -28,11 +30,21 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  // Apply affiliate/delivery-app markup to totals consistently
-  const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
-  const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
-  const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
+  const totalItems = calculateTotalItems(items);
+  
+  // Apply affiliate/delivery-app markup with bulletproof calculations
+  const markupPercent = safeNumber(sessionStorage.getItem('pricing.markupPercent'));
+  const applyMarkup = (price: number) => {
+    const safePrice = safeNumber(price);
+    return safePrice * (1 + markupPercent / 100);
+  };
+  
+  // ROBUST total calculation that can never crash the website
+  const adjustedTotal = items.reduce((sum, item) => {
+    const safePrice = safeNumber(item.price);
+    const safeQuantity = safeNumber(item.quantity);
+    return sum + applyMarkup(safePrice) * safeQuantity;
+  }, 0);
 
   // Helper to check if we're on the homepage - avoid reloading if already there
   const isHomePage = location.pathname === '/';
@@ -101,7 +113,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
               </Button>
               
               <span className="font-semibold text-xs text-primary px-1">
-                ${adjustedTotal.toFixed(2)}
+                ${formatPrice(adjustedTotal)}
               </span>
               
               <Button
@@ -161,7 +173,7 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
             
             {/* Total price - always visible */}
             <span className="font-semibold text-sm sm:text-lg text-primary">
-              ${adjustedTotal.toFixed(2)}
+              ${formatPrice(adjustedTotal)}
             </span>
             
             {/* Checkout button */}
@@ -181,4 +193,4 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
       </div>
     </>
   );
-};
+});

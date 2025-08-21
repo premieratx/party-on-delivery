@@ -73,7 +73,6 @@ export const useUnifiedCart = () => {
     return itemId === checkId && itemVariant === checkVariant;
   };
 
-  // Update quantity - FIXED AND RELIABLE
   const updateQuantity = useCallback((id: string, variant: string | undefined, newQuantity: number, productData?: Partial<UnifiedCartItem>) => {
     if (!id) {
       console.warn('🛒 updateQuantity: Missing product ID');
@@ -118,14 +117,14 @@ export const useUnifiedCart = () => {
         };
         return newItems;
       } else if (productData) {
-        // CREATE operation
+        // CREATE operation with bulletproof data validation
         console.log('🛒 ATOMIC CREATE:', nid, normalizedVariant, 'quantity:', qty);
         const newItem: UnifiedCartItem = {
           id: nid,
           productId: nid,
           title: String(productData.title || `Product ${nid}`),
           name: String(productData.name || productData.title || `Product ${nid}`),
-          price: Number(productData.price || 0),
+          price: Math.max(0, Number(productData.price) || 0), // Ensure valid price
           quantity: qty,
           image: String(productData.image || ''),
           variant: normalizedVariant,
@@ -178,13 +177,20 @@ export const useUnifiedCart = () => {
     setCartItems([]);
   }, []);
 
-  // Get totals
+  // Get totals with bulletproof error handling
   const getTotalPrice = useCallback(() => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce((total, item) => {
+      const safePrice = Number(item.price) || 0;
+      const safeQuantity = Number(item.quantity) || 0;
+      return total + (safePrice * safeQuantity);
+    }, 0);
   }, [cartItems]);
 
   const getTotalItems = useCallback(() => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+    return cartItems.reduce((total, item) => {
+      const safeQuantity = Number(item.quantity) || 0;
+      return total + safeQuantity;
+    }, 0);
   }, [cartItems]);
 
   return {

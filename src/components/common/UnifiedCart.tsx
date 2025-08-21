@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { X, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useNavigate } from 'react-router-dom';
+import { safeNumber, formatPrice } from '@/utils/safeCalculations';
+import { RobustCartErrorBoundary } from './RobustCartErrorBoundary';
 
 interface UnifiedCartProps {
   isOpen: boolean;
@@ -20,8 +22,13 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
   const { cartItems, updateQuantity, removeItem, emptyCart, getTotalPrice } = useUnifiedCart();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate pricing
-  const subtotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  // BULLETPROOF pricing calculations to prevent crashes
+  const subtotal = cartItems.reduce((total, item) => {
+    const safePrice = safeNumber(item.price);
+    const safeQuantity = safeNumber(item.quantity);
+    return total + (safePrice * safeQuantity);
+  }, 0);
+  
   const deliveryFee = subtotal >= 200 ? subtotal * 0.1 : 20; // Fixed: Use percentage calculation for orders over $200
   const salesTax = subtotal * 0.0825; // 8.25% sales tax
   const finalTotal = subtotal + deliveryFee + salesTax;
@@ -61,7 +68,7 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
   if (!isOpen) return null;
 
   return (
-    <>
+    <RobustCartErrorBoundary>
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 z-50 animate-fade-in"
@@ -200,20 +207,20 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>${formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Delivery Fee {subtotal >= 200 ? '(10%)' : '($20 min)'}</span>
-                  <span>${(subtotal >= 200 ? subtotal * 0.1 : 20).toFixed(2)}</span>
+                  <span>${formatPrice(deliveryFee)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Sales Tax (8.25%)</span>
-                  <span>${salesTax.toFixed(2)}</span>
+                  <span>${formatPrice(salesTax)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${finalTotal.toFixed(2)}</span>
+                  <span>${formatPrice(finalTotal)}</span>
                 </div>
               </div>
             </div>
@@ -228,12 +235,12 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
               size="lg" 
               onClick={handleCheckout}
             >
-              Proceed to Checkout - ${finalTotal.toFixed(2)}
+              Proceed to Checkout - ${formatPrice(finalTotal)}
             </Button>
           </div>
         )}
         
       </div>
-    </>
+    </RobustCartErrorBoundary>
   );
 };
