@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -323,11 +323,13 @@ const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorProps> = 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            {initial ? `Edit: ${initial.name}` : 'Create Enhanced Post-Checkout Page'}
+        <DialogHeader className="sticky top-0 bg-background z-10 border-b pb-4">
+          <DialogTitle className="text-xl font-semibold">
+            {initial ? 'Edit Post-Checkout Page' : 'Create Post-Checkout Page'}  
           </DialogTitle>
+          <DialogDescription id="dialog-description">
+            Configure your post-checkout page content and appearance.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col h-[calc(95vh-100px)]">

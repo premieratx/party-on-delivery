@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -343,6 +343,9 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
             <Package className="w-5 h-5" />
             {initial ? 'Edit' : 'Create'} Delivery App
           </DialogTitle>
+          <DialogDescription id="dialog-description">
+            Configure your delivery app settings, collections, and appearance.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="flex-1 flex flex-col">

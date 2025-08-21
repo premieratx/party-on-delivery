@@ -55,7 +55,7 @@ export function useAdminState(defaultTab = 'overview') {
     };
   }, []); // Keep empty dependency array to prevent clearing on tab switches
 
-  // Save state to localStorage whenever it changes - with success logging
+  // Save state to localStorage - remove excessive logging
   const saveState = useCallback((tab?: string, data?: Record<string, any>) => {
     try {
       const state: AdminState = {

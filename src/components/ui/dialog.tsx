@@ -47,6 +47,7 @@ const DialogContent = React.forwardRef<
         maxHeight: '90vh',
         overflowY: 'auto'
       }}
+      aria-describedby="dialog-description"
       {...props}
     >
       {children}

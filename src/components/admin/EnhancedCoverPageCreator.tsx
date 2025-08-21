@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,9 +118,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     setFormValue
   ]);
 
-  // Auto-save every 3 seconds
+  // Auto-save every 30 seconds (reduced from 3 seconds to prevent spam)
   useEffect(() => {
-    const interval = setInterval(autoSave, 3000);
+    const interval = setInterval(autoSave, 30000);
     return () => clearInterval(interval);
   }, [autoSave]);
 
@@ -568,6 +568,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
             {initial?.id ? 'Edit Cover Page' : 'Create Cover Page'}
             <Badge variant="secondary" className="text-xs">Auto-Saving</Badge>
           </DialogTitle>
+          <DialogDescription id="dialog-description">
+            Design and configure your cover page with custom branding, content, and interactive elements.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 flex gap-6 overflow-hidden">

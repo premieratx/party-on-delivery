@@ -25,8 +25,8 @@ export const ColdStartSolution = () => {
         });
         // console.log('🔥 Functions kept warm at:', new Date().toISOString());
       } catch (error) {
-        // Silently fail keep-alive to prevent console spam
-        // console.warn('Keep-alive failed, but continuing:', error);
+        // Silently fail keep-alive to prevent console spam and CORS errors
+        // Don't log anything to avoid flooding console
       }
     };
 
