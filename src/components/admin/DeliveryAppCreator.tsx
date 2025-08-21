@@ -179,11 +179,28 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
     }
   };
 
+  // Load homepage app template for new apps
+  const [homepageTemplate, setHomepageTemplate] = useState<any>(null);
+  
+  const loadHomepageTemplate = async () => {
+    try {
+      const { data } = await supabase
+        .from('delivery_app_variations')
+        .select('*')
+        .eq('is_homepage', true)
+        .single();
+      setHomepageTemplate(data);
+    } catch (error) {
+      console.error('Error loading homepage template:', error);
+    }
+  };
+
   // Initialize form with existing data
   useEffect(() => {
     if (!open) return;
 
     loadShopifyCollections();
+    loadHomepageTemplate();
 
     if (initial) {
       setAppName(initial.app_name || '');
@@ -195,21 +212,23 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
       setIsActive(initial.is_active ?? true);
       setIsHomepage(initial.is_homepage ?? false);
     } else {
-      // Reset for new app
+      // Reset for new app - use homepage template as default
       setAppName('');
       setAppSlug('');
-      setHeroHeading('');
-      setHeroSubheading('');
+      setHeroHeading(homepageTemplate?.main_app_config?.hero_heading || 'Austin\'s Premier Party Supply Delivery');
+      setHeroSubheading(homepageTemplate?.main_app_config?.hero_subheading || 'Satisfaction Guaranteed, On-Time Delivery');
       setLogoUrl('');
-      setTabs([
-        { name: 'Featured', collection_handle: 'featured', icon: '⭐' },
-        { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' },
-        { name: 'Beer', collection_handle: 'beer', icon: '🍺' }
+      setTabs(homepageTemplate?.collections_config?.tabs || [
+        { name: 'Beer', collection_handle: 'tailgate-beer', icon: '🍺' },
+        { name: 'Seltzers', collection_handle: 'seltzer-collection', icon: '🥤' },
+        { name: 'Cocktails', collection_handle: 'cocktail-kits', icon: '🍸' },
+        { name: 'Mixers & N/A', collection_handle: 'mixers-non-alcoholic', icon: '🧊' },
+        { name: 'Spirits', collection_handle: 'spirits', icon: '🥃' }
       ]);
       setIsActive(true);
       setIsHomepage(false);
     }
-  }, [open, initial]);
+  }, [open, initial, homepageTemplate]);
 
   // Auto-generate slug from app name
   useEffect(() => {
