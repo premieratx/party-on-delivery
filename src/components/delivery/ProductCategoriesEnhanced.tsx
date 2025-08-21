@@ -396,7 +396,7 @@ export const ProductCategoriesEnhanced: React.FC<ProductCategoriesEnhancedProps>
           tabs={tabs}
           selectedCategory={selectedCategory}
           onTabSelect={(index) => {
-            console.log(`🔄 Enhanced: Switching to tab ${index}: ${tabs[index].title} (${tabs[index].handle})`);
+            // Remove excessive tab switching logs - works silently
             setSelectedCategory(index);
             setSearchProducts([]);
           }}

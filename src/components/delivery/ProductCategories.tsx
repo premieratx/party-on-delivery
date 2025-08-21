@@ -89,7 +89,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // Preload logo if provided
   const { loaded: logoLoaded } = useImagePreloader(logoUrl);
 
-  console.log(`🎯 ProductCategories: Background loaded: ${bgImageLoaded}, Logo loaded: ${logoLoaded}`);
+  // Remove excessive logging - image loading works silently
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice, getTotalItems } = useUnifiedCart();
@@ -395,7 +395,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
         selectedCategory={selectedCategory}
         onTabSelect={(index) => {
           const currentTab = collectionsConfig?.tabs?.[index];
-          console.log(`🔄 SWITCHING TO TAB ${index}: ${currentTab?.name || tabs[index].title} (${currentTab?.collection_handle || tabs[index].handle})`);
+          // Remove excessive tab switching logs - works silently
           setSelectedCategory(index);
           setSearchProducts([]);
           setIsSearchActive(false);

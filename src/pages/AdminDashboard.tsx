@@ -214,7 +214,8 @@ export default function AdminDashboard() {
     });
   };
 
-  console.log('🎯 AdminDashboard: Rendering with activeTab:', activeTab, 'loading:', loading);
+  // Remove excessive render logging - dashboard works silently
+  // console.log('🎯 AdminDashboard: Rendering with activeTab:', activeTab, 'loading:', loading);
 
   if (loading) {
     return (

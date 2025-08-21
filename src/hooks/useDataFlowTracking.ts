@@ -106,7 +106,10 @@ export function useDataFlowTracking() {
     const updatedEvents = [...events, event];
     storeEvents(updatedEvents);
 
-    console.log(`🔍 Data Flow Tracking - ${type}:`, { event, flowData });
+    // Only log critical events, not every single tracking call
+    if (type === 'order_complete' || type === 'checkout_start') {
+      console.log(`🔍 Data Flow Tracking - ${type}:`, { event, flowData });
+    }
   }, [events, flowData]);
 
   const initializeCoverPageFlow = useCallback((coverPageId: string, coverPageSlug: string, affiliateCode?: string) => {
@@ -252,10 +255,9 @@ export function useDataFlowTracking() {
 
     validation.isHealthy = validation.hasSession && validation.hasTracking;
     
+    // Only log validation failures, not successes
     if (!validation.isHealthy) {
       console.warn('🚨 Data Flow Validation Failed:', validation);
-    } else {
-      console.log('✅ Data Flow Validation Passed:', validation);
     }
 
     return validation;

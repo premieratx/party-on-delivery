@@ -25,10 +25,10 @@ export function useAdminState(defaultTab = 'overview') {
           // Only restore form data, NOT activeTab to prevent auto-switching
           if (now - parsed.lastUpdated < STORAGE_EXPIRY) {
             setFormData(parsed.formData || {});
-            console.log('🔄 Restored admin form data only:', { formDataKeys: Object.keys(parsed.formData || {}) });
+            // Remove excessive logging - form restoration works silently
           } else {
             localStorage.removeItem(STORAGE_KEY);
-            console.log('⏰ Cleared expired admin state');
+            // Remove excessive logging - expiry works silently
           }
         }
       } catch (error) {

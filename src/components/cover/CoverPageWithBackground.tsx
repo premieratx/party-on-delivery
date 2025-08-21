@@ -22,7 +22,7 @@ const CoverPageWithBackground = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [backgroundApp, setBackgroundApp] = useState<BackgroundApp | null>(null);
-  const { initializeCoverPageFlow, trackButtonClick } = useDataFlowTracking();
+  const { initializeCoverPageFlow, trackButtonClick, flowData } = useDataFlowTracking();
   
   const { 
     cartItems, 
@@ -65,17 +65,17 @@ const CoverPageWithBackground = () => {
     enabled: !!slug
   });
 
-  // Initialize tracking when cover page loads
+  // Initialize tracking when cover page loads (prevent infinite loops)
   useEffect(() => {
-    if (coverPage) {
+    if (coverPage && !flowData?.coverPageId) {
       // Extract affiliate code from URL or cover page data
       const urlParams = new URLSearchParams(window.location.search);
       const affiliateCode = urlParams.get('affiliate') || coverPage.affiliate_slug;
       
       initializeCoverPageFlow(coverPage.id, coverPage.slug, affiliateCode);
-      console.log('🔍 Cover page tracking initialized:', { coverPage: coverPage.slug, affiliate: affiliateCode });
+      // Remove excessive logging - tracking works silently
     }
-  }, [coverPage, initializeCoverPageFlow]);
+  }, [coverPage?.id, coverPage?.slug, initializeCoverPageFlow, flowData?.coverPageId]);
 
   // Preload default homepage app in background
   useEffect(() => {
