@@ -626,7 +626,12 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
       }
     };
 
-    logStep("Creating Shopify order", { lineItemCount: lineItems.length });
+    logStep("Creating Shopify order", { 
+      lineItemCount: lineItems.length,
+      shopifyStore: shopifyStore,
+      hasToken: !!shopifyToken,
+      url: `https://${shopifyStore}/admin/api/2024-10/orders.json`
+    });
 
     const orderResponse = await fetch(
       `https://${shopifyStore}/admin/api/2024-10/orders.json`,
@@ -644,9 +649,20 @@ ${discountCode ? `📊 Affiliate Code: ${discountCode}
       const errorText = await orderResponse.text();
       logStep("Shopify order creation failed", { 
         status: orderResponse.status, 
-        error: errorText 
+        statusText: orderResponse.statusText,
+        error: errorText,
+        shopifyStore: shopifyStore,
+        url: `https://${shopifyStore}/admin/api/2024-10/orders.json`,
+        hasToken: !!shopifyToken,
+        tokenLength: shopifyToken?.length || 0
       });
-      throw new Error(`Failed to create Shopify order: ${errorText}`);
+      
+      // Log the order data for debugging
+      logStep("Failed order data", { 
+        orderData: JSON.stringify(orderData, null, 2)
+      });
+      
+      throw new Error(`Failed to create Shopify order (${orderResponse.status}): ${errorText}`);
     }
 
     const orderResult = await orderResponse.json();
@@ -1065,8 +1081,22 @@ ${discountCode ? `🏷️ AFFILIATE TRACKING: Discount code "${discountCode}" us
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-shopify-order", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    logStep("ERROR in create-shopify-order", { 
+      message: errorMessage,
+      stack: errorStack,
+      name: error instanceof Error ? error.name : 'Unknown',
+      cause: error instanceof Error ? error.cause : undefined
+    });
+    
+    console.error("Full error details:", error);
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: errorStack,
+      function: 'create-shopify-order'
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
