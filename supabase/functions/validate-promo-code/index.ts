@@ -54,41 +54,41 @@ serve(async (req) => {
       );
     }
 
-    // Check for hardcoded test codes first
-    const testCodes: { [key: string]: PromoCode } = {
-      'SAVE10': {
-        code: 'SAVE10',
-        discount_type: 'percentage',
-        discount_value: 10,
-        is_active: true
-      },
-      'WELCOME20': {
-        code: 'WELCOME20',
-        discount_type: 'percentage',
-        discount_value: 20,
-        is_active: true,
-        minimum_order_amount: 50
-      },
-      'FREESHIP': {
-        code: 'FREESHIP',
-        discount_type: 'fixed_amount',
-        discount_value: 5.99,
-        is_active: true,
-        minimum_order_amount: 25
-      },
-      'PREMIERE2025': {
-        code: 'PREMIERE2025',
-        discount_type: 'fixed_amount',
-        discount_value: 0,
-        is_active: true
-      },
-      'PREMIER2025': {
-        code: 'PREMIER2025',
-        discount_type: 'fixed_amount',
-        discount_value: 0,
-        is_active: true
-      }
-    };
+      // Check for hardcoded test codes first
+      const testCodes: { [key: string]: PromoCode } = {
+        'SAVE10': {
+          code: 'SAVE10',
+          discount_type: 'percentage',
+          discount_value: 10,
+          is_active: true
+        },
+        'WELCOME20': {
+          code: 'WELCOME20',
+          discount_type: 'percentage',
+          discount_value: 20,
+          is_active: true,
+          minimum_order_amount: 50
+        },
+        'FREESHIP': {
+          code: 'FREESHIP',
+          discount_type: 'fixed_amount',
+          discount_value: 0,
+          is_active: true,
+          minimum_order_amount: 25
+        },
+        'PREMIERE2025': {
+          code: 'PREMIERE2025',
+          discount_type: 'fixed_amount',
+          discount_value: 0,
+          is_active: true
+        },
+        'PREMIER2025': {
+          code: 'PREMIER2025',
+          discount_type: 'fixed_amount', 
+          discount_value: 0,
+          is_active: true
+        }
+      };
 
     const upperCode = code.toUpperCase();
     
@@ -110,12 +110,20 @@ serve(async (req) => {
         );
       }
 
-      // Calculate discount
+      // Calculate discount and determine message
       let discountAmount = 0;
+      let message = '';
+      
       if (promoCode.discount_type === 'percentage') {
         discountAmount = (orderAmount * promoCode.discount_value) / 100;
+        message = `${promoCode.discount_value}% discount applied!`;
+      } else if (promoCode.discount_value === 0) {
+        // This is a free shipping code
+        discountAmount = 0;
+        message = `Free shipping applied!`;
       } else {
         discountAmount = promoCode.discount_value;
+        message = `$${promoCode.discount_value} discount applied!`;
       }
 
       return new Response(
@@ -125,7 +133,8 @@ serve(async (req) => {
           discount_type: promoCode.discount_type,
           discount_value: promoCode.discount_value,
           discount_amount: Math.round(discountAmount * 100) / 100,
-          message: `${promoCode.discount_type === 'percentage' ? promoCode.discount_value + '%' : '$' + promoCode.discount_value} discount applied!`
+          is_free_shipping: promoCode.discount_type === 'fixed_amount' && promoCode.discount_value === 0,
+          message: message
         }),
         { 
           status: 200, 

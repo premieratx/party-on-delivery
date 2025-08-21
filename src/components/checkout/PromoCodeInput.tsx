@@ -43,6 +43,7 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
     setIsValidating(true);
     try {
       console.log('🎫 Validating promo code:', promoCode.trim().toUpperCase());
+      console.log('🎫 Cart subtotal for validation:', cartSubtotal);
       
       // Call the actual Supabase validation function
       const { data, error } = await supabase.functions.invoke('validate-promo-code', {
@@ -65,16 +66,20 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
       }
 
       if (data.valid) {
+        console.log('🎫 Valid promo code detected:', data);
+        
         // Convert backend response to frontend format
         const discount = {
           code: data.code,
-          type: data.discount_type === 'fixed_amount' && data.discount_value === 0 
+          type: (data.discount_type === 'fixed_amount' && data.discount_value === 0) || data.is_free_shipping
             ? 'free_shipping' as const
             : data.discount_type === 'percentage' 
               ? 'percentage' as const
               : 'free_shipping' as const,
           value: data.discount_type === 'percentage' ? data.discount_value : 0
         };
+        
+        console.log('🎫 Converted discount object:', discount);
         
         onDiscountApplied(discount);
         setPromoCode('');
