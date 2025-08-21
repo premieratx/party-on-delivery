@@ -417,50 +417,50 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         <span className="font-bold text-primary text-lg">
                           ${(parseFloat(String(product.price)) || 0).toFixed(2)}
                         </span>
-                        
-                        {quantity > 0 ? (
-                          <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]">
+                         
+                         {quantity > 0 ? (
+                           <div className="flex items-center justify-center bg-muted rounded-md p-1 w-full max-w-[90px] mx-auto">
+                              <Button
+                               size="sm"
+                               variant="ghost"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
+                                 if (onUpdateQuantity) {
+                                   onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
+                                 }
+                               }}
+                               className="h-6 w-6 p-0 flex-shrink-0"
+                             >
+                               <Minus className="w-3 h-3" />
+                             </Button>
+                             <span className="font-medium px-1 text-sm flex-1 text-center min-w-0">{quantity}</span>
                              <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
-                                if (onUpdateQuantity) {
-                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
-                                }
-                              }}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </Button>
-                            <span className="font-medium px-2">{quantity}</span>
+                               size="sm"
+                               variant="ghost"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
+                                 if (onUpdateQuantity) {
+                                   onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
+                                 }
+                               }}
+                               className="h-6 w-6 p-0 flex-shrink-0"
+                             >
+                               <Plus className="w-3 h-3" />
+                             </Button>
+                           </div>
+                          ) : (
                             <Button
-                              size="sm"
-                              variant="ghost"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
-                                if (onUpdateQuantity) {
-                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
-                                }
+                                handleAddToCart(product);
                               }}
-                              className="h-8 w-8 p-0"
+                              className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in mx-auto"
                             >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                         ) : (
-                           <Button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               handleAddToCart(product);
-                             }}
-                             className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
-                           >
-                            <Plus className="w-5 h-5" />
-                          </Button>
-                        )}
+                             <Plus className="w-4 h-4" />
+                           </Button>
+                         )}
                       </div>
                     </div>
                   </div>
@@ -532,51 +532,51 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         ${(parseFloat(String(product.price)) || 0).toFixed(2)}
                       </span>
                       
-                      {quantity > 0 ? (
-                         <div className="flex items-center justify-between bg-muted rounded-md p-1 w-full max-w-[120px]" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
-                                if (onUpdateQuantity) {
-                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
-                                }
-                              }}
-                            >
-                            <Minus className="w-4 h-4" />
-                          </Button>
-                          <span className="font-semibold min-w-[2rem] text-center">
-                            {quantity}
-                          </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
-                                if (onUpdateQuantity) {
-                                  onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
-                                }
-                              }}
-                            >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                       ) : (
-                         <Button
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             handleAddToCart(product);
-                           }}
-                           className="w-10 h-10 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in"
-                         >
-                          <Plus className="w-5 h-5" />
-                        </Button>
-                      )}
+                       {quantity > 0 ? (
+                          <div className="flex items-center justify-center bg-muted rounded-md p-1 w-full max-w-[90px] mx-auto" onClick={(e) => e.stopPropagation()}>
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               className="h-6 w-6 p-0 flex-shrink-0"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
+                                 if (onUpdateQuantity) {
+                                   onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
+                                 }
+                               }}
+                             >
+                             <Minus className="w-3 h-3" />
+                           </Button>
+                           <span className="font-semibold text-sm flex-1 text-center min-w-0">
+                             {quantity}
+                           </span>
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               className="h-6 w-6 p-0 flex-shrink-0"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
+                                 if (onUpdateQuantity) {
+                                   onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
+                                 }
+                               }}
+                             >
+                             <Plus className="w-3 h-3" />
+                           </Button>
+                         </div>
+                        ) : (
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(product);
+                            }}
+                            className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in mx-auto"
+                          >
+                           <Plus className="w-4 h-4" />
+                         </Button>
+                       )}
                     </div>
                   </div>
                 </div>
