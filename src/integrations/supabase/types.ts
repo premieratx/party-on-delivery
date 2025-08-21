@@ -1165,7 +1165,9 @@ export type Database = {
           is_default_homepage: boolean | null
           is_multi_flow: boolean | null
           logo_height: number | null
+          logo_height_override: number | null
           logo_url: string | null
+          logo_width: number | null
           slug: string
           styles: Json
           subtitle: string | null
@@ -1192,7 +1194,9 @@ export type Database = {
           is_default_homepage?: boolean | null
           is_multi_flow?: boolean | null
           logo_height?: number | null
+          logo_height_override?: number | null
           logo_url?: string | null
+          logo_width?: number | null
           slug: string
           styles?: Json
           subtitle?: string | null
@@ -1219,7 +1223,9 @@ export type Database = {
           is_default_homepage?: boolean | null
           is_multi_flow?: boolean | null
           logo_height?: number | null
+          logo_height_override?: number | null
           logo_url?: string | null
+          logo_width?: number | null
           slug?: string
           styles?: Json
           subtitle?: string | null
@@ -1779,6 +1785,8 @@ export type Database = {
         Row: {
           app_name: string
           app_slug: string
+          bg_image_url: string | null
+          bg_video_url: string | null
           collections_config: Json
           created_at: string
           custom_post_checkout_config: Json | null
@@ -1786,6 +1794,7 @@ export type Database = {
           is_active: boolean
           is_homepage: boolean | null
           logo_url: string | null
+          logo_width: number | null
           main_app_config: Json | null
           post_checkout_config: Json | null
           short_path: string | null
@@ -1797,6 +1806,8 @@ export type Database = {
         Insert: {
           app_name: string
           app_slug: string
+          bg_image_url?: string | null
+          bg_video_url?: string | null
           collections_config?: Json
           created_at?: string
           custom_post_checkout_config?: Json | null
@@ -1804,6 +1815,7 @@ export type Database = {
           is_active?: boolean
           is_homepage?: boolean | null
           logo_url?: string | null
+          logo_width?: number | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
           short_path?: string | null
@@ -1815,6 +1827,8 @@ export type Database = {
         Update: {
           app_name?: string
           app_slug?: string
+          bg_image_url?: string | null
+          bg_video_url?: string | null
           collections_config?: Json
           created_at?: string
           custom_post_checkout_config?: Json | null
@@ -1822,6 +1836,7 @@ export type Database = {
           is_active?: boolean
           is_homepage?: boolean | null
           logo_url?: string | null
+          logo_width?: number | null
           main_app_config?: Json | null
           post_checkout_config?: Json | null
           short_path?: string | null
@@ -2602,33 +2617,45 @@ export type Database = {
       }
       post_checkout_pages: {
         Row: {
+          bg_image_url: string | null
+          bg_video_url: string | null
           content: Json
           created_at: string
           id: string
           is_active: boolean
           is_default: boolean
+          logo_url: string | null
+          logo_width: number | null
           name: string
           slug: string
           theme: string | null
           updated_at: string
         }
         Insert: {
+          bg_image_url?: string | null
+          bg_video_url?: string | null
           content?: Json
           created_at?: string
           id?: string
           is_active?: boolean
           is_default?: boolean
+          logo_url?: string | null
+          logo_width?: number | null
           name: string
           slug: string
           theme?: string | null
           updated_at?: string
         }
         Update: {
+          bg_image_url?: string | null
+          bg_video_url?: string | null
           content?: Json
           created_at?: string
           id?: string
           is_active?: boolean
           is_default?: boolean
+          logo_url?: string | null
+          logo_width?: number | null
           name?: string
           slug?: string
           theme?: string | null

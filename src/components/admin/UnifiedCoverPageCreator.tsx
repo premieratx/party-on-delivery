@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EditableCoverScreen } from "@/components/enhanced-cover/EditableCoverScreen";
 import { Loader2, Save, Settings, Palette, Eye, Monitor, Smartphone, Tablet } from 'lucide-react';
-import { UNIFIED_THEMES, getThemeCSS, migrateLegacyTheme } from '@/lib/themeSystem';
+import { UNIFIED_THEMES, type ThemeConfig, migrateLegacyTheme } from '@/lib/themeSystem';
 
 interface UnifiedCoverPageCreatorProps {
   open: boolean;
@@ -74,11 +74,14 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
       }
       
       if (initial.buttons && Array.isArray(initial.buttons)) {
-        setButtons(initial.buttons.slice(0, 2).map((btn: any, index: number) => ({
-          text: btn.text || btn.title || (index === 0 ? 'Order Now' : 'Learn More'),
-          type: index === 0 ? 'primary' as const : 'secondary' as const,
-          url: btn.url || btn.link || (index === 0 ? '/delivery' : '/about')
-        })));
+        setButtons(initial.buttons.slice(0, 2).map((btn: any, index: number) => {
+          const buttonType: 'primary' | 'secondary' = index === 0 ? 'primary' : 'secondary';
+          return {
+            text: btn.text || btn.title || (index === 0 ? 'Order Now' : 'Learn More'),
+            type: buttonType,
+            url: btn.url || btn.link || (index === 0 ? '/delivery' : '/about')
+          };
+        }));
       }
     } else {
       // Reset for new cover page
@@ -94,8 +97,8 @@ export const UnifiedCoverPageCreator: React.FC<UnifiedCoverPageCreatorProps> = (
         { emoji: '💎', title: 'Best Value', description: 'Unbeatable prices and deals' }
       ]);
       setButtons([
-        { text: 'Order Now', type: 'primary' as const, url: '/delivery' },
-        { text: 'Learn More', type: 'secondary' as const, url: '/about' }
+        { text: 'Order Now', type: 'primary', url: '/delivery' },
+        { text: 'Learn More', type: 'secondary', url: '/about' }
       ]);
       setIsActive(true);
     }
