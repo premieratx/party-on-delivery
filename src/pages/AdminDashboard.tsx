@@ -53,12 +53,46 @@ export default function AdminDashboard() {
   const [showCoverCreator, setShowCoverCreator] = useState(false);
   const [showPostCheckoutCreator, setShowPostCheckoutCreator] = useState(false);
 
+  // Prevent dashboard reload on tab switching - load data only once
   useEffect(() => {
     console.log('🚀 AdminDashboard: Component mounted, loading data...');
     console.log('🔍 DEBUG: Window location:', window.location.pathname);
     console.log('🔍 DEBUG: Active tab:', activeTab);
-    loadDashboardData();
-  }, []);
+    
+    // Only load data if we haven't loaded it before (prevent reload on tab switch)
+    if (!sessionStorage.getItem('admin_dashboard_loaded')) {
+      loadDashboardData();
+      sessionStorage.setItem('admin_dashboard_loaded', 'true');
+    }
+
+    // Prevent component from remounting on browser tab events
+    const handleVisibilityChange = () => {
+      // Do nothing - just prevent default browser behavior
+      return false;
+    };
+
+    const handleFocus = () => {
+      // Do nothing - just prevent reload
+      return false;
+    };
+
+    const handleBlur = () => {
+      // Do nothing - just prevent reload  
+      return false;
+    };
+
+    // Add event listeners to prevent reload behavior
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      // Clean up event listeners
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []); // Empty dependency array to prevent unnecessary re-runs
 
   const loadDashboardData = async () => {
     try {

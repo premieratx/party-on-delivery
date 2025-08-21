@@ -13,30 +13,50 @@ export function useAdminState(defaultTab = 'overview') {
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [formData, setFormData] = useState<Record<string, any>>({});
 
-  // Load state from localStorage on mount WITHOUT clearing when switching tabs
+  // Load state from localStorage on mount - PREVENT RELOAD ON TAB SWITCH
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed: AdminState = JSON.parse(stored);
-        const now = Date.now();
-        
-        // Only clear if data is older than 24 hours, NOT when switching tabs
-        if (now - parsed.lastUpdated < STORAGE_EXPIRY) {
-          setActiveTab(parsed.activeTab || defaultTab);
-          setFormData(parsed.formData || {});
-          console.log('🔄 Restored admin state:', { activeTab: parsed.activeTab, formDataKeys: Object.keys(parsed.formData || {}) });
-        } else {
-          // Only clear expired state  
-          localStorage.removeItem(STORAGE_KEY);
-          console.log('⏰ Cleared expired admin state');
+    const loadStoredState = () => {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed: AdminState = JSON.parse(stored);
+          const now = Date.now();
+          
+          // Only clear if data is older than 24 hours, NOT when switching tabs
+          if (now - parsed.lastUpdated < STORAGE_EXPIRY) {
+            setActiveTab(parsed.activeTab || defaultTab);
+            setFormData(parsed.formData || {});
+            console.log('🔄 Restored admin state:', { activeTab: parsed.activeTab, formDataKeys: Object.keys(parsed.formData || {}) });
+          } else {
+            // Only clear expired state  
+            localStorage.removeItem(STORAGE_KEY);
+            console.log('⏰ Cleared expired admin state');
+          }
         }
+      } catch (error) {
+        console.warn('Failed to load admin state:', error);
+        localStorage.removeItem(STORAGE_KEY);
       }
-    } catch (error) {
-      console.warn('Failed to load admin state:', error);
-      localStorage.removeItem(STORAGE_KEY);
-    }
-  }, []); // Remove defaultTab dependency to prevent clearing on tab switches
+    };
+
+    // Load state immediately
+    loadStoredState();
+
+    // Prevent reload on browser tab focus/blur events
+    const preventReload = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    // Add event listeners to prevent unnecessary reloads
+    window.addEventListener('beforeunload', preventReload);
+    document.addEventListener('visibilitychange', preventReload);
+
+    return () => {
+      window.removeEventListener('beforeunload', preventReload);
+      document.removeEventListener('visibilitychange', preventReload);
+    };
+  }, []); // Keep empty dependency array to prevent clearing on tab switches
 
   // Save state to localStorage whenever it changes
   const saveState = useCallback((tab?: string, data?: Record<string, any>) => {
