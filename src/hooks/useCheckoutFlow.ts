@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DeliveryInfo } from '@/components/DeliveryWidget';
 import { useCustomerInfo } from './useCustomerInfo';
+import { useCheckoutPersistence } from './useCheckoutPersistence';
 
 interface UseCheckoutFlowProps {
   isAddingToOrder: boolean;
@@ -12,12 +13,28 @@ interface UseCheckoutFlowProps {
 
 export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, onDeliveryInfoChange, affiliateCode }: UseCheckoutFlowProps) {
   const { customerInfo, addressInfo, setAddressInfo, setCustomerInfo } = useCustomerInfo();
+  const { saveCheckoutState, getCheckoutState } = useCheckoutPersistence();
   
-  // Step management with auto-progression
-  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>('datetime');
-  const [confirmedDateTime, setConfirmedDateTime] = useState(false);
-  const [confirmedAddress, setConfirmedAddress] = useState(false);
-  const [confirmedCustomer, setConfirmedCustomer] = useState(false);
+  // Step management with auto-progression - load from storage
+  const [currentStep, setCurrentStep] = useState<'datetime' | 'address' | 'payment'>(() => {
+    const saved = getCheckoutState();
+    return saved?.currentStep || 'datetime';
+  });
+  
+  const [confirmedDateTime, setConfirmedDateTime] = useState(() => {
+    const saved = getCheckoutState();
+    return saved?.confirmedDateTime || false;
+  });
+  
+  const [confirmedAddress, setConfirmedAddress] = useState(() => {
+    const saved = getCheckoutState();
+    return saved?.confirmedAddress || false;
+  });
+  
+  const [confirmedCustomer, setConfirmedCustomer] = useState(() => {
+    const saved = getCheckoutState();
+    return saved?.confirmedCustomer || false;
+  });
 
   // Auto-advance to next step when previous step is confirmed
   useEffect(() => {
@@ -103,6 +120,19 @@ export function useCheckoutFlow({ isAddingToOrder, lastOrderInfo, deliveryInfo, 
       setHasChanges(changes.length > 0);
     }
   }, [addressInfo, deliveryInfo.date, deliveryInfo.timeSlot, originalOrderInfo, isAddingToOrder]);
+
+  // Save checkout state whenever key values change
+  useEffect(() => {
+    saveCheckoutState({
+      currentStep,
+      confirmedDateTime,
+      confirmedAddress,
+      confirmedCustomer,
+      deliveryInfo,
+      customerInfo,
+      addressInfo
+    });
+  }, [currentStep, confirmedDateTime, confirmedAddress, confirmedCustomer, deliveryInfo, customerInfo, addressInfo]);
 
   // Validation helpers
   const isDateTimeComplete = deliveryInfo.date && deliveryInfo.timeSlot;

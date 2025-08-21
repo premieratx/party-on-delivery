@@ -126,19 +126,18 @@ export const DateTimeStep: React.FC<DateTimeStepProps> = ({
         {selectedDate && (
           <div>
             <label className="text-sm font-medium mb-2 block">Delivery Time</label>
-            <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+            <select
+              value={deliveryInfo.timeSlot || ''}
+              onChange={(e) => handleTimeSlotSelect(e.target.value)}
+              className="w-full p-3 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="" disabled>Select delivery time</option>
               {timeSlots.map((slot) => (
-                <Button
-                  key={slot}
-                  variant={deliveryInfo.timeSlot === slot ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleTimeSlotSelect(slot)}
-                  className="text-xs py-2"
-                >
+                <option key={slot} value={slot}>
                   {slot}
-                </Button>
+                </option>
               ))}
-            </div>
+            </select>
           </div>
         )}
 

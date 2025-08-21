@@ -173,13 +173,6 @@ export const CheckoutSummary: React.FC<CheckoutSummaryProps> = ({
             <span>Sales Tax (8.25%)</span>
             <span>${salesTax.toFixed(2)}</span>
           </div>
-          
-          {tipAmount > 0 && (
-            <div className="flex justify-between">
-              <span>Driver Tip</span>
-              <span>${tipAmount.toFixed(2)}</span>
-            </div>
-          )}
         </div>
 
         <Separator />

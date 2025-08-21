@@ -332,9 +332,34 @@ export const EnhancedCoverPageManager: React.FC = () => {
                           {page.subtitle && (
                             <p className="text-sm text-muted-foreground mb-2">{page.subtitle}</p>
                           )}
-                          <p className="text-xs text-muted-foreground">
+                           <p className="text-xs text-muted-foreground mb-2">
                             Slug: /{page.slug} • Created: {new Date(page.created_at).toLocaleDateString()}
                           </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                const url = `${window.location.origin}/${page.slug}`;
+                                navigator.clipboard.writeText(url);
+                                toast.success('URL copied to clipboard!');
+                              }}
+                              className="text-xs h-7 px-2"
+                            >
+                              Copy URL
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => window.open(`/${page.slug}`, '_blank')}
+                              className="text-xs h-7 px-2"
+                            >
+                              Preview
+                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              {window.location.origin}/{page.slug}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <Button
