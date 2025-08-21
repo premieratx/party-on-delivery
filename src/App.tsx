@@ -105,11 +105,10 @@ const App = () => {
                     
                     <Route path="/flow/:shareSlug" element={<AffiliateFlowLanding />} />
                     
-                    {/* Admin Routes */}
+                    {/* Admin Routes - consolidated to prevent remounting */}
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                     <Route path="/admin/*" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-                    <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                     
                     {/* Customer Routes */}
                     <Route path="/customer/login" element={<CustomerLogin />} />

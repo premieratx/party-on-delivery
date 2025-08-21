@@ -90,7 +90,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   const [featuresVerticalPos, setFeaturesVerticalPos] = useState(0);
   const [buttonsVerticalPos, setButtonsVerticalPos] = useState(0);
 
-  // Auto-save functionality
+  // Enhanced auto-save functionality with logging
   const autoSave = useCallback(() => {
     if (!open) return;
     
@@ -98,10 +98,19 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     const formState = {
       title, subtitle, logoUrl, logoEmoji, backgroundImageUrl, backgroundVideoUrl,
       variant, features, buttons, isActive, logoSize, logoPosition, headlineSize,
-      logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos
+      logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos,
+      lastAutoSave: Date.now()
     };
     
-    setFormValue(formKey, formState);
+    // Only save if there's actual content
+    if (title.trim() || subtitle.trim() || logoUrl || backgroundImageUrl) {
+      setFormValue(formKey, formState);
+      console.log('💾 Cover page auto-saved:', { 
+        formKey, 
+        title: title.trim() || 'Untitled',
+        hasContent: !!(title.trim() || subtitle.trim() || logoUrl || backgroundImageUrl)
+      });
+    }
   }, [
     open, initial?.id, title, subtitle, logoUrl, logoEmoji, backgroundImageUrl, backgroundVideoUrl,
     variant, features, buttons, isActive, logoSize, logoPosition, headlineSize,
@@ -221,9 +230,11 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       setFeaturesVerticalPos(savedState.featuresVerticalPos || 0);
       setButtonsVerticalPos(savedState.buttonsVerticalPos || 0);
 
+      console.log('🔄 Cover page session restored from auto-save');
       toast({
-        title: "Session Restored",
-        description: "Your work has been automatically restored.",
+        title: "Session Restored", 
+        description: "Your previous work has been restored automatically.",
+        duration: 3000,
       });
     }
   }, [initial, open, getFormValue, toast]);

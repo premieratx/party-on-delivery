@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, CreditCard, Search, Package } from 'lucide-react';
 import { UnifiedCartItem } from '@/hooks/useUnifiedCart';
@@ -26,11 +26,16 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
   showAdmin = false,
   currentAppSlug
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   // Apply affiliate/delivery-app markup to totals consistently
   const markupPercent = Number(sessionStorage.getItem('pricing.markupPercent') || '0');
   const applyMarkup = (price: number) => price * (1 + (isNaN(markupPercent) ? 0 : markupPercent) / 100);
   const adjustedTotal = items.reduce((sum, item) => sum + applyMarkup(item.price) * item.quantity, 0);
+
+  // Helper to check if we're on the homepage - avoid reloading if already there
+  const isHomePage = location.pathname === '/';
 
   // Always show the bottom cart bar - never hide it completely
   // This ensures consistent sticky behavior across desktop and mobile
@@ -42,35 +47,37 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
         <div className="bg-background border-t shadow-lg p-2">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             {/* Left side: Search icon */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.href = '/search'}
-              className="flex items-center gap-1 px-3 h-9"
-            >
-              <Search className="w-4 h-4" />
-              <span className="text-xs">Search</span>
-            </Button>
-
-            {/* Center: Manage Order, Delivery App Selector, Admin */}
-            <div className="flex items-center gap-2">
+            {!isHomePage && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.href = '/customer/dashboard'}
+                onClick={() => navigate('/search')}
+                className="flex items-center gap-1 px-3 h-9"
+              >
+                <Search className="w-4 h-4" />
+                <span className="text-xs">Search</span>
+              </Button>
+            )}
+            {!isHomePage && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/customer/dashboard')}
                 className="flex items-center gap-1 px-2 h-9"
               >
                 <Package className="w-4 h-4" />
                 <span className="text-xs">Manage Order</span>
               </Button>
-              
+            )}
+            {/* Center: Delivery App Selector, Admin */}
+            <div className="flex items-center gap-2">
               {showAdmin && (
-                <Link 
-                  to="/admin/dashboard"
-                  className="text-xs text-muted-foreground hover:text-primary transition-colors px-2"
+                <button 
+                  onClick={() => navigate('/admin')}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors px-2 bg-transparent border-0 cursor-pointer"
                 >
                   Admin
-                </Link>
+                </button>
               )}
               
               <div className="scale-75 origin-center">
@@ -116,12 +123,12 @@ export const BottomCartBar: React.FC<BottomCartBarProps> = ({
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             {showAdmin && (
-              <Link 
-                to="/admin/dashboard"
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              <button 
+                onClick={() => navigate('/admin')}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors bg-transparent border-0 cursor-pointer"
               >
                 Admin
-              </Link>
+              </button>
             )}
             {/* Delivery App Selector moved here */}
             <div className="scale-75 origin-left">

@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// BULLETPROOF HOMEPAGE - NO HOOKS, NO EXTERNAL DEPS
+// BULLETPROOF HOMEPAGE - MINIMAL HOOKS FOR SPA NAVIGATION
 export default function SafeHomepage() {
+  const navigate = useNavigate();
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -23,7 +25,7 @@ export default function SafeHomepage() {
           </h1>
           <nav style={{ display: 'flex', gap: '1rem' }}>
             <button 
-              onClick={() => window.location.href = '/admin'}
+              onClick={() => navigate('/admin')}
               style={{
                 background: '#4a5568',
                 color: 'white',

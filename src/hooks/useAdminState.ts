@@ -55,7 +55,7 @@ export function useAdminState(defaultTab = 'overview') {
     };
   }, []); // Keep empty dependency array to prevent clearing on tab switches
 
-  // Save state to localStorage whenever it changes
+  // Save state to localStorage whenever it changes - with success logging
   const saveState = useCallback((tab?: string, data?: Record<string, any>) => {
     try {
       const state: AdminState = {
@@ -64,8 +64,9 @@ export function useAdminState(defaultTab = 'overview') {
         lastUpdated: Date.now()
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      console.log('💾 Admin state saved successfully:', { tab: tab || activeTab, dataKeys: Object.keys(data || formData) });
     } catch (error) {
-      console.warn('Failed to save admin state:', error);
+      console.error('❌ Failed to save admin state:', error);
     }
   }, [activeTab, formData]);
 
