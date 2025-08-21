@@ -108,6 +108,10 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
+    // Build full delivery address string
+    const fullDeliveryAddress = deliveryInfo?.address ? 
+      `${deliveryInfo.address.street}, ${deliveryInfo.address.city}, ${deliveryInfo.address.state} ${deliveryInfo.address.zipCode}` : '';
+
     // Create session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -116,9 +120,30 @@ serve(async (req) => {
       success_url: `${req.headers.get('origin')}/order-complete?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/checkout?cancelled=true`,
       metadata: {
-        affiliate_code: affiliateCode || '',
+        // Customer information
+        customer_name: `${customerInfo.firstName} ${customerInfo.lastName}`,
+        customer_email: customerInfo.email,
+        customer_phone: customerInfo.phone || '',
+        
+        // Delivery information
         delivery_date: deliveryInfo?.date || '',
         delivery_time: deliveryInfo?.timeSlot || '',
+        delivery_address: fullDeliveryAddress,
+        delivery_instructions: deliveryInfo?.specialInstructions || '',
+        
+        // Order amounts
+        subtotal: (subtotal * 100).toString(), // Convert to cents
+        delivery_fee: (deliveryFee * 100).toString(),
+        sales_tax: (salesTax * 100).toString(),
+        tip_amount: (tipAmount * 100).toString(),
+        total_amount: (totalAmount / 100).toString(), // Total is already in cents
+        
+        // Cart items (JSON string)
+        cart_items: JSON.stringify(cartItems),
+        
+        // Other
+        affiliate_code: affiliateCode || '',
+        applied_discount: appliedDiscount ? JSON.stringify(appliedDiscount) : '',
       },
     });
 
