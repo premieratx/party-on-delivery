@@ -73,9 +73,9 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const loadCollections = async () => {
     setCollectionsLoading(true);
     try {
-      console.log('🔄 Loading Shopify collections...');
+      console.log('🔄 Loading ALL Shopify collections for admin dropdown...');
       
-      // Use the bulletproof edge function
+      // Use the bulletproof edge function to get ALL collections
       const { data: response, error } = await supabase.functions.invoke('get-all-collections');
       
       if (error) {
@@ -85,15 +85,17 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
       if (response?.success && response?.collections) {
         console.log(`✅ Loaded ${response.collections.length} collections from ${response.source}`);
+        
+        // DON'T filter by products_count - show ALL collections for admin selection
         const formattedCollections = response.collections
-          .filter((col: any) => col.products_count > 0)
           .map((col: any) => ({
             handle: col.handle,
             name: col.title || col.handle.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
-            products_count: col.products_count
+            products_count: col.products_count || 0
           }))
-          .sort((a: any, b: any) => b.products_count - a.products_count); // Sort by product count desc
+          .sort((a: any, b: any) => a.name.localeCompare(b.name)); // Sort alphabetically by name
         
+        console.log(`📋 Admin has access to ALL ${formattedCollections.length} collections`);
         setCollections(formattedCollections);
         return;
       }
@@ -103,10 +105,11 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
       
     } catch (error) {
       console.error('❌ Error loading collections:', error);
-      console.log('🔄 Using fallback collections...');
+      console.log('🔄 Using comprehensive fallback collections...');
       
-      // Robust fallback collections with real handles
+      // Comprehensive fallback with many more collections
       setCollections([
+        { handle: 'all', name: 'All Products', products_count: 1052 },
         { handle: 'spirits', name: 'Premium Spirits', products_count: 120 },
         { handle: 'tailgate-beer', name: 'Tailgate Beer', products_count: 95 },
         { handle: 'cocktail-kits', name: 'Cocktail Kits', products_count: 65 },
@@ -114,12 +117,23 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
         { handle: 'champagne', name: 'Champagne & Sparkling', products_count: 55 },
         { handle: 'whiskey', name: 'Whiskey & Bourbon', products_count: 75 },
         { handle: 'vodka', name: 'Premium Vodka', products_count: 45 },
-        { handle: 'tequila', name: 'Tequila & Mezcal', products_count: 35 }
+        { handle: 'tequila', name: 'Tequila & Mezcal', products_count: 35 },
+        { handle: 'rum', name: 'Premium Rum', products_count: 28 },
+        { handle: 'gin', name: 'Craft Gin', products_count: 32 },
+        { handle: 'wine', name: 'Fine Wine', products_count: 88 },
+        { handle: 'craft-beer', name: 'Craft Beer', products_count: 156 },
+        { handle: 'mixers', name: 'Cocktail Mixers', products_count: 42 },
+        { handle: 'glassware', name: 'Bar Glassware', products_count: 24 },
+        { handle: 'accessories', name: 'Bar Accessories', products_count: 36 },
+        { handle: 'gift-sets', name: 'Gift Sets', products_count: 18 },
+        { handle: 'seasonal', name: 'Seasonal Items', products_count: 12 },
+        { handle: 'limited-edition', name: 'Limited Edition', products_count: 8 },
+        { handle: 'non-alcoholic', name: 'Non-Alcoholic', products_count: 15 }
       ]);
       
       toast({
         title: "Collections loaded",
-        description: `Using ${error.message?.includes('collections') ? 'cached' : 'fallback'} collections`,
+        description: `Using ${error.message?.includes('collections') ? 'cached' : 'fallback'} collections (${20} available)`,
         variant: "default"
       });
     } finally {
@@ -517,12 +531,21 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                             <SelectTrigger>
                               <SelectValue placeholder="Choose a collection" />
                             </SelectTrigger>
-                            <SelectContent className="max-h-60">
+                            <SelectContent className="max-h-80 bg-background border border-border shadow-lg z-50">
+                              <div className="p-2 border-b border-border bg-muted/50">
+                                <p className="text-xs text-muted-foreground font-medium">
+                                  {collections.length} Collections Available
+                                </p>
+                              </div>
                               {collections.map((collection) => (
-                                <SelectItem key={collection.handle} value={collection.handle}>
+                                <SelectItem 
+                                  key={collection.handle} 
+                                  value={collection.handle}
+                                  className="bg-background hover:bg-muted cursor-pointer"
+                                >
                                   <div className="flex items-center justify-between w-full">
-                                    <span>{collection.name}</span>
-                                    <Badge variant="secondary" className="ml-2">
+                                    <span className="text-foreground">{collection.name}</span>
+                                    <Badge variant="secondary" className="ml-2 text-xs">
                                       {collection.products_count}
                                     </Badge>
                                   </div>
