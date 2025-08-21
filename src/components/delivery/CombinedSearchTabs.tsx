@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, ShoppingCart, CreditCard } from 'lucide-react';
@@ -46,7 +46,88 @@ export const CombinedSearchTabs = ({
   onCheckout
 }: CombinedSearchTabsProps) => {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [tabLayout, setTabLayout] = useState<'full' | 'compact' | 'minimal' | 'icon-only'>('full');
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
   const { headerCompressed } = useSearchInterface();
+
+  // Dynamic tab sizing based on available space
+  const calculateTabLayout = useCallback(() => {
+    if (!tabsContainerRef.current || tabs.length === 0) return;
+    
+    const containerWidth = tabsContainerRef.current.offsetWidth;
+    const tabCount = tabs.length;
+    
+    // Estimate space needed for each layout mode (in pixels)
+    const spacingBetweenTabs = 4; // gap-1 = 4px
+    const totalSpacing = (tabCount - 1) * spacingBetweenTabs;
+    
+    // Average character width estimates + padding + icon space
+    const avgTabNameLength = tabs.reduce((sum, tab) => sum + tab.title.length, 0) / tabCount;
+    const fullModeWidth = tabCount * (avgTabNameLength * 8 + 40 + 24) + totalSpacing; // 8px per char + icon + padding
+    const compactModeWidth = tabCount * (avgTabNameLength * 7 + 32 + 20) + totalSpacing; // smaller text/padding
+    const minimalModeWidth = tabCount * (avgTabNameLength * 6 + 24 + 16) + totalSpacing; // minimal text/padding
+    const iconOnlyModeWidth = tabCount * (32) + totalSpacing; // just icons + minimal padding
+    
+    if (containerWidth >= fullModeWidth) {
+      setTabLayout('full');
+    } else if (containerWidth >= compactModeWidth) {
+      setTabLayout('compact');
+    } else if (containerWidth >= minimalModeWidth) {
+      setTabLayout('minimal');
+    } else {
+      setTabLayout('icon-only');
+    }
+  }, [tabs]);
+
+  // Recalculate on resize and tab changes
+  useEffect(() => {
+    calculateTabLayout();
+    
+    const resizeObserver = new ResizeObserver(calculateTabLayout);
+    if (tabsContainerRef.current) {
+      resizeObserver.observe(tabsContainerRef.current);
+    }
+    
+    return () => resizeObserver.disconnect();
+  }, [calculateTabLayout]);
+
+  // Get dynamic tab styling based on layout mode
+  const getTabClasses = (isSelected: boolean) => {
+    const baseClasses = "whitespace-nowrap flex-shrink-0 transition-all duration-200 flex items-center justify-center";
+    const variantClass = isSelected ? "default" : "ghost";
+    
+    switch (tabLayout) {
+      case 'full':
+        return `${baseClasses} text-sm px-3 py-2 h-9 gap-2`;
+      case 'compact':
+        return `${baseClasses} text-xs px-2 py-1.5 h-8 gap-1.5`;
+      case 'minimal':
+        return `${baseClasses} text-xs px-1.5 py-1 h-7 gap-1`;
+      case 'icon-only':
+        return `${baseClasses} text-xs p-1.5 h-8 w-8`;
+      default:
+        return `${baseClasses} text-xs px-2 py-1 h-8 gap-1`;
+    }
+  };
+
+  const getIconSize = () => {
+    switch (tabLayout) {
+      case 'full':
+        return 'text-lg'; // 18px
+      case 'compact':
+        return 'text-base'; // 16px
+      case 'minimal':
+        return 'text-sm'; // 14px
+      case 'icon-only':
+        return 'text-sm'; // 14px
+      default:
+        return 'text-sm';
+    }
+  };
+
+  const shouldShowText = () => {
+    return tabLayout !== 'icon-only';
+  };
 
   // Auto-expand search when user starts typing
   useEffect(() => {
@@ -157,38 +238,35 @@ export const CombinedSearchTabs = ({
         </div>
       </div>
 
-      {/* Mobile Layout with stacked cart and checkout */}
+      {/* Mobile Layout with Dynamic Responsive Tabs */}
       <div className="block md:hidden sticky top-0 z-40 bg-background">
-        {/* First Row - Tabs and Search Icon */}
+        {/* First Row - Dynamic Tabs */}
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
-            {/* Tabs - Show titles with icons until space runs out */}
-            <div className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1">
+            {/* Dynamic Responsive Tabs */}
+            <div 
+              ref={tabsContainerRef}
+              className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1"
+            >
               {tabs.map((tab, index) => (
                 <Button
                   key={tab.id}
                   variant={selectedCategory === index ? "default" : "ghost"}
-                  className="whitespace-nowrap text-xs px-2 py-1 h-8 min-w-fit flex-shrink-0 transition-all duration-200 flex items-center gap-1"
+                  className={getTabClasses(selectedCategory === index)}
                   onClick={() => onTabSelect(index)}
                   title={tab.title}
                 >
-                  <span className="text-sm flex-shrink-0">{tab.icon || '📦'}</span>
-                  <span className="hidden min-[480px]:inline">{tab.title}</span>
+                  <span className={`flex-shrink-0 ${getIconSize()}`}>
+                    {tab.icon || '📦'}
+                  </span>
+                  {shouldShowText() && (
+                    <span className="truncate">
+                      {tab.title}
+                    </span>
+                  )}
                 </Button>
               ))}
             </div>
-            
-            {/* Search Icon - Move into cart row on mobile */}
-            {showSearch && !isSearchExpanded && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSearchIconClick}
-                className="ml-2 flex-shrink-0 h-8 w-8 p-0 hidden"
-              >
-                <Search className="w-4 h-4" />
-              </Button>
-            )}
           </div>
         </div>
 
