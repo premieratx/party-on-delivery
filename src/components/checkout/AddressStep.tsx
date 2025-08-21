@@ -14,6 +14,7 @@ interface AddressStepProps {
   addressInfo: AddressInfo;
   setAddressInfo: (info: AddressInfo) => void;
   onConfirm: () => void;
+  onEdit?: () => void;
   isConfirmed: boolean;
 }
 
@@ -21,6 +22,7 @@ export const AddressStep: React.FC<AddressStepProps> = ({
   addressInfo,
   setAddressInfo,
   onConfirm,
+  onEdit,
   isConfirmed
 }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -98,6 +100,16 @@ export const AddressStep: React.FC<AddressStepProps> = ({
             <CheckCircle className="w-5 h-5 text-green-500" />
             Delivery Address
           </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onEdit?.();
+            }}
+            className="flex items-center gap-2"
+          >
+            Edit Address
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="flex items-start gap-2 text-sm">

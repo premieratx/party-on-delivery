@@ -239,6 +239,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                   addressInfo={addressInfo}
                   setAddressInfo={setAddressInfo}
                   onConfirm={handleAddressConfirm}
+                  onEdit={() => setCurrentStep('address')}
                   isConfirmed={confirmedAddress}
                 />
                 
@@ -248,6 +249,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
                     customerInfo={customerInfo}
                     setCustomerInfo={setCustomerInfo}
                     onConfirm={handleCustomerConfirm}
+                    onEdit={() => setCurrentStep('address')}
                     isConfirmed={confirmedCustomer}
                   />
                 )}

@@ -11,6 +11,7 @@ interface CustomerInfoStepProps {
   customerInfo: CustomerInfo;
   setCustomerInfo: (info: CustomerInfo) => void;
   onConfirm: () => void;
+  onEdit?: () => void;
   isConfirmed: boolean;
 }
 
@@ -18,6 +19,7 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
   customerInfo,
   setCustomerInfo,
   onConfirm,
+  onEdit,
   isConfirmed
 }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -72,6 +74,16 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
             <CheckCircle className="w-5 h-5 text-green-500" />
             Contact Information
           </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              onEdit?.();
+            }}
+            className="flex items-center gap-2"
+          >
+            Edit Info
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-1 text-sm">

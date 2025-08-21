@@ -42,6 +42,9 @@ interface Order {
   customer_id?: string;
   session_id?: string;
   shopify_order_id?: string;
+  affiliate_code?: string;
+  affiliate_id?: string;
+  delivery_app_slug?: string;
 }
 
 const CustomerDashboard = () => {
@@ -497,9 +500,9 @@ const CustomerDashboard = () => {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <div className="mt-3 pt-3 border-t space-y-2">
-                            {order.line_items.map((item: any, index: number) => (
+                             {order.line_items.map((item: any, index: number) => (
                               <div key={index} className="flex justify-between items-center text-sm">
-                                <span>{item.quantity}× {item.title}</span>
+                                <span>{item.quantity}× {item.title?.replace(/gid:\/\/shopify\/[^\s]+/g, '').trim()}</span>
                                 <span className="font-medium">
                                   {formatCurrency(item.price * item.quantity)}
                                 </span>
@@ -508,9 +511,32 @@ const CustomerDashboard = () => {
                           </div>
                         </CollapsibleContent>
                       </Collapsible>
-                    )}
+                     )}
 
-                    {/* Special Instructions */}
+                     {/* Affiliate & Source Information */}
+                     {(order.affiliate_code || order.delivery_app_slug) && (
+                       <div className="text-sm space-y-1 bg-muted/50 p-3 rounded-lg">
+                         <div className="font-medium text-muted-foreground">Order Source:</div>
+                         {order.affiliate_code && (
+                           <div className="flex items-center text-xs">
+                             <span className="text-muted-foreground">Affiliate:</span>
+                             <Badge variant="outline" className="ml-2 text-xs">
+                               {order.affiliate_code}
+                             </Badge>
+                           </div>
+                         )}
+                         {order.delivery_app_slug && (
+                           <div className="flex items-center text-xs">
+                             <span className="text-muted-foreground">App:</span>
+                             <Badge variant="outline" className="ml-2 text-xs">
+                               {order.delivery_app_slug}
+                             </Badge>
+                           </div>
+                         )}
+                       </div>
+                     )}
+
+                     {/* Special Instructions */}
                     {order.special_instructions && (
                       <div className="text-sm">
                         <span className="font-medium">Special Instructions: </span>

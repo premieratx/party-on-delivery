@@ -105,15 +105,33 @@ export default function AdminDashboard() {
         affiliatesError: affiliatesResponse.error
       });
 
-      // Process orders data
+      // Calculate comprehensive statistics from real data
       const orders = ordersResponse.data || [];
-      const totalOrderRevenue = orders.reduce((sum, order) => sum + (parseFloat(String(order.total_amount || 0))), 0);
+      const customers = customersResponse.data || [];
+      const affiliatesData = affiliatesResponse.data || [];
       
-      // Set dashboard statistics
+      // Calculate real totals
+      const totalOrderRevenue = orders.reduce((sum, order) => sum + (parseFloat(String(order.total_amount || 0))), 0);
+      const totalOrderCount = orders.length;
+      const totalCustomerCount = customers.length;
+      
+      // Count unique customers from orders if customer data is limited
+      const uniqueCustomerEmails = new Set(
+        orders.map(order => {
+          const address = order.delivery_address;
+          if (typeof address === 'object' && address !== null && !Array.isArray(address)) {
+            return (address as any).email;
+          }
+          return null;
+        }).filter(Boolean)
+      );
+      const calculatedCustomerCount = Math.max(totalCustomerCount, uniqueCustomerEmails.size);
+      
+      // Set dashboard statistics with real data
       setTotalRevenue(totalOrderRevenue);
-      setTotalOrders(orders.length);
-      setTotalCustomers(customersResponse.data?.length || 0);
-      setTotalProducts(1052); // Static for now
+      setTotalOrders(totalOrderCount);
+      setTotalCustomers(calculatedCustomerCount);
+      setTotalProducts(1052); // Static for now - could be dynamic via Shopify sync
       
       // Map orders with customer details
       const ordersWithDetails = orders.map((order: any) => ({
@@ -130,8 +148,8 @@ export default function AdminDashboard() {
       setRecentOrders(ordersWithDetails);
 
       // Set affiliates data
-      const affiliatesData = affiliatesResponse.data || [];
-      setAffiliates(affiliatesData.map((affiliate: any) => ({
+      const affiliatesInfo = affiliatesResponse.data || [];
+      setAffiliates(affiliatesInfo.map((affiliate: any) => ({
         ...affiliate,
         name: affiliate.name || affiliate.company_name || 'Unknown',
         total_sales: affiliate.total_sales || 0,
