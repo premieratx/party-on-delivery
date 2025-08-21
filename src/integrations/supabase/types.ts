@@ -3845,6 +3845,51 @@ export type Database = {
         }
         Relationships: []
       }
+      system_guidelines: {
+        Row: {
+          component_name: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          examples: Json | null
+          guideline_type: string
+          id: string
+          is_active: boolean
+          priority: number | null
+          rules: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          component_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          examples?: Json | null
+          guideline_type: string
+          id?: string
+          is_active?: boolean
+          priority?: number | null
+          rules?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          component_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          examples?: Json | null
+          guideline_type?: string
+          id?: string
+          is_active?: boolean
+          priority?: number | null
+          rules?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_health: {
         Row: {
           active_sessions: number | null
