@@ -16,6 +16,7 @@ import { MobileBottomCartBar } from '@/components/common/MobileBottomCartBar';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 import { useImageOptimization } from '@/hooks/useImageOptimization';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
+import { useImagePreloader } from '@/hooks/useImagePreloader';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesEnhancedProps {

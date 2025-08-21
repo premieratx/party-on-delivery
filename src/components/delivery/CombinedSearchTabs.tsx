@@ -4,6 +4,16 @@ import { Input } from '@/components/ui/input';
 import { Search, ShoppingCart, CreditCard } from 'lucide-react';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 
+// Preload critical images
+const preloadImage = (src: string): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = reject;
+    img.src = src;
+  });
+};
+
 interface Tab {
   id: string;
   title: string;
@@ -50,78 +60,114 @@ export const CombinedSearchTabs = ({
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const { headerCompressed } = useSearchInterface();
 
-  // Dynamic tab sizing based on available space
+  // Enhanced dynamic tab sizing based on available space with better precision
   const calculateTabLayout = useCallback(() => {
     if (!tabsContainerRef.current || tabs.length === 0) return;
     
-    const containerWidth = tabsContainerRef.current.offsetWidth;
+    const containerWidth = tabsContainerRef.current.offsetWidth - 16; // Account for padding
     const tabCount = tabs.length;
     
-    // Estimate space needed for each layout mode (in pixels)
+    // More precise spacing calculations
     const spacingBetweenTabs = 4; // gap-1 = 4px
     const totalSpacing = (tabCount - 1) * spacingBetweenTabs;
+    const availableWidth = containerWidth - totalSpacing;
+    const averageWidthPerTab = availableWidth / tabCount;
     
-    // Average character width estimates + padding + icon space
-    const avgTabNameLength = tabs.reduce((sum, tab) => sum + tab.title.length, 0) / tabCount;
-    const fullModeWidth = tabCount * (avgTabNameLength * 8 + 40 + 24) + totalSpacing; // 8px per char + icon + padding
-    const compactModeWidth = tabCount * (avgTabNameLength * 7 + 32 + 20) + totalSpacing; // smaller text/padding
-    const minimalModeWidth = tabCount * (avgTabNameLength * 6 + 24 + 16) + totalSpacing; // minimal text/padding
-    const iconOnlyModeWidth = tabCount * (32) + totalSpacing; // just icons + minimal padding
-    
-    if (containerWidth >= fullModeWidth) {
+    // Calculate content width requirements for each mode
+    const tabMeasurements = tabs.map(tab => {
+      const charCount = tab.title.length;
+      return {
+        full: Math.max(charCount * 8 + 64, 100), // 8px per char + icon + generous padding
+        compact: Math.max(charCount * 7 + 48, 80), // 7px per char + icon + padding
+        minimal: Math.max(charCount * 6 + 36, 60), // 6px per char + icon + minimal padding
+        iconOnly: 36 // Just icon + minimal padding
+      };
+    });
+
+    // Check if tabs fit in each mode
+    const totalWidthNeeded = {
+      full: tabMeasurements.reduce((sum, tab) => sum + tab.full, 0),
+      compact: tabMeasurements.reduce((sum, tab) => sum + tab.compact, 0),
+      minimal: tabMeasurements.reduce((sum, tab) => sum + tab.minimal, 0),
+      iconOnly: tabMeasurements.reduce((sum, tab) => sum + tab.iconOnly, 0)
+    };
+
+    // Progressive fallback to smaller layouts
+    if (availableWidth >= totalWidthNeeded.full) {
       setTabLayout('full');
-    } else if (containerWidth >= compactModeWidth) {
+    } else if (availableWidth >= totalWidthNeeded.compact) {
       setTabLayout('compact');
-    } else if (containerWidth >= minimalModeWidth) {
+    } else if (availableWidth >= totalWidthNeeded.minimal) {
       setTabLayout('minimal');
     } else {
       setTabLayout('icon-only');
     }
   }, [tabs]);
 
-  // Recalculate on resize and tab changes
+  // Enhanced responsive recalculation with throttling for performance
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const throttledCalculateLayout = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(calculateTabLayout, 50); // Throttle for better performance
+    };
+    
+    // Initial calculation
     calculateTabLayout();
     
-    const resizeObserver = new ResizeObserver(calculateTabLayout);
+    const resizeObserver = new ResizeObserver(throttledCalculateLayout);
     if (tabsContainerRef.current) {
       resizeObserver.observe(tabsContainerRef.current);
     }
     
-    return () => resizeObserver.disconnect();
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timeoutId);
+    };
   }, [calculateTabLayout]);
 
-  // Get dynamic tab styling based on layout mode
+  // Enhanced tab styling with smoother responsive design
   const getTabClasses = (isSelected: boolean) => {
-    const baseClasses = "whitespace-nowrap flex-shrink-0 transition-all duration-200 flex items-center justify-center";
-    const variantClass = isSelected ? "default" : "ghost";
+    const baseClasses = "whitespace-nowrap flex-shrink-0 transition-all duration-300 flex items-center justify-center font-medium border border-transparent";
+    const selectedClasses = isSelected 
+      ? "bg-primary text-primary-foreground border-primary shadow-sm" 
+      : "bg-background hover:bg-accent text-foreground hover:text-accent-foreground border-muted hover:border-muted-foreground/50";
     
+    let sizeClasses = "";
     switch (tabLayout) {
       case 'full':
-        return `${baseClasses} text-sm px-3 py-2 h-9 gap-2`;
+        sizeClasses = "text-sm px-4 py-2.5 h-10 gap-2 min-w-[6rem]";
+        break;
       case 'compact':
-        return `${baseClasses} text-xs px-2 py-1.5 h-8 gap-1.5`;
+        sizeClasses = "text-sm px-3 py-2 h-9 gap-1.5 min-w-[4.5rem]";
+        break;
       case 'minimal':
-        return `${baseClasses} text-xs px-1.5 py-1 h-7 gap-1`;
+        sizeClasses = "text-xs px-2 py-1.5 h-8 gap-1 min-w-[3rem]";
+        break;
       case 'icon-only':
-        return `${baseClasses} text-xs p-1.5 h-8 w-8`;
+        sizeClasses = "text-xs p-2 h-8 w-8 min-w-[2rem]";
+        break;
       default:
-        return `${baseClasses} text-xs px-2 py-1 h-8 gap-1`;
+        sizeClasses = "text-sm px-3 py-2 h-9 gap-1.5";
     }
+    
+    return `${baseClasses} ${selectedClasses} ${sizeClasses}`;
   };
 
+  // Enhanced icon sizing with better proportions
   const getIconSize = () => {
     switch (tabLayout) {
       case 'full':
-        return 'text-lg'; // 18px
+        return 'w-5 h-5 text-lg'; // 20px
       case 'compact':
-        return 'text-base'; // 16px
+        return 'w-4 h-4 text-base'; // 16px
       case 'minimal':
-        return 'text-sm'; // 14px
+        return 'w-4 h-4 text-sm'; // 16px (keep readable)
       case 'icon-only':
-        return 'text-sm'; // 14px
+        return 'w-4 h-4 text-base'; // 16px (keep readable)
       default:
-        return 'text-sm';
+        return 'w-4 h-4 text-sm';
     }
   };
 
@@ -243,24 +289,26 @@ export const CombinedSearchTabs = ({
         {/* First Row - Dynamic Tabs */}
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
-            {/* Dynamic Responsive Tabs */}
+            {/* Enhanced Responsive Tabs with better space utilization */}
             <div 
               ref={tabsContainerRef}
-              className="flex space-x-1 overflow-x-auto scrollbar-hide flex-1"
+              className="flex gap-1 overflow-x-auto scrollbar-hide flex-1 justify-start"
             >
               {tabs.map((tab, index) => (
                 <Button
                   key={tab.id}
-                  variant={selectedCategory === index ? "default" : "ghost"}
                   className={getTabClasses(selectedCategory === index)}
                   onClick={() => onTabSelect(index)}
-                  title={tab.title}
+                  title={tabLayout === 'icon-only' ? tab.title : undefined}
                 >
                   <span className={`flex-shrink-0 ${getIconSize()}`}>
                     {tab.icon || '📦'}
                   </span>
                   {shouldShowText() && (
-                    <span className="truncate">
+                    <span className={`truncate transition-all duration-300 ${
+                      tabLayout === 'minimal' ? 'max-w-[3rem]' : 
+                      tabLayout === 'compact' ? 'max-w-[4rem]' : 'max-w-[8rem]'
+                    }`}>
                       {tab.title}
                     </span>
                   )}

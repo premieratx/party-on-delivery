@@ -18,6 +18,7 @@ import { useProductPreloader } from '@/hooks/useProductPreloader';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { ultraFastSearch } from '@/utils/ultraFastSearch';
+import { useImagePreloader } from '@/hooks/useImagePreloader';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -81,6 +82,14 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   const [isSearchActive, setIsSearchActive] = useState(false); // Track if user is actively searching
   const [savedSearchQuery, setSavedSearchQuery] = useState(''); // Persist search across tab switches
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+
+  // Preload background image for instant display
+  const { loaded: bgImageLoaded } = useImagePreloader(bgImage, { priority: true });
+  
+  // Preload logo if provided
+  const { loaded: logoLoaded } = useImagePreloader(logoUrl);
+
+  console.log(`🎯 ProductCategories: Background loaded: ${bgImageLoaded}, Logo loaded: ${logoLoaded}`);
 
   const navigate = useNavigate();
   const { addToCart, getCartItemQuantity, updateQuantity, getTotalPrice, getTotalItems } = useUnifiedCart();
@@ -324,18 +333,31 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-8">
-      {/* Hero Section with Background Image */}
+      {/* Hero Section with Instant Loading Background Image */}
       <div 
-        className="relative h-[70vh] overflow-hidden bg-cover bg-center bg-no-repeat"
+        className={`relative h-[70vh] overflow-hidden bg-cover bg-center bg-no-repeat transition-opacity duration-300 ${
+          bgImageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
         style={{ backgroundImage: `url(${bgImage})` }}
       >
+        {/* Loading fallback with solid color background */}
+        {!bgImageLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
+        )}
+        
         <div className="absolute inset-0 bg-black/50" />
         
         <div className="relative z-10 flex items-center justify-center h-full">
           <div className="text-center text-white px-4 max-w-4xl">
             {logoUrl && (
               <div className="mb-6">
-                <img src={logoUrl} alt={appName} className="h-16 mx-auto" />
+                <img 
+                  src={logoUrl} 
+                  alt={appName} 
+                  className={`h-16 mx-auto transition-opacity duration-300 ${
+                    logoLoaded ? 'opacity-100' : 'opacity-0'
+                  }`} 
+                />
               </div>
             )}
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
