@@ -38,62 +38,20 @@ const Success = () => {
         localStorage.setItem('lastPaymentIntent', sessionId);
       }
 
-      try {
-        const affiliateCode = sessionStorage.getItem('affiliate.code') || sessionStorage.getItem('affiliate_code') || localStorage.getItem('affiliate_code') || searchParams.get('aff') || '';
-        const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
-        const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
-        const { data, error } = await supabase.functions.invoke('create-shopify-order', {
-          body: isPaymentIntent ? { paymentIntentId: sessionId, affiliateCode, commissionPercent } : { sessionId, affiliateCode, commissionPercent }
-        });
-
-        if (error) {
-          console.error('Error processing order:', error);
-          setOrderStatus({ success: false, error: error.message });
-        } else {
-          setOrderStatus({
-            success: true,
-            shopifyOrderId: data.order?.id || data.shopifyOrderId,
-            orderNumber: data.order?.order_number || data.orderNumber
-          });
-          
-          // Update localStorage with completed order info immediately
-          const existingOrder = JSON.parse(localStorage.getItem('partyondelivery_last_order') || '{}');
-          const completedOrderInfo = {
-            ...existingOrder,
-            orderNumber: data.order?.order_number || data.orderNumber,
-            orderId: data.order?.id || data.shopifyOrderId,
-            recentpurchase: true,
-            total: existingOrder.total || 0
-          };
-          localStorage.setItem('partyondelivery_last_order', JSON.stringify(completedOrderInfo));
-          console.log('Completed order info saved to localStorage:', completedOrderInfo);
-          
-          // Send SMS notifications after successful processing
-          try {
-            await supabase.functions.invoke('send-order-sms', {
-              body: {
-                orderData: data,
-                type: 'customer_confirmation'
-              }
-            });
-            console.log('Customer SMS sent successfully');
-          } catch (smsError) {
-            console.warn('Failed to send customer SMS:', smsError);
-          }
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        setOrderStatus({ 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        });
-      } finally {
-        setIsCreatingOrder(false);
-      }
+      // Webhook handles order creation automatically - no manual call needed
+      console.log('💰 Payment successful - webhook will handle order creation');
+      
+      // Since webhook handles order creation, just set success status
+      setOrderStatus({
+        success: true,
+        orderNumber: 'Processing...'
+      });
+      
+      setIsCreatingOrder(false);
     };
 
     createShopifyOrder();
-  }, [sessionId]);
+  }, [sessionId, storeSessionId]);
 
   if (isCreatingOrder) {
     return (

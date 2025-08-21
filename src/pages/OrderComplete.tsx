@@ -84,21 +84,8 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-              const { data: processed, error: procError } = await supabase.functions.invoke('create-shopify-order', {
-                body: piId.startsWith('pi_') ? { paymentIntentId: piId, affiliateCode, commissionPercent } : { sessionId: piId, affiliateCode, commissionPercent }
-              });
-              if (procError) {
-                console.error('❌ create-shopify-order error:', procError);
-              } else {
-                console.log('✅ create-shopify-order success:', processed);
-                if (processed?.order?.order_number || processed?.orderNumber) {
-                  setOrderData((prev: any) => ({
-                    ...prev,
-                    order_number: processed.order?.order_number || processed.orderNumber
-                  }));
-                  localStorage.setItem('processedPaymentIntent', piId);
-                }
-              }
+          // Webhook handles order creation automatically - removing duplicate call
+          console.log('💰 Payment successful - webhook handles order creation automatically');
             } catch (e) {
               console.error('❌ Failed to process order on complete page:', e);
             }
@@ -178,21 +165,8 @@ const OrderComplete = () => {
               const commissionPercentStr = sessionStorage.getItem('commission.percent') || '';
               const commissionPercent = commissionPercentStr ? parseFloat(commissionPercentStr) : undefined;
               
-              const { data: processed, error: procError } = await supabase.functions.invoke('create-shopify-order', {
-                body: piId.startsWith('pi_') ? { paymentIntentId: piId, affiliateCode, commissionPercent } : { sessionId: piId, affiliateCode, commissionPercent }
-              });
-              if (procError) {
-                console.error('❌ create-shopify-order error:', procError);
-              } else {
-                console.log('✅ create-shopify-order success:', processed);
-                if (processed?.order?.order_number || processed?.orderNumber) {
-                  setOrderData((prev: any) => ({
-                    ...prev,
-                    order_number: processed.order?.order_number || processed.orderNumber
-                  }));
-                  localStorage.setItem('processedPaymentIntent', piId);
-                }
-              }
+          // Webhook handles order creation automatically - removing second duplicate call
+          console.log('💰 Payment successful - webhook handles order creation automatically');
             } catch (e) {
               console.error('❌ Failed to process order on complete page (no session data):', e);
             }

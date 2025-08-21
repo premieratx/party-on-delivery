@@ -127,16 +127,19 @@ serve(async (req) => {
           
         if (!error && orderDraft?.draft_data) {
           cartItems = orderDraft.draft_data.cart_items || [];
+          // CRITICAL FIX: Don't double-convert amounts - they're already in dollars in draft_data
           orderAmounts = {
-            subtotal: (orderDraft.draft_data.subtotal || 0) / 100,
-            delivery_fee: (orderDraft.draft_data.delivery_fee || 0) / 100,
-            sales_tax: (orderDraft.draft_data.sales_tax || 0) / 100,
-            tip_amount: (orderDraft.draft_data.tip_amount || 0) / 100,
+            subtotal: orderDraft.draft_data.subtotal || 0,
+            delivery_fee: orderDraft.draft_data.delivery_fee || 0,
+            sales_tax: orderDraft.draft_data.sales_tax || 0,
+            tip_amount: orderDraft.draft_data.tip_amount || 0,
             total_amount: orderDraft.total_amount || 0
           };
-          logStep("Order data loaded from database", { 
+          logStep("Order data loaded from database (FIXED DECIMAL CONVERSION)", { 
             itemCount: cartItems.length,
-            totalAmount: orderAmounts.total_amount
+            totalAmount: orderAmounts.total_amount,
+            deliveryFee: orderAmounts.delivery_fee,
+            tipAmount: orderAmounts.tip_amount
           });
         }
       } catch (dbError) {
@@ -174,6 +177,45 @@ serve(async (req) => {
         total_amount: parseFloat(metadata.total_amount || '0')
       };
       logStep("Using amounts from metadata", orderAmounts);
+    }
+
+    // CRITICAL FIX: Check for duplicate orders before creating
+    try {
+      const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+      
+      const { data: existingOrder } = await supabaseClient
+        .from('customer_orders')
+        .select('id, order_number, shopify_order_id')
+        .eq('session_id', paymentIntentId || sessionId)
+        .limit(1)
+        .maybeSingle();
+        
+      if (existingOrder) {
+        logStep("ORDER ALREADY EXISTS - PREVENTING DUPLICATE", {
+          existingOrderId: existingOrder.id,
+          existingOrderNumber: existingOrder.order_number,
+          existingShopifyOrderId: existingOrder.shopify_order_id
+        });
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            shopify_order_id: existingOrder.shopify_order_id,
+            order_number: existingOrder.order_number,
+            total_amount: orderAmounts.total_amount,
+            message: "Order already exists - duplicate prevented",
+            duplicate_prevented: true
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          }
+        );
+      }
+    } catch (duplicateCheckError) {
+      logStep("WARNING: Could not check for duplicates", { error: duplicateCheckError.message });
     }
 
     // FIX: Don't recalculate total - use the stored total_amount directly
@@ -317,11 +359,22 @@ serve(async (req) => {
       lineItems.push(lineItem);
     }
 
+    // CRITICAL FIX: Ensure delivery fee and tip are in dollars, not cents
+    const deliveryFeeInDollars = orderAmounts.delivery_fee;
+    const tipAmountInDollars = orderAmounts.tip_amount;
+    
+    logStep("DECIMAL FIX: Using correct dollar amounts", {
+      originalDeliveryFee: orderAmounts.delivery_fee,
+      deliveryFeeInDollars,
+      originalTipAmount: orderAmounts.tip_amount,
+      tipAmountInDollars
+    });
+
     // Add shipping fee as line item
-    if (orderAmounts.delivery_fee > 0) {
+    if (deliveryFeeInDollars > 0) {
       lineItems.push({
         title: "Delivery Fee",
-        price: orderAmounts.delivery_fee.toString(),
+        price: deliveryFeeInDollars.toFixed(2),
         quantity: 1,
         requires_shipping: false,
         taxable: false
@@ -329,10 +382,10 @@ serve(async (req) => {
     }
 
     // Add tip as line item
-    if (orderAmounts.tip_amount > 0) {
+    if (tipAmountInDollars > 0) {
       lineItems.push({
-        title: "Tip",
-        price: orderAmounts.tip_amount.toString(),
+        title: "Driver Tip",
+        price: tipAmountInDollars.toFixed(2),
         quantity: 1,
         requires_shipping: false,
         taxable: false
@@ -344,8 +397,8 @@ serve(async (req) => {
       totalLineItemValue: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0)
     });
 
-    // Generate unique order number
-    const orderNumber = `PO-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+    // Let Shopify generate the order number naturally - remove custom naming
+    // This will use Shopify's normal numbering system instead of jumbled letters/numbers
 
     // Create Shopify order
     const orderData = {
@@ -376,7 +429,6 @@ serve(async (req) => {
         phone: customerPhone,
         note: `Delivery: ${deliveryDate} at ${deliveryTime}${deliveryInstructions ? `. Instructions: ${deliveryInstructions}` : ''}`,
         tags: "delivery-order,paid",
-        name: orderNumber,
         financial_status: "paid",
         fulfillment_status: "unfulfilled",
         total_tax: orderAmounts.sales_tax.toString(),
@@ -386,7 +438,6 @@ serve(async (req) => {
     };
 
     logStep("Creating Shopify order", { 
-      orderNumber,
       totalAmount: orderAmounts.total_amount,
       lineItemCount: lineItems.length
     });
@@ -431,7 +482,7 @@ serve(async (req) => {
         });
 
         const orderRecord = {
-          order_number: orderNumber,
+          order_number: shopifyOrder.name || shopifyOrder.order_number || `#${shopifyOrder.number}`,
           session_id: paymentIntentId || sessionId,
           shopify_order_id: shopifyOrder.id.toString(),
           delivery_date: deliveryDate,
@@ -472,7 +523,7 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           shopify_order_id: shopifyOrder.id,
-          order_number: orderNumber,
+          order_number: shopifyOrder.name || shopifyOrder.order_number || `#${shopifyOrder.number}`,
           shopify_order_name: shopifyOrder.name,
           total_amount: orderAmounts.total_amount,
           message: "Order created successfully in Shopify"
