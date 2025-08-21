@@ -12,10 +12,9 @@ import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryA
 import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
 import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
-import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCreator';
 import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator';
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
-import { RobustDeliveryAppCreator } from '@/components/admin/RobustDeliveryAppCreator';
+import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -414,13 +413,21 @@ export default function AdminDashboard() {
         <FixedCoverPageCreator 
           open={showCoverCreator}
           onOpenChange={setShowCoverCreator}
+          onSaved={() => {
+            setShowCoverCreator(false);
+            loadDashboardData(); // Refresh data after creation
+          }}
         />
       )}
       
       {showDeliveryCreator && (
-        <RobustDeliveryAppCreator 
+        <FixedDeliveryAppCreator 
           open={showDeliveryCreator}
           onOpenChange={setShowDeliveryCreator}
+          onSaved={() => {
+            setShowDeliveryCreator(false);
+            loadDashboardData(); // Refresh data after creation
+          }}
         />
       )}
       
