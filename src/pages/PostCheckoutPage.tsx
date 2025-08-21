@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { PremiumOrderComplete } from '@/components/enhanced-checkout/PremiumOrderComplete';
+import { PostCheckoutDataFlow } from '@/components/pages/PostCheckoutDataFlow';
 import { Loader2 } from 'lucide-react';
 
 const PostCheckoutPage = () => {
@@ -55,43 +56,63 @@ const PostCheckoutPage = () => {
 
   return (
     <div className="min-h-screen">
-      <PremiumOrderComplete
-        title={content.title || postCheckoutPage.name}
-        subtitle={content.subtitle || "Thank you for your order!"}
-        logoUrl={postCheckoutPage.logo_url || content.logo_url}
-        orderNumber={content.orderNumber || "ORD-2024-001"}
-        orderItems={content.orderItems || [
-          { name: 'Sample Product', price: 29.99, quantity: 1 }
-        ]}
-        subtotal={content.orderTotal?.subtotal || 29.99}
-        deliveryFee={content.orderTotal?.delivery || 0.00}
-        total={content.orderTotal?.total || 34.99}
-        deliveryInfo={{
-          address: content.deliveryAddress ? 
-            `${content.deliveryAddress.street}, ${content.deliveryAddress.city}, ${content.deliveryAddress.state} ${content.deliveryAddress.zip}` :
-            '123 Sample St, Austin, TX 78701',
-          date: 'Today',
-          time: content.estimatedDelivery || '2:00 PM - 4:00 PM'
-        }}
-        primaryButton={{
-          text: primaryButton.text,
-          url: primaryButton.url,
-          color: primaryButton.color || "#d4af37",
-          textColor: primaryButton.textColor || "#000000"
-        }}
-        secondaryButton={{
-          text: secondaryButton.text,
-          url: secondaryButton.url,
-          color: secondaryButton.color || "#8b5cf6",
-          textColor: secondaryButton.textColor || "#ffffff"
-        }}
-        showOrderDetails={content.show_order_details !== false}
-        showDeliveryInfo={content.show_delivery_info !== false}
-        showShareOptions={content.showSocialShare || false}
-        theme={content.theme || "celebration"}
-        variant={content.variant || "gold"}
-        standalone={true}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+        {/* Main Order Complete Section */}
+        <div className="lg:col-span-2">
+          <PremiumOrderComplete
+            title={content.title || postCheckoutPage.name}
+            subtitle={content.subtitle || "Thank you for your order!"}
+            logoUrl={postCheckoutPage.logo_url || content.logo_url}
+            orderNumber={content.orderNumber || "ORD-2024-001"}
+            orderItems={content.orderItems || [
+              { name: 'Sample Product', price: 29.99, quantity: 1 }
+            ]}
+            subtotal={content.orderTotal?.subtotal || 29.99}
+            deliveryFee={content.orderTotal?.delivery || 0.00}
+            total={content.orderTotal?.total || 34.99}
+            deliveryInfo={{
+              address: content.deliveryAddress ? 
+                `${content.deliveryAddress.street}, ${content.deliveryAddress.city}, ${content.deliveryAddress.state} ${content.deliveryAddress.zip}` :
+                '123 Sample St, Austin, TX 78701',
+              date: 'Today',
+              time: content.estimatedDelivery || '2:00 PM - 4:00 PM'
+            }}
+            primaryButton={{
+              text: primaryButton.text,
+              url: primaryButton.url,
+              color: primaryButton.color || "#d4af37",
+              textColor: primaryButton.textColor || "#000000"
+            }}
+            secondaryButton={{
+              text: secondaryButton.text,
+              url: secondaryButton.url,
+              color: secondaryButton.color || "#8b5cf6",
+              textColor: secondaryButton.textColor || "#ffffff"
+            }}
+            showOrderDetails={content.show_order_details !== false}
+            showDeliveryInfo={content.show_delivery_info !== false}
+            showShareOptions={content.showSocialShare || false}
+            theme={content.theme || "celebration"}
+            variant={content.variant || "gold"}
+            standalone={false}
+          />
+        </div>
+
+        {/* Data Flow Verification Panel */}
+        <div className="lg:col-span-1">
+          <PostCheckoutDataFlow 
+            orderData={{
+              order_id: content.orderNumber || "ORD-2024-001",
+              customer_email: content.customerEmail,
+              delivery_date: content.deliveryDate,
+              delivery_time: content.deliveryTime || content.estimatedDelivery,
+              subtotal: content.orderTotal?.subtotal || 29.99,
+              total_amount: content.orderTotal?.total || 34.99,
+              line_items: content.orderItems || []
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 };

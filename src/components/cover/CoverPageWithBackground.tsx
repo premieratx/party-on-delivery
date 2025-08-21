@@ -6,6 +6,8 @@ import { EditableCoverScreen } from '@/components/enhanced-cover/EditableCoverSc
 import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useGlobalCart } from '@/components/common/GlobalCartProvider';
+import { useDataFlowTracking } from '@/hooks/useDataFlowTracking';
+import { DataFlowMonitor } from '@/components/tracking/DataFlowMonitor';
 import { Loader2 } from 'lucide-react';
 
 interface BackgroundApp {
@@ -19,6 +21,7 @@ interface BackgroundApp {
 const CoverPageWithBackground = () => {
   const { slug } = useParams<{ slug: string }>();
   const [backgroundApp, setBackgroundApp] = useState<BackgroundApp | null>(null);
+  const { initializeCoverPageFlow, trackButtonClick } = useDataFlowTracking();
   
   const { 
     cartItems, 
@@ -48,6 +51,18 @@ const CoverPageWithBackground = () => {
     },
     enabled: !!slug
   });
+
+  // Initialize tracking when cover page loads
+  useEffect(() => {
+    if (coverPage) {
+      // Extract affiliate code from URL or cover page data
+      const urlParams = new URLSearchParams(window.location.search);
+      const affiliateCode = urlParams.get('affiliate') || coverPage.affiliate_slug;
+      
+      initializeCoverPageFlow(coverPage.id, coverPage.slug, affiliateCode);
+      console.log('🔍 Cover page tracking initialized:', { coverPage: coverPage.slug, affiliate: affiliateCode });
+    }
+  }, [coverPage, initializeCoverPageFlow]);
 
   // Preload default homepage app in background
   useEffect(() => {
@@ -140,10 +155,24 @@ const CoverPageWithBackground = () => {
       description: typeof item === 'string' ? 'Premium feature' : item.description || 'Premium feature'
     })) : [];
 
-  // Transform buttons with click handlers
+  // Transform buttons with click handlers and tracking
   const buttons = parsedButtons.map((btn: any) => ({
     ...btn,
     onClick: () => {
+      console.log('🔍 Button clicked:', btn);
+      
+      // Track button click with enhanced data
+      trackButtonClick({
+        button_text: btn.text,
+        button_type: btn.type,
+        target_url: btn.target || btn.url,
+        delivery_app_slug: btn.target?.includes('/app/') ? btn.target.split('/app/')[1] : null,
+        markup_percentage: btn.markup_percentage || 0,
+        markup_dollar_amount: btn.markup_dollar_amount || 0,
+        special_action: btn.special_action,
+        prefill_data: btn.prefill_data || null
+      });
+      
       if (btn.target || btn.url) {
         window.location.href = btn.target || btn.url;
       }
@@ -191,6 +220,9 @@ const CoverPageWithBackground = () => {
           standalone={true}
         />
       </div>
+
+      {/* Data Flow Monitor */}
+      <DataFlowMonitor />
     </div>
   );
 };
