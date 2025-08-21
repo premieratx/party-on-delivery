@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { PremiumOrderComplete } from '@/components/enhanced-checkout/PremiumOrderComplete';
 
 const PostCheckoutPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -48,60 +48,42 @@ const PostCheckoutPage = () => {
     JSON.parse(postCheckoutPage.content) : postCheckoutPage.content;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4"
-         style={{ backgroundColor: content.background_color || '#ffffff' }}>
-      <div className="text-center space-y-6 max-w-2xl mx-auto">
-        {postCheckoutPage.logo_url && (
-          <img src={postCheckoutPage.logo_url} alt="Logo" className="h-16 w-auto mx-auto" />
-        )}
-        
-        <div className="space-y-4">
-          <h1 className="text-4xl font-bold" style={{ color: content.text_color || '#000000' }}>
-            {postCheckoutPage.name}
-          </h1>
-          <p className="text-xl" style={{ color: content.text_color || '#666666' }}>
-            {content.customMessage || content.custom_message || 'Thank you for your order!'}
-          </p>
-        </div>
-
-        <div className="flex gap-4 justify-center">
-          {content.buttons && content.buttons.length > 0 ? (
-            content.buttons.map((button: any, index: number) => (
-              <a 
-                key={index}
-                href={button.url}
-                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                  button.style === 'primary' 
-                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    : 'border border-primary text-primary hover:bg-primary hover:text-primary-foreground'
-                }`}
-              >
-                {button.text}
-              </a>
-            ))
-          ) : (
-            <>
-              {content.primary_button_text && content.primary_button_url && (
-                <a 
-                  href={content.primary_button_url}
-                  className="px-6 py-3 rounded-lg font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  {content.primary_button_text}
-                </a>
-              )}
-              
-              {content.secondary_button_text && content.secondary_button_url && (
-                <a 
-                  href={content.secondary_button_url}
-                  className="px-6 py-3 rounded-lg font-medium border border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  {content.secondary_button_text}
-                </a>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+    <div className="min-h-screen">
+      <PremiumOrderComplete
+        title={postCheckoutPage.name}
+        subtitle={content.subtitle || "Thank you for your order!"}
+        logoUrl={postCheckoutPage.logo_url || content.logo_url}
+        orderNumber="ORD-2024-001"
+        orderItems={[
+          { name: 'Sample Product', price: 29.99, quantity: 1 }
+        ]}
+        subtotal={29.99}
+        deliveryFee={5.00}
+        total={34.99}
+        deliveryInfo={{
+          address: '123 Sample St, Austin, TX 78701',
+          date: 'Today',
+          time: '2:00 PM - 4:00 PM'
+        }}
+        primaryButton={{
+          text: content.primary_button_text || "Continue Shopping",
+          url: content.primary_button_url || "/checkout",
+          color: content.primary_button_color || "#d4af37",
+          textColor: content.primary_button_text_color || "#000000"
+        }}
+        secondaryButton={{
+          text: content.secondary_button_text || "Track Order",
+          url: content.secondary_button_url || "/orders",
+          color: content.secondary_button_color || "#8b5cf6",
+          textColor: content.secondary_button_text_color || "#ffffff"
+        }}
+        showOrderDetails={content.show_order_details !== false}
+        showDeliveryInfo={content.show_delivery_info !== false}
+        showShareOptions={content.show_share_options || false}
+        theme={content.theme || "celebration"}
+        variant={content.variant || "gold"}
+        standalone={true}
+      />
     </div>
   );
 };

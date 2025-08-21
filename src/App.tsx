@@ -35,7 +35,7 @@ const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout")
 const CustomPartyOnDeliveryPostCheckout = lazy(() => import("./pages/CustomPartyOnDeliveryPostCheckout"));
 
 // Enhanced standalone pages
-import CoverPage from '@/pages/CoverPage';
+import CoverPageWithBackground from '@/components/cover/CoverPageWithBackground';
 import PostCheckoutPage from '@/pages/PostCheckoutPage';
 
 // Admin pages - using direct imports since they use named exports
@@ -79,7 +79,7 @@ const App = () => {
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
                     {/* Enhanced standalone pages */}
-                    <Route path="/cover/:slug" element={<CoverPage />} />
+                    <Route path="/cover/:slug" element={<CoverPageWithBackground />} />
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
                     
                     {/* Conditionally render Voice Chat */}
@@ -118,8 +118,8 @@ const App = () => {
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
                     
-                    {/* Dynamic slug routes - MUST be last to avoid conflicts */}
-                    <Route path="/:slug" element={<CoverPage />} />
+            {/* Dynamic slug routes - MUST be last to avoid conflicts */}
+            <Route path="/:slug" element={<CoverPageWithBackground />} />
                   </Routes>
                 </Suspense>
               </div>

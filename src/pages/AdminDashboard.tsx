@@ -14,7 +14,7 @@ import AffiliateCreator from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
 import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCreator';
 import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator';
-import { FixedPostCheckoutCreator } from '@/components/admin/FixedPostCheckoutCreator';
+import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
 import { RobustDeliveryAppCreator } from '@/components/admin/RobustDeliveryAppCreator';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
@@ -425,9 +425,13 @@ export default function AdminDashboard() {
       )}
       
       {showPostCheckoutCreator && (
-        <FixedPostCheckoutCreator 
+        <EnhancedPostCheckoutCreator 
           open={showPostCheckoutCreator}
           onOpenChange={setShowPostCheckoutCreator}
+          onSaved={() => {
+            setShowPostCheckoutCreator(false);
+            loadDashboardData(); // Refresh data after creation
+          }}
         />
       )}
     </div>

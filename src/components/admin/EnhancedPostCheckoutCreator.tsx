@@ -1,624 +1,750 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, ExternalLink, Save, Upload, Eye } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { 
+  Save, 
+  Eye, 
+  Upload, 
+  Palette, 
+  Smartphone, 
+  Tablet, 
+  Monitor,
+  Sparkles,
+  CheckCircle
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useToast } from '@/hooks/use-toast';
-import { createPostCheckoutFromTemplate } from '../templates/PostCheckoutTemplates';
+import { PremiumOrderComplete } from '@/components/enhanced-checkout/PremiumOrderComplete';
+import { CANONICAL_DOMAIN } from '@/utils/links';
 
-interface PostCheckoutScreen {
-  id?: string;
-  name: string;
-  title: string;
-  subtitle: string;
-  slug?: string;
-  content: {
-    logo_url?: string;
-    background_image_url?: string;
-    background_video_url?: string;
-    primary_button_text?: string;
-    primary_button_url?: string;
-    secondary_button_text?: string;
-    secondary_button_url?: string;
-    custom_message?: string;
-    text_color?: string;
-    background_color?: string;
-  };
-  is_active: boolean;
-  is_default?: boolean;
-  created_at?: string;
-  updated_at?: string;
+interface EnhancedPostCheckoutCreatorProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initial?: any;
+  onSaved?: () => void;
 }
 
-export default function EnhancedPostCheckoutCreator() {
-  const { toast: shadToast } = useToast();
-  const [postCheckoutScreens, setPostCheckoutScreens] = useState<PostCheckoutScreen[]>([]);
-  const [selectedScreen, setSelectedScreen] = useState<PostCheckoutScreen | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+const THEMES = {
+  success: { name: 'Success Green', color: '#22c55e' },
+  celebration: { name: 'Celebration Gold', color: '#f59e0b' },
+  premium: { name: 'Premium Blue', color: '#3b82f6' },
+  elegant: { name: 'Elegant Purple', color: '#8b5cf6' }
+};
 
-  // Form state - Initialize with template
-  const [formData, setFormData] = useState<PostCheckoutScreen>(() => {
-    const template = createPostCheckoutFromTemplate('gold');
-    return {
-      name: template.name,
-      title: template.title,
-      subtitle: template.subtitle,
-      content: {
-        logo_url: template.content.logo_url,
-        background_image_url: '',
-        background_video_url: '',
-        primary_button_text: template.content.continue_shopping_text,
-        primary_button_url: template.content.continue_shopping_url,
-        secondary_button_text: template.content.manage_order_text,
-        secondary_button_url: template.content.manage_order_url,
-        custom_message: template.content.thankYouMessage,
-        text_color: template.content.primary_button_text_color,
-        background_color: '#ffffff',
-      },
-      is_active: true
-    };
-  });
+const VARIANTS = {
+  original: { name: 'Original', description: 'Clean and minimal' },
+  gold: { name: 'Gold Premium', description: 'Luxury gold accents' },
+  platinum: { name: 'Platinum Elite', description: 'Premium platinum theme' }
+};
 
-  // File upload states
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [backgroundImageFile, setBackgroundImageFile] = useState<File | null>(null);
+const DEVICE_CONFIGS = {
+  mobile: { name: 'Mobile', icon: Smartphone, className: 'w-[375px] h-[600px]' },
+  tablet: { name: 'Tablet', icon: Tablet, className: 'w-[768px] h-[600px]' },
+  desktop: { name: 'Desktop', icon: Monitor, className: 'w-[1024px] h-[600px]' }
+};
 
-  useEffect(() => {
-    loadPostCheckoutScreens();
-  }, []);
+const MOCK_ORDER_DATA = {
+  orderNumber: 'ORD-2024-001',
+  orderItems: [
+    { name: 'Premium Product A', price: 29.99, quantity: 2, image: '/api/placeholder/60/60' },
+    { name: 'Premium Product B', price: 19.99, quantity: 1, image: '/api/placeholder/60/60' }
+  ],
+  subtotal: 79.97,
+  deliveryFee: 15.00,
+  total: 94.97,
+  deliveryInfo: {
+    address: '123 Main St, Austin, TX 78701',
+    date: 'Today',
+    time: '2:00 PM - 4:00 PM',
+    instructions: 'Leave at front door'
+  }
+};
 
-  const loadPostCheckoutScreens = async () => {
+const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorProps> = ({
+  open,
+  onOpenChange,
+  initial,
+  onSaved
+}) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<keyof typeof DEVICE_CONFIGS>('mobile');
+  
+  // Form state - Enhanced version based on PremiumOrderComplete
+  const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [title, setTitle] = useState('Order Confirmed! 🎉');
+  const [subtitle, setSubtitle] = useState('Thank you for choosing our premium service. Your order is being prepared with the utmost care.');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [theme, setTheme] = useState<keyof typeof THEMES>('celebration');
+  const [variant, setVariant] = useState<keyof typeof VARIANTS>('gold');
+  
+  // Button configuration
+  const [primaryButtonText, setPrimaryButtonText] = useState('Track My Order');
+  const [primaryButtonUrl, setPrimaryButtonUrl] = useState('/orders');
+  const [primaryButtonColor, setPrimaryButtonColor] = useState('#d4af37');
+  const [primaryButtonTextColor, setPrimaryButtonTextColor] = useState('#000000');
+  
+  const [secondaryButtonText, setSecondaryButtonText] = useState('Continue Premium Shopping');
+  const [secondaryButtonUrl, setSecondaryButtonUrl] = useState('/checkout');
+  const [secondaryButtonColor, setSecondaryButtonColor] = useState('#8b5cf6');
+  const [secondaryButtonTextColor, setSecondaryButtonTextColor] = useState('#ffffff');
+  
+  // Display options
+  const [showOrderDetails, setShowOrderDetails] = useState(true);
+  const [showDeliveryInfo, setShowDeliveryInfo] = useState(true);
+  const [showShareOptions, setShowShareOptions] = useState(true);
+  
+  // Enhanced features
+  const [nextStepsMessage, setNextStepsMessage] = useState("Your order is now in our fulfillment queue. You'll receive SMS and email updates as we prepare and deliver your items.");
+  const [supportPhone, setSupportPhone] = useState('+1 (512) 555-0123');
+  const [supportEmail, setSupportEmail] = useState('concierge@premiumdelivery.com');
+  const [supportHours, setSupportHours] = useState('Available 24/7 for our premium clients');
+  
+  // Testimonial
+  const [testimonialEnabled, setTestimonialEnabled] = useState(true);
+  const [testimonialText, setTestimonialText] = useState('Absolutely incredible service! The attention to detail and speed of delivery exceeded all expectations. This is luxury convenience at its finest.');
+  const [testimonialAuthor, setTestimonialAuthor] = useState('Sarah M., Austin');
+  const [testimonialRating, setTestimonialRating] = useState(5);
+  
+  // Animation settings
+  const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [celebrationEffect, setCelebrationEffect] = useState(true);
+
+  // Load initial data
+  React.useEffect(() => {
+    if (initial && open) {
+      console.log('Loading initial post-checkout data:', initial);
+      setName(initial.name || '');
+      setSlug(initial.slug || '');
+      
+      const content = typeof initial.content === 'string' ? 
+        JSON.parse(initial.content) : initial.content || {};
+      
+      setTitle(content.title || initial.name || 'Order Confirmed! 🎉');
+      setSubtitle(content.subtitle || 'Thank you for choosing our premium service.');
+      setLogoUrl(content.logo_url || initial.logo_url || '');
+      setTheme(content.theme || 'celebration');
+      setVariant(content.variant || 'gold');
+      
+      // Load button configurations
+      setPrimaryButtonText(content.primary_button_text || 'Track My Order');
+      setPrimaryButtonUrl(content.primary_button_url || '/orders');
+      setPrimaryButtonColor(content.primary_button_color || '#d4af37');
+      setPrimaryButtonTextColor(content.primary_button_text_color || '#000000');
+      
+      setSecondaryButtonText(content.secondary_button_text || 'Continue Shopping');
+      setSecondaryButtonUrl(content.secondary_button_url || '/checkout');
+      setSecondaryButtonColor(content.secondary_button_color || '#8b5cf6');
+      setSecondaryButtonTextColor(content.secondary_button_text_color || '#ffffff');
+      
+      // Load display options
+      setShowOrderDetails(content.show_order_details !== false);
+      setShowDeliveryInfo(content.show_delivery_info !== false);
+      setShowShareOptions(content.show_share_options || false);
+      
+      // Load enhanced features
+      setNextStepsMessage(content.nextStepsMessage || "Your order is now in our fulfillment queue.");
+      setSupportPhone(content.supportContact?.phone || '+1 (512) 555-0123');
+      setSupportEmail(content.supportContact?.email || 'concierge@premiumdelivery.com');
+      setSupportHours(content.supportContact?.hours || 'Available 24/7 for our premium clients');
+      
+      // Load testimonial
+      setTestimonialEnabled(content.testimonial?.enabled !== false);
+      setTestimonialText(content.testimonial?.text || 'Absolutely incredible service!');
+      setTestimonialAuthor(content.testimonial?.author || 'Sarah M., Austin');
+      setTestimonialRating(content.testimonial?.rating || 5);
+      
+      // Load animations
+      setAnimationsEnabled(content.animations?.enabled !== false);
+      setCelebrationEffect(content.animations?.celebrationEffect !== false);
+    } else if (open && !initial) {
+      // Reset for new post-checkout page
+      resetForm();
+    }
+  }, [initial, open]);
+
+  const resetForm = () => {
+    setName('');
+    setSlug('');
+    setTitle('Order Confirmed! 🎉');
+    setSubtitle('Thank you for choosing our premium service. Your order is being prepared with the utmost care.');
+    setLogoUrl('');
+    setTheme('celebration');
+    setVariant('gold');
+    setPrimaryButtonText('Track My Order');
+    setPrimaryButtonUrl('/orders');
+    setPrimaryButtonColor('#d4af37');
+    setPrimaryButtonTextColor('#000000');
+    setSecondaryButtonText('Continue Premium Shopping');
+    setSecondaryButtonUrl('/checkout');
+    setSecondaryButtonColor('#8b5cf6');
+    setSecondaryButtonTextColor('#ffffff');
+    setShowOrderDetails(true);
+    setShowDeliveryInfo(true);
+    setShowShareOptions(true);
+    setNextStepsMessage("Your order is now in our fulfillment queue. You'll receive SMS and email updates as we prepare and deliver your items.");
+    setSupportPhone('+1 (512) 555-0123');
+    setSupportEmail('concierge@premiumdelivery.com');
+    setSupportHours('Available 24/7 for our premium clients');
+    setTestimonialEnabled(true);
+    setTestimonialText('Absolutely incredible service! The attention to detail and speed of delivery exceeded all expectations. This is luxury convenience at its finest.');
+    setTestimonialAuthor('Sarah M., Austin');
+    setTestimonialRating(5);
+    setAnimationsEnabled(true);
+    setCelebrationEffect(true);
+  };
+
+  const generateSlug = (title: string): string => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  React.useEffect(() => {
+    if (name && !initial) {
+      setSlug(generateSlug(name));
+    }
+  }, [name, initial]);
+
+  const handleSave = async () => {
+    if (!name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a page name.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      const { data, error } = await supabase
-        .from('post_checkout_pages')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Transform database data to match our interface
-      const transformedData = data?.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        title: item.title,
-        subtitle: item.subtitle,
-        slug: item.slug,
-        content: typeof item.content === 'string' ? JSON.parse(item.content) : item.content,
-        is_active: item.is_active,
-        is_default: item.is_default,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      })) || [];
-      
-      setPostCheckoutScreens(transformedData);
+      setLoading(true);
+
+      const content = {
+        title,
+        subtitle,
+        logo_url: logoUrl,
+        theme,
+        variant,
+        primary_button_text: primaryButtonText,
+        primary_button_url: primaryButtonUrl,
+        primary_button_color: primaryButtonColor,
+        primary_button_text_color: primaryButtonTextColor,
+        secondary_button_text: secondaryButtonText,
+        secondary_button_url: secondaryButtonUrl,
+        secondary_button_color: secondaryButtonColor,
+        secondary_button_text_color: secondaryButtonTextColor,
+        show_order_details: showOrderDetails,
+        show_delivery_info: showDeliveryInfo,
+        show_share_options: showShareOptions,
+        nextStepsMessage,
+        supportContact: {
+          phone: supportPhone,
+          email: supportEmail,
+          hours: supportHours
+        },
+        testimonial: {
+          enabled: testimonialEnabled,
+          text: testimonialText,
+          author: testimonialAuthor,
+          rating: testimonialRating
+        },
+        animations: {
+          enabled: animationsEnabled,
+          celebrationEffect,
+          entranceAnimation: 'fade'
+        }
+      };
+
+      if (initial?.id) {
+        // Update existing
+        const { error } = await supabase
+          .from('post_checkout_pages')
+          .update({
+            name,
+            slug,
+            content,
+            logo_url: logoUrl,
+            theme
+          })
+          .eq('id', initial.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Success!",
+          description: "Post-checkout page updated successfully."
+        });
+      } else {
+        // Create new
+        const { error } = await supabase
+          .from('post_checkout_pages')
+          .insert({
+            name,
+            slug,
+            content,
+            logo_url: logoUrl,
+            theme,
+            is_active: true,
+            is_default: false
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: "Success!",
+          description: `Enhanced post-checkout page "${name}" created successfully!`
+        });
+      }
+
+      onSaved?.();
+      onOpenChange(false);
     } catch (error: any) {
-      console.error('Error loading post-checkout screens:', error);
-      toast.error('Failed to load post-checkout screens');
+      console.error('Error saving post-checkout page:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save post-checkout page",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const uploadFile = async (file: File, bucket: string, path: string): Promise<string> => {
-    try {
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(path);
-
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
-  };
-
-  const updateFormField = (field: keyof PostCheckoutScreen['content'], value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      content: {
-        ...prev.content,
-        [field]: value
-      }
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!formData.title.trim()) {
-      toast.error('Title is required');
-      return;
-    }
-
-    try {
-      let logoUrl = formData.content.logo_url || '';
-      let backgroundImageUrl = formData.content.background_image_url || '';
-
-      // Upload logo if provided
-      if (logoFile) {
-        const fileExt = logoFile.name.split('.').pop();
-        const fileName = `post-checkout-logo-${Date.now()}.${fileExt}`;
-        logoUrl = await uploadFile(logoFile, 'post-checkout-assets', fileName);
-      }
-
-      // Upload background image if provided
-      if (backgroundImageFile) {
-        const fileExt = backgroundImageFile.name.split('.').pop();
-        const fileName = `post-checkout-bg-${Date.now()}.${fileExt}`;
-        backgroundImageUrl = await uploadFile(backgroundImageFile, 'post-checkout-assets', fileName);
-      }
-
-      const screenData = {
-        name: formData.title,
-        title: formData.title,
-        subtitle: formData.subtitle,
-        content: {
-          ...formData.content,
-          logo_url: logoUrl,
-          background_image_url: backgroundImageUrl,
-        },
-        slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-        is_active: formData.is_active
-      };
-
-      let result;
-      if (isEditing && selectedScreen?.id) {
-        result = await supabase
-          .from('post_checkout_pages')
-          .update(screenData)
-          .eq('id', selectedScreen.id)
-          .select()
-          .single();
-      } else {
-        result = await supabase
-          .from('post_checkout_pages')
-          .insert([screenData])
-          .select()
-          .single();
-      }
-
-      if (result.error) throw result.error;
-
-      toast.success(isEditing ? 'Post-checkout screen updated!' : 'Post-checkout screen created!');
-      
-      // Reload the list to get fresh data
-      await loadPostCheckoutScreens();
-      handleReset();
-      setIsDialogOpen(false);
-
-    } catch (error: any) {
-      console.error('Error saving post-checkout screen:', error);
-      toast.error('Failed to save post-checkout screen');
-    }
-  };
-
-  const handleEdit = (screen: PostCheckoutScreen) => {
-    setSelectedScreen(screen);
-    // Transform the screen data to match the form structure
-    setFormData({
-      ...screen,
-      content: screen.content || {}
-    });
-    setIsEditing(true);
-    setIsDialogOpen(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this post-checkout screen?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('post_checkout_pages')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      setPostCheckoutScreens(prev => prev.filter(screen => screen.id !== id));
-      toast.success('Post-checkout screen deleted');
-    } catch (error: any) {
-      console.error('Error deleting post-checkout screen:', error);
-      toast.error('Failed to delete post-checkout screen');
-    }
-  };
-
-  const handleReset = () => {
-    const template = createPostCheckoutFromTemplate('gold');
-    setFormData({
-      name: template.name,
-      title: template.title,
-      subtitle: template.subtitle,
-      content: {
-        logo_url: template.content.logo_url,
-        background_image_url: '',
-        background_video_url: '',
-        primary_button_text: template.content.continue_shopping_text,
-        primary_button_url: template.content.continue_shopping_url,
-        secondary_button_text: template.content.manage_order_text,
-        secondary_button_url: template.content.manage_order_url,
-        custom_message: template.content.thankYouMessage,
-        text_color: template.content.primary_button_text_color,
-        background_color: '#ffffff',
-      },
-      is_active: true
-    });
-    setSelectedScreen(null);
-    setIsEditing(false);
-    setLogoFile(null);
-    setBackgroundImageFile(null);
-  };
-
-  const handlePreview = (screen: PostCheckoutScreen) => {
-    // Create a preview URL based on the screen slug or ID
-    const slug = screen.slug || screen.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'preview';
-    window.open(`/post-checkout/${slug}`, '_blank');
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Post-Checkout Screen Creator</h2>
-          <p className="text-muted-foreground">Create and manage custom post-checkout experiences</p>
-        </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleReset}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Screen
-            </Button>
-          </DialogTrigger>
-          
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {isEditing ? 'Edit Post-Checkout Screen' : 'Create New Post-Checkout Screen'}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6">
-              {/* Basic Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="title">Title</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="Thank you for your order!"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="subtitle">Subtitle</Label>
-                      <Input
-                        id="subtitle"
-                        value={formData.subtitle}
-                        onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                        placeholder="We'll contact you shortly to confirm delivery"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="custom_message">Custom Message</Label>
-                    <Textarea
-                      id="custom_message"
-                      value={formData.content.custom_message || ''}
-                      onChange={(e) => updateFormField('custom_message', e.target.value)}
-                      placeholder="Add any additional message or instructions..."
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden p-0">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            {initial ? `Edit: ${initial.name}` : 'Create Enhanced Post-Checkout Page'}
+          </DialogTitle>
+        </DialogHeader>
 
-              {/* Visual Assets */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Visual Assets</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="logo-upload">Logo Upload</Label>
-                      <Input
-                        id="logo-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) setLogoFile(file);
-                        }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">PNG, JPG, SVG supported</p>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="logo_url">Or Logo URL</Label>
-                      <Input
-                        id="logo_url"
-                        value={formData.content.logo_url || ''}
-                        onChange={(e) => updateFormField('logo_url', e.target.value)}
-                        placeholder="https://example.com/logo.png"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="bg-image-upload">Background Image Upload</Label>
-                      <Input
-                        id="bg-image-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) setBackgroundImageFile(file);
-                        }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="background_image_url">Or Background Image URL</Label>
-                      <Input
-                        id="background_image_url"
-                        value={formData.content.background_image_url || ''}
-                        onChange={(e) => updateFormField('background_image_url', e.target.value)}
-                        placeholder="https://example.com/background.jpg"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="background_video_url">Background Video URL</Label>
-                    <Input
-                      id="background_video_url"
-                      value={formData.content.background_video_url || ''}
-                      onChange={(e) => updateFormField('background_video_url', e.target.value)}
-                      placeholder="https://example.com/background-video.mp4"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">MP4 format recommended</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Buttons Configuration */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Button Configuration</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="primary_button_text">Primary Button Text</Label>
-                      <Input
-                        id="primary_button_text"
-                        value={formData.content.primary_button_text || ''}
-                        onChange={(e) => updateFormField('primary_button_text', e.target.value)}
-                        placeholder="Continue Shopping"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="primary_button_url">Primary Button URL</Label>
-                      <Input
-                        id="primary_button_url"
-                        value={formData.content.primary_button_url || ''}
-                        onChange={(e) => updateFormField('primary_button_url', e.target.value)}
-                        placeholder="https://example.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="secondary_button_text">Secondary Button Text</Label>
-                      <Input
-                        id="secondary_button_text"
-                        value={formData.content.secondary_button_text || ''}
-                        onChange={(e) => updateFormField('secondary_button_text', e.target.value)}
-                        placeholder="Track Order"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="secondary_button_url">Secondary Button URL</Label>
-                      <Input
-                        id="secondary_button_url"
-                        value={formData.content.secondary_button_url || ''}
-                        onChange={(e) => updateFormField('secondary_button_url', e.target.value)}
-                        placeholder="https://tracking.example.com"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Styling */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Styling</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="text_color">Text Color</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="color"
-                          value={formData.content.text_color || '#000000'}
-                          onChange={(e) => updateFormField('text_color', e.target.value)}
-                          className="w-16 h-10"
-                        />
-                        <Input
-                          value={formData.content.text_color || '#000000'}
-                          onChange={(e) => updateFormField('text_color', e.target.value)}
-                          placeholder="#000000"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="background_color">Background Color</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="color"
-                          value={formData.content.background_color || '#ffffff'}
-                          onChange={(e) => updateFormField('background_color', e.target.value)}
-                          className="w-16 h-10"
-                        />
-                        <Input
-                          value={formData.content.background_color || '#ffffff'}
-                          onChange={(e) => updateFormField('background_color', e.target.value)}
-                          placeholder="#ffffff"
-                          className="flex-1"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Preview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Preview</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div 
-                    className="p-6 rounded-lg border min-h-[200px] flex flex-col items-center justify-center text-center space-y-4"
-                    style={{ 
-                      backgroundColor: formData.content.background_color || '#ffffff',
-                      color: formData.content.text_color || '#000000',
-                      backgroundImage: formData.content.background_image_url ? `url(${formData.content.background_image_url})` : 'none',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
-                    }}
-                  >
-                    {formData.content.logo_url && (
-                      <img src={formData.content.logo_url} alt="Logo" className="h-12 w-auto" />
-                    )}
-                    <h3 className="text-xl font-bold">{formData.title || 'Your Title Here'}</h3>
-                    <p>{formData.subtitle || 'Your subtitle here'}</p>
-                    {formData.content.custom_message && (
-                      <p className="text-sm opacity-90">{formData.content.custom_message}</p>
-                    )}
-                    <div className="flex gap-3">
-                      {formData.content.primary_button_text && (
-                        <Button variant="default" size="sm">
-                          {formData.content.primary_button_text}
-                        </Button>
-                      )}
-                      {formData.content.secondary_button_text && (
-                        <Button variant="outline" size="sm">
-                          {formData.content.secondary_button_text}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSave}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {isEditing ? 'Update Screen' : 'Create Screen'}
-                </Button>
-              </div>
+        <div className="flex flex-col h-[calc(95vh-100px)]">
+          <Tabs defaultValue="content" className="flex-1 flex flex-col">
+            <div className="px-6">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="content">Content</TabsTrigger>
+                <TabsTrigger value="design">Design</TabsTrigger>
+                <TabsTrigger value="features">Features</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      {/* Screens List */}
-      <div className="grid gap-4">
-        {postCheckoutScreens.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground mb-4">No post-checkout screens created yet.</p>
-              <Button onClick={() => setIsDialogOpen(true)}>
-                Create Your First Screen
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          postCheckoutScreens.map((screen) => (
-            <Card key={screen.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
+            <div className="flex-1 overflow-hidden">
+              <TabsContent value="content" className="h-full overflow-y-auto p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      {screen.title}
-                      {screen.slug && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => window.open(`/post-checkout/${screen.slug}`, '_blank')}
-                        >
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          View Live
-                        </Button>
-                      )}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">{screen.subtitle}</p>
+                    <Label htmlFor="name">Page Name</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g., Premium Order Complete"
+                    />
                   </div>
-                  <Badge variant={screen.is_active ? 'default' : 'secondary'}>
-                    {screen.is_active ? 'Active' : 'Inactive'}
-                  </Badge>
+                  <div>
+                    <Label htmlFor="slug">URL Slug</Label>
+                    <Input
+                      id="slug"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      placeholder="premium-order-complete"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {slug && `${CANONICAL_DOMAIN}/post-checkout/${slug}`}
+                    </p>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handlePreview(screen)}>
-                    <Eye className="h-3 w-3 mr-1" />
-                    Preview
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(screen)}>
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(screen.id!)}>
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Delete
-                  </Button>
+
+                <div>
+                  <Label htmlFor="title">Main Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Order Confirmed! 🎉"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-    </div>
+
+                <div>
+                  <Label htmlFor="subtitle">Subtitle</Label>
+                  <Textarea
+                    id="subtitle"
+                    value={subtitle}
+                    onChange={(e) => setSubtitle(e.target.value)}
+                    placeholder="Thank you for choosing our premium service..."
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="logoUrl">Logo URL</Label>
+                  <Input
+                    id="logoUrl"
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                    placeholder="https://example.com/logo.png"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="primaryButtonText">Primary Button Text</Label>
+                    <Input
+                      id="primaryButtonText"
+                      value={primaryButtonText}
+                      onChange={(e) => setPrimaryButtonText(e.target.value)}
+                      placeholder="Track My Order"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="primaryButtonUrl">Primary Button URL</Label>
+                    <Input
+                      id="primaryButtonUrl"
+                      value={primaryButtonUrl}
+                      onChange={(e) => setPrimaryButtonUrl(e.target.value)}
+                      placeholder="/orders"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="secondaryButtonText">Secondary Button Text</Label>
+                    <Input
+                      id="secondaryButtonText"
+                      value={secondaryButtonText}
+                      onChange={(e) => setSecondaryButtonText(e.target.value)}
+                      placeholder="Continue Shopping"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="secondaryButtonUrl">Secondary Button URL</Label>
+                    <Input
+                      id="secondaryButtonUrl"
+                      value={secondaryButtonUrl}
+                      onChange={(e) => setSecondaryButtonUrl(e.target.value)}
+                      placeholder="/checkout"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="design" className="h-full overflow-y-auto p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Theme</Label>
+                    <Select value={theme} onValueChange={(value: keyof typeof THEMES) => setTheme(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(THEMES).map(([key, theme]) => (
+                          <SelectItem key={key} value={key}>
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-4 h-4 rounded" 
+                                style={{ backgroundColor: theme.color }}
+                              />
+                              {theme.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Variant</Label>
+                    <Select value={variant} onValueChange={(value: keyof typeof VARIANTS) => setVariant(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(VARIANTS).map(([key, variant]) => (
+                          <SelectItem key={key} value={key}>
+                            <div>
+                              <div className="font-medium">{variant.name}</div>
+                              <div className="text-xs text-muted-foreground">{variant.description}</div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="primaryButtonColor">Primary Button Color</Label>
+                    <Input
+                      id="primaryButtonColor"
+                      type="color"
+                      value={primaryButtonColor}
+                      onChange={(e) => setPrimaryButtonColor(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="primaryButtonTextColor">Primary Button Text</Label>
+                    <Input
+                      id="primaryButtonTextColor"
+                      type="color"
+                      value={primaryButtonTextColor}
+                      onChange={(e) => setPrimaryButtonTextColor(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="secondaryButtonColor">Secondary Button Color</Label>
+                    <Input
+                      id="secondaryButtonColor"
+                      type="color"
+                      value={secondaryButtonColor}
+                      onChange={(e) => setSecondaryButtonColor(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="secondaryButtonTextColor">Secondary Button Text</Label>
+                    <Input
+                      id="secondaryButtonTextColor"
+                      type="color"
+                      value={secondaryButtonTextColor}
+                      onChange={(e) => setSecondaryButtonTextColor(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="features" className="h-full overflow-y-auto p-6 space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showOrderDetails">Show Order Details</Label>
+                    <Switch
+                      id="showOrderDetails"
+                      checked={showOrderDetails}
+                      onCheckedChange={setShowOrderDetails}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showDeliveryInfo">Show Delivery Info</Label>
+                    <Switch
+                      id="showDeliveryInfo"
+                      checked={showDeliveryInfo}
+                      onCheckedChange={setShowDeliveryInfo}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="showShareOptions">Show Share Options</Label>
+                    <Switch
+                      id="showShareOptions"
+                      checked={showShareOptions}
+                      onCheckedChange={setShowShareOptions}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="nextStepsMessage">Next Steps Message</Label>
+                  <Textarea
+                    id="nextStepsMessage"
+                    value={nextStepsMessage}
+                    onChange={(e) => setNextStepsMessage(e.target.value)}
+                    placeholder="Your order is now in our fulfillment queue..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="supportPhone">Support Phone</Label>
+                    <Input
+                      id="supportPhone"
+                      value={supportPhone}
+                      onChange={(e) => setSupportPhone(e.target.value)}
+                      placeholder="+1 (512) 555-0123"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="supportEmail">Support Email</Label>
+                    <Input
+                      id="supportEmail"
+                      value={supportEmail}
+                      onChange={(e) => setSupportEmail(e.target.value)}
+                      placeholder="support@example.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="supportHours">Support Hours</Label>
+                    <Input
+                      id="supportHours"
+                      value={supportHours}
+                      onChange={(e) => setSupportHours(e.target.value)}
+                      placeholder="Available 24/7"
+                    />
+                  </div>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="flex items-center justify-between w-full">
+                        <span>Customer Testimonial</span>
+                        <Switch
+                          checked={testimonialEnabled}
+                          onCheckedChange={setTestimonialEnabled}
+                        />
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  {testimonialEnabled && (
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="testimonialText">Testimonial Text</Label>
+                        <Textarea
+                          id="testimonialText"
+                          value={testimonialText}
+                          onChange={(e) => setTestimonialText(e.target.value)}
+                          placeholder="Customer testimonial..."
+                          rows={3}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="testimonialAuthor">Author</Label>
+                          <Input
+                            id="testimonialAuthor"
+                            value={testimonialAuthor}
+                            onChange={(e) => setTestimonialAuthor(e.target.value)}
+                            placeholder="Customer Name, Location"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="testimonialRating">Rating (1-5)</Label>
+                          <Input
+                            id="testimonialRating"
+                            type="number"
+                            min="1"
+                            max="5"
+                            value={testimonialRating}
+                            onChange={(e) => setTestimonialRating(Number(e.target.value))}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Animations</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="animationsEnabled">Enable Animations</Label>
+                      <Switch
+                        id="animationsEnabled"
+                        checked={animationsEnabled}
+                        onCheckedChange={setAnimationsEnabled}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="celebrationEffect">Celebration Effect</Label>
+                      <Switch
+                        id="celebrationEffect"
+                        checked={celebrationEffect}
+                        onCheckedChange={setCelebrationEffect}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="preview" className="h-full overflow-y-auto p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-2">
+                    {Object.entries(DEVICE_CONFIGS).map(([key, config]) => (
+                      <Button
+                        key={key}
+                        variant={previewDevice === key ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPreviewDevice(key as keyof typeof DEVICE_CONFIGS)}
+                        className="flex items-center gap-2"
+                      >
+                        <config.icon className="w-4 h-4" />
+                        {config.name}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-center">
+                    <div className={`${DEVICE_CONFIGS[previewDevice].className} border rounded-lg overflow-hidden bg-white shadow-lg`}>
+                      <PremiumOrderComplete
+                        title={title}
+                        subtitle={subtitle}
+                        logoUrl={logoUrl}
+                        orderNumber={MOCK_ORDER_DATA.orderNumber}
+                        orderItems={MOCK_ORDER_DATA.orderItems}
+                        subtotal={MOCK_ORDER_DATA.subtotal}
+                        deliveryFee={MOCK_ORDER_DATA.deliveryFee}
+                        total={MOCK_ORDER_DATA.total}
+                        deliveryInfo={MOCK_ORDER_DATA.deliveryInfo}
+                        primaryButton={{
+                          text: primaryButtonText,
+                          url: primaryButtonUrl,
+                          color: primaryButtonColor,
+                          textColor: primaryButtonTextColor
+                        }}
+                        secondaryButton={{
+                          text: secondaryButtonText,
+                          url: secondaryButtonUrl,
+                          color: secondaryButtonColor,
+                          textColor: secondaryButtonTextColor
+                        }}
+                        showOrderDetails={showOrderDetails}
+                        showDeliveryInfo={showDeliveryInfo}
+                        showShareOptions={showShareOptions}
+                        theme={theme}
+                        variant={variant}
+                        standalone={true}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+
+          <div className="flex justify-between items-center p-6 border-t">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={loading || !name.trim()}>
+              {loading ? (
+                <>Loading...</>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  {initial ? 'Update' : 'Create'} Page
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
+
+export default EnhancedPostCheckoutCreator;

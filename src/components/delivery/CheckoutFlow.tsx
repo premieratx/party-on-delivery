@@ -1346,9 +1346,10 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   </div>
                 )}
                  {cartItems.map((item) => (
-                   <div key={`${item.id}-${item.variant || ''}`} className="flex justify-between items-center gap-2">
+                   <div key={`${item.id}-${item.variant || ''}`} className="flex justify-between items-center gap-2 py-2">
+                     {/* Compact Product Info - No Images */}
                      <div className="flex-1 min-w-0">
-                       <p className="font-medium text-xs sm:text-sm line-clamp-2">
+                       <p className="font-medium text-xs sm:text-sm line-clamp-1">
                          {item.title
                            .replace(/gid:\/\/shopify\/[^\s]+/g, '') // Remove GID URLs
                            .replace(/https?:\/\/[^\s]+/g, '') // Remove ALL URLs
@@ -1376,44 +1377,43 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                            .replace(/^[-\s|]+|[-\s|]+$/g, '') // Remove leading/trailing dashes, spaces, and pipes
                          }
                        </p>
-                       <div className="flex items-center gap-2 mt-1">
-                         <span className="product-price text-xs sm:text-sm text-primary">${applyMarkup(item.price).toFixed(2)} each</span>
-                       </div>
+                       <span className="product-price text-xs text-primary">${applyMarkup(item.price).toFixed(2)} each</span>
                      </div>
                      
-                     <div className="flex items-center gap-1 sm:gap-3 shrink-0">
-                       {/* Quantity Controls */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-5 w-5 sm:h-7 sm:w-7"
-                            onClick={() => {
-                              const newQuantity = Math.max(0, item.quantity - 1);
-                              console.log('🛒 CheckoutFlow: Updating quantity:', { id: item.id, variant: item.variant, quantity: newQuantity });
-                              onUpdateQuantity(item.id, item.variant, newQuantity);
-                            }}
-                          >
-                            <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
-                         </Button>
-                         
-                         <Badge variant="secondary" className="min-w-[28px] sm:min-w-[35px] justify-center px-1 sm:px-2 text-xs">
-                           {item.quantity}
-                         </Badge>
-                         
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-5 w-5 sm:h-7 sm:w-7"
-                            onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
-                          >
-                            <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
-                         </Button>
-                       </div>
-                       
-                       {/* Total Price for Item */}
-                       <p className="product-price font-semibold min-w-[50px] sm:min-w-[60px] text-right text-xs sm:text-sm text-primary">${(applyMarkup(item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
-                     </div>
+                     {/* Compact Quantity and Price */}
+                     <div className="flex items-center gap-2 shrink-0">
+                       <div className="flex items-center gap-1">
+                         <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-5 w-5 sm:h-6 sm:w-6"
+                           onClick={() => {
+                             const newQuantity = Math.max(0, item.quantity - 1);
+                             console.log('🛒 CheckoutFlow: Updating quantity:', { id: item.id, variant: item.variant, quantity: newQuantity });
+                             onUpdateQuantity(item.id, item.variant, newQuantity);
+                           }}
+                         >
+                           <Minus className="w-2 h-2 sm:w-3 sm:h-3" />
+                        </Button>
+                        
+                        <Badge variant="secondary" className="min-w-[24px] sm:min-w-[28px] justify-center px-1 text-xs">
+                          {item.quantity}
+                        </Badge>
+                        
+                         <Button
+                           variant="outline"
+                           size="icon"
+                           className="h-5 w-5 sm:h-6 sm:w-6"
+                           onClick={() => onUpdateQuantity(item.id, item.variant, item.quantity + 1)}
+                         >
+                           <Plus className="w-2 h-2 sm:w-3 sm:h-3" />
+                        </Button>
+                      </div>
+                      
+                      <p className="product-price font-semibold min-w-[40px] sm:min-w-[50px] text-right text-xs sm:text-sm text-primary">
+                        ${(applyMarkup(item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                      </p>
+                    </div>
                    </div>
                 ))}
                 
