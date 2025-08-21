@@ -1123,6 +1123,7 @@ export type Database = {
           created_by: string | null
           flow_description: string | null
           flow_name: string | null
+          free_shipping_enabled: boolean | null
           id: string
           is_active: boolean
           is_default_homepage: boolean | null
@@ -1147,6 +1148,7 @@ export type Database = {
           created_by?: string | null
           flow_description?: string | null
           flow_name?: string | null
+          free_shipping_enabled?: boolean | null
           id?: string
           is_active?: boolean
           is_default_homepage?: boolean | null
@@ -1171,6 +1173,7 @@ export type Database = {
           created_by?: string | null
           flow_description?: string | null
           flow_name?: string | null
+          free_shipping_enabled?: boolean | null
           id?: string
           is_active?: boolean
           is_default_homepage?: boolean | null

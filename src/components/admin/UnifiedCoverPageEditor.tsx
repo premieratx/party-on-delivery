@@ -91,4 +91,5 @@ export interface CoverPageConfig {
   is_default_homepage?: boolean;
   flow_name?: string;
   is_multi_flow?: boolean;
+  free_shipping_enabled?: boolean;
 }

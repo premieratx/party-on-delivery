@@ -239,6 +239,7 @@ export interface CoverPageConfig {
   is_default_homepage?: boolean;
   flow_name?: string;
   is_multi_flow?: boolean;
+  free_shipping_enabled?: boolean;
 }
 
 interface DraggableElement {
@@ -297,6 +298,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
   ]);
   const [isActive, setIsActive] = useState<boolean>(initial?.is_active ?? true);
+  const [freeShippingEnabled, setFreeShippingEnabled] = useState<boolean>(initial?.free_shipping_enabled ?? false);
   const [templateData, setTemplateData] = useState<any>(null);
 
   // Element positions for drag mode
@@ -332,6 +334,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
       { text: 'ORDER NOW', type: 'delivery_app', style: 'filled' },
       { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
     ]);
+    setFreeShippingEnabled(initial?.free_shipping_enabled ?? false);
   }, [open, embedded, initial]);
 
   useEffect(() => {
@@ -431,6 +434,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
         checklist: checklist.filter(item => item.trim()) as any,
         buttons: buttons as any,
         is_active: isActive,
+        free_shipping_enabled: freeShippingEnabled,
         theme: selectedTheme,
         styles: {
           element_positions: elementPositions
@@ -724,6 +728,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   onCheckedChange={setIsActive}
                 />
                 <Label htmlFor="is-active">Page Active</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="free-shipping"
+                  checked={freeShippingEnabled}
+                  onCheckedChange={setFreeShippingEnabled}
+                />
+                <Label htmlFor="free-shipping">Enable Free Shipping for users from this cover page</Label>
               </div>
             </TabsContent>
 

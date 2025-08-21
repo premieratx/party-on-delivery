@@ -6,6 +6,7 @@ import { CartItem, DeliveryInfo } from '../DeliveryWidget';
 import { useCustomerInfo } from '@/hooks/useCustomerInfo';
 import { useCheckoutFlow } from '@/hooks/useCheckoutFlow';
 import { useToast } from '@/hooks/use-toast';
+import { useCoverPageTracking } from '@/hooks/useCoverPageTracking';
 
 // Import our new modular components
 import { CheckoutSteps } from './CheckoutSteps';
@@ -52,6 +53,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { tracking } = useCoverPageTracking();
   
   // Custom hooks for state management
   const { customerInfo, setCustomerInfo, addressInfo, setAddressInfo } = useCustomerInfo();
@@ -86,7 +88,8 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   
   const calculatedDeliveryFee = calculatedSubtotal >= 200 ? calculatedSubtotal * 0.1 : 20;
   const assignedFreeShipping = sessionStorage.getItem('shipping.free') === '1';
-  const finalDeliveryFee = (appliedDiscount?.type === 'free_shipping' || assignedFreeShipping) ? 0 : calculatedDeliveryFee;
+  const coverPageFreeShipping = tracking.freeShippingEligible;
+  const finalDeliveryFee = (appliedDiscount?.type === 'free_shipping' || assignedFreeShipping || coverPageFreeShipping) ? 0 : calculatedDeliveryFee;
   
   const discountedSubtotal = appliedDiscount?.type === 'percentage' 
     ? calculatedSubtotal * (1 - appliedDiscount.value / 100)
