@@ -17,6 +17,7 @@ import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator'
 import { FixedPostCheckoutCreator } from '@/components/admin/FixedPostCheckoutCreator';
 import { RobustDeliveryAppCreator } from '@/components/admin/RobustDeliveryAppCreator';
 import { ComprehensiveAdminTest } from '@/components/admin/ComprehensiveAdminTest';
+import { BulletproofAdminTest } from '@/components/admin/BulletproofAdminTest';
 import { supabase } from '@/integrations/supabase/client';
 import { withRetry, isRetryableError } from '@/utils/retryWrapper';
 import { useToast } from '@/hooks/use-toast';
@@ -252,17 +253,22 @@ export default function AdminDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={updateActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-4 md:grid-cols-8 gap-1 w-full h-auto flex-wrap p-2">
-            <TabsTrigger value="homepage" className="px-3 py-2 text-xs sm:text-sm">🏠 Homepage</TabsTrigger>
+          <TabsList className="grid grid-cols-4 md:grid-cols-9 gap-1 w-full h-auto flex-wrap p-2">
+            <TabsTrigger value="test-suite" className="px-3 py-2 text-xs sm:text-sm">🔧 Test</TabsTrigger>
+            <TabsTrigger value="homepage" className="px-3 py-2 text-xs sm:text-sm">🏠 Home</TabsTrigger>
             <TabsTrigger value="delivery-apps" className="px-3 py-2 text-xs sm:text-sm">🚚 Apps</TabsTrigger>
+            <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm">🎬 Cover</TabsTrigger>
+            <TabsTrigger value="post-checkout" className="px-3 py-2 text-xs sm:text-sm">✅ Checkout</TabsTrigger>
             <TabsTrigger value="customer-flows" className="px-3 py-2 text-xs sm:text-sm">🔄 Flows</TabsTrigger>
-            <TabsTrigger value="flow-assignments" className="px-3 py-2 text-xs sm:text-sm">🎯 Assignments</TabsTrigger>
-            <TabsTrigger value="cover-pages" className="px-3 py-2 text-xs sm:text-sm">🎬 Cover Pages</TabsTrigger>
-            <TabsTrigger value="post-checkout" className="px-3 py-2 text-xs sm:text-sm">✅ Post-Checkout</TabsTrigger>
+            <TabsTrigger value="flow-assignments" className="px-3 py-2 text-xs sm:text-sm">🎯 Assign</TabsTrigger>
             <TabsTrigger value="orders" className="px-3 py-2 text-xs sm:text-sm">📋 Orders</TabsTrigger>
             <TabsTrigger value="affiliates" className="px-3 py-2 text-xs sm:text-sm">👥 Affiliates</TabsTrigger>
-            <TabsTrigger value="abandoned" className="px-3 py-2 text-xs sm:text-sm">⏰ Abandoned</TabsTrigger>
           </TabsList>
+
+          {/* Test Suite - FIRST TAB */}
+          <TabsContent value="test-suite" className="space-y-4">
+            <BulletproofAdminTest />
+          </TabsContent>
 
           {/* Homepage Configuration - PRIORITY TAB */}
           <TabsContent value="homepage" className="space-y-4">
