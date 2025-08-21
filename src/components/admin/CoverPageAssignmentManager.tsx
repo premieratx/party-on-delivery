@@ -273,11 +273,9 @@ export const CoverPageAssignmentManager: React.FC = () => {
                         <Badge variant="outline">{getButtonSummary(page.buttons)}</Badge>
                         <Badge variant="secondary">Slug: {page.slug}</Badge>
                       </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <a href={`/${page.slug}`} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Preview
-                        </a>
+                      <Button size="sm" variant="outline" onClick={() => window.open(`/${page.slug}`, '_blank')}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Preview
                       </Button>
                     </div>
                   );
@@ -345,11 +343,9 @@ export const CoverPageAssignmentManager: React.FC = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              asChild
+                              onClick={() => window.open(`/${assignment.share_slug}`, '_blank')}
                             >
-                              <a href={`/${assignment.share_slug}`} target="_blank" rel="noopener noreferrer">
-                                <Eye className="w-4 h-4" />
-                              </a>
+                              <Eye className="w-4 h-4" />
                             </Button>
                             <Button
                               size="sm"

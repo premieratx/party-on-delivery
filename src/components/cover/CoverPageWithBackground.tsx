@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { EditableCoverScreen } from '@/components/enhanced-cover/EditableCoverScreen';
@@ -20,6 +20,7 @@ interface BackgroundApp {
 
 const CoverPageWithBackground = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [backgroundApp, setBackgroundApp] = useState<BackgroundApp | null>(null);
   const { initializeCoverPageFlow, trackButtonClick } = useDataFlowTracking();
   
@@ -125,11 +126,11 @@ const CoverPageWithBackground = () => {
 
   const handleProceedToCheckout = () => {
     console.log('🛒 Navigating to checkout from cover page');
-    window.location.href = '/checkout';
+    navigate('/checkout');
   };
 
   const handleGoHome = () => {
-    window.location.reload();
+    navigate('/');
   };
 
   if (loadingCover) {
@@ -186,7 +187,13 @@ const CoverPageWithBackground = () => {
       });
       
       if (btn.target || btn.url) {
-        window.location.href = btn.target || btn.url;
+        if ((btn.target || btn.url).startsWith('http')) {
+          // External link - use window.location
+          window.location.href = btn.target || btn.url;
+        } else {
+          // Internal link - use React Router
+          navigate(btn.target || btn.url);
+        }
       }
     }
   }));
