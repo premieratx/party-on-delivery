@@ -62,10 +62,15 @@ export const PromoCodeInput: React.FC<PromoCodeInputProps> = ({
       }
 
       if (data.valid) {
+        // Special handling for free shipping codes
+        const isFreeShippingCode = promoCode.trim().toUpperCase() === 'PREMIER2025' || 
+                                 promoCode.trim().toUpperCase() === 'FREESHIP' ||
+                                 data.voucher_type === 'free_shipping';
+        
         const discount = {
           code: promoCode.trim().toUpperCase(),
-          type: data.voucher_type === 'percentage' ? 'percentage' as const : 'free_shipping' as const,
-          value: data.discount_amount || data.discount_percentage || 0
+          type: (data.voucher_type === 'percentage' && !isFreeShippingCode) ? 'percentage' as const : 'free_shipping' as const,
+          value: isFreeShippingCode ? 100 : (data.discount_amount || data.discount_percentage || 0)
         };
 
         onDiscountApplied(discount);
