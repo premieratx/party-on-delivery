@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { PremiumOrderComplete } from '@/components/enhanced-checkout/PremiumOrderComplete';
+import { Loader2 } from 'lucide-react';
 
 const PostCheckoutPage = () => {
   const { slug } = useParams<{ slug: string }>();
