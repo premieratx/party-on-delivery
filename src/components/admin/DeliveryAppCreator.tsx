@@ -109,36 +109,46 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const loadShopifyCollections = async (forceRefresh = false) => {
     try {
       setCollectionsLoading(true);
-      console.log('🔄 Loading REAL Shopify collections with accurate counts...');
+      console.log('🔄 Loading REAL Shopify collections - NO FALLBACKS');
       
       // Use the new optimizer that gets real data
       const { data, error } = await supabase.functions.invoke('shopify-sync-optimizer');
       
       if (error) {
         console.error('❌ Optimizer error:', error);
-        throw error;
+        // NO FALLBACKS - show empty state
+        setShopifyCollections([]);
+        toast({
+          title: "Error Loading Collections",
+          description: "Failed to sync with Shopify. Please try again.",
+          variant: "destructive"
+        });
+        return;
       }
       
       if (data?.collections && Array.isArray(data.collections)) {
         console.log(`✅ Got ${data.collections.length} REAL collections with accurate counts`);
         
-        // Filter and sort collections
+        // Filter and sort collections - REAL DATA ONLY
         const collections = data.collections
-          .filter((collection: any) => collection.products_count >= 3) // Only collections with 3+ products
-          .sort((a: any, b: any) => b.products_count - a.products_count); // Sort by product count
+          .filter((collection: any) => collection.products_count >= 1) // Only collections with actual products
+          .sort((a: any, b: any) => b.products_count - a.products_count);
         
         setShopifyCollections(collections);
         console.log('📋 Real collections loaded:', collections.map(c => `${c.name}: ${c.products_count} products`));
         
       } else {
-        throw new Error('No collections returned from optimizer');
+        // NO FALLBACKS - show empty state
+        console.log('⚠️ No collections returned - showing empty state (NO FALLBACKS)');
+        setShopifyCollections([]);
       }
     } catch (error) {
-      console.error('❌ Error loading real collections:', error);
+      console.error('❌ Error loading collections:', error);
+      // NO FALLBACKS - always show empty state on error
       setShopifyCollections([]);
       toast({
-        title: "Error Loading Collections",
-        description: "Failed to load Shopify collections with real product counts.",
+        title: "Shopify Sync Failed",
+        description: "Could not load real collection data. Showing empty state instead of fake data.",
         variant: "destructive"
       });
     } finally {

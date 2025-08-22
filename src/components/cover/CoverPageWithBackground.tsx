@@ -50,27 +50,40 @@ const CoverPageWithBackground = () => {
       
       console.log('🔍 Loading cover page with slug:', slug);
       console.log('🔍 Current URL:', window.location.href);
-      console.log('🔍 Full params:', useParams());
       
-      const { data, error } = await supabase
-        .from('cover_pages')
-        .select('*')
-        .eq('slug', slug)
-        .eq('is_active', true)
-        .maybeSingle();
+      // Try both the direct slug and the slug with 'cover/' prefix
+      const slugsToTry = [slug, `cover/${slug}`];
+      console.log('🔍 Trying slugs:', slugsToTry);
+      
+      let coverPageData = null;
+      
+      for (const slugToTry of slugsToTry) {
+        const { data, error } = await supabase
+          .from('cover_pages')
+          .select('*')
+          .eq('slug', slugToTry)
+          .eq('is_active', true)
+          .maybeSingle();
 
-      if (error) {
-        console.error('❌ Error loading cover page:', error);
-        throw error;
-      }
-      
-      if (data) {
-        console.log('✅ Cover page loaded successfully:', data.title);
-        console.log('✅ Cover page data:', data);
-      } else {
-        console.log('❌ No cover page found for slug:', slug);
+        if (error) {
+          console.error(`❌ Error loading cover page with slug ${slugToTry}:`, error);
+          continue;
+        }
         
-        // Check if any cover pages exist at all
+        if (data) {
+          console.log(`✅ Found cover page with slug ${slugToTry}:`, data.title);
+          coverPageData = data;
+          break;
+        }
+      }
+
+      if (coverPageData) {
+        console.log('✅ Cover page loaded successfully:', coverPageData);
+        return coverPageData;
+      } else {
+        console.log('❌ No cover page found for any slug variation');
+        
+        // Debug: Check what cover pages exist
         const { data: allPages } = await supabase
           .from('cover_pages')
           .select('slug, title, is_active')
@@ -78,17 +91,8 @@ const CoverPageWithBackground = () => {
         
         console.log('📋 All available cover pages:', allPages);
         
-        // Check if this specific slug exists but is inactive
-        const { data: inactivePage } = await supabase
-          .from('cover_pages')
-          .select('slug, title, is_active')
-          .eq('slug', slug)
-          .maybeSingle();
-          
-        console.log('🔍 Inactive page check:', inactivePage);
+        throw new Error(`Cover page not found for slug: ${slug}`);
       }
-      
-      return data;
     },
     enabled: !!slug
   });
