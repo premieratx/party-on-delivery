@@ -1,327 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { EditableCoverScreen } from '@/components/enhanced-cover/EditableCoverScreen';
-import { CustomDeliveryTabsPage } from '@/components/custom-delivery/CustomDeliveryTabsPage';
-import { useUnifiedCart } from '@/hooks/useUnifiedCart';
-import { useGlobalCart } from '@/components/common/GlobalCartProvider';
-import { useDataFlowTracking } from '@/hooks/useDataFlowTracking';
-import { DataFlowMonitor } from '@/components/tracking/DataFlowMonitor';
-import { Loader2 } from 'lucide-react';
-
-interface BackgroundApp {
-  id: string;
-  app_name: string;
-  collections_config: any;
-  main_app_config?: any;
-  logo_url?: string;
-}
 
 const CoverPageWithBackground = () => {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
-  const [backgroundApp, setBackgroundApp] = useState<BackgroundApp | null>(null);
-  const { initializeCoverPageFlow, trackButtonClick, flowData } = useDataFlowTracking();
-  
-  // Just load the damn cover page - no unnecessary validation
-  
-  const { 
-    cartItems, 
-    addToCart, 
-    updateQuantity, 
-    getTotalItems, 
-    getTotalPrice 
-  } = useUnifiedCart();
-  
-  const { openCart } = useGlobalCart();
 
-  // Load cover page data - try to find active cover page with this slug
-  const { data: coverPage, isLoading: loadingCover, error } = useQuery({
+  // Load ONLY the cover page data - nothing else
+  const { data: coverPage, isLoading, error } = useQuery({
     queryKey: ['cover-page', slug],
     queryFn: async () => {
       if (!slug) throw new Error('No slug provided');
       
-      // Try to find cover page with this slug
       const { data, error } = await supabase
         .from('cover_pages')
         .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
-        .maybeSingle();
+        .single();
 
       if (error) {
-        throw new Error(`Database error: ${error.message}`);
+        throw new Error(`Cover page not found: ${slug}`);
       }
-      
-      if (data) {
-        return data;
-      }
-      
-      // If no cover page found, return null (will trigger 404 or app fallback)
-      return null;
+
+      return data;
     },
     enabled: !!slug
   });
 
-  // Load delivery apps for button URL resolution
-  const { data: deliveryApps } = useQuery({
-    queryKey: ['delivery-apps'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('delivery_app_variations')
-        .select('id, app_slug')
-        .eq('is_active', true);
-      
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
-  // Initialize tracking when cover page loads (prevent infinite loops)
-  useEffect(() => {
-    if (coverPage && !flowData?.coverPageId) {
-      // Extract affiliate code from URL or cover page data
-      const urlParams = new URLSearchParams(window.location.search);
-      const affiliateCode = urlParams.get('affiliate') || coverPage.affiliate_slug;
-      
-      initializeCoverPageFlow(coverPage.id, coverPage.slug, affiliateCode);
-      // Remove excessive logging - tracking works silently
-    }
-  }, [coverPage?.id, coverPage?.slug, initializeCoverPageFlow, flowData?.coverPageId]);
-
-  // Preload default homepage app in background
-  useEffect(() => {
-    const loadBackgroundApp = async () => {
-      try {
-        console.log('🚀 Loading default homepage app for background...');
-        
-        const { data, error } = await supabase
-          .from('delivery_app_variations')
-          .select('*')
-          .eq('is_homepage', true)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (error) {
-          console.error('❌ Background app error:', error);
-          return;
-        }
-        
-        if (data) {
-          const processedApp: BackgroundApp = {
-            id: data.id,
-            app_name: data.app_name,
-            collections_config: data.collections_config || { tab_count: 0, tabs: [] },
-            main_app_config: data.main_app_config || {},
-            logo_url: data.logo_url || ''
-          };
-          
-          console.log('✅ Background app loaded:', processedApp.app_name);
-          setBackgroundApp(processedApp);
-        }
-      } catch (err) {
-        console.error('❌ Failed to load background app:', err);
-      }
-    };
-
-    loadBackgroundApp();
-  }, []);
-
-  const handleAddToCart = (item: any) => {
-    console.log('🛒 Adding to cart from cover page:', item);
-    addToCart(item);
-  };
-
-  const handleUpdateQuantity = (id: string, variant: string | undefined, quantity: number) => {
-    updateQuantity(id, variant, quantity);
-  };
-
-  const handleProceedToCheckout = () => {
-    console.log('🛒 Navigating to checkout from cover page');
-    navigate('/checkout');
-  };
-
-  const handleGoHome = () => {
-    navigate('/');
-  };
-
-  if (loadingCover) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error || (!coverPage && !loadingCover)) {
-    // If no cover page found, show the background delivery app instead of 404
-    if (!coverPage && backgroundApp) {
-      return (
-        <div className="relative min-h-screen">
-          <CustomDeliveryTabsPage
-            appName={backgroundApp.app_name}
-            heroHeading={backgroundApp.main_app_config?.hero_heading || backgroundApp.app_name}
-            heroSubheading={backgroundApp.main_app_config?.hero_subheading || 'Premium delivery service'}
-            logoUrl={backgroundApp.logo_url}
-            collectionsConfig={backgroundApp.collections_config}
-            onAddToCart={handleAddToCart}
-            cartItemCount={getTotalItems()}
-            onOpenCart={openCart}
-            cartItems={cartItems}
-            onUpdateQuantity={handleUpdateQuantity}
-            onProceedToCheckout={handleProceedToCheckout}
-            onGoHome={handleGoHome}
-          />
-          <DataFlowMonitor />
-        </div>
-      );
-    }
-    
-    // Show 404 only if there's an actual error or no fallback available
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Page Not Found</h1>
-          <p className="text-muted-foreground">The page you're looking for doesn't exist or has been disabled.</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading cover page...</p>
         </div>
       </div>
     );
   }
 
-  // Parse cover page data
-  const parsedFeatures = typeof coverPage.checklist === 'string' ? 
-    JSON.parse(coverPage.checklist || '[]') : coverPage.checklist || [];
-  const parsedButtons = typeof coverPage.buttons === 'string' ? 
-    JSON.parse(coverPage.buttons || '[]') : coverPage.buttons || [];
-  const parsedStyles = typeof coverPage.styles === 'string' ? 
-    JSON.parse(coverPage.styles || '{}') : coverPage.styles || {};
+  if (error || !coverPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
+          <p className="text-muted-foreground">
+            The cover page you're looking for doesn't exist or has been disabled.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  // Transform features to the expected format
-  const features = parsedFeatures.length > 0 ? 
-    parsedFeatures.map((item: any, index: number) => ({
-      emoji: parsedStyles.features?.[index]?.emoji || '⭐',
-      title: typeof item === 'string' ? item : item.title || item,
-      description: typeof item === 'string' ? 'Premium feature' : item.description || 'Premium feature'
-    })) : [];
+  // Parse the data and render ONLY the cover page - completely standalone
+  const parsedFeatures = typeof coverPage.checklist === 'string' 
+    ? JSON.parse(coverPage.checklist || '[]') 
+    : coverPage.checklist || [];
+    
+  const parsedButtons = typeof coverPage.buttons === 'string' 
+    ? JSON.parse(coverPage.buttons || '[]') 
+    : coverPage.buttons || [];
+    
+  const parsedStyles = typeof coverPage.styles === 'string' 
+    ? JSON.parse(coverPage.styles || '{}') 
+    : coverPage.styles || {};
 
-  // Transform buttons with click handlers and tracking
-  const buttons = parsedButtons.map((btn: any) => ({
-    ...btn,
+  // Transform features to expected format
+  const features = parsedFeatures.map((item: any, index: number) => ({
+    emoji: parsedStyles.features?.[index]?.emoji || item.emoji || '⭐',
+    title: typeof item === 'string' ? item : item.title || item,
+    description: typeof item === 'string' ? 'Premium feature' : item.description || 'Premium feature'
+  }));
+
+  // Transform buttons with navigation
+  const buttons = parsedButtons.map((button: any) => ({
+    ...button,
     onClick: () => {
-      console.log('🔍 Button clicked:', btn);
-      
-      // Track button click with enhanced data
-      trackButtonClick({
-        button_text: btn.text,
-        button_type: btn.type,
-        target_url: btn.target || btn.url,
-        delivery_app_slug: btn.delivery_app_id || (btn.target?.includes('/app/') ? btn.target.split('/app/')[1] : null),
-        markup_percentage: btn.markup_percentage || 0,
-        markup_dollar_amount: btn.markup_dollar_amount || 0,
-        special_action: btn.special_action,
-        prefill_data: btn.prefill_data || null
-      });
-      
-      // Determine the target URL based on button configuration
-      let targetUrl = btn.target || btn.url;
-      
-      // Handle different assignment types
-      if (btn.assignment_type === 'delivery_app' && btn.delivery_app_id) {
-        // Find the delivery app by ID and redirect to its slug
-        const deliveryApp = deliveryApps?.find(app => app.id === btn.delivery_app_id);
-        targetUrl = `/app/${deliveryApp?.app_slug || 'delivery'}`;
-      } else if (btn.assignment_type === 'special') {
-        // Handle special actions
-        if (btn.special_action === 'free_delivery') {
-          targetUrl = '/delivery?free_shipping=true';
-        } else if (btn.special_action === 'prefill_address' && btn.prefill_data?.address) {
-          targetUrl = `/delivery?address=${encodeURIComponent(btn.prefill_data.address)}`;
-        } else if (btn.special_action === 'prefill_datetime' && btn.prefill_data) {
-          const params = new URLSearchParams();
-          if (btn.prefill_data.date) params.set('date', btn.prefill_data.date);
-          if (btn.prefill_data.time) params.set('time', btn.prefill_data.time);
-          targetUrl = `/delivery?${params.toString()}`;
-        }
-      } else if (btn.assignment_type === 'url' && btn.url) {
-        targetUrl = btn.url;
-      }
-      
-      // Default fallback to main delivery page
-      if (!targetUrl) {
-        targetUrl = '/delivery';
-      }
-      
-      console.log('🔗 Redirecting to:', targetUrl);
-      
-      if (targetUrl.startsWith('http')) {
-        // External link - use window.location
-        window.location.href = targetUrl;
-      } else {
-        // Internal link - use React Router
-        navigate(targetUrl);
+      if (button.url) {
+        window.open(button.url, '_blank');
       }
     }
   }));
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Hide any global navigation when on cover pages */}
+    <div className="min-h-screen bg-background">
+      {/* Hide ALL global navigation and UI elements */}
       <style>
         {`
-          body { overflow: hidden; }
+          body { 
+            overflow-x: hidden; 
+            margin: 0;
+            padding: 0;
+          }
           [data-global-nav], 
           [data-bottom-nav], 
           .bottom-navigation,
-          .global-cart-provider > *:not(.cover-page-content) {
+          .global-cart-provider > *:not(.cover-page-content),
+          .fixed.bottom-0,
+          .fixed.top-0,
+          nav:not(.cover-page-nav),
+          header:not(.cover-page-header),
+          .floating-cart,
+          .cart-overlay,
+          .navigation-menu {
             display: none !important;
           }
         `}
       </style>
       
-      {/* Preloaded Background Homepage - Hidden but Cached */}
-      {backgroundApp && (
-        <div className="absolute inset-0 opacity-0 pointer-events-none">
-          <CustomDeliveryTabsPage
-            appName={backgroundApp.app_name}
-            heroHeading={backgroundApp.main_app_config?.hero_heading || backgroundApp.app_name}
-            heroSubheading={backgroundApp.main_app_config?.hero_subheading || 'Premium delivery service'}
-            logoUrl={backgroundApp.logo_url}
-            collectionsConfig={backgroundApp.collections_config}
-            onAddToCart={handleAddToCart}
-            cartItemCount={getTotalItems()}
-            onOpenCart={openCart}
-            cartItems={cartItems}
-            onUpdateQuantity={handleUpdateQuantity}
-            onProceedToCheckout={handleProceedToCheckout}
-            onGoHome={handleGoHome}
-          />
-        </div>
-      )}
-
-      {/* Cover Page Overlay */}
-      <div className="relative z-50 min-h-screen cover-page-content">
+      <div className="cover-page-content">
         <EditableCoverScreen
           title={coverPage.title}
           subtitle={coverPage.subtitle}
           logoUrl={coverPage.logo_url}
-          logoEmoji={parsedStyles.logoEmoji || '🎉'}
+          logoEmoji={parsedStyles.logoEmoji}
           backgroundImageUrl={coverPage.bg_image_url}
           backgroundVideoUrl={coverPage.bg_video_url}
           features={features}
           buttons={buttons}
-          variant={coverPage.theme || parsedStyles.variant || 'original'}
-          customColors={parsedStyles.customColors}
-          typography={parsedStyles.typography}
-          logoSizing={parsedStyles.logoSizing}
-          positioning={parsedStyles.positioning}
-          sizing={parsedStyles.sizing}
+          variant={parsedStyles.variant || coverPage.theme || 'gold'}
           standalone={true}
+          sizing={parsedStyles.sizing}
+          positioning={parsedStyles.positioning}
         />
       </div>
-
-      {/* Data Flow Monitor */}
-      <DataFlowMonitor />
     </div>
   );
 };
