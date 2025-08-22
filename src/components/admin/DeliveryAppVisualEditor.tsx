@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Palette, Upload, Type, Settings, Save, Loader2, Eye, Video, Play, Pause } from 'lucide-react';
+import { Palette, Upload, Type, Settings, Save, Loader2, Eye, Video, Play, Pause, Smartphone, Tablet, Monitor } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -929,14 +929,18 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
           {/* Right Panel - Preview */}
           <div className="flex-1 flex flex-col">
             {/* Device Selector */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 justify-center">
               {Object.entries(DEVICE_CONFIGS).map(([key, device]) => (
                 <Button
                   key={key}
                   variant={activeDevice === key ? "default" : "outline"}
                   size="sm"
                   onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
+                  className="flex items-center gap-2"
                 >
+                  {key === 'mobile' && <Smartphone className="w-4 h-4" />}
+                  {key === 'tablet' && <Tablet className="w-4 h-4" />}
+                  {key === 'desktop' && <Monitor className="w-4 h-4" />}
                   {device.name}
                 </Button>
               ))}
@@ -977,55 +981,114 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
                     />
                   )}
                   
-                  {/* Content */}
-                  <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-8">
+                  {/* Content - Responsive Layout */}
+                  <div className={`relative z-10 flex flex-col h-full text-center px-4 ${
+                    activeDevice === 'mobile' ? 'py-8' : 
+                    activeDevice === 'tablet' ? 'py-12' : 'py-16'
+                  }`}>
                     {/* Logo */}
                     {config.logoUrl && (
                       <div 
-                        className="mb-6"
+                        className={`flex-shrink-0 ${
+                          activeDevice === 'mobile' ? 'mb-4' : 
+                          activeDevice === 'tablet' ? 'mb-6' : 'mb-8'
+                        }`}
                         style={{
-                          transform: `translateY(${config.logoVerticalPosition}px)`
+                          transform: `translateY(${config.logoVerticalPosition * (
+                            activeDevice === 'mobile' ? 0.6 : 
+                            activeDevice === 'tablet' ? 0.8 : 1
+                          )}px)`
                         }}
                       >
                         <img 
                           src={config.logoUrl} 
                           alt={config.appName}
+                          className="mx-auto"
                           style={{
-                            height: `${config.logoSize}px`,
-                            maxWidth: '100%',
+                            height: `${config.logoSize * (
+                              activeDevice === 'mobile' ? 0.7 : 
+                              activeDevice === 'tablet' ? 0.85 : 1
+                            )}px`,
+                            maxWidth: '80%',
                             objectFit: 'contain'
                           }}
                         />
                       </div>
                     )}
                     
-                    {/* Headline */}
-                    {config.heroHeading && (
-                      <h1 
-                        className="mb-4"
-                        style={generateTextStyle('headline')}
-                      >
-                        {config.heroHeading}
-                      </h1>
-                    )}
+                    {/* Content Container - Flex Grow */}
+                    <div className="flex-1 flex flex-col justify-center">
+                      {/* Headline */}
+                      {config.heroHeading && (
+                        <h1 
+                          className={`${
+                            activeDevice === 'mobile' ? 'mb-3' : 
+                            activeDevice === 'tablet' ? 'mb-4' : 'mb-6'
+                          } leading-tight`}
+                          style={{
+                            ...generateTextStyle('headline'),
+                            fontSize: `${config.headlineSize * (
+                              activeDevice === 'mobile' ? 0.6 : 
+                              activeDevice === 'tablet' ? 0.8 : 1
+                            )}px`,
+                            transform: `translateY(${config.headlineVerticalPosition * (
+                              activeDevice === 'mobile' ? 0.6 : 
+                              activeDevice === 'tablet' ? 0.8 : 1
+                            )}px)`
+                          }}
+                        >
+                          {config.heroHeading}
+                        </h1>
+                      )}
+                      
+                      {/* Sub-headline */}
+                      {config.heroSubheading && (
+                        <p 
+                          className={`${
+                            activeDevice === 'mobile' ? 'mb-4' : 
+                            activeDevice === 'tablet' ? 'mb-6' : 'mb-8'
+                          } leading-relaxed`}
+                          style={{
+                            ...generateTextStyle('subheadline'),
+                            fontSize: `${config.subheadlineSize * (
+                              activeDevice === 'mobile' ? 0.7 : 
+                              activeDevice === 'tablet' ? 0.85 : 1
+                            )}px`,
+                            transform: `translateY(${config.subheadlineVerticalPosition * (
+                              activeDevice === 'mobile' ? 0.6 : 
+                              activeDevice === 'tablet' ? 0.8 : 1
+                            )}px)`
+                          }}
+                        >
+                          {config.heroSubheading}
+                        </p>
+                      )}
+                    </div>
                     
-                    {/* Sub-headline */}
-                    {config.heroSubheading && (
-                      <p 
-                        className="mb-8"
-                        style={generateTextStyle('subheadline')}
-                      >
-                        {config.heroSubheading}
-                      </p>
-                    )}
-                    
-                    {/* Scrolling Text */}
+                    {/* Scrolling Text - Always at Bottom */}
                     {config.scrollingText && (
-                      <div className="absolute bottom-24 left-0 right-0">
+                      <div 
+                        className={`flex-shrink-0 ${
+                          activeDevice === 'mobile' ? 'mt-4' : 
+                          activeDevice === 'tablet' ? 'mt-6' : 'mt-8'
+                        }`}
+                        style={{
+                          transform: `translateY(${config.scrollingTextVerticalPosition * (
+                            activeDevice === 'mobile' ? 0.6 : 
+                            activeDevice === 'tablet' ? 0.8 : 1
+                          )}px)`
+                        }}
+                      >
                         <ScrollingTextComponent
                           text={config.scrollingText}
                           speed={config.scrollingTextSpeed}
-                          style={generateTextStyle('scrollingText')}
+                          style={{
+                            ...generateTextStyle('scrollingText'),
+                            fontSize: `${config.scrollingTextSize * (
+                              activeDevice === 'mobile' ? 0.7 : 
+                              activeDevice === 'tablet' ? 0.85 : 1
+                            )}px`
+                          }}
                           className="text-center"
                         />
                       </div>

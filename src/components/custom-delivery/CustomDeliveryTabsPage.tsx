@@ -6,6 +6,7 @@ interface CustomDeliveryTabsPageProps {
   heroHeading?: string;
   heroSubheading?: string;
   logoUrl?: string;
+  appConfig?: any; // App configuration including hero_config
   collectionsConfig: {
     tab_count: number;
     tabs: Array<{
@@ -32,6 +33,7 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
   heroHeading,
   heroSubheading,
   logoUrl,
+  appConfig,
   collectionsConfig,
   onAddToCart,
   cartItemCount,
@@ -50,6 +52,7 @@ export const CustomDeliveryTabsPage: React.FC<CustomDeliveryTabsPageProps> = ({
       heroHeading={heroHeading}
       heroSubheading={heroSubheading}
       logoUrl={logoUrl}
+      appConfig={appConfig}
       collectionsConfig={collectionsConfig}
       onAddToCart={onAddToCart}
       cartItemCount={cartItemCount}

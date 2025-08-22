@@ -26,6 +26,7 @@ interface ProductCategoriesProps {
   heroHeading?: string;
   heroSubheading?: string;
   logoUrl?: string;
+  appConfig?: any; // App configuration including hero_config
   collectionsConfig?: {
     tab_count: number;
     tabs: Array<{
@@ -58,6 +59,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   heroHeading = "Austin's Premier Party Supply Delivery",
   heroSubheading = "Satisfaction Guaranteed, On-Time Delivery",
   logoUrl,
+  appConfig,
   collectionsConfig,
   onAddToCart,
   cartItemCount = 0,
@@ -340,44 +342,133 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     }
   }, [searchQuery, handleSearch]);
 
+  // Parse hero_config if available
+  const heroConfig = appConfig?.hero_config ? 
+    (typeof appConfig.hero_config === 'string' ? 
+      JSON.parse(appConfig.hero_config) : appConfig.hero_config) : {};
+
+  // Helper function to generate responsive text styles
+  const getResponsiveTextStyle = (type: 'headline' | 'subheadline' | 'scrollingText') => {
+    const config = heroConfig[`${type}Style`] || {};
+    const color = heroConfig[`${type}Color`] || '#FFFFFF';
+    const font = heroConfig[`${type}Font`] || 'Inter';
+    const size = heroConfig[`${type}Size`] || (type === 'headline' ? 48 : type === 'subheadline' ? 24 : 16);
+    
+    return {
+      color,
+      fontFamily: font,
+      fontSize: `clamp(${size * 0.6}px, ${size * 0.8}vw, ${size}px)`, // Responsive sizing
+      fontWeight: config.bold ? 'bold' : 'normal',
+      fontStyle: config.italic ? 'italic' : 'normal',
+      textDecoration: config.underlined ? 'underline' : 'none',
+      lineHeight: type === 'headline' ? '1.1' : '1.5'
+    };
+  };
+
   return (
     <div className="min-h-screen bg-background pb-20 lg:pb-8">
-      {/* Hero Section with Instant Loading Background Image */}
+      {/* Hero Section with Enhanced Responsive Design */}
       <div 
-        className={`relative h-[70vh] overflow-hidden bg-cover bg-center bg-no-repeat transition-opacity duration-300 ${
+        className={`relative min-h-[70vh] overflow-hidden bg-cover bg-center bg-no-repeat transition-opacity duration-300 ${
           bgImageLoaded ? 'opacity-100' : 'opacity-0'
         }`}
-        style={{ backgroundImage: `url(${bgImage})` }}
+        style={{ 
+          backgroundImage: heroConfig.backgroundUrl ? `url(${heroConfig.backgroundUrl})` : `url(${bgImage})`,
+          minHeight: 'clamp(500px, 70vh, 800px)' // Responsive height
+        }}
       >
         {/* Loading fallback with solid color background */}
         {!bgImageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 animate-pulse" />
         )}
         
+        {/* Video Background */}
+        {heroConfig.backgroundType === 'video' && heroConfig.backgroundUrl && (
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            src={heroConfig.backgroundUrl}
+          />
+        )}
+        
         <div className="absolute inset-0 bg-black/50" />
         
-        <div className="relative z-10 flex items-center justify-center h-full">
-          <div className="text-center text-white px-4 max-w-4xl">
-            {logoUrl && (
-              <div className="mb-6">
-                <img 
-                  src={logoUrl} 
-                  alt={appName} 
-                  className={`h-16 mx-auto transition-opacity duration-300 ${
-                    logoLoaded ? 'opacity-100' : 'opacity-0'
-                  }`} 
-                />
-              </div>
-            )}
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+        {/* Content - Responsive Flexbox Layout */}
+        <div className="relative z-10 flex flex-col h-full text-center px-4 py-8 sm:py-12 lg:py-16">
+          {/* Logo */}
+          {(heroConfig.logoUrl || logoUrl) && (
+            <div 
+              className="flex-shrink-0 mb-4 sm:mb-6 lg:mb-8"
+              style={{
+                transform: `translateY(${(heroConfig.logoVerticalPosition || 0) * 0.8}px)`
+              }}
+            >
+              <img 
+                src={heroConfig.logoUrl || logoUrl} 
+                alt={appName}
+                className="mx-auto transition-opacity duration-300"
+                style={{
+                  height: `clamp(${(heroConfig.logoSize || 64) * 0.5}px, ${(heroConfig.logoSize || 64) * 0.8}vw, ${heroConfig.logoSize || 64}px)`,
+                  maxWidth: '80%',
+                  objectFit: 'contain',
+                  opacity: logoLoaded ? 1 : 0
+                }}
+              />
+            </div>
+          )}
+          
+          {/* Content Container - Flex Grow */}
+          <div className="flex-1 flex flex-col justify-center max-w-4xl mx-auto">
+            {/* Headline */}
+            <h1 
+              className="mb-4 sm:mb-6 leading-tight"
+              style={{
+                ...getResponsiveTextStyle('headline'),
+                transform: `translateY(${(heroConfig.headlineVerticalPosition || 0) * 0.8}px)`
+              }}
+            >
               {heroHeading}
             </h1>
+            
+            {/* Sub-headline */}
             {heroSubheading && (
-              <p className="text-xl md:text-2xl text-blue-100 mb-6">
+              <p 
+                className="mb-6 sm:mb-8 leading-relaxed"
+                style={{
+                  ...getResponsiveTextStyle('subheadline'),
+                  transform: `translateY(${(heroConfig.subheadlineVerticalPosition || 0) * 0.8}px)`
+                }}
+              >
                 {heroSubheading}
               </p>
             )}
           </div>
+          
+          {/* Scrolling Text - Always at Bottom */}
+          {heroConfig.scrollingText && (
+            <div 
+              className="flex-shrink-0 mt-4 sm:mt-6 lg:mt-8"
+              style={{
+                transform: `translateY(${(heroConfig.scrollingTextVerticalPosition || 0) * 0.8}px)`
+              }}
+            >
+              <div 
+                className="overflow-hidden whitespace-nowrap"
+                style={getResponsiveTextStyle('scrollingText')}
+              >
+                <div 
+                  className="inline-block animate-marquee"
+                  style={{
+                    animation: `marquee ${heroConfig.scrollingTextSpeed || 10}s linear infinite`
+                  }}
+                >
+                  {heroConfig.scrollingText}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
