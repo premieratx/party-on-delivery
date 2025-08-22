@@ -339,8 +339,8 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] overflow-hidden" aria-describedby="dialog-description">
-        <DialogHeader className="flex-shrink-0">
+      <DialogContent className="max-w-6xl h-[90vh] flex flex-col" aria-describedby="dialog-description">
+        <DialogHeader className="flex-shrink-0 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
             {initial ? 'Edit' : 'Create'} Delivery App
@@ -350,14 +350,16 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="basic" className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 flex-shrink-0 mx-6 mt-4">
+        <Tabs defaultValue="basic" className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-3 flex-shrink-0 mb-4">
             <TabsTrigger value="basic">Basic Settings</TabsTrigger>
             <TabsTrigger value="tabs">Collection Tabs</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 p-6 max-h-[calc(90vh-120px)]">
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-6 pb-2">
             <TabsContent value="basic" className="space-y-4 mt-0">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -593,7 +595,9 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                 </div>
               </div>
             </TabsContent>
-          </ScrollArea>
+              </div>
+            </ScrollArea>
+          </div>
 
           <div className="flex justify-between gap-2 p-6 border-t flex-shrink-0">
             <Button 
