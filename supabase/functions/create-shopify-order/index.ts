@@ -391,10 +391,10 @@ serve(async (req) => {
     // Extract affiliate code if present
     const affiliateCode = metadata.affiliate_code || '';
 
-    // Create Shopify order with proper structure
+    // Create Shopify order with EXACT structure matching screenshot
     const orderData = {
       order: {
-        line_items: lineItems, // ONLY actual products, no fees/tips/tax
+        line_items: lineItems, // ONLY actual products - no fees/tips/tax
         customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
         billing_address: {
           first_name: firstName,
@@ -418,58 +418,51 @@ serve(async (req) => {
         },
         email: customerEmail,
         phone: customerPhone,
-        // Put ALL non-product charges in the order notes (detailed breakdown)
-        note: `=== DELIVERY ORDER DETAILS ===
-
-📦 PAYMENT BREAKDOWN:
-• Subtotal (Products): $${orderAmounts.subtotal.toFixed(2)}
-• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}
-• Sales Tax (8.25%): $${orderAmounts.sales_tax.toFixed(2)}
-• Driver Tip: $${orderAmounts.tip_amount.toFixed(2)}
-• TOTAL PAID: $${orderAmounts.total_amount.toFixed(2)} (via Stripe)
-
-🚚 DELIVERY DETAILS:
-• Date: ${deliveryDate}
-• Time: ${deliveryTime}
-• Address: ${street}, ${city}, ${state} ${zip}
-${deliveryInstructions ? `• Special Instructions: ${deliveryInstructions}` : ''}
-
-💳 STRIPE PAYMENT:
-• Payment Intent: ${paymentIntentId || sessionId}
-• Status: Payment Confirmed
-• Amount: $${orderAmounts.total_amount.toFixed(2)}
-
-${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
-
-🎯 ORDER COMPOSITION:
-• Products Only: ${lineItems.length} item(s) = $${orderAmounts.subtotal.toFixed(2)}
-• Service Charges: Delivery + Tax + Tip = $${(orderAmounts.delivery_fee + orderAmounts.sales_tax + orderAmounts.tip_amount).toFixed(2)}
-
-Note: Driver tip and delivery fees are NOT line items - they are service charges included in total payment.`,
         
-        // Set the total and tax properly (Shopify will calculate line item total + shipping + tax)
-        total_price: orderAmounts.total_amount.toFixed(2),
+        // PROPER SHOPIFY ORDER STRUCTURE (matching screenshot)
         subtotal_price: orderAmounts.subtotal.toFixed(2),
         total_tax: orderAmounts.sales_tax.toFixed(2),
+        total_price: orderAmounts.total_amount.toFixed(2),
         
-        // Add shipping as a shipping line, not a line item
+        // Shipping lines (delivery fee) - NOT line items
         shipping_lines: orderAmounts.delivery_fee > 0 ? [{
-          title: "Delivery Service",
+          title: "Local Delivery (Items 0.0 lb, Package 0.0 lb)",
           price: orderAmounts.delivery_fee.toFixed(2),
-          code: "DELIVERY"
+          code: "LOCAL_DELIVERY"
         }] : [],
         
-        // Mark as paid since we have Stripe confirmation
+        // Order notes with detailed breakdown (tip goes here since it's not a Shopify field)
+        note: `DELIVERY ORDER - ${deliveryDate} at ${deliveryTime}
+
+📍 DELIVERY ADDRESS: ${street}, ${city}, ${state} ${zip}
+${deliveryInstructions ? `🗒️ INSTRUCTIONS: ${deliveryInstructions}` : ''}
+
+💰 PAYMENT BREAKDOWN:
+• Subtotal: $${orderAmounts.subtotal.toFixed(2)}
+• Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}  
+• Tax: $${orderAmounts.sales_tax.toFixed(2)}
+• Driver Tip: $${orderAmounts.tip_amount.toFixed(2)}
+• TOTAL PAID: $${orderAmounts.total_amount.toFixed(2)}
+
+💳 STRIPE CONFIRMATION: ${paymentIntentId || sessionId}
+${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
+
+⚠️ NOTE: Driver tip ($${orderAmounts.tip_amount.toFixed(2)}) included in total payment - not a line item.`,
+        
+        // Financial status - paid
         financial_status: "paid",
+        
+        // Tags for tracking
         tags: [
           "delivery-order",
           "stripe-paid",
           affiliateCode ? `affiliate-${affiliateCode}` : null,
           orderAmounts.tip_amount > 0 ? "has-tip" : "no-tip",
-          `tip-${orderAmounts.tip_amount.toFixed(2)}`
+          `tip-${orderAmounts.tip_amount.toFixed(2).replace('.', '_')}`,
+          `delivery-${deliveryDate}`
         ].filter(Boolean).join(", "),
         
-        // Use transactions to show the payment was processed by Stripe
+        // Transaction record
         transactions: [{
           amount: orderAmounts.total_amount.toFixed(2),
           kind: "sale",
