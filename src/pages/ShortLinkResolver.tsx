@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAffiliateFlowTracking } from '@/hooks/useAffiliateFlowTracking';
+import CoverPage from '@/pages/CoverPage';
 
 // Resolves short links for:
 // 1) /:shortPath -> first try cover_pages.slug (public), then delivery app short_path, then affiliate code
@@ -216,10 +217,11 @@ onClick: () => {
   }, [coverPage]);
 
   if (coverPage) {
-    // Cover pages are disabled - redirect to main app instead
-    console.log('🚫 Cover page found but disabled, redirecting to main app');
-    navigate('/');
-    return null;
+    // Render cover page directly
+    console.log('✅ Cover page found, rendering:', coverPage.slug);
+    return (
+      <CoverPage />
+    );
   }
 
   return (

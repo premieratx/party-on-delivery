@@ -643,13 +643,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full max-h-[95vh] flex flex-col overflow-hidden" aria-describedby="cover-page-creator-description">
+      <DialogContent className="max-w-7xl w-full max-h-[95vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {initial?.id ? 'Edit Cover Page' : 'Create Cover Page'}
             <Badge variant="secondary" className="text-xs">Auto-Saving</Badge>
           </DialogTitle>
-          <DialogDescription id="cover-page-creator-description">
+          <DialogDescription>
             Design and configure your cover page with custom branding, content, and interactive elements.
           </DialogDescription>
         </DialogHeader>
