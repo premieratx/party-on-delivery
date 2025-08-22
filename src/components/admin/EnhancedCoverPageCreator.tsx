@@ -256,11 +256,38 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     }
   }, [initial, open]); // Fixed: Removed getFormValue and toast from dependencies to prevent infinite loop
 
-  const generateSlug = (title: string) => {
-    return title
+  const generateSlug = async (title: string, excludeId?: string) => {
+    const baseSlug = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 50); // Limit length
+    
+    let slug = baseSlug;
+    let counter = 1;
+    
+    // Check for duplicates and generate unique slug
+    while (true) {
+      const { data: existing } = await supabase
+        .from('cover_pages')
+        .select('id')
+        .eq('slug', slug)
+        .neq('id', excludeId || '') // Exclude current record when updating
+        .single();
+      
+      if (!existing) {
+        return slug; // Slug is unique
+      }
+      
+      // Generate new slug with counter
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+      
+      // Safety check to prevent infinite loop
+      if (counter > 100) {
+        return `${baseSlug}-${Date.now()}`;
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -276,7 +303,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     setIsLoading(true);
 
     try {
-      const slug = generateSlug(title);
+      const slug = await generateSlug(title, initial?.id);
       const coverPageData = {
         title,
         subtitle,
