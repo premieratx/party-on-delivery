@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import { CANONICAL_DOMAIN } from '@/utils/links';
+import { AdminPerformanceFix } from '@/components/admin/AdminPerformanceFix';
 
 export default function AdminDashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -56,42 +57,27 @@ export default function AdminDashboard() {
   // Prevent dashboard reload on tab switching - load data only ONCE with keep-warm
   useEffect(() => {
     console.log('🚀 AdminDashboard: Component mounted, loading data...');
-    console.log('🔍 DEBUG: Window location:', window.location.pathname);
-    console.log('🔍 DEBUG: Active tab:', activeTab);
     
-    // Keep functions warm first to prevent timeouts
-    const warmUpAndLoad = async () => {
-      try {
-        console.log('🔥 Warming up edge functions...');
-        await supabase.functions.invoke('keep-warm');
-        console.log('✅ Functions warmed, loading dashboard data...');
-      } catch (error) {
-        console.warn('⚠️ Keep-warm failed, proceeding with data load:', error);
-      }
-      
-      // Load data immediately
-      loadDashboardData();
-    };
-    
-    warmUpAndLoad();
-
-    return () => {
-      // Cleanup function - prevent memory leaks
-    };
+    // Load data immediately without keep-warm delays
+    loadDashboardData();
   }, []); // Empty dependency array to prevent re-runs
 
-  // Enhanced load dashboard data with error handling and no reload loops
+  // Enhanced load dashboard data with timeout and fallback
   const loadDashboardData = async () => {
     try {
       console.log('🔄 Loading admin dashboard data...');
       setLoading(true);
       
-      // Use edge function exclusively to avoid RLS permission issues
-      const { data: response, error } = await supabase.functions.invoke('get-dashboard-data', {
-        body: {
-          type: 'admin'
-        }
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Dashboard load timeout')), 8000)
+      );
+      
+      const dataPromise = supabase.functions.invoke('get-dashboard-data', {
+        body: { type: 'admin' }
       });
+      
+      const { data: response, error } = await Promise.race([dataPromise, timeoutPromise]) as any;
 
       console.log('📊 Dashboard response received:', { response, error });
 
@@ -229,6 +215,7 @@ export default function AdminDashboard() {
   }
 
   return (
+    <AdminPerformanceFix>
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -465,6 +452,7 @@ export default function AdminDashboard() {
           }}
         />
       )}
-    </div>
+      </div>
+    </AdminPerformanceFix>
   );
 }

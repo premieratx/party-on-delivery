@@ -643,8 +643,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full max-h-[95vh] flex flex-col overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-7xl w-full h-[95vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="px-6 py-4 border-b bg-background/95 backdrop-blur-sm">
           <DialogTitle className="flex items-center gap-2">
             {initial?.id ? 'Edit Cover Page' : 'Create Cover Page'}
             <Badge variant="secondary" className="text-xs">Auto-Saving</Badge>
@@ -654,9 +654,10 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
+        <div className="grid grid-cols-2 gap-6 flex-1 min-h-0 overflow-hidden">
           {/* Configuration Panel */}
-          <div className="space-y-6 overflow-y-auto pr-4 max-h-[75vh]">
+          <div className="flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -942,7 +943,10 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               </CardContent>
             </Card>
 
-            <div className="flex justify-end space-x-2 pb-6 border-t pt-6">
+            </div>
+            
+            {/* Fixed Footer */}
+            <div className="flex justify-end space-x-2 p-6 border-t bg-background/95 backdrop-blur-sm">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
@@ -957,13 +961,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
             </div>
           </div>
 
-          {/* Live Preview */}
-          <div className="border rounded-lg overflow-hidden bg-gradient-to-br from-background to-muted/20">
-            <div className="p-4 border-b bg-muted/10">
+          {/* Live Preview - Fixed Height */}
+          <div className="flex flex-col bg-gradient-to-br from-background to-muted/20 border rounded-lg overflow-hidden">
+            <div className="p-4 border-b bg-muted/10 shrink-0">
               <h3 className="font-semibold">Live Preview</h3>
               <p className="text-sm text-muted-foreground">See your changes in real-time</p>
             </div>
-            <div className="h-[600px] overflow-y-auto">
+            <div className="flex-1 overflow-y-auto">
               <EditableCoverScreen
                 title={title}
                 subtitle={subtitle}
