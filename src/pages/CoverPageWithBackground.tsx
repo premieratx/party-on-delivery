@@ -19,15 +19,26 @@ export default function CoverPageWithBackground() {
         .eq('is_active', true)
         .maybeSingle();
 
+      console.log('📋 Query result:', { data, error, slug });
+
       if (error) {
         console.error('❌ Error loading cover page:', error);
         throw error;
       }
 
+      if (!data) {
+        console.log('❌ No cover page found for slug:', slug);
+        return null;
+      }
+
+      console.log('✅ Cover page loaded successfully:', data.title);
       return data;
     },
-    enabled: !!slug
+    enabled: !!slug,
+    retry: false
   });
+
+  console.log('🎯 Cover page state:', { slug, isLoading, error: error?.message, hasData: !!coverPage });
 
   if (isLoading) {
     return (
@@ -82,6 +93,13 @@ export default function CoverPageWithBackground() {
       }
     }
   }));
+
+  console.log('🎨 About to render EditableCoverScreen with:', {
+    title: coverPage.title,
+    slug: coverPage.slug,
+    hasFeatures: features.length > 0,
+    hasButtons: buttons.length > 0
+  });
 
   return (
     <div className="min-h-screen bg-background">

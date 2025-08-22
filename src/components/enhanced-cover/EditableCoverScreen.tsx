@@ -110,6 +110,16 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   onClose,
   standalone = false
 }) => {
+  console.log('🎬 EditableCoverScreen rendering with props:', {
+    title,
+    subtitle,
+    hasLogo: !!logoUrl,
+    hasBackground: !!(backgroundImageUrl || backgroundVideoUrl),
+    featureCount: features?.length || 0,
+    buttonCount: buttons?.length || 0,
+    variant,
+    standalone
+  });
   const getVariantStyles = () => {
     switch (variant) {
       case 'gold':

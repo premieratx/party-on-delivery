@@ -61,8 +61,8 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
   const [showNavigation, setShowNavigation] = useState(true);
   const { getTotalItems, getTotalPrice } = useUnifiedCart();
   const { isCoverPage } = useCoverPageDetection();
-
-  // Check if current route should show navigation
+  
+  console.log('🧭 GlobalNavigation render:', { isCoverPage, pathname: location.pathname });
   useEffect(() => {
     console.log('🔍 Navigation check for path:', location.pathname);
     console.log('🔍 isCoverPage:', isCoverPage);
