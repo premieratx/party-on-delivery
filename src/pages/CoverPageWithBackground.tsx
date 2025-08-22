@@ -17,7 +17,7 @@ export default function CoverPageWithBackground() {
         .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('❌ Error loading cover page:', error);
