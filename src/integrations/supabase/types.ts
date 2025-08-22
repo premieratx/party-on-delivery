@@ -2321,6 +2321,63 @@ export type Database = {
         }
         Relationships: []
       }
+      media_library: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration: number | null
+          file_size: number | null
+          file_type: string
+          filename: string
+          height: number | null
+          id: string
+          mime_type: string
+          original_filename: string
+          public_url: string
+          storage_path: string
+          tags: string[] | null
+          updated_at: string
+          uploaded_by: string | null
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_type: string
+          filename: string
+          height?: number | null
+          id?: string
+          mime_type: string
+          original_filename: string
+          public_url: string
+          storage_path: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          file_type?: string
+          filename?: string
+          height?: number | null
+          id?: string
+          mime_type?: string
+          original_filename?: string
+          public_url?: string
+          storage_path?: string
+          tags?: string[] | null
+          updated_at?: string
+          uploaded_by?: string | null
+          width?: number | null
+        }
+        Relationships: []
+      }
       optimization_logs: {
         Row: {
           created_at: string
