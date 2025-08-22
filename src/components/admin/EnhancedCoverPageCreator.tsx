@@ -109,16 +109,11 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     // Only save if there's actual content
     if (title.trim() || subtitle.trim() || logoUrl || backgroundImageUrl) {
       setFormValue(formKey, formState);
-      // console.log('💾 Cover page auto-saved:', { 
-      //   formKey, 
-      //   title: title.trim() || 'Untitled',
-      //   hasContent: !!(title.trim() || subtitle.trim() || logoUrl || backgroundImageUrl)
-      // });
     }
   }, [
     open, initial?.id, title, subtitle, logoUrl, logoEmoji, backgroundImageUrl, backgroundVideoUrl,
     backgroundImageSize, backgroundImagePosition,
-    variant, features, buttons, isActive, logoSize, logoPosition, headlineSize,
+    variant, features, buttons, isActive, logoSize, logoPosition, headlineSize, subtitleSize,
     logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos,
     setFormValue
   ]);
@@ -178,11 +173,14 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         setLogoEmoji(parsedStyles.logoEmoji);
       }
 
-      // Load sizing data
+      // Load sizing data from styles or legacy fields
       if (parsedStyles.sizing) {
         setLogoSize(parsedStyles.sizing.logoSize || 80);
         setHeadlineSize(parsedStyles.sizing.headlineSize || 48);
         setSubtitleSize(parsedStyles.sizing.subtitleSize || 20);
+      } else {
+        // Fallback to legacy fields if no sizing in styles
+        setLogoSize(initial.logo_width || initial.logo_height || 80);
       }
       
       // Load positioning data
@@ -254,14 +252,14 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         duration: 3000,
       });
     }
-  }, [initial, open]); // Fixed: Removed getFormValue and toast from dependencies to prevent infinite loop
+  }, [initial, open]);
 
   const generateSlug = async (title: string, excludeId?: string) => {
     const baseSlug = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
-      .slice(0, 50); // Limit length
+      .slice(0, 50);
     
     let slug = baseSlug;
     let counter = 1;
@@ -272,18 +270,16 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         .from('cover_pages')
         .select('id')
         .eq('slug', slug)
-        .neq('id', excludeId || '') // Exclude current record when updating
-        .single();
+        .neq('id', excludeId || '')
+        .maybeSingle();
       
       if (!existing) {
-        return slug; // Slug is unique
+        return slug;
       }
       
-      // Generate new slug with counter
       slug = `${baseSlug}-${counter}`;
       counter++;
       
-      // Safety check to prevent infinite loop
       if (counter > 100) {
         return `${baseSlug}-${Date.now()}`;
       }
@@ -309,6 +305,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         subtitle,
         slug,
         logo_url: logoUrl,
+        logo_width: logoSize,
+        logo_height: logoSize,
         bg_image_url: backgroundImageUrl,
         bg_video_url: backgroundVideoUrl,
         theme: variant,
@@ -346,7 +344,17 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           .update(coverPageData)
           .eq('id', initial.id);
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '23505') {
+            toast({
+              title: "Duplicate Name",
+              description: "A cover page with this name already exists. Please choose a different title.",
+              variant: "destructive"
+            });
+            return;
+          }
+          throw error;
+        }
 
         toast({
           title: "Success!",
@@ -367,7 +375,17 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           .from('cover_pages')
           .insert(coverPageData);
 
-        if (error) throw error;
+        if (error) {
+          if (error.code === '23505') {
+            toast({
+              title: "Duplicate Name",
+              description: "A cover page with this name already exists. Please choose a different title.",
+              variant: "destructive"
+            });
+            return;
+          }
+          throw error;
+        }
 
         toast({
           title: "Success!",
@@ -485,135 +503,131 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         )}
 
         {button.assignment_type === 'delivery_app' && (
-          <div className="space-y-2">
-            <Label>Delivery App</Label>
-            <Select 
-              value={button.delivery_app_id || ''} 
-              onValueChange={(value) => updateButton(index, { delivery_app_id: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select delivery app" />
-              </SelectTrigger>
-              <SelectContent>
-                {deliveryApps.map(app => (
-                  <SelectItem key={app.id} value={app.id}>
-                    {app.app_name} ({app.app_slug})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Delivery App</Label>
+              <Select 
+                value={button.delivery_app_id || ''} 
+                onValueChange={(value) => updateButton(index, { delivery_app_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a delivery app" />
+                </SelectTrigger>
+                <SelectContent>
+                  {deliveryApps.map((app) => (
+                    <SelectItem key={app.id} value={app.id}>
+                      {app.app_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Percent className="w-4 h-4" />
+                  Markup %
+                </Label>
+                <Input
+                  type="number"
+                  value={button.markup_percentage || 0}
+                  onChange={(e) => updateButton(index, { markup_percentage: Number(e.target.value) })}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Markup $
+                </Label>
+                <Input
+                  type="number"
+                  value={button.markup_dollar_amount || 0}
+                  onChange={(e) => updateButton(index, { markup_dollar_amount: Number(e.target.value) })}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
           </div>
         )}
 
         {button.assignment_type === 'special' && (
-          <div className="space-y-2">
-            <Label>Special Action</Label>
-            <Select 
-              value={button.special_action || ''} 
-              onValueChange={(value: 'free_delivery' | 'prefill_address' | 'prefill_datetime') => updateButton(index, { special_action: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select special action" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free_delivery">
-                  <div className="flex items-center gap-2">
-                    <Truck className="w-4 h-4" />
-                    Free Delivery
-                  </div>
-                </SelectItem>
-                <SelectItem value="prefill_address">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    Pre-fill Address
-                  </div>
-                </SelectItem>
-                <SelectItem value="prefill_datetime">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
-                    Pre-fill Date & Time
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Special Action</Label>
+              <Select 
+                value={button.special_action || ''} 
+                onValueChange={(value: 'free_delivery' | 'prefill_address' | 'prefill_datetime') => updateButton(index, { special_action: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select special action" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free_delivery">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-4 h-4" />
+                      Free Delivery
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="prefill_address">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      Pre-fill Address
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="prefill_datetime">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Pre-fill Date/Time
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        {button.special_action === 'prefill_address' && (
-          <div className="space-y-2">
-            <Label>Default Address</Label>
-            <Textarea
-              value={button.prefill_data?.address || ''}
-              onChange={(e) => updateButton(index, { 
-                prefill_data: { ...button.prefill_data, address: e.target.value }
-              })}
-              placeholder="123 Main St, Austin, TX 78701"
-            />
-          </div>
-        )}
+            {button.special_action === 'prefill_address' && (
+              <div className="space-y-2">
+                <Label>Default Address</Label>
+                <Input
+                  value={button.prefill_data?.address || ''}
+                  onChange={(e) => updateButton(index, { 
+                    prefill_data: { ...button.prefill_data, address: e.target.value }
+                  })}
+                  placeholder="123 Main St, City, State, ZIP"
+                />
+              </div>
+            )}
 
-        {button.special_action === 'prefill_datetime' && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Default Date</Label>
-              <Input
-                type="date"
-                value={button.prefill_data?.date || ''}
-                onChange={(e) => updateButton(index, { 
-                  prefill_data: { ...button.prefill_data, date: e.target.value }
-                })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Default Time</Label>
-              <Input
-                type="time"
-                value={button.prefill_data?.time || ''}
-                onChange={(e) => updateButton(index, { 
-                  prefill_data: { ...button.prefill_data, time: e.target.value }
-                })}
-              />
-            </div>
-          </div>
-        )}
-
-        {(button.assignment_type === 'delivery_app' || button.assignment_type === 'url') && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Percent className="w-4 h-4" />
-                Markup %
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={button.markup_percentage || 0}
-                onChange={(e) => updateButton(index, { markup_percentage: parseFloat(e.target.value) || 0 })}
-                placeholder="0"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Markup $
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={button.markup_dollar_amount || 0}
-                onChange={(e) => updateButton(index, { markup_dollar_amount: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-              />
-            </div>
+            {button.special_action === 'prefill_datetime' && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Default Date</Label>
+                  <Input
+                    type="date"
+                    value={button.prefill_data?.date || ''}
+                    onChange={(e) => updateButton(index, { 
+                      prefill_data: { ...button.prefill_data, date: e.target.value }
+                    })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Default Time</Label>
+                  <Input
+                    type="time"
+                    value={button.prefill_data?.time || ''}
+                    onChange={(e) => updateButton(index, { 
+                      prefill_data: { ...button.prefill_data, time: e.target.value }
+                    })}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         <div className="flex justify-end">
           <Button
-            type="button"
             variant="destructive"
             size="sm"
             onClick={() => removeButton(index)}
@@ -629,47 +643,46 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full max-h-[95vh] flex flex-col overflow-hidden" aria-describedby="dialog-description">
+      <DialogContent className="max-w-7xl w-full max-h-[95vh] flex flex-col overflow-hidden" aria-describedby="cover-page-creator-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {initial?.id ? 'Edit Cover Page' : 'Create Cover Page'}
             <Badge variant="secondary" className="text-xs">Auto-Saving</Badge>
           </DialogTitle>
-          <DialogDescription id="dialog-description">
+          <DialogDescription id="cover-page-creator-description">
             Design and configure your cover page with custom branding, content, and interactive elements.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="flex-1 flex gap-6 overflow-hidden">
-          {/* Content Form */}
-          <div className="w-1/2 space-y-4 overflow-y-auto pr-4">
+        
+        <div className="grid grid-cols-2 gap-6 flex-1 overflow-hidden">
+          {/* Configuration Panel */}
+          <div className="space-y-6 overflow-y-auto pr-4">
+            {/* Basic Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
+                  <Label>Page Title</Label>
                   <Input
-                    id="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Amazing Products & Services"
+                    placeholder="My Awesome Store"
                   />
                 </div>
-
+                
                 <div className="space-y-2">
-                  <Label htmlFor="subtitle">Subtitle</Label>
-                  <Textarea
-                    id="subtitle"
+                  <Label>Subtitle</Label>
+                  <Input
                     value={subtitle}
                     onChange={(e) => setSubtitle(e.target.value)}
-                    placeholder="Get premium quality products delivered to your door"
+                    placeholder="Premium products delivered"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="variant">Theme</Label>
+                  <Label>Theme</Label>
                   <Select value={variant} onValueChange={(value: 'original' | 'gold' | 'platinum') => setVariant(value)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -684,7 +697,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               </CardContent>
             </Card>
 
-            {/* Media Upload Section */}
+            {/* Media Section */}
             <MediaUploadSection
               title="Media Assets"
               logoUrl={logoUrl}
@@ -696,281 +709,226 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               componentType="cover"
             />
 
-            {/* Background Image Controls */}
-            {backgroundImageUrl && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Background Image Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Background Size: {backgroundImageSize}%</Label>
-                    <Slider
-                      value={[backgroundImageSize]}
-                      onValueChange={(value) => setBackgroundImageSize(value[0])}
-                      min={50}
-                      max={200}
-                      step={5}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Background Position</Label>
-                    <Select 
-                      value={backgroundImagePosition} 
-                      onValueChange={(value) => setBackgroundImagePosition(value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="center">Center</SelectItem>
-                        <SelectItem value="top">Top</SelectItem>
-                        <SelectItem value="bottom">Bottom</SelectItem>
-                        <SelectItem value="left">Left</SelectItem>
-                        <SelectItem value="right">Right</SelectItem>
-                        <SelectItem value="top left">Top Left</SelectItem>
-                        <SelectItem value="top right">Top Right</SelectItem>
-                        <SelectItem value="bottom left">Bottom Left</SelectItem>
-                        <SelectItem value="bottom right">Bottom Right</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
+            {/* Size & Position Controls */}
             <Card>
               <CardHeader>
-                <CardTitle>Logo Settings</CardTitle>
+                <CardTitle>Size & Position Controls</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="space-y-6">
+                {/* Logo Controls */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Logo</h4>
                   <div className="space-y-2">
-                    <Label htmlFor="logoEmoji">Fallback Emoji</Label>
-                    <Input
-                      id="logoEmoji"
-                      value={logoEmoji}
-                      onChange={(e) => setLogoEmoji(e.target.value)}
-                      placeholder="🎉"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Size: {logoSize}px</Label>
+                    <Label>Logo Size: {logoSize}px</Label>
                     <Slider
                       value={[logoSize]}
                       onValueChange={(value) => setLogoSize(value[0])}
-                      min={40}
+                      min={20}
                       max={200}
-                      step={5}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Logo Vertical Position: {logoVerticalPos}px</Label>
+                    <Slider
+                      value={[logoVerticalPos]}
+                      onValueChange={(value) => setLogoVerticalPos(value[0])}
+                      min={-50}
+                      max={50}
+                      step={1}
                       className="w-full"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Headline Controls */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Headline</h4>
                   <div className="space-y-2">
-                    <Label>Horizontal Position: {logoPosition.x}%</Label>
+                    <Label>Headline Size: {headlineSize}px</Label>
                     <Slider
-                      value={[logoPosition.x]}
-                      onValueChange={(value) => setLogoPosition(prev => ({ ...prev, x: value[0] }))}
-                      min={0}
-                      max={100}
+                      value={[headlineSize]}
+                      onValueChange={(value) => setHeadlineSize(value[0])}
+                      min={20}
+                      max={80}
                       step={1}
                       className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Vertical Position: {logoPosition.y}%</Label>
+                    <Label>Headline Vertical Position: {headlineVerticalPos}px</Label>
                     <Slider
-                      value={[logoPosition.y]}
-                      onValueChange={(value) => setLogoPosition(prev => ({ ...prev, y: value[0] }))}
-                      min={0}
-                      max={100}
+                      value={[headlineVerticalPos]}
+                      onValueChange={(value) => setHeadlineVerticalPos(value[0])}
+                      min={-50}
+                      max={50}
                       step={1}
                       className="w-full"
                     />
                   </div>
                 </div>
+
+                {/* Subtitle Controls */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Subtitle</h4>
+                  <div className="space-y-2">
+                    <Label>Subtitle Size: {subtitleSize}px</Label>
+                    <Slider
+                      value={[subtitleSize]}
+                      onValueChange={(value) => setSubtitleSize(value[0])}
+                      min={12}
+                      max={40}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Subtitle Vertical Position: {subtitleVerticalPos}px</Label>
+                    <Slider
+                      value={[subtitleVerticalPos]}
+                      onValueChange={(value) => setSubtitleVerticalPos(value[0])}
+                      min={-50}
+                      max={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Features Controls */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Features</h4>
+                  <div className="space-y-2">
+                    <Label>Features Vertical Position: {featuresVerticalPos}px</Label>
+                    <Slider
+                      value={[featuresVerticalPos]}
+                      onValueChange={(value) => setFeaturesVerticalPos(value[0])}
+                      min={-50}
+                      max={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Buttons Controls */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Buttons</h4>
+                  <div className="space-y-2">
+                    <Label>Buttons Vertical Position: {buttonsVerticalPos}px</Label>
+                    <Slider
+                      value={[buttonsVerticalPos]}
+                      onValueChange={(value) => setButtonsVerticalPos(value[0])}
+                      min={-50}
+                      max={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Background Image Controls */}
+                {backgroundImageUrl && (
+                  <div className="space-y-4">
+                    <h4 className="font-medium">Background Image</h4>
+                    <div className="space-y-2">
+                      <Label>Image Size: {backgroundImageSize}%</Label>
+                      <Slider
+                        value={[backgroundImageSize]}
+                        onValueChange={(value) => setBackgroundImageSize(value[0])}
+                        min={50}
+                        max={150}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Position</Label>
+                      <Select value={backgroundImagePosition} onValueChange={setBackgroundImagePosition}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="center">Center</SelectItem>
+                          <SelectItem value="top">Top</SelectItem>
+                          <SelectItem value="bottom">Bottom</SelectItem>
+                          <SelectItem value="left">Left</SelectItem>
+                          <SelectItem value="right">Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
+            {/* Button Configuration */}
             <Card>
               <CardHeader>
-                <CardTitle>Element Positioning</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  Button Configuration
+                  <Button onClick={addButton} size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Button
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-4">
-                   <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                       <Label>Headline Size: {headlineSize}px</Label>
-                       <Slider
-                         value={[headlineSize]}
-                         onValueChange={(value) => setHeadlineSize(value[0])}
-                         min={24}
-                         max={72}
-                         step={2}
-                         className="w-full"
-                       />
-                     </div>
-                     <div className="space-y-2">
-                       <Label>Subtitle Size: {subtitleSize}px</Label>
-                       <Slider
-                         value={[subtitleSize]}
-                         onValueChange={(value) => setSubtitleSize(value[0])}
-                         min={14}
-                         max={32}
-                         step={1}
-                         className="w-full"
-                       />
-                     </div>
-                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Title Offset: {headlineVerticalPos}px</Label>
-                      <Slider
-                        value={[headlineVerticalPos]}
-                        onValueChange={(value) => setHeadlineVerticalPos(value[0])}
-                        min={-50}
-                        max={50}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Subtitle Offset: {subtitleVerticalPos}px</Label>
-                      <Slider
-                        value={[subtitleVerticalPos]}
-                        onValueChange={(value) => setSubtitleVerticalPos(value[0])}
-                        min={-50}
-                        max={50}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
+                {buttons.map((button, index) => (
+                  <div key={index}>
+                    {renderButtonAssignment(button, index)}
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Features Offset: {featuresVerticalPos}px</Label>
-                      <Slider
-                        value={[featuresVerticalPos]}
-                        onValueChange={(value) => setFeaturesVerticalPos(value[0])}
-                        min={-50}
-                        max={50}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Buttons Offset: {buttonsVerticalPos}px</Label>
-                      <Slider
-                        value={[buttonsVerticalPos]}
-                        onValueChange={(value) => setButtonsVerticalPos(value[0])}
-                        min={-50}
-                        max={50}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
 
+            {/* Feature List */}
             <Card>
               <CardHeader>
-                <CardTitle>Features</CardTitle>
+                <CardTitle>Feature List</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {features.map((feature, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-2 items-end">
-                    <div className="space-y-2">
-                      <Label>Emoji</Label>
-                      <Input
-                        value={feature.emoji}
-                        onChange={(e) => {
-                          const newFeatures = [...features];
-                          newFeatures[index].emoji = e.target.value;
-                          setFeatures(newFeatures);
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Title</Label>
-                      <Input
-                        value={feature.title}
-                        onChange={(e) => {
-                          const newFeatures = [...features];
-                          newFeatures[index].title = e.target.value;
-                          setFeatures(newFeatures);
-                        }}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-2 flex items-end gap-2">
-                      <div className="flex-1">
-                        <Label>Description</Label>
-                        <Input
-                          value={feature.description}
-                          onChange={(e) => {
-                            const newFeatures = [...features];
-                            newFeatures[index].description = e.target.value;
-                            setFeatures(newFeatures);
-                          }}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (features.length > 1) {
-                            setFeatures(features.filter((_, i) => i !== index));
-                          }
-                        }}
-                        disabled={features.length <= 1}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                  <div key={index} className="grid grid-cols-4 gap-2">
+                    <Input
+                      value={feature.emoji}
+                      onChange={(e) => {
+                        const newFeatures = [...features];
+                        newFeatures[index].emoji = e.target.value;
+                        setFeatures(newFeatures);
+                      }}
+                      placeholder="🎉"
+                      className="text-center"
+                    />
+                    <Input
+                      value={feature.title}
+                      onChange={(e) => {
+                        const newFeatures = [...features];
+                        newFeatures[index].title = e.target.value;
+                        setFeatures(newFeatures);
+                      }}
+                      placeholder="Title"
+                    />
+                    <Input
+                      value={feature.description}
+                      onChange={(e) => {
+                        const newFeatures = [...features];
+                        newFeatures[index].description = e.target.value;
+                        setFeatures(newFeatures);
+                      }}
+                      placeholder="Description"
+                      className="col-span-2"
+                    />
                   </div>
                 ))}
-                
-                <Button
-                  type="button"
-                  variant="outline" 
-                  onClick={() => setFeatures([...features, { emoji: '⭐', title: 'New Feature', description: 'Feature description' }])}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Feature
-                </Button>
               </CardContent>
             </Card>
 
+            {/* Activation */}
             <Card>
               <CardHeader>
-                <CardTitle>Button Assignments</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {buttons.map((button, index) => renderButtonAssignment(button, index))}
-                
-                <Button
-                  type="button"
-                  variant="outline" 
-                  onClick={addButton}
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Button
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Settings</CardTitle>
+                <CardTitle>Page Status</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-2">
@@ -1000,66 +958,42 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </div>
 
           {/* Live Preview */}
-          <div className="w-1/2 border-l pl-6 overflow-hidden">
-            <div className="h-full flex flex-col">
-              <h3 className="text-lg font-medium mb-4 flex-shrink-0">Live Preview</h3>
-              <div className="flex-1 overflow-hidden rounded-lg border bg-muted/10">
-                <div className="w-full h-full scale-[0.35] origin-top-left" style={{ width: '285%', height: '285%' }}>
-                  <EditableCoverScreen
-                    title={title || 'Your Amazing Title'}
-                    subtitle={subtitle || 'Your compelling subtitle here'}
-                    logoUrl={logoUrl}
-                    logoEmoji={logoEmoji}
-                    backgroundImageUrl={backgroundImageUrl}
-                    backgroundVideoUrl={backgroundVideoUrl}
-                    backgroundImageStyles={{
-                      backgroundSize: `${backgroundImageSize}%`,
-                      backgroundPosition: backgroundImagePosition
-                    }}
-                    features={features}
-                    buttons={buttons.map(btn => ({
-                      text: btn.text,
-                      type: btn.type,
-                      url: btn.assignment_type === 'url' ? btn.url : 
-                           btn.assignment_type === 'delivery_app' ? `/app/${deliveryApps.find(app => app.id === btn.delivery_app_id)?.app_slug || 'delivery'}` :
-                           btn.special_action === 'free_delivery' ? '/delivery?free_shipping=true' :
-                           btn.special_action === 'prefill_address' ? `/delivery?address=${encodeURIComponent(btn.prefill_data?.address || '')}` :
-                           btn.special_action === 'prefill_datetime' ? `/delivery?date=${btn.prefill_data?.date}&time=${btn.prefill_data?.time}` : '/delivery',
-                      onClick: () => console.log(`Button clicked: ${btn.text}`)
-                    }))}
-                    variant={variant}
-                    sizing={{
-                      logoSize: logoSize,
-                      headlineSize: headlineSize,
-                      subtitleSize: subtitleSize
-                    }}
-                    positioning={{
-                      logoMarginTop: `${logoVerticalPos}rem`,
-                      titleMarginTop: `${headlineVerticalPos}rem`,
-                      subtitleMarginTop: `${subtitleVerticalPos}rem`,
-                      featuresMarginTop: `${featuresVerticalPos}rem`,
-                      buttonsMarginTop: `${buttonsVerticalPos}rem`
-                    }}
-                    standalone={true}
-                  />
-                </div>
-              </div>
+          <div className="border rounded-lg overflow-hidden bg-gradient-to-br from-background to-muted/20">
+            <div className="p-4 border-b bg-muted/10">
+              <h3 className="font-semibold">Live Preview</h3>
+              <p className="text-sm text-muted-foreground">See your changes in real-time</p>
+            </div>
+            <div className="h-[600px] overflow-y-auto">
+              <EditableCoverScreen
+                title={title}
+                subtitle={subtitle}
+                logoUrl={logoUrl}
+                logoEmoji={logoEmoji}
+                backgroundImageUrl={backgroundImageUrl}
+                backgroundVideoUrl={backgroundVideoUrl}
+                backgroundImageStyles={{
+                  backgroundSize: `${backgroundImageSize}%`,
+                  backgroundPosition: backgroundImagePosition
+                }}
+                variant={variant}
+                features={features}
+                buttons={buttons}
+                sizing={{
+                  logoSize: logoSize,
+                  headlineSize: headlineSize,
+                  subtitleSize: subtitleSize
+                }}
+                positioning={{
+                  logoMarginTop: `${logoVerticalPos}px`,
+                  titleMarginTop: `${headlineVerticalPos}px`,
+                  subtitleMarginTop: `${subtitleVerticalPos}px`,
+                  featuresMarginTop: `${featuresVerticalPos}px`,
+                  buttonsMarginTop: `${buttonsVerticalPos}px`
+                }}
+                standalone={true}
+              />
             </div>
           </div>
-        </div>
-
-        <div className="flex justify-end space-x-2 p-6 border-t flex-shrink-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            {initial?.id ? 'Update' : 'Create'} Cover Page
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
