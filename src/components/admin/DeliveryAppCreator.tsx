@@ -351,66 +351,56 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
-        <div className="h-full flex flex-col">
-          {/* Header */}
-          <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Package className="w-6 h-6 text-primary" />
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {isEditing ? `Edit: ${initial?.app_name}` : 'Create Delivery App'}
-                  </h2>
-                  <DialogDescription className="text-sm text-muted-foreground font-normal">
-                    Configure your delivery app with custom tabs and collections
-                  </DialogDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {onBack && (
-                  <Button onClick={onBack} variant="outline" size="sm">
-                    Back
-                  </Button>
-                )}
-                <Button
-                  onClick={handleSave}
-                  disabled={saving || !appName || !appSlug}
-                  size="sm"
-                  className="min-w-[100px]"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save App'}
+      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Package className="w-6 h-6 text-primary" />
+              <span>
+                {isEditing ? `Edit: ${initial?.app_name}` : 'Create Delivery App'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {onBack && (
+                <Button onClick={onBack} variant="outline" size="sm">
+                  Back
                 </Button>
-              </div>
-            </DialogTitle>
-            <DialogDescription>
-              Build custom delivery experiences with product collections, themes, and interactive features.
-            </DialogDescription>
-          </DialogHeader>
+              )}
+              <Button
+                onClick={handleSave}
+                disabled={saving || !appName || !appSlug}
+                size="sm"
+                className="min-w-[100px]"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save App'}
+              </Button>
+            </div>
+          </DialogTitle>
+          <DialogDescription>
+            Configure your delivery app with custom tabs and collections
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* Main Content */}
-          <div className="flex-1 overflow-y-auto">
-            <Tabs defaultValue="basic" className="h-full flex flex-col">
-                <div className="px-6 pt-4 border-b">
-                  <TabsList className="grid w-full grid-cols-3 max-w-md">
-                    <TabsTrigger value="basic" className="flex items-center gap-2">
-                      <Settings className="w-4 h-4" />
-                      Basic Info
-                    </TabsTrigger>
-                    <TabsTrigger value="tabs" className="flex items-center gap-2">
-                      <Layout className="w-4 h-4" />
-                      Tabs & Collections
-                    </TabsTrigger>
-                    <TabsTrigger value="preview" className="flex items-center gap-2">
-                      <Eye className="w-4 h-4" />
-                      Preview
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
+        <Tabs defaultValue="basic" className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-3 flex-shrink-0 mx-6 mt-4">
+            <TabsTrigger value="basic" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Basic Info
+            </TabsTrigger>
+            <TabsTrigger value="tabs" className="flex items-center gap-2">
+              <Layout className="w-4 h-4" />
+              Tabs & Collections
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="flex items-center gap-2">
+              <Eye className="w-4 h-4" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
 
-              {/* Basic Info Tab */}
-              <TabsContent value="basic" className="flex-1 p-6">
+          <ScrollArea className="flex-1 p-6 max-h-[calc(90vh-120px)]">
+            {/* Basic Info Tab */}
+            <TabsContent value="basic" className="space-y-4 mt-0">
                 <div className="max-w-2xl mx-auto space-y-6">
                   <Card>
                     <CardHeader>
@@ -746,9 +736,8 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                   </Tabs>
                 </div>
               </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+          </ScrollArea>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

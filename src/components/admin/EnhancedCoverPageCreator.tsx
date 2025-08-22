@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAdminState } from "@/hooks/useAdminState";
@@ -644,7 +645,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl w-full h-[95vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="px-6 py-4 border-b bg-background/95 backdrop-blur-sm">
+        <DialogHeader className="px-6 py-4 border-b bg-background/95 backdrop-blur-sm flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             {initial?.id ? 'Edit Cover Page' : 'Create Cover Page'}
             <Badge variant="secondary" className="text-xs">Auto-Saving</Badge>
@@ -657,7 +658,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         <div className="grid grid-cols-2 gap-6 flex-1 min-h-0 overflow-hidden">
           {/* Configuration Panel */}
           <div className="flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+            <ScrollArea className="flex-1 px-6 py-4">
+              <div className="space-y-6">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -943,7 +945,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               </CardContent>
             </Card>
 
-            </div>
+              </div>
+            </ScrollArea>
             
             {/* Fixed Footer */}
             <div className="flex justify-end space-x-2 p-6 border-t bg-background/95 backdrop-blur-sm">
