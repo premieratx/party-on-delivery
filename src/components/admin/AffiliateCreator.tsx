@@ -33,7 +33,7 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
     venmo_handle: '',
     commission_type: 'percent' as 'percent' | 'flat',
     commission_value: '',
-    delivery_app_id: ''
+    // Removed delivery_app_id - standalone architecture
   });
 
   useEffect(() => {
@@ -90,28 +90,14 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
         .single();
       if (affErr) throw affErr;
 
-      // Optionally link to a delivery app
-      if (form.delivery_app_id) {
-        // Create a custom site record (optional legacy flow)
-        const site_slug = affiliate_code.toLowerCase();
-        await supabase.from('custom_affiliate_sites').insert({
-          site_slug,
-          site_name: `${form.company_name} Delivery`,
-          business_name: form.company_name,
-          is_active: true,
-          affiliate_id: affiliate.id,
-          delivery_app_id: form.delivery_app_id
-        });
-
-        // Note: App assignments are no longer used - delivery apps are not linked to specific affiliates
-        // Affiliates now work through cover pages and flows, not direct app assignments
-      }
+      // Removed delivery app assignments - standalone architecture
+      // No delivery app connections needed
 
       toast({ title: 'Affiliate created', description: `Code: ${affiliate_code}` });
       setOpen(false);
       setForm({
         name: '', email: '', phone: '', company_name: '', venmo_handle: '',
-        commission_type: 'percent', commission_value: '', delivery_app_id: ''
+        commission_type: 'percent', commission_value: '' // Removed delivery_app_id
       });
       onCreated?.();
     } catch (e: any) {
@@ -175,17 +161,7 @@ export const AffiliateCreator: React.FC<AffiliateCreatorProps> = ({ onCreated })
               <Input value={form.commission_value} onChange={(e) => setForm({ ...form, commission_value: e.target.value })} />
             </div>
           </div>
-          <div>
-            <Label>Assign Delivery App (optional)</Label>
-            <Select value={form.delivery_app_id} onValueChange={(v) => setForm({ ...form, delivery_app_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Choose an app" /></SelectTrigger>
-              <SelectContent>
-                {apps.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>{a.app_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Delivery app assignment removed - standalone architecture */}
           <div className="pt-2 flex justify-end">
             <Button onClick={handleCreate} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin"/>}

@@ -34,9 +34,9 @@ interface DeliveryApp {
 interface ButtonConfig {
   text: string;
   type: 'primary' | 'secondary';
-  assignment_type: 'url' | 'delivery_app' | 'special';
+  assignment_type: 'url' | 'special';
   url?: string;
-  delivery_app_id?: string;
+  // Removed delivery_app_id - standalone architecture
   special_action?: 'free_delivery' | 'prefill_address' | 'prefill_datetime';
   markup_percentage?: number;
   markup_dollar_amount?: number;
@@ -77,8 +77,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     { 
       text: 'Order Now', 
       type: 'primary', 
-      assignment_type: 'delivery_app',
-      delivery_app_id: '',
+      assignment_type: 'url',
+      // Removed delivery_app_id - standalone architecture
       markup_percentage: 0
     }
   ]);
@@ -235,7 +235,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           type: btn.type || 'primary',
           assignment_type: btn.assignment_type || 'url',
           url: btn.url,
-          delivery_app_id: btn.delivery_app_id || '',
+          // Removed delivery_app_id - standalone architecture
           special_action: btn.special_action,
           markup_percentage: btn.markup_percentage || 0,
           markup_dollar_amount: btn.markup_dollar_amount || 0,
@@ -517,14 +517,14 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           <Label>Assignment Type</Label>
           <Select 
             value={button.assignment_type} 
-            onValueChange={(value: 'url' | 'delivery_app' | 'special') => updateButton(index, { assignment_type: value, url: '', delivery_app_id: '', special_action: undefined })}
+            onValueChange={(value: 'url' | 'special') => updateButton(index, { assignment_type: value, url: '', special_action: undefined })}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="url">Custom URL</SelectItem>
-              <SelectItem value="delivery_app">Delivery App</SelectItem>
+              {/* Delivery app option removed - standalone architecture */}
               <SelectItem value="special">Special Action</SelectItem>
             </SelectContent>
           </Select>
@@ -541,55 +541,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </div>
         )}
 
-        {button.assignment_type === 'delivery_app' && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Delivery App</Label>
-              <Select 
-                value={button.delivery_app_id || ''} 
-                onValueChange={(value) => updateButton(index, { delivery_app_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a delivery app" />
-                </SelectTrigger>
-                <SelectContent>
-                  {deliveryApps.map((app) => (
-                    <SelectItem key={app.id} value={app.id}>
-                      {app.app_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Percent className="w-4 h-4" />
-                  Markup %
-                </Label>
-                <Input
-                  type="number"
-                  value={button.markup_percentage || 0}
-                  onChange={(e) => updateButton(index, { markup_percentage: Number(e.target.value) })}
-                  placeholder="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
-                  Markup $
-                </Label>
-                <Input
-                  type="number"
-                  value={button.markup_dollar_amount || 0}
-                  onChange={(e) => updateButton(index, { markup_dollar_amount: Number(e.target.value) })}
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        {/* All delivery app functionality removed - standalone architecture */}
 
         {button.assignment_type === 'special' && (
           <div className="space-y-4">

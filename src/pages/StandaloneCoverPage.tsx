@@ -76,9 +76,9 @@ export default function StandaloneCoverPage() {
     onClick: () => {
       if (button.url) {
         window.open(button.url, '_blank');
-      } else if (button.delivery_app_id) {
-        // Direct link to delivery app - no dependencies
-        window.open('/delivery', '_blank');
+      } else {
+        // Generic fallback - just link to main checkout
+        window.open('/checkout', '_blank');
       }
     }
   }));

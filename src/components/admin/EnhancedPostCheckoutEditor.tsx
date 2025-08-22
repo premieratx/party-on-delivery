@@ -112,7 +112,7 @@ interface PostCheckoutConfig {
   buttons: PostCheckoutButton[];
   background_color?: string;
   text_color?: string;
-  cover_page_id?: string;
+  // Removed cover_page_id - standalone architecture
   affiliate_id?: string;
   is_template?: boolean;
   theme?: string;
@@ -161,7 +161,7 @@ export const EnhancedPostCheckoutEditor: React.FC<EnhancedPostCheckoutEditorProp
   ]);
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
   const [textColor, setTextColor] = useState('#000000');
-  const [coverPageId, setCoverPageId] = useState('');
+  // Removed coverPageId - standalone architecture
   const [affiliateId, setAffiliateId] = useState('');
   const [isTemplate, setIsTemplate] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -206,7 +206,7 @@ export const EnhancedPostCheckoutEditor: React.FC<EnhancedPostCheckoutEditorProp
       setButtons(initial.buttons || []);
       setBackgroundColor(initial.background_color || '#ffffff');
       setTextColor(initial.text_color || '#000000');
-      setCoverPageId(initial.cover_page_id || '');
+      // Removed cover page ID setting - standalone architecture
       setAffiliateId(initial.affiliate_id || '');
       setIsTemplate(initial.is_template ?? false);
       setSelectedTheme(initial.theme || 'success');
@@ -222,7 +222,7 @@ export const EnhancedPostCheckoutEditor: React.FC<EnhancedPostCheckoutEditorProp
       ]);
       setBackgroundColor('#ffffff');
       setTextColor('#000000');
-      setCoverPageId('');
+      // Removed cover page ID reset - standalone architecture
       setAffiliateId('');
       setIsTemplate(false);
       setSelectedTheme('success');
@@ -278,7 +278,7 @@ export const EnhancedPostCheckoutEditor: React.FC<EnhancedPostCheckoutEditorProp
         button_2_url: buttons[1]?.url || '',
         background_color: backgroundColor,
         text_color: textColor,
-        cover_page_id: coverPageId || null,
+        cover_page_id: null, // Always null for standalone architecture
         affiliate_id: affiliateId || null,
         is_template: isTemplate,
         styles: JSON.parse(JSON.stringify({
@@ -618,20 +618,10 @@ export const EnhancedPostCheckoutEditor: React.FC<EnhancedPostCheckoutEditorProp
                     </div>
 
                     <div>
-                      <Label>Associated Cover Page</Label>
-                      <Select value={coverPageId} onValueChange={setCoverPageId}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select cover page..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {coverPages.map((page) => (
-                            <SelectItem key={page.id} value={page.id}>
-                              {page.title} ({page.slug})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label>Associated Cover Page (Disabled - Standalone)</Label>
+                      <div className="text-sm text-muted-foreground p-3 bg-muted/30 rounded">
+                        Cover pages and post-checkout screens are now independent components.
+                      </div>
                     </div>
 
                     <div>
