@@ -24,10 +24,11 @@ const CoverPageWithBackground = () => {
   const [backgroundApp, setBackgroundApp] = useState<BackgroundApp | null>(null);
   const { initializeCoverPageFlow, trackButtonClick, flowData } = useDataFlowTracking();
   
-  // SAFETY CHECK: Only render if we're actually on a cover page route
-  const isValidCoverPageRoute = window.location.pathname.startsWith('/cover/');
-  if (!isValidCoverPageRoute) {
-    console.log('🚫 CoverPageWithBackground: Not a cover page route, redirecting to homepage');
+  // SAFETY CHECK: Only render if we're on a cover page route OR a direct slug route
+  const isValidCoverPageRoute = window.location.pathname.startsWith('/cover/') || 
+    (slug && !window.location.pathname.includes('/') || window.location.pathname === `/${slug}`);
+  if (!isValidCoverPageRoute && window.location.pathname !== `/${slug}`) {
+    console.log('🚫 CoverPageWithBackground: Not a valid cover page route, redirecting to homepage');
     navigate('/', { replace: true });
     return null;
   }
