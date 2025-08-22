@@ -13,7 +13,11 @@ export default function CoverPageWithBackground() {
   const { data: coverPage, isLoading, error } = useQuery({
     queryKey: ['cover-page', slug],
     queryFn: async () => {
-      console.log('🔍 Loading cover page with slug:', slug);
+      if (!slug) {
+        throw new Error('No slug provided');
+      }
+      
+      console.log('🔍 Querying for slug:', slug);
       
       const { data, error } = await supabase
         .from('cover_pages')
@@ -22,23 +26,40 @@ export default function CoverPageWithBackground() {
         .eq('is_active', true)
         .maybeSingle();
 
-      console.log('📋 Query result:', { data, error, slug });
+      console.log('📋 Raw query result:', { data, error });
 
       if (error) {
-        console.error('❌ Error loading cover page:', error);
+        console.error('❌ Database error:', error);
         throw error;
       }
 
       if (!data) {
+        // Try without the cover/ prefix if this was a /cover/ route
+        if (slug?.startsWith('cover/')) {
+          const cleanSlug = slug.replace('cover/', '');
+          console.log('🔄 Retrying with clean slug:', cleanSlug);
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('cover_pages')
+            .select('*')
+            .eq('slug', cleanSlug)
+            .eq('is_active', true)
+            .maybeSingle();
+            
+          if (retryError) throw retryError;
+          return retryData;
+        }
+        
         console.log('❌ No cover page found for slug:', slug);
         return null;
       }
 
-      console.log('✅ Cover page loaded successfully:', data.title);
+      console.log('✅ Cover page found:', data.title);
       return data;
     },
     enabled: !!slug,
-    retry: false
+    retry: false,
+    staleTime: 0
   });
 
   console.log('🎯 Cover page state:', { slug, isLoading, error: error?.message, hasData: !!coverPage });
