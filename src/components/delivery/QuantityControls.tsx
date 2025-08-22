@@ -25,9 +25,9 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
   disabled = false
 }) => {
   const sizeClasses = {
-    sm: 'h-6 w-8 text-xs rounded-full',
-    md: 'h-7 w-9 text-sm rounded-full',
-    lg: 'h-8 w-10 text-base rounded-full'
+    sm: 'h-5 w-7 text-xs rounded-full',
+    md: 'h-6 w-8 text-sm rounded-full', 
+    lg: 'h-7 w-9 text-base rounded-full'
   };
 
   const textSizeClasses = {

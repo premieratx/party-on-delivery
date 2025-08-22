@@ -185,67 +185,82 @@ export const OrderCompleteView: React.FC<OrderCompleteViewProps> = ({
               
               <Separator />
               
-              <div className="space-y-2">
-                <h4 className="font-medium">Items ({orderItems?.filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip')?.length || 0}):</h4>
-                {orderItems && orderItems.length > 0 ? (
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {orderItems
-                      .filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip') // Filter out tip from product list
-                      .map((item: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center text-sm">
-                        <span>{item.name || item.title} × {item.quantity}</span>
-                        <span>${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <LoadingSpinner text="Loading order items..." />
-                  </div>
-                )}
-              </div>
-              
-              <Separator />
-              
-              {/* Order Total Breakdown */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span>Subtotal ({orderItems?.filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip')?.length || 0} items):</span>
-                  <span>${subtotal.toFixed(2)}</span>
+              <div className="space-y-4">
+                {/* Product Items Section */}
+                <div className="space-y-2">
+                  <h4 className="font-medium text-lg">Items ({orderItems?.filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip')?.length || 0})</h4>
+                  {orderItems && orderItems.length > 0 ? (
+                    <div className="space-y-3">
+                      {orderItems
+                        .filter(item => item.name !== 'Driver Tip' && item.title !== 'Driver Tip') // Filter out tip from product list
+                        .map((item: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <div className="flex-1">
+                            <span className="font-medium">{item.name || item.title}</span>
+                            <span className="text-muted-foreground ml-2">× {item.quantity}</span>
+                          </div>
+                          <span className="font-medium">${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <LoadingSpinner text="Loading order items..." />
+                    </div>
+                  )}
                 </div>
                 
-                {appliedDiscount && (
-                  <div className="flex justify-between items-center text-sm text-green-600">
-                    <span>Discount ({appliedDiscount.code}):</span>
-                    <span>-${appliedDiscount.value.toFixed(2)}</span>
-                  </div>
-                )}
+                <Separator className="my-6" />
                 
-                {deliveryFee > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Delivery Fee:</span>
-                    <span>${deliveryFee.toFixed(2)}</span>
+                {/* Purchase Details Section */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-lg">Purchase Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span>Subtotal:</span>
+                      <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    
+                    {deliveryFee > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span>Delivery Fee:</span>
+                        <span>${deliveryFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
+                    {salesTax > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span>Sales Tax:</span>
+                        <span>${salesTax.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
+                    {tipAmount > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span>Driver Tip:</span>
+                        <span>${tipAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
+                    {appliedDiscount && (
+                      <div className="flex justify-between items-center text-green-600">
+                        <span>Discount ({appliedDiscount.code}):</span>
+                        <span>-${appliedDiscount.value.toFixed(2)}</span>
+                      </div>
+                    )}
+                    
+                    <Separator className="my-2" />
+                    
+                    <div className="flex justify-between items-center font-bold text-base">
+                      <span>Total:</span>
+                      <span className="text-primary">${totalAmount.toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center font-bold text-base">
+                      <span>Amount Paid:</span>
+                      <span className="text-success">${totalAmount.toFixed(2)}</span>
+                    </div>
                   </div>
-                )}
-                
-                {tipAmount > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Driver Tip:</span>
-                    <span>${tipAmount.toFixed(2)}</span>
-                  </div>
-                )}
-                
-                {salesTax > 0 && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span>Sales Tax:</span>
-                    <span>${salesTax.toFixed(2)}</span>
-                  </div>
-                )}
-                
-                <Separator />
-                <div className="flex justify-between items-center font-bold text-lg">
-                  <span>Total:</span>
-                  <span className="text-primary">${totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             </CardContent>

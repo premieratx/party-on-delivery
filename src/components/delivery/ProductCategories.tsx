@@ -19,6 +19,7 @@ import { SearchOptimizer } from '@/utils/searchOptimizer';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { ultraFastSearch } from '@/utils/ultraFastSearch';
 import { useImagePreloader } from '@/hooks/useImagePreloader';
+import { ThemeColorToggle } from '@/components/delivery/ThemeColorToggle';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -421,6 +422,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           
           {/* Content Container - Flex Grow */}
           <div className="flex-1 flex flex-col justify-center max-w-4xl mx-auto">
+            {/* Theme Color Toggle - Top Right */}
+            <div className="absolute top-4 right-4">
+              <ThemeColorToggle />
+            </div>
+            
             {/* Headline */}
             <h1 
               className="mb-4 sm:mb-6 leading-tight"

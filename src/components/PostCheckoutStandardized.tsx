@@ -89,76 +89,90 @@ export const PostCheckoutStandardized: React.FC<PostCheckoutStandardizedProps> =
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {/* Order Summary (totals) */}
+          {/* Product Items Section */}
+          {itemsToShow && itemsToShow.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Items ({itemsToShow.length})</h3>
+              <div className="space-y-3">
+                {itemsToShow.map((item, idx) => {
+                  const title = item.title || item.name || 'Item';
+                  const qty = item.quantity ?? item.qty ?? 1;
+                  const variant = item.variant_title ? ` (${item.variant_title})` : '';
+                  return (
+                    <div key={idx} className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                      <div className="flex-1">
+                        <span className="font-medium">{title}{variant}</span>
+                        <span className="text-muted-foreground ml-2">× {qty}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Purchase Details Section */}
           {hasSummary && (
-            <div className="p-6 rounded-lg border bg-card">
-              <h3 className="text-lg font-semibold mb-3">Order Summary</h3>
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Purchase Details</h3>
               <div className="space-y-2 text-sm">
                 {typeof subtotalAmount === 'number' && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span>Subtotal</span>
                     <span>{formatCurrency(subtotalAmount)}</span>
                   </div>
                 )}
                 {typeof deliveryFeeAmount === 'number' && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span>Delivery Fee</span>
                     <span>{formatCurrency(deliveryFeeAmount)}</span>
                   </div>
                 )}
                 {typeof salesTaxAmount === 'number' && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span>Sales Tax</span>
                     <span>{formatCurrency(salesTaxAmount)}</span>
                   </div>
                 )}
                 {typeof tipAmount === 'number' && tipAmount > 0 && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span>Driver Tip</span>
                     <span>{formatCurrency(tipAmount)}</span>
                   </div>
                 )}
                 {typeof discountAmount === 'number' && discountAmount > 0 && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center text-green-600">
                     <span>Discount{discountCode ? ` (${discountCode})` : ''}</span>
                     <span>-{formatCurrency(discountAmount)}</span>
                   </div>
                 )}
-                <div className="border-t pt-2 flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>{formatCurrency(typeof totalAmount === 'number' ? totalAmount : ((subtotalAmount || 0) + (deliveryFeeAmount || 0) + (salesTaxAmount || 0) + (tipAmount || 0)))}</span>
+                
+                <div className="border-t pt-2 space-y-2">
+                  <div className="flex justify-between items-center font-bold text-base">
+                    <span>Total</span>
+                    <span>{formatCurrency(typeof totalAmount === 'number' ? totalAmount : ((subtotalAmount || 0) + (deliveryFeeAmount || 0) + (salesTaxAmount || 0) + (tipAmount || 0)))}</span>
+                  </div>
+                  <div className="flex justify-between items-center font-bold text-base">
+                    <span>Amount Paid</span>
+                    <span className="text-success">{formatCurrency(typeof totalAmount === 'number' ? totalAmount : ((subtotalAmount || 0) + (deliveryFeeAmount || 0) + (salesTaxAmount || 0) + (tipAmount || 0)))}</span>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Order Details (items and schedule) */}
-          {(deliveryDate || deliveryTime || (itemsToShow && itemsToShow.length > 0)) && (
-            <div className="p-6 rounded-lg border bg-card">
-              <h3 className="text-lg font-semibold mb-3">Order details</h3>
-              <ul className="list-disc pl-5 space-y-1 text-sm">
+          {/* Delivery Information */}
+          {(deliveryDate || deliveryTime) && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Delivery Information</h3>
+              <div className="space-y-1 text-sm">
                 {deliveryDate && (
-                  <li>Delivery date: {deliveryDate}</li>
+                  <div><span className="font-medium">Date:</span> {deliveryDate}</div>
                 )}
                 {deliveryTime && (
-                  <li>Delivery time: {deliveryTime}</li>
+                  <div><span className="font-medium">Time:</span> {deliveryTime}</div>
                 )}
-                {itemsToShow && itemsToShow.length > 0 && (
-                  <li>
-                    Items:
-                    <ul className="list-disc pl-5 mt-1 space-y-1">
-                      {itemsToShow.map((item, idx) => {
-                        const title = item.title || item.name || 'Item';
-                        const qty = item.quantity ?? item.qty ?? 1;
-                        const variant = item.variant_title ? ` (${item.variant_title})` : '';
-                        return (
-                          <li key={idx}>{title}{variant} × {qty}</li>
-                        );
-                      })}
-                    </ul>
-                  </li>
-                )}
-              </ul>
+              </div>
             </div>
           )}
 

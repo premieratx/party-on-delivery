@@ -77,6 +77,7 @@ export default {
 				}
 			},
 			fontFamily: {
+				'sans': ['Montserrat', 'sans-serif'], // Set Montserrat as default
 				'oswald': ['Oswald', 'sans-serif'],
 				'playfair': ['Playfair Display', 'serif'],
 				'montserrat': ['Montserrat', 'sans-serif'],
