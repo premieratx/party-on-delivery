@@ -959,7 +959,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
             <div className="h-full flex flex-col">
               <h3 className="text-lg font-medium mb-4 flex-shrink-0">Live Preview</h3>
               <div className="flex-1 overflow-hidden rounded-lg border bg-muted/10">
-                <div className="w-full h-full scale-[0.4] origin-top-left" style={{ width: '250%', height: '250%' }}>
+                <div className="w-full h-full scale-[0.35] origin-top-left" style={{ width: '285%', height: '285%' }}>
                   <EditableCoverScreen
                     title={title || 'Your Amazing Title'}
                     subtitle={subtitle || 'Your compelling subtitle here'}

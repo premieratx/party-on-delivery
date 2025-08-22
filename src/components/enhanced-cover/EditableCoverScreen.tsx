@@ -193,7 +193,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   };
 
   return (
-    <div className={`${containerClass} ${className || ''}`}>
+    <div className={`${containerClass} ${className || ''}`} style={{ fontSize: '16px' }}>
       {renderBackground()}
       
       {/* Mobile-first vertical layout with desktop centering */}
@@ -203,12 +203,13 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative w-full max-w-sm mx-auto lg:max-w-md h-full lg:h-auto lg:aspect-[9/16] bg-gradient-to-b from-gray-900 via-black to-gray-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-700"
         style={{ 
-          minHeight: standalone ? '95vh' : '100vh',
-          maxHeight: standalone ? '95vh' : '100vh'
+          minHeight: standalone ? '85vh' : '100vh',
+          maxHeight: standalone ? '90vh' : '100vh',
+          fontSize: 'inherit'
         }}
       >
         {/* Content Container */}
-        <div className="relative h-full flex flex-col justify-between p-6 text-center">
+        <div className="relative h-full flex flex-col justify-between p-4 sm:p-6 text-center overflow-y-auto">
           
           {/* Top Badge */}
           <motion.div 
