@@ -105,14 +105,28 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const logoInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!initial?.id;
 
-  // Load Shopify collections
-  const loadShopifyCollections = async () => {
+  // Load Shopify collections with force refresh capability
+  const loadShopifyCollections = async (forceRefresh = false) => {
     try {
       setCollectionsLoading(true);
       console.log('🔄 Loading Shopify collections for delivery app creator...');
       
-      // Use the working get-all-collections edge function
-      const { data, error } = await supabase.functions.invoke('get-all-collections');
+      if (forceRefresh) {
+        console.log('⚡ Force refreshing Shopify data...');
+        // Force a complete refresh of Shopify data
+        const { data: syncData, error: syncError } = await supabase.functions.invoke('force-shopify-sync');
+        
+        if (syncError) {
+          console.warn('Sync warning (will continue):', syncError);
+        } else {
+          console.log('✅ Force sync completed:', syncData);
+        }
+      }
+      
+      // Get the freshest collections data
+      const { data, error } = await supabase.functions.invoke('get-all-collections', {
+        body: { forceRefresh }
+      });
       
       if (error) {
         console.error('❌ Error from get-all-collections:', error);
@@ -122,63 +136,76 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
       if (data?.collections && Array.isArray(data.collections)) {
         console.log(`✅ Loaded ${data.collections.length} collections from Shopify`);
         
+        // Process and filter collections with products
         const collections = data.collections
           .filter((collection: any) => collection.products_count > 0) // Only collections with products
           .map((collection: any) => ({
             handle: collection.handle,
             name: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            products_count: collection.products_count
+            products_count: collection.products_count || 0
           }))
           .sort((a: any, b: any) => a.name.localeCompare(b.name));
         
         setShopifyCollections(collections);
-        console.log('Shopify collections loaded:', collections.map(c => `${c.name} (${c.products_count} products)`));
+        console.log('📋 Shopify collections loaded:', collections.map(c => `${c.name} (${c.products_count} products)`));
+        
+        if (collections.length === 0) {
+          console.warn('⚠️ No collections with products found. Attempting force refresh...');
+          if (!forceRefresh) {
+            // Try one more time with force refresh
+            return loadShopifyCollections(true);
+          }
+        }
       } else {
         throw new Error('No collections returned from API');
       }
     } catch (error) {
-      console.error('Error loading collections:', error);
+      console.error('❌ Error loading collections:', error);
       
-      // Fallback: try to get from cache as backup
+      // Fallback: try to get from cache
       try {
+        console.log('🔄 Attempting fallback from cache...');
         const { data: cacheData } = await supabase
           .from('cache')
           .select('data')
-          .like('key', 'shopify_collections%')
+          .like('key', '%collections%')
           .order('created_at', { ascending: false })
           .limit(1);
         
-        if (cacheData?.[0]?.data && typeof cacheData[0].data === 'object' && (cacheData[0].data as any).collections) {
-          const cachedCollections = (cacheData[0].data as any).collections
+        if (cacheData?.[0]?.data) {
+          // Handle both array and object formats from cache
+          let cachedCollections: any[] = [];
+          const data = cacheData[0].data as any;
+          
+          if (Array.isArray(data)) {
+            cachedCollections = data;
+          } else if (data && typeof data === 'object' && data.collections) {
+            cachedCollections = data.collections;
+          }
+          
+          const processedCollections = cachedCollections
             .filter((collection: any) => collection.products_count > 0)
             .map((collection: any) => ({
               handle: collection.handle,
-              name: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-              products_count: collection.products_count
-            }))
-            .sort((a: any, b: any) => a.name.localeCompare(b.name));
+              name: collection.title || collection.name || collection.handle,
+              products_count: collection.products_count || 0
+            }));
           
-          setShopifyCollections(cachedCollections);
-          console.log('Used cached collections:', cachedCollections.length);
-        } else {
-          throw new Error('No cached collections available');
+          setShopifyCollections(processedCollections);
+          console.log('✅ Loaded collections from cache fallback');
         }
       } catch (cacheError) {
-        console.error('Cache fallback failed:', cacheError);
-        // Set a few real collections as final fallback
-        setShopifyCollections([
-          { handle: 'spirits', name: 'Spirits', products_count: 100 },
-          { handle: 'tailgate-beer', name: 'Tailgate Beer', products_count: 62 },
-          { handle: 'cocktail-kits', name: 'Cocktail Kits', products_count: 40 },
-          { handle: 'party-supplies', name: 'Party Supplies', products_count: 46 },
-          { handle: 'champagne', name: 'Champagne', products_count: 47 }
-        ]);
+        console.error('❌ Cache fallback failed:', cacheError);
+        toast({
+          title: "Error Loading Collections",
+          description: "Failed to load Shopify collections. Please try refreshing.",
+          variant: "destructive"
+        });
       }
     } finally {
       setCollectionsLoading(false);
     }
   };
-
   // Load homepage app template for new apps
   const [homepageTemplate, setHomepageTemplate] = useState<any>(null);
   
@@ -199,7 +226,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   useEffect(() => {
     if (!open) return;
 
-    loadShopifyCollections();
+    loadShopifyCollections(true); // Force refresh on open
     loadHomepageTemplate();
 
     if (initial) {
