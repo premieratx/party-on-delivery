@@ -23,6 +23,7 @@ const TestCheckout = lazy(() => import("./pages/TestCheckout"));
 const TestCoverPage = lazy(() => import("./pages/TestCoverPage"));
 const DirectCoverPage = lazy(() => import("./pages/DirectCoverPage"));
 const BasicCoverPage = lazy(() => import("./pages/BasicCoverPage"));
+const RoutingTest = lazy(() => import("./pages/RoutingTest"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
@@ -73,8 +74,11 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* DYNAMIC HOMEPAGE ROUTE */}
-                    <Route path="/" element={<DynamicHomepage />} />
+                    {/* ROUTING TEST */}
+                    <Route path="/" element={<RoutingTest />} />
+                    
+                    {/* DYNAMIC HOMEPAGE ROUTE - DISABLED */}
+                    {/* <Route path="/" element={<DynamicHomepage />} /> */}
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/delivery" element={<DynamicHomepage />} />
                     <Route path="/search" element={<SearchPage />} />
