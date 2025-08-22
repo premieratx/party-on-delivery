@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -318,6 +318,9 @@ export const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorPr
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
+          <DialogDescription className="sr-only">
+            Create and customize post-checkout pages with professional templates and styling options
+          </DialogDescription>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 justify-between">
               <div className="flex items-center gap-2">
@@ -974,6 +977,9 @@ export const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorPr
       {/* Full Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
+          <DialogDescription className="sr-only">
+            Preview of the post-checkout page
+          </DialogDescription>
           <PremiumOrderComplete
             title={config.title}
             subtitle={config.subtitle}

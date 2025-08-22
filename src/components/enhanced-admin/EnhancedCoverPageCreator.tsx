@@ -1614,6 +1614,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       {/* Full Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
+          <DialogDescription className="sr-only">
+            Full preview of the cover page
+          </DialogDescription>
           <EditableCoverScreen
             title={config.title}
             subtitle={config.subtitle}

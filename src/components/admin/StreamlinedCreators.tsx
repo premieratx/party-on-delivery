@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,9 @@ export const StreamlinedModal: React.FC<StreamlinedModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden flex flex-col">
+        <DialogDescription className="sr-only">
+          Streamlined creation interface
+        </DialogDescription>
         <DialogHeader className="flex-shrink-0 px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl font-bold">{title}</DialogTitle>

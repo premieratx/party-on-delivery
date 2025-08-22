@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -293,6 +293,9 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden p-0">
+          <DialogDescription className="sr-only">
+            Post-checkout screen preview interface
+          </DialogDescription>
           <DialogHeader className="px-6 py-4 border-b">
             <div className="flex items-center justify-between">
               <DialogTitle>Post-Checkout Screen Preview</DialogTitle>
@@ -328,6 +331,9 @@ export const SimplifiedPostCheckoutEditor: React.FC<SimplifiedPostCheckoutEditor
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden p-0">
+        <DialogDescription className="sr-only">
+          Simplified post-checkout editor interface
+        </DialogDescription>
         <DialogHeader className="px-6 py-4 border-b">
           <div className="flex items-center justify-between">
             <DialogTitle>Edit Post-Checkout Screen</DialogTitle>

@@ -323,6 +323,9 @@ const EnhancedPostCheckoutCreator: React.FC<EnhancedPostCheckoutCreatorProps> = 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden p-0">
+        <DialogDescription className="sr-only">
+          Enhanced post-checkout page creation interface
+        </DialogDescription>
         <DialogHeader className="sticky top-0 bg-background z-10 border-b pb-4">
           <DialogTitle className="text-xl font-semibold">
             {initial ? 'Edit Post-Checkout Page' : 'Create Post-Checkout Page'}  
