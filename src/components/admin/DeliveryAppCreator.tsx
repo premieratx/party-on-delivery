@@ -375,7 +375,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden" aria-describedby="dialog-description">
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
         <div className="h-full flex flex-col">
           {/* Header */}
           <DialogHeader className="p-6 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
@@ -386,7 +386,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                   <h2 className="text-xl font-bold">
                     {isEditing ? `Edit: ${initial?.app_name}` : 'Create Delivery App'}
                   </h2>
-                  <DialogDescription id="dialog-description" className="text-sm text-muted-foreground font-normal">
+                  <DialogDescription className="text-sm text-muted-foreground font-normal">
                     Configure your delivery app with custom tabs and collections
                   </DialogDescription>
                 </div>
@@ -408,7 +408,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                 </Button>
               </div>
             </DialogTitle>
-            <DialogDescription id="dialog-description">
+            <DialogDescription>
               Build custom delivery experiences with product collections, themes, and interactive features.
             </DialogDescription>
           </DialogHeader>
