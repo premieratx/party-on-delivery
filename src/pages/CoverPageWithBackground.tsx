@@ -6,6 +6,9 @@ import { EditableCoverScreen } from '@/components/enhanced-cover/EditableCoverSc
 
 export default function CoverPageWithBackground() {
   const { slug } = useParams<{ slug: string }>();
+  
+  console.log('🔍 CoverPageWithBackground - Raw slug from params:', slug);
+  console.log('🔍 Current URL pathname:', window.location.pathname);
 
   const { data: coverPage, isLoading, error } = useQuery({
     queryKey: ['cover-page', slug],
@@ -52,12 +55,22 @@ export default function CoverPageWithBackground() {
   }
 
   if (error || !coverPage) {
+    console.log('❌ Showing Page Not Found:', { 
+      error: error?.message, 
+      hasData: !!coverPage, 
+      slug,
+      pathname: window.location.pathname 
+    });
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
           <p className="text-muted-foreground">
             The cover page you're looking for doesn't exist or has been disabled.
+          </p>
+          <p className="text-sm text-muted-foreground mt-4">
+            Debug: Slug = "{slug}", URL = {window.location.pathname}
           </p>
         </div>
       </div>
