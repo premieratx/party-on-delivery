@@ -68,11 +68,7 @@ const App = () => {
                 <Toaster />
                 <Sonner />
               <div className="min-h-screen">
-                <Suspense fallback={
-                  <div className="min-h-screen flex items-center justify-center">
-                    <div className="text-lg text-muted-foreground">Loading...</div>
-                  </div>
-                }>
+                <Suspense fallback={<div />}>
                   <Routes>
                     {/* DYNAMIC HOMEPAGE ROUTE */}
                     <Route path="/" element={<DynamicHomepage />} />
