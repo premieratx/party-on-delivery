@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { EmbeddedCoverPageCreator } from './EmbeddedCoverPageCreator';
 import { EmbeddedPostCheckoutCreator } from './EmbeddedPostCheckoutCreator';
-import CustomerFlowConfigurator from './CustomerFlowConfigurator';
+// CustomerFlowConfigurator removed - standalone architecture
 
 export default function CustomerJourneyDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -277,7 +277,9 @@ export default function CustomerJourneyDashboard() {
                 </p>
               </CardHeader>
               <CardContent className="p-6">
-                <CustomerFlowConfigurator />
+                <div className="text-center text-muted-foreground">
+                  Components are now standalone - no flow configuration needed.
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { RecentOrdersFeed } from '@/components/dashboard/RecentOrdersFeed';
-import { CustomerFlowManager } from '@/components/admin/CustomerFlowManager';
+// Customer Flow Manager removed - standalone architecture
 import { AffiliateFlowAssignmentManager } from '@/components/admin/AffiliateFlowAssignmentManager';
 import { EnhancedCoverPageManager } from '@/components/admin/EnhancedCoverPageManager';
 import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryAppManager';
@@ -412,7 +412,7 @@ export default function AdminDashboard() {
 
           <TabsContent value="settings" className="space-y-6">
             <div className="grid gap-6">
-              <CustomerFlowManager />
+              {/* Customer Flow Manager removed - standalone architecture */}
               <HomepageAppSwitcher />
             </div>
           </TabsContent>
