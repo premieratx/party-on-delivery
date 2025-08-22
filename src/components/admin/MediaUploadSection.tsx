@@ -39,7 +39,7 @@ export const MediaUploadSection: React.FC<MediaUploadSectionProps> = ({
       const fileName = `${componentType}/${type}/${Date.now()}-${Math.random()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
-        .from('media-uploads')
+        .from('cover-assets')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
@@ -48,7 +48,7 @@ export const MediaUploadSection: React.FC<MediaUploadSectionProps> = ({
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('media-uploads')
+        .from('cover-assets')
         .getPublicUrl(fileName);
 
       if (type === 'logo') {
