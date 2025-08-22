@@ -24,15 +24,6 @@ const CoverPageWithBackground = () => {
   const [backgroundApp, setBackgroundApp] = useState<BackgroundApp | null>(null);
   const { initializeCoverPageFlow, trackButtonClick, flowData } = useDataFlowTracking();
   
-  // Mobile debugging
-  useEffect(() => {
-    console.log('🔍 MOBILE DEBUG: Component mounted');
-    console.log('🔍 MOBILE DEBUG: Slug from URL:', slug);
-    console.log('🔍 MOBILE DEBUG: User agent:', navigator.userAgent);
-    console.log('🔍 MOBILE DEBUG: Window location:', window.location.href);
-    console.log('🔍 MOBILE DEBUG: Screen dimensions:', window.screen.width, 'x', window.screen.height);
-  }, []);
-  
   // Just load the damn cover page - no unnecessary validation
   
   const { 
@@ -49,14 +40,7 @@ const CoverPageWithBackground = () => {
   const { data: coverPage, isLoading: loadingCover, error } = useQuery({
     queryKey: ['cover-page', slug],
     queryFn: async () => {
-      if (!slug) {
-        console.error('🔍 MOBILE DEBUG: No slug provided!');
-        throw new Error('No slug provided');
-      }
-      
-      console.log('🔍 MOBILE DEBUG: Loading cover page with slug:', slug);
-      console.log('🔍 MOBILE DEBUG: Current URL:', window.location.href);
-      console.log('🔍 MOBILE DEBUG: Supabase client available:', !!supabase);
+      if (!slug) throw new Error('No slug provided');
       
       // Simple database lookup
       const { data, error } = await supabase
@@ -67,19 +51,14 @@ const CoverPageWithBackground = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('❌ MOBILE DEBUG: Database error:', error);
-        console.error('❌ MOBILE DEBUG: Error details:', JSON.stringify(error));
         throw new Error(`Database error: ${error.message}`);
       }
       
       if (data) {
-        console.log('✅ MOBILE DEBUG: Cover page found:', data.title);
-        console.log('✅ MOBILE DEBUG: Cover page data:', JSON.stringify(data, null, 2));
         return data;
       }
       
       // Not found
-      console.error('❌ MOBILE DEBUG: Cover page not found for slug:', slug);
       throw new Error(`Cover page not found: ${slug}`);
     },
     enabled: !!slug
@@ -176,18 +155,11 @@ const CoverPageWithBackground = () => {
   }
 
   if (error || !coverPage) {
-    console.error('❌ MOBILE DEBUG: Showing error page');
-    console.error('❌ MOBILE DEBUG: Error:', error);
-    console.error('❌ MOBILE DEBUG: Cover page:', coverPage);
-    
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Page Not Found</h1>
           <p className="text-muted-foreground">The cover page you're looking for doesn't exist or has been disabled.</p>
-          <p className="text-xs text-muted-foreground mt-4">
-            Debug: Slug="{slug}" Error="{error?.message}" 
-          </p>
         </div>
       </div>
     );
@@ -269,7 +241,20 @@ const CoverPageWithBackground = () => {
   }));
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Hide any global navigation when on cover pages */}
+      <style>
+        {`
+          body { overflow: hidden; }
+          [data-global-nav], 
+          [data-bottom-nav], 
+          .bottom-navigation,
+          .global-cart-provider > *:not(.cover-page-content) {
+            display: none !important;
+          }
+        `}
+      </style>
+      
       {/* Preloaded Background Homepage - Hidden but Cached */}
       {backgroundApp && (
         <div className="absolute inset-0 opacity-0 pointer-events-none">
@@ -291,7 +276,7 @@ const CoverPageWithBackground = () => {
       )}
 
       {/* Cover Page Overlay */}
-      <div className="relative z-10 min-h-screen">
+      <div className="relative z-50 min-h-screen cover-page-content">
         <EditableCoverScreen
           title={coverPage.title}
           subtitle={coverPage.subtitle}
