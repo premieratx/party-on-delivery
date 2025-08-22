@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Save, X, Palette, Type, Link, Sparkles, Layout } from 'lucide-react';
@@ -188,12 +188,15 @@ const [config, setConfig] = useState<StartScreenConfig>({
   };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" aria-describedby="dialog-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Palette className="h-5 w-5" />
             Customize Start Screen - {appName}
           </DialogTitle>
+          <DialogDescription id="dialog-description" className="sr-only">
+            Configure your custom start screen appearance and functionality.
+          </DialogDescription>
         </DialogHeader>
         
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">

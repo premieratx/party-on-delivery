@@ -32,6 +32,7 @@ interface CoverPageProject {
 
 export default function CoverPagesAdmin() {
   const [showCreator, setShowCreator] = useState(false);
+  console.log('🔍 CoverPagesAdmin render - showCreator:', showCreator);
   const [editingPage, setEditingPage] = useState<CoverPageConfig | null>(null);
   const [coverPages, setCoverPages] = useState<CoverPageConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,7 +214,10 @@ export default function CoverPagesAdmin() {
                 </p>
               </div>
               <Button 
-                onClick={() => setShowCreator(true)}
+                onClick={() => {
+                  console.log('🔴 NEW COVER PAGE BUTTON CLICKED - opening editor');
+                  setShowCreator(true);
+                }}
                 className="flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -283,7 +287,10 @@ export default function CoverPagesAdmin() {
                 <Layout className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-muted-foreground mb-2">No cover pages yet</h3>
                 <p className="text-muted-foreground mb-4">Create your first cover page to get started</p>
-                <Button onClick={() => setShowCreator(true)}>
+                <Button onClick={() => {
+                  console.log('🔴 CREATE FIRST COVER PAGE BUTTON CLICKED - opening editor');
+                  setShowCreator(true);
+                }}>
                   <Plus className="w-4 h-4 mr-2" />
                   Create First Cover Page
                 </Button>
