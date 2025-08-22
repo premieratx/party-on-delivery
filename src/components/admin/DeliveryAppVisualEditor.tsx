@@ -415,13 +415,13 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[95vh] flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[95vh] flex flex-col" aria-describedby="visual-editor-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Palette className="w-5 h-5" />
             {initial ? 'Edit' : 'Create'} Delivery App - Visual Editor
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="visual-editor-description">
             Customize the hero section of your delivery app with visual controls
           </DialogDescription>
         </DialogHeader>
