@@ -330,29 +330,36 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   }, [initial]);
 
   const handleSave = async () => {
-    console.log('💾 Saving cover page...', config);
-    if (!config.slug.trim()) {
+    console.log('🚀 SAVE INITIATED - Current config:', config);
+    
+    // Validation
+    if (!config.slug?.trim()) {
+      console.error('❌ VALIDATION FAILED: Missing slug');
       toast.error('Please enter a page slug');
       return;
     }
 
-    if (!config.title.trim()) {
+    if (!config.title?.trim()) {
+      console.error('❌ VALIDATION FAILED: Missing title');
       toast.error('Please enter a page title');
       return;
     }
 
+    console.log('✅ VALIDATION PASSED');
     setSaving(true);
+    
     try {
+      console.log('🏗️ CONSTRUCTING PAGE DATA...');
       const pageData = {
         slug: config.slug,
         title: config.title,
-        subtitle: config.subtitle,
-        logo_url: config.logoUrl,
-        bg_image_url: config.backgroundImageUrl,
-        bg_video_url: config.backgroundVideoUrl,
-        buttons: JSON.stringify(config.buttons),
-        checklist: JSON.stringify(config.features),
-        theme: config.variant,
+        subtitle: config.subtitle || '',
+        logo_url: config.logoUrl || null,
+        bg_image_url: config.backgroundImageUrl || null,
+        bg_video_url: config.backgroundVideoUrl || null,
+        buttons: JSON.stringify(config.buttons || []),
+        checklist: JSON.stringify(config.features || []),
+        theme: config.variant || 'gold',
         styles: JSON.stringify({
           variant: config.variant,
           logoEmoji: config.logoEmoji,
@@ -365,68 +372,90 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           animations: config.animations,
           backgroundOverlay: config.backgroundOverlay
         }),
-        is_active: config.is_active,
+        is_active: config.is_active !== undefined ? config.is_active : true,
         created_by: 'admin'
       };
 
-      console.log('💾 Saving page data with enhanced logging:', pageData);
-      console.log('🔍 Button data being saved:', JSON.stringify(config.buttons, null, 2));
-      console.log('🔍 logoSizing being saved:', config.logoSizing);
-      console.log('🔍 Full styles object:', JSON.stringify({
-        variant: config.variant,
-        logoEmoji: config.logoEmoji,
-        features: config.features,
-        buttons: config.buttons,
-        typography: config.typography,
-        logoSizing: config.logoSizing,
-        positioning: config.positioning,
-        customColors: config.customColors,
-        animations: config.animations,
-        backgroundOverlay: config.backgroundOverlay
-      }, null, 2));
-
+      console.log('📦 PAGE DATA CONSTRUCTED:', pageData);
+      console.log('🔍 Buttons being saved:', config.buttons);
+      console.log('🔍 Features being saved:', config.features);
+      
       let result;
       if (config.id) {
-        console.log('📝 Updating existing page:', config.id);
-        result = await supabase
-          .from('cover_pages')
-          .update(pageData)
-          .eq('id', config.id)
-          .select()
-          .single();
+        console.log('📝 UPDATING EXISTING PAGE:', config.id);
+        try {
+          result = await supabase
+            .from('cover_pages')
+            .update(pageData)
+            .eq('id', config.id)
+            .select()
+            .single();
+          console.log('✅ UPDATE QUERY COMPLETED');
+        } catch (updateError) {
+          console.error('❌ UPDATE QUERY FAILED:', updateError);
+          throw updateError;
+        }
       } else {
-        console.log('✨ Creating new page');
-        result = await supabase
-          .from('cover_pages')
-          .insert([pageData])
-          .select()
-          .single();
+        console.log('✨ CREATING NEW PAGE');
+        try {
+          result = await supabase
+            .from('cover_pages')
+            .insert([pageData])
+            .select()
+            .single();
+          console.log('✅ INSERT QUERY COMPLETED');
+        } catch (insertError) {
+          console.error('❌ INSERT QUERY FAILED:', insertError);
+          throw insertError;
+        }
       }
 
-      console.log('💾 Save result:', result);
-      if (result.data) {
-        console.log('✅ Saved data verification:', {
-          buttons: result.data.buttons,
-          styles: result.data.styles
-        });
+      console.log('📊 FULL SUPABASE RESULT:', result);
+      
+      if (result.error) {
+        console.error('❌ SUPABASE ERROR DETECTED:', result.error);
+        console.error('Error details:', JSON.stringify(result.error, null, 2));
+        throw result.error;
       }
 
-      if (result.error) throw result.error;
+      if (!result.data) {
+        console.error('❌ NO DATA RETURNED FROM SUPABASE');
+        throw new Error('No data returned from save operation');
+      }
 
+      console.log('✅ SAVE SUCCESSFUL - Data returned:', result.data);
+      
       // Set standalone path and update config ID for new pages
       if (!config.id && result.data) {
+        console.log('🔗 SETTING UP NEW PAGE REFERENCES');
         setConfig(prev => ({ ...prev, id: result.data.id }));
         setStandalonePath(`/cover/${result.data.slug}`);
+        console.log('✅ NEW PAGE SETUP COMPLETE');
       } else if (config.id) {
         setStandalonePath(`/cover/${config.slug}`);
+        console.log('✅ EXISTING PAGE PATH UPDATED');
       }
 
-      toast.success(config.id ? 'Cover page updated!' : 'Cover page created!');
+      const successMessage = config.id ? 'Cover page updated!' : 'Cover page created!';
+      console.log('🎉 SUCCESS:', successMessage);
+      toast.success(successMessage);
       onSaved?.();
+      
     } catch (error) {
-      console.error('❌ Error saving cover page:', error);
-      toast.error('Failed to save cover page');
+      console.error('💥 CRITICAL ERROR DURING SAVE:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
+      console.error('Full error object:', JSON.stringify(error, null, 2));
+      
+      let errorMessage = 'Failed to save cover page';
+      if (error?.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      
+      toast.error(errorMessage);
     } finally {
+      console.log('🏁 SAVE PROCESS COMPLETED');
       setSaving(false);
     }
   };
