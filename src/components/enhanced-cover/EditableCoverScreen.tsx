@@ -9,6 +9,10 @@ interface EditableCoverScreenProps {
   logoEmoji?: string;
   backgroundImageUrl?: string;
   backgroundVideoUrl?: string;
+  backgroundImageStyles?: {
+    backgroundSize?: string;
+    backgroundPosition?: string;
+  };
   
   // Feature cards
   features: Array<{
@@ -76,6 +80,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   logoEmoji = '🎉',
   backgroundImageUrl,
   backgroundVideoUrl,
+  backgroundImageStyles,
   features = [],
   buttons = [],
   variant = 'original',
@@ -167,7 +172,11 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
       return (
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+          style={{ 
+            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundSize: backgroundImageStyles?.backgroundSize || 'cover',
+            backgroundPosition: backgroundImageStyles?.backgroundPosition || 'center'
+          }}
         />
       );
     }

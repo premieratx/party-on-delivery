@@ -63,6 +63,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   const [logoEmoji, setLogoEmoji] = useState('🎉');
   const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
   const [backgroundVideoUrl, setBackgroundVideoUrl] = useState('');
+  const [backgroundImageSize, setBackgroundImageSize] = useState(100); // Background image size percentage
+  const [backgroundImagePosition, setBackgroundImagePosition] = useState('center'); // Background position
   const [variant, setVariant] = useState<'original' | 'gold' | 'platinum'>('gold');
   const [features, setFeatures] = useState([
     { emoji: '⭐', title: 'Premium Quality', description: 'Top-tier products and service' },
@@ -97,6 +99,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     const formKey = initial?.id ? `cover_edit_${initial.id}` : 'cover_create_new';
     const formState = {
       title, subtitle, logoUrl, logoEmoji, backgroundImageUrl, backgroundVideoUrl,
+      backgroundImageSize, backgroundImagePosition,
       variant, features, buttons, isActive, logoSize, logoPosition, headlineSize,
       logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos,
       lastAutoSave: Date.now()
@@ -113,6 +116,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     }
   }, [
     open, initial?.id, title, subtitle, logoUrl, logoEmoji, backgroundImageUrl, backgroundVideoUrl,
+    backgroundImageSize, backgroundImagePosition,
     variant, features, buttons, isActive, logoSize, logoPosition, headlineSize,
     logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos,
     setFormValue
@@ -157,6 +161,18 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       setLogoUrl(initial.logo_url || '');
       setBackgroundImageUrl(initial.bg_image_url || '');
       setBackgroundVideoUrl(initial.bg_video_url || '');
+      
+      // Parse existing styles if available
+      if (initial.styles) {
+        const parsedStyles = typeof initial.styles === 'string' ? 
+          JSON.parse(initial.styles || '{}') : initial.styles;
+        
+        if (parsedStyles.backgroundImage) {
+          setBackgroundImageSize(parsedStyles.backgroundImage.size || 100);
+          setBackgroundImagePosition(parsedStyles.backgroundImage.position || 'center');
+        }
+      }
+      
       setVariant(initial.theme || 'gold');
       setIsActive(initial.is_active !== false);
 
@@ -209,6 +225,11 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         setButtonsVerticalPos(parsedStyles.positioning.buttonsVerticalPos || 0);
         setLogoPosition(parsedStyles.positioning.logoPosition || { x: 50, y: 15 });
       }
+      
+      if (parsedStyles.backgroundImage) {
+        setBackgroundImageSize(parsedStyles.backgroundImage.size || 100);
+        setBackgroundImagePosition(parsedStyles.backgroundImage.position || 'center');
+      }
     } else if (savedState && !initial?.id) {
       // Restore from auto-save for new cover page
       setTitle(savedState.title || '');
@@ -217,6 +238,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       setLogoEmoji(savedState.logoEmoji || '🎉');
       setBackgroundImageUrl(savedState.backgroundImageUrl || '');
       setBackgroundVideoUrl(savedState.backgroundVideoUrl || '');
+      setBackgroundImageSize(savedState.backgroundImageSize || 100);
+      setBackgroundImagePosition(savedState.backgroundImagePosition || 'center');
       setVariant(savedState.variant || 'gold');
       setFeatures(savedState.features || features);
       setButtons(savedState.buttons || buttons);
@@ -285,6 +308,10 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
             featuresVerticalPos,
             buttonsVerticalPos,
             logoPosition
+          },
+          backgroundImage: {
+            size: backgroundImageSize,
+            position: backgroundImagePosition
           }
         }),
         is_active: isActive
@@ -629,6 +656,50 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               componentType="cover"
             />
 
+            {/* Background Image Controls */}
+            {backgroundImageUrl && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Background Image Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Background Size: {backgroundImageSize}%</Label>
+                    <Slider
+                      value={[backgroundImageSize]}
+                      onValueChange={(value) => setBackgroundImageSize(value[0])}
+                      min={50}
+                      max={200}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Background Position</Label>
+                    <Select 
+                      value={backgroundImagePosition} 
+                      onValueChange={(value) => setBackgroundImagePosition(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="center">Center</SelectItem>
+                        <SelectItem value="top">Top</SelectItem>
+                        <SelectItem value="bottom">Bottom</SelectItem>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
+                        <SelectItem value="top left">Top Left</SelectItem>
+                        <SelectItem value="top right">Top Right</SelectItem>
+                        <SelectItem value="bottom left">Bottom Left</SelectItem>
+                        <SelectItem value="bottom right">Bottom Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Logo Settings</CardTitle>
@@ -888,6 +959,10 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                     logoEmoji={logoEmoji}
                     backgroundImageUrl={backgroundImageUrl}
                     backgroundVideoUrl={backgroundVideoUrl}
+                    backgroundImageStyles={{
+                      backgroundSize: `${backgroundImageSize}%`,
+                      backgroundPosition: backgroundImagePosition
+                    }}
                     features={features}
                     buttons={buttons.map(btn => ({
                       text: btn.text,
