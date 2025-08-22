@@ -1880,6 +1880,7 @@ export type Database = {
           collections_config: Json
           created_at: string
           custom_post_checkout_config: Json | null
+          hero_config: Json | null
           id: string
           is_active: boolean
           is_homepage: boolean | null
@@ -1901,6 +1902,7 @@ export type Database = {
           collections_config?: Json
           created_at?: string
           custom_post_checkout_config?: Json | null
+          hero_config?: Json | null
           id?: string
           is_active?: boolean
           is_homepage?: boolean | null
@@ -1922,6 +1924,7 @@ export type Database = {
           collections_config?: Json
           created_at?: string
           custom_post_checkout_config?: Json | null
+          hero_config?: Json | null
           id?: string
           is_active?: boolean
           is_homepage?: boolean | null
