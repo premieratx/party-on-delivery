@@ -3,6 +3,7 @@ import { UnifiedCart } from '@/components/common/UnifiedCart';
 import { BottomCartBar } from '@/components/common/BottomCartBar';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useCoverPageDetection } from '@/hooks/useCoverPageDetection';
 
 interface GlobalCartContextType {
   isCartOpen: boolean;
@@ -31,6 +32,7 @@ export const GlobalCartProvider: React.FC<GlobalCartProviderProps> = ({ children
   const { cartItems, getTotalPrice, getTotalItems } = useUnifiedCart();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isCoverPage } = useCoverPageDetection();
 
   // Remove excessive logging - only log on cart changes, not every render
   // console.log('🛒 GlobalCartProvider: Rendering with', cartItems.length, 'items');
@@ -62,15 +64,11 @@ export const GlobalCartProvider: React.FC<GlobalCartProviderProps> = ({ children
     closeCart();
   }, [navigate, location, closeCart]);
 
-  // Determine if we should show the cart bar (hide on checkout, admin, and cover pages)
-  const shouldShowCartBar = !location.pathname.includes('/checkout') && 
+  // Determine if we should show the cart bar - NEVER show on cover pages
+  const shouldShowCartBar = !isCoverPage && 
+                           !location.pathname.includes('/checkout') && 
                            !location.pathname.includes('/order-complete') &&
-                           !location.pathname.includes('/admin') &&
-                           !location.pathname.startsWith('/cover/') &&
-                           // Also check for potential cover page slugs (single segment URLs)
-                           !(location.pathname.split('/').filter(Boolean).length === 1 && 
-                             location.pathname !== '/' &&
-                             !['admin', 'customer', 'affiliate', 'checkout', 'success', 'search', 'app', 'delivery'].includes(location.pathname.split('/')[1]));
+                           !location.pathname.includes('/admin');
 
   const isAdminUser = location.pathname.includes('/admin');
 

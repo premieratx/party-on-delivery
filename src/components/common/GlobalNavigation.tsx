@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { useCoverPageDetection } from '@/hooks/useCoverPageDetection';
 import { 
   Home, 
   ShoppingCart, 
@@ -59,12 +60,20 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
   const [userType, setUserType] = useState<'guest' | 'customer' | 'affiliate' | 'admin'>('guest');
   const [showNavigation, setShowNavigation] = useState(true);
   const { getTotalItems, getTotalPrice } = useUnifiedCart();
+  const { isCoverPage } = useCoverPageDetection();
 
   // Check if current route should show navigation
   useEffect(() => {
     console.log('🔍 Navigation check for path:', location.pathname);
+    console.log('🔍 isCoverPage:', isCoverPage);
     
-    const hideNavOnRoutes = ['/checkout', '/order-complete', '/success', '/cover'];
+    if (isCoverPage) {
+      console.log('❌ Hiding navigation - cover page detected');
+      setShowNavigation(false);
+      return;
+    }
+    
+    const hideNavOnRoutes = ['/checkout', '/order-complete', '/success'];
     const shouldHideBasedOnRoute = hideNavOnRoutes.some(route => location.pathname.startsWith(route));
     
     if (shouldHideBasedOnRoute) {
@@ -73,19 +82,9 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
       return;
     }
     
-    // Additional check: if the current path could be a cover page slug, hide navigation
-    // This handles URLs like /premier-concierge (without /cover/)
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    if (pathSegments.length === 1 && pathSegments[0] !== '' && 
-        !['admin', 'customer', 'affiliate', 'checkout', 'success', 'search', 'app', 'delivery'].includes(pathSegments[0])) {
-      console.log('❌ Hiding navigation - potential cover page slug:', pathSegments[0]);
-      setShowNavigation(false);
-      return;
-    }
-    
     console.log('✅ Showing navigation for path:', location.pathname);
     setShowNavigation(true);
-  }, [location.pathname]);
+  }, [location.pathname, isCoverPage]);
 
   // Detect user type from URL and localStorage
   useEffect(() => {
@@ -140,24 +139,46 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
   const cartItems = getTotalItems();
   const cartTotal = getTotalPrice();
 
-  if (!showNavigation) {
-    console.log('🚫 GlobalNavigation: Not rendering (showNavigation = false)');
+  // For cover pages, render aggressive CSS to hide ALL navigation
+  if (!showNavigation || isCoverPage) {
+    console.log('🚫 GlobalNavigation: Not rendering - cover page or hidden navigation');
     return (
-      <style>
-        {`
-          /* Forcefully hide ALL navigation elements for cover pages */
-          .fixed.bottom-0,
-          [data-bottom-nav],
-          .bottom-navigation,
-          .mobile-bottom-nav,
-          .global-cart-provider .fixed.bottom-0,
-          nav,
-          header {
-            display: none !important;
-            visibility: hidden !important;
-          }
-        `}
-      </style>
+      <>
+        <style>
+          {`
+            /* AGGRESSIVE: Hide ALL possible navigation elements */
+            .fixed.bottom-0,
+            .fixed.top-0,
+            [data-bottom-nav],
+            [data-cart-trigger],
+            .bottom-navigation,
+            .mobile-bottom-nav,
+            .global-cart-provider,
+            .global-cart-provider *,
+            nav,
+            header,
+            .bottom-cart-bar,
+            [class*="bottom"],
+            [class*="nav"],
+            [class*="cart"] {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+              position: absolute !important;
+              top: -9999px !important;
+              left: -9999px !important;
+            }
+            
+            /* Ensure main content takes full height */
+            body, html, #root {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+          `}
+        </style>
+        <div style={{ display: 'none' }} />
+      </>
     );
   }
 
