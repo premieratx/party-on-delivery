@@ -62,10 +62,15 @@ export const GlobalCartProvider: React.FC<GlobalCartProviderProps> = ({ children
     closeCart();
   }, [navigate, location, closeCart]);
 
-  // Determine if we should show the cart bar (always show unless on specific pages)
+  // Determine if we should show the cart bar (hide on checkout, admin, and cover pages)
   const shouldShowCartBar = !location.pathname.includes('/checkout') && 
                            !location.pathname.includes('/order-complete') &&
-                           !location.pathname.includes('/admin');
+                           !location.pathname.includes('/admin') &&
+                           !location.pathname.startsWith('/cover/') &&
+                           // Also check for potential cover page slugs (single segment URLs)
+                           !(location.pathname.split('/').filter(Boolean).length === 1 && 
+                             location.pathname !== '/' &&
+                             !['admin', 'customer', 'affiliate', 'checkout', 'success', 'search', 'app', 'delivery'].includes(location.pathname.split('/')[1]));
 
   const isAdminUser = location.pathname.includes('/admin');
 

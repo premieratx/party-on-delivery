@@ -141,7 +141,24 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
   const cartTotal = getTotalPrice();
 
   if (!showNavigation) {
-    return null;
+    console.log('🚫 GlobalNavigation: Not rendering (showNavigation = false)');
+    return (
+      <style>
+        {`
+          /* Forcefully hide ALL navigation elements for cover pages */
+          .fixed.bottom-0,
+          [data-bottom-nav],
+          .bottom-navigation,
+          .mobile-bottom-nav,
+          .global-cart-provider .fixed.bottom-0,
+          nav,
+          header {
+            display: none !important;
+            visibility: hidden !important;
+          }
+        `}
+      </style>
+    );
   }
 
   return (
