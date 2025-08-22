@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
 
     const result = {
       success: true,
-      products: processLimit ? finalProducts.slice(0, processLimit) : finalProducts,
+      products: limit ? finalProducts.slice(0, limit) : finalProducts,
       collections,
       categories: collections, // Categories and collections based on use_type
       total_products: finalProducts.length,

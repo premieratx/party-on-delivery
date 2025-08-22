@@ -337,7 +337,7 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] overflow-hidden">
+      <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] overflow-hidden" aria-describedby="dialog-description">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
