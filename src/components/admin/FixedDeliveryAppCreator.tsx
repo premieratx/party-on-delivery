@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Save, Trash2, Package, Eye, Loader2, Upload } from 'lucide-react';
+import { Plus, Save, Trash2, Package, Eye, Loader2, Upload, Palette } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { DeliveryAppVisualEditor } from './DeliveryAppVisualEditor';
 
 interface DeliveryAppTab {
   id: string;
@@ -62,6 +63,7 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const [uploading, setUploading] = useState(false);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [collections, setCollections] = useState<Array<{handle: string, name: string, products_count: number}>>([]);
+  const [showVisualEditor, setShowVisualEditor] = useState(false);
 
   // Load collections on mount
   useEffect(() => {
@@ -593,18 +595,51 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
             </TabsContent>
           </ScrollArea>
 
-          <div className="flex justify-end gap-2 p-6 border-t flex-shrink-0">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+          <div className="flex justify-between gap-2 p-6 border-t flex-shrink-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowVisualEditor(true)}
+              className="flex items-center gap-2"
+            >
+              <Palette className="w-4 h-4" />
+              Visual Editor
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Save className="w-4 h-4 mr-2" />
-              Save App
-            </Button>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={saving}>
+                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                <Save className="w-4 h-4 mr-2" />
+                Save App
+              </Button>
+            </div>
           </div>
         </Tabs>
       </DialogContent>
+      
+      {/* Visual Editor Dialog */}
+      <DeliveryAppVisualEditor
+        open={showVisualEditor}
+        onOpenChange={setShowVisualEditor}
+        initial={{
+          ...initial,
+          app_name: appName,
+          main_app_config: {
+            hero_heading: heroHeading,
+            hero_subheading: heroSubheading
+          },
+          logo_url: logoUrl,
+          collections_config: { tabs },
+          is_active: isActive,
+          is_homepage: isHomepage
+        }}
+        onSaved={() => {
+          setShowVisualEditor(false);
+          onSaved?.();
+        }}
+      />
     </Dialog>
   );
 };
