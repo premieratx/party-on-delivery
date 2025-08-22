@@ -41,6 +41,8 @@ const CoverPageWithBackground = () => {
       if (!slug) throw new Error('No slug provided');
       
       console.log('🔍 Loading cover page with slug:', slug);
+      console.log('🔍 Current URL:', window.location.href);
+      console.log('🔍 Full params:', useParams());
       
       const { data, error } = await supabase
         .from('cover_pages')
@@ -56,8 +58,26 @@ const CoverPageWithBackground = () => {
       
       if (data) {
         console.log('✅ Cover page loaded successfully:', data.title);
+        console.log('✅ Cover page data:', data);
       } else {
         console.log('❌ No cover page found for slug:', slug);
+        
+        // Check if any cover pages exist at all
+        const { data: allPages } = await supabase
+          .from('cover_pages')
+          .select('slug, title, is_active')
+          .eq('is_active', true);
+        
+        console.log('📋 All available cover pages:', allPages);
+        
+        // Check if this specific slug exists but is inactive
+        const { data: inactivePage } = await supabase
+          .from('cover_pages')
+          .select('slug, title, is_active')
+          .eq('slug', slug)
+          .maybeSingle();
+          
+        console.log('🔍 Inactive page check:', inactivePage);
       }
       
       return data;
