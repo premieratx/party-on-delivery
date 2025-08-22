@@ -32,7 +32,7 @@ import { AffiliateIntro } from "./pages/AffiliateIntro";
 import { AffiliateDashboard } from "./pages/AffiliateDashboard";  
 import { AffiliateCompleteSignup } from "./pages/AffiliateCompleteSignup";
 import { AffiliateLanding } from "./pages/AffiliateLanding";
-import { AffiliateFlowLanding } from "./pages/AffiliateFlowLanding";
+// AffiliateFlowLanding removed - standalone architecture
 import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 
 // Custom app pages
@@ -100,7 +100,7 @@ const App = () => {
                     <Route path="/a/:affiliateCode" element={<AffiliateLanding />} />
                     <Route path="/custom/:affiliateSlug" element={<AffiliateCustomLanding />} />
                     
-                    <Route path="/flow/:shareSlug" element={<AffiliateFlowLanding />} />
+                    {/* AffiliateFlowLanding route removed - standalone architecture */}
                     
                     {/* Admin Routes - consolidated to prevent remounting */}
                     <Route path="/admin/login" element={<AdminLogin />} />

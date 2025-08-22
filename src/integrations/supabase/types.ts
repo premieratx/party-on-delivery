@@ -150,63 +150,6 @@ export type Database = {
         }
         Relationships: []
       }
-      affiliate_flow_assignments: {
-        Row: {
-          affiliate_id: string
-          created_at: string
-          customer_flow_id: string
-          discount_dollar_amount: number | null
-          discount_percentage: number | null
-          discount_type: string | null
-          free_shipping: boolean | null
-          id: string
-          is_active: boolean
-          share_slug: string
-          updated_at: string
-        }
-        Insert: {
-          affiliate_id: string
-          created_at?: string
-          customer_flow_id: string
-          discount_dollar_amount?: number | null
-          discount_percentage?: number | null
-          discount_type?: string | null
-          free_shipping?: boolean | null
-          id?: string
-          is_active?: boolean
-          share_slug: string
-          updated_at?: string
-        }
-        Update: {
-          affiliate_id?: string
-          created_at?: string
-          customer_flow_id?: string
-          discount_dollar_amount?: number | null
-          discount_percentage?: number | null
-          discount_type?: string | null
-          free_shipping?: boolean | null
-          id?: string
-          is_active?: boolean
-          share_slug?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_flow_assignments_affiliate_id_fkey"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliate_flow_assignments_customer_flow_id_fkey"
-            columns: ["customer_flow_id"]
-            isOneToOne: false
-            referencedRelation: "customer_flows"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       affiliate_flows: {
         Row: {
           affiliate_id: string
@@ -1502,45 +1445,6 @@ export type Database = {
           state?: string
           updated_at?: string
           zip_code?: string
-        }
-        Relationships: []
-      }
-      customer_flows: {
-        Row: {
-          cover_page_id: string | null
-          created_at: string
-          delivery_app_id: string | null
-          id: string
-          is_active: boolean
-          is_default: boolean
-          name: string
-          post_checkout_id: string | null
-          slug: string
-          updated_at: string
-        }
-        Insert: {
-          cover_page_id?: string | null
-          created_at?: string
-          delivery_app_id?: string | null
-          id?: string
-          is_active?: boolean
-          is_default?: boolean
-          name: string
-          post_checkout_id?: string | null
-          slug: string
-          updated_at?: string
-        }
-        Update: {
-          cover_page_id?: string | null
-          created_at?: string
-          delivery_app_id?: string | null
-          id?: string
-          is_active?: boolean
-          is_default?: boolean
-          name?: string
-          post_checkout_id?: string | null
-          slug?: string
-          updated_at?: string
         }
         Relationships: []
       }

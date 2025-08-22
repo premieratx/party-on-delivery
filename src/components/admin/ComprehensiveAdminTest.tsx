@@ -280,16 +280,8 @@ export const ComprehensiveAdminTest: React.FC = () => {
   };
 
   const testCustomerFlowCreation = async (test: TestResult): Promise<TestResult> => {
-    const { data, error } = await supabase
-      .from('customer_flows')
-      .select('*')
-      .limit(1);
-
-    if (error) {
-      return { ...test, status: 'error', message: 'Failed to access customer flows', details: error };
-    }
-
-    return { ...test, status: 'success', message: 'Customer flows accessible', details: { count: data?.length || 0 } };
+    // Customer flows removed - standalone architecture
+    return { ...test, status: 'success', message: 'Customer flows functionality removed - components are now standalone', details: { note: 'Components work independently' } };
   };
 
   const testAffiliateCreation = async (test: TestResult): Promise<TestResult> => {
@@ -379,7 +371,7 @@ export const ComprehensiveAdminTest: React.FC = () => {
       { id: 'delivery-app-create', category: 'Delivery Apps', test: 'Create Delivery App', status: 'pending', message: '' },
       { id: 'delivery-app-edit', category: 'Delivery Apps', test: 'Edit Delivery App', status: 'pending', message: '' },
       { id: 'post-checkout-create', category: 'Post-Checkout', test: 'Access Post-Checkout', status: 'pending', message: '' },
-      { id: 'customer-flow-create', category: 'Customer Flows', test: 'Access Customer Flows', status: 'pending', message: '' },
+      { id: 'customer-flow-create', category: 'Standalone Architecture', test: 'Customer Flows Removed', status: 'success', message: 'Components are now standalone' },
       { id: 'affiliate-create', category: 'Affiliates', test: 'Access Affiliates', status: 'pending', message: '' },
       { id: 'promo-codes', category: 'Checkout', test: 'Promo Code Validation', status: 'pending', message: '' },
       { id: 'customer-dashboard', category: 'Customer', test: 'Customer Data Access', status: 'pending', message: '' }

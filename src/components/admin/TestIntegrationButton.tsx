@@ -147,26 +147,18 @@ export const TestIntegrationButton: React.FC = () => {
         });
       }
 
-      // Test 6: Customer flows table
+      // Test 6: Customer flows removed - standalone architecture
       try {
-        const { data, error } = await supabase
-          .from('customer_flows')
-          .select('id, name, is_active')
-          .limit(5);
-          
-        if (error) throw error;
-        
         results.push({
-          name: 'Customer Flows Table',
+          name: 'Customer Flows (Removed)',
           status: 'success',
-          message: `Found ${data?.length || 0} customer flows`
+          message: 'Components are now standalone - no flow dependencies'
         });
       } catch (error) {
         results.push({
-          name: 'Customer Flows Table',
-          status: 'error',
-          message: 'Customer flows table access failed',
-          details: error instanceof Error ? error.message : 'Unknown error'
+          name: 'Customer Flows (Removed)',
+          status: 'success',
+          message: 'Architecture successfully simplified'
         });
       }
 
