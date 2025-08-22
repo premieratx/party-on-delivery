@@ -86,6 +86,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   const [logoSize, setLogoSize] = useState(80);
   const [logoPosition, setLogoPosition] = useState({ x: 50, y: 15 }); // percentage based
   const [headlineSize, setHeadlineSize] = useState(48);
+  const [subtitleSize, setSubtitleSize] = useState(20); // Add subtitle size control
   const [logoVerticalPos, setLogoVerticalPos] = useState(0);
   const [headlineVerticalPos, setHeadlineVerticalPos] = useState(0);
   const [subtitleVerticalPos, setSubtitleVerticalPos] = useState(0);
@@ -100,7 +101,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     const formState = {
       title, subtitle, logoUrl, logoEmoji, backgroundImageUrl, backgroundVideoUrl,
       backgroundImageSize, backgroundImagePosition,
-      variant, features, buttons, isActive, logoSize, logoPosition, headlineSize,
+      variant, features, buttons, isActive, logoSize, logoPosition, headlineSize, subtitleSize,
       logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos,
       lastAutoSave: Date.now()
     };
@@ -181,6 +182,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       if (parsedStyles.sizing) {
         setLogoSize(parsedStyles.sizing.logoSize || 80);
         setHeadlineSize(parsedStyles.sizing.headlineSize || 48);
+        setSubtitleSize(parsedStyles.sizing.subtitleSize || 20);
       }
       
       // Load positioning data
@@ -201,7 +203,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
       if (parsedFeatures.length > 0) {
         setFeatures(parsedFeatures.map((item: any, index: number) => ({
-          emoji: parsedStyles.features?.[index]?.emoji || '⭐',
+          emoji: parsedStyles.features?.[index]?.emoji || item.emoji || '⭐',
           title: typeof item === 'string' ? item : item.title || item,
           description: typeof item === 'string' ? 'Premium feature' : item.description || 'Premium feature'
         })));
@@ -238,6 +240,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       setLogoSize(savedState.logoSize || 80);
       setLogoPosition(savedState.logoPosition || { x: 50, y: 15 });
       setHeadlineSize(savedState.headlineSize || 48);
+      setSubtitleSize(savedState.subtitleSize || 20);
       setLogoVerticalPos(savedState.logoVerticalPos || 0);
       setHeadlineVerticalPos(savedState.headlineVerticalPos || 0);
       setSubtitleVerticalPos(savedState.subtitleVerticalPos || 0);
@@ -282,15 +285,16 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         bg_image_url: backgroundImageUrl,
         bg_video_url: backgroundVideoUrl,
         theme: variant,
-        checklist: JSON.stringify(features.map(f => f.title)),
+        checklist: JSON.stringify(features),
         buttons: JSON.stringify(buttons),
         styles: JSON.stringify({
           variant,
           logoEmoji,
-          features: features.map(f => ({ emoji: f.emoji })),
+          features: features,
           sizing: {
             logoSize,
-            headlineSize
+            headlineSize,
+            subtitleSize
           },
           positioning: {
             logoVerticalPos,
@@ -752,17 +756,30 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Headline Size: {headlineSize}px</Label>
-                    <Slider
-                      value={[headlineSize]}
-                      onValueChange={(value) => setHeadlineSize(value[0])}
-                      min={24}
-                      max={72}
-                      step={2}
-                      className="w-full"
-                    />
-                  </div>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                       <Label>Headline Size: {headlineSize}px</Label>
+                       <Slider
+                         value={[headlineSize]}
+                         onValueChange={(value) => setHeadlineSize(value[0])}
+                         min={24}
+                         max={72}
+                         step={2}
+                         className="w-full"
+                       />
+                     </div>
+                     <div className="space-y-2">
+                       <Label>Subtitle Size: {subtitleSize}px</Label>
+                       <Slider
+                         value={[subtitleSize]}
+                         onValueChange={(value) => setSubtitleSize(value[0])}
+                         min={14}
+                         max={32}
+                         step={1}
+                         className="w-full"
+                       />
+                     </div>
+                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -966,12 +983,10 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                       onClick: () => console.log(`Button clicked: ${btn.text}`)
                     }))}
                     variant={variant}
-                    logoSizing={{
-                      width: `${logoSize}px`,
-                      height: `${logoSize}px`
-                    }}
-                    typography={{
-                      titleSize: `${headlineSize}px`
+                    sizing={{
+                      logoSize: logoSize,
+                      headlineSize: headlineSize,
+                      subtitleSize: subtitleSize
                     }}
                     positioning={{
                       logoMarginTop: `${logoVerticalPos}rem`,

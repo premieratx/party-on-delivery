@@ -47,6 +47,13 @@ interface EditableCoverScreenProps {
     subtitleColor?: string;
   };
   
+  // Sizing controls
+  sizing?: {
+    logoSize?: number;
+    headlineSize?: number;
+    subtitleSize?: number;
+  };
+  
   // Logo customization
   logoSizing?: {
     width?: string;
@@ -88,6 +95,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   typography,
   logoSizing,
   positioning,
+  sizing,
   className,
   onClose,
   standalone = false
@@ -194,7 +202,10 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="relative w-full max-w-sm mx-auto lg:max-w-md h-full lg:h-auto lg:aspect-[9/16] bg-gradient-to-b from-gray-900 via-black to-gray-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-700"
-        style={{ minHeight: '95vh' }}
+        style={{ 
+          minHeight: standalone ? '95vh' : '100vh',
+          maxHeight: standalone ? '95vh' : '100vh'
+        }}
       >
         {/* Content Container */}
         <div className="relative h-full flex flex-col justify-between p-6 text-center">
@@ -229,16 +240,16 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
                 alt="Logo" 
                 className="object-contain rounded-2xl shadow-2xl"
                 style={{
-                  width: logoSizing?.width || '6rem',
-                  height: logoSizing?.height || '6rem'
+                  width: sizing?.logoSize ? `${sizing.logoSize}px` : logoSizing?.width || '6rem',
+                  height: sizing?.logoSize ? `${sizing.logoSize}px` : logoSizing?.height || '6rem'
                 }}
               />
             ) : (
               <div 
                 className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl"
                 style={{
-                  width: logoSizing?.width || '6rem',
-                  height: logoSizing?.height || '6rem'
+                  width: sizing?.logoSize ? `${sizing.logoSize}px` : logoSizing?.width || '6rem',
+                  height: sizing?.logoSize ? `${sizing.logoSize}px` : logoSizing?.height || '6rem'
                 }}
               >
                 <span className="text-3xl">{logoEmoji}</span>
@@ -263,7 +274,8 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
               }`}
               style={{
                 fontFamily: typography?.fontFamily || 'inherit',
-                color: typography?.titleColor || undefined
+                color: typography?.titleColor || undefined,
+                fontSize: sizing?.headlineSize ? `${sizing.headlineSize}px` : undefined
               }}
             >
               {title}
@@ -276,6 +288,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
               style={{
                 fontFamily: typography?.fontFamily || 'inherit',
                 color: typography?.subtitleColor || undefined,
+                fontSize: sizing?.subtitleSize ? `${sizing.subtitleSize}px` : undefined,
                 marginTop: positioning?.subtitleMarginTop || '0',
                 marginBottom: positioning?.subtitleMarginBottom || '0'
               }}
