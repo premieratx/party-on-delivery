@@ -62,8 +62,19 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
 
   // Check if current route should show navigation
   useEffect(() => {
-    const hideNavOnRoutes = ['/checkout', '/order-complete', '/success'];
+    const hideNavOnRoutes = ['/checkout', '/order-complete', '/success', '/cover'];
+    // Also hide navigation if the slug matches any cover page slug (for catch-all routes)
     const shouldShow = !hideNavOnRoutes.some(route => location.pathname.startsWith(route));
+    
+    // Additional check: if the current path could be a cover page slug, hide navigation
+    // This handles URLs like /premier-concierge (without /cover/)
+    const pathSegments = location.pathname.split('/').filter(Boolean);
+    if (pathSegments.length === 1 && pathSegments[0] !== '' && 
+        !['admin', 'customer', 'affiliate', 'checkout', 'success', 'search', 'app', 'delivery'].includes(pathSegments[0])) {
+      setShowNavigation(false);
+      return;
+    }
+    
     setShowNavigation(shouldShow);
   }, [location.pathname]);
 
