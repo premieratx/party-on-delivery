@@ -112,12 +112,12 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
       console.log('🔄 Loading Shopify collections for delivery app creator...');
       
       if (forceRefresh) {
-        console.log('⚡ Force refreshing Shopify data...');
-        // Force a complete refresh of Shopify data
-        const { data: syncData, error: syncError } = await supabase.functions.invoke('force-shopify-sync');
+        console.log('⚡ Force fixing product collections...');
+        // Force fix product collections specifically
+        const { data: syncData, error: syncError } = await supabase.functions.invoke('fix-product-collections');
         
         if (syncError) {
-          console.warn('Sync warning (will continue):', syncError);
+          console.warn('Product collection fix warning (will continue):', syncError);
         } else {
           console.log('✅ Force sync completed:', syncData);
         }

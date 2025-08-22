@@ -713,11 +713,11 @@ export const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
     
     const checkoutCompletionData = {
       cartItems,
-      totalAmount: finalTotal,
-      subtotal: discountedSubtotal,
-      salesTax,
-      deliveryFee: finalDeliveryFee,
-      tipAmount,
+      totalAmount: Number(finalTotal),
+      subtotal: Number(discountedSubtotal),
+      salesTax: Number(salesTax),
+      deliveryFee: Number(finalDeliveryFee),
+      tipAmount: Number(tipAmount), // CRITICAL: Ensure tip is properly stored as number
       customerName: `${customerInfo.firstName} ${customerInfo.lastName}`,
       customerEmail: customerInfo.email,
       deliveryAddress: addressInfo.street ? 

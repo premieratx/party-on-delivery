@@ -169,14 +169,19 @@ serve(async (req) => {
 
     // Get order amounts (fallback to metadata if not from database)
     if (!orderAmounts.total_amount) {
+      // CRITICAL FIX: Properly parse and round tip amount from metadata
+      const rawTipAmount = parseFloat(metadata.tip_amount || '0');
       orderAmounts = {
         subtotal: parseFloat(metadata.subtotal || '0'),
         delivery_fee: parseFloat(metadata.delivery_fee || '0'),
         sales_tax: parseFloat(metadata.sales_tax || '0'),
-        tip_amount: parseFloat(metadata.tip_amount || '0'),
+        tip_amount: Math.round(rawTipAmount * 100) / 100, // Round to 2 decimal places
         total_amount: parseFloat(metadata.total_amount || '0')
       };
-      logStep("Using amounts from metadata", orderAmounts);
+      logStep("Using amounts from metadata with proper tip rounding", {
+        ...orderAmounts,
+        rawTipFromMetadata: rawTipAmount
+      });
     }
 
     // CRITICAL FIX: Check for duplicate orders before creating
@@ -388,8 +393,15 @@ serve(async (req) => {
         price: tipAmountInDollars.toFixed(2),
         quantity: 1,
         requires_shipping: false,
-        taxable: false
+        taxable: false,
+        vendor: "Party On Delivery" // Ensure tip shows properly in Shopify
       });
+      logStep("CRITICAL: Driver tip added to Shopify order", { 
+        tipAmount: tipAmountInDollars,
+        priceString: tipAmountInDollars.toFixed(2) 
+      });
+    } else {
+      logStep("WARNING: No driver tip to add", { tipAmountInDollars });
     }
 
     // CRITICAL FIX: Add sales tax as line item so it shows in Shopify breakdown
