@@ -303,7 +303,7 @@ export default function CustomerFlowConfigurator() {
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto" aria-describedby="flow-dialog-description">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Settings className="h-5 w-5" />

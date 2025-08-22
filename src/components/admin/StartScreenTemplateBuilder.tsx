@@ -550,7 +550,7 @@ export function StartScreenTemplateBuilder({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden" aria-describedby="template-dialog-description">
         <DialogHeader className="pb-4">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Palette className="h-6 w-6" />
