@@ -188,174 +188,182 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
     <div className={`${containerClass} ${className || ''}`}>
       {renderBackground()}
       
+      {/* Mobile-first vertical layout with desktop centering */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className={`relative w-full max-w-4xl mx-auto ${styles.container} rounded-2xl shadow-2xl overflow-hidden`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative w-full max-w-sm mx-auto lg:max-w-md h-full lg:h-auto lg:aspect-[9/16] bg-gradient-to-b from-gray-900 via-black to-gray-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-700"
+        style={{ minHeight: '95vh' }}
       >
-          {/* Frame effect for premium variants */}
-          {styles.frame && (
-            <div className={`absolute inset-0 ${styles.frame} p-1 rounded-2xl`}>
-              <div className={`w-full h-full ${styles.inner} rounded-xl`} />
-            </div>
-          )}
+        {/* Content Container */}
+        <div className="relative h-full flex flex-col justify-between p-6 text-center">
           
-          {/* Content */}
-          <div 
-            className={`relative ${styles.inner} p-8 md:p-12 text-center space-y-8`}
-            style={{ textAlign: 'center' }}
+          {/* Top Badge */}
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-full text-xs uppercase tracking-wider shadow-lg"
+            style={{
+              marginTop: positioning?.logoMarginTop || '0'
+            }}
           >
-            
-            {/* Premium Badge */}
-            <div 
-              className={`inline-block px-4 py-2 ${styles.badge} font-bold rounded-full text-sm shadow-lg mx-auto`}
-              style={{ textAlign: 'center', display: 'inline-block' }}
-            >
-              {styles.badgeText}
-            </div>
-            
-            {/* Logo Section */}
-            <div 
-              className="flex justify-center items-center"
+            {styles.badgeText}
+          </motion.div>
+          
+          {/* Logo Section */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="flex justify-center items-center my-8"
+            style={{
+              marginTop: positioning?.logoMarginTop || '2rem',
+              marginBottom: positioning?.logoMarginBottom || '2rem'
+            }}
+          >
+            {logoUrl ? (
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                className="object-contain rounded-2xl shadow-2xl"
+                style={{
+                  width: logoSizing?.width || '6rem',
+                  height: logoSizing?.height || '6rem'
+                }}
+              />
+            ) : (
+              <div 
+                className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl"
+                style={{
+                  width: logoSizing?.width || '6rem',
+                  height: logoSizing?.height || '6rem'
+                }}
+              >
+                <span className="text-3xl">{logoEmoji}</span>
+              </div>
+            )}
+          </motion.div>
+          
+          {/* Title Section */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="space-y-4"
+            style={{
+              marginTop: positioning?.titleMarginTop || '0',
+              marginBottom: positioning?.titleMarginBottom || '0'
+            }}
+          >
+            <h1 
+              className={`font-black bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 bg-clip-text text-transparent leading-tight ${
+                typography?.titleSize || 'text-3xl'
+              }`}
               style={{
-                marginTop: positioning?.logoMarginTop || '0',
-                marginBottom: positioning?.logoMarginBottom || '0',
-                textAlign: 'center',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
+                fontFamily: typography?.fontFamily || 'inherit',
+                color: typography?.titleColor || undefined
               }}
             >
-              {logoUrl ? (
-                <img 
-                  src={logoUrl} 
-                  alt="Logo" 
-                  className={`object-contain rounded-full shadow-xl ${
-                    logoSizing?.width && logoSizing?.height 
-                      ? '' 
-                      : 'w-20 h-20'
-                  }`}
-                  style={{
-                    width: logoSizing?.width || '5rem',
-                    height: logoSizing?.height || '5rem'
-                  }}
-                />
-              ) : (
-                <div 
-                  className={`${styles.logoContainer} rounded-full flex items-center justify-center shadow-xl ${
-                    logoSizing?.width && logoSizing?.height 
-                      ? '' 
-                      : 'w-20 h-20'
-                  }`}
-                  style={{
-                    width: logoSizing?.width || '5rem',
-                    height: logoSizing?.height || '5rem'
-                  }}
-                >
-                  <span className="text-2xl">{logoEmoji}</span>
-                </div>
-              )}
-            </div>
+              {title}
+            </h1>
             
-            {/* Title & Subtitle */}
-            <div 
-              className="space-y-4 max-w-3xl mx-auto text-center"
-              style={{ textAlign: 'center' }}
+            <p 
+              className={`text-gray-300 font-medium leading-relaxed ${
+                typography?.subtitleSize || 'text-lg'
+              }`}
+              style={{
+                fontFamily: typography?.fontFamily || 'inherit',
+                color: typography?.subtitleColor || undefined,
+                marginTop: positioning?.subtitleMarginTop || '0',
+                marginBottom: positioning?.subtitleMarginBottom || '0'
+              }}
             >
-              <h1 
-                className={`font-bold bg-gradient-to-r ${styles.titleGradient} bg-clip-text text-transparent ${
-                  typography?.titleSize || 'text-4xl md:text-5xl'
-                } text-center`}
-                style={{
-                  fontFamily: typography?.fontFamily || 'inherit',
-                  color: typography?.titleColor || undefined,
-                  marginTop: positioning?.titleMarginTop || '0',
-                  marginBottom: positioning?.titleMarginBottom || '0',
-                  textAlign: 'center'
-                }}
-              >
-                {title}
-              </h1>
-              
-              <p 
-                className={`${typography?.subtitleSize || 'text-xl'} ${
-                  typography?.subtitleColor || styles.subtitleColor
-                } text-center`}
-                style={{
-                  fontFamily: typography?.fontFamily || 'inherit',
-                  color: typography?.subtitleColor || undefined,
-                  marginTop: positioning?.subtitleMarginTop || '0',
-                  marginBottom: positioning?.subtitleMarginBottom || '0',
-                  textAlign: 'center'
-                }}
-              >
-                {subtitle}
-              </p>
-            </div>
-            
-            {/* Features Grid */}
-            {features.length > 0 && (
-              <div 
-                className="w-full max-w-4xl mx-auto"
-                style={{
-                  marginTop: positioning?.featuresMarginTop || '0',
-                  marginBottom: positioning?.featuresMarginBottom || '0'
-                }}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {features.map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      whileHover={{ scale: 1.05 }}
-                      className={`flex flex-col items-center p-4 rounded-lg ${styles.featureCard} shadow-lg space-y-2`}
-                    >
-                      <div className="text-2xl">{feature.emoji}</div>
-                      <h3 className={`font-semibold ${styles.featureTitle}`}>{feature.title}</h3>
-                      <p className={`text-sm ${styles.featureDesc}`}>{feature.description}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Action Buttons */}
-            {buttons.length > 0 && (
-              <div 
-                className="flex flex-col sm:flex-row gap-4 w-full max-w-lg mx-auto justify-center items-center"
-                style={{
-                  marginTop: positioning?.buttonsMarginTop || '0',
-                  marginBottom: positioning?.buttonsMarginBottom || '0',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }}
-              >
-                {buttons.map((button, index) => {
-                  const buttonStyles = getButtonStyles(button, variant);
-                  return (
-                    <motion.button
-                      key={index}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={button.onClick || onClose}
-                      className={`flex-1 px-8 py-4 font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl ${buttonStyles}`}
-                      style={{
-                        backgroundColor: button.color,
-                        color: button.textColor
-                      }}
-                    >
-                      {button.text}
-                    </motion.button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+              {subtitle}
+            </p>
+          </motion.div>
           
-          {/* Shimmer overlay */}
-          <div className={`absolute inset-0 bg-gradient-to-r ${styles.shimmer} animate-shimmer pointer-events-none`} />
-        </motion.div>
+          {/* Features Section - Vertical stacked with animations */}
+          {features.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="space-y-4 my-8"
+              style={{
+                marginTop: positioning?.featuresMarginTop || '2rem',
+                marginBottom: positioning?.featuresMarginBottom || '2rem'
+              }}
+            >
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 1 + index * 0.1, duration: 0.4 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 backdrop-blur-sm border border-gray-600 rounded-2xl p-4 text-left"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl bg-gradient-to-br from-blue-400 to-purple-500 w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                      {feature.emoji}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-white font-bold text-sm mb-1">{feature.title}</h3>
+                      <p className="text-gray-400 text-xs leading-relaxed">{feature.description}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+          
+          {/* Action Buttons - Bottom positioned */}
+          {buttons.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 0.5 }}
+              className="space-y-3 mt-auto"
+              style={{
+                marginTop: positioning?.buttonsMarginTop || 'auto',
+                marginBottom: positioning?.buttonsMarginBottom || '0'
+              }}
+            >
+              {buttons.map((button, index) => {
+                const isSpecial = button.type === 'primary';
+                return (
+                  <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={button.onClick || onClose}
+                    className={`w-full py-4 px-6 font-bold rounded-2xl transition-all duration-300 shadow-xl ${
+                      isSpecial 
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-pink-500/25' 
+                        : 'bg-gradient-to-r from-gray-700 to-gray-600 text-white border border-gray-500'
+                    }`}
+                    style={{
+                      backgroundColor: button.color,
+                      color: button.textColor
+                    }}
+                  >
+                    {button.text}
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          )}
+          
+          {/* Animated particles/glow effects */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-10 left-10 w-20 h-20 bg-purple-500/10 rounded-full blur-xl animate-pulse" />
+            <div className="absolute bottom-20 right-10 w-16 h-16 bg-pink-500/10 rounded-full blur-xl animate-pulse delay-1000" />
+            <div className="absolute top-1/2 left-5 w-12 h-12 bg-blue-500/10 rounded-full blur-xl animate-pulse delay-500" />
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
