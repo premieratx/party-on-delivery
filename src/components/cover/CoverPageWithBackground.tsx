@@ -24,6 +24,14 @@ const CoverPageWithBackground = () => {
   const [backgroundApp, setBackgroundApp] = useState<BackgroundApp | null>(null);
   const { initializeCoverPageFlow, trackButtonClick, flowData } = useDataFlowTracking();
   
+  // SAFETY CHECK: Only render if we're actually on a cover page route
+  const isValidCoverPageRoute = window.location.pathname.startsWith('/cover/');
+  if (!isValidCoverPageRoute) {
+    console.log('🚫 CoverPageWithBackground: Not a cover page route, redirecting to homepage');
+    navigate('/', { replace: true });
+    return null;
+  }
+  
   const { 
     cartItems, 
     addToCart, 
