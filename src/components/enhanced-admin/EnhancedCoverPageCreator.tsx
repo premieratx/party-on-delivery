@@ -520,7 +520,10 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden" aria-describedby="cover-page-description">
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
+          <DialogDescription className="sr-only">
+            Create and customize cover pages with professional templates, styling options, and real-time preview
+          </DialogDescription>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 justify-between">
               <div className="flex items-center gap-2">
