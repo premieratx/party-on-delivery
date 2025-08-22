@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimpleCoverPageCreator } from './SimpleCoverPageCreator';
+import { EnhancedCoverPageCreator } from './EnhancedCoverPageCreator';
 
 // Simple wrapper to maintain compatibility
 interface CoverPageCreatorProps {
@@ -11,5 +11,5 @@ interface CoverPageCreatorProps {
 }
 
 export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({ onBack, ...props }) => {
-  return <SimpleCoverPageCreator {...props} />;
+  return <EnhancedCoverPageCreator {...props} />;
 };

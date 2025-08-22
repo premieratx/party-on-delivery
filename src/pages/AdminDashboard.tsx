@@ -12,7 +12,7 @@ import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryA
 import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
 import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
-import { FixedCoverPageCreator } from '@/components/admin/FixedCoverPageCreator';
+import { EnhancedCoverPageCreator } from '@/components/admin/EnhancedCoverPageCreator';
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
 import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCreator';
 import { supabase } from '@/integrations/supabase/client';
@@ -421,7 +421,7 @@ export default function AdminDashboard() {
 
       {/* Creator Modals */}
       {showCoverCreator && (
-        <FixedCoverPageCreator 
+        <EnhancedCoverPageCreator 
           open={showCoverCreator}
           onOpenChange={setShowCoverCreator}
           onSaved={() => {
