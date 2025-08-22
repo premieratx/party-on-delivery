@@ -94,6 +94,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   const [subtitleVerticalPos, setSubtitleVerticalPos] = useState(0);
   const [featuresVerticalPos, setFeaturesVerticalPos] = useState(0);
   const [buttonsVerticalPos, setButtonsVerticalPos] = useState(0);
+  
+  // New controls for badge and colors
+  const [badgeText, setBadgeText] = useState('✨ PREMIUM EXPERIENCE ✨');
+  const [badgeSize, setBadgeSize] = useState(14);
+  const [badgeVerticalPos, setBadgeVerticalPos] = useState(0);
+  const [borderColor, setBorderColor] = useState('#334155');
+  const [fontColor, setFontColor] = useState('#ffffff');
 
   // Enhanced auto-save functionality with logging
   const autoSave = useCallback(() => {
@@ -105,6 +112,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       backgroundImageSize, backgroundImagePosition,
       variant, features, buttons, isActive, logoSize, logoPosition, headlineSize, subtitleSize,
       logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos,
+      badgeText, badgeSize, badgeVerticalPos, borderColor, fontColor,
       lastAutoSave: Date.now()
     };
     
@@ -117,6 +125,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
     backgroundImageSize, backgroundImagePosition,
     variant, features, buttons, isActive, logoSize, logoPosition, headlineSize, subtitleSize,
     logoVerticalPos, headlineVerticalPos, subtitleVerticalPos, featuresVerticalPos, buttonsVerticalPos,
+    badgeText, badgeSize, badgeVerticalPos, borderColor, fontColor,
     setFormValue
   ]);
 
@@ -200,6 +209,17 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         setBackgroundImageSize(parsedStyles.backgroundImage.size || 100);
         setBackgroundImagePosition(parsedStyles.backgroundImage.position || 'center');
       }
+      
+      // Load badge and color settings
+      if (parsedStyles.badge) {
+        setBadgeText(parsedStyles.badge.text || '✨ PREMIUM EXPERIENCE ✨');
+        setBadgeSize(parsedStyles.badge.size || 14);
+        setBadgeVerticalPos(parsedStyles.badge.verticalPos || 0);
+      }
+      if (parsedStyles.colors) {
+        setBorderColor(parsedStyles.colors.border || '#334155');
+        setFontColor(parsedStyles.colors.font || '#ffffff');
+      }
 
       if (parsedFeatures.length > 0) {
         setFeatures(parsedFeatures.map((item: any, index: number) => ({
@@ -246,6 +266,13 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       setSubtitleVerticalPos(savedState.subtitleVerticalPos || 0);
       setFeaturesVerticalPos(savedState.featuresVerticalPos || 0);
       setButtonsVerticalPos(savedState.buttonsVerticalPos || 0);
+      
+      // Restore badge and color settings
+      setBadgeText(savedState.badgeText || '✨ PREMIUM EXPERIENCE ✨');
+      setBadgeSize(savedState.badgeSize || 14);
+      setBadgeVerticalPos(savedState.badgeVerticalPos || 0);
+      setBorderColor(savedState.borderColor || '#334155');
+      setFontColor(savedState.fontColor || '#ffffff');
 
       console.log('🔄 Cover page session restored from auto-save');
       toast({
@@ -335,6 +362,15 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           backgroundImage: {
             size: backgroundImageSize,
             position: backgroundImagePosition
+          },
+          badge: {
+            text: badgeText,
+            size: badgeSize,
+            verticalPos: badgeVerticalPos
+          },
+          colors: {
+            border: borderColor,
+            font: fontColor
           }
         }),
         is_active: isActive
@@ -864,11 +900,95 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                       </Select>
                     </div>
                   </div>
-                )}
+                 )}
+               </CardContent>
+             </Card>
+
+            {/* Badge & Color Controls */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Badge & Color Controls</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Badge Controls */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Top Badge</h4>
+                  <div className="space-y-2">
+                    <Label>Badge Text</Label>
+                    <Input
+                      value={badgeText}
+                      onChange={(e) => setBadgeText(e.target.value)}
+                      placeholder="✨ PREMIUM EXPERIENCE ✨"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Badge Size: {badgeSize}px</Label>
+                    <Slider
+                      value={[badgeSize]}
+                      onValueChange={(value) => setBadgeSize(value[0])}
+                      min={8}
+                      max={24}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Badge Vertical Position: {badgeVerticalPos}px</Label>
+                    <Slider
+                      value={[badgeVerticalPos]}
+                      onValueChange={(value) => setBadgeVerticalPos(value[0])}
+                      min={-50}
+                      max={50}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* Color Controls */}
+                <div className="space-y-4">
+                  <h4 className="font-medium">Colors</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Border Color</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="color"
+                          value={borderColor}
+                          onChange={(e) => setBorderColor(e.target.value)}
+                          className="w-16 h-10 p-1 border-2"
+                        />
+                        <Input
+                          value={borderColor}
+                          onChange={(e) => setBorderColor(e.target.value)}
+                          placeholder="#334155"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Font Color</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="color"
+                          value={fontColor}
+                          onChange={(e) => setFontColor(e.target.value)}
+                          className="w-16 h-10 p-1 border-2"
+                        />
+                        <Input
+                          value={fontColor}
+                          onChange={(e) => setFontColor(e.target.value)}
+                          placeholder="#ffffff"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Button Configuration */}
+             {/* Button Configuration */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
@@ -998,6 +1118,15 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                   subtitleMarginTop: `${subtitleVerticalPos}px`,
                   featuresMarginTop: `${featuresVerticalPos}px`,
                   buttonsMarginTop: `${buttonsVerticalPos}px`
+                }}
+                badgeConfig={{
+                  text: badgeText,
+                  size: badgeSize,
+                  verticalPos: badgeVerticalPos
+                }}
+                customColors={{
+                  border: borderColor,
+                  font: fontColor
                 }}
                 standalone={true}
               />

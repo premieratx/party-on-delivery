@@ -36,6 +36,8 @@ interface EditableCoverScreenProps {
     primary?: string;
     secondary?: string;
     accent?: string;
+    border?: string;
+    font?: string;
   };
   
   // Typography & Sizing Controls
@@ -74,6 +76,13 @@ interface EditableCoverScreenProps {
     buttonsMarginBottom?: string;
   };
   
+  // Badge configuration
+  badgeConfig?: {
+    text?: string;
+    size?: number;
+    verticalPos?: number;
+  };
+  
   // Layout options
   className?: string;
   onClose?: () => void;
@@ -96,6 +105,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   logoSizing,
   positioning,
   sizing,
+  badgeConfig,
   className,
   onClose,
   standalone = false
@@ -201,11 +211,14 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative w-full max-w-sm mx-auto lg:max-w-md h-full lg:h-auto lg:aspect-[9/16] bg-gradient-to-b from-gray-900 via-black to-gray-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-700"
+        className="relative w-full max-w-sm mx-auto lg:max-w-md h-full lg:h-auto lg:aspect-[9/16] bg-gradient-to-b from-gray-900 via-black to-gray-900 rounded-3xl shadow-2xl overflow-hidden"
         style={{ 
           minHeight: standalone ? '85vh' : '100vh',
           maxHeight: standalone ? '90vh' : '100vh',
-          fontSize: 'inherit'
+          fontSize: 'inherit',
+          borderColor: customColors?.border || undefined,
+          borderWidth: customColors?.border ? '4px' : undefined,
+          borderStyle: customColors?.border ? 'solid' : undefined
         }}
       >
         {/* Content Container */}
@@ -216,12 +229,15 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-full text-xs uppercase tracking-wider shadow-lg"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-full uppercase tracking-wider shadow-lg"
             style={{
-              marginTop: positioning?.logoMarginTop || '0'
+              marginTop: positioning?.logoMarginTop || '0',
+              fontSize: badgeConfig?.size ? `${badgeConfig.size}px` : '12px',
+              marginBottom: badgeConfig?.verticalPos ? `${badgeConfig.verticalPos}px` : '0',
+              color: customColors?.font || undefined
             }}
           >
-            {styles.badgeText}
+            {badgeConfig?.text || styles.badgeText}
           </motion.div>
           
           {/* Logo Section */}
@@ -275,7 +291,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
               }`}
               style={{
                 fontFamily: typography?.fontFamily || 'inherit',
-                color: typography?.titleColor || undefined,
+                color: customColors?.font || typography?.titleColor || undefined,
                 fontSize: sizing?.headlineSize ? `${sizing.headlineSize}px` : undefined
               }}
             >
@@ -288,7 +304,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
               }`}
               style={{
                 fontFamily: typography?.fontFamily || 'inherit',
-                color: typography?.subtitleColor || undefined,
+                color: customColors?.font || typography?.subtitleColor || undefined,
                 fontSize: sizing?.subtitleSize ? `${sizing.subtitleSize}px` : undefined,
                 marginTop: positioning?.subtitleMarginTop || '0',
                 marginBottom: positioning?.subtitleMarginBottom || '0'
@@ -324,8 +340,12 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
                       {feature.emoji}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-bold text-sm mb-1">{feature.title}</h3>
-                      <p className="text-gray-400 text-xs leading-relaxed">{feature.description}</p>
+                      <h3 className="font-bold text-sm mb-1" style={{ color: customColors?.font || '#ffffff' }}>
+                        {feature.title}
+                      </h3>
+                      <p className="text-xs leading-relaxed" style={{ color: customColors?.font || '#9ca3af' }}>
+                        {feature.description}
+                      </p>
                     </div>
                   </div>
                 </motion.div>
