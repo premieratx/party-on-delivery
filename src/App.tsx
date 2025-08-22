@@ -20,6 +20,7 @@ const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const TestCheckout = lazy(() => import("./pages/TestCheckout"));
+const TestCoverPage = lazy(() => import("./pages/TestCoverPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
@@ -110,6 +111,7 @@ const App = () => {
                     <Route path="/test-checkout" element={<TestCheckout />} />
                     
                     {/* Dynamic slug routes for cover pages - ENABLED FOR TESTING */}
+                    <Route path="/test-cover" element={<TestCoverPage />} />
                     <Route path="/:slug" element={<CoverPageWithBackground />} />
                   </Routes>
                 </Suspense>
