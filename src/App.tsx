@@ -24,7 +24,7 @@ const TestCoverPage = lazy(() => import("./pages/TestCoverPage"));
 const DirectCoverPage = lazy(() => import("./pages/DirectCoverPage"));
 const BasicCoverPage = lazy(() => import("./pages/BasicCoverPage"));
 const RoutingTest = lazy(() => import("./pages/RoutingTest"));
-const StandaloneCoverPage = lazy(() => import("./pages/StandaloneCoverPage"));
+const MobileCoverPage = lazy(() => import("./pages/MobileCoverPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
@@ -38,9 +38,6 @@ import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 // Custom app pages
 const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
-
-// Cover pages - SAFE with route validation
-import CoverPageWithBackground from '@/pages/CoverPageWithBackground';
 import PostCheckoutPage from '@/pages/PostCheckoutPage';
 
 // Admin pages - using direct imports since they use named exports
@@ -82,8 +79,7 @@ const App = () => {
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
-                    {/* Cover pages - SAFE: Component has built-in route validation */}
-                    <Route path="/cover/:slug" element={<CoverPageWithBackground />} />
+                    {/* Post-checkout pages only */}
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
                     
                     {/* Order completion - standardized routes */}
@@ -119,8 +115,8 @@ const App = () => {
                     <Route path="/direct-cover" element={<DirectCoverPage />} />
                     <Route path="/basic" element={<BasicCoverPage />} />
                     
-                    {/* Standalone cover page routes */}
-                    <Route path="/:slug" element={<StandaloneCoverPage />} />
+                    {/* Mobile-optimized standalone cover page routes */}
+                    <Route path="/:slug" element={<MobileCoverPage />} />
                   </Routes>
                 </Suspense>
               </div>
