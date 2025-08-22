@@ -161,28 +161,43 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
       setLogoUrl(initial.logo_url || '');
       setBackgroundImageUrl(initial.bg_image_url || '');
       setBackgroundVideoUrl(initial.bg_video_url || '');
-      
-      // Parse existing styles if available
-      if (initial.styles) {
-        const parsedStyles = typeof initial.styles === 'string' ? 
-          JSON.parse(initial.styles || '{}') : initial.styles;
-        
-        if (parsedStyles.backgroundImage) {
-          setBackgroundImageSize(parsedStyles.backgroundImage.size || 100);
-          setBackgroundImagePosition(parsedStyles.backgroundImage.position || 'center');
-        }
-      }
-      
       setVariant(initial.theme || 'gold');
       setIsActive(initial.is_active !== false);
 
-      // Parse existing data
+      // Parse existing data - single parsing to avoid conflicts
       const parsedFeatures = typeof initial.checklist === 'string' ? 
         JSON.parse(initial.checklist || '[]') : initial.checklist || [];
       const parsedButtons = typeof initial.buttons === 'string' ? 
         JSON.parse(initial.buttons || '[]') : initial.buttons || [];
       const parsedStyles = typeof initial.styles === 'string' ? 
         JSON.parse(initial.styles || '{}') : initial.styles || {};
+
+      // Apply all style settings from parsedStyles
+      if (parsedStyles.logoEmoji) {
+        setLogoEmoji(parsedStyles.logoEmoji);
+      }
+
+      // Load sizing data
+      if (parsedStyles.sizing) {
+        setLogoSize(parsedStyles.sizing.logoSize || 80);
+        setHeadlineSize(parsedStyles.sizing.headlineSize || 48);
+      }
+      
+      // Load positioning data
+      if (parsedStyles.positioning) {
+        setLogoVerticalPos(parsedStyles.positioning.logoVerticalPos || 0);
+        setHeadlineVerticalPos(parsedStyles.positioning.headlineVerticalPos || 0);
+        setSubtitleVerticalPos(parsedStyles.positioning.subtitleVerticalPos || 0);
+        setFeaturesVerticalPos(parsedStyles.positioning.featuresVerticalPos || 0);
+        setButtonsVerticalPos(parsedStyles.positioning.buttonsVerticalPos || 0);
+        setLogoPosition(parsedStyles.positioning.logoPosition || { x: 50, y: 15 });
+      }
+      
+      // Load background image settings
+      if (parsedStyles.backgroundImage) {
+        setBackgroundImageSize(parsedStyles.backgroundImage.size || 100);
+        setBackgroundImagePosition(parsedStyles.backgroundImage.position || 'center');
+      }
 
       if (parsedFeatures.length > 0) {
         setFeatures(parsedFeatures.map((item: any, index: number) => ({
@@ -205,30 +220,6 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           prefill_data: btn.prefill_data || {}
         }));
         setButtons(convertedButtons);
-      }
-
-      if (parsedStyles.logoEmoji) {
-        setLogoEmoji(parsedStyles.logoEmoji);
-      }
-
-      // Load sizing and positioning data
-      if (parsedStyles.sizing) {
-        setLogoSize(parsedStyles.sizing.logoSize || 80);
-        setHeadlineSize(parsedStyles.sizing.headlineSize || 48);
-      }
-      
-      if (parsedStyles.positioning) {
-        setLogoVerticalPos(parsedStyles.positioning.logoVerticalPos || 0);
-        setHeadlineVerticalPos(parsedStyles.positioning.headlineVerticalPos || 0);
-        setSubtitleVerticalPos(parsedStyles.positioning.subtitleVerticalPos || 0);
-        setFeaturesVerticalPos(parsedStyles.positioning.featuresVerticalPos || 0);
-        setButtonsVerticalPos(parsedStyles.positioning.buttonsVerticalPos || 0);
-        setLogoPosition(parsedStyles.positioning.logoPosition || { x: 50, y: 15 });
-      }
-      
-      if (parsedStyles.backgroundImage) {
-        setBackgroundImageSize(parsedStyles.backgroundImage.size || 100);
-        setBackgroundImagePosition(parsedStyles.backgroundImage.position || 'center');
       }
     } else if (savedState && !initial?.id) {
       // Restore from auto-save for new cover page
