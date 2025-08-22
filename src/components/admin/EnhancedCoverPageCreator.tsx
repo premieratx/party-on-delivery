@@ -654,9 +654,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-6 flex-1 overflow-hidden">
+        <div className="grid grid-cols-2 gap-6 flex-1 min-h-0">
           {/* Configuration Panel */}
-          <div className="space-y-6 overflow-y-auto pr-4">
+          <div className="space-y-6 overflow-y-auto pr-4 max-h-[75vh]">
             {/* Basic Information */}
             <Card>
               <CardHeader>
