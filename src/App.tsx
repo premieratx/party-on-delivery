@@ -35,7 +35,7 @@ const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
 
 // Cover pages - SAFE with route validation
-import CoverPageWithBackground from '@/components/cover/CoverPageWithBackground';
+import CoverPageWithBackground from '@/pages/CoverPageWithBackground';
 import PostCheckoutPage from '@/pages/PostCheckoutPage';
 
 // Admin pages - using direct imports since they use named exports
