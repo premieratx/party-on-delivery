@@ -34,8 +34,7 @@ import AffiliateCustomLanding from "./pages/AffiliateCustomLanding";
 const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
 
-// Enhanced standalone pages
-import CoverPageWithBackground from '@/components/cover/CoverPageWithBackground';
+// REMOVED: Enhanced standalone pages - COMPLETELY DISABLED to prevent homepage interference
 import PostCheckoutPage from '@/pages/PostCheckoutPage';
 
 // Admin pages - using direct imports since they use named exports
@@ -81,8 +80,8 @@ const App = () => {
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
-                    {/* Enhanced standalone pages */}
-                    <Route path="/cover/:slug" element={<CoverPageWithBackground />} />
+                    {/* COVER PAGES COMPLETELY DISABLED - PREVENTING HOMEPAGE INTERFERENCE */}
+                    {/* <Route path="/cover/:slug" element={<CoverPageWithBackground />} /> */}
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
                     
                     {/* Order completion - standardized routes */}
