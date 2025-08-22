@@ -35,7 +35,6 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
     : subtotal;
   
   const finalDeliveryFee = appliedDiscount?.type === 'free_shipping' ? 0 : deliveryFee;
-  const finalTotal = discountedSubtotal + finalDeliveryFee + salesTax;
 
   // Enhanced product title cleaning for better display
   const cleanTitle = (title: string) => {
@@ -183,12 +182,9 @@ export const ImprovedCheckoutSummary: React.FC<ImprovedCheckoutSummaryProps> = (
 
         <Separator className="my-4" />
         
-        {/* Final Total - Enhanced */}
-        <div className="flex justify-between items-center py-2 bg-primary/5 rounded-lg px-3">
-          <span className="text-lg font-bold">Total</span>
-          <span className="text-xl font-bold text-primary">
-            ${finalTotal.toFixed(2)}
-          </span>
+        {/* Note: Final total is calculated in the payment step including tip */}
+        <div className="text-xs text-muted-foreground text-center py-2">
+          Final total with tip will be shown at checkout
         </div>
 
         {/* Savings Summary */}

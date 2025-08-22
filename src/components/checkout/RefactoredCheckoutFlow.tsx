@@ -18,6 +18,7 @@ import { AddressStep } from './AddressStep';
 import { CustomerInfoStep } from './CustomerInfoStep';
 import { ImprovedCheckoutSummary } from './ImprovedCheckoutSummary';
 import { StripePaymentWrapper } from './StripePaymentWrapper';
+import { CleanCheckoutTotal } from './CleanCheckoutTotal';
 import { PromoCodeInput } from './PromoCodeInput';
 
 interface RefactoredCheckoutFlowProps {
@@ -353,19 +354,33 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
             )}
           </div>
 
-          {/* Right Column - Order Summary (Better Width) */}
+          {/* Right Column - Clean Total Display */}
           <div className="xl:col-span-2 space-y-4">
-            {/* Order Summary - Sticky on larger screens */}
-            <div className="lg:sticky lg:top-4">
-               <ImprovedCheckoutSummary
-                 cartItems={cartItems}
-                 subtotal={cartSubtotal}
-                 deliveryFee={finalDeliveryFee}
-                 salesTax={calculatedSalesTax}
-                 appliedDiscount={appliedDiscount}
-                 onUpdateQuantity={onUpdateQuantity}
-               />
-            </div>
+            {currentStep === 'payment' && (
+              <div className="lg:sticky lg:top-4">
+                <CleanCheckoutTotal
+                  subtotal={cartSubtotal}
+                  deliveryFee={finalDeliveryFee}
+                  salesTax={calculatedSalesTax}
+                  tipAmount={tipAmount}
+                  appliedDiscount={appliedDiscount}
+                />
+              </div>
+            )}
+            
+            {/* Show order summary only on non-payment steps */}
+            {currentStep !== 'payment' && (
+              <div className="lg:sticky lg:top-4">
+                <ImprovedCheckoutSummary
+                  cartItems={cartItems}
+                  subtotal={cartSubtotal}
+                  deliveryFee={finalDeliveryFee}
+                  salesTax={calculatedSalesTax}
+                  appliedDiscount={appliedDiscount}
+                  onUpdateQuantity={onUpdateQuantity}
+                />
+              </div>
+            )}
           </div>
         </div>
         

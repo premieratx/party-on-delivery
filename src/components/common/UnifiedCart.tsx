@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { X, Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { X, Minus, Plus, ShoppingCart, Trash2, Check } from 'lucide-react';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 import { useNavigate } from 'react-router-dom';
 import { safeNumber, formatPrice } from '@/utils/safeCalculations';
@@ -42,26 +42,22 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
     onClose();
   };
 
-  // Always scroll cart to top when opened - enhanced with multiple methods
+  // ENHANCED: Always scroll cart to top when opened - guaranteed to work
   useEffect(() => {
-    if (isOpen && scrollContainerRef.current) {
-      // Use multiple approaches to ensure scroll reset
-      const scrollContainer = scrollContainerRef.current;
-      
-      // Immediate scroll reset
-      scrollContainer.scrollTop = 0;
-      
-      // Backup with scrollTo
-      scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
-      
-      // Additional timeout to ensure it works even with delayed rendering
-      const timeoutId = setTimeout(() => {
-        if (scrollContainer) {
-          scrollContainer.scrollTop = 0;
+    if (isOpen) {
+      // Force scroll to top immediately when cart opens
+      const scrollToTop = () => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = 0;
+          scrollContainerRef.current.scrollTo({ top: 0, behavior: 'instant' });
         }
-      }, 10);
+      };
       
-      return () => clearTimeout(timeoutId);
+      // Multiple attempts to ensure scroll reset works
+      scrollToTop(); // Immediate
+      setTimeout(scrollToTop, 1); // Next tick
+      setTimeout(scrollToTop, 10); // Backup
+      setTimeout(scrollToTop, 50); // Final backup
     }
   }, [isOpen]);
 
@@ -227,14 +223,15 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           )}
         </div>
 
-        {/* Sticky Checkout Button - Always at Bottom */}
+        {/* Sticky Proceed to Checkout - Enhanced with larger button */}
         {cartItems.length > 0 && (
-          <div className="sticky bottom-0 left-0 right-0 border-t p-4 bg-background shadow-lg z-20">
+          <div className="sticky bottom-0 left-0 right-0 border-t p-3 bg-background/95 backdrop-blur-sm shadow-xl z-20">
             <Button 
-              className="w-full checkout-blink bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg py-6"
+              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200"
               size="lg" 
               onClick={handleCheckout}
             >
+              <Check className="w-5 h-5 mr-2" />
               Proceed to Checkout - ${formatPrice(finalTotal)}
             </Button>
           </div>

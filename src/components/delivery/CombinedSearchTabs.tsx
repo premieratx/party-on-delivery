@@ -286,15 +286,16 @@ export const CombinedSearchTabs = ({
         </div>
       </div>
 
-      {/* Mobile Layout with Dynamic Responsive Tabs */}
+        {/* Mobile Layout with Dynamic Responsive Tabs - Optimized Space Usage */}
       <div className="block md:hidden sticky top-0 z-40 bg-background">
-        {/* First Row - Dynamic Tabs */}
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between">
-            {/* Enhanced Responsive Tabs with better space utilization */}
+        {/* Dynamic Tabs - Take Full Width */}
+        <div className="container mx-auto px-2 py-1.5">
+          <div className="flex items-center">
+            {/* Enhanced Responsive Tabs - Maximize space utilization */}
             <div 
               ref={tabsContainerRef}
-              className="flex gap-1 overflow-x-auto scrollbar-hide flex-1 justify-start"
+              className="flex gap-0.5 overflow-x-auto scrollbar-hide flex-1 w-full"
+              style={{ justifyContent: 'space-between' }}
             >
               {tabs.map((tab, index) => (
                 <Button
@@ -302,67 +303,66 @@ export const CombinedSearchTabs = ({
                   className={getTabClasses(selectedCategory === index)}
                   onClick={() => onTabSelect(index)}
                   title={tabLayout === 'icon-only' ? tab.title : undefined}
+                  style={{ 
+                    flex: '1 1 0px',
+                    minWidth: '0',
+                    maxWidth: `${100 / tabs.length}%`
+                  }}
                 >
-                  <span className={`flex-shrink-0 ${getIconSize()}`}>
+                  {/* Minimize icon size, maximize text */}
+                  <span className="text-xs mr-1 flex-shrink-0" style={{ fontSize: '10px' }}>
                     {tab.icon || '📦'}
                   </span>
-                   <span className={`truncate transition-all duration-300 flex-1 ${
-                     tabLayout === 'minimal' ? 'text-[10px] max-w-[2.5rem]' : 
-                     tabLayout === 'compact' ? 'text-xs max-w-[3.5rem]' :
-                     tabLayout === 'icon-only' ? 'text-[9px] max-w-[2rem]' : 'max-w-[8rem]'
-                   }`}>
-                     {tab.title}
-                   </span>
+                  <span className="truncate font-medium text-xs leading-tight flex-1 text-center">
+                    {tab.title}
+                  </span>
                 </Button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Second Row - Cart, Checkout, and Search Icons (Mobile) - Maximize space usage */}
+        {/* Second Row - Cart & Checkout Icons (Clean Layout) */}
         <div className="container mx-auto px-4 pb-2">
-          <div className="flex items-center gap-2 w-full">
+          <div className="flex items-center justify-center gap-4">
             {/* Search Icon - Compact */}
             {showSearch && !isSearchExpanded && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleSearchIconClick}
-                className="flex-shrink-0 h-10 w-10 p-0 border border-muted hover:border-primary transition-colors"
+                className="h-9 w-9 p-0 border border-muted hover:border-primary transition-colors"
                 title="Search"
               >
                 <Search className="w-4 h-4" />
               </Button>
             )}
             
-            {/* Cart Button - Mobile (Maximize space, show quantity and total) */}
+            {/* Cart Button - Mobile (Simple: Icon + Count Only) */}
             <Button
               variant="outline"
               onClick={onOpenCart}
-              className="flex-1 flex items-center justify-center gap-2 h-10 text-sm border hover:bg-muted transition-colors min-w-0"
+              className="flex items-center justify-center gap-1.5 h-9 px-3 border hover:bg-muted transition-colors"
               disabled={cartItemCount === 0}
             >
-              <ShoppingCart className="w-4 h-4 flex-shrink-0" />
+              <ShoppingCart className="w-4 h-4" />
               {cartItemCount > 0 && (
-                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center flex-shrink-0">
+                <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center font-semibold">
                   {cartItemCount}
                 </span>
               )}
-              {totalAmount > 0 && (
-                <span className="font-bold text-sm truncate">${formatPrice(safePrice(totalAmount))}</span>
-              )}
             </Button>
             
-            {/* Checkout Button - Mobile (Checkmark + total, maximize space) */}
+            {/* Checkout Button - Mobile (Checkmark + Total Only) */}
             <Button
               onClick={onCheckout}
-              className="flex-1 flex items-center justify-center gap-2 h-10 text-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 shadow-sm hover:shadow-md min-w-0"
+              className="flex items-center justify-center gap-1.5 h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200"
               variant="default"
               disabled={cartItemCount === 0}
             >
-              <Check className="w-4 h-4 flex-shrink-0" />
+              <Check className="w-5 h-5" />
               {totalAmount > 0 && (
-                <span className="font-bold text-sm truncate">${formatPrice(safePrice(totalAmount))}</span>
+                <span className="font-bold text-sm">${formatPrice(safePrice(totalAmount))}</span>
               )}
             </Button>
           </div>
