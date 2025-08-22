@@ -88,9 +88,9 @@ const FONT_OPTIONS = [
 ];
 
 const DEVICE_CONFIGS = {
-  mobile: { width: 375, height: 667, name: 'Mobile' },
-  tablet: { width: 768, height: 1024, name: 'Tablet' },
-  desktop: { width: 1200, height: 800, name: 'Desktop' }
+  mobile: { width: 375, height: 812, name: 'iPhone' },      // iPhone 12/13/14 standard
+  tablet: { width: 768, height: 1024, name: 'iPad' },       // Standard iPad
+  desktop: { width: 1366, height: 768, name: 'Laptop' }     // Most common laptop resolution
 };
 
 const ScrollingTextComponent: React.FC<{
@@ -955,8 +955,9 @@ export const DeliveryAppVisualEditor: React.FC<DeliveryAppVisualEditorProps> = (
                   height: DEVICE_CONFIGS[activeDevice].height,
                   maxWidth: '100%',
                   maxHeight: '100%',
-                  transform: activeDevice === 'mobile' ? 'scale(0.8)' : 
-                            activeDevice === 'tablet' ? 'scale(0.7)' : 'scale(0.6)'
+                  transform: activeDevice === 'mobile' ? 'scale(0.9)' :     // iPhone gets better scale
+                            activeDevice === 'tablet' ? 'scale(0.75)' :    // iPad fits nicely  
+                            'scale(0.55)'                                   // Laptop needs smaller scale
                 }}
               >
                 {/* Hero Section Preview */}
