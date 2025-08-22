@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -516,7 +516,7 @@ export const EnhancedPostCheckoutEditor: React.FC<EnhancedPostCheckoutEditorProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-[98vw] w-full h-[98vh] p-0 overflow-hidden" aria-describedby="dialog-description">
         <div className="h-full flex flex-col">
           {/* Header */}
           <DialogHeader className="p-4 border-b flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
@@ -544,6 +544,9 @@ export const EnhancedPostCheckoutEditor: React.FC<EnhancedPostCheckoutEditorProp
                 </Button>
               </div>
             </DialogTitle>
+            <DialogDescription id="dialog-description" className="sr-only">
+              Design and configure your post-checkout screen content and appearance.
+            </DialogDescription>
           </DialogHeader>
 
           {/* Main Content */}
