@@ -105,103 +105,42 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const logoInputRef = useRef<HTMLInputElement>(null);
   const isEditing = !!initial?.id;
 
-  // Load Shopify collections with force refresh capability
+  // Load Shopify collections with REAL data and proper scrolling
   const loadShopifyCollections = async (forceRefresh = false) => {
     try {
       setCollectionsLoading(true);
-      console.log('🔄 Loading Shopify collections for delivery app creator...');
+      console.log('🔄 Loading REAL Shopify collections with accurate counts...');
       
-      if (forceRefresh) {
-        console.log('⚡ Force fixing product collections...');
-        // Force fix product collections specifically
-        const { data: syncData, error: syncError } = await supabase.functions.invoke('fix-product-collections');
-        
-        if (syncError) {
-          console.warn('Product collection fix warning (will continue):', syncError);
-        } else {
-          console.log('✅ Force sync completed:', syncData);
-        }
-      }
-      
-      // Get the freshest collections data
-      const { data, error } = await supabase.functions.invoke('get-all-collections', {
-        body: { forceRefresh }
-      });
+      // Use the new optimizer that gets real data
+      const { data, error } = await supabase.functions.invoke('shopify-sync-optimizer');
       
       if (error) {
-        console.error('❌ Error from get-all-collections:', error);
+        console.error('❌ Optimizer error:', error);
         throw error;
       }
       
       if (data?.collections && Array.isArray(data.collections)) {
-        console.log(`✅ Loaded ${data.collections.length} collections from Shopify`);
+        console.log(`✅ Got ${data.collections.length} REAL collections with accurate counts`);
         
-        // Process and filter collections with products
+        // Filter and sort collections
         const collections = data.collections
-          .filter((collection: any) => collection.products_count > 0) // Only collections with products
-          .map((collection: any) => ({
-            handle: collection.handle,
-            name: collection.title || collection.handle.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            products_count: collection.products_count || 0
-          }))
-          .sort((a: any, b: any) => a.name.localeCompare(b.name));
+          .filter((collection: any) => collection.products_count >= 3) // Only collections with 3+ products
+          .sort((a: any, b: any) => b.products_count - a.products_count); // Sort by product count
         
         setShopifyCollections(collections);
-        console.log('📋 Shopify collections loaded:', collections.map(c => `${c.name} (${c.products_count} products)`));
+        console.log('📋 Real collections loaded:', collections.map(c => `${c.name}: ${c.products_count} products`));
         
-        if (collections.length === 0) {
-          console.warn('⚠️ No collections with products found. Attempting force refresh...');
-          if (!forceRefresh) {
-            // Try one more time with force refresh
-            return loadShopifyCollections(true);
-          }
-        }
       } else {
-        throw new Error('No collections returned from API');
+        throw new Error('No collections returned from optimizer');
       }
     } catch (error) {
-      console.error('❌ Error loading collections:', error);
-      
-      // Fallback: try to get from cache
-      try {
-        console.log('🔄 Attempting fallback from cache...');
-        const { data: cacheData } = await supabase
-          .from('cache')
-          .select('data')
-          .like('key', '%collections%')
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (cacheData?.[0]?.data) {
-          // Handle both array and object formats from cache
-          let cachedCollections: any[] = [];
-          const data = cacheData[0].data as any;
-          
-          if (Array.isArray(data)) {
-            cachedCollections = data;
-          } else if (data && typeof data === 'object' && data.collections) {
-            cachedCollections = data.collections;
-          }
-          
-          const processedCollections = cachedCollections
-            .filter((collection: any) => collection.products_count > 0)
-            .map((collection: any) => ({
-              handle: collection.handle,
-              name: collection.title || collection.name || collection.handle,
-              products_count: collection.products_count || 0
-            }));
-          
-          setShopifyCollections(processedCollections);
-          console.log('✅ Loaded collections from cache fallback');
-        }
-      } catch (cacheError) {
-        console.error('❌ Cache fallback failed:', cacheError);
-        toast({
-          title: "Error Loading Collections",
-          description: "Failed to load Shopify collections. Please try refreshing.",
-          variant: "destructive"
-        });
-      }
+      console.error('❌ Error loading real collections:', error);
+      setShopifyCollections([]);
+      toast({
+        title: "Error Loading Collections",
+        description: "Failed to load Shopify collections with real product counts.",
+        variant: "destructive"
+      });
     } finally {
       setCollectionsLoading(false);
     }
@@ -605,7 +544,7 @@ export const DeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                   </Card>
 
                   {/* Tab Configuration */}
-                  <ScrollArea className="h-[400px]">
+                  <ScrollArea className="h-[600px] overflow-y-auto">
                     <div className="grid gap-4 pr-4">
                       {tabs.map((tab, index) => (
                         <Card key={index}>
