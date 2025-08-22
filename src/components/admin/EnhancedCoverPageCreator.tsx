@@ -271,7 +271,8 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         .from('cover_pages')
         .select('id')
         .eq('slug', slug)
-        .neq('id', excludeId || '')
+        // Only add the neq filter if we have a valid excludeId
+        .not('id', 'eq', excludeId || '00000000-0000-0000-0000-000000000000')
         .maybeSingle();
       
       if (!existing) {
