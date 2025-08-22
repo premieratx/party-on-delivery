@@ -16,6 +16,7 @@ import { useAdminState } from "@/hooks/useAdminState";
 import { EditableCoverScreen } from "@/components/enhanced-cover/EditableCoverScreen";
 import { MediaUploadSection } from "./MediaUploadSection";
 import { Loader2, Save, Plus, Trash2, Move, Percent, DollarSign, Truck, MapPin, Clock } from 'lucide-react';
+import { CANONICAL_DOMAIN } from '@/utils/domain';
 
 interface EnhancedCoverPageCreatorProps {
   open: boolean;
@@ -391,7 +392,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
         toast({
           title: "Success!",
-          description: `Cover page created! Available at ${window.location.origin}/cover/${slug}`,
+          description: `Cover page created! Available at ${CANONICAL_DOMAIN}/cover/${slug}`,
           action: (
             <Button 
               variant="outline" 
