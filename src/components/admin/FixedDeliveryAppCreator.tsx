@@ -75,68 +75,80 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
   const loadCollections = async () => {
     setCollectionsLoading(true);
     try {
-      console.log('🔄 Loading ALL Shopify collections for admin dropdown...');
+      console.log('🔄 Loading ALL REAL Shopify collections for admin dropdown...');
       
-      // Use the bulletproof edge function to get ALL collections
-      const { data: response, error } = await supabase.functions.invoke('get-all-collections');
-      
-      if (error) {
-        console.error('❌ Edge function error:', error);
-        throw error;
+      // PRIORITY 1: Use the unified products endpoint with real cached data
+      const { data: unifiedData, error: unifiedError } = await supabase.functions.invoke('get-unified-products', {
+        body: { 
+          use_type: 'delivery',
+          lightweight: true,
+          admin_access: true 
+        }
+      });
+
+      if (!unifiedError && unifiedData?.collections && unifiedData.collections.length > 0) {
+        console.log(`✅ SUCCESS: Loaded ${unifiedData.collections.length} REAL Shopify collections with products!`);
+        
+        const formattedCollections = unifiedData.collections.map((collection: any) => ({
+          handle: collection.handle,
+          name: collection.name,
+          products_count: collection.product_count || collection.products_count || 0
+        }));
+        
+        console.log(`📋 REAL DATA: Admin has access to ALL ${formattedCollections.length} collections`);
+        setCollections(formattedCollections);
+        
+        toast({
+          title: "✅ Real Shopify Collections Loaded!",
+          description: `${formattedCollections.length} collections with actual products loaded successfully`,
+          variant: "default"
+        });
+        return;
       }
 
-      if (response?.success && response?.collections) {
-        console.log(`✅ Loaded ${response.collections.length} collections from ${response.source}`);
+      // PRIORITY 2: Fallback to legacy collections endpoint
+      console.log('⚠️ Unified endpoint failed, trying legacy collections...');
+      const { data: response, error } = await supabase.functions.invoke('get-all-collections');
+      
+      if (!error && response?.success && response?.collections) {
+        console.log(`✅ BACKUP: Loaded ${response.collections.length} collections from legacy endpoint`);
         
-        // DON'T filter by products_count - show ALL collections for admin selection
         const formattedCollections = response.collections
           .map((col: any) => ({
             handle: col.handle,
             name: col.title || col.handle.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
             products_count: col.products_count || 0
           }))
-          .sort((a: any, b: any) => a.name.localeCompare(b.name)); // Sort alphabetically by name
+          .sort((a: any, b: any) => a.name.localeCompare(b.name));
         
-        console.log(`📋 Admin has access to ALL ${formattedCollections.length} collections`);
+        console.log(`📋 BACKUP DATA: Admin has access to ALL ${formattedCollections.length} collections`);
         setCollections(formattedCollections);
+        
+        toast({
+          title: "Collections Loaded (Backup)",
+          description: `${formattedCollections.length} collections loaded from backup source`,
+          variant: "default"
+        });
         return;
       }
 
-      // If no success, throw error to trigger fallback
-      throw new Error('No collections returned');
+      // Only reach here if BOTH real endpoints fail
+      throw new Error('Both real collection endpoints failed - check Shopify connection');
       
     } catch (error) {
-      console.error('❌ Error loading collections:', error);
-      console.log('🔄 Using comprehensive fallback collections...');
+      console.error('❌ CRITICAL: All real collection sources failed:', error);
+      console.log('🆘 EMERGENCY FALLBACK - Limited fake collections in use');
       
-      // Comprehensive fallback with many more collections
+      // Emergency fallback - VERY limited to make it obvious this is not real data
       setCollections([
-        { handle: 'all', name: 'All Products', products_count: 1052 },
-        { handle: 'spirits', name: 'Premium Spirits', products_count: 120 },
-        { handle: 'tailgate-beer', name: 'Tailgate Beer', products_count: 95 },
-        { handle: 'cocktail-kits', name: 'Cocktail Kits', products_count: 65 },
-        { handle: 'party-supplies', name: 'Party Supplies', products_count: 85 },
-        { handle: 'champagne', name: 'Champagne & Sparkling', products_count: 55 },
-        { handle: 'whiskey', name: 'Whiskey & Bourbon', products_count: 75 },
-        { handle: 'vodka', name: 'Premium Vodka', products_count: 45 },
-        { handle: 'tequila', name: 'Tequila & Mezcal', products_count: 35 },
-        { handle: 'rum', name: 'Premium Rum', products_count: 28 },
-        { handle: 'gin', name: 'Craft Gin', products_count: 32 },
-        { handle: 'wine', name: 'Fine Wine', products_count: 88 },
-        { handle: 'craft-beer', name: 'Craft Beer', products_count: 156 },
-        { handle: 'mixers', name: 'Cocktail Mixers', products_count: 42 },
-        { handle: 'glassware', name: 'Bar Glassware', products_count: 24 },
-        { handle: 'accessories', name: 'Bar Accessories', products_count: 36 },
-        { handle: 'gift-sets', name: 'Gift Sets', products_count: 18 },
-        { handle: 'seasonal', name: 'Seasonal Items', products_count: 12 },
-        { handle: 'limited-edition', name: 'Limited Edition', products_count: 8 },
-        { handle: 'non-alcoholic', name: 'Non-Alcoholic', products_count: 15 }
+        { handle: 'emergency-fallback', name: '🚨 EMERGENCY FALLBACK ONLY', products_count: 0 },
+        { handle: 'contact-admin', name: '⚠️ Contact Admin - Real Data Unavailable', products_count: 0 }
       ]);
       
       toast({
-        title: "Collections loaded",
-        description: `Using ${error.message?.includes('collections') ? 'cached' : 'fallback'} collections (${20} available)`,
-        variant: "default"
+        title: "🚨 CRITICAL: Emergency Fallback Active",
+        description: "Real Shopify collections unavailable - contact system admin immediately",
+        variant: "destructive"
       });
     } finally {
       setCollectionsLoading(false);
