@@ -110,20 +110,21 @@ serve(async (req) => {
       },
       metadata: {
         order_draft_id: draftData?.id || 'unknown',
-        affiliate_code: affiliateCode || '',
-        customer_email: customerInfo?.email || '',
-        delivery_date: deliveryInfo?.date || '',
-        delivery_time: deliveryInfo?.timeSlot || '',
-        cart_items: JSON.stringify(cartItems),
+        affiliate_code: (affiliateCode || '').substring(0, 100),
+        customer_email: (customerInfo?.email || '').substring(0, 100),
+        delivery_date: (deliveryInfo?.date || '').substring(0, 50),
+        delivery_time: (deliveryInfo?.timeSlot || '').substring(0, 50),
+        items_count: (cartItems?.length || 0).toString(),
+        item_summary: cartItems?.slice(0, 2).map(item => item.title || 'Item').join(', ').substring(0, 200) + (cartItems?.length > 2 ? '...' : ''),
         subtotal: subtotal.toFixed(2),
         delivery_fee: deliveryFee.toFixed(2),
         sales_tax: salesTax.toFixed(2),
         tip_amount: tipAmount.toFixed(2),
         total_amount: (amount / 100).toFixed(2),
-        customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim(),
-        customer_phone: customerInfo?.phone || '',
-        delivery_address: `${deliveryInfo?.address || ''}, ${deliveryInfo?.city || ''}, ${deliveryInfo?.state || ''} ${deliveryInfo?.zipCode || ''}`.trim(),
-        delivery_instructions: deliveryInfo?.instructions || ''
+        customer_name: `${customerInfo?.firstName || ''} ${customerInfo?.lastName || ''}`.trim().substring(0, 100),
+        customer_phone: (customerInfo?.phone || '').substring(0, 20),
+        delivery_city: (deliveryInfo?.city || '').substring(0, 50),
+        delivery_state: (deliveryInfo?.state || '').substring(0, 20)
       }
     });
 

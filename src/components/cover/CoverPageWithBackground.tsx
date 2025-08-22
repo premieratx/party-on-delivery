@@ -36,13 +36,13 @@ const CoverPageWithBackground = () => {
   
   const { openCart } = useGlobalCart();
 
-  // Load cover page data
+  // Load cover page data - try to find active cover page with this slug
   const { data: coverPage, isLoading: loadingCover, error } = useQuery({
     queryKey: ['cover-page', slug],
     queryFn: async () => {
       if (!slug) throw new Error('No slug provided');
       
-      // Simple database lookup
+      // Try to find cover page with this slug
       const { data, error } = await supabase
         .from('cover_pages')
         .select('*')
@@ -58,8 +58,8 @@ const CoverPageWithBackground = () => {
         return data;
       }
       
-      // Not found
-      throw new Error(`Cover page not found: ${slug}`);
+      // If no cover page found, return null (will trigger 404 or app fallback)
+      return null;
     },
     enabled: !!slug
   });
@@ -154,12 +154,36 @@ const CoverPageWithBackground = () => {
     );
   }
 
-  if (error || !coverPage) {
+  if (error || (!coverPage && !loadingCover)) {
+    // If no cover page found, show the background delivery app instead of 404
+    if (!coverPage && backgroundApp) {
+      return (
+        <div className="relative min-h-screen">
+          <CustomDeliveryTabsPage
+            appName={backgroundApp.app_name}
+            heroHeading={backgroundApp.main_app_config?.hero_heading || backgroundApp.app_name}
+            heroSubheading={backgroundApp.main_app_config?.hero_subheading || 'Premium delivery service'}
+            logoUrl={backgroundApp.logo_url}
+            collectionsConfig={backgroundApp.collections_config}
+            onAddToCart={handleAddToCart}
+            cartItemCount={getTotalItems()}
+            onOpenCart={openCart}
+            cartItems={cartItems}
+            onUpdateQuantity={handleUpdateQuantity}
+            onProceedToCheckout={handleProceedToCheckout}
+            onGoHome={handleGoHome}
+          />
+          <DataFlowMonitor />
+        </div>
+      );
+    }
+    
+    // Show 404 only if there's an actual error or no fallback available
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Page Not Found</h1>
-          <p className="text-muted-foreground">The cover page you're looking for doesn't exist or has been disabled.</p>
+          <p className="text-muted-foreground">The page you're looking for doesn't exist or has been disabled.</p>
         </div>
       </div>
     );
