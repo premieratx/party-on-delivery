@@ -529,7 +529,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                     className="text-sm"
                   />
                 <div className="text-xs text-muted-foreground">
-                  Preview URL: {window.location.origin}/cover/{computedSlug}
+                  Preview URL: {CANONICAL_DOMAIN}/cover/{computedSlug}
                 </div>
                 <Button
                   variant="outline"

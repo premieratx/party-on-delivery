@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { UnifiedCoverPageEditor } from './UnifiedCoverPageEditor';
 import { Settings, Eye, Plus } from 'lucide-react';
+import { CANONICAL_DOMAIN } from '@/utils/domain';
 
 interface CoverPage {
   id: string;
@@ -178,7 +179,7 @@ export const HomepageCoverSettings: React.FC = () => {
 
   const previewHomepageCover = () => {
     if (!coverConfig?.cover_pages) return;
-    window.open(`${window.location.origin}/cover/${coverConfig.cover_pages.slug}`, '_blank');
+    window.open(`${CANONICAL_DOMAIN}/cover/${coverConfig.cover_pages.slug}`, '_blank');
   };
 
   if (loading) {

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, Save, Copy, Settings2, Palette, Layout, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { CANONICAL_DOMAIN } from '@/utils/domain';
 
 // Import Figma components - Removed old cover screens per user request
 
@@ -490,7 +491,7 @@ export const FigmaEnhancedCoverCreator: React.FC<FigmaEnhancedCoverCreatorProps>
           <div className="flex justify-between items-center pt-6 border-t">
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => navigator.clipboard.writeText(`${window.location.origin}/cover/${config.slug}`)}
+                onClick={() => navigator.clipboard.writeText(`${CANONICAL_DOMAIN}/cover/${config.slug}`)}
                 variant="outline"
                 size="sm"
               >

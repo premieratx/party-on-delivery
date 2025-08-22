@@ -11,3 +11,6 @@ export const buildRootQueryUrl = (query: string) => `${CANONICAL_DOMAIN}/?${quer
 // New helpers for affiliate short links
 export const buildAffiliateUrl = (affiliateCode: string) => `${CANONICAL_DOMAIN}/${affiliateCode}`;
 export const buildAppAffiliateUrl = (appShortPath: string, affiliateCode: string) => `${CANONICAL_DOMAIN}/${appShortPath}/${affiliateCode}`;
+
+// Cover page URL helper
+export const buildCoverPageUrl = (slug: string) => `${CANONICAL_DOMAIN}/cover/${slug}`;

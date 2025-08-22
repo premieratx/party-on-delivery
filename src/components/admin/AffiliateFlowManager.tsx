@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Trash2, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { CANONICAL_DOMAIN } from '@/utils/domain';
 
 interface AffiliateFlow {
   id: string;
@@ -249,7 +250,7 @@ export const AffiliateFlowManager: React.FC = () => {
 
   const copyFlowURL = (flow: AffiliateFlow) => {
     const affiliate = affiliates.find(a => a.id === flow.affiliate_id);
-    const url = `${window.location.origin}/${affiliate?.custom_handle}/${flow.flow_slug}/cover`;
+    const url = `${CANONICAL_DOMAIN}/${affiliate?.custom_handle}/${flow.flow_slug}/cover`;
     navigator.clipboard.writeText(url);
     toast({
       title: "Copied!",

@@ -155,7 +155,7 @@ export default function CoverPagesAdmin() {
   const openCoverUrl = (projectId: string) => {
     const coverPage = coverPages.find(p => p.id === projectId);
     if (coverPage) {
-      window.open(`/cover/${coverPage.slug}`, '_blank');
+      window.open(`https://order.partyondelivery.com/cover/${coverPage.slug}`, '_blank');
     }
   };
 
