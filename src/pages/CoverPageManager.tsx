@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { UnifiedCoverPageEditor } from '@/components/admin/UnifiedCoverPageEditor';
+import { buildCoverPageUrl } from '@/utils/links';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Eye, Trash2, Copy, ExternalLink } from 'lucide-react';
+import { UnifiedCoverPageEditor } from '@/components/admin/UnifiedCoverPageEditor';
 
 const CoverPageManager = () => {
   const [showEditor, setShowEditor] = useState(false);
@@ -54,7 +55,7 @@ const CoverPageManager = () => {
   };
 
   const copyCoverUrl = async (page: any) => {
-    const url = `https://order.partyondelivery.com/cover/${page.slug}`;
+    const url = buildCoverPageUrl(page.slug);
     try {
       await navigator.clipboard.writeText(url);
       toast({
@@ -77,7 +78,7 @@ const CoverPageManager = () => {
   };
 
   const openCoverUrl = (page: any) => {
-    window.open(`/cover/${page.slug}`, '_blank');
+    window.open(buildCoverPageUrl(page.slug), '_blank');
   };
 
   const handleDelete = async (pageId: string) => {

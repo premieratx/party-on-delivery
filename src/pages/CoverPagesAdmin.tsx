@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { buildCoverPageUrl } from '@/utils/links';
 import { 
   Layout, 
   Plus, 
@@ -135,7 +136,7 @@ export default function CoverPagesAdmin() {
   const copyCoverUrl = async (projectId: string) => {
     const coverPage = coverPages.find(p => p.id === projectId);
     if (coverPage) {
-      const url = `https://order.partyondelivery.com/cover/${coverPage.slug}`;
+      const url = buildCoverPageUrl(coverPage.slug);
       try {
         await navigator.clipboard.writeText(url);
         toast.success(`Copied URL for ${coverPage.title}`);
@@ -155,7 +156,7 @@ export default function CoverPagesAdmin() {
   const openCoverUrl = (projectId: string) => {
     const coverPage = coverPages.find(p => p.id === projectId);
     if (coverPage) {
-      window.open(`https://order.partyondelivery.com/cover/${coverPage.slug}`, '_blank');
+      window.open(buildCoverPageUrl(coverPage.slug), '_blank');
     }
   };
 
@@ -310,7 +311,7 @@ export default function CoverPagesAdmin() {
                         
                         <div className="flex items-center gap-2 mb-2">
                           <p className="text-sm font-mono bg-muted px-2 py-1 rounded text-primary">
-                            https://order.partyondelivery.com/cover/{coverPages.find(p => p.id === project.id)?.slug}
+                            {buildCoverPageUrl(coverPages.find(p => p.id === project.id)?.slug || '')}
                           </p>
                           <Button
                             size="sm"
