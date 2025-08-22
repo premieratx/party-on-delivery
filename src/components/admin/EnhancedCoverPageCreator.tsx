@@ -237,7 +237,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         duration: 3000,
       });
     }
-  }, [initial, open, getFormValue, toast]);
+  }, [initial, open]); // Fixed: Removed getFormValue and toast from dependencies to prevent infinite loop
 
   const generateSlug = (title: string) => {
     return title
