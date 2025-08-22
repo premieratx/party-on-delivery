@@ -74,11 +74,8 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* ROUTING TEST */}
-                    <Route path="/" element={<RoutingTest />} />
-                    
-                    {/* DYNAMIC HOMEPAGE ROUTE - DISABLED */}
-                    {/* <Route path="/" element={<DynamicHomepage />} /> */}
+                    {/* DYNAMIC HOMEPAGE ROUTE */}
+                    <Route path="/" element={<DynamicHomepage />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/delivery" element={<DynamicHomepage />} />
                     <Route path="/search" element={<SearchPage />} />
@@ -121,8 +118,8 @@ const App = () => {
                     <Route path="/direct-cover" element={<DirectCoverPage />} />
                     <Route path="/basic" element={<BasicCoverPage />} />
                     
-                    {/* Dynamic slug routes DISABLED FOR TESTING */}
-                    {/* <Route path="/:slug" element={<CoverPageWithBackground />} /> */}
+                    {/* Cover page routes - RE-ENABLED */}
+                    <Route path="/:slug" element={<BasicCoverPage />} />
                   </Routes>
                 </Suspense>
               </div>
