@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -491,7 +491,7 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden">
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden" aria-describedby="cover-page-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 justify-between">
               <div className="flex items-center gap-2">
@@ -512,6 +512,9 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
                 </Button>
               )}
             </DialogTitle>
+            <DialogDescription id="cover-page-description">
+              Create and customize professional cover pages with templates, branding, and interactive elements.
+            </DialogDescription>
           </DialogHeader>
 
           <Tabs defaultValue="template" className="flex-1 flex flex-col min-h-0">
