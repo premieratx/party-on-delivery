@@ -77,6 +77,7 @@ const App = () => {
                     {/* DYNAMIC HOMEPAGE ROUTE */}
                     <Route path="/" element={<DynamicHomepage />} />
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/delivery" element={<DynamicHomepage />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     

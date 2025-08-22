@@ -324,6 +324,15 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
         toast({
           title: "Success!",
           description: "Cover page updated successfully",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.open(`/cover/${slug}`, '_blank')}
+            >
+              View Page
+            </Button>
+          )
         });
       } else {
         // Create new
@@ -335,7 +344,16 @@ export const EnhancedCoverPageCreator: React.FC<EnhancedCoverPageCreatorProps> =
 
         toast({
           title: "Success!",
-          description: `Cover page created! Available at https://order.partyondelivery.com/cover/${slug}`,
+          description: `Cover page created! Available at ${window.location.origin}/cover/${slug}`,
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.open(`/cover/${slug}`, '_blank')}
+            >
+              View Page
+            </Button>
+          )
         });
       }
 

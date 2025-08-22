@@ -65,6 +65,20 @@ const CoverPageWithBackground = () => {
     enabled: !!slug
   });
 
+  // Load delivery apps for button URL resolution
+  const { data: deliveryApps } = useQuery({
+    queryKey: ['delivery-apps'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('delivery_app_variations')
+        .select('id, app_slug')
+        .eq('is_active', true);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   // Initialize tracking when cover page loads (prevent infinite loops)
   useEffect(() => {
     if (coverPage && !flowData?.coverPageId) {
@@ -179,21 +193,50 @@ const CoverPageWithBackground = () => {
         button_text: btn.text,
         button_type: btn.type,
         target_url: btn.target || btn.url,
-        delivery_app_slug: btn.target?.includes('/app/') ? btn.target.split('/app/')[1] : null,
+        delivery_app_slug: btn.delivery_app_id || (btn.target?.includes('/app/') ? btn.target.split('/app/')[1] : null),
         markup_percentage: btn.markup_percentage || 0,
         markup_dollar_amount: btn.markup_dollar_amount || 0,
         special_action: btn.special_action,
         prefill_data: btn.prefill_data || null
       });
       
-      if (btn.target || btn.url) {
-        if ((btn.target || btn.url).startsWith('http')) {
-          // External link - use window.location
-          window.location.href = btn.target || btn.url;
-        } else {
-          // Internal link - use React Router
-          navigate(btn.target || btn.url);
+      // Determine the target URL based on button configuration
+      let targetUrl = btn.target || btn.url;
+      
+      // Handle different assignment types
+      if (btn.assignment_type === 'delivery_app' && btn.delivery_app_id) {
+        // Find the delivery app by ID and redirect to its slug
+        const deliveryApp = deliveryApps?.find(app => app.id === btn.delivery_app_id);
+        targetUrl = `/app/${deliveryApp?.app_slug || 'delivery'}`;
+      } else if (btn.assignment_type === 'special') {
+        // Handle special actions
+        if (btn.special_action === 'free_delivery') {
+          targetUrl = '/delivery?free_shipping=true';
+        } else if (btn.special_action === 'prefill_address' && btn.prefill_data?.address) {
+          targetUrl = `/delivery?address=${encodeURIComponent(btn.prefill_data.address)}`;
+        } else if (btn.special_action === 'prefill_datetime' && btn.prefill_data) {
+          const params = new URLSearchParams();
+          if (btn.prefill_data.date) params.set('date', btn.prefill_data.date);
+          if (btn.prefill_data.time) params.set('time', btn.prefill_data.time);
+          targetUrl = `/delivery?${params.toString()}`;
         }
+      } else if (btn.assignment_type === 'url' && btn.url) {
+        targetUrl = btn.url;
+      }
+      
+      // Default fallback to main delivery page
+      if (!targetUrl) {
+        targetUrl = '/delivery';
+      }
+      
+      console.log('🔗 Redirecting to:', targetUrl);
+      
+      if (targetUrl.startsWith('http')) {
+        // External link - use window.location
+        window.location.href = targetUrl;
+      } else {
+        // Internal link - use React Router
+        navigate(targetUrl);
       }
     }
   }));
@@ -236,6 +279,7 @@ const CoverPageWithBackground = () => {
           typography={parsedStyles.typography}
           logoSizing={parsedStyles.logoSizing}
           positioning={parsedStyles.positioning}
+          sizing={parsedStyles.sizing}
           standalone={true}
         />
       </div>
