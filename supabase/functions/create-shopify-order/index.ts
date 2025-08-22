@@ -375,58 +375,26 @@ serve(async (req) => {
       tipAmountInDollars
     });
 
-    // Add shipping fee as line item
-    if (deliveryFeeInDollars > 0) {
-      lineItems.push({
-        title: "Delivery Fee",
-        price: deliveryFeeInDollars.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
-
-    // Add tip as line item
-    if (tipAmountInDollars > 0) {
-      lineItems.push({
-        title: "Driver Tip",
-        price: tipAmountInDollars.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false,
-        vendor: "Party On Delivery" // Ensure tip shows properly in Shopify
-      });
-      logStep("CRITICAL: Driver tip added to Shopify order", { 
-        tipAmount: tipAmountInDollars,
-        priceString: tipAmountInDollars.toFixed(2) 
-      });
-    } else {
-      logStep("WARNING: No driver tip to add", { tipAmountInDollars });
-    }
-
-    // CRITICAL FIX: Add sales tax as line item so it shows in Shopify breakdown
-    if (orderAmounts.sales_tax > 0) {
-      lineItems.push({
-        title: "Sales Tax (8.25%)",
-        price: orderAmounts.sales_tax.toFixed(2),
-        quantity: 1,
-        requires_shipping: false,
-        taxable: false
-      });
-    }
-
-    logStep("Line items prepared", { 
+    // CRITICAL FIX: DO NOT add delivery fee, tip, or sales tax as line items!
+    // These are NOT products and should not be taxable line items.
+    // All details are already in the order notes section below.
+    
+    logStep("Line items prepared (PRODUCTS ONLY)", { 
       itemCount: lineItems.length,
-      totalLineItemValue: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0)
+      totalLineItemValue: lineItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0),
+      deliveryFeeAmount: deliveryFeeInDollars,
+      tipAmount: tipAmountInDollars,
+      salesTaxAmount: orderAmounts.sales_tax,
+      note: "Delivery fee, tips, and tax are in order notes, NOT line items"
     });
 
-    // Let Shopify generate the order number naturally - remove custom naming
-    // This will use Shopify's normal numbering system instead of jumbled letters/numbers
+    // Extract affiliate code if present
+    const affiliateCode = metadata.affiliate_code || '';
 
-    // Create Shopify order
+    // Create Shopify order with proper structure
     const orderData = {
       order: {
-        line_items: lineItems,
+        line_items: lineItems, // ONLY actual products, no fees/tips/tax
         customer: shopifyCustomerId ? { id: shopifyCustomerId } : undefined,
         billing_address: {
           first_name: firstName,
@@ -450,33 +418,65 @@ serve(async (req) => {
         },
         email: customerEmail,
         phone: customerPhone,
+        // Put ALL non-product charges in the order notes (detailed breakdown)
         note: `=== DELIVERY ORDER DETAILS ===
 
-📦 PAYMENT DETAILS:
-• Total Paid: $${orderAmounts.total_amount.toFixed(2)} (via Stripe)
-• Subtotal: $${orderAmounts.subtotal.toFixed(2)}
+📦 PAYMENT BREAKDOWN:
+• Subtotal (Products): $${orderAmounts.subtotal.toFixed(2)}
 • Delivery Fee: $${orderAmounts.delivery_fee.toFixed(2)}
-• Sales Tax: $${orderAmounts.sales_tax.toFixed(2)}
+• Sales Tax (8.25%): $${orderAmounts.sales_tax.toFixed(2)}
 • Driver Tip: $${orderAmounts.tip_amount.toFixed(2)}
+• TOTAL PAID: $${orderAmounts.total_amount.toFixed(2)} (via Stripe)
 
-🚚 DELIVERY SCHEDULE:
+🚚 DELIVERY DETAILS:
 • Date: ${deliveryDate}
 • Time: ${deliveryTime}
-• Address: ${deliveryAddress}${deliveryInstructions ? `
-• Special Instructions: ${deliveryInstructions}` : ''}
+• Address: ${street}, ${city}, ${state} ${zip}
+${deliveryInstructions ? `• Special Instructions: ${deliveryInstructions}` : ''}
 
 💳 STRIPE PAYMENT:
 • Payment Intent: ${paymentIntentId || sessionId}
-• Payment Status: Completed Successfully
-• Single Source of Truth: This order matches Stripe transaction exactly
+• Status: Payment Confirmed
+• Amount: $${orderAmounts.total_amount.toFixed(2)}
 
-📱 APP SOURCE: Delivery App (Party On Delivery)`,
-        tags: "delivery-order,paid,stripe-processed",
+${affiliateCode ? `🤝 AFFILIATE: ${affiliateCode}` : ''}
+
+🎯 ORDER COMPOSITION:
+• Products Only: ${lineItems.length} item(s) = $${orderAmounts.subtotal.toFixed(2)}
+• Service Charges: Delivery + Tax + Tip = $${(orderAmounts.delivery_fee + orderAmounts.sales_tax + orderAmounts.tip_amount).toFixed(2)}
+
+Note: Driver tip and delivery fees are NOT line items - they are service charges included in total payment.`,
+        
+        // Set the total and tax properly (Shopify will calculate line item total + shipping + tax)
+        total_price: orderAmounts.total_amount.toFixed(2),
+        subtotal_price: orderAmounts.subtotal.toFixed(2),
+        total_tax: orderAmounts.sales_tax.toFixed(2),
+        
+        // Add shipping as a shipping line, not a line item
+        shipping_lines: orderAmounts.delivery_fee > 0 ? [{
+          title: "Delivery Service",
+          price: orderAmounts.delivery_fee.toFixed(2),
+          code: "DELIVERY"
+        }] : [],
+        
+        // Mark as paid since we have Stripe confirmation
         financial_status: "paid",
-        fulfillment_status: "unfulfilled",
-        total_tax: "0.00",
-        currency: "USD",
-        source_name: "delivery-app"
+        tags: [
+          "delivery-order",
+          "stripe-paid",
+          affiliateCode ? `affiliate-${affiliateCode}` : null,
+          orderAmounts.tip_amount > 0 ? "has-tip" : "no-tip",
+          `tip-${orderAmounts.tip_amount.toFixed(2)}`
+        ].filter(Boolean).join(", "),
+        
+        // Use transactions to show the payment was processed by Stripe
+        transactions: [{
+          amount: orderAmounts.total_amount.toFixed(2),
+          kind: "sale",
+          gateway: "stripe",
+          status: "success",
+          source_name: "web"
+        }]
       }
     };
 
