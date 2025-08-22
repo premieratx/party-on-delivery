@@ -62,20 +62,29 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
 
   // Check if current route should show navigation
   useEffect(() => {
+    console.log('🔍 Navigation check for path:', location.pathname);
+    
     const hideNavOnRoutes = ['/checkout', '/order-complete', '/success', '/cover'];
-    // Also hide navigation if the slug matches any cover page slug (for catch-all routes)
-    const shouldShow = !hideNavOnRoutes.some(route => location.pathname.startsWith(route));
+    const shouldHideBasedOnRoute = hideNavOnRoutes.some(route => location.pathname.startsWith(route));
+    
+    if (shouldHideBasedOnRoute) {
+      console.log('❌ Hiding navigation - matches hideNavOnRoutes');
+      setShowNavigation(false);
+      return;
+    }
     
     // Additional check: if the current path could be a cover page slug, hide navigation
     // This handles URLs like /premier-concierge (without /cover/)
     const pathSegments = location.pathname.split('/').filter(Boolean);
     if (pathSegments.length === 1 && pathSegments[0] !== '' && 
         !['admin', 'customer', 'affiliate', 'checkout', 'success', 'search', 'app', 'delivery'].includes(pathSegments[0])) {
+      console.log('❌ Hiding navigation - potential cover page slug:', pathSegments[0]);
       setShowNavigation(false);
       return;
     }
     
-    setShowNavigation(shouldShow);
+    console.log('✅ Showing navigation for path:', location.pathname);
+    setShowNavigation(true);
   }, [location.pathname]);
 
   // Detect user type from URL and localStorage
