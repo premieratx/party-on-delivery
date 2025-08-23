@@ -547,48 +547,50 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                         </span>
                          
                          {quantity > 0 ? (
-                           <div className="flex items-center justify-center bg-muted rounded-md p-1 w-full max-w-[90px] mx-auto">
+                           <div className="flex items-center justify-center bg-muted rounded-full p-0.5 w-full max-w-[75px] mx-auto" onClick={(e) => e.stopPropagation()}>
                               <Button
-                               size="sm"
-                               variant="ghost"
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
-                                 if (onUpdateQuantity) {
-                                   onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
-                                 }
-                               }}
-                               className="h-6 w-6 p-0 flex-shrink-0"
-                             >
-                               <Minus className="w-3 h-3" />
-                             </Button>
-                             <span className="font-medium px-1 text-sm flex-1 text-center min-w-0">{quantity}</span>
-                             <Button
-                               size="sm"
-                               variant="ghost"
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
-                                 if (onUpdateQuantity) {
-                                   onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
-                                 }
-                               }}
-                               className="h-6 w-6 p-0 flex-shrink-0"
-                             >
-                               <Plus className="w-3 h-3" />
-                             </Button>
-                           </div>
-                          ) : (
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddToCart(product);
-                              }}
-                              className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in mx-auto"
-                            >
-                             <Plus className="w-4 h-4" />
-                           </Button>
-                         )}
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 p-0 flex-shrink-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
+                                  if (onUpdateQuantity) {
+                                    onUpdateQuantity(product.id, product.variants?.[0]?.id, Math.max(0, quantity - 1));
+                                  }
+                                }}
+                              >
+                              <Minus className="w-2.5 h-2.5" strokeWidth={2.5} />
+                            </Button>
+                            <span className="font-semibold text-xs flex-1 text-center min-w-[16px]">
+                              {quantity}
+                            </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 p-0 flex-shrink-0 rounded-full hover:bg-primary hover:text-primary-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
+                                  if (onUpdateQuantity) {
+                                    onUpdateQuantity(product.id, product.variants?.[0]?.id, quantity + 1);
+                                  }
+                                }}
+                              >
+                              <Plus className="w-2.5 h-2.5" strokeWidth={2.5} />
+                            </Button>
+                          </div>
+                         ) : (
+                           <Button
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               handleAddToCart(product);
+                             }}
+                             className="w-7 h-7 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in mx-auto"
+                           >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -661,11 +663,11 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                       </span>
                       
                        {quantity > 0 ? (
-                          <div className="flex items-center justify-center bg-muted rounded-md p-1 w-full max-w-[90px] mx-auto" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center bg-muted rounded-full p-0.5 w-full max-w-[75px] mx-auto" onClick={(e) => e.stopPropagation()}>
                              <Button
                                variant="ghost"
                                size="icon"
-                               className="h-6 w-6 p-0 flex-shrink-0"
+                               className="h-5 w-5 p-0 flex-shrink-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
                                onClick={(e) => {
                                  e.stopPropagation();
                                  handleQuantityChange(product.id, product.variants?.[0]?.id, -1);
@@ -674,15 +676,15 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                  }
                                }}
                              >
-                             <Minus className="w-3 h-3" />
+                             <Minus className="w-2.5 h-2.5" strokeWidth={2.5} />
                            </Button>
-                           <span className="font-semibold text-sm flex-1 text-center min-w-0">
+                           <span className="font-semibold text-xs flex-1 text-center min-w-[16px]">
                              {quantity}
                            </span>
                              <Button
                                variant="ghost"
                                size="icon"
-                               className="h-6 w-6 p-0 flex-shrink-0"
+                               className="h-5 w-5 p-0 flex-shrink-0 rounded-full hover:bg-primary hover:text-primary-foreground"
                                onClick={(e) => {
                                  e.stopPropagation();
                                  handleQuantityChange(product.id, product.variants?.[0]?.id, 1);
@@ -691,7 +693,7 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                                  }
                                }}
                              >
-                             <Plus className="w-3 h-3" />
+                             <Plus className="w-2.5 h-2.5" strokeWidth={2.5} />
                            </Button>
                          </div>
                         ) : (
@@ -700,9 +702,9 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
                               e.stopPropagation();
                               handleAddToCart(product);
                             }}
-                            className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in mx-auto"
+                            className="w-7 h-7 rounded-full bg-green-600 hover:bg-green-700 text-white p-0 animate-scale-in mx-auto"
                           >
-                           <Plus className="w-4 h-4" />
+                           <Plus className="w-3 h-3" />
                          </Button>
                        )}
                     </div>
