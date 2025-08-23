@@ -195,8 +195,11 @@ export default function StandaloneCoverPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {buttons.map((button: any, index: number) => {
               const handleClick = () => {
+                // Only navigate to explicit URLs - no fallback logic
                 if (button.url) {
                   window.open(button.url, '_blank');
+                } else {
+                  console.log('Button clicked but no URL defined:', button);
                 }
               };
 
