@@ -5,6 +5,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile safe area utilities for better mobile UX */
+@supports (padding: max(0px)) {
+  .safe-area-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .safe-area-inset {
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+}
+
 @import './styles/cover-animations.css';
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 

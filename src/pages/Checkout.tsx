@@ -90,25 +90,48 @@ export const Checkout = () => {
 
   return (
     <CheckoutIsolation>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-20 sm:pb-8">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-6">
-          {/* Header - Mobile Optimized */}
-          <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
+      {/* Mobile: Ensure checkout starts at very top */}
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-safe safe-area-top">
+        <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-6 max-w-4xl">
+          {/* Enhanced Header - Mobile Optimized with Back Button */}
+          <div className="flex items-center justify-between mb-3 sm:mb-6 px-1">
             <div className="flex items-center gap-2 sm:gap-4">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Checkout</h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  try {
+                    const lastDeliveryApp = localStorage.getItem('last-delivery-app-url') || 
+                                          localStorage.getItem('deliveryAppReferrer');
+                    
+                    if (lastDeliveryApp && lastDeliveryApp !== '/checkout') {
+                      navigate(lastDeliveryApp);
+                    } else {
+                      navigate('/');
+                    }
+                  } catch (error) {
+                    console.warn('Navigation error, using fallback:', error);
+                    navigate('/');
+                  }
+                }}
+                className="p-2 h-8 w-8 sm:h-10 sm:w-10"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-bold tracking-tight">Checkout</h1>
             </div>
             
             <div className="text-right">
               <div className="text-xs sm:text-sm text-muted-foreground font-medium">
                 {totalItems} {totalItems === 1 ? 'item' : 'items'}
               </div>
-              <div className="text-lg sm:text-xl font-bold">
+              <div className="text-base sm:text-xl font-bold">
                 ${totalAmount.toFixed(2)}
               </div>
             </div>
           </div>
 
-          {/* Checkout Form */}
+          {/* Enhanced Checkout Form - Mobile First */}
           <RefactoredCheckoutFlow
             cartItems={cartItems.map(item => {
               console.log('🛒 Processing cart item:', item);

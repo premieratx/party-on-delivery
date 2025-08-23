@@ -72,13 +72,17 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
       />
       
       {/* Cart Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col safe-area-inset">
+        {/* Mobile: Ensure cart starts at very top */}
         
-        {/* Fixed Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5" />
-            Your Cart ({cartItems.length})
+        
+        {/* Enhanced Fixed Header - Mobile Optimized */}
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-background sticky top-0 z-10 min-h-[60px]">
+          <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Your Cart</span>
+            <span className="sm:hidden">Cart</span>
+            <span className="text-sm font-normal">({cartItems.length})</span>
           </h2>
           <div className="flex gap-2">
             {cartItems.length > 0 && (
@@ -91,24 +95,38 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                 <Trash2 className="w-4 h-4" />
               </Button>
             )}
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-5 h-5" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose}
+              className="h-8 w-8 sm:h-10 sm:w-10"
+            >
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overscroll-contain">
-          <div className="p-4 space-y-4">
+        {/* Enhanced Scrollable Content - Mobile Safe */}
+        <div 
+          ref={scrollContainerRef} 
+          className="flex-1 overflow-y-auto overscroll-contain touch-pan-y"
+          style={{ 
+            /* Ensure mobile browsers respect the scrolling area */
+            WebkitOverflowScrolling: 'touch',
+            maxHeight: 'calc(100vh - 120px)', /* Account for header + footer */
+            overscrollBehavior: 'contain'
+          }}
+        >
+          <div className="p-3 sm:p-4 space-y-3 sm:space-y-4 pb-safe">{/* Add bottom padding for safe area */}
             {cartItems.length === 0 ? (
-              <div className="text-center py-12">
-                <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Your cart is empty</p>
-                <p className="text-sm text-muted-foreground">Add some products to get started</p>
+              <div className="text-center py-8 sm:py-12">
+                <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
+                <p className="text-muted-foreground text-sm sm:text-base">Your cart is empty</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Add some products to get started</p>
               </div>
             ) : (
               cartItems.map((item) => (
-                <Card key={`${item.id}-${item.variant || ''}`} className="p-4">
+                <Card key={`${item.id}-${item.variant || ''}`} className="p-3 sm:p-4 shadow-sm">
                   <div className="flex gap-3">
                     <img 
                       src={item.image} 
@@ -223,16 +241,18 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
           )}
         </div>
 
-        {/* Sticky Proceed to Checkout - Enhanced with larger button */}
+        {/* Enhanced Sticky Checkout Button - Mobile Optimized */}
         {cartItems.length > 0 && (
-          <div className="sticky bottom-0 left-0 right-0 border-t p-3 bg-background/95 backdrop-blur-sm shadow-xl z-20">
+          <div className="sticky bottom-0 left-0 right-0 border-t p-3 sm:p-4 bg-background/98 backdrop-blur-sm shadow-xl z-20 safe-area-bottom">
             <Button 
-              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200"
+              className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 rounded-xl"
               size="lg" 
               onClick={handleCheckout}
             >
-              <Check className="w-5 h-5 mr-2" />
-              Proceed to Checkout - ${formatPrice(finalTotal)}
+              <Check className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <span className="hidden sm:inline">Proceed to Checkout - </span>
+              <span className="sm:hidden">Checkout - </span>
+              ${formatPrice(finalTotal)}
             </Button>
           </div>
         )}
