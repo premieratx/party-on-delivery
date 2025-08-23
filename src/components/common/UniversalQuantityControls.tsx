@@ -39,37 +39,37 @@ export const UniversalQuantityControls: React.FC<UniversalQuantityControlsProps>
     onQuantityChange(Math.max(0, quantity - 1));
   };
 
-  // Variant-specific styling
+  // Variant-specific styling - ULTRA COMPACT
   const getVariantClasses = () => {
     switch (variant) {
       case 'minimal':
         return {
-          container: 'gap-0.5 bg-muted/50 rounded-full p-0.5',
-          button: 'h-4 w-4 p-0 rounded-full',
-          text: 'text-xs min-w-[16px] px-0.5',
-          icon: 2
+          container: 'gap-0 bg-muted/50 rounded-full p-0',
+          button: 'h-3 w-3 p-0 rounded-full min-w-0',
+          text: 'text-[10px] min-w-[12px] px-0',
+          icon: 1.5
         };
       case 'compact':
         return {
-          container: 'gap-0.5 bg-muted rounded-full p-0.5',
-          button: 'h-5 w-5 p-0 rounded-full',
-          text: 'text-xs min-w-[18px] px-1',
-          icon: 2.5
+          container: 'gap-0 bg-muted rounded-full p-0',
+          button: 'h-4 w-4 p-0 rounded-full min-w-0',
+          text: 'text-[10px] min-w-[14px] px-0',
+          icon: 2
         };
       case 'desktop':
         return {
-          container: 'gap-1 bg-muted rounded-full px-1 py-1',
-          button: 'h-8 w-8 p-0 rounded-full',
-          text: 'text-sm min-w-[24px] px-2',
-          icon: 3
+          container: 'gap-0.5 bg-muted rounded-full p-0.5',
+          button: 'h-6 w-6 p-0 rounded-full min-w-0',
+          text: 'text-xs min-w-[18px] px-1',
+          icon: 2.5
         };
       case 'mobile':
       default:
         return {
-          container: 'gap-0.5 bg-muted rounded-full p-0.5',
-          button: 'h-6 w-6 p-0 rounded-full',
-          text: 'text-xs min-w-[20px] px-1',
-          icon: 2.5
+          container: 'gap-0 bg-muted rounded-full p-0',
+          button: 'h-4 w-4 p-0 rounded-full min-w-0',
+          text: 'text-[10px] min-w-[14px] px-0',
+          icon: 2
         };
     }
   };
@@ -94,18 +94,17 @@ export const UniversalQuantityControls: React.FC<UniversalQuantityControlsProps>
   // Show quantity controls
   return (
     <div className={cn('flex items-center justify-center', variantStyles.container, className)}>
-      <Button
-        variant="ghost"
-        size="sm"
+      <button
+        type="button"
         className={cn(
           variantStyles.button,
-          'hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center shrink-0'
+          'hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center shrink-0 border-0 bg-transparent'
         )}
         onClick={handleDecrease}
         disabled={disabled}
       >
-        <Minus size={variantStyles.icon} strokeWidth={2.5} />
-      </Button>
+        <Minus size={variantStyles.icon} strokeWidth={3} />
+      </button>
       
       <span className={cn(
         'font-semibold text-center flex items-center justify-center',
@@ -114,18 +113,17 @@ export const UniversalQuantityControls: React.FC<UniversalQuantityControlsProps>
         {quantity}
       </span>
       
-      <Button
-        variant="ghost"
-        size="sm"
+      <button
+        type="button"
         className={cn(
           variantStyles.button,
-          'hover:bg-primary hover:text-primary-foreground flex items-center justify-center shrink-0'
+          'hover:bg-primary hover:text-primary-foreground flex items-center justify-center shrink-0 border-0 bg-transparent'
         )}
         onClick={handleIncrease}
         disabled={disabled}
       >
-        <Plus size={variantStyles.icon} strokeWidth={2.5} />
-      </Button>
+        <Plus size={variantStyles.icon} strokeWidth={3} />
+      </button>
     </div>
   );
 };
