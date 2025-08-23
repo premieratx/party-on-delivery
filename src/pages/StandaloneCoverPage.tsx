@@ -26,7 +26,7 @@ export default function StandaloneCoverPage() {
   useEffect(() => {
     const fetchCoverPage = async () => {
       try {
-        console.log('🚀 STANDALONE: Starting fetch for slug:', slug);
+        console.log('🚀 Starting fetch for slug:', slug);
         
         const { data, error } = await supabase
           .from('cover_pages')

@@ -73,7 +73,7 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* STANDALONE Cover page routes - HIGHEST PRIORITY */}
+                    {/* Regular pages - no special designations */}
                     <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
                     <Route path="/:slug" element={<StandaloneCoverPage />} />
                     
