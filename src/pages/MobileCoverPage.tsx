@@ -63,52 +63,20 @@ export default function MobileCoverPage() {
   
   if (isLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#000',
-        color: '#fff',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid #333',
-            borderTop: '3px solid #fff',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 20px'
-          }} />
+      <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
+        <div className="text-center">
+          <div className="w-10 h-10 border-3 border-gray-600 border-t-white rounded-full animate-spin mx-auto mb-5"></div>
           <p>Loading...</p>
         </div>
-        <style>
-          {`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}
-        </style>
       </div>
     );
   }
   
   if (error || !coverPage) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#000',
-        color: '#fff',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Page Not Found</h1>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center font-sans">
+        <div className="text-center p-5">
+          <h1 className="text-2xl mb-4">Page Not Found</h1>
           <p>The page you're looking for doesn't exist.</p>
         </div>
       </div>
@@ -237,9 +205,9 @@ export default function MobileCoverPage() {
           />
         )}
         
-        {/* Title */}
+        {/* Title - responsive font size */}
         <h1 style={{
-          fontSize: window.innerWidth < 768 ? '32px' : '48px',
+          fontSize: 'clamp(32px, 8vw, 48px)',
           fontWeight: 'bold',
           marginBottom: '20px',
           lineHeight: '1.2',
@@ -248,10 +216,10 @@ export default function MobileCoverPage() {
           {coverPage.title}
         </h1>
         
-        {/* Subtitle */}
+        {/* Subtitle - responsive font size */}
         {coverPage.subtitle && (
           <p style={{
-            fontSize: window.innerWidth < 768 ? '18px' : '24px',
+            fontSize: 'clamp(18px, 4vw, 24px)',
             marginBottom: '40px',
             opacity: 0.9,
             maxWidth: '600px',
@@ -261,12 +229,12 @@ export default function MobileCoverPage() {
           </p>
         )}
         
-        {/* Features */}
+        {/* Features - responsive grid */}
         {features.length > 0 && (
           <div style={{
             marginBottom: '40px',
             display: 'grid',
-            gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(auto-fit, minmax(250px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))',
             gap: '20px',
             maxWidth: '800px',
             width: '100%'
@@ -305,15 +273,16 @@ export default function MobileCoverPage() {
           </div>
         )}
         
-        {/* Buttons */}
+        {/* Buttons - responsive layout */}
         {buttons.length > 0 && (
           <div style={{
             display: 'flex',
-            flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+            flexDirection: 'column',
             gap: '16px',
             justifyContent: 'center',
             alignItems: 'center',
-            flexWrap: 'wrap'
+            flexWrap: 'wrap',
+            width: '100%'
           }}>
             {buttons.map((button: any, index: number) => (
               <button
@@ -331,7 +300,8 @@ export default function MobileCoverPage() {
                   borderRadius: '8px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  minWidth: window.innerWidth < 768 ? '280px' : 'auto',
+                  minWidth: '280px',
+                  maxWidth: '400px',
                   backgroundColor: button.variant === 'outline' 
                     ? 'transparent' 
                     : variantStyles.accent,
