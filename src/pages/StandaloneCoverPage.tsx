@@ -23,11 +23,12 @@ export default function StandaloneCoverPage() {
   useEffect(() => {
     const fetchCoverPage = async () => {
       try {
-        console.log('🚀 STANDALONE: Fetching cover page for slug:', slug);
+        console.log('🚀 STANDALONE: Starting fetch for slug:', slug);
+        console.log('🌐 STANDALONE: Current URL:', window.location.href);
         setIsLoading(true);
         setError(null);
         
-        // Direct fetch to Supabase REST API - completely standalone
+        // Direct fetch to Supabase REST API
         const apiUrl = `https://acmlfzfliqupwxwoefdq.supabase.co/rest/v1/cover_pages?slug=eq.${slug}&is_active=eq.true&select=*`;
         console.log('📡 STANDALONE API URL:', apiUrl);
         
@@ -40,25 +41,33 @@ export default function StandaloneCoverPage() {
         });
         
         console.log('📊 STANDALONE Response status:', response.status);
+        console.log('📊 STANDALONE Response headers:', Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          console.error('❌ STANDALONE Response error:', errorText);
+          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
         }
         
         const data = await response.json();
         console.log('📦 STANDALONE Response data:', data);
+        console.log('📦 STANDALONE Data length:', data?.length);
         
         if (data && data.length > 0) {
           console.log('✅ STANDALONE Cover page found:', data[0]);
           setCoverPage(data[0]);
         } else {
           console.log('❌ STANDALONE No cover page found for slug:', slug);
+          console.log('❌ STANDALONE Response was:', JSON.stringify(data));
           setError('Page not found');
         }
       } catch (err) {
-        console.error('💥 STANDALONE Error fetching cover page:', err);
-        setError('Failed to load page');
+        console.error('💥 STANDALONE Error details:', err);
+        console.error('💥 STANDALONE Error message:', err?.message);
+        console.error('💥 STANDALONE Error stack:', err?.stack);
+        setError(`Failed to load page: ${err?.message}`);
       } finally {
+        console.log('🏁 STANDALONE Setting loading to false');
         setIsLoading(false);
       }
     };
