@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import StandaloneCoverPage from './pages/StandaloneCoverPage';
+import TestCoverPage from './pages/TestCoverPage';
 import './index.css';
 
 // Check if this is a cover page route and render directly
@@ -11,7 +12,8 @@ if (isCoverPage) {
   const container = document.getElementById('root');
   if (container) {
     const root = createRoot(container);
-    root.render(<StandaloneCoverPage />);
+    // Use test page to debug the issue
+    root.render(<TestCoverPage />);
   }
 } else {
   // Render the full app for everything else
