@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function StandaloneCoverPage() {
-  const { slug: urlSlug } = useParams<{ slug: string }>();
-  const slug = urlSlug || window.location.pathname.replace('/', '') || 'premier-concierge';
+  const slug = window.location.pathname.replace('/', '') || 'premier-concierge';
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
