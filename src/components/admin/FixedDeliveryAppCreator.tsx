@@ -550,22 +550,27 @@ export const FixedDeliveryAppCreator: React.FC<DeliveryAppCreatorProps> = ({
                             <SelectTrigger>
                               <SelectValue placeholder="Choose a collection" />
                             </SelectTrigger>
-                            <SelectContent className="max-h-80 bg-background border border-border shadow-lg z-50">
-                              <div className="p-2 border-b border-border bg-muted/50">
-                                <p className="text-xs text-muted-foreground font-medium">
-                                  {collections.length} Collections Available
+                            <SelectContent className="max-h-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl z-[100] overflow-y-auto">
+                              <div className="p-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 sticky top-0">
+                                <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">
+                                  ✅ {collections.length} Shopify Collections Available (Each with Products)
                                 </p>
                               </div>
                               {collections.map((collection) => (
                                 <SelectItem 
                                   key={collection.handle} 
                                   value={collection.handle}
-                                  className="bg-background hover:bg-muted cursor-pointer"
+                                  className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer py-3 px-3 border-b border-gray-100 dark:border-gray-700"
                                 >
                                   <div className="flex items-center justify-between w-full">
-                                    <span className="text-foreground">{collection.name}</span>
-                                    <Badge variant="secondary" className="ml-2 text-xs">
-                                      {collection.products_count}
+                                    <span className="text-gray-900 dark:text-gray-100 font-medium text-sm">
+                                      {collection.name}
+                                    </span>
+                                    <Badge 
+                                      variant={collection.products_count > 0 ? "default" : "secondary"} 
+                                      className="ml-2 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                    >
+                                      {collection.products_count} products
                                     </Badge>
                                   </div>
                                 </SelectItem>
