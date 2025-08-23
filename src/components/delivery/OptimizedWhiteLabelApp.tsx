@@ -15,6 +15,7 @@ import { TypingIntro } from '@/components/common/TypingIntro';
 import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { CombinedSearchTabs } from '@/components/delivery/CombinedSearchTabs';
 import { supabase } from '@/integrations/supabase/client';
+import { useRealTimeSearch } from '@/hooks/useRealTimeSearch';
 
 interface WhiteLabelAppConfig {
   id: string;
@@ -122,6 +123,17 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
   const [showCart, setShowCart] = useState(false);
   const [flashIndex, setFlashIndex] = useState<number | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
+  // Real-time search functionality
+  const {
+    searchQuery,
+    searchResults,
+    isSearching,
+    updateSearchQuery,
+    clearSearch,
+    hasResults
+  } = useRealTimeSearch({ maxResults: 50 });
 
   // Apply custom branding
   useEffect(() => {
@@ -266,7 +278,18 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
     onCheckout?.(cartItems);
   }, [cartItems, onCheckout, toast]);
 
-  // Handle search select from hero search bar (add one to cart)
+  // Handle search functionality
+  const handleSearchChange = useCallback((query: string) => {
+    updateSearchQuery(query);
+    setShowSearchResults(!!query.trim());
+  }, [updateSearchQuery]);
+
+  const handleSearchSubmit = useCallback(() => {
+    if (searchQuery.trim() && hasResults) {
+      setShowSearchResults(true);
+    }
+  }, [searchQuery, hasResults]);
+
   const handleSearchSelect = useCallback((product: any) => {
     const variantId = product.variants?.[0]?.id;
     const price = product.variants?.[0]?.price ?? product.price ?? 0;
@@ -279,7 +302,11 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
       image: product.image,
       variant: variantId,
     });
-  }, [getCartItemQuantity, updateQuantity]);
+    
+    toast({
+      description: `Added ${product.title} to cart`,
+    });
+  }, [getCartItemQuantity, updateQuantity, toast]);
 
   if (loading) {
     return (
@@ -396,30 +423,56 @@ export const OptimizedWhiteLabelApp: React.FC<OptimizedWhiteLabelAppProps> = mem
             icon: tab.hasProducts ? `${tab.collection?.products.length || 0}` : '0'
           }))}
           selectedCategory={activeTab}
-          onTabSelect={(index) => setActiveTab(index)}
-          searchQuery=""
-          onSearchChange={() => {}} 
-          onSearchSubmit={() => {}}
-          showSearch={false}
+          onTabSelect={(index) => {
+            setActiveTab(index);
+            setShowSearchResults(false);
+            clearSearch();
+          }}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          onSearchSubmit={handleSearchSubmit}
+          showSearch={true}
+          isSearching={isSearching}
           cartItemCount={totalItems}
           totalAmount={totalPrice}
           onOpenCart={() => setShowCart(true)}
           onCheckout={handleCheckout}
         />
-        <Tabs value={activeTab.toString()} onValueChange={(value) => setActiveTab(parseInt(value))} className="mt-6">
-
-          {/* Tab Content */}
-          {tabData.map((tab, index) => (
-            <TabsContent key={index} value={index.toString()} className="mt-0">
-              <TabContent
-                collection={tab.collection}
-                tabName={tab.name}
-                isActive={activeTab === index}
-                onProductClick={(product) => setSelectedProduct(product)}
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+        {/* Search Results or Regular Tabs */}
+        {showSearchResults && hasResults ? (
+          <div className="mt-6">
+            <div className="mb-4 text-center">
+              <h3 className="text-lg font-semibold">Search Results</h3>
+              <p className="text-sm text-muted-foreground">
+                Found {searchResults.length} products for "{searchQuery}"
+              </p>
+            </div>
+            <SuperFastProductGrid
+              products={searchResults.map(product => ({
+                ...product,
+                handle: product.handle || `product-${product.id}`
+              }))}
+              category="search"
+              onProductClick={(product) => setSelectedProduct(product)}
+              maxProducts={50}
+              className="px-4"
+            />
+          </div>
+        ) : (
+          <Tabs value={activeTab.toString()} onValueChange={(value) => setActiveTab(parseInt(value))} className="mt-6">
+            {/* Tab Content */}
+            {tabData.map((tab, index) => (
+              <TabsContent key={index} value={index.toString()} className="mt-0">
+                <TabContent
+                  collection={tab.collection}
+                  tabName={tab.name}
+                  isActive={activeTab === index}
+                  onProductClick={(product) => setSelectedProduct(product)}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+        )}
       </div>
 
       {/* Cart Sidebar */}

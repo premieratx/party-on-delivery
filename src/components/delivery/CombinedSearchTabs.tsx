@@ -231,15 +231,16 @@ export const CombinedSearchTabs = ({
                 {/* Compact Search Bar - shrinks first */}
                 <div className="relative min-w-[120px] max-w-[200px] flex-shrink-2">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    onFocus={handleSearchFocus}
-                    onBlur={handleSearchBlur}
-                    className="pl-8 pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus:border-primary transition-colors"
-                  />
+                    <Input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => onSearchChange(e.target.value)}
+                      onFocus={handleSearchFocus}
+                      onBlur={handleSearchBlur}
+                      onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
+                      className="pl-8 pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus:border-primary transition-colors"
+                    />
                   {isSearching && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -374,7 +375,7 @@ export const CombinedSearchTabs = ({
             <div className="flex">
               <Input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search all products..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 onFocus={handleSearchFocus}
