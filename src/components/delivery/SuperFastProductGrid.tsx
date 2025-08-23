@@ -75,27 +75,27 @@ const ProductCard = memo(({
             priority={false}
           />
           
-          {/* Quick Add/Remove Buttons */}
+          {/* Compact Mobile Quantity Controls */}
           {quantity > 0 && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full p-0.5 md:p-1 border">
+            <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-background/95 backdrop-blur-sm rounded-full p-0.5 border border-border/50">
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 w-7 md:h-8 md:w-8 p-0 rounded-full"
+                className="h-5 w-5 p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
                 onClick={handleDecrement}
               >
-                <Minus className="h-3 w-3" />
+                <Minus className="h-2.5 w-2.5" strokeWidth={2.5} />
               </Button>
-              <span className="text-xs md:text-sm font-medium px-1.5 md:px-2 min-w-[1.25rem] md:min-w-[1.5rem] text-center">
+              <span className="text-xs font-semibold min-w-[18px] text-center px-1">
                 {quantity}
               </span>
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 w-7 md:h-8 md:w-8 p-0 rounded-full"
+                className="h-5 w-5 p-0 rounded-full hover:bg-primary hover:text-primary-foreground"
                 onClick={handleIncrement}
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
               </Button>
             </div>
           )}
@@ -131,34 +131,34 @@ const ProductCard = memo(({
             </span>
             
             {quantity > 0 ? (
-              <div className="flex items-center gap-1 md:gap-2">
+              <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="h-7 w-7 md:h-8 md:w-8 p-0"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
                   onClick={handleDecrement}
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-2.5 w-2.5" strokeWidth={2.5} />
                 </Button>
-                <span className="text-xs md:text-sm font-medium min-w-[1.25rem] md:min-w-[1.5rem] text-center">
+                <span className="text-xs font-semibold min-w-[20px] text-center px-1">
                   {quantity}
                 </span>
                 <Button
                   size="sm"
-                  variant="outline"
-                  className="h-7 w-7 md:h-8 md:w-8 p-0"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 rounded-full hover:bg-primary hover:text-primary-foreground"
                   onClick={handleIncrement}
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
                 </Button>
               </div>
             ) : (
               <Button
                 size="sm"
                 onClick={handleIncrement}
-                className="h-8 px-3"
+                className="h-7 px-3 text-xs"
               >
-                <Plus className="h-3 w-3 mr-1" />
+                <Plus className="h-2.5 w-2.5 mr-1" />
                 Add
               </Button>
             )}
