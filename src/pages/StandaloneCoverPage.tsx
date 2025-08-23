@@ -84,10 +84,26 @@ export default function StandaloneCoverPage() {
     );
   }
 
-  // Parse the data safely
-  const features = Array.isArray(coverPage.checklist) ? coverPage.checklist : [];
-  const buttons = Array.isArray(coverPage.buttons) ? coverPage.buttons : [];
+  // Parse the data safely - handle both JSON strings and objects
+  const features = (() => {
+    if (Array.isArray(coverPage.checklist)) return coverPage.checklist;
+    if (typeof coverPage.checklist === 'string') {
+      try { return JSON.parse(coverPage.checklist); } catch { return []; }
+    }
+    return [];
+  })();
+  
+  const buttons = (() => {
+    if (Array.isArray(coverPage.buttons)) return coverPage.buttons;
+    if (typeof coverPage.buttons === 'string') {
+      try { return JSON.parse(coverPage.buttons); } catch { return []; }
+    }
+    return [];
+  })();
+  
   const styles = coverPage.styles || {};
+  
+  console.log('📊 Parsed data:', { features, buttons, styles });
 
   // Get theme-specific styles
   const getVariantStyles = () => {
