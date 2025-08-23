@@ -84,26 +84,14 @@ export default function StandaloneCoverPage() {
     );
   }
 
-  // Parse the data safely - handle both JSON strings and objects
-  const features = (() => {
-    if (Array.isArray(coverPage.checklist)) return coverPage.checklist;
-    if (typeof coverPage.checklist === 'string') {
-      try { return JSON.parse(coverPage.checklist); } catch { return []; }
-    }
-    return [];
-  })();
-  
-  const buttons = (() => {
-    if (Array.isArray(coverPage.buttons)) return coverPage.buttons;
-    if (typeof coverPage.buttons === 'string') {
-      try { return JSON.parse(coverPage.buttons); } catch { return []; }
-    }
-    return [];
-  })();
-  
+  // Parse the data exactly as saved in database
+  const features = coverPage.checklist || [];
+  const buttons = coverPage.buttons || [];
   const styles = coverPage.styles || {};
   
-  console.log('📊 Parsed data:', { features, buttons, styles });
+  console.log('🔍 Raw database data:', coverPage);
+  console.log('📋 Features:', features);
+  console.log('🔘 Buttons:', buttons);
 
   // Get theme-specific styles
   const getVariantStyles = () => {
@@ -211,11 +199,14 @@ export default function StandaloneCoverPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {buttons.map((button: any, index: number) => {
               const handleClick = () => {
-                // Only navigate to explicit URLs - no fallback logic
+                console.log('Button clicked:', button);
                 if (button.url) {
                   window.open(button.url, '_blank');
+                } else if (button.assignment_type === 'delivery_app') {
+                  // Navigate to your delivery app
+                  window.location.href = '/delivery';
                 } else {
-                  console.log('Button clicked but no URL defined:', button);
+                  console.log('No action defined for button:', button);
                 }
               };
 
