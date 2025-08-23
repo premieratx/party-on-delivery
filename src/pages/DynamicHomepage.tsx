@@ -127,32 +127,60 @@ export default function DynamicHomepage() {
     );
   }
 
-  if (error) {
-    // Show demo cover page on error
-    const DemoCoverPage = React.lazy(() => import('@/components/demo/DemoCoverPage'));
+  if (error || !homepageApp) {
     return (
-      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-        <DemoCoverPage />
-      </React.Suspense>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center">
+        <div className="text-center p-8 max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">Welcome!</h2>
+            <p className="text-muted-foreground mb-6">
+              No delivery app is currently configured for the homepage. 
+              {error && (
+                <span className="block mt-2 text-sm text-red-600">
+                  Error: {error}
+                </span>
+              )}
+            </p>
+            <div className="space-y-3">
+              <Button onClick={() => navigate('/admin')} className="w-full">
+                Configure Homepage
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/delivery')} className="w-full">
+                Browse Delivery Apps
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/premier-concierge')} className="w-full">
+                View Cover Page
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
-  // Safety check - show demo if no collections configured
+  // Safety check to prevent React errors
   if (!homepageApp.collections_config?.tabs || homepageApp.collections_config.tabs.length === 0) {
-    const DemoCoverPage = React.lazy(() => import('@/components/demo/DemoCoverPage'));
     return (
-      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-        <DemoCoverPage />
-      </React.Suspense>
-    );
-  }
-
-  // Show demo cover page if no app configured
-  if (!homepageApp) {
-    const DemoCoverPage = React.lazy(() => import('@/components/demo/DemoCoverPage'));
-    return (
-      <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-        <DemoCoverPage />
-      </React.Suspense>
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 flex items-center justify-center">
+        <div className="text-center p-8 max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold mb-4 text-foreground">Configuration Needed</h2>
+            <p className="text-muted-foreground mb-6">
+              The homepage delivery app "{homepageApp.app_name}" needs to be configured with collections.
+            </p>
+            <div className="space-y-3">
+              <Button onClick={() => navigate('/admin')} className="w-full">
+                Configure App
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/delivery')} className="w-full">
+                Browse Other Apps
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/premier-concierge')} className="w-full">
+                View Cover Page
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
