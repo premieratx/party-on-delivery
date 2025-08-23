@@ -20,6 +20,8 @@ import { ProductLightbox } from '@/components/delivery/ProductLightbox';
 import { ultraFastSearch } from '@/utils/ultraFastSearch';
 import { useImagePreloader } from '@/hooks/useImagePreloader';
 import { ThemeColorToggle } from '@/components/delivery/ThemeColorToggle';
+import { UniversalQuantityControls } from '@/components/common/UniversalQuantityControls';
+import { useUniversalSearch } from '@/hooks/useUniversalSearch';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -80,10 +82,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState(0);
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchProducts, setSearchProducts] = useState<any[]>([]);
-  const [isSearchActive, setIsSearchActive] = useState(false); // Track if user is actively searching
-  const [savedSearchQuery, setSavedSearchQuery] = useState(''); // Persist search across tab switches
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // Preload background image for instant display
@@ -102,6 +100,36 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
   // Set up search variables
   const searchQuery = onSearchQueryChange ? externalSearchQuery : internalSearchQuery;
   const setSearchQuery = onSearchQueryChange || setInternalSearchQuery;
+
+  // Get current tab config first
+  const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];
+  const currentCollectionHandle = currentTabConfig?.collection_handle;
+  
+  // Load products for current collection directly from Shopify collections
+  const { products: currentTabProducts, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
+    collection_handle: currentCollectionHandle,
+    use_type: 'delivery'
+  });
+
+  // Universal search hook
+  const {
+    searchResults: searchProducts,
+    isSearching,
+    updateSearchQuery,
+    clearSearch: clearUniversalSearch
+  } = useUniversalSearch(currentTabProducts, {
+    debounceMs: 300,
+    maxResults: 50,
+    useUltraFast: true,
+    category: currentCollectionHandle
+  });
+
+  // Sync search query with universal search
+  useEffect(() => {
+    updateSearchQuery(searchQuery);
+  }, [searchQuery, updateSearchQuery]);
+
+  const isSearchActive = searchQuery.trim().length > 0;
 
   // ONLY use Shopify collections from delivery app config - NO defaults
   const tabs = useMemo(() => {
@@ -147,15 +175,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     preloadMultipleCollections(collectionHandles);
   }, [tabs, preloadMultipleCollections]);
 
-  // Get current tab config
-  const currentTabConfig = collectionsConfig?.tabs?.[selectedCategory];
-  const currentCollectionHandle = currentTabConfig?.collection_handle;
-  
-  // Load products for current collection directly from Shopify collections
-  const { products: currentTabProducts, collections, loading, error, refreshProducts } = useOptimizedProductLoader({
-    collection_handle: currentCollectionHandle,
-    use_type: 'delivery'
-  });
 
   // Listen for collection updates and refresh
   useEffect(() => {
@@ -281,67 +300,6 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     console.log('🛒 ProductCategories: Updating cart with:', cartItem);
     updateQuantity(normalizedProductId, normalizedVariantId, newQty, cartItem);
   }, [currentTabProducts, searchProducts, getCartItemQuantity, updateQuantity]);
-
-  // Real-time hierarchical search using ultra-fast search
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) {
-      setSearchProducts([]);
-      setIsSearching(false);
-      setIsSearchActive(false);
-      return;
-    }
-
-    setIsSearching(true);
-    setIsSearchActive(true);
-    
-    try {
-      console.log(`🚀 ULTRA-FAST SEARCH: "${searchQuery}"`);
-      const startTime = performance.now();
-      
-      // Use CATEGORY-GOVERNED search for consistent results
-      const filteredProducts = currentTabProducts
-        .map(product => {
-          const lowerQuery = searchQuery.toLowerCase();
-          const lowerCategory = (product.category || '').toLowerCase();
-          const lowerTitle = product.title.toLowerCase();
-          
-          let score = 0;
-          // CATEGORY GOVERNANCE - category matches trump everything else
-          if (lowerCategory.includes(lowerQuery)) score = 1000;
-          else if (lowerTitle.includes(lowerQuery)) score = 800;
-           else if (Array.isArray(product.collection_handles) && 
-                    product.collection_handles.some(c => String(c).toLowerCase().includes(lowerQuery))) score = 600;
-          
-          return score > 0 ? { ...product, _score: score } : null;
-        })
-        .filter(Boolean)
-        .sort((a: any, b: any) => b._score - a._score)
-        .slice(0, 50);
-      
-      const result = { products: filteredProducts, fromCache: true };
-
-      const endTime = performance.now();
-      const duration = endTime - startTime;
-      
-      console.log(`⚡ ULTRA-FAST SEARCH COMPLETED: "${searchQuery}" - ${result.products.length} results in ${duration.toFixed(2)}ms (${result.fromCache ? 'cached' : 'fresh'})`);
-      
-      setSearchProducts(result.products);
-    } catch (error) {
-      console.error('Ultra-fast search error:', error);
-      setSearchProducts([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [searchQuery]);
-  // Real-time search - no delay for instant results
-  useEffect(() => {
-    if (searchQuery?.trim()) {
-      handleSearch();
-    } else {
-      setSearchProducts([]);
-      setIsSearchActive(false);
-    }
-  }, [searchQuery, handleSearch]);
 
   // Parse hero_config if available
   const heroConfig = appConfig?.hero_config ? 
@@ -486,18 +444,16 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
           const currentTab = collectionsConfig?.tabs?.[index];
           // Remove excessive tab switching logs - works silently
           setSelectedCategory(index);
-          setSearchProducts([]);
-          setIsSearchActive(false);
+          clearUniversalSearch();
         }}
         searchQuery={searchQuery}
         onSearchChange={(query) => {
           setSearchQuery(query);
-          setIsSearchActive(!!query.trim());
         }}
-        onSearchSubmit={handleSearch}
+        onSearchSubmit={() => {}}
         showSearch={showSearch}
         isSearchActive={isSearchActive}
-        onSearchActiveChange={setIsSearchActive}
+        onSearchActiveChange={() => {}}
         isSearching={isSearching}
         cartItemCount={getTotalItems()}
         totalAmount={getTotalPrice()}

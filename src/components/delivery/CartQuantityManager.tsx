@@ -1,5 +1,5 @@
 import React from 'react';
-import { QuantityControls } from './QuantityControls';
+import { UniversalQuantityControls } from '@/components/common/UniversalQuantityControls';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
 
 interface CartQuantityManagerProps {
@@ -46,13 +46,12 @@ export const CartQuantityManager: React.FC<CartQuantityManagerProps> = ({
   };
   
   return (
-    <QuantityControls
+    <UniversalQuantityControls
       quantity={quantity}
       onQuantityChange={handleQuantityChange}
       onAddToCart={handleAddToCart}
       productId={productId}
-      variant={variant}
-      size={size}
+      variant={size === 'sm' ? 'compact' : size === 'lg' ? 'desktop' : 'mobile'}
       className={className}
     />
   );

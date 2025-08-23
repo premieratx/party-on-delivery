@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Minus } from 'lucide-react';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { useUnifiedCart } from '@/hooks/useUnifiedCart';
+import { UniversalQuantityControls } from '@/components/common/UniversalQuantityControls';
 
 interface Product {
   id: string;
@@ -75,28 +76,17 @@ const ProductCard = memo(({
             priority={false}
           />
           
-          {/* Compact Mobile Quantity Controls */}
+          {/* Universal Quantity Controls - Mobile */}
           {quantity > 0 && (
-            <div className="absolute top-2 right-2 flex items-center gap-0.5 bg-background/95 backdrop-blur-sm rounded-full p-0.5 border border-border/50">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-5 w-5 p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
-                onClick={handleDecrement}
-              >
-                <Minus className="h-2.5 w-2.5" strokeWidth={2.5} />
-              </Button>
-              <span className="text-xs font-semibold min-w-[18px] text-center px-1">
-                {quantity}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-5 w-5 p-0 rounded-full hover:bg-primary hover:text-primary-foreground"
-                onClick={handleIncrement}
-              >
-                <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
-              </Button>
+            <div className="absolute top-2 right-2">
+              <UniversalQuantityControls
+                quantity={quantity}
+                onQuantityChange={(newQuantity) => onQuantityChange(product.id, product.variants?.[0]?.id, newQuantity - quantity)}
+                productId={product.id}
+                variant="minimal"
+                showAddButton={false}
+                className="bg-background/95 backdrop-blur-sm border border-border/50"
+              />
             </div>
           )}
           
@@ -130,38 +120,14 @@ const ProductCard = memo(({
               ${(parseFloat(String(product.price)) || 0).toFixed(2)}
             </span>
             
-            {quantity > 0 ? (
-              <div className="flex items-center gap-0.5 bg-muted rounded-full p-0.5">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0 rounded-full hover:bg-destructive hover:text-destructive-foreground"
-                  onClick={handleDecrement}
-                >
-                  <Minus className="h-2.5 w-2.5" strokeWidth={2.5} />
-                </Button>
-                <span className="text-xs font-semibold min-w-[20px] text-center px-1">
-                  {quantity}
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0 rounded-full hover:bg-primary hover:text-primary-foreground"
-                  onClick={handleIncrement}
-                >
-                  <Plus className="h-2.5 w-2.5" strokeWidth={2.5} />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                size="sm"
-                onClick={handleIncrement}
-                className="h-7 px-3 text-xs"
-              >
-                <Plus className="h-2.5 w-2.5 mr-1" />
-                Add
-              </Button>
-            )}
+            <UniversalQuantityControls
+              quantity={quantity}
+              onQuantityChange={(newQuantity) => onQuantityChange(product.id, product.variants?.[0]?.id, newQuantity - quantity)}
+              onAddToCart={() => handleIncrement}
+              productId={product.id}
+              variant="compact"
+              showAddButton={true}
+            />
           </div>
         </div>
       </CardContent>
