@@ -92,21 +92,41 @@ export default function CoverPage() {
   const subtitle = pageData.subtitle || '';
   const logoUrl = pageData.logo_url || '';
   
-  console.log('🔧 PARSED DATA:');
-  console.log('Features:', features);
-  console.log('Buttons:', buttons);
+  // Parse and apply the saved styles
+  const savedStyles = pageData.styles || {};
+  const theme = pageData.theme || pageData.unified_theme || 'gold';
+  
+  console.log('🎨 STYLES DATA:');
+  console.log('Theme:', theme);
+  console.log('Saved styles:', savedStyles);
+  
+  // Apply the exact sizing from saved styles
+  const logoSize = savedStyles.sizing?.logoSize || 149;
+  const headlineSize = savedStyles.sizing?.headlineSize || 34;
+  const subtitleSize = savedStyles.sizing?.subtitleSize || 20;
+  
+  // Apply positioning
+  const logoVerticalPos = savedStyles.positioning?.logoVerticalPos || -20;
+  const headlineVerticalPos = savedStyles.positioning?.headlineVerticalPos || -50;
+  const subtitleVerticalPos = savedStyles.positioning?.subtitleVerticalPos || 0;
+  const featuresVerticalPos = savedStyles.positioning?.featuresVerticalPos || -32;
+  const buttonsVerticalPos = savedStyles.positioning?.buttonsVerticalPos || -50;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 p-4">
       <div className="max-w-4xl mx-auto text-center py-8 sm:py-12">
         
-        {/* Logo */}
+        {/* Logo with exact saved positioning and sizing */}
         {logoUrl && (
-          <div className="mb-8">
+          <div className="mb-8" style={{ transform: `translateY(${logoVerticalPos}px)` }}>
             <img 
               src={logoUrl} 
               alt="Logo" 
-              className="w-24 h-24 sm:w-32 sm:h-32 mx-auto object-contain"
+              style={{ 
+                width: `${logoSize}px`, 
+                height: `${logoSize}px` 
+              }}
+              className="mx-auto object-contain"
               onError={(e) => {
                 console.error('Logo failed to load:', logoUrl);
                 e.currentTarget.style.display = 'none';
@@ -115,19 +135,34 @@ export default function CoverPage() {
           </div>
         )}
 
-        {/* Title & Subtitle */}
-        <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-4 px-4">
-          {title}
-        </h1>
+        {/* Title with exact saved styling */}
+        <div style={{ transform: `translateY(${headlineVerticalPos}px)` }}>
+          <h1 
+            className="font-bold text-gray-900 mb-4 px-4"
+            style={{ fontSize: `${headlineSize}px` }}
+          >
+            {title}
+          </h1>
+        </div>
+        
+        {/* Subtitle with exact saved styling */}
         {subtitle && (
-          <p className="text-lg sm:text-xl md:text-2xl text-gray-700 mb-8 sm:mb-12 px-4">
-            {subtitle}
-          </p>
+          <div style={{ transform: `translateY(${subtitleVerticalPos}px)` }}>
+            <p 
+              className="text-gray-700 mb-8 sm:mb-12 px-4"
+              style={{ fontSize: `${subtitleSize}px` }}
+            >
+              {subtitle}
+            </p>
+          </div>
         )}
 
-        {/* Features */}
+        {/* Features with exact saved positioning */}
         {features.length > 0 && (
-          <div className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
+          <div 
+            className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 max-w-3xl mx-auto px-4"
+            style={{ transform: `translateY(${featuresVerticalPos}px)` }}
+          >
             {features.map((feature: any, index: number) => (
               <div key={index} className="bg-white rounded-lg p-4 sm:p-6 shadow-lg">
                 <div className="flex items-center justify-center mb-3">
@@ -140,9 +175,12 @@ export default function CoverPage() {
           </div>
         )}
 
-        {/* Buttons */}
+        {/* Buttons with exact saved positioning */}
         {buttons.length > 0 && (
-          <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
+          <div 
+            className="flex flex-col sm:flex-row gap-4 justify-center px-4"
+            style={{ transform: `translateY(${buttonsVerticalPos}px)` }}
+          >
             {buttons.map((button: any, index: number) => (
               <button
                 key={index}
