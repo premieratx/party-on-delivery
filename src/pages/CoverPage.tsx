@@ -62,10 +62,10 @@ export default function CoverPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-yellow-50 to-amber-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mx-auto mb-4"></div>
-          <p className="text-yellow-800 font-medium">Loading your page...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground font-medium">Loading your page...</p>
         </div>
       </div>
     );
@@ -73,23 +73,20 @@ export default function CoverPage() {
 
   if (error || !pageData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 p-4">
-        <div className="text-center max-w-md bg-white rounded-lg p-8 shadow-lg">
-          <h1 className="text-2xl font-bold text-red-800 mb-4">Could Not Load Page</h1>
-          <p className="text-red-600 mb-4">Slug: <code className="bg-red-100 px-2 py-1 rounded">{pageSlug}</code></p>
-          {error && <p className="text-red-600 text-sm bg-red-50 p-3 rounded">{error}</p>}
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-destructive/10 to-destructive/5 p-4">
+        <div className="text-center max-w-md bg-card rounded-lg p-8 shadow-lg">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Could Not Load Page</h1>
+          <p className="text-muted-foreground mb-4">Slug: <code className="bg-muted px-2 py-1 rounded">{pageSlug}</code></p>
+          {error && <p className="text-destructive text-sm bg-destructive/10 p-3 rounded">{error}</p>}
+          <Button onClick={() => window.location.reload()} variant="destructive" className="mt-4">
             Try Again
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Parse JSON strings from database correctly
+  // Parse JSON strings from database - YOUR EXACT SAVED DATA
   const parseJsonData = (data: any) => {
     if (typeof data === 'string') {
       try {
@@ -108,215 +105,162 @@ export default function CoverPage() {
   const subtitle = pageData.subtitle || '';
   const logoUrl = pageData.logo_url || '';
   
-  // Parse and apply the saved styles
+  // Parse YOUR EXACT SAVED STYLES
   const savedStyles = pageData.styles || {};
   const theme = pageData.theme || pageData.unified_theme || 'gold';
   
-  console.log('🎨 STYLES DATA:');
+  console.log('🎨 USING YOUR EXACT SAVED STYLES:');
   console.log('Theme:', theme);
   console.log('Saved styles:', savedStyles);
   
-  // Apply the exact sizing from saved styles
+  // Apply YOUR EXACT SIZING from saved styles
   const logoSize = savedStyles.sizing?.logoSize || 149;
   const headlineSize = savedStyles.sizing?.headlineSize || 34;
   const subtitleSize = savedStyles.sizing?.subtitleSize || 20;
   
-  // Apply positioning
+  // Apply YOUR EXACT POSITIONING
   const logoVerticalPos = savedStyles.positioning?.logoVerticalPos || -20;
   const headlineVerticalPos = savedStyles.positioning?.headlineVerticalPos || -50;
   const subtitleVerticalPos = savedStyles.positioning?.subtitleVerticalPos || 0;
   const featuresVerticalPos = savedStyles.positioning?.featuresVerticalPos || -32;
   const buttonsVerticalPos = savedStyles.positioning?.buttonsVerticalPos || -50;
 
-  // Get theme-based styling
-  const currentTheme = UNIFIED_THEMES.find(t => t.id === (pageData.unified_theme || `${theme}_modern`)) || UNIFIED_THEMES[0];
+  // Apply YOUR EXACT THEME COLORS
+  const themeColors = savedStyles.customColors || {
+    primary: '#d4af37',
+    secondary: '#8b5cf6', 
+    accent: '#f59e0b'
+  };
 
   return (
     <div 
-      className="min-h-screen relative overflow-hidden"
+      className="min-h-screen flex flex-col"
       style={{
-        background: `linear-gradient(135deg, ${currentTheme.colors.background}, ${currentTheme.colors.primary}15)`
+        background: `linear-gradient(135deg, ${themeColors.primary}15, ${themeColors.secondary}10, ${themeColors.accent}05)`
       }}
     >
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Floating particles */}
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-primary/20 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${3 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-4xl mx-auto text-center space-y-8 sm:space-y-12">
-          
-          {/* Logo Section */}
+      {/* MOBILE VIEWPORT: Fit everything on one screen */}
+      <div className="flex-1 flex flex-col justify-between p-4 max-h-screen overflow-hidden">
+        
+        {/* TOP SECTION: Logo + Title */}
+        <div className="flex-shrink-0 text-center">
+          {/* Logo with YOUR EXACT positioning and sizing */}
           {logoUrl && (
             <div 
-              className="animate-fade-in"
-              style={{ 
-                transform: `translateY(${logoVerticalPos}px)`,
-                animationDelay: '0.2s'
-              }}
+              className="mb-4"
+              style={{ transform: `translateY(${logoVerticalPos * 0.5}px)` }}
             >
-              <div className="relative">
-                <img 
-                  src={logoUrl} 
-                  alt="Logo" 
-                  style={{ 
-                    width: `${logoSize}px`, 
-                    height: `${logoSize}px` 
-                  }}
-                  className="mx-auto object-contain drop-shadow-lg hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    console.error('Logo failed to load:', logoUrl);
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                {/* Glow effect */}
-                <div 
-                  className="absolute inset-0 rounded-full opacity-30 blur-xl"
-                  style={{
-                    background: `radial-gradient(circle, ${currentTheme.colors.primary}40, transparent 70%)`
-                  }}
-                />
-              </div>
+              <img 
+                src={logoUrl} 
+                alt="Logo" 
+                style={{ 
+                  width: `${Math.min(logoSize, 120)}px`, 
+                  height: `${Math.min(logoSize, 120)}px` 
+                }}
+                className="mx-auto object-contain"
+                onError={(e) => {
+                  console.error('Logo failed to load:', logoUrl);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             </div>
           )}
 
-          {/* Title Section */}
-          <div 
-            className="animate-fade-in"
-            style={{ 
-              transform: `translateY(${headlineVerticalPos}px)`,
-              animationDelay: '0.4s'
-            }}
-          >
+          {/* Title with YOUR EXACT styling */}
+          <div style={{ transform: `translateY(${headlineVerticalPos * 0.3}px)` }}>
             <h1 
-              className="font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent mb-4 px-4 leading-tight"
+              className="font-bold text-foreground mb-2 px-4 leading-tight"
               style={{ 
-                fontSize: `${Math.max(24, headlineSize * 0.8)}px`,
-                lineHeight: '1.2'
+                fontSize: `${Math.min(headlineSize, 28)}px`,
+                color: themeColors.primary 
               }}
             >
               {title}
             </h1>
           </div>
           
-          {/* Subtitle Section */}
+          {/* Subtitle with YOUR EXACT styling */}
           {subtitle && (
-            <div 
-              className="animate-fade-in"
-              style={{ 
-                transform: `translateY(${subtitleVerticalPos}px)`,
-                animationDelay: '0.6s'
-              }}
-            >
+            <div style={{ transform: `translateY(${subtitleVerticalPos * 0.3}px)` }}>
               <p 
-                className="text-muted-foreground mb-8 sm:mb-12 px-4 max-w-2xl mx-auto"
+                className="text-muted-foreground mb-4 px-4"
                 style={{ 
-                  fontSize: `${Math.max(16, subtitleSize * 0.9)}px`,
-                  lineHeight: '1.5'
+                  fontSize: `${Math.min(subtitleSize, 16)}px`,
+                  lineHeight: '1.4'
                 }}
               >
                 {subtitle}
               </p>
             </div>
           )}
+        </div>
 
-          {/* Features Section */}
-          {features.length > 0 && (
-            <div 
-              className="animate-fade-in space-y-4 sm:space-y-6 max-w-3xl mx-auto px-4"
-              style={{ 
-                transform: `translateY(${featuresVerticalPos}px)`,
-                animationDelay: '0.8s'
-              }}
-            >
+        {/* MIDDLE SECTION: Features (scrollable if needed) */}
+        {features.length > 0 && (
+          <div 
+            className="flex-1 overflow-y-auto px-4 my-4"
+            style={{ transform: `translateY(${featuresVerticalPos * 0.3}px)` }}
+          >
+            <div className="space-y-3 max-w-2xl mx-auto">
               {features.map((feature: any, index: number) => (
                 <div 
                   key={index} 
-                  className="bg-card/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 shadow-lg border border-border/50 hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    animationDelay: `${0.8 + index * 0.1}s`
-                  }}
+                  className="bg-card/90 backdrop-blur-sm rounded-lg p-3 shadow-md border"
+                  style={{ borderColor: `${themeColors.primary}30` }}
                 >
-                  <div className="flex items-center justify-center sm:justify-start mb-3 flex-col sm:flex-row">
-                    <span className="text-3xl sm:text-4xl mb-2 sm:mb-0 sm:mr-4 drop-shadow-lg">
-                      {feature.emoji || '⭐'}
-                    </span>
-                    <h3 className="text-lg sm:text-xl font-bold text-foreground text-center sm:text-left">
-                      {feature.title || 'Feature'}
-                    </h3>
+                  <div className="flex items-center mb-2">
+                    <span className="text-xl mr-3">{feature.emoji || '⭐'}</span>
+                    <h3 className="text-sm font-bold text-foreground">{feature.title || 'Feature'}</h3>
                   </div>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed text-center sm:text-left">
+                  <p className="text-xs text-muted-foreground leading-relaxed pl-8">
                     {feature.description || ''}
                   </p>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Buttons Section */}
-          {buttons.length > 0 && (
-            <div 
-              className="animate-fade-in flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center px-4"
-              style={{ 
-                transform: `translateY(${buttonsVerticalPos}px)`,
-                animationDelay: '1s'
-              }}
-            >
-              {buttons.map((button: any, index: number) => (
-                <Button
-                  key={index}
-                  onClick={() => {
-                    try {
-                      console.log('🔘 Button clicked:', button);
-                      if (button.url) {
-                        console.log('🔗 Opening URL:', button.url);
-                        window.open(button.url, '_blank');
-                      } else if (button.assignment_type === 'delivery_app') {
-                        console.log('🚚 Going to delivery page');
-                        window.location.href = '/delivery';
-                      } else {
-                        console.log('⚠️ No action defined for button');
-                      }
-                    } catch (err) {
-                      console.error('Button click error:', err);
+        {/* BOTTOM SECTION: Buttons (always visible) */}
+        {buttons.length > 0 && (
+          <div 
+            className="flex-shrink-0 flex flex-col gap-3 px-4 pb-safe"
+            style={{ transform: `translateY(${buttonsVerticalPos * 0.3}px)` }}
+          >
+            {buttons.map((button: any, index: number) => (
+              <Button
+                key={index}
+                onClick={() => {
+                  try {
+                    console.log('🔘 Button clicked:', button);
+                    if (button.url) {
+                      console.log('🔗 Opening URL:', button.url);
+                      window.open(button.url, '_blank');
+                    } else if (button.assignment_type === 'delivery_app') {
+                      console.log('🚚 Going to delivery page');
+                      window.location.href = '/delivery';
+                    } else {
+                      console.log('⚠️ No action defined for button');
                     }
-                  }}
-                  variant={button.type === 'primary' ? 'default' : 'outline'}
-                  size="lg"
-                  className={`
-                    min-w-[200px] text-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl
-                    ${button.type === 'primary' 
-                      ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg' 
-                      : 'bg-card/80 backdrop-blur-sm hover:bg-card border-2 border-primary/30 hover:border-primary/60'
-                    }
-                  `}
-                  style={{
-                    animationDelay: `${1 + index * 0.1}s`
-                  }}
-                >
-                  {button.text || 'Button'}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
+                  } catch (err) {
+                    console.error('Button click error:', err);
+                  }
+                }}
+                variant={button.type === 'primary' ? 'default' : 'outline'}
+                size="lg"
+                className="w-full text-base font-semibold py-4"
+                style={{
+                  backgroundColor: button.type === 'primary' ? themeColors.primary : 'transparent',
+                  borderColor: button.type !== 'primary' ? themeColors.primary : undefined,
+                  color: button.type === 'primary' ? '#000000' : themeColors.primary
+                }}
+              >
+                {button.text || 'Button'}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* Bottom Gradient Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background/20 to-transparent pointer-events-none" />
     </div>
   );
 }
