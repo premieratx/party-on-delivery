@@ -184,25 +184,22 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
 
   return (
     <>
-      {/* Mobile Bottom Navigation Bar */}
+      {/* Mobile Bottom Navigation Bar - REMOVE ICONS ON MOBILE */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/20 md:hidden">
-        <div className="grid grid-cols-4 h-14">
-          {/* Removed Home button as requested */}
-
+        <div className="grid grid-cols-4 h-12">
           {/* Cart */}
           <button
             onClick={() => {
               const cartTrigger = document.querySelector('[data-cart-trigger]') as HTMLElement;
               cartTrigger?.click();
             }}
-            className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors relative"
+            className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors relative px-1"
           >
-            <ShoppingCart className="h-4 w-4 mb-1" />
-            <span>Cart</span>
+            <span className="font-medium">Cart</span>
             {cartItems > 0 && (
               <Badge 
                 variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 text-[10px] rounded-full p-0 flex items-center justify-center"
+                className="absolute -top-1 -right-1 h-4 w-4 text-[8px] rounded-full p-0 flex items-center justify-center"
               >
                 {cartItems}
               </Badge>
@@ -219,14 +216,13 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
                 cartTrigger?.click();
               }
             }}
-            className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors relative"
+            className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors relative px-1"
           >
-            <ShoppingCart className="h-4 w-4 mb-1" />
-            <span>{cartItems > 0 ? 'Checkout' : 'Cart'}</span>
+            <span className="font-medium">{cartItems > 0 ? 'Checkout' : 'Cart'}</span>
             {cartItems > 0 && (
               <Badge 
                 variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 text-[10px] rounded-full p-0 flex items-center justify-center"
+                className="absolute -top-1 -right-1 h-4 w-4 text-[8px] rounded-full p-0 flex items-center justify-center"
               >
                 {cartItems}
               </Badge>
@@ -236,22 +232,20 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
           {/* Admin Dashboard */}
           <button
             onClick={() => handleNavigation('/admin')}
-            className={`flex flex-col items-center justify-center text-xs transition-colors ${
+            className={`flex flex-col items-center justify-center text-xs transition-colors px-1 ${
               location.pathname === '/admin' 
                 ? 'text-primary' 
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Settings className="h-4 w-4 mb-1" />
-            <span>Admin</span>
+            <span className="font-medium">Admin</span>
           </button>
 
           {/* More Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <button className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors">
-                <Menu className="h-4 w-4 mb-1" />
-                <span>More</span>
+              <button className="flex flex-col items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-colors px-1">
+                <span className="font-medium">More</span>
               </button>
             </SheetTrigger>
             <SheetContent side="right" className="w-80">

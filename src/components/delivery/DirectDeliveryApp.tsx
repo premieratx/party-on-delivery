@@ -147,20 +147,23 @@ export const DirectDeliveryApp: React.FC<DirectDeliveryAppProps> = ({ appConfig 
         </div>
       </div>
 
-      {/* DIRECT Tab Navigation - No Processing */}
-      <div className="container mx-auto px-4 py-8">
+      {/* Mobile-Optimized Tab Navigation */}
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {tabs.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8 border-b pb-4">
-            {tabs.map((tab: any, index: number) => (
-              <Button
-                key={tab.collection_handle || index}
-                variant={selectedTab === index ? "default" : "outline"}
-                onClick={() => setSelectedTab(index)}
-                className="mb-2"
-              >
-                {tab.name}
-              </Button>
-            ))}
+          <div className="mb-4 sm:mb-8 border-b pb-2 sm:pb-4">
+            {/* Mobile: Horizontal scrollable tabs */}
+            <div className="flex overflow-x-auto gap-1 sm:gap-2 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0 sm:flex-wrap">
+              {tabs.map((tab: any, index: number) => (
+                <Button
+                  key={tab.collection_handle || index}
+                  variant={selectedTab === index ? "default" : "outline"}
+                  onClick={() => setSelectedTab(index)}
+                  className="flex-shrink-0 text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-8 sm:h-10 whitespace-nowrap"
+                >
+                  {tab.name}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -184,16 +187,16 @@ export const DirectDeliveryApp: React.FC<DirectDeliveryAppProps> = ({ appConfig 
             <p className="text-muted-foreground">No products found in this category.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4">
             {products.map((product) => {
               const quantity = getProductQuantity(product);
               const variant = product.variants?.[0];
               const price = variant?.price || product.price || 0;
               
               return (
-                <div key={product.id} className="bg-card rounded-lg border p-4 hover:shadow-lg transition-shadow">
+                <div key={product.id} className="bg-card rounded-lg border p-2 sm:p-4 hover:shadow-lg transition-shadow">
                   {/* Product Image */}
-                  <div className="aspect-square bg-muted rounded-lg mb-4 overflow-hidden">
+                  <div className="aspect-square bg-muted rounded-lg mb-2 sm:mb-4 overflow-hidden">
                     {product.image || product.featured_image ? (
                       <img 
                         src={product.image || product.featured_image} 
@@ -209,8 +212,8 @@ export const DirectDeliveryApp: React.FC<DirectDeliveryAppProps> = ({ appConfig 
                   </div>
                   
                   {/* Product Info */}
-                  <h3 className="font-semibold mb-2 line-clamp-2">{product.title}</h3>
-                  <p className="text-2xl font-bold text-primary mb-4">
+                  <h3 className="font-semibold mb-1 sm:mb-2 line-clamp-2 text-xs sm:text-sm">{product.title}</h3>
+                  <p className="text-lg sm:text-2xl font-bold text-primary mb-2 sm:mb-4">
                     ${typeof price === 'number' ? price.toFixed(2) : price}
                   </p>
                   
@@ -218,7 +221,7 @@ export const DirectDeliveryApp: React.FC<DirectDeliveryAppProps> = ({ appConfig 
                   {quantity === 0 ? (
                     <Button
                       onClick={() => handleAddToCart(product)}
-                      className="w-full"
+                      className="w-full text-xs sm:text-sm h-8 sm:h-10"
                     >
                       Add to Cart
                     </Button>

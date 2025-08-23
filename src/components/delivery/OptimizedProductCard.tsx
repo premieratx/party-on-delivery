@@ -48,14 +48,14 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
     <div 
       className={`bg-card border rounded-lg transition-all duration-200 flex flex-col h-full ${
         isCocktailsTab ? 'cursor-pointer hover:border-primary/50' : ''
-      } ${isSearchFocused ? 'p-2' : 'p-3'} hover:shadow-md`}
+      } ${isSearchFocused ? 'p-1 sm:p-2' : 'p-2 sm:p-3'} hover:shadow-md`}
       onClick={() => onProductClick(product)}
     >
-      {/* Product image - condensed when search focused */}
+      {/* Product image - mobile optimized spacing */}
       <div className={`bg-muted rounded overflow-hidden w-full aspect-square ${
         isSearchFocused 
-          ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-1' : 'mb-2'
-          : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'mb-2' : 'mb-3'
+          ? 'mb-1' 
+          : 'mb-1 sm:mb-2'
       }`}>
         <img
           src={product.image}
@@ -66,31 +66,25 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
         />
       </div>
       
-      {/* Product info with condensed height when search focused */}
+      {/* Product info - mobile optimized */}
       <div className={`flex flex-col flex-1 justify-between ${
-        isSearchFocused 
-          ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[4.5rem]' : 'min-h-[6rem]'
-          : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'min-h-[6rem]' : 'min-h-[8rem]'
+        isSearchFocused ? 'min-h-[4rem]' : 'min-h-[5rem] sm:min-h-[6rem]'
       }`}>
         <div className="flex-1 flex flex-col justify-start">
           {isCocktailsTab ? (
-            <h4 className="font-bold leading-tight text-center text-sm mb-2">
+            <h4 className="font-bold leading-tight text-center text-xs sm:text-sm mb-1">
               {product.title}
             </h4>
           ) : (
             <>
               <h4 className={`font-bold leading-tight text-center line-clamp-2 ${
-                isSearchFocused
-                  ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] mb-0.5' : 'text-xs mb-1'
-                  : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-xs mb-1' : 'text-sm mb-1'
+                isSearchFocused ? 'text-[10px] sm:text-xs mb-0.5' : 'text-xs sm:text-sm mb-1'
               }`}>
                 {displayTitle}
               </h4>
               {displayPackage && (
                 <p className={`text-foreground text-center whitespace-nowrap overflow-hidden text-ellipsis ${
-                  isSearchFocused
-                    ? (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[8px] leading-2 mb-0.5' : 'text-[10px] mb-1'
-                    : (selectedCategory === 0 || selectedCategory === 1 || selectedCategory === 3) ? 'text-[10px] leading-3 mb-1' : 'text-xs mb-1'
+                  isSearchFocused ? 'text-[8px] sm:text-[10px] leading-2 mb-0.5' : 'text-[9px] sm:text-xs leading-3 mb-1'
                 }`}>
                   {displayPackage}
                 </p>
@@ -100,17 +94,17 @@ export const OptimizedProductCard = memo<OptimizedProductCardProps>(({
 
           {/* Variant selector for products with multiple variants */}
           {product.variants.length > 1 && (
-            <div className="mb-2">
+            <div className="mb-1">
               <Select
                 value={selectedVariant?.id}
                 onValueChange={(variantId) => onVariantChange(product.id, variantId)}
               >
-                <SelectTrigger className="w-full h-8 text-xs">
+                <SelectTrigger className="w-full h-7 text-[10px] sm:text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {product.variants.map((variant: any) => (
-                    <SelectItem key={variant.id} value={variant.id} className="text-xs">
+                    <SelectItem key={variant.id} value={variant.id} className="text-[10px] sm:text-xs">
                       {variant.title}
                     </SelectItem>
                   ))}
