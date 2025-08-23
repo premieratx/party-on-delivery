@@ -6,7 +6,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useAppConfig } from '@/hooks/useAppConfig';
 import RequireAdmin from "./components/admin/RequireAdmin";
 import { GlobalCartProvider } from "@/components/common/GlobalCartProvider";
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -57,7 +56,6 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const { config } = useAppConfig();
   
   return (
     <RobustErrorBoundary>
@@ -84,7 +82,6 @@ const App = () => {
                     
                     {/* Cover pages - specific routes first */}
                     <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
-                    <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
                     {/* Post-checkout pages only */}
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
