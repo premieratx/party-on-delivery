@@ -4,7 +4,10 @@ import StandaloneCoverPage from './pages/StandaloneCoverPage';
 import './index.css';
 
 // Check if this is a cover page route and render directly
-if (window.location.pathname === '/premier-concierge' || window.location.pathname.startsWith('/cover/')) {
+const pathname = window.location.pathname;
+const isCoverPage = pathname === '/premier-concierge' || pathname.startsWith('/cover/');
+
+if (isCoverPage) {
   const container = document.getElementById('root');
   if (container) {
     const root = createRoot(container);

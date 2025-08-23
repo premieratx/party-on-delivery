@@ -10,13 +10,7 @@ export default function StandaloneCoverPage() {
   useEffect(() => {
     const loadPage = async () => {
       try {
-        // Add to page so we can see what's happening
-        document.body.style.background = 'red';
-        document.title = `Loading ${slug}...`;
-        
         console.log('📱 Loading page for slug:', slug);
-        console.log('📱 Current URL:', window.location.href);
-        console.log('📱 Pathname:', window.location.pathname);
         
         const { data, error } = await supabase
           .from('cover_pages')
@@ -26,24 +20,18 @@ export default function StandaloneCoverPage() {
           .maybeSingle();
 
         if (error) {
-          document.title = 'ERROR: ' + error.message;
           console.error('❌ Database error:', error);
           throw new Error(`Database error: ${error.message}`);
         }
         
         if (!data) {
-          document.title = 'ERROR: No data found';
           console.error('❌ No page found for slug:', slug);
           throw new Error(`No page found for slug: ${slug}`);
         }
         
-        document.title = data.title;
-        document.body.style.background = '';
         console.log('✅ Page data loaded:', data);
         setPageData(data);
       } catch (err: any) {
-        document.title = 'ERROR: ' + err.message;
-        document.body.style.background = 'red';
         console.error('💥 Failed to load page:', err);
         setError(err.message);
       } finally {
