@@ -110,7 +110,7 @@ export const EditableCoverScreen: React.FC<EditableCoverScreenProps> = ({
   onClose,
   standalone = false
 }) => {
-  console.log('🎬 EditableCoverScreen rendering with props:', {
+  console.log('📱 EditableCoverScreen mobile render:', {
     title,
     subtitle,
     hasLogo: !!logoUrl,
