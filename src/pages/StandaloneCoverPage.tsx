@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CoverPageData {
   title: string;
@@ -6,8 +7,8 @@ interface CoverPageData {
   logo_url?: string;
   bg_image_url?: string;
   bg_video_url?: string;
-  checklist?: any[];
-  buttons?: any[];
+  checklist?: any;
+  buttons?: any;
   styles?: any;
   theme?: string;
 }
@@ -28,37 +29,28 @@ export default function StandaloneCoverPage() {
         setIsLoading(true);
         setError(null);
         
-        // Direct fetch to Supabase REST API
-        const apiUrl = `https://acmlfzfliqupwxwoefdq.supabase.co/rest/v1/cover_pages?slug=eq.${slug}&is_active=eq.true&select=*`;
-        console.log('📡 STANDALONE API URL:', apiUrl);
+        // Use Supabase client instead of direct fetch
+        console.log('📡 STANDALONE: Using Supabase client to fetch...');
         
-        const response = await fetch(apiUrl, {
-          headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjbWxmemZsaXF1cHd4d29lZmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MzQxNTQsImV4cCI6MjA2ODUxMDE1NH0.1U3U-0IlnYFo55090c2Cg4AgP9IQs-xQB6xTom8Xcns',
-            'Content-Type': 'application/json'
-          }
-        });
+        const { data, error } = await supabase
+          .from('cover_pages')
+          .select('*')
+          .eq('slug', slug)
+          .eq('is_active', true);
         
-        console.log('📊 STANDALONE Response status:', response.status);
-        console.log('📊 STANDALONE Response headers:', Object.fromEntries(response.headers.entries()));
+        console.log('📊 STANDALONE Supabase response:', { data, error });
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ STANDALONE Response error:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+        if (error) {
+          console.error('❌ STANDALONE Supabase error:', error);
+          throw new Error(`Supabase error: ${error.message}`);
         }
-        
-        const data = await response.json();
-        console.log('📦 STANDALONE Response data:', data);
-        console.log('📦 STANDALONE Data length:', data?.length);
         
         if (data && data.length > 0) {
           console.log('✅ STANDALONE Cover page found:', data[0]);
           setCoverPage(data[0]);
         } else {
           console.log('❌ STANDALONE No cover page found for slug:', slug);
-          console.log('❌ STANDALONE Response was:', JSON.stringify(data));
+          console.log('❌ STANDALONE Data was:', JSON.stringify(data));
           setError('Page not found');
         }
       } catch (err) {
