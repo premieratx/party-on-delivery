@@ -20,7 +20,7 @@ export default function MobileCoverPage() {
   // Get slug from URL - completely standalone
   const getSlugFromPath = () => {
     const path = window.location.pathname;
-    console.log('🔍 Full pathname:', path);
+    console.log('🔍 Mobile Cover Page - Full pathname:', path);
     
     // Handle /cover/slug format
     if (path.startsWith('/cover/')) {
@@ -31,7 +31,7 @@ export default function MobileCoverPage() {
     
     // Handle direct slug format like /premier-concierge
     const slug = path.replace(/^\//, ''); // Remove leading slash only
-    console.log('📄 Direct slug:', slug);
+    console.log('📄 Direct slug for mobile:', slug);
     return slug;
   };
   
