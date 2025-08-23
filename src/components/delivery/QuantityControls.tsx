@@ -24,16 +24,23 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
   className,
   disabled = false
 }) => {
+  // Mobile-optimized sizing with better proportions
   const sizeClasses = {
-    sm: 'h-5 w-7 text-xs rounded-full',
-    md: 'h-6 w-8 text-sm rounded-full', 
-    lg: 'h-7 w-9 text-base rounded-full'
+    sm: 'h-6 w-6 text-xs rounded-full',
+    md: 'h-7 w-7 text-sm rounded-full', 
+    lg: 'h-8 w-8 text-base rounded-full'
   };
 
   const textSizeClasses = {
-    sm: 'text-xs px-1 min-w-[1.5rem] font-semibold',
-    md: 'text-sm px-2 min-w-[2rem] font-semibold',
-    lg: 'text-base px-2 min-w-[2.5rem] font-semibold'
+    sm: 'text-xs min-w-[24px] font-semibold',
+    md: 'text-sm min-w-[28px] font-semibold',
+    lg: 'text-base min-w-[32px] font-semibold'
+  };
+
+  const iconSizes = {
+    sm: 8,
+    md: 10,
+    lg: 12
   };
 
   const handleIncrease = () => {
@@ -70,24 +77,24 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
     );
   }
 
-  // Show quantity controls
+  // Show quantity controls - compact mobile layout
   return (
-    <div className={cn('flex items-center justify-center gap-1 bg-muted rounded-full px-1 py-0.5', className)}>
+    <div className={cn('flex items-center justify-center gap-0.5 bg-muted rounded-full px-0.5 py-0.5', className)}>
       <Button
         variant="ghost"
         size="sm"
         className={cn(
           sizeClasses[size],
-          'p-0 hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center'
+          'p-0 hover:bg-destructive hover:text-destructive-foreground flex items-center justify-center shrink-0'
         )}
         onClick={handleDecrease}
         disabled={disabled}
       >
-        <Minus size={size === 'sm' ? 10 : size === 'lg' ? 14 : 12} />
+        <Minus size={iconSizes[size]} strokeWidth={2.5} />
       </Button>
       
       <span className={cn(
-        'font-medium text-center flex items-center justify-center',
+        'font-medium text-center flex items-center justify-center px-1',
         textSizeClasses[size]
       )}>
         {quantity}
@@ -98,12 +105,12 @@ export const QuantityControls: React.FC<QuantityControlsProps> = ({
         size="sm"
         className={cn(
           sizeClasses[size],
-          'p-0 hover:bg-primary hover:text-primary-foreground flex items-center justify-center'
+          'p-0 hover:bg-primary hover:text-primary-foreground flex items-center justify-center shrink-0'
         )}
         onClick={handleIncrease}
         disabled={disabled}
       >
-        <Plus size={size === 'sm' ? 10 : size === 'lg' ? 14 : 12} />
+        <Plus size={iconSizes[size]} strokeWidth={2.5} />
       </Button>
     </div>
   );
