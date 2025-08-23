@@ -25,6 +25,7 @@ const DirectCoverPage = lazy(() => import("./pages/DirectCoverPage"));
 const BasicCoverPage = lazy(() => import("./pages/BasicCoverPage"));
 const RoutingTest = lazy(() => import("./pages/RoutingTest"));
 const MobileCoverPage = lazy(() => import("./pages/MobileCoverPage"));
+const StandaloneCoverPage = lazy(() => import("./pages/StandaloneCoverPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
@@ -72,8 +73,8 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* Cover page routes - HIGHEST PRIORITY */}
-                    <Route path="/premier-concierge" element={<MobileCoverPage />} />
+                    {/* STANDALONE Cover page route - HIGHEST PRIORITY */}
+                    <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
                     <Route path="/cover/:slug" element={<MobileCoverPage />} />
                     
                     {/* DYNAMIC HOMEPAGE ROUTE */}
