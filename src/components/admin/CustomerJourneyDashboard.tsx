@@ -15,7 +15,7 @@ import {
   Award,
   Rocket
 } from 'lucide-react';
-import { EmbeddedCoverPageCreator } from './EmbeddedCoverPageCreator';
+// EmbeddedCoverPageCreator removed - standalone implementation only
 import { EmbeddedPostCheckoutCreator } from './EmbeddedPostCheckoutCreator';
 // CustomerFlowConfigurator removed - standalone architecture
 
@@ -239,7 +239,7 @@ export default function CustomerJourneyDashboard() {
                 </p>
               </CardHeader>
               <CardContent className="p-6">
-                <EmbeddedCoverPageCreator />
+                <div className="text-center text-muted-foreground">Cover page creation moved to standalone implementation</div>
               </CardContent>
             </Card>
           </TabsContent>

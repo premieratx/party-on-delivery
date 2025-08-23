@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { EnhancedCoverPageCreator } from "../enhanced-admin/EnhancedCoverPageCreator";
+// EnhancedCoverPageCreator removed - standalone implementation only
 import { Wand2, Layout, Sparkles, Eye } from 'lucide-react';
 
 interface UnifiedCoverPageEditorProps {
@@ -21,12 +21,16 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   onSaved
 }) => {
   return (
-    <EnhancedCoverPageCreator
-      open={open}
-      onOpenChange={onOpenChange}
-      initial={initial}
-      onSaved={onSaved}
-    />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Cover Page Editor</DialogTitle>
+        </DialogHeader>
+        <div className="text-center text-muted-foreground p-8">
+          Cover page editing moved to standalone implementation
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -18,12 +18,6 @@ const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const TestCheckout = lazy(() => import("./pages/TestCheckout"));
-const TestCoverPage = lazy(() => import("./pages/TestCoverPage"));
-const DirectCoverPage = lazy(() => import("./pages/DirectCoverPage"));
-const BasicCoverPage = lazy(() => import("./pages/BasicCoverPage"));
-const RoutingTest = lazy(() => import("./pages/RoutingTest"));
-const MobileCoverPage = lazy(() => import("./pages/MobileCoverPage"));
-const StandaloneCoverPage = lazy(() => import("./pages/StandaloneCoverPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 
 // Affiliate pages - using direct imports since they use named exports
@@ -79,8 +73,7 @@ const App = () => {
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
-                    {/* Cover pages - specific routes first */}
-                    <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
+                    {/* Cover pages - specific routes first - moved to main.tsx for standalone rendering */}
                     
                     {/* Post-checkout pages only */}
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
@@ -110,9 +103,6 @@ const App = () => {
                     
                     {/* Test Routes */}
                     <Route path="/test-checkout" element={<TestCheckout />} />
-                    <Route path="/test-cover" element={<TestCoverPage />} />
-                    <Route path="/direct-cover" element={<DirectCoverPage />} />
-                    <Route path="/basic" element={<BasicCoverPage />} />
                   </Routes>
                 </Suspense>
               </div>

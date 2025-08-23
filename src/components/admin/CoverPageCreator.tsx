@@ -1,7 +1,6 @@
 import React from 'react';
-import { EnhancedCoverPageCreator } from './EnhancedCoverPageCreator';
 
-// Simple wrapper to maintain compatibility
+// Simple wrapper - functionality removed for clean cover page implementation
 interface CoverPageCreatorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -10,6 +9,6 @@ interface CoverPageCreatorProps {
   onBack?: () => void; // Added for compatibility
 }
 
-export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({ onBack, ...props }) => {
-  return <EnhancedCoverPageCreator {...props} />;
+export const CoverPageCreator: React.FC<CoverPageCreatorProps> = ({ onOpenChange }) => {
+  return <div>Cover Page Creator - Standalone implementation only</div>;
 };

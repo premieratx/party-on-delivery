@@ -12,7 +12,7 @@ import { EnhancedDeliveryAppManager } from '@/components/admin/EnhancedDeliveryA
 import { EnhancedPostCheckoutManager } from '@/components/admin/EnhancedPostCheckoutManager';
 import { AffiliateCreator } from '@/components/admin/AffiliateCreator';
 import { HomepageAppSwitcher } from '@/components/admin/HomepageAppSwitcher';
-import { EnhancedCoverPageCreator } from '@/components/admin/EnhancedCoverPageCreator';
+// EnhancedCoverPageCreator removed - standalone implementation only
 import EnhancedPostCheckoutCreator from '@/components/admin/EnhancedPostCheckoutCreator';
 import { FixedDeliveryAppCreator } from '@/components/admin/FixedDeliveryAppCreator';
 import { supabase } from '@/integrations/supabase/client';
@@ -419,16 +419,9 @@ export default function AdminDashboard() {
         </Tabs>
       </div>
 
-      {/* Creator Modals */}
+      {/* Creator Modals - Cover page creation moved to standalone implementation */}
       {showCoverCreator && (
-        <EnhancedCoverPageCreator 
-          open={showCoverCreator}
-          onOpenChange={setShowCoverCreator}
-          onSaved={() => {
-            setShowCoverCreator(false);
-            loadDashboardData(); // Refresh data after creation
-          }}
-        />
+        <div>Cover page creation disabled - using standalone implementation</div>
       )}
       
       {showDeliveryCreator && (
