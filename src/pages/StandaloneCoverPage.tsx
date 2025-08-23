@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface CoverPageData {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   logo_url?: string;
   bg_image_url?: string;
   bg_video_url?: string;
@@ -18,25 +18,20 @@ export default function StandaloneCoverPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Force slug to premier-concierge for mobile
+  // Fixed slug for premier-concierge
   const slug = 'premier-concierge';
   
   useEffect(() => {
     const fetchCoverPage = async () => {
       try {
         console.log('🚀 STANDALONE: Starting fetch for slug:', slug);
-        console.log('🌐 STANDALONE: Current URL:', window.location.href);
-        setIsLoading(true);
-        setError(null);
-        
-        // Use Supabase client instead of direct fetch
-        console.log('📡 STANDALONE: Using Supabase client to fetch...');
         
         const { data, error } = await supabase
           .from('cover_pages')
           .select('*')
           .eq('slug', slug)
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .maybeSingle();
         
         console.log('📊 STANDALONE Supabase response:', { data, error });
         
@@ -45,317 +40,181 @@ export default function StandaloneCoverPage() {
           throw new Error(`Supabase error: ${error.message}`);
         }
         
-        if (data && data.length > 0) {
-          console.log('✅ STANDALONE Cover page found:', data[0]);
-          setCoverPage(data[0]);
+        if (data) {
+          console.log('✅ STANDALONE Cover page found:', data);
+          setCoverPage(data);
         } else {
           console.log('❌ STANDALONE No cover page found for slug:', slug);
-          console.log('❌ STANDALONE Data was:', JSON.stringify(data));
           setError('Page not found');
         }
       } catch (err) {
-        console.error('💥 STANDALONE Error details:', err);
-        console.error('💥 STANDALONE Error message:', err?.message);
-        console.error('💥 STANDALONE Error stack:', err?.stack);
-        setError(`Failed to load page: ${err?.message}`);
+        console.error('💥 STANDALONE Fetch error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load page');
       } finally {
-        console.log('🏁 STANDALONE Setting loading to false');
         setIsLoading(false);
       }
     };
-    
+
     fetchCoverPage();
-  }, []);
-  
+  }, [slug]);
+
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '40px', height: '40px', border: '3px solid #333', borderTop: '3px solid #fff', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
-          <p>Loading...</p>
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600 mx-auto mb-2"></div>
+          <p className="text-yellow-800">Loading...</p>
         </div>
       </div>
     );
   }
-  
+
   if (error || !coverPage) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui' }}>
-        <div style={{ textAlign: 'center', padding: '20px' }}>
-          <h1 style={{ fontSize: '32px', marginBottom: '16px' }}>Page Not Found</h1>
-          <p>The page you're looking for doesn't exist.</p>
-          <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.7 }}>Slug: {slug}</p>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-800">Page Not Found</h1>
+          <p className="text-red-600">The page you're looking for doesn't exist.</p>
+          <p className="text-sm text-red-500 mt-2">Slug: {slug}</p>
+          {error && <p className="text-sm text-red-500 mt-1">Error: {error}</p>}
         </div>
       </div>
     );
   }
-  
-  // Parse features/checklist safely
-  const parseFeatures = (checklist: any) => {
-    if (!checklist) return [];
-    if (Array.isArray(checklist)) return checklist;
-    if (typeof checklist === 'string') {
-      try { return JSON.parse(checklist); } catch { return []; }
-    }
-    return [];
-  };
-  
-  // Parse buttons safely  
-  const parseButtons = (buttons: any) => {
-    if (!buttons) return [];
-    if (Array.isArray(buttons)) return buttons;
-    if (typeof buttons === 'string') {
-      try { return JSON.parse(buttons); } catch { return []; }
-    }
-    return [];
-  };
-  
-  // Parse styles safely
-  const parseStyles = (styles: any) => {
-    if (!styles) return {};
-    if (typeof styles === 'object' && styles !== null) return styles;
-    if (typeof styles === 'string') {
-      try { return JSON.parse(styles); } catch { return {}; }
-    }
-    return {};
-  };
-  
-  const features = parseFeatures(coverPage.checklist);
-  const buttons = parseButtons(coverPage.buttons);
-  const styles = parseStyles(coverPage.styles);
-  
-  // Get variant styles based on theme
+
+  // Parse the data safely
+  const features = Array.isArray(coverPage.checklist) ? coverPage.checklist : [];
+  const buttons = Array.isArray(coverPage.buttons) ? coverPage.buttons : [];
+  const styles = coverPage.styles || {};
+
+  // Get theme-specific styles
   const getVariantStyles = () => {
-    const variant = coverPage.theme || styles.variant || 'default';
+    const variant = coverPage.theme || styles.variant || 'gold';
     
     switch (variant) {
-      case 'luxury':
+      case 'gold':
         return {
-          background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-          accent: '#c9a96e',
-          text: '#ffffff'
+          background: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-100',
+          accent: 'text-yellow-600',
+          text: 'text-gray-800'
         };
-      case 'vibrant':
+      case 'blue':
         return {
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          accent: '#ffffff',
-          text: '#ffffff'
+          background: 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100', 
+          accent: 'text-blue-600',
+          text: 'text-gray-800'
         };
-      case 'minimal':
+      case 'green':
         return {
-          background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          accent: '#2c3e50',
-          text: '#2c3e50'
-        };
-      case 'ocean':
-        return {
-          background: 'linear-gradient(135deg, #0c4a6e 0%, #075985 100%)',
-          accent: '#38bdf8',
-          text: '#ffffff'
+          background: 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-100',
+          accent: 'text-green-600', 
+          text: 'text-gray-800'
         };
       default:
         return {
-          background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-          accent: '#3b82f6',
-          text: '#ffffff'
+          background: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-100',
+          accent: 'text-yellow-600',
+          text: 'text-gray-800'
         };
     }
   };
-  
+
   const variantStyles = getVariantStyles();
-  
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: styles.backgroundColor || variantStyles.background,
-      color: styles.textColor || variantStyles.text,
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {/* Background Video */}
+    <div className={`min-h-screen ${variantStyles.background} flex flex-col items-center justify-center p-4`}>
+      {/* Background Video/Image */}
       {coverPage.bg_video_url && (
         <video
           autoPlay
-          loop
           muted
+          loop
           playsInline
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 1
-          }}
+          className="absolute inset-0 w-full h-full object-cover"
         >
           <source src={coverPage.bg_video_url} type="video/mp4" />
         </video>
       )}
-      
-      {/* Background Image */}
       {!coverPage.bg_video_url && coverPage.bg_image_url && (
         <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundImage: `url(${coverPage.bg_image_url})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            zIndex: 1
-          }}
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${coverPage.bg_image_url})` }}
         />
       )}
       
       {/* Overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        zIndex: 2
-      }} />
+      <div className="absolute inset-0 bg-black/30" />
       
       {/* Content */}
-      <div style={{
-        position: 'relative',
-        zIndex: 3,
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        textAlign: 'center'
-      }}>
+      <div className="relative z-10 text-center max-w-4xl mx-auto">
         {/* Logo */}
         {coverPage.logo_url && (
-          <img
-            src={coverPage.logo_url}
-            alt="Logo"
-            style={{
-              maxWidth: '120px',
-              height: 'auto',
-              marginBottom: '30px',
-              filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
-            }}
-          />
+          <div className="mb-8">
+            <img
+              src={coverPage.logo_url}
+              alt="Logo"
+              className="mx-auto h-20 w-auto"
+            />
+          </div>
         )}
-        
+
         {/* Title */}
-        <h1 style={{
-          fontSize: 'clamp(32px, 8vw, 48px)',
-          fontWeight: 'bold',
-          marginBottom: '20px',
-          lineHeight: '1.2',
-          textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-        }}>
+        <h1 className={`text-4xl md:text-6xl font-bold mb-4 ${variantStyles.text}`}>
           {coverPage.title}
         </h1>
-        
+
         {/* Subtitle */}
         {coverPage.subtitle && (
-          <p style={{
-            fontSize: 'clamp(18px, 4vw, 24px)',
-            marginBottom: '40px',
-            opacity: 0.9,
-            maxWidth: '600px',
-            lineHeight: '1.4',
-            textShadow: '0 1px 2px rgba(0,0,0,0.5)'
-          }}>
+          <p className={`text-xl md:text-2xl mb-12 ${variantStyles.text} opacity-90`}>
             {coverPage.subtitle}
           </p>
         )}
-        
+
         {/* Features */}
         {features.length > 0 && (
-          <div style={{
-            marginBottom: '40px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(250px, 100%), 1fr))',
-            gap: '20px',
-            maxWidth: '800px',
-            width: '100%'
-          }}>
+          <div className="grid gap-6 md:gap-8 mb-12 max-w-3xl mx-auto">
             {features.map((feature: any, index: number) => (
               <div
                 key={index}
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  textAlign: 'center'
-                }}
+                className="bg-white/90 backdrop-blur-sm rounded-lg p-6 shadow-lg"
               >
-                <div style={{ fontSize: '24px', marginBottom: '12px' }}>
-                  {feature.emoji || '✓'}
+                <div className="flex items-center justify-center mb-3">
+                  <span className="text-3xl mr-3">{feature.emoji}</span>
+                  <h3 className="text-xl font-bold text-gray-800">{feature.title}</h3>
                 </div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
-                  {feature.title || feature.text || feature}
-                </h3>
-                {feature.description && (
-                  <p style={{ fontSize: '14px', opacity: 0.8, lineHeight: '1.4' }}>
-                    {feature.description}
-                  </p>
-                )}
+                <p className="text-gray-700">{feature.description}</p>
               </div>
             ))}
           </div>
         )}
-        
+
         {/* Buttons */}
         {buttons.length > 0 && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '100%'
-          }}>
-            {buttons.map((button: any, index: number) => (
-              <button
-                key={index}
-                onClick={() => {
-                  if (button.url) {
-                    window.open(button.url, '_blank');
-                  }
-                }}
-                style={{
-                  padding: '16px 32px',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  border: button.variant === 'outline' 
-                    ? `2px solid ${variantStyles.accent}` 
-                    : 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  minWidth: '280px',
-                  maxWidth: '400px',
-                  backgroundColor: button.variant === 'outline' 
-                    ? 'transparent' 
-                    : variantStyles.accent,
-                  color: button.variant === 'outline' 
-                    ? variantStyles.accent 
-                    : (variantStyles.accent === '#ffffff' ? '#000000' : '#ffffff'),
-                  backdropFilter: button.variant === 'outline' ? 'blur(10px)' : 'none',
-                  textShadow: 'none'
-                }}
-              >
-                {button.text || button.label || 'Click Here'}
-              </button>
-            ))}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {buttons.map((button: any, index: number) => {
+              const handleClick = () => {
+                if (button.url) {
+                  window.open(button.url, '_blank');
+                } else if (button.assignment_type === 'delivery_app') {
+                  // For delivery app buttons, navigate to the delivery page
+                  window.open('/delivery', '_blank');
+                }
+              };
+
+              return (
+                <button
+                  key={index}
+                  onClick={handleClick}
+                  className={`px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-200 ${
+                    button.type === 'primary'
+                      ? 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg hover:shadow-xl'
+                      : 'bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  {button.text}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
