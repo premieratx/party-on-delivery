@@ -73,18 +73,28 @@ export default function CoverPage() {
     );
   }
 
-  // Safe data extraction with fallbacks - ADD DEBUGGING
-  const features = Array.isArray(pageData.checklist) ? pageData.checklist : [];
-  const buttons = Array.isArray(pageData.buttons) ? pageData.buttons : [];
+  // Parse JSON strings from database correctly
+  const parseJsonData = (data: any) => {
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        console.error('Failed to parse JSON:', data);
+        return [];
+      }
+    }
+    return Array.isArray(data) ? data : [];
+  };
+  
+  const features = parseJsonData(pageData.checklist);
+  const buttons = parseJsonData(pageData.buttons);
   const title = pageData.title || 'Welcome';
   const subtitle = pageData.subtitle || '';
   const logoUrl = pageData.logo_url || '';
   
-  console.log('🔧 DEBUGGING RENDER DATA:');
+  console.log('🔧 PARSED DATA:');
   console.log('Features:', features);
   console.log('Buttons:', buttons);
-  console.log('Features length:', features.length);
-  console.log('Buttons length:', buttons.length);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 p-4">
@@ -115,10 +125,10 @@ export default function CoverPage() {
           </p>
         )}
 
-        {/* Features - FORCE RENDER FOR DEBUGGING */}
-        <div className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
-          {features.length > 0 ? (
-            features.map((feature: any, index: number) => (
+        {/* Features */}
+        {features.length > 0 && (
+          <div className="grid gap-4 sm:gap-6 mb-8 sm:mb-12 max-w-3xl mx-auto px-4">
+            {features.map((feature: any, index: number) => (
               <div key={index} className="bg-white rounded-lg p-4 sm:p-6 shadow-lg">
                 <div className="flex items-center justify-center mb-3">
                   <span className="text-2xl sm:text-3xl mr-3">{feature.emoji || '⭐'}</span>
@@ -126,19 +136,14 @@ export default function CoverPage() {
                 </div>
                 <p className="text-sm sm:text-base text-gray-600">{feature.description || ''}</p>
               </div>
-            ))
-          ) : (
-            <div className="bg-red-100 p-4 rounded">
-              <p>DEBUG: No features found. Features array: {JSON.stringify(features)}</p>
-              <p>Raw checklist: {JSON.stringify(pageData.checklist)}</p>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {/* Buttons - FORCE RENDER FOR DEBUGGING */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
-          {buttons.length > 0 ? (
-            buttons.map((button: any, index: number) => (
+        {/* Buttons */}
+        {buttons.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
+            {buttons.map((button: any, index: number) => (
               <button
                 key={index}
                 onClick={() => {
@@ -165,14 +170,9 @@ export default function CoverPage() {
               >
                 {button.text || 'Button'}
               </button>
-            ))
-          ) : (
-            <div className="bg-red-100 p-4 rounded">
-              <p>DEBUG: No buttons found. Buttons array: {JSON.stringify(buttons)}</p>
-              <p>Raw buttons: {JSON.stringify(pageData.buttons)}</p>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
