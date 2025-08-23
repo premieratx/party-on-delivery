@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { UNIFIED_THEMES, applyUnifiedTheme, resetUnifiedTheme } from '@/utils/unifiedThemes';
+import { TEMPLATE_VARIANTS } from '@/components/templates/CoverPageTemplates';
 
 export default function CoverPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -35,15 +35,6 @@ export default function CoverPage() {
         
         console.log('✅ Page data loaded:', data);
         setPageData(data);
-
-        // Apply theme when page loads
-        if (data.unified_theme || data.theme) {
-          const themeId = data.unified_theme || `${data.theme}_modern`;
-          const theme = UNIFIED_THEMES.find(t => t.id === themeId);
-          if (theme) {
-            applyUnifiedTheme(theme);
-          }
-        }
       } catch (err: any) {
         console.error('💥 Failed to load page:', err);
         setError(err.message);
@@ -53,11 +44,6 @@ export default function CoverPage() {
     };
 
     loadPage();
-
-    // Cleanup theme on unmount
-    return () => {
-      resetUnifiedTheme();
-    };
   }, [pageSlug]);
 
   if (loading) {
@@ -125,12 +111,9 @@ export default function CoverPage() {
   const featuresVerticalPos = savedStyles.positioning?.featuresVerticalPos || -32;
   const buttonsVerticalPos = savedStyles.positioning?.buttonsVerticalPos || -50;
 
-  // Apply YOUR EXACT THEME COLORS
-  const themeColors = savedStyles.customColors || {
-    primary: '#d4af37',
-    secondary: '#8b5cf6', 
-    accent: '#f59e0b'
-  };
+  // Get YOUR EXACT SAVED THEME VARIANT
+  const themeVariant = TEMPLATE_VARIANTS[theme as keyof typeof TEMPLATE_VARIANTS] || TEMPLATE_VARIANTS.gold;
+  const themeColors = savedStyles.customColors || themeVariant.styles.customColors;
 
   return (
     <div 
