@@ -71,31 +71,39 @@ export default function StandaloneCoverPage() {
     );
   }
 
-  const features = pageData.checklist || [];
-  const buttons = pageData.buttons || [];
+  // Safe data extraction with fallbacks
+  const features = Array.isArray(pageData.checklist) ? pageData.checklist : [];
+  const buttons = Array.isArray(pageData.buttons) ? pageData.buttons : [];
+  const title = pageData.title || 'Welcome';
+  const subtitle = pageData.subtitle || '';
+  const logoUrl = pageData.logo_url || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-amber-100 p-4">
       <div className="max-w-4xl mx-auto text-center py-8 sm:py-12">
         
         {/* Logo */}
-        {pageData.logo_url && (
+        {logoUrl && (
           <div className="mb-8">
             <img 
-              src={pageData.logo_url} 
+              src={logoUrl} 
               alt="Logo" 
               className="w-24 h-24 sm:w-32 sm:h-32 mx-auto object-contain"
+              onError={(e) => {
+                console.error('Logo failed to load:', logoUrl);
+                e.currentTarget.style.display = 'none';
+              }}
             />
           </div>
         )}
 
         {/* Title & Subtitle */}
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 mb-4 px-4">
-          {pageData.title}
+          {title}
         </h1>
-        {pageData.subtitle && (
+        {subtitle && (
           <p className="text-lg sm:text-xl md:text-2xl text-gray-700 mb-8 sm:mb-12 px-4">
-            {pageData.subtitle}
+            {subtitle}
           </p>
         )}
 
@@ -105,10 +113,10 @@ export default function StandaloneCoverPage() {
             {features.map((feature: any, index: number) => (
               <div key={index} className="bg-white rounded-lg p-4 sm:p-6 shadow-lg">
                 <div className="flex items-center justify-center mb-3">
-                  <span className="text-2xl sm:text-3xl mr-3">{feature.emoji}</span>
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">{feature.title}</h3>
+                  <span className="text-2xl sm:text-3xl mr-3">{feature.emoji || '⭐'}</span>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900">{feature.title || 'Feature'}</h3>
                 </div>
-                <p className="text-sm sm:text-base text-gray-600">{feature.description}</p>
+                <p className="text-sm sm:text-base text-gray-600">{feature.description || ''}</p>
               </div>
             ))}
           </div>
@@ -121,15 +129,19 @@ export default function StandaloneCoverPage() {
               <button
                 key={index}
                 onClick={() => {
-                  console.log('🔘 Button clicked:', button);
-                  if (button.url) {
-                    console.log('🔗 Opening URL:', button.url);
-                    window.open(button.url, '_blank');
-                  } else if (button.assignment_type === 'delivery_app') {
-                    console.log('🚚 Going to delivery page');
-                    window.location.href = '/delivery';
-                  } else {
-                    console.log('⚠️ No action defined for button');
+                  try {
+                    console.log('🔘 Button clicked:', button);
+                    if (button.url) {
+                      console.log('🔗 Opening URL:', button.url);
+                      window.open(button.url, '_blank');
+                    } else if (button.assignment_type === 'delivery_app') {
+                      console.log('🚚 Going to delivery page');
+                      window.location.href = '/delivery';
+                    } else {
+                      console.log('⚠️ No action defined for button');
+                    }
+                  } catch (err) {
+                    console.error('Button click error:', err);
                   }
                 }}
                 className={`px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-200 ${
@@ -138,7 +150,7 @@ export default function StandaloneCoverPage() {
                     : 'bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-300 hover:border-yellow-400 shadow-lg'
                 }`}
               >
-                {button.text}
+                {button.text || 'Button'}
               </button>
             ))}
           </div>
