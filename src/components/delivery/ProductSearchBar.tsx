@@ -6,6 +6,8 @@ import { Search, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SearchOptimizer } from '@/utils/searchOptimizer';
+import { useSearchInterface } from '@/hooks/useSearchInterface';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ShopifyProduct {
   id: string;
@@ -60,6 +62,19 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [allProducts, setAllProducts] = useState<ShopifyProduct[]>([]);
+  
+  const isMobile = useIsMobile();
+  const { 
+    searchInputRef, 
+    handleSearchFocus, 
+    handleSearchBlur, 
+    isSearchFocused,
+    shouldHideChrome,
+    shouldHideBottomMenu 
+  } = useSearchInterface({
+    onSearchFocus: onFocus,
+    onSearchBlur: onBlur
+  });
 
   // Load all products on mount
   useEffect(() => {
@@ -160,7 +175,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   };
 
   return (
-    <div className={`relative w-full ${className}`}>
+    <div className={`relative w-full ${className} ${isMobile && isSearchFocused ? 'z-[100]' : ''}`}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
@@ -168,9 +183,9 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
             placeholder={placeholder}
             value={searchQuery}
             onChange={handleInputChange}
-            onFocus={onFocus}
-            onBlur={onBlur}
-            ref={inputRef as any}
+            onFocus={handleSearchFocus}
+            onBlur={handleSearchBlur}
+            ref={searchInputRef}
             className={`pl-10 pr-10 h-12 text-base border-2 border-primary/20 focus:border-primary ${inputClassName || ''}`}
           />
         {searchQuery && (
@@ -190,7 +205,9 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
       {/* Search Results Dropdown */}
       {showDropdownResults && showResults && searchResults.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className={`absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 overflow-y-auto ${
+          isMobile && isSearchFocused ? 'max-h-[70vh] fixed left-4 right-4 top-16' : 'max-h-96'
+        }`}>
           <div className="p-2">
             <div className="text-sm text-muted-foreground mb-2">
               Found {searchResults.length} products
@@ -226,7 +243,9 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
       {/* No Results */}
       {showDropdownResults && showResults && searchResults.length === 0 && !isLoading && searchQuery.trim() && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 p-4 text-center">
+        <div className={`absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 p-4 text-center ${
+          isMobile && isSearchFocused ? 'fixed left-4 right-4 top-16' : ''
+        }`}>
           <div className="text-muted-foreground">
             No products found for "{searchQuery}"
           </div>

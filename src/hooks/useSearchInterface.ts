@@ -60,16 +60,42 @@ export const useSearchInterface = (options: UseSearchInterfaceOptions = {}) => {
     };
   }, []);
 
-  // Handle search focus - Clean and simple
+  // Handle search focus - Enhanced for mobile with auto-scroll
   const handleSearchFocus = useCallback(() => {
     setIsSearchFocused(true);
     setHasUserInteracted(true);
+    
+    // Auto-scroll to top on mobile when search is focused
+    if (window.innerWidth < 768) {
+      // Smooth scroll to top to bring search bar into view
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      
+      // Also hide unnecessary UI elements for better search experience
+      setShouldHideBottomMenu(true);
+      setShouldHideChrome(true);
+    }
+    
     options.onSearchFocus?.();
   }, [options]);
 
-  // Handle search blur with cleanup
+  // Handle search blur with cleanup - Restore UI on mobile
   const handleSearchBlur = useCallback(() => {
     setIsSearchFocused(false);
+    
+    // Restore UI elements on mobile when search loses focus
+    if (window.innerWidth < 768) {
+      setTimeout(() => {
+        // Only restore if search is not focused anymore
+        if (!searchInputRef.current?.matches(':focus')) {
+          setShouldHideBottomMenu(false);
+          setShouldHideChrome(false);
+        }
+      }, 150);
+    }
+    
     options.onSearchBlur?.();
   }, [options]);
 

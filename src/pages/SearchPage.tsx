@@ -11,6 +11,8 @@ import { SearchOptimizer } from '@/utils/searchOptimizer';
 import { OptimizedImage } from '@/components/common/OptimizedImage';
 import { parseProductTitle } from '@/utils/productUtils';
 import { useToast } from '@/hooks/use-toast';
+import { useSearchInterface } from '@/hooks/useSearchInterface';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FilterCategory {
   id: string;
@@ -29,6 +31,16 @@ export const SearchPage = () => {
   const [filterCategories, setFilterCategories] = useState<FilterCategory[]>([]);
   const [isLoadingFilters, setIsLoadingFilters] = useState(true);
   const { addToCart, getTotalItems, getCartItemQuantity, updateQuantity } = useUnifiedCart();
+  
+  const isMobile = useIsMobile();
+  const { 
+    searchInputRef, 
+    handleSearchFocus, 
+    handleSearchBlur, 
+    isSearchFocused,
+    shouldHideChrome,
+    shouldHideBottomMenu 
+  } = useSearchInterface();
 
   const handleBack = () => {
     const referrer = localStorage.getItem('deliveryAppReferrer') || '/';
@@ -348,17 +360,21 @@ export const SearchPage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search for products, brands, or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
                 className="text-lg pl-10"
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Filter Categories */}
+        {/* Filter Categories - Hide on mobile when search is focused */}
+        {!(isMobile && isSearchFocused) && (
         <Card className="mb-6">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
@@ -395,6 +411,7 @@ export const SearchPage = () => {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Search Results */}
         {isSearching ? (
