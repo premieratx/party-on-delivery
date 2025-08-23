@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-export default function StandaloneCoverPage() {
-  const slug = window.location.pathname.replace('/', '') || 'premier-concierge';
+export default function CoverPage() {
+  const { slug } = useParams<{ slug: string }>();
+  const pageSlug = slug || 'premier-concierge';
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -10,12 +12,12 @@ export default function StandaloneCoverPage() {
   useEffect(() => {
     const loadPage = async () => {
       try {
-        console.log('📱 Loading page for slug:', slug);
+        console.log('📱 Loading page for slug:', pageSlug);
         
         const { data, error } = await supabase
           .from('cover_pages')
           .select('*')
-          .eq('slug', slug)
+          .eq('slug', pageSlug)
           .eq('is_active', true)
           .maybeSingle();
 
@@ -25,8 +27,8 @@ export default function StandaloneCoverPage() {
         }
         
         if (!data) {
-          console.error('❌ No page found for slug:', slug);
-          throw new Error(`No page found for slug: ${slug}`);
+          console.error('❌ No page found for slug:', pageSlug);
+          throw new Error(`No page found for slug: ${pageSlug}`);
         }
         
         console.log('✅ Page data loaded:', data);
@@ -40,7 +42,7 @@ export default function StandaloneCoverPage() {
     };
 
     loadPage();
-  }, [slug]);
+  }, [pageSlug]);
 
   if (loading) {
     return (
@@ -58,7 +60,7 @@ export default function StandaloneCoverPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 p-4">
         <div className="text-center max-w-md bg-white rounded-lg p-8 shadow-lg">
           <h1 className="text-2xl font-bold text-red-800 mb-4">Could Not Load Page</h1>
-          <p className="text-red-600 mb-4">Slug: <code className="bg-red-100 px-2 py-1 rounded">{slug}</code></p>
+          <p className="text-red-600 mb-4">Slug: <code className="bg-red-100 px-2 py-1 rounded">{pageSlug}</code></p>
           {error && <p className="text-red-600 text-sm bg-red-50 p-3 rounded">{error}</p>}
           <button 
             onClick={() => window.location.reload()} 

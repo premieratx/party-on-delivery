@@ -33,6 +33,9 @@ const CustomAppView = lazy(() => import("./pages/CustomAppView"));
 const CustomAppPostCheckout = lazy(() => import("./pages/CustomAppPostCheckout"));
 import PostCheckoutPage from '@/pages/PostCheckoutPage';
 
+// Cover pages
+import CoverPage from "./pages/CoverPage";
+
 // Admin pages - using direct imports since they use named exports
 import { AdminLogin } from "./pages/AdminLogin";
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -73,7 +76,9 @@ const App = () => {
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
-                    {/* Cover pages - specific routes first - moved to main.tsx for standalone rendering */}
+                    {/* Cover pages - normal routes */}
+                    <Route path="/premier-concierge" element={<CoverPage />} />
+                    <Route path="/cover/:slug" element={<CoverPage />} />
                     
                     {/* Post-checkout pages only */}
                     <Route path="/post-checkout/:slug" element={<PostCheckoutPage />} />
