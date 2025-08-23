@@ -73,15 +73,17 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* Regular pages - no special designations */}
-                    <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
-                    <Route path="/:slug" element={<StandaloneCoverPage />} />
-                    
                     {/* DYNAMIC HOMEPAGE ROUTE */}
                     <Route path="/" element={<DynamicHomepage />} />
+                    
+                    {/* Core app routes */}
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/delivery" element={<DynamicHomepage />} />
                     <Route path="/search" element={<SearchPage />} />
+                    <Route path="/app/:appSlug" element={<CustomAppView />} />
+                    
+                    {/* Cover pages - specific routes first */}
+                    <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
                     <Route path="/app/:appSlug" element={<CustomAppView />} />
                     
                     {/* Post-checkout pages only */}

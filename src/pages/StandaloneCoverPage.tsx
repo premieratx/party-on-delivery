@@ -19,9 +19,16 @@ export default function StandaloneCoverPage() {
           .select('*')
           .eq('slug', slug)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Database error:', error);
+          throw new Error(`Database error: ${error.message}`);
+        }
+        
+        if (!data) {
+          throw new Error(`No page found for slug: ${slug}`);
+        }
         
         console.log('Page data loaded:', data);
         setPageData(data);
