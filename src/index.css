@@ -22,6 +22,34 @@
   }
 }
 
+/* Mobile fullscreen support - hide system UI bars */
+@media (max-width: 768px) {
+  html {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  
+  body {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  
+  #root {
+    height: 100vh;
+    height: 100dvh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 @import './styles/cover-animations.css';
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 

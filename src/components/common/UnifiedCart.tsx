@@ -126,8 +126,8 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
               </div>
             ) : (
               cartItems.map((item) => (
-                <Card key={`${item.id}-${item.variant || ''}`} className="p-3 sm:p-4 shadow-sm">
-                  <div className="flex gap-3">
+                <Card key={`${item.id}-${item.variant || ''}`} className="p-2 sm:p-3 shadow-sm">
+                  <div className="flex gap-2">
                     <img 
                       src={item.image} 
                       alt={/* Clean alt text too */
@@ -139,13 +139,13 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                           .replace(/\s+/g, ' ')
                           .trim()
                       }
-                      className="w-16 h-16 object-cover rounded-md bg-muted"
+                      className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md bg-muted flex-shrink-0"
                     />
                     
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-medium text-xs sm:text-sm line-clamp-2">
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-medium text-xs leading-tight line-clamp-2">
                             {/* Clean product title - remove GID URLs and Shopify identifiers */}
                             {item.title
                               .replace(/gid:\/\/shopify\/[^\s]+/g, '') // Remove GID URLs
@@ -172,39 +172,39 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
                               .replace(/^[-\s|]+|[-\s|]+$/g, '') // Remove leading/trailing dashes, spaces, and pipes
                             }
                           </h4>
-                          <p className="product-price text-primary font-semibold text-xs sm:text-sm">${item.price}</p>
+                          <p className="product-price text-primary font-semibold text-xs">${item.price}</p>
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive flex-shrink-0"
                           onClick={() => removeItem(item.id, item.variant)}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 h-3" />
                         </Button>
                       </div>
                       
-                      <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-3.5 w-3.5 sm:h-5 sm:w-5"
+                          className="h-6 w-6"
                           onClick={() => updateQuantity(item.id, item.variant, item.quantity - 1)}
                         >
-                          <Minus className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                          <Minus className="w-3 h-3" />
                         </Button>
                         
-                        <Badge variant="secondary" className="min-w-[24px] sm:min-w-[40px] justify-center text-xs">
+                        <Badge variant="secondary" className="min-w-[28px] justify-center text-xs px-2">
                           {item.quantity}
                         </Badge>
                         
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-3.5 w-3.5 sm:h-5 sm:w-5"
+                          className="h-6 w-6"
                           onClick={() => updateQuantity(item.id, item.variant, item.quantity + 1)}
                         >
-                          <Plus className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
+                          <Plus className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
