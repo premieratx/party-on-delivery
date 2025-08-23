@@ -72,6 +72,10 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
+                    {/* Cover page routes - PRIORITY routing */}
+                    <Route path="/cover/:slug" element={<MobileCoverPage />} />
+                    <Route path="/premier-concierge" element={<MobileCoverPage />} />
+                    
                     {/* DYNAMIC HOMEPAGE ROUTE */}
                     <Route path="/" element={<DynamicHomepage />} />
                     <Route path="/checkout" element={<Checkout />} />
@@ -115,7 +119,8 @@ const App = () => {
                     <Route path="/direct-cover" element={<DirectCoverPage />} />
                     <Route path="/basic" element={<BasicCoverPage />} />
                     
-                    {/* Mobile-optimized standalone cover page routes */}
+                    {/* Cover page routes - both explicit and single segment */}
+                    <Route path="/cover/:slug" element={<MobileCoverPage />} />
                     <Route path="/:slug" element={<MobileCoverPage />} />
                   </Routes>
                 </Suspense>
