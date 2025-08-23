@@ -77,8 +77,8 @@ const App = () => {
                     <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
                     <Route path="/cover/:slug" element={<MobileCoverPage />} />
                     
-                    {/* DYNAMIC HOMEPAGE ROUTE */}
-                    <Route path="/" element={<DynamicHomepage />} />
+                    {/* DYNAMIC HOMEPAGE ROUTE - Now serves standalone cover page */}
+                    <Route path="/" element={<StandaloneCoverPage />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/delivery" element={<DynamicHomepage />} />
                     <Route path="/search" element={<SearchPage />} />
