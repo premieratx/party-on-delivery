@@ -9,6 +9,7 @@ import { CreditCard, Plus, Minus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CartItem } from '../DeliveryWidget';
 import { CustomerInfo } from '@/hooks/useCustomerInfo';
+import { handlePaymentError, safeSupabaseInvoke, PaymentIntentResponse } from '@/utils/apiErrorHandler';
 
 interface PaymentStepProps {
   cartItems: CartItem[];
@@ -117,25 +118,34 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         }
       });
 
-      // Create payment intent
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-        body: {
-          amount: amountInCents,
-          currency: 'usd',
-          cartItems,
-          customerInfo,
-          deliveryInfo,
-          appliedDiscount,
-          tipAmount: validTipAmount,
-          subtotal,
-          deliveryFee,
-          salesTax,
-          affiliateCode
+      // Create payment intent with enhanced error handling and retries
+      const response = await safeSupabaseInvoke<PaymentIntentResponse>(
+        supabase,
+        'create-payment-intent',
+        {
+          body: {
+            amount: amountInCents,
+            currency: 'usd',
+            cartItems,
+            customerInfo,
+            deliveryInfo,
+            appliedDiscount,
+            tipAmount: validTipAmount,
+            subtotal,
+            deliveryFee,
+            salesTax,
+            affiliateCode
+          }
         }
-      });
+      );
 
-      if (error) {
-        throw new Error(error.message);
+      if (!response.success || !response.data) {
+        throw new Error(response.error?.message || 'Payment setup failed');
+      }
+
+      const data = response.data;
+      if (!data.client_secret) {
+        throw new Error('Payment setup failed: Invalid response from server');
       }
 
       // Confirm payment
@@ -166,7 +176,8 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       }
     } catch (error) {
       console.error('Payment processing error:', error);
-      setPaymentError(error instanceof Error ? error.message : 'Payment failed');
+      const errorMessage = handlePaymentError(error);
+      setPaymentError(errorMessage);
     } finally {
       setIsProcessing(false);
     }

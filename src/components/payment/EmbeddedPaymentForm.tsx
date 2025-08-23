@@ -11,6 +11,7 @@ import { CreditCard, Plus, Minus, Edit } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CartItem } from '../DeliveryWidget';
 import { PromoCodeInput } from '../checkout/PromoCodeInput';
+import { handlePaymentError, safeSupabaseInvoke, PaymentIntentResponse } from '@/utils/apiErrorHandler';
 interface PaymentFormProps {
   cartItems: CartItem[];
   subtotal: number;
@@ -260,28 +261,36 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
       // Create payment intent with all pricing details - include current group token
       const currentGroupToken = localStorage.getItem('currentGroupToken') || localStorage.getItem('groupOrderToken');
       
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('create-payment-intent', {
-        body: {
-          amount: amountInCents, // Amount in cents
-          currency: 'usd',
-          cartItems,
-          customerInfo,
-          deliveryInfo,
-          appliedDiscount,
-          tipAmount: validTipAmount,
-          subtotal: validSubtotal,
-          deliveryFee: validDeliveryFee,
-          salesTax: validSalesTax,
-          groupOrderToken: currentGroupToken, // Use consistent group token
-          affiliateCode,
-          commissionPercent
+      // Create payment intent with enhanced error handling and retries
+      const response = await safeSupabaseInvoke<PaymentIntentResponse>(
+        supabase,
+        'create-payment-intent',
+        {
+          body: {
+            amount: amountInCents, // Amount in cents
+            currency: 'usd',
+            cartItems,
+            customerInfo,
+            deliveryInfo,
+            appliedDiscount,
+            tipAmount: validTipAmount,
+            subtotal: validSubtotal,
+            deliveryFee: validDeliveryFee,
+            salesTax: validSalesTax,
+            groupOrderToken: currentGroupToken, // Use consistent group token
+            affiliateCode,
+            commissionPercent
+          }
         }
-      });
-      if (error) {
-        throw new Error(error.message);
+      );
+      
+      if (!response.success || !response.data) {
+        throw new Error(response.error?.message || 'Payment setup failed');
+      }
+
+      const data = response.data;
+      if (!data.client_secret) {
+        throw new Error('Payment setup failed: Invalid response from server');
       }
 
       // Confirm payment
@@ -345,7 +354,9 @@ export const EmbeddedPaymentForm: React.FC<PaymentFormProps> = ({
         onPaymentSuccess(paymentIntentId);
       }
     } catch (error) {
-      setPaymentError(error instanceof Error ? error.message : 'Payment failed');
+      console.error('Payment processing error:', error);
+      const errorMessage = handlePaymentError(error);
+      setPaymentError(errorMessage);
     } finally {
       setIsProcessing(false);
     }
