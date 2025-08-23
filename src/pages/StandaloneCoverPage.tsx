@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CoverPageData {
@@ -18,8 +19,9 @@ export default function StandaloneCoverPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Fixed slug for premier-concierge
-  const slug = 'premier-concierge';
+  // Get slug from URL params, default to premier-concierge
+  const { slug: urlSlug } = useParams<{ slug: string }>();
+  const slug = urlSlug || window.location.pathname.replace('/', '') || 'premier-concierge';
   
   useEffect(() => {
     const fetchCoverPage = async () => {
@@ -195,9 +197,6 @@ export default function StandaloneCoverPage() {
               const handleClick = () => {
                 if (button.url) {
                   window.open(button.url, '_blank');
-                } else if (button.assignment_type === 'delivery_app') {
-                  // For delivery app buttons, navigate to the delivery page
-                  window.open('/delivery', '_blank');
                 }
               };
 

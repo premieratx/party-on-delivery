@@ -73,9 +73,9 @@ const App = () => {
               <div className="min-h-screen">
                 <Suspense fallback={<div />}>
                   <Routes>
-                    {/* STANDALONE Cover page route - HIGHEST PRIORITY */}
+                    {/* STANDALONE Cover page routes - HIGHEST PRIORITY */}
                     <Route path="/premier-concierge" element={<StandaloneCoverPage />} />
-                    <Route path="/cover/:slug" element={<MobileCoverPage />} />
+                    <Route path="/:slug" element={<StandaloneCoverPage />} />
                     
                     {/* DYNAMIC HOMEPAGE ROUTE */}
                     <Route path="/" element={<DynamicHomepage />} />
