@@ -130,7 +130,7 @@ class UltraFastSearchClient {
   }
 
   async getAllProducts(category?: string): Promise<any[]> {
-    return this.searchProducts('', { category, limit: 1000 }).then(result => result.products);
+    return this.searchProducts('', { category, limit: 2000 }).then(result => result.products); // Increased limit to handle full catalog
   }
 
   clearCache(): void {

@@ -43,11 +43,10 @@ serve(async (req) => {
     if (needsRefresh || action === 'preload') {
       console.log('🚀 Refreshing product index...');
       
-      // Load all products in one fast query
+      // Load ALL products in one fast query - no limit to get full 1068+ catalog
       const { data: products, error } = await supabase
         .from('shopify_products_cache')
-        .select('id, title, price, image, handle, data')
-        .limit(1000);
+        .select('id, title, price, image, handle, data');
 
       if (error) {
         throw new Error(`Failed to load products: ${error.message}`);

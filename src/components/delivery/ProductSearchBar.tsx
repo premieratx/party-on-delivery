@@ -43,7 +43,7 @@ interface ProductSearchBarProps {
 
 export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   onProductSelect,
-  placeholder = "Search all products...",
+  placeholder = "Search all 1,068 products in catalog...",
   className = "",
   showDropdownResults = true,
   onResultsChange,
@@ -73,13 +73,15 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
 
   const loadAllProducts = async () => {
     try {
-      console.log('🔍 ProductSearchBar: Loading products for search...');
+      console.log('🔍 ProductSearchBar: Loading ALL products from catalog for search...');
       
-      // Use the optimized product loader to get real products from cache
-      const { data, error } = await supabase.functions.invoke('optimized-product-loader', {
+      // Use get-unified-products to get the complete catalog (not delivery-app specific)
+      const { data, error } = await supabase.functions.invoke('get-unified-products', {
         body: { 
+          use_type: 'search', // Use search mode to get all products
           lightweight: false, // Get full product data for search
-          force_refresh: false 
+          force_refresh: false,
+          limit: null // Remove any limits to get all 1068+ products
         }
       });
 
@@ -88,11 +90,11 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
         return;
       }
 
-      if (data?.success && data.products) {
-        console.log(`🔍 Loaded ${data.products.length} products for search`);
+      if (data?.products) {
+        console.log(`🔍 Loaded ${data.products.length} products from full catalog for search`);
         setAllProducts(data.products);
       } else {
-        console.warn('No products returned from optimized loader');
+        console.warn('No products returned from unified products');
         setAllProducts([]);
       }
     } catch (error) {
