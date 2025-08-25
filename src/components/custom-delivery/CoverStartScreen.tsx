@@ -132,19 +132,21 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
         </div>
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Content - Phone Frame Optimized Layout */}
+        {/* Content - Enhanced Figma Layout with Animations */}
         <div className="relative z-10 flex h-full flex-col justify-center items-center px-6 py-4">
           
-          {/* Top Section: Logo and Title */}
-          <div className="text-center flex flex-col items-center flex-shrink-0 w-full">
-            {/* Logo */}
-            <div className="mb-4" style={{ marginTop: (logoOffsetY || 0) }}>
-              <div className="relative inline-block mx-auto">
+          {/* Logo with enhanced Figma styling */}
+          {logoUrl && (
+            <div 
+              className="flex justify-center mb-6 cover-scale-in stagger-1"
+              style={{ transform: `translateY(${logoOffsetY || 0}px)` }}
+            >
+              <div className="relative inline-block">
                 {logoBgColor && logoBgMode !== 'none' && (
                   logoBgMode === 'rectangle' ? (
                     <div
-                      className="absolute inset-0 -m-1 rounded-md"
-                      style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.35))' }}
+                      className="absolute inset-0 -m-2 rounded-xl shadow-lg"
+                      style={{ backgroundColor: logoBgColor, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.4))' }}
                       aria-hidden="true"
                     />
                   ) : (
@@ -152,8 +154,8 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                       className="absolute inset-0"
                       style={{
                         backgroundColor: logoBgColor,
-                        WebkitMaskImage: `url(${logoUrl || partyLogo})`,
-                        maskImage: `url(${logoUrl || partyLogo})`,
+                        WebkitMaskImage: `url(${logoUrl})`,
+                        maskImage: `url(${logoUrl})`,
                         WebkitMaskRepeat: 'no-repeat',
                         maskRepeat: 'no-repeat',
                         WebkitMaskPosition: 'center',
@@ -165,68 +167,75 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
                     />
                   )
                 )}
-                <img
-                  src={logoUrl || partyLogo}
-                  alt={`${appName} logo`}
-                  className="relative w-auto object-contain drop-shadow-lg mx-auto"
-                  style={{ 
-                    height: Math.min((logoHeight || 100), 120),
-                    maxHeight: '120px' 
-                  }}
-                  loading="eager"
+                <img 
+                  src={logoUrl} 
+                  alt="Logo" 
+                  className="relative w-20 h-20 object-contain filter drop-shadow-lg hover:scale-110 transition-transform duration-300"
+                  style={{ height: `${logoHeight || 80}px` }}
                 />
               </div>
             </div>
+          )}
 
-            {/* Title */}
-            <h1
-              className="font-bold tracking-tight text-white mb-3 px-2 leading-tight"
+          {/* Title with gradient and glow effects from Figma */}
+          <div 
+            className="text-center mb-4 cover-fade-in stagger-2"
+            style={{ transform: `translateY(${titleOffsetY || 0}px)` }}
+          >
+            <h1 
+              className="font-bold bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent drop-shadow-2xl animate-pulse"
               style={{ 
-                fontSize: titleSizeProp ? `${Math.min(titleSizeProp, 32)}px` : '28px', 
-                marginTop: (titleOffsetY || 0) 
+                fontSize: titleSizeProp ? `${titleSizeProp}px` : '28px',
+                textShadow: '0 0 30px rgba(59,130,246,0.6), 0 0 60px rgba(59,130,246,0.4), 0 4px 8px rgba(0,0,0,0.8)',
+                lineHeight: '1.2'
               }}
             >
               {title}
             </h1>
+          </div>
 
-            {/* Subtitle */}
-            {subtitle && (
-              <p
-                className="text-white/90 mb-4 px-2 leading-relaxed"
+          {/* Subtitle with enhanced styling */}
+          {subtitle && (
+            <div 
+              className="text-center mb-8 cover-fade-in stagger-3"
+              style={{ transform: `translateY(${subtitleOffsetY || 0}px)` }}
+            >
+              <p 
+                className="text-gray-200 leading-relaxed font-medium px-6"
                 style={{ 
-                  fontSize: subtitleSizeProp ? `${Math.min(subtitleSizeProp, 18)}px` : '16px', 
-                  marginTop: (subtitleOffsetY || 0) 
+                  fontSize: subtitleSizeProp ? `${subtitleSizeProp}px` : '15px',
+                  textShadow: '0 2px 8px rgba(0,0,0,0.9)',
+                  lineHeight: '1.4'
                 }}
               >
                 {subtitle}
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Middle Section: Checklist */}
+          {/* Checklist with enhanced animations and Figma styling */}
           {checklistItems && checklistItems.length > 0 && (
             <div 
               className="w-full flex-1 overflow-y-auto px-2 my-4"
-              style={{ marginTop: (checklistOffsetY || 0) }}
+              style={{ transform: `translateY(${checklistOffsetY || 0}px)` }}
             >
               <div className="space-y-3">
-                {checklistItems.filter(Boolean).slice(0, 6).map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center space-x-3 text-left bg-white/10 backdrop-blur-sm rounded-lg p-3 animate-fade-in"
-                    style={{ animationDelay: `${idx * 80}ms` }}
+                {checklistItems.filter(Boolean).slice(0, 6).map((item, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex items-center space-x-3 cover-fade-in stagger-${Math.min(index + 4, 5)} group bg-white/10 backdrop-blur-sm rounded-lg p-3`}
+                    style={{ animationDelay: `${index * 80}ms` }}
                   >
-                    <div className="flex-shrink-0">
-                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
+                    <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200">
+                      <svg className="w-3 h-3 text-white drop-shadow-sm" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
                     </div>
                     <span 
-                      className="text-white font-medium flex-1"
+                      className="text-gray-100 font-medium group-hover:text-white transition-colors duration-200 flex-1"
                       style={{ 
-                        fontSize: checklistSizeProp ? `${Math.min(checklistSizeProp, 14)}px` : '14px',
+                        fontSize: checklistSizeProp ? `${checklistSizeProp}px` : '14px',
+                        textShadow: '0 2px 4px rgba(0,0,0,0.8)',
                         lineHeight: '1.4'
                       }}
                     >
@@ -238,22 +247,40 @@ export const CoverStartScreen: React.FC<CoverStartScreenProps> = ({
             </div>
           )}
 
-          {/* Bottom Section: Buttons */}
+          {/* Action buttons with enhanced Figma styling and animations */}
           <div 
             className="w-full flex-shrink-0"
-            style={{ marginTop: (buttonsOffsetY || 0) }}
+            style={{ transform: `translateY(${buttonsOffsetY || 0}px)` }}
           >
             <div className="flex flex-col gap-3">
-              {buttons.slice(0, 3).map((b, i) => (
-                <Button
-                  key={`${b.text}-${i}`}
-                  size="lg"
-                  className={`w-full h-12 rounded-full text-base font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 ${b.bgColor ? '' : 'bg-brand-blue text-brand-blue-foreground hover:bg-brand-blue/90'}`}
-                  style={{ backgroundColor: b.bgColor || undefined, color: b.textColor || undefined }}
-                  onClick={(e) => { e.stopPropagation(); b.onClick?.(); }}
+              {buttons.slice(0, 3).map((button, index) => (
+                <button
+                  key={`${button.text}-${index}`}
+                  onClick={(e) => { e.stopPropagation(); button.onClick?.(); }}
+                  className={`
+                    w-full h-12 rounded-2xl font-semibold text-base transition-all duration-300
+                    transform hover:scale-[1.02] hover:shadow-2xl active:scale-95
+                    cover-scale-in stagger-${Math.min(index + 4, 5)}
+                    relative overflow-hidden group
+                    ${!button.bgColor || button.bgColor === 'primary'
+                      ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 text-white shadow-[0_8px_32px_rgba(59,130,246,0.5)] border border-blue-400/40' 
+                      : 'bg-white/10 text-white border-2 border-white/40 backdrop-blur-sm hover:bg-white/20 shadow-[0_8px_32px_rgba(255,255,255,0.15)]'
+                    }
+                  `}
+                  style={{
+                    backgroundColor: button.bgColor && button.bgColor !== 'primary' ? button.bgColor : undefined,
+                    color: button.textColor || undefined,
+                    textShadow: (!button.bgColor || button.bgColor === 'primary') ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.7)',
+                    boxShadow: (!button.bgColor || button.bgColor === 'primary')
+                      ? '0 8px 32px rgba(59,130,246,0.5), inset 0 1px 0 rgba(255,255,255,0.2), 0 0 0 1px rgba(59,130,246,0.3)' 
+                      : '0 8px 32px rgba(255,255,255,0.15), inset 0 1px 0 rgba(255,255,255,0.15), 0 0 0 1px rgba(255,255,255,0.1)'
+                  }}
                 >
-                  {b.text}
-                </Button>
+                  <span className="relative z-10">{button.text}</span>
+                  {(!button.bgColor || button.bgColor === 'primary') && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  )}
+                </button>
               ))}
             </div>
           </div>

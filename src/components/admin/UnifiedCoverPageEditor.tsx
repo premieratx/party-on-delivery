@@ -1128,36 +1128,33 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center bg-muted/10 rounded-lg">
+          <div className="flex-1 flex items-center justify-center bg-black/5 rounded-lg overflow-hidden">
             <div 
-              className={`${DEVICE_CONFIGS[activeDevice].className} transition-all duration-300 border-2 border-border/20 shadow-2xl overflow-hidden`}
+              className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl overflow-hidden bg-black rounded-[2rem] scale-90"
               style={{ 
-                width: DEVICE_CONFIGS[activeDevice].previewWidth,
-                height: DEVICE_CONFIGS[activeDevice].previewHeight
+                transform: 'scale(0.75)', // Scale down for preview
+                transformOrigin: 'center'
               }}
             >
-              {/* Always use CoverStartScreen for consistent real-time updates */}
-              <div className="relative w-full h-full">
-                <CoverStartScreen
-                  title={title}
-                  subtitle={subtitle}
-                  logoUrl={logoUrl}
-                  logoHeight={logoHeight}
-                  backgroundImageUrl={bgImageUrl}
-                  backgroundVideoUrl={bgVideoUrl}
-                  checklistItems={checklist}
-                  buttons={buttons}
-                  titleSize={titleSize}
-                  subtitleSize={subtitleSize}
-                  checklistSize={checklistSize}
-                  titleOffsetY={titleOffsetY}
-                  subtitleOffsetY={subtitleOffsetY}
-                  checklistOffsetY={checklistOffsetY}
-                  buttonsOffsetY={buttonsOffsetY}
-                  logoOffsetY={logoOffsetY}
-                />
-                {/* Removed drag mode indicator */}
-              </div>
+              {/* Direct CoverStartScreen with proper sizing */}
+              <CoverStartScreen
+                title={title}
+                subtitle={subtitle}
+                logoUrl={logoUrl}
+                logoHeight={logoHeight}
+                backgroundImageUrl={bgImageUrl}
+                backgroundVideoUrl={bgVideoUrl}
+                checklistItems={checklist}
+                buttons={buttons}
+                titleSize={titleSize}
+                subtitleSize={subtitleSize}
+                checklistSize={checklistSize}
+                titleOffsetY={titleOffsetY}
+                subtitleOffsetY={subtitleOffsetY}
+                checklistOffsetY={checklistOffsetY}
+                buttonsOffsetY={buttonsOffsetY}
+                logoOffsetY={logoOffsetY}
+              />
             </div>
           </div>
         </div>
@@ -1195,27 +1192,25 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                 </Button>
               </div>
             </div>
-            <div className="flex-1 p-6 bg-gradient-to-br from-muted/30 to-background/30">
-              <div className="h-full flex items-center justify-center">
-                <CoverStartScreen
-                  title={title}
-                  subtitle={subtitle}
-                  logoUrl={logoUrl}
-                  logoHeight={logoHeight}
-                  backgroundImageUrl={bgImageUrl}
-                  backgroundVideoUrl={bgVideoUrl}
-                  checklistItems={checklist}
-                  buttons={buttons}
-                  titleSize={titleSize}
-                  subtitleSize={subtitleSize}
-                  checklistSize={checklistSize}
-                  titleOffsetY={titleOffsetY}
-                  subtitleOffsetY={subtitleOffsetY}
-                  checklistOffsetY={checklistOffsetY}
-                  buttonsOffsetY={buttonsOffsetY}
-                  logoOffsetY={logoOffsetY}
-                />
-              </div>
+            <div className="flex-1 bg-black flex items-center justify-center">
+              <CoverStartScreen
+                title={title}
+                subtitle={subtitle}
+                logoUrl={logoUrl}
+                logoHeight={logoHeight}
+                backgroundImageUrl={bgImageUrl}
+                backgroundVideoUrl={bgVideoUrl}
+                checklistItems={checklist}
+                buttons={buttons}
+                titleSize={titleSize}
+                subtitleSize={subtitleSize}
+                checklistSize={checklistSize}
+                titleOffsetY={titleOffsetY}
+                subtitleOffsetY={subtitleOffsetY}
+                checklistOffsetY={checklistOffsetY}
+                buttonsOffsetY={buttonsOffsetY}
+                logoOffsetY={logoOffsetY}
+              />
             </div>
           </div>
         </DialogContent>
