@@ -567,12 +567,14 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           <div className="flex-1 overflow-hidden h-full">
             <div className="h-full flex">
               {/* Left Panel - All Controls with Proper Scrolling */}
-              <div className="w-80 border-r bg-muted/20 flex flex-col max-h-full">
-                <ScrollArea className="flex-1 h-full">
-                  <div className="p-4 space-y-6 pb-8">
+              <div className="w-80 border-r bg-muted/20 flex flex-col h-full">
+                <div className="p-4 flex-shrink-0">
                   <h3 className="text-lg font-semibold">Delivery App Creator</h3>
-                  
-                  {/* Device Selector */}
+                </div>
+                <ScrollArea className="flex-1 px-4">
+                  <div className="space-y-6 pb-8">
+                   
+                   {/* Device Selector */}
                   <div>
                     <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
                     <div className="grid grid-cols-3 gap-2">
