@@ -29,6 +29,8 @@ interface HomepageDeliveryApp {
 }
 
 export default function DynamicHomepage() {
+  console.log('🏠 DynamicHomepage component loading...');
+  
   const navigate = useNavigate();
   const [homepageApp, setHomepageApp] = useState<HomepageDeliveryApp | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,11 +47,14 @@ export default function DynamicHomepage() {
   const { openCart } = useGlobalCart();
 
   useEffect(() => {
+    console.log('🏠 DynamicHomepage useEffect triggered');
     loadHomepageApp();
   }, []);
 
   const loadHomepageApp = async () => {
+    console.log('🏠 Starting loadHomepageApp...');
     try {
+      console.log('🏠 Querying database for homepage app...');
       const { data, error } = await supabase
         .from('delivery_app_variations')
         .select('*')
