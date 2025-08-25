@@ -125,21 +125,21 @@ const DeliveryAppPreview: React.FC<{
             </p>
             
             {/* Category Tabs Preview */}
-            <div className="grid grid-cols-3 gap-3 mt-8">
-              {tabs.slice(0, 6).map((tab, index) => (
-                <div 
-                  key={index}
-                  className="p-4 rounded-xl text-center cursor-pointer transform hover:scale-105 transition-transform"
-                  style={{ 
-                    backgroundColor: themeConfig.colors.cardBackground,
-                    border: `1px solid ${themeConfig.colors.border}`,
-                    boxShadow: themeConfig.shadows.card
-                  }}
-                >
-                  <div className="text-2xl mb-2">{tab.icon || '📦'}</div>
-                  <h3 className="font-medium text-sm">{tab.name}</h3>
-                </div>
-              ))}
+        <div className="grid grid-cols-3 gap-3 mt-8">
+          {tabs.slice(0, 6).map((tab, index) => (
+            <div 
+              key={index}
+              className="p-4 rounded-xl text-center cursor-pointer transform hover:scale-105 transition-transform"
+              style={{ 
+                backgroundColor: themeConfig.colors.cardBackground,
+                border: `1px solid ${themeConfig.colors.border}`,
+                boxShadow: themeConfig.shadows.card
+              }}
+            >
+              <div className="text-2xl mb-2">{tab.icon || '📦'}</div>
+              <h3 className="font-medium text-sm">{tab.name}</h3>
+            </div>
+          ))}
             </div>
             
             {/* CTA Button */}

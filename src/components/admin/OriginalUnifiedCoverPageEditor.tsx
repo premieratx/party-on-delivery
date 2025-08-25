@@ -1233,9 +1233,15 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
               buttons={buttons.map(btn => ({ ...btn, style: btn.style || 'filled' as const }))}
               selectedTheme={selectedTheme}
               activeDevice={activeDevice}
-              dragMode={dragMode}
-              elementPositions={elementPositions}
-              onElementDrag={handleElementDrag}
+              titleSize={48}
+              subtitleSize={20}
+              checklistSize={16}
+              titleOffsetY={0}
+              subtitleOffsetY={0}
+              checklistOffsetY={0}
+              buttonsOffsetY={0}
+              logoOffsetY={0}
+              logoHeight={160}
               fullscreenPreview={fullscreenPreview}
               templateData={templateData || {}}
             />

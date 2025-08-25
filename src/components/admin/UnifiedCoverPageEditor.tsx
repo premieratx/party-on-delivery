@@ -1036,21 +1036,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-medium">Drag Mode</Label>
-                      <Switch
-                        checked={dragMode}
-                        onCheckedChange={setDragMode}
-                      />
-                    </div>
-
-                    {dragMode && (
-                      <div className="p-3 bg-muted/20 rounded border border-border/30">
-                        <p className="text-xs text-muted-foreground">
-                          Drag mode enabled. You can now drag elements in the preview to reposition them.
-                        </p>
-                      </div>
-                    )}
+                    {/* Removed drag mode - elements are centered with vertical positioning only */}
                   </div>
                 </TabsContent>
               </Tabs>
@@ -1100,12 +1086,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
               <Badge variant={previewMode ? "default" : "secondary"} className="text-xs">
                 {previewMode ? 'Preview Mode' : 'Edit Mode'}
               </Badge>
-              {dragMode && (
-                <Badge variant="outline" className="text-xs border-warning text-warning">
-                  <Move className="w-3 h-3 mr-1" />
-                  Drag Mode
-                </Badge>
-              )}
+              {/* Removed drag mode indicator */}
             </div>
           </div>
 
@@ -1137,11 +1118,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                   buttonsOffsetY={buttonsOffsetY}
                   logoOffsetY={logoOffsetY}
                 />
-                {dragMode && (
-                  <div className="absolute top-2 left-2 z-50 bg-black/80 text-white px-2 py-1 rounded text-xs">
-                    Drag Mode: Move elements by dragging them
-                  </div>
-                )}
+                {/* Removed drag mode indicator */}
               </div>
             </div>
           </div>

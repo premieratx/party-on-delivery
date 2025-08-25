@@ -101,25 +101,26 @@ export const RestoreUnifiedCoverEditor: React.FC<RestoreUnifiedCoverEditorProps>
           <TabsContent value="animated" className="h-full mt-4">
             <div className="h-full flex items-center justify-center">
               <div className="text-center space-y-4">
-                <AnimatedCoverPreview
-                  title={config.title}
-                  subtitle={config.subtitle}
-                  logoUrl={config.logoUrl}
-                  bgImageUrl={config.bgImageUrl}
-                  bgVideoUrl={config.bgVideoUrl}
-                  checklist={config.checklist}
-                  buttons={config.buttons}
-                  selectedTheme={config.selectedTheme}
-                  activeDevice={config.activeDevice}
-                  dragMode={true}
-                  elementPositions={[
-                    { id: 'logo', type: 'logo', x: 50, y: 10 },
-                    { id: 'title', type: 'title', x: 50, y: 25 },
-                    { id: 'subtitle', type: 'subtitle', x: 50, y: 35 },
-                    { id: 'checklist', type: 'checklist', x: 50, y: 50 },
-                    { id: 'buttons', type: 'buttons', x: 50, y: 75 }
-                  ]}
-                />
+                  <AnimatedCoverPreview
+                    title={config.title}
+                    subtitle={config.subtitle}
+                    logoUrl={config.logoUrl}
+                    bgImageUrl={config.bgImageUrl}
+                    bgVideoUrl={config.bgVideoUrl}
+                    checklist={config.checklist}
+                    buttons={config.buttons}
+                    selectedTheme={config.selectedTheme}
+                    activeDevice={config.activeDevice}
+                    titleSize={48}
+                    subtitleSize={20}
+                    checklistSize={16}
+                    titleOffsetY={0}
+                    subtitleOffsetY={0}
+                    checklistOffsetY={0}
+                    buttonsOffsetY={0}
+                    logoOffsetY={0}
+                    logoHeight={160}
+                  />
               </div>
             </div>
           </TabsContent>
@@ -137,14 +138,15 @@ export const RestoreUnifiedCoverEditor: React.FC<RestoreUnifiedCoverEditorProps>
                   buttons={config.buttons}
                   selectedTheme={config.selectedTheme}
                   activeDevice={config.activeDevice}
-                  dragMode={false}
-                  elementPositions={[
-                    { id: 'logo', type: 'logo', x: 50, y: 10 },
-                    { id: 'title', type: 'title', x: 50, y: 25 },
-                    { id: 'subtitle', type: 'subtitle', x: 50, y: 35 },
-                    { id: 'checklist', type: 'checklist', x: 50, y: 50 },
-                    { id: 'buttons', type: 'buttons', x: 50, y: 75 }
-                  ]}
+                  titleSize={48}
+                  subtitleSize={20}
+                  checklistSize={16}
+                  titleOffsetY={0}
+                  subtitleOffsetY={0}
+                  checklistOffsetY={0}
+                  buttonsOffsetY={0}
+                  logoOffsetY={0}
+                  logoHeight={160}
                 />
               </div>
             </div>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Draggable from 'react-draggable';
 
 interface AnimatedCoverPreviewProps {
   title: string;
@@ -17,14 +16,15 @@ interface AnimatedCoverPreviewProps {
   }>;
   selectedTheme: string;
   activeDevice: string;
-  dragMode: boolean;
-  elementPositions: Array<{
-    id: string;
-    type: string;
-    x: number;
-    y: number;
-  }>;
-  onElementDrag?: (id: string, position: { x: number; y: number }) => void;
+  titleSize?: number;
+  subtitleSize?: number;
+  checklistSize?: number;
+  titleOffsetY?: number;
+  subtitleOffsetY?: number;
+  checklistOffsetY?: number;
+  buttonsOffsetY?: number;
+  logoOffsetY?: number;
+  logoHeight?: number;
   fullscreenPreview?: boolean;
   templateData?: any;
 }
@@ -91,9 +91,15 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
   buttons,
   selectedTheme,
   activeDevice,
-  dragMode,
-  elementPositions,
-  onElementDrag,
+  titleSize = 48,
+  subtitleSize = 20,
+  checklistSize = 16,
+  titleOffsetY = 0,
+  subtitleOffsetY = 0,
+  checklistOffsetY = 0,
+  buttonsOffsetY = 0,
+  logoOffsetY = 0,
+  logoHeight = 160,
   fullscreenPreview = false,
   templateData
 }) => {
@@ -121,13 +127,7 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
     setAnimationKey(prev => prev + 1);
   }, [selectedTheme, templateData]);
 
-  const handleElementDrag = (id: string, position: { x: number; y: number }) => {
-    onElementDrag?.(id, position);
-  };
-
-  const getElementPosition = (id: string) => {
-    return elementPositions.find(pos => pos.id === id) || { x: 50, y: 50 };
-  };
+  // Removed drag functionality - elements are now centered with vertical positioning only
 
   const renderParticles = () => {
     if (!theme.particles) return null;
@@ -176,8 +176,7 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
     );
   };
 
-  const renderAnimatedElement = (elementId: string, content: React.ReactNode, animations: string[] = []) => {
-    const position = getElementPosition(elementId);
+  const renderAnimatedElement = (elementId: string, content: React.ReactNode, animations: string[] = [], offsetY: number = 0) => {
     const animationClasses = animations.map(anim => {
       switch (anim) {
         case 'fadeIn': return 'animate-fade-in';
@@ -190,41 +189,17 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
       }
     }).join(' ');
 
-    if (!dragMode) {
-      return (
-        <div
-          key={`${elementId}-${animationKey}`}
-          className={`transition-all duration-500 ${animationClasses}`}
-          style={{
-            position: 'absolute',
-            left: `${position.x}%`,
-            top: `${position.y}%`,
-            transform: 'translate(-50%, -50%)',
-            animationDelay: `${Math.random() * 0.5}s`
-          }}
-        >
-          {content}
-        </div>
-      );
-    }
-
     return (
-      <Draggable
+      <div
         key={`${elementId}-${animationKey}`}
-        defaultPosition={{ x: (position.x / 100) * device.previewWidth - device.previewWidth/2, y: (position.y / 100) * device.previewHeight - device.previewHeight/2 }}
-        onStop={(_, data) => {
-          const newPosition = { 
-            x: Math.max(0, Math.min(100, ((data.x + device.previewWidth/2) / device.previewWidth) * 100)), 
-            y: Math.max(0, Math.min(100, ((data.y + device.previewHeight/2) / device.previewHeight) * 100))
-          };
-          handleElementDrag(elementId, newPosition);
+        className={`w-full flex justify-center transition-all duration-500 ${animationClasses}`}
+        style={{
+          transform: `translateY(${offsetY}px)`,
+          animationDelay: `${Math.random() * 0.5}s`
         }}
-        bounds="parent"
       >
-        <div className={`absolute cursor-move transition-none ${animationClasses} select-none hover:ring-2 hover:ring-primary/50 rounded p-1`}>
-          {content}
-        </div>
-      </Draggable>
+        {content}
+      </div>
     );
   };
 
@@ -236,20 +211,22 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
         <img 
           src={logoUrl} 
           alt="Logo" 
-          className="w-16 h-16 object-contain rounded-lg shadow-lg"
+          className="object-contain rounded-lg shadow-lg"
           style={{
+            height: `${logoHeight}px`,
             filter: `drop-shadow(0 0 10px ${theme.glowColor})`
           }}
         />
       </div>
-    ), ['fadeIn', 'scale']);
+    ), ['fadeIn', 'scale'], logoOffsetY);
   };
 
   const renderTitle = () => {
     return renderAnimatedElement('title', (
       <h1 
-        className="text-3xl md:text-4xl font-bold text-center px-4 leading-tight"
+        className="font-bold text-center px-4 leading-tight"
         style={{ 
+          fontSize: `${titleSize}px`,
           color: theme.primaryColor,
           textShadow: `0 0 20px ${theme.glowColor}, 0 2px 4px rgba(0,0,0,0.3)`,
           fontFamily: templateData?.design_data?.typography?.heading || 'inherit'
@@ -257,21 +234,22 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
       >
         {title}
       </h1>
-    ), ['fadeIn', 'glow']);
+    ), ['fadeIn', 'glow'], titleOffsetY);
   };
 
   const renderSubtitle = () => {
     return renderAnimatedElement('subtitle', (
       <p 
-        className="text-lg md:text-xl text-center px-6 leading-relaxed"
+        className="text-center px-6 leading-relaxed"
         style={{ 
+          fontSize: `${subtitleSize}px`,
           color: theme.subtitleColor,
           textShadow: '0 1px 2px rgba(0,0,0,0.2)'
         }}
       >
         {subtitle}
       </p>
-    ), ['fadeIn']);
+    ), ['fadeIn'], subtitleOffsetY);
   };
 
   const renderChecklist = () => {
@@ -293,15 +271,18 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
               {selectedTheme === 'gold' ? '🥂' : selectedTheme === 'ocean' ? '🌊' : '🔥'}
             </span>
             <span 
-              className="text-base font-medium"
-              style={{ color: theme.subtitleColor }}
+              className="font-medium"
+              style={{ 
+                fontSize: `${checklistSize}px`,
+                color: theme.subtitleColor 
+              }}
             >
               {item}
             </span>
           </div>
         ))}
       </div>
-    ), ['slideInUp']);
+    ), ['slideInUp'], checklistOffsetY);
   };
 
   const renderButtons = () => {
@@ -329,7 +310,7 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
           </button>
         ))}
       </div>
-    ), ['scale', 'hover-scale']);
+    ), ['scale', 'hover-scale'], buttonsOffsetY);
   };
 
   return (
@@ -374,25 +355,15 @@ export const AnimatedCoverPreview: React.FC<AnimatedCoverPreviewProps> = ({
         {renderParticles()}
         {renderWaves()}
         
-        {/* Content Container with Animation */}
+        {/* Content Container with Animation - Centered Layout */}
         <div className="relative z-10 h-full flex flex-col justify-center items-center space-y-8 p-8">
-          {!dragMode ? (
-            <div className="w-full space-y-8 animate-fade-in">
-              {renderLogo()}
-              {renderTitle()}
-              {renderSubtitle()}
-              {renderChecklist()}
-              {renderButtons()}
-            </div>
-          ) : (
-            <div className="absolute inset-0">
-              {renderLogo()}
-              {renderTitle()}
-              {renderSubtitle()}
-              {renderChecklist()}
-              {renderButtons()}
-            </div>
-          )}
+          <div className="w-full space-y-8 animate-fade-in">
+            {renderLogo()}
+            {renderTitle()}
+            {renderSubtitle()}
+            {renderChecklist()}
+            {renderButtons()}
+          </div>
         </div>
 
         {/* Enhanced Phone Frame Overlay Effects */}
