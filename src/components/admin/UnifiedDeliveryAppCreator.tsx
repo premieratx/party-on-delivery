@@ -111,21 +111,22 @@ const DeliveryAppLivePreview: React.FC<{
     }
   };
 
-  // Fixed dimensions that stay consistent regardless of device
+  // Fixed dimensions that are properly sized for preview
   const previewDimensions = {
-    mobile: { width: 320, height: 568 },
-    tablet: { width: 320, height: 568 }, // Keep same size but show tablet content
-    desktop: { width: 320, height: 568 } // Keep same size but show desktop content
+    mobile: { width: 375, height: 667 },
+    tablet: { width: 768, height: 900 }, 
+    desktop: { width: 1200, height: 700 }
   };
   
   const currentDimensions = previewDimensions[device];
+  const scaleFactor = device === 'tablet' ? 0.6 : device === 'desktop' ? 0.4 : 0.8;
   
   return (
     <div 
       className="border rounded-xl overflow-hidden shadow-xl bg-background mx-auto"
       style={{ 
-        width: `${currentDimensions.width}px`, 
-        height: `${currentDimensions.height}px`
+        width: `${currentDimensions.width * scaleFactor}px`, 
+        height: `${currentDimensions.height * scaleFactor}px`
       }}
     >
       <div className="h-full flex flex-col">
@@ -418,18 +419,17 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
             </div>
           </DialogHeader>
 
-          {/* Main Content - Clean Grid Layout */}
-          <div className="flex-1 min-h-0 grid grid-cols-12 gap-0">
-            {/* Left Panel - Controls (spans 8 columns) */}
-            <div className="col-span-8 border-r bg-muted/20 overflow-hidden">
+          {/* Main Content - Simple Two Panel Layout */}
+          <div className="flex-1 min-h-0 flex">
+            {/* Left Panel - Controls */}
+            <div className="w-[420px] border-r bg-muted/20">
               <div className="h-full flex flex-col">
-                <div className="p-4 border-b">
+                <div className="p-4 border-b flex-shrink-0">
                   <h3 className="text-lg font-semibold">App Configuration</h3>
                 </div>
                 
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto">
-                  <div className="p-4 space-y-6">
+                {/* Scrollable Content - This is the key fix */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     
                     {/* Device Selector */}
                     <div>
@@ -694,15 +694,14 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right Panel - Preview (spans 4 columns) */}
-            <div className="col-span-4 bg-muted/10 overflow-hidden">
+            {/* Right Panel - Preview */}
+            <div className="flex-1 bg-muted/10">
               <div className="h-full flex flex-col">
                 <div className="p-3 border-b flex-shrink-0">
                   <h4 className="text-sm font-semibold">Live Preview</h4>
                 </div>
-                <div className="flex-1 p-4 flex items-center justify-center">
+                <div className="flex-1 p-4 flex items-center justify-center overflow-auto">
                   <DeliveryAppLivePreview
                     appName={appName}
                     heroHeading={heroHeading}
