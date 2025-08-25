@@ -1128,27 +1128,43 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center bg-black/5 rounded-lg overflow-hidden">
-            <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden my-4">
-              <div className="w-full h-full relative">
-                <CoverStartScreen
-                  title={title}
-                  subtitle={subtitle}
-                  logoUrl={logoUrl}
-                  logoHeight={logoHeight}
-                  backgroundImageUrl={bgImageUrl}
-                  backgroundVideoUrl={bgVideoUrl}
-                  checklistItems={checklist}
-                  buttons={buttons}
-                  titleSize={titleSize}
-                  subtitleSize={subtitleSize}
-                  checklistSize={checklistSize}
-                  titleOffsetY={titleOffsetY}
-                  subtitleOffsetY={subtitleOffsetY}
-                  checklistOffsetY={checklistOffsetY}
-                  buttonsOffsetY={buttonsOffsetY}
-                  logoOffsetY={logoOffsetY}
-                />
+          <div className="flex-1 flex items-center justify-center bg-black/5 rounded-lg p-4">
+            <div className="relative">
+              <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
+                <div className="absolute inset-0 pt-10 pb-6 overflow-hidden">
+                  <CoverStartScreen
+                    title={title}
+                    subtitle={subtitle}
+                    logoUrl={logoUrl}
+                    logoHeight={logoHeight}
+                    backgroundImageUrl={bgImageUrl}
+                    backgroundVideoUrl={bgVideoUrl}
+                    checklistItems={checklist}
+                    buttons={buttons}
+                    titleSize={titleSize}
+                    subtitleSize={subtitleSize}
+                    checklistSize={checklistSize}
+                    titleOffsetY={titleOffsetY}
+                    subtitleOffsetY={subtitleOffsetY}
+                    checklistOffsetY={checklistOffsetY}
+                    buttonsOffsetY={buttonsOffsetY}
+                    logoOffsetY={logoOffsetY}
+                  />
+                </div>
+                
+                {/* Status bar */}
+                <div className="absolute top-0 left-0 right-0 h-10 flex items-center justify-between px-6 text-white text-xs z-50 bg-black/30 backdrop-blur-sm">
+                  <span className="font-medium">9:41</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-2 bg-white/70 rounded-sm"></div>
+                    <div className="w-6 h-3 border border-white/70 rounded-sm relative">
+                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-1 h-1 bg-white/70 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Home indicator */}
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-28 h-1 bg-white/50 rounded-full"></div>
               </div>
             </div>
           </div>
