@@ -252,9 +252,20 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   useEffect(() => {
     if (open) {
+      console.log('🚪 Dialog opened, loading collections...');
       loadCollections();
+    } else {
+      console.log('🚪 Dialog closed');
     }
   }, [open]);
+
+  // Debug effect to monitor collections state
+  useEffect(() => {
+    console.log('📊 Collections state changed:', collections.length);
+    if (collections.length > 0) {
+      console.log('📋 Current collections:', collections.slice(0, 5).map(c => ({ handle: c.handle, name: c.name })));
+    }
+  }, [collections]);
 
   const loadCollections = async () => {
     try {
@@ -279,22 +290,26 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
         console.log('✅ Loaded real collections:', data.collections.length);
         console.log('📋 Sample collections:', data.collections.slice(0, 3));
         
-        // Transform the collections to include product counts in the name
-        const transformedCollections = data.collections.map((collection: any) => ({
-          id: collection.id || collection.handle,
-          handle: collection.handle,
-          name: `${collection.title} (${collection.products_count || 0} products)`,
-          title: collection.title,
-          products_count: collection.products_count || 0
-        }));
+        // Transform and filter collections - only include ones with valid handles
+        const transformedCollections = data.collections
+          .filter((collection: any) => collection.handle && collection.title)
+          .map((collection: any) => ({
+            id: collection.id || collection.handle,
+            handle: collection.handle,
+            name: `${collection.title} (${collection.products_count || 0} products)`,
+            title: collection.title,
+            products_count: collection.products_count || 0
+          }));
         
         console.log('🔄 Setting transformed collections:', transformedCollections.length);
+        console.log('🔍 First 3 transformed collections:', transformedCollections.slice(0, 3));
+        
         setCollections(transformedCollections);
         
-        // Force re-render after a brief delay to ensure state update
+        // Force component re-render
         setTimeout(() => {
-          console.log('🔄 Collections state after update:', transformedCollections.length);
-        }, 100);
+          console.log('🔄 Collections in state should be:', transformedCollections.length);
+        }, 200);
         
       } else {
         console.warn('⚠️ No collections data received or invalid format:', data);
@@ -724,25 +739,29 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                             onChange={(e) => updateTab(index, 'name', e.target.value)}
                           />
                           <Select
+                            key={`collection-${index}-${collections.length}`}
                             value={tab.collection_handle}
                             onValueChange={(value) => updateTab(index, 'collection_handle', value)}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder={collections.length > 0 ? "Select Collection" : "Loading collections..."} />
                             </SelectTrigger>
-                          <SelectContent>
-                            {collections.length > 0 ? (
-                              collections.map((collection) => (
-                                <SelectItem key={collection.handle} value={collection.handle}>
-                                  {collection.name}
+                            <SelectContent className="max-h-[200px] overflow-y-auto">
+                              {collections.length > 0 ? (
+                                collections.map((collection) => (
+                                  <SelectItem 
+                                    key={`${collection.handle}-${index}`} 
+                                    value={collection.handle}
+                                  >
+                                    {collection.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="loading" disabled>
+                                  Loading collections...
                                 </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value="loading" disabled>
-                                Loading collections...
-                              </SelectItem>
-                            )}
-                          </SelectContent>
+                              )}
+                            </SelectContent>
                           </Select>
                           <Select
                             value={tab.icon || '📦'}
