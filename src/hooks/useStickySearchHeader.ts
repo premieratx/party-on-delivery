@@ -33,7 +33,7 @@ export function useStickySearchHeader(options: StickySearchOptions = {}) {
       const shouldBeSticky = currentScrollY > threshold;
       setIsSticky(shouldBeSticky);
 
-      // Hide keyboard when scrolling during active search
+      // Hide keyboard when scrolling during active search on mobile
       if (hideKeyboardOnScroll && isSearchActive && Math.abs(currentScrollY - lastScrollY.current) > 10) {
         hideKeyboard();
       }

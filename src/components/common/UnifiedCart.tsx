@@ -71,9 +71,9 @@ export const UnifiedCart: React.FC<UnifiedCartProps> = ({
         onClick={onClose}
       />
       
-      {/* Cart Sidebar */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col safe-area-inset">
-        {/* Mobile: Ensure cart starts at very top */}
+      {/* Cart Sidebar - Fixed positioning for mobile */}
+      <div className="fixed right-0 top-0 h-screen w-full max-w-md bg-background shadow-floating z-50 animate-slide-in-right flex flex-col">
+        {/* Mobile: Full screen height with safe area */}
         
         
         {/* Enhanced Fixed Header - Mobile Optimized */}
