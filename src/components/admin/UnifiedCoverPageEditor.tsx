@@ -1128,33 +1128,29 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center bg-black/5 rounded-lg overflow-hidden">
-            <div 
-              className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl overflow-hidden bg-black rounded-[2rem] scale-90"
-              style={{ 
-                transform: 'scale(0.75)', // Scale down for preview
-                transformOrigin: 'center'
-              }}
-            >
-              {/* Direct CoverStartScreen with proper sizing */}
-              <CoverStartScreen
-                title={title}
-                subtitle={subtitle}
-                logoUrl={logoUrl}
-                logoHeight={logoHeight}
-                backgroundImageUrl={bgImageUrl}
-                backgroundVideoUrl={bgVideoUrl}
-                checklistItems={checklist}
-                buttons={buttons}
-                titleSize={titleSize}
-                subtitleSize={subtitleSize}
-                checklistSize={checklistSize}
-                titleOffsetY={titleOffsetY}
-                subtitleOffsetY={subtitleOffsetY}
-                checklistOffsetY={checklistOffsetY}
-                buttonsOffsetY={buttonsOffsetY}
-                logoOffsetY={logoOffsetY}
-              />
+          <div className="flex-1 flex items-start justify-center bg-black/5 rounded-lg overflow-auto p-4">
+            <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
+              {/* Use PhoneFrameLayout for proper mobile preview */}
+              <div className="w-full h-full relative">
+                <CoverStartScreen
+                  title={title}
+                  subtitle={subtitle}
+                  logoUrl={logoUrl}
+                  logoHeight={logoHeight}
+                  backgroundImageUrl={bgImageUrl}
+                  backgroundVideoUrl={bgVideoUrl}
+                  checklistItems={checklist}
+                  buttons={buttons}
+                  titleSize={titleSize}
+                  subtitleSize={subtitleSize}
+                  checklistSize={checklistSize}
+                  titleOffsetY={titleOffsetY}
+                  subtitleOffsetY={subtitleOffsetY}
+                  checklistOffsetY={checklistOffsetY}
+                  buttonsOffsetY={buttonsOffsetY}
+                  logoOffsetY={logoOffsetY}
+                />
+              </div>
             </div>
           </div>
         </div>
