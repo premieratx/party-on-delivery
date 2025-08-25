@@ -65,12 +65,51 @@ export const AdminLogin: React.FC = () => {
     }
   };
 
+  // Test OAuth configuration first
+  const testOAuthConfig = async () => {
+    try {
+      console.log('🔍 Testing OAuth configuration...');
+      const { data, error } = await supabase.functions.invoke('test-google-auth');
+      console.log('🔍 OAuth test result:', { data, error });
+      
+      if (error || (data && !data.success)) {
+        toast({
+          title: "OAuth Configuration Error",
+          description: `Google OAuth is not configured: ${error?.message || data?.error || 'Unknown error'}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      return true;
+    } catch (error: any) {
+      console.error('🚨 Error testing OAuth:', error);
+      toast({
+        title: "OAuth Test Failed",
+        description: `Could not test OAuth: ${error.message}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   // SECURITY: Force fresh Google auth - ignore existing user sessions
   const forceGoogleAuth = async () => {
     if (isProcessingAuth) return;
     
     setIsProcessingAuth(true);
     console.log('🔐 SECURITY: Forcing fresh Google OAuth for admin');
+    
+    // First test if OAuth is configured
+    const oauthWorking = await testOAuthConfig();
+    if (!oauthWorking) {
+      setIsProcessingAuth(false);
+      toast({
+        title: "OAuth Not Configured",
+        description: "Google OAuth provider is not set up in Supabase. Check Authentication > Providers in Supabase dashboard.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       // Clear any existing session first
@@ -100,11 +139,20 @@ export const AdminLogin: React.FC = () => {
         console.error('🚨 SECURITY: OAuth error:', error);
         toast({
           title: "OAuth Configuration Error",
-          description: `Google OAuth failed: ${error.message}. Please check Supabase Google provider configuration.`,
+          description: `Google OAuth failed: ${error.message}. Google provider may not be enabled in Supabase.`,
           variant: "destructive",
         });
       } else {
-        console.log('🔐 OAuth initiated successfully, redirecting to Google...');
+        console.log('🔐 OAuth initiated successfully, should redirect to Google...');
+        // If we get here without redirect, something is wrong
+        setTimeout(() => {
+          toast({
+            title: "OAuth Issue",
+            description: "OAuth was initiated but redirect didn't happen. Check Supabase Auth configuration.",
+            variant: "destructive",
+          });
+          setIsProcessingAuth(false);
+        }, 5000);
       }
     } catch (error: any) {
       console.error('🚨 SECURITY: Unexpected error during OAuth:', error);
@@ -113,11 +161,7 @@ export const AdminLogin: React.FC = () => {
         description: `Unexpected error: ${error.message}. Check console for details.`,
         variant: "destructive",
       });
-    } finally {
-      // Reset loading state after a delay if no redirect happened
-      setTimeout(() => {
-        setIsProcessingAuth(false);
-      }, 3000);
+      setIsProcessingAuth(false);
     }
   };
 
