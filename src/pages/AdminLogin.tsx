@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Lock } from 'lucide-react';
+import { AdminSessionManager } from '@/utils/sessionPersistence';
+import { Lock, AlertTriangle } from 'lucide-react';
 import logoImage from '@/assets/party-on-delivery-logo.png';
 
 export const AdminLogin: React.FC = () => {
@@ -13,18 +14,27 @@ export const AdminLogin: React.FC = () => {
   const { toast } = useToast();
   const { user, session } = useAuth();
 
+  React.useEffect(() => {
+    // SECURITY: Clear any cached admin sessions on login page load
+    console.log('🔐 SECURITY: Clearing cached admin sessions for fresh authentication');
+    AdminSessionManager.clearAdminSession();
+    
+    // Also clear any existing Supabase sessions
+    supabase.auth.signOut({ scope: 'global' });
+  }, []);
+
   const processAuth = async (email: string) => {
-    console.log('Processing admin auth for:', email);
+    console.log('🔐 SECURITY: Processing fresh admin auth for:', email);
     try {
       // Use edge function for admin verification (faster, no RLS issues)
       const { data, error } = await supabase.functions.invoke('verify-admin-google', {
         body: { email }
       });
 
-      console.log('Admin verification response:', { data, error });
+      console.log('🔍 SECURITY: Admin verification response:', { data, error });
 
       if (error) {
-        console.error('Error verifying admin:', error);
+        console.error('🚨 SECURITY: Error verifying admin:', error);
         toast({
           title: "Authentication Error",
           description: "Failed to verify admin status. Please try again.",
@@ -34,10 +44,10 @@ export const AdminLogin: React.FC = () => {
       }
 
       if (data?.isAdmin) {
-        console.log('✅ Admin verified, redirecting to dashboard');
+        console.log('✅ SECURITY: Admin verified with fresh Google auth, redirecting to dashboard');
         navigate('/admin', { replace: true });
       } else {
-        console.log('❌ Access denied - not an admin');
+        console.log('❌ SECURITY: Access denied - not an admin');
         toast({
           title: "Access Denied", 
           description: "Your account does not have admin privileges.",
@@ -45,7 +55,7 @@ export const AdminLogin: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Unexpected error during admin verification:', error);
+      console.error('🚨 SECURITY: Unexpected error during admin verification:', error);
       toast({
         title: "Authentication Error",
         description: "An unexpected error occurred. Please try again.",
@@ -54,8 +64,8 @@ export const AdminLogin: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    console.log('AdminLogin: Checking auth state');
+  React.useEffect(() => {
+    console.log('🔍 SECURITY: AdminLogin checking auth state');
     
     if (user?.email) {
       processAuth(user.email);
@@ -80,6 +90,19 @@ export const AdminLogin: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Security Notice */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-amber-800">Enhanced Security Active</p>
+                <p className="text-amber-700">
+                  Fresh Google authentication required for every admin session
+                </p>
+              </div>
+            </div>
+          </div>
+          
           <div className="text-center space-y-2">
             <p className="text-muted-foreground">
               Admin access is restricted to authorized Google accounts only.
