@@ -265,7 +265,8 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           .filter((collection: any) => collection.products_count > 0)
           .map((collection: any) => ({
             handle: collection.handle,
-            name: collection.title,
+            title: collection.title,
+            name: collection.name || collection.title,
             products_count: collection.products_count
           }))
           .sort((a: any, b: any) => b.products_count - a.products_count); // Sort by product count
@@ -290,7 +291,8 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           .filter((collection: any) => collection.products && collection.products.length > 0)
           .map((collection: any) => ({
             handle: collection.handle,
-            name: collection.title,
+            title: collection.title,
+            name: collection.name || collection.title,
             products_count: collection.products?.length || 0
           }))
           .sort((a: any, b: any) => b.products_count - a.products_count);
