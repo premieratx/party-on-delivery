@@ -5,6 +5,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Scrollbar utilities */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Mobile safe area utilities for better mobile UX */
 @supports (padding: max(0px)) {
   .safe-area-top {
