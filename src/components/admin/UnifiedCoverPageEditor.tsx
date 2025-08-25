@@ -285,7 +285,6 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
   const [dragMode, setDragMode] = useState(false);
   const [fullscreenPreview, setFullscreenPreview] = useState(false);
   const [controlsExpanded, setControlsExpanded] = useState(true);
-  const [currentDevice, setCurrentDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   // Form state
   const [slug, setSlug] = useState(initial?.slug || "");
@@ -301,7 +300,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
     { text: 'VIEW COLLECTION', type: 'url', url: '#collection', style: 'outline' }
   ]);
 
-  // Enhanced positioning and sizing controls
+  // Enhanced positioning and sizing controls - device specific
   const [titleSize, setTitleSize] = useState<number>(initial?.styles?.title_size ?? 48);
   const [subtitleSize, setSubtitleSize] = useState<number>(initial?.styles?.subtitle_size ?? 20);
   const [checklistSize, setChecklistSize] = useState<number>(initial?.styles?.checklist_size ?? 16);
@@ -868,44 +867,29 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                       />
                     </div>
 
-                    {/* Device Selector */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Device View ({currentDevice})</h4>
-                      <div className="grid grid-cols-3 gap-2">
-                        <Button
-                          variant={currentDevice === 'desktop' ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentDevice('desktop')}
-                          className="text-xs"
-                        >
-                          <Monitor className="w-3 h-3 mr-1" />
-                          Desktop
-                        </Button>
-                        <Button
-                          variant={currentDevice === 'tablet' ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentDevice('tablet')}
-                          className="text-xs"
-                        >
-                          <Tablet className="w-3 h-3 mr-1" />
-                          Tablet
-                        </Button>
-                        <Button
-                          variant={currentDevice === 'mobile' ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setCurrentDevice('mobile')}
-                          className="text-xs"
-                        >
-                          <Smartphone className="w-3 h-3 mr-1" />
-                          Mobile
-                        </Button>
+                    {/* Device Preview */}
+                    <div>
+                      <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
+                          const IconComponent = device.icon;
+                          return (
+                            <Button
+                              key={key}
+                              variant={activeDevice === key ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
+                              className="justify-start"
+                            >
+                              <IconComponent className="w-4 h-4 mr-2" />
+                              {device.name}
+                            </Button>
+                          );
+                        })}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Adjust positioning for {currentDevice} view independently
-                      </p>
                     </div>
                     <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Size Controls</h4>
+                      <h4 className="text-sm font-semibold text-muted-foreground">Size Controls ({DEVICE_CONFIGS[activeDevice].name})</h4>
                       
                       <div>
                         <Label className="text-sm font-medium">Title Size: {titleSize}px</Label>
@@ -946,7 +930,7 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
 
                     {/* Positioning Controls - Device Specific */}
                     <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning ({currentDevice})</h4>
+                      <h4 className="text-sm font-semibold text-muted-foreground">Vertical Positioning ({DEVICE_CONFIGS[activeDevice].name})</h4>
                       
                       <div>
                         <Label className="text-sm font-medium">Logo Position: {logoOffsetY}px</Label>
@@ -1006,28 +990,6 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
                           step={5}
                           className="mt-2"
                         />
-                      </div>
-                    </div>
-
-                    {/* Device Preview */}
-                    <div>
-                      <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {Object.entries(DEVICE_CONFIGS).map(([key, device]) => {
-                          const IconComponent = device.icon;
-                          return (
-                            <Button
-                              key={key}
-                              variant={activeDevice === key ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setActiveDevice(key as keyof typeof DEVICE_CONFIGS)}
-                              className="justify-start"
-                            >
-                              <IconComponent className="w-4 h-4 mr-2" />
-                              {device.name}
-                            </Button>
-                          );
-                        })}
                       </div>
                     </div>
                   </div>

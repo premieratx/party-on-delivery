@@ -77,8 +77,9 @@ export const DynamicRouteHandler: React.FC = () => {
   }
 
   if (routeType === 'cover') {
-    console.log('🎯 Rendering StandaloneCoverPage for:', location.pathname);
-    return <StandaloneCoverPage />;
+    const pathname = location.pathname.slice(1); // Remove leading slash
+    console.log('🎯 Rendering StandaloneCoverPage for slug:', pathname);
+    return <StandaloneCoverPage slug={pathname} />;
   }
 
   if (routeType === 'homepage') {

@@ -21,6 +21,10 @@ interface CoverPageData {
   styles?: any;
 }
 
+interface StandaloneCoverPageProps {
+  slug?: string; // Can be passed as prop or taken from URL params
+}
+
 const COVER_THEMES = {
   original: { name: 'Original Blue', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
   gold: { name: 'Luxury Gold', background: 'radial-gradient(circle at center, #1a1a1a 0%, #000000 100%)' },
@@ -30,8 +34,9 @@ const COVER_THEMES = {
   forest: { name: 'Forest Green', background: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)' }
 };
 
-export const StandaloneCoverPage: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+export const StandaloneCoverPage: React.FC<StandaloneCoverPageProps> = ({ slug: propSlug }) => {
+  const { slug: paramSlug } = useParams<{ slug: string }>();
+  const slug = propSlug || paramSlug;
   const [coverPage, setCoverPage] = useState<CoverPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
