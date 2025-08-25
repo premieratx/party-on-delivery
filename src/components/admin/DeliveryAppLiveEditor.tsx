@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,6 @@ interface DeliveryAppTab {
 }
 
 interface DeliveryAppLiveEditorProps {
-  // App content
   appName: string;
   heroHeading: string;
   heroSubheading: string;
@@ -21,15 +20,11 @@ interface DeliveryAppLiveEditorProps {
   backgroundImageUrl: string;
   tabs: DeliveryAppTab[];
   theme: 'original' | 'gold' | 'platinum';
-  
-  // Positioning controls
   logoSize: number;
   headlineSize: number;
   logoVerticalPos: number;
   headlineVerticalPos: number;
   subheadlineVerticalPos: number;
-  
-  // Update handlers
   onLogoSizeChange: (value: number[]) => void;
   onHeadlineSizeChange: (value: number[]) => void;
   onLogoVerticalChange: (value: number[]) => void;
@@ -41,340 +36,349 @@ interface DeliveryAppLiveEditorProps {
   onBackgroundUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-// Real-time Preview Component - Exact Replica of DirectDeliveryApp
-const DeliveryAppLivePreview: React.FC<{
+// Hero-Only Preview Component
+const DeliveryAppHeroPreview: React.FC<{
   appName: string;
   heroHeading: string;
   heroSubheading: string;
   logoUrl?: string;
+  backgroundImageUrl?: string;
   logoSize: number;
   headlineSize: number;
+  subheadlineSize: number;
   logoVerticalPos: number;
   headlineVerticalPos: number;
   subheadlineVerticalPos: number;
-  backgroundImageUrl?: string;
-  tabs: DeliveryAppTab[];
-  device: 'mobile' | 'tablet' | 'desktop';
+  theme: 'original' | 'gold' | 'platinum';
+  size: 'mobile' | 'tablet' | 'desktop';
 }> = ({ 
   appName, 
   heroHeading, 
   heroSubheading, 
-  logoUrl, 
-  logoSize,
+  logoUrl,
+  backgroundImageUrl,
+  logoSize, 
   headlineSize,
+  subheadlineSize,
   logoVerticalPos,
   headlineVerticalPos,
   subheadlineVerticalPos,
-  backgroundImageUrl,
-  tabs, 
-  device 
+  theme,
+  size 
 }) => {
-  const deviceClasses = {
-    mobile: 'w-[375px] h-[667px]',
-    tablet: 'w-[768px] h-[800px]',
-    desktop: 'w-[1200px] h-[800px]'
+  const getThemeBackground = () => {
+    if (backgroundImageUrl) {
+      return `url(${backgroundImageUrl})`;
+    }
+    switch (theme) {
+      case 'gold':
+        return 'radial-gradient(circle at center, #1a1a1a 0%, #000000 100%)';
+      case 'platinum':
+        return 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)';
+      default:
+        return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
   };
-  
+
   return (
-    <div className={`${deviceClasses[device]} border rounded-xl overflow-hidden shadow-xl`}>
-      <div className="h-full flex flex-col bg-background">
-        {/* EXACT REPLICA: Hero Section like DirectDeliveryApp */}
-        <div 
-          className="relative bg-gradient-to-r from-primary to-secondary text-white py-12"
-          style={{
-            backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {backgroundImageUrl && <div className="absolute inset-0 bg-black/50" />}
-          <div className="relative container mx-auto px-4 text-center">
-            {logoUrl && (
+    <div 
+      className={`relative overflow-hidden transition-all duration-300 rounded-lg border shadow-lg ${
+        size === 'mobile' ? 'w-full max-w-sm h-[600px]' : 
+        size === 'tablet' ? 'w-full max-w-2xl h-[700px]' : 
+        'w-full max-w-4xl h-[800px]'
+      }`}
+      style={{
+        background: getThemeBackground(),
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}
+    >
+      {/* Hero Section Only - No Tabs */}
+      <div className="relative h-full flex items-center justify-center text-center text-white px-4">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Logo */}
+          {logoUrl && (
+            <div 
+              className="flex justify-center mb-6"
+              style={{ transform: `translateY(${logoVerticalPos}px)` }}
+            >
               <img 
                 src={logoUrl} 
-                alt={appName} 
-                className="mx-auto mb-6 object-contain" 
+                alt={appName}
+                className="max-h-24 w-auto object-contain transition-all duration-300"
                 style={{ 
                   height: `${logoSize}px`,
-                  transform: `translateY(${logoVerticalPos}px)`
+                  maxHeight: `${logoSize}px`
                 }}
               />
-            )}
-            <h1 
-              className="font-bold mb-4 text-white"
-              style={{ 
-                fontSize: `${headlineSize}px`,
-                transform: `translateY(${headlineVerticalPos}px)`
-              }}
-            >
-              {heroHeading || appName}
-            </h1>
-            <p 
-              className="text-blue-100 mb-6"
-              style={{ 
-                fontSize: `${Math.max(14, headlineSize * 0.6)}px`,
-                transform: `translateY(${subheadlineVerticalPos}px)`
-              }}
-            >
-              {heroSubheading || "Satisfaction Guaranteed, On-Time Delivery"}
-            </p>
-            
-            {/* Cart Button */}
-            <Button className="bg-white text-primary hover:bg-white/90" size="lg">
-              Cart (0)
-            </Button>
-          </div>
-        </div>
-
-        {/* EXACT REPLICA: Tab Navigation */}
-        <div className="container mx-auto px-4 py-8 flex-1">
-          {tabs.length > 0 && (
-            <div className="mb-8 border-b pb-4">
-              <div className="flex overflow-x-auto gap-2 scrollbar-hide">
-                {tabs.map((tab: any, index: number) => (
-                  <Button
-                    key={tab.collection_handle || index}
-                    variant={index === 0 ? "default" : "outline"}
-                    className="flex-shrink-0 text-sm px-4 py-2 whitespace-nowrap"
-                  >
-                    {tab.name}
-                  </Button>
-                ))}
-              </div>
             </div>
           )}
-
-          {/* EXACT REPLICA: Product Grid Placeholder */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[1,2,3,4,5,6].map((i) => (
-              <div key={i} className="bg-card rounded-lg border p-4 hover:shadow-lg transition-shadow">
-                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
-                <h3 className="font-semibold mb-2 text-sm">Sample Product {i}</h3>
-                <p className="text-lg font-bold text-primary mb-4">$12.99</p>
-                <Button className="w-full text-sm">Add to Cart</Button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* EXACT REPLICA: Fixed Action Buttons */}
-        <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-          <Button variant="outline" size="sm" className="bg-background/90 backdrop-blur-sm">
-            Admin
-          </Button>
+          
+          {/* Hero Heading */}
+          <h1 
+            className="font-bold text-white leading-tight"
+            style={{
+              fontSize: `${headlineSize}px`,
+              transform: `translateY(${headlineVerticalPos}px)`
+            }}
+          >
+            {heroHeading || "Premium Delivery Service"}
+          </h1>
+          
+          {/* Hero Subheading */}
+          <p 
+            className="text-white/90 max-w-2xl mx-auto"
+            style={{
+              fontSize: `${subheadlineSize}px`,
+              transform: `translateY(${subheadlineVerticalPos}px)`
+            }}
+          >
+            {heroSubheading || "Satisfaction Guaranteed, On-Time Delivery"}
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
-export const DeliveryAppLiveEditor: React.FC<DeliveryAppLiveEditorProps> = (props) => {
-  const [previewDevice, setPreviewDevice] = React.useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+// Main Live Editor Component
+export const DeliveryAppLiveEditor: React.FC<DeliveryAppLiveEditorProps> = ({
+  appName,
+  heroHeading,
+  heroSubheading,
+  logoUrl,
+  backgroundImageUrl,
+  tabs,
+  theme,
+  logoSize,
+  headlineSize,
+  logoVerticalPos,
+  headlineVerticalPos,
+  subheadlineVerticalPos,
+  onLogoSizeChange,
+  onHeadlineSizeChange,
+  onLogoVerticalChange,
+  onHeadlineVerticalChange,
+  onSubheadlineVerticalChange,
+  onHeroHeadingChange,
+  onHeroSubheadingChange,
+  onLogoUpload,
+  onBackgroundUpload
+}) => {
+  const [selectedDevice, setSelectedDevice] = useState<'mobile' | 'tablet' | 'desktop'>('mobile');
+  const [subheadlineSize, setSubheadlineSize] = useState(18);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const backgroundInputRef = useRef<HTMLInputElement>(null);
-  
+
   return (
     <div className="h-full flex">
-      {/* Left Panel: Controls */}
-      <div className="w-80 border-r p-6 overflow-y-auto">
-        <div className="space-y-6">
-          {/* Hero Content */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Hero Content</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Hero Heading</Label>
-                <Input
-                  value={props.heroHeading}
-                  onChange={(e) => props.onHeroHeadingChange(e.target.value)}
-                  placeholder="Austin's Premier Party Supply Delivery"
-                />
-              </div>
-              
-              <div>
-                <Label>Hero Subheading</Label>
-                <Input
-                  value={props.heroSubheading}
-                  onChange={(e) => props.onHeroSubheadingChange(e.target.value)}
-                  placeholder="Satisfaction Guaranteed, On-Time Delivery"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Logo Controls */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Logo</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                variant="outline"
-                onClick={() => logoInputRef.current?.click()}
-                className="w-full"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Logo
-              </Button>
-              {props.logoUrl && (
-                <img src={props.logoUrl} alt="Logo" className="h-16 object-contain rounded border p-2" />
-              )}
-              
-              <div>
-                <Label>Logo Size: {props.logoSize}px</Label>
-                <Slider
-                  value={[props.logoSize]}
-                  onValueChange={props.onLogoSizeChange}
-                  min={32}
-                  max={120}
-                  step={4}
-                  className="mt-2"
-                />
-              </div>
-              
-              <div>
-                <Label>Logo Vertical Position: {props.logoVerticalPos}px</Label>
-                <Slider
-                  value={[props.logoVerticalPos]}
-                  onValueChange={props.onLogoVerticalChange}
-                  min={-50}
-                  max={50}
-                  step={2}
-                  className="mt-2"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Text Controls */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Text Sizing & Position</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>Headline Size: {props.headlineSize}px</Label>
-                <Slider
-                  value={[props.headlineSize]}
-                  onValueChange={props.onHeadlineSizeChange}
-                  min={18}
-                  max={48}
-                  step={2}
-                  className="mt-2"
-                />
-              </div>
-              
-              <div>
-                <Label>Headline Vertical Position: {props.headlineVerticalPos}px</Label>
-                <Slider
-                  value={[props.headlineVerticalPos]}
-                  onValueChange={props.onHeadlineVerticalChange}
-                  min={-30}
-                  max={30}
-                  step={2}
-                  className="mt-2"
-                />
-              </div>
-              
-              <div>
-                <Label>Subheadline Vertical Position: {props.subheadlineVerticalPos}px</Label>
-                <Slider
-                  value={[props.subheadlineVerticalPos]}
-                  onValueChange={props.onSubheadlineVerticalChange}
-                  min={-30}
-                  max={30}
-                  step={2}
-                  className="mt-2"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Background */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Background</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                variant="outline"
-                onClick={() => backgroundInputRef.current?.click()}
-                className="w-full"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Background
-              </Button>
-              {props.backgroundImageUrl && (
-                <img src={props.backgroundImageUrl} alt="Background" className="h-20 object-cover rounded border w-full" />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Right Panel: Live Preview */}
-      <div className="flex-1 p-6 bg-gradient-to-br from-muted/30 to-background/30">
+      {/* Left Panel - Controls */}
+      <div className="w-80 border-r bg-muted/20 p-6 overflow-y-auto">
+        <h3 className="text-lg font-semibold mb-6">Delivery App Editor</h3>
+        
         {/* Device Selector */}
-        <div className="flex justify-center mb-4">
-          <div className="flex bg-muted rounded-lg p-1">
+        <div className="mb-6">
+          <Label className="text-sm font-medium mb-3 block">Preview Device</Label>
+          <div className="grid grid-cols-3 gap-2">
             <Button
-              variant={previewDevice === 'mobile' ? 'default' : 'ghost'}
+              variant={selectedDevice === 'mobile' ? "default" : "outline"}
               size="sm"
-              onClick={() => setPreviewDevice('mobile')}
+              onClick={() => setSelectedDevice('mobile')}
+              className="flex flex-col items-center gap-1 h-auto py-3"
             >
               <Smartphone className="w-4 h-4" />
+              <span className="text-xs">Mobile</span>
             </Button>
             <Button
-              variant={previewDevice === 'tablet' ? 'default' : 'ghost'}
+              variant={selectedDevice === 'tablet' ? "default" : "outline"}
               size="sm"
-              onClick={() => setPreviewDevice('tablet')}
+              onClick={() => setSelectedDevice('tablet')}
+              className="flex flex-col items-center gap-1 h-auto py-3"
             >
               <Tablet className="w-4 h-4" />
+              <span className="text-xs">Tablet</span>
             </Button>
             <Button
-              variant={previewDevice === 'desktop' ? 'default' : 'ghost'}
+              variant={selectedDevice === 'desktop' ? "default" : "outline"}
               size="sm"
-              onClick={() => setPreviewDevice('desktop')}
+              onClick={() => setSelectedDevice('desktop')}
+              className="flex flex-col items-center gap-1 h-auto py-3"
             >
               <Monitor className="w-4 h-4" />
+              <span className="text-xs">Desktop</span>
             </Button>
           </div>
         </div>
 
-        {/* Live Preview */}
-        <div className="flex justify-center">
-          <DeliveryAppLivePreview
-            appName={props.appName}
-            heroHeading={props.heroHeading}
-            heroSubheading={props.heroSubheading}
-            logoUrl={props.logoUrl}
-            logoSize={props.logoSize}
-            headlineSize={props.headlineSize}
-            logoVerticalPos={props.logoVerticalPos}
-            headlineVerticalPos={props.headlineVerticalPos}
-            subheadlineVerticalPos={props.subheadlineVerticalPos}
-            backgroundImageUrl={props.backgroundImageUrl}
-            tabs={props.tabs}
-            device={previewDevice}
+        {/* Content Editor */}
+        <div className="space-y-6">
+          {/* Hero Text */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground">Hero Content</h4>
+            <div>
+              <Label className="text-sm font-medium">Headline</Label>
+              <Input
+                value={heroHeading}
+                onChange={(e) => onHeroHeadingChange(e.target.value)}
+                placeholder="Enter headline..."
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Subheadline</Label>
+              <Input
+                value={heroSubheading}
+                onChange={(e) => onHeroSubheadingChange(e.target.value)}
+                placeholder="Enter subheadline..."
+              />
+            </div>
+          </div>
+
+          {/* Background Image */}
+          <div className="space-y-4 border-t pt-4">
+            <h4 className="text-sm font-semibold text-muted-foreground">Background Image</h4>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => backgroundInputRef.current?.click()}
+              className="w-full flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              {backgroundImageUrl ? 'Change Background' : 'Upload Background'}
+            </Button>
+            {backgroundImageUrl && (
+              <div className="text-xs text-muted-foreground">
+                Background image uploaded
+              </div>
+            )}
+          </div>
+
+          {/* Logo Controls */}
+          <div className="space-y-4 border-t pt-4">
+            <h4 className="text-sm font-semibold text-muted-foreground">Logo</h4>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => logoInputRef.current?.click()}
+              className="w-full flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              {logoUrl ? 'Change Logo' : 'Upload Logo'}
+            </Button>
+            
+            <div>
+              <Label className="text-sm font-medium">Logo Size: {logoSize}px</Label>
+              <Slider
+                value={[logoSize]}
+                onValueChange={onLogoSizeChange}
+                min={40}
+                max={200}
+                step={5}
+                className="mt-2"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Logo Position: {logoVerticalPos}px</Label>
+              <Slider
+                value={[logoVerticalPos]}
+                onValueChange={onLogoVerticalChange}
+                min={-100}
+                max={100}
+                step={5}
+                className="mt-2"
+              />
+            </div>
+          </div>
+
+          {/* Text Sizing & Positioning Controls */}
+          <div className="space-y-4 border-t pt-4">
+            <h4 className="text-sm font-semibold text-muted-foreground">Text Sizing & Position</h4>
+            
+            <div>
+              <Label className="text-sm font-medium">Headline Size: {headlineSize}px</Label>
+              <Slider
+                value={[headlineSize]}
+                onValueChange={onHeadlineSizeChange}
+                min={20}
+                max={80}
+                step={2}
+                className="mt-2"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Subheadline Size: {subheadlineSize}px</Label>
+              <Slider
+                value={[subheadlineSize]}
+                onValueChange={(value) => setSubheadlineSize(value[0])}
+                min={12}
+                max={32}
+                step={1}
+                className="mt-2"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Headline Position: {headlineVerticalPos}px</Label>
+              <Slider
+                value={[headlineVerticalPos]}
+                onValueChange={onHeadlineVerticalChange}
+                min={-100}
+                max={100}
+                step={5}
+                className="mt-2"
+              />
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Subheadline Position: {subheadlineVerticalPos}px</Label>
+              <Slider
+                value={[subheadlineVerticalPos]}
+                onValueChange={onSubheadlineVerticalChange}
+                min={-100}
+                max={100}
+                step={5}
+                className="mt-2"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Live Preview */}
+      <div className="flex-1 p-6">
+        <div className="h-full flex items-center justify-center">
+          <DeliveryAppHeroPreview
+            appName={appName}
+            heroHeading={heroHeading}
+            heroSubheading={heroSubheading}
+            logoUrl={logoUrl}
+            backgroundImageUrl={backgroundImageUrl}
+            logoSize={logoSize}
+            headlineSize={headlineSize}
+            subheadlineSize={subheadlineSize}
+            logoVerticalPos={logoVerticalPos}
+            headlineVerticalPos={headlineVerticalPos}
+            subheadlineVerticalPos={subheadlineVerticalPos}
+            theme={theme}
+            size={selectedDevice}
           />
         </div>
       </div>
 
-      {/* Hidden file inputs */}
+      {/* Hidden File Inputs */}
       <input
         ref={logoInputRef}
         type="file"
         accept="image/*"
-        onChange={props.onLogoUpload}
+        onChange={onLogoUpload}
         className="hidden"
       />
       <input
         ref={backgroundInputRef}
         type="file"
         accept="image/*"
-        onChange={props.onBackgroundUpload}
+        onChange={onBackgroundUpload}
         className="hidden"
       />
     </div>
