@@ -41,6 +41,7 @@ import StandaloneCoverPage from "./components/cover-pages/StandaloneCoverPage";
 
 // Admin pages - using direct imports since they use named exports
 import AdminLogin from "./pages/AdminLogin";
+import AdminBypass from "./pages/AdminBypass";
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 const queryClient = new QueryClient({
@@ -104,6 +105,7 @@ const App = () => {
                     
                     {/* Admin Routes - consolidated to prevent remounting */}
                     <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin/bypass" element={<AdminBypass />} />
                     <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                     <Route path="/admin/*" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                     
