@@ -312,32 +312,35 @@ export const CombinedSearchTabs = ({
 
         {/* Mobile Layout with Dynamic Responsive Tabs - Optimized Space Usage */}
       <div className="block md:hidden sticky top-0 z-40 bg-background">
-        {/* Dynamic Tabs - Take Full Width */}
+        {/* Dynamic Tabs - Show 4.5 tabs with horizontal scroll */}
         <div className="container mx-auto px-2 py-1.5">
           <div className="flex items-center">
-            {/* Enhanced Responsive Tabs - Maximize space utilization */}
+            {/* Enhanced Responsive Tabs - Show 4.5 tabs with scrolling */}
             <div 
               ref={tabsContainerRef}
-              className="flex gap-0.5 overflow-x-auto scrollbar-hide flex-1 w-full"
-              style={{ justifyContent: 'space-between' }}
+              className="flex gap-1 overflow-x-auto scrollbar-hide"
+              style={{ 
+                scrollSnapType: 'x mandatory',
+                WebkitOverflowScrolling: 'touch'
+              }}
             >
               {tabs.map((tab, index) => (
                 <Button
                   key={tab.id}
                   className={getTabClasses(selectedCategory === index)}
                   onClick={() => onTabSelect(index)}
-                  title={tabLayout === 'icon-only' ? tab.title : undefined}
+                  title={tab.title}
                   style={{ 
-                    flex: '1 1 0px',
-                    minWidth: '0',
-                    maxWidth: `${100 / tabs.length}%`
+                    flex: '0 0 calc(22.5% - 3px)', // Show 4.5 tabs (100% / 4.5 = ~22.2%)
+                    minWidth: 'calc(22.5% - 3px)',
+                    scrollSnapAlign: 'start'
                   }}
                 >
-                  {/* Minimize icon size, maximize text */}
+                  {/* Icon and full text - no truncation */}
                   <span className="text-xs mr-1 flex-shrink-0" style={{ fontSize: '10px' }}>
                     {tab.icon || '📦'}
                   </span>
-                  <span className="truncate font-medium text-xs leading-tight flex-1 text-center">
+                  <span className="font-medium text-xs leading-tight whitespace-nowrap">
                     {tab.title}
                   </span>
                 </Button>
