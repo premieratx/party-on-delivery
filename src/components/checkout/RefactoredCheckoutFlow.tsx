@@ -126,10 +126,7 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
         setTimeout(() => setConfirmedAddress(true), 200);
       }
       
-      // If we have complete customer info, auto-confirm it
-      if (persistedCustomer.email && persistedCustomer.firstName && !confirmedCustomer) {
-        setTimeout(() => setConfirmedCustomer(true), 300);
-      }
+      // Don't auto-confirm customer info - always show the form for user to review and confirm
     }
   }, [persistentDataLoaded, deliveryInfo, persistedAddress, persistedCustomer, confirmedDateTime, confirmedAddress, confirmedCustomer]);
 
@@ -170,9 +167,8 @@ export const RefactoredCheckoutFlow: React.FC<RefactoredCheckoutFlowProps> = ({
   const handleAddressConfirm = () => {
     if (isAddressComplete) {
       setConfirmedAddress(true);
-      // Customer info is handled inline with address step
-      setConfirmedCustomer(true);
-      setCurrentStep('payment');
+      // Don't auto-confirm customer - let them fill it out
+      // setCurrentStep will advance automatically when customer is confirmed
       // No toast for speed - just auto-advance
     }
   };

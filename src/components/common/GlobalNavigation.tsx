@@ -184,8 +184,8 @@ export const GlobalNavigation: React.FC<NavigationProps> = ({ className }) => {
 
   return (
     <>
-      {/* Mobile Bottom Navigation Bar - REMOVE ICONS ON MOBILE */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/20 md:hidden">
+      {/* Mobile Bottom Navigation Bar - HIDDEN */}
+      <div className="hidden">{/* Bottom nav bar hidden on mobile as requested */}
         <div className="grid grid-cols-4 h-12">
           {/* Cart */}
           <button
