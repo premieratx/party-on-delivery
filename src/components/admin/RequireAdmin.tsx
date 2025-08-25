@@ -82,14 +82,32 @@ const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
       }
     };
 
-    // Check if already verified to avoid unnecessary calls
+    // Check if cached session exists but ALWAYS verify and set admin context
     const isAlreadyVerified = AdminSessionManager.isAdminSessionValid();
     if (isAlreadyVerified && allowed === null) {
-      const session = AdminSessionManager.getAdminSession();
-      setAdminContextSet(true);
-      setAllowed(true);
-      console.log('🔄 Admin session restored from persistent cache:', session?.email);
-      return;
+      const cachedSession = AdminSessionManager.getAdminSession();
+      console.log('🔄 Found cached admin session, but will re-verify to set context:', cachedSession?.email);
+      
+      // Still need to call verify-admin-google to set the admin context for RLS
+      if (cachedSession?.email) {
+        supabase.functions.invoke('verify-admin-google', {
+          body: { email: cachedSession.email }
+        }).then(({ data, error }) => {
+          if (!mounted) return;
+          
+          if (data?.isAdmin && !error) {
+            console.log('✅ Cached admin session verified and context set');
+            setAdminContextSet(true);
+            setAllowed(true);
+          } else {
+            console.log('❌ Cached session invalid, clearing');
+            AdminSessionManager.clearAdminSession();
+            setAllowed(false);
+            navigate('/affiliate/admin-login', { replace: true });
+          }
+        });
+        return;
+      }
     }
 
     // Set up auth state listener to react to login/logout only
