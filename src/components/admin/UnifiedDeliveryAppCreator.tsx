@@ -564,16 +564,15 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           </DialogHeader>
 
           {/* Consolidated Single-Tab Interface */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0">
             <div className="h-full flex">
                {/* Left Panel - All Controls with Proper Scrolling */}
-               <div className="w-80 border-r bg-muted/20 flex flex-col">
+               <div className="flex-1 border-r bg-muted/20 flex flex-col">
                  <div className="p-4 flex-shrink-0 border-b">
                    <h3 className="text-lg font-semibold">Delivery App Creator</h3>
                  </div>
-                 <div className="flex-1 overflow-hidden">
-                   <ScrollArea className="h-full">
-                     <div className="p-4 space-y-6 pb-8">
+                 <div className="flex-1 overflow-auto">
+                   <div className="p-4 space-y-4">
                    
                    {/* Device Selector */}
                   <div>
@@ -904,15 +903,17 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                       </div>
                     </div>
                   </div>
-                     </div>
-                   </ScrollArea>
-                  </div>
-                </div>
+                   </div>
+                 </div>
+               </div>
 
               {/* Right Panel - Smaller Live Preview */}
-              <div className="flex-1 bg-muted/10 overflow-auto">
-                <div className="p-4">
-                  <div className="w-[280px] h-[580px] mx-auto">
+              <div className="w-[320px] bg-muted/10 flex flex-col">
+                <div className="p-3 border-b">
+                  <h4 className="text-sm font-semibold">Live Preview</h4>
+                </div>
+                <div className="flex-1 p-3 flex items-start justify-center">
+                  <div className="w-[280px] h-[480px] scale-90">
                     <DeliveryAppLivePreview
                       appName={appName}
                       heroHeading={heroHeading}
