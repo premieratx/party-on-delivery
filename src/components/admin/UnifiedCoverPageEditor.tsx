@@ -1107,29 +1107,27 @@ export const UnifiedCoverPageEditor: React.FC<UnifiedCoverPageEditorProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center min-h-0">
-            <div className="flex items-center justify-center bg-black/5 rounded-lg p-4 w-full h-full">
-              <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
-                <CoverStartScreen
-                  title={title}
-                  subtitle={subtitle}
-                  logoUrl={logoUrl}
-                  logoHeight={logoHeight}
-                  backgroundImageUrl={bgImageUrl}
-                  backgroundVideoUrl={bgVideoUrl}
-                  checklistItems={checklist}
-                  buttons={buttons}
-                  titleSize={titleSize}
-                  subtitleSize={subtitleSize}
-                  checklistSize={checklistSize}
-                  titleOffsetY={titleOffsetY}
-                  subtitleOffsetY={subtitleOffsetY}
-                  checklistOffsetY={checklistOffsetY}
-                  buttonsOffsetY={buttonsOffsetY}
-                  logoOffsetY={logoOffsetY}
-                  backgroundColor={COVER_THEMES[selectedTheme]?.background}
-                />
-              </div>
+          <div className="flex-1 flex justify-center pt-6 min-h-0 overflow-auto">
+            <div className="w-[360px] h-[740px] transition-all duration-300 shadow-2xl bg-black rounded-[2rem] overflow-hidden">
+              <CoverStartScreen
+                title={title}
+                subtitle={subtitle}
+                logoUrl={logoUrl}
+                logoHeight={logoHeight}
+                backgroundImageUrl={bgImageUrl}
+                backgroundVideoUrl={bgVideoUrl}
+                checklistItems={checklist}
+                buttons={buttons}
+                titleSize={titleSize}
+                subtitleSize={subtitleSize}
+                checklistSize={checklistSize}
+                titleOffsetY={titleOffsetY}
+                subtitleOffsetY={subtitleOffsetY}
+                checklistOffsetY={checklistOffsetY}
+                buttonsOffsetY={buttonsOffsetY}
+                logoOffsetY={logoOffsetY}
+                backgroundColor={COVER_THEMES[selectedTheme]?.background}
+              />
             </div>
           </div>
         </div>
