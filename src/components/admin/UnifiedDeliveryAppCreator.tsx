@@ -564,12 +564,12 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
           </DialogHeader>
 
           {/* Consolidated Single-Tab Interface */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden h-full">
             <div className="h-full flex">
               {/* Left Panel - All Controls with Proper Scrolling */}
-              <div className="w-80 border-r bg-muted/20 flex flex-col">
-                <ScrollArea className="flex-1">
-                  <div className="p-4 space-y-6">
+              <div className="w-80 border-r bg-muted/20 flex flex-col max-h-full">
+                <ScrollArea className="flex-1 h-full">
+                  <div className="p-4 space-y-6 pb-8">
                   <h3 className="text-lg font-semibold">Delivery App Creator</h3>
                   
                   {/* Device Selector */}
@@ -792,7 +792,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[99999]">
                         <SelectItem value="original">Original Blue</SelectItem>
                         <SelectItem value="gold">Luxury Gold</SelectItem>
                         <SelectItem value="platinum">Modern Platinum</SelectItem>
@@ -828,7 +828,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                             <SelectTrigger className="text-sm">
                               <SelectValue placeholder={loadingCollections ? "Loading..." : "Select collection"} />
                             </SelectTrigger>
-                            <SelectContent className="z-[9999]">
+                            <SelectContent className="z-[99999] max-h-[200px]">
                               {loadingCollections ? (
                                 <SelectItem value="" disabled>Loading collections...</SelectItem>
                               ) : shopifyCollections.length === 0 ? (
@@ -857,7 +857,7 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
                             <SelectTrigger className="w-20">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[99999]">
                               {ICON_OPTIONS.map((option) => (
                                 <SelectItem key={option.value} value={option.value}>
                                   <span className="text-lg">{option.value}</span>
