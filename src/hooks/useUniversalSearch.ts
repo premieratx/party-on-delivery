@@ -53,7 +53,7 @@ export function useUniversalSearch(
   const [isSearching, setIsSearching] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Build search index from products
+  // Build search index from ALL products (not just current collection)
   const searchIndex = useMemo(() => {
     if (products.length === 0) return [];
     // Transform products to ensure price is a number
@@ -78,9 +78,9 @@ export function useUniversalSearch(
       let results: SearchProduct[] = [];
 
       if (useUltraFast) {
-        // Use ultra-fast search
+        // Use ultra-fast search - searches ALL products (1000+), not just collection
         const response = await ultraFastSearch.searchProducts(query, {
-          category,
+          category: undefined, // Remove category filter to search ALL products
           limit: maxResults
         });
         results = response.products || [];

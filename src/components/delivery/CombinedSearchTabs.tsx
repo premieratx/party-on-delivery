@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Search, ShoppingCart, CreditCard, Check } from 'lucide-react';
 import { useSearchInterface } from '@/hooks/useSearchInterface';
 import { safePrice, formatPrice } from '@/utils/safeCalculations';
+import { useStickySearchHeader } from '@/hooks/useStickySearchHeader';
 
 // Preload critical images
 const preloadImage = (src: string): Promise<void> => {
@@ -204,8 +205,15 @@ export const CombinedSearchTabs = ({
     onSearchActiveChange?.(true);
   };
 
+  const { isSticky, isSearchActive: stickySearchActive, searchInputRef, activateSearch, deactivateSearch } = useStickySearchHeader({
+    threshold: 100,
+    hideKeyboardOnScroll: true
+  });
+
   return (
-    <div className="bg-background border-b sticky top-0 z-40">
+    <div className={`bg-background border-b transition-all duration-200 ${
+      isSticky || stickySearchActive || isSearchActive ? 'sticky top-0 z-50 shadow-md' : 'sticky top-0 z-40'
+    }`}>
       {/* Desktop Layout */}
       <div className="hidden md:block">
         <div className="container mx-auto px-4 py-3">
@@ -231,22 +239,31 @@ export const CombinedSearchTabs = ({
                 {/* Compact Search Bar - shrinks first */}
                 <div className="relative min-w-[120px] max-w-[200px] flex-shrink-2">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-                     <Input
-                       type="text"
-                       placeholder="Search products..."
-                       value={searchQuery}
-                       onChange={(e) => {
-                         onSearchChange(e.target.value);
-                         // Trigger search automatically as user types
-                         if (e.target.value.trim()) {
-                           setTimeout(() => onSearchSubmit(), 300);
-                         }
-                       }}
-                       onFocus={handleSearchFocus}
-                       onBlur={handleSearchBlur}
-                       onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
-                       className="pl-8 pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus:border-primary transition-colors"
-                     />
+                      <Input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                          onSearchChange(e.target.value);
+                          // Trigger search automatically as user types
+                          if (e.target.value.trim()) {
+                            setTimeout(() => onSearchSubmit(), 300);
+                          }
+                        }}
+                        onFocus={() => {
+                          handleSearchFocus();
+                          activateSearch();
+                        }}
+                        onBlur={() => {
+                          handleSearchBlur();
+                          if (!searchQuery?.trim()) {
+                            deactivateSearch();
+                          }
+                        }}
+                        onKeyPress={(e) => e.key === 'Enter' && onSearchSubmit()}
+                        className="pl-8 pr-3 h-8 text-sm bg-muted/50 border-muted-foreground/20 focus:border-primary transition-colors"
+                      />
                   {isSearching && (
                     <div className="absolute right-2 top-1/2 -translate-y-1/2">
                       <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />

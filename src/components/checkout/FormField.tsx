@@ -53,9 +53,9 @@ export const FormField: React.FC<FormFieldProps> = ({
       </Label>
       
       {type === 'textarea' ? (
-        <Textarea {...inputProps} rows={3} />
+        <Textarea {...inputProps} rows={3} className={cn(inputProps.className, "touch-manipulation")} />
       ) : (
-        <Input {...inputProps} type={type} />
+        <Input {...inputProps} type={type} className={cn(inputProps.className, "touch-manipulation h-10 sm:h-12")} />
       )}
       
       {error && (

@@ -158,7 +158,11 @@ export const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
         </div>
 
         {isCustomerComplete && (
-          <Button onClick={handleConfirm} className="w-full h-8 sm:h-10 text-xs sm:text-sm">
+          <Button 
+            onClick={handleConfirm} 
+            className="w-full h-10 sm:h-12 text-sm sm:text-base font-medium touch-manipulation"
+            type="button"
+          >
             Confirm Contact Information
           </Button>
         )}

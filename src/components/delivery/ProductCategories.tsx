@@ -22,6 +22,7 @@ import { useImagePreloader } from '@/hooks/useImagePreloader';
 import { ThemeColorToggle } from '@/components/delivery/ThemeColorToggle';
 import { UniversalQuantityControls } from '@/components/common/UniversalQuantityControls';
 import { useUniversalSearch } from '@/hooks/useUniversalSearch';
+import { useAllProductsLoader } from '@/hooks/useAllProductsLoader';
 import bgImage from '@/assets/old-fashioned-bg.jpg';
 
 interface ProductCategoriesProps {
@@ -111,17 +112,20 @@ export const ProductCategories: React.FC<ProductCategoriesProps> = ({
     use_type: 'delivery'
   });
 
-  // Universal search hook
+  // Load ALL products for search (not just current collection)
+  const { allProducts } = useAllProductsLoader();
+
+  // Universal search hook - now searches ALL products, not just current collection
   const {
     searchResults: searchProducts,
     isSearching,
     updateSearchQuery,
     clearSearch: clearUniversalSearch
-  } = useUniversalSearch(currentTabProducts, {
+  } = useUniversalSearch(allProducts, {
     debounceMs: 300,
     maxResults: 50,
     useUltraFast: true,
-    category: currentCollectionHandle
+    category: undefined // Remove category filter to search ALL products
   });
 
   // Sync search query with universal search

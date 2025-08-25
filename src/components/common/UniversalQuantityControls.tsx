@@ -39,22 +39,22 @@ export const UniversalQuantityControls: React.FC<UniversalQuantityControlsProps>
     onQuantityChange(Math.max(0, quantity - 1));
   };
 
-  // Variant-specific styling - ULTRA COMPACT
+  // Variant-specific styling - ULTRA COMPACT FOR MOBILE
   const getVariantClasses = () => {
     switch (variant) {
       case 'minimal':
         return {
           container: 'gap-0 bg-muted/50 rounded-full p-0',
-          button: 'h-3 w-3 p-0 rounded-full min-w-0',
-          text: 'text-[10px] min-w-[12px] px-0',
-          icon: 1.5
+          button: 'h-2.5 w-2.5 p-0 rounded-full min-w-0',
+          text: 'text-[8px] min-w-[10px] px-0',
+          icon: 1.2
         };
       case 'compact':
         return {
           container: 'gap-0 bg-muted rounded-full p-0',
-          button: 'h-4 w-4 p-0 rounded-full min-w-0',
-          text: 'text-[10px] min-w-[14px] px-0',
-          icon: 2
+          button: 'h-3 w-3 p-0 rounded-full min-w-0',
+          text: 'text-[8px] min-w-[12px] px-0',
+          icon: 1.5
         };
       case 'desktop':
         return {
@@ -67,9 +67,9 @@ export const UniversalQuantityControls: React.FC<UniversalQuantityControlsProps>
       default:
         return {
           container: 'gap-0 bg-muted rounded-full p-0',
-          button: 'h-4 w-4 p-0 rounded-full min-w-0',
-          text: 'text-[10px] min-w-[14px] px-0',
-          icon: 2
+          button: 'h-3 w-3 p-0 rounded-full min-w-0',
+          text: 'text-[8px] min-w-[12px] px-0',
+          icon: 1.5
         };
     }
   };
