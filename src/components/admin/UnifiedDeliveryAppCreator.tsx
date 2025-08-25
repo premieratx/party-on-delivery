@@ -394,9 +394,16 @@ export const UnifiedDeliveryAppCreator: React.FC<UnifiedDeliveryAppCreatorProps>
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl w-full p-0 !z-[100] bg-background border-0" style={{ maxHeight: 'none', height: 'auto' }}>
-        {/* Header - Sticky at top */}
-        <DialogHeader className="sticky top-0 z-10 p-4 border-b bg-gradient-to-r from-primary/5 to-secondary/5">
+      <DialogContent 
+        className="max-w-7xl w-full p-0 !z-[100] bg-background border-0 !max-h-none !h-auto" 
+        style={{ 
+          maxHeight: 'none', 
+          height: 'auto',
+          overflow: 'visible'
+        }}
+      >
+        {/* Header */}
+        <DialogHeader className="p-4 border-b bg-gradient-to-r from-primary/5 to-secondary/5">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-xl font-semibold">
