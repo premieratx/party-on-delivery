@@ -125,25 +125,18 @@ export default function CoverPage() {
           background: `linear-gradient(135deg, ${themeColors.primary}20, ${themeColors.secondary}15, ${themeColors.accent}10)`
         }}
       >
-        {/* Content - Phone Frame Optimized Layout */}
-        <div className="relative z-10 flex h-full flex-col justify-center items-center px-6 py-4">
+        {/* Content - Responsive Layout that fits screen */}
+        <div className="relative z-10 flex min-h-screen flex-col justify-between items-center px-6 py-8 md:py-4">
           
           {/* TOP SECTION: Logo + Title */}
           <div className="flex-shrink-0 text-center w-full">
-            {/* Logo with YOUR EXACT positioning and sizing */}
+            {/* Logo with responsive sizing */}
             {logoUrl && (
-              <div 
-                className="mb-4"
-                style={{ transform: `translateY(${logoVerticalPos * 0.3}px)` }}
-              >
+              <div className="mb-6 md:mb-4">
                 <img 
                   src={logoUrl} 
                   alt="Logo" 
-                  style={{ 
-                    width: `${Math.min(logoSize, 100)}px`, 
-                    height: `${Math.min(logoSize, 100)}px` 
-                  }}
-                  className="mx-auto object-contain"
+                  className="mx-auto object-contain w-20 h-20 md:w-24 md:h-24"
                   onError={(e) => {
                     console.error('Logo failed to load:', logoUrl);
                     e.currentTarget.style.display = 'none';
@@ -152,12 +145,11 @@ export default function CoverPage() {
               </div>
             )}
 
-            {/* Title with YOUR EXACT styling */}
-            <div style={{ transform: `translateY(${headlineVerticalPos * 0.2}px)` }}>
+            {/* Title with responsive styling */}
+            <div>
               <h1 
-                className="font-bold mb-2 px-4 leading-tight"
+                className="font-bold mb-4 px-4 leading-tight text-2xl md:text-xl"
                 style={{ 
-                  fontSize: `${Math.min(headlineSize, 24)}px`,
                   color: themeColors.primary || '#F5B800'
                 }}
               >
@@ -165,15 +157,11 @@ export default function CoverPage() {
               </h1>
             </div>
             
-            {/* Subtitle with YOUR EXACT styling */}
+            {/* Subtitle with responsive styling */}
             {subtitle && (
-              <div style={{ transform: `translateY(${subtitleVerticalPos * 0.2}px)` }}>
+              <div>
                 <p 
-                  className="text-white/80 mb-4 px-4"
-                  style={{ 
-                    fontSize: `${Math.min(subtitleSize, 14)}px`,
-                    lineHeight: '1.4'
-                  }}
+                  className="text-white/80 mb-6 px-4 text-base md:text-sm leading-relaxed"
                 >
                   {subtitle}
                 </p>
@@ -181,25 +169,19 @@ export default function CoverPage() {
             )}
           </div>
 
-          {/* MIDDLE SECTION: Features (scrollable if needed) */}
+          {/* MIDDLE SECTION: Features (compact layout) */}
           {features.length > 0 && (
-            <div 
-              className="flex-1 overflow-y-auto px-2 my-4 w-full"
-              style={{ transform: `translateY(${featuresVerticalPos * 0.2}px)` }}
-            >
-              <div className="space-y-3">
-                {features.slice(0, 4).map((feature: any, index: number) => (
+            <div className="flex-1 px-2 my-6 w-full max-w-sm">
+              <div className="space-y-4">
+                {features.slice(0, 3).map((feature: any, index: number) => (
                   <div 
                     key={index} 
-                    className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20"
+                    className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
                   >
-                    <div className="flex items-center mb-2">
-                      <span className="text-lg mr-3">{feature.emoji || '⭐'}</span>
-                      <h3 className="text-sm font-bold text-white">{feature.title || 'Feature'}</h3>
+                    <div className="flex items-center">
+                      <span className="text-xl mr-4">{feature.emoji || '⭐'}</span>
+                      <h3 className="text-base font-bold text-white">{feature.title || 'Feature'}</h3>
                     </div>
-                    <p className="text-xs text-white/70 leading-relaxed pl-8">
-                      {feature.description || ''}
-                    </p>
                   </div>
                 ))}
               </div>
@@ -208,11 +190,8 @@ export default function CoverPage() {
 
           {/* BOTTOM SECTION: Buttons (always visible) */}
           {buttons.length > 0 && (
-            <div 
-              className="flex-shrink-0 flex flex-col gap-3 w-full"
-              style={{ transform: `translateY(${buttonsVerticalPos * 0.2}px)` }}
-            >
-              {buttons.slice(0, 3).map((button: any, index: number) => (
+            <div className="flex-shrink-0 flex flex-col gap-4 w-full max-w-sm">
+              {buttons.slice(0, 2).map((button: any, index: number) => (
                 <Button
                   key={index}
                   onClick={() => {
@@ -233,7 +212,7 @@ export default function CoverPage() {
                   }}
                   variant={button.type === 'primary' ? 'default' : 'outline'}
                   size="lg"
-                  className="w-full text-base font-semibold h-12 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
+                  className="w-full text-lg font-semibold h-14 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105"
                   style={{
                     backgroundColor: button.type === 'primary' ? (themeColors.primary || '#F5B800') : 'transparent',
                     borderColor: button.type !== 'primary' ? (themeColors.primary || '#F5B800') : undefined,

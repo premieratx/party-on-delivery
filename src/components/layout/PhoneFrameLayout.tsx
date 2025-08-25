@@ -10,16 +10,16 @@ export const PhoneFrameLayout: React.FC<PhoneFrameLayoutProps> = ({
   className = '' 
 }) => {
   return (
-    // Full screen black background that only shows on larger screens
-    <div className="min-h-screen w-full bg-black flex items-center justify-center">
-      {/* Phone frame container - perfect for all phone sizes */}
-      <div className="relative w-[360px] h-[740px] bg-black">
-        {/* Figma phone frame with enhanced styling */}
+    // Responsive full screen container
+    <div className="min-h-screen w-full bg-black">
+      {/* Responsive container that adapts to screen size */}
+      <div className="relative w-full min-h-screen max-w-sm mx-auto bg-black">
+        {/* Responsive frame with enhanced styling */}
         <div 
-          className={`w-full h-full rounded-[2rem] border-2 border-gray-600/50 shadow-[0_0_40px_rgba(255,255,255,0.1)] overflow-hidden relative bg-gradient-to-br from-gray-900 to-black ${className}`}
+          className={`w-full min-h-screen rounded-none md:rounded-[2rem] border-0 md:border-2 md:border-gray-600/50 md:shadow-[0_0_40px_rgba(255,255,255,0.1)] overflow-hidden relative bg-gradient-to-br from-gray-900 to-black ${className}`}
         >
-          {/* Status bar */}
-          <div className="absolute top-0 left-0 right-0 h-10 flex items-center justify-between px-6 text-white text-xs z-50 bg-black/30 backdrop-blur-sm">
+          {/* Status bar - hidden on small screens to save space */}
+          <div className="hidden md:flex absolute top-0 left-0 right-0 h-10 items-center justify-between px-6 text-white text-xs z-50 bg-black/30 backdrop-blur-sm">
             <span className="font-medium">9:41</span>
             <div className="flex items-center gap-1">
               <div className="w-4 h-2 bg-white/70 rounded-sm"></div>
@@ -29,16 +29,13 @@ export const PhoneFrameLayout: React.FC<PhoneFrameLayoutProps> = ({
             </div>
           </div>
 
-          {/* Animated border glow effect from Figma */}
-          <div className="absolute inset-0 rounded-[2rem] border border-primary/20 animate-pulse"></div>
+          {/* Animated border glow effect - only on larger screens */}
+          <div className="hidden md:block absolute inset-0 rounded-[2rem] border border-primary/20 animate-pulse"></div>
 
-          {/* Content area - optimized for all content */}
-          <div className="absolute inset-0 pt-10 pb-6 overflow-hidden">
+          {/* Content area - fully responsive */}
+          <div className="relative w-full min-h-screen md:absolute md:inset-0 md:pt-10 md:pb-6">
             {children}
           </div>
-
-          {/* Home indicator */}
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-28 h-1 bg-white/50 rounded-full"></div>
         </div>
       </div>
     </div>
